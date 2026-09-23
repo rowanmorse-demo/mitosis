@@ -1,0 +1,8 @@
+{
+  "name": "mitosis",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Mitosis multiplayer cell arena: game page and live relay server",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" }
+}
