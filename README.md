@@ -109,7 +109,7 @@ Until the Apple/Google variables are set, real purchases are refused (HTTP 503) 
 
 - Open `ios/Mitosis.xcodeproj` in Xcode 16+ and run. Signing is automatic for team `4M7HR323EA`; change `DEVELOPMENT_TEAM` and the bundle id in `project.yml` for another account, then `xcodegen generate` (`brew install xcodegen`).
 - **Testing purchases in the simulator:** the scheme uses `Mitosis/Products.storekit`, a fake App Store with the four packs. Run a local server with `npm run dev` first: debug builds in the simulator use `http://localhost:3000` when it answers, and the production server otherwise.
-- **App Store Connect:** create the app with bundle id `com.eclipseforeverbeyond.mitosis`, then four consumable in-app purchases with product ids `atp_500`, `atp_1500`, `atp_5000`, `atp_12000`. Create an In-App Purchase API key and set the `APPLE_*` variables on the server.
+- **App Store Connect:** create the app with bundle id `com.mitosisgame.app`, then four consumable in-app purchases with product ids `atp_500`, `atp_1500`, `atp_5000`, `atp_12000`. Create an In-App Purchase API key and set the `APPLE_*` variables on the server.
 - **TestFlight:** Product → Archive, then Distribute App → App Store Connect. From the terminal: `xcodebuild -project ios/Mitosis.xcodeproj -scheme Mitosis -configuration Release archive -archivePath ios/build/Mitosis.xcarchive -allowProvisioningUpdates`, then export with `ios/ExportOptions.plist`.
 
 Regenerate the icon with `swift ios/tools/make-icon.swift ios/Mitosis/Assets.xcassets/AppIcon.appiconset/icon-1024.png`.
@@ -120,7 +120,7 @@ Regenerate the icon with `swift ios/tools/make-icon.swift ios/Mitosis/Assets.xca
 
 - Open `android/` in Android Studio (Ladybug or newer, Android SDK 35) and run, or `cd android && ./gradlew assembleDebug`.
 - The server address is `SERVER_URL` in `android/app/build.gradle.kts`. For a local server from the emulator use `http://10.0.2.2:3000`.
-- **Play Console:** create the app with package `com.eclipseforeverbeyond.mitosis`, add four in-app products with the ids above, upload a signed build to a testing track, and add your Google account as a license tester so purchases are free. Create a service account with *View financial data* and set the `GOOGLE_*` variables on the server.
+- **Play Console:** create the app with package `com.mitosisgame.app`, add four in-app products with the ids above, upload a signed build to a testing track, and add your Google account as a license tester so purchases are free. Create a service account with *View financial data* and set the `GOOGLE_*` variables on the server.
 - Release builds need a signing key: add a `signingConfigs` block in `app/build.gradle.kts` or use Android Studio's *Generate Signed Bundle*.
 
 ## How it works

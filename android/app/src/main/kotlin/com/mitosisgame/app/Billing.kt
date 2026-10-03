@@ -1,4 +1,4 @@
-package com.eclipseforeverbeyond.mitosis
+package com.mitosisgame.app
 
 import android.app.Activity
 import android.content.Context

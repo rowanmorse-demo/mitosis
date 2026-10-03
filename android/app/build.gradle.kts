@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.eclipseforeverbeyond.mitosis"
+    namespace = "com.mitosisgame.app"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.eclipseforeverbeyond.mitosis"
+        applicationId = "com.mitosisgame.app"
         minSdk = 26
         targetSdk = 35
         versionCode = 1

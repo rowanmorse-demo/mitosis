@@ -2,7 +2,7 @@
 # (brew install xcodegen). The committed .xcodeproj opens in Xcode without it.
 name: Mitosis
 options:
-  bundleIdPrefix: com.eclipseforeverbeyond
+  bundleIdPrefix: com.mitosisgame
   deploymentTarget:
     iOS: "16.0"
   xcodeVersion: "16.0"
@@ -48,7 +48,7 @@ targets:
         MitosisServerURL: $(MITOSIS_SERVER)
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.eclipseforeverbeyond.mitosis
+        PRODUCT_BUNDLE_IDENTIFIER: com.mitosisgame.app
         PRODUCT_NAME: Mitosis
         TARGETED_DEVICE_FAMILY: "1,2"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon

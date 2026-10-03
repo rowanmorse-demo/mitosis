@@ -22,8 +22,8 @@ services:
       - key: APPLE_PRIVATE_KEY
         sync: false
       - key: APPLE_BUNDLE_ID
-        value: com.eclipseforeverbeyond.mitosis
+        value: com.mitosisgame.app
       - key: GOOGLE_PACKAGE_NAME
-        value: com.eclipseforeverbeyond.mitosis
+        value: com.mitosisgame.app
       - key: GOOGLE_SERVICE_ACCOUNT
         sync: false
