@@ -179,6 +179,34 @@ body:not(.playing) #evolve{display:none!important}
   #massVal{font-size:34px}
   .card{padding:22px 20px 20px;gap:15px}
 }
+/* touch layout: joystick bottom-left, Split / Shoot / Boost on the right, pause+sound bottom-centre */
+#joy{display:none;position:fixed;z-index:3;left:calc(var(--gut) + env(safe-area-inset-left,0px));bottom:calc(var(--gut) + 44px + env(safe-area-inset-bottom,0px));width:150px;height:150px;touch-action:none;pointer-events:auto}
+#joy .base{position:absolute;left:15px;top:15px;width:120px;height:120px;border-radius:50%;border:1.5px solid var(--line-strong);background:rgba(6,20,22,.55);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+#joy .base::after{content:"";position:absolute;inset:34px;border-radius:50%;border:1px dashed rgba(140,210,200,.25)}
+#joy .knob{position:absolute;left:49px;top:49px;width:52px;height:52px;border-radius:50%;background:rgba(220,239,233,.85);box-shadow:0 4px 14px rgba(0,0,0,.45);transition:transform .1s}
+#joy.active .knob{transition:none;background:var(--accent)}
+body:not(.playing) #joy{display:none!important}
+@media (pointer:coarse){
+  body.playing #joy{display:block}
+  #actions{left:auto;right:calc(var(--gut) + env(safe-area-inset-right,0px));transform:none;bottom:calc(var(--gut) + 112px + env(safe-area-inset-bottom,0px));flex-direction:column;gap:12px}
+  .act{width:72px;height:72px;padding:0;justify-content:center;border-radius:50%;font:700 13px var(--display)}
+  .act kbd{display:none}
+  #scale{left:50%;transform:translateX(-50%);bottom:calc(var(--gut) + env(safe-area-inset-bottom,0px))}
+  #scale .bar,#magLbl{display:none}
+  #feed{bottom:calc(var(--gut) + 200px + env(safe-area-inset-bottom,0px))}
+}
+/* collapsible leaderboard */
+#boardToggle{width:22px;height:22px;padding:0;display:grid;place-items:center;font-size:11px;line-height:1;flex:none}
+#board.collapsed ol{display:none}#board.collapsed{width:auto!important}
+/* lobby sections */
+.sec{border:1px solid var(--line);border-radius:12px;background:rgba(0,0,0,.18)}
+.sec summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:11px 14px;user-select:none;-webkit-user-select:none}
+.sec summary::-webkit-details-marker{display:none}
+.sec summary::after{content:"";width:8px;height:8px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:rotate(45deg);margin-left:auto;transition:transform .15s;flex:none}
+.sec[open] summary::after{transform:rotate(-135deg)}
+.sec summary .label{flex:none}.sec .sum{font:500 13px var(--display);color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sec .body{display:grid;gap:14px;padding:4px 14px 14px}
+.sec .atp{margin-left:auto;flex:none}
 /* ATP, skins, store */
 .fhead{display:flex;align-items:center;gap:10px}.fhead .label{flex:1}
 .atp{font:600 13px var(--mono);color:var(--amber)}.atp b{font-weight:700;font-variant-numeric:tabular-nums}
@@ -212,7 +240,7 @@ body:not(.playing) #evolve{display:none!important}
   <div id="metaVal">1 cell · rank –</div>
   <div id="fx"></div>
 </div>
-<div id="board" class="hud panel"><div class="bhead"><span class="label">Culture ranking</span><span id="netPill" class="pill" hidden>Live</span></div><ol id="boardList"></ol></div>
+<div id="board" class="hud panel"><div class="bhead"><span class="label">Culture ranking</span><span id="netPill" class="pill" hidden>Live</span><button id="boardToggle" class="tiny" type="button" aria-label="Collapse ranking" aria-expanded="true">▾</button></div><ol id="boardList"></ol></div>
 <div id="feed" class="hud" aria-live="polite"></div>
 <div id="scale" class="hud">
   <div class="bar"><div id="scaleBar" style="width:80px"></div><span id="scaleLbl">100 µm</span></div>
@@ -225,10 +253,11 @@ body:not(.playing) #evolve{display:none!important}
 <div id="toasts" class="hud" aria-live="polite"></div>
 <div id="evolve" hidden><div class="evhead"><span class="label">Evolve</span><span id="evTier" class="evsub">Stage 1 of 6</span><span class="evsub kbd-only">Keys 1 · 2 · 3</span></div><div class="evopts" id="evOpts"></div></div>
 <div id="actions">
-  <button class="act" id="splitBtn" type="button">Divide <kbd>Space</kbd></button>
-  <button class="act" id="ejectBtn" type="button">Eject <kbd>W</kbd></button>
-  <button class="act" id="dashBtn" type="button">Dash <kbd>Shift</kbd></button>
+  <button class="act" id="splitBtn" type="button"><span class="kbd-only">Divide</span><span class="touch-only">Split</span> <kbd>Space</kbd></button>
+  <button class="act" id="ejectBtn" type="button"><span class="kbd-only">Eject</span><span class="touch-only">Shoot</span> <kbd>W</kbd></button>
+  <button class="act" id="dashBtn" type="button"><span class="kbd-only">Dash</span><span class="touch-only">Boost</span> <kbd>Shift</kbd></button>
 </div>
+<div id="joy" aria-hidden="true"><div class="base"></div><div class="knob"></div></div>
 
 <div id="overlay">
   <div class="card panel" id="startCard">
@@ -236,22 +265,25 @@ body:not(.playing) #evolve{display:none!important}
     <h1>Mitosis<sup>2.0</sup></h1>
     <p class="lede">Absorb anything smaller than you. Divide to strike. Keep clear of anything bigger.</p>
     <div class="field"><label class="label" for="nameIn">Specimen name</label><input id="nameIn" type="text" maxlength="16" placeholder="Unnamed cell" autocomplete="off" spellcheck="false"></div>
-    <div class="field"><span class="label">Stain</span><div class="swatches" id="sw"></div></div>
-    <div class="field"><span class="label">Pattern</span><div class="pats" id="pats"></div></div>
-    <div class="field"><div class="fhead"><span class="label">Skins</span><span class="atp"><b id="atpBal">0</b> ATP</span><button id="getAtp" class="tiny" type="button">Get ATP</button></div><div class="skins" id="skins"></div><p class="hint" id="skinHint">Earn ATP by surviving, absorbing cells and growing. Spend it on skins.</p></div>
-    <div class="field"><span class="label">Culture density</span>
+    <button id="go" class="primary" type="button">Inoculate</button>
+    <details class="sec" id="lookSec"><summary><span class="label">Appearance</span><span class="sum" id="lookSum"></span><span class="atp"><b id="atpBal">0</b> ATP</span></summary><div class="body">
+      <div class="field"><span class="label">Stain</span><div class="swatches" id="sw"></div></div>
+      <div class="field"><span class="label">Pattern</span><div class="pats" id="pats"></div></div>
+      <div class="field"><div class="fhead"><span class="label">Skins</span><button id="getAtp" class="tiny" type="button">Get ATP</button></div><div class="skins" id="skins"></div><p class="hint" id="skinHint">Earn ATP by surviving, absorbing cells and growing. Spend it on skins.</p></div>
+    </div></details>
+    <details class="sec" id="diffSec"><summary><span class="label">Culture density</span><span class="sum" id="diffSum"></span></summary><div class="body">
       <div class="seg" id="diff">
         <button type="button" data-d="calm">Calm<small>40 cells</small></button>
         <button type="button" data-d="standard">Standard<small>60 cells</small></button>
         <button type="button" data-d="hostile">Hostile<small>80 cells</small></button>
       </div>
-    </div>
-    <button id="go" class="primary" type="button">Inoculate</button>
+    </div></details>
     <div class="together"><strong>Play together</strong>
       <p id="inviteHelp">Send this link to a friend on the same Wi-Fi. For friends elsewhere, run <b>share-online.bat</b> and send the https link it prints.</p>
       <div class="invite" id="inviteRow"><input id="inviteUrl" type="text" readonly aria-label="Invite link" value=""><button id="copyInvite" class="ghost" type="button">Copy</button></div>
       <p id="netLine" class="netline"><i></i><span>Connecting to the server…</span></p>
     </div>
+    <details class="sec" id="helpSec"><summary><span class="label">How to play</span></summary><div class="body">
     <dl class="keys kbd-only">
       <dt>Mouse</dt><dd>Steer toward the cursor</dd>
       <dt>Space</dt><dd>Divide — launch half your mass forward</dd>
@@ -262,13 +294,15 @@ body:not(.playing) #evolve{display:none!important}
       <dt>Esc</dt><dd>Pause</dd>
     </dl>
     <dl class="keys touch-only">
-      <dt>Drag</dt><dd>Hold anywhere to steer that way</dd>
-      <dt>Buttons</dt><dd>Divide, eject and dash sit on the right; tap an evolution card to take it</dd>
+      <dt>Joystick</dt><dd>Bottom left — push it to steer, further for faster</dd>
+      <dt>Buttons</dt><dd>Split, Shoot and Boost sit on the right; tap an evolution card to take it</dd>
+      <dt>Pause</dt><dd>Bottom centre, with a Return to lobby option</dd>
     </dl>
     <div class="new"><strong>New in 2.0</strong>
       <em>Evolve</em> at mass milestones — pick one of three traits, six times a life. <em>World events</em>: nutrient blooms, antibiotic tides that close the well, phage swarms and the <em>Leviathan</em> — lure it onto phages to break it up. The leader wears a crown and pays a <em>1.5× bounty</em>.
       <span class="danger">Hunter phages</span> break in through the rim and inject any cell they touch — it bursts into up to 16 pieces 8–10 s later. Phase blocks them and three ejected blobs kill one.
       Also: mutations (Magnet, Phase, Surge), dash, frenzy streaks, stain patterns and achievements.</div>
+    </div></details>
     <p class="achline" id="achLine"></p>
   </div>
 
@@ -285,8 +319,8 @@ body:not(.playing) #evolve{display:none!important}
   <div class="card panel" id="pauseCard" hidden>
     <p class="eyebrow">Culture on hold</p>
     <h2>Paused</h2>
-    <p class="lede">Nothing moves until you resume.</p>
-    <div class="row"><button id="resume" class="primary" type="button">Resume</button><button id="quit" class="ghost" type="button">End run</button></div>
+    <p class="lede">Nothing moves until you resume. Return to the lobby to change your look or density.</p>
+    <div class="row"><button id="resume" class="primary" type="button">Resume</button><button id="quit" class="ghost" type="button">Return to lobby</button></div>
   </div>
 
   <div class="card panel" id="deathCard" hidden>
@@ -302,7 +336,7 @@ body:not(.playing) #evolve{display:none!important}
     <p id="dAch" hidden></p>
     <p id="dEarn" class="earn" hidden></p>
     <div class="chartbox"><span class="label">Mass over time</span><canvas id="dChart"></canvas></div>
-    <div class="row"><button id="again" class="primary" type="button">Re-inoculate</button><button id="setup" class="ghost" type="button">Settings</button></div>
+    <div class="row"><button id="again" class="primary" type="button">Re-inoculate</button><button id="setup" class="ghost" type="button">Lobby</button></div>
   </div>
 </div>
 
@@ -555,6 +589,8 @@ let confirmSkin=0,confirmT=0;
 function renderSkins(){
   const el=$('skins');if(!el)return;$('atpBal').textContent=wallet.balance;$('storeBal').textContent=wallet.balance;
   $('skinHint').textContent=wallet.online?'Earn ATP by surviving, absorbing cells and growing. Tap a skin to buy or wear it.':'Connect to the server to earn or spend ATP. Skins you own still work.';
+  const look=settings.skin>=SKIN_FREE&&PREMIUM[settings.skin-SKIN_FREE]?PREMIUM[settings.skin-SKIN_FREE].name:['Plain','Spots','Stripes','Rings','Marbled'][settings.skin]||'Plain';
+  const ls=$('lookSum');if(ls)ls.textContent=look+' · stain '+((settings.stain|0)+1);
   let html='';for(const S of PREMIUM){const own=ownsSkin(S.id),eq=settings.skin===S.id,cf=confirmSkin===S.id&&performance.now()-confirmT<4000;
     html+=`<button type="button" class="skin${own?' own':''}${cf?' confirm':''}" data-id="${S.id}" aria-pressed="${eq}" aria-label="${escH(S.name)} skin"><canvas width="144" height="144" data-skin="${S.id}"></canvas><span class="sn">${escH(S.name)}</span><span class="sp">${own?(eq?'Wearing':'Owned'):cf?'Tap again · '+S.price:S.price+' ATP'}</span></button>`;}
   el.innerHTML=html;renderPreviews();
@@ -608,6 +644,7 @@ async function redeem(p){ // server verifies with Apple/Google, credits ATP, the
 }
 $('packs').addEventListener('click',e=>{const b=e.target.closest('.pack');if(b&&!b.disabled)buyPack(b.dataset.id);});
 $('getAtp').addEventListener('click',()=>openStore());
+$('lookSec').querySelector('.atp').addEventListener('click',e=>{e.preventDefault();e.stopPropagation();openStore();});
 $('storeBack').addEventListener('click',()=>showCard('startCard'));
 econInit();
 let best=0;try{best=+localStorage.getItem('mitosis.best')||0;}catch(e){}
@@ -640,6 +677,9 @@ let achGot=new Set();try{const a=JSON.parse(localStorage.getItem('mitosis.ach')|
 let T=0,nextId=1,nidC=1,vidC=1,puC=1,hidC=1,human=null,mode='attract',leader=null,paused=false,lowFx=false,histT=0,hunterT=12,slow=1;
 const cam={x:0,y:0,z:.6,shake:0};
 const pointer={x:innerWidth/2,y:innerHeight/2};
+// Touch devices steer with the on-screen joystick (bottom left) instead of the finger position.
+const TOUCH_UI=matchMedia('(pointer:coarse)').matches;
+const joy={id:null,ux:0,uy:0,m:0,R:46};
 // live room
 let lastPeerCount=1,room=null,netState='pending',myPeer=null,isHost=true,claimReady=false,roomAt=-1,netSendT=0,seq=0,recs=[],peLog=[],peerCount=1,hostPeer=null,yielded=false,netNames=[];
 const proxies=new Map(),botProx=new Map(),remoteEj=new Map(),lastSeen=new Map(),lastSeq=new Map(),vSup=new Map(),wSup=new Map(),puSup=new Map(),hSup=new Map();
@@ -1006,6 +1046,10 @@ function step(dt){
   T+=dt;
   if(human&&human.alive){
     if(paused){let sx=0,sy=0,sm=0;for(const c of human.cells){sx+=c.x*c.mass;sy+=c.y*c.mass;sm+=c.mass;}if(sm)human.target={x:sx/sm,y:sy/sm};}
+    else if(TOUCH_UI){ // joystick: direction × deflection, scaled so full deflection is full speed for the biggest cell
+      let sx=0,sy=0,sm=0,mr=0;for(const c of human.cells){if(c.dead)continue;sx+=c.x*c.mass;sy+=c.y*c.mass;sm+=c.mass;if(c.r>mr)mr=c.r;}
+      if(sm){const cx=sx/sm,cy=sy/sm,L=joy.m*(mr*.8+20)*1.05;human.target={x:cx+joy.ux*L,y:cy+joy.uy*L};}
+    }
     else human.target={x:cam.x+(pointer.x-W/2)/cam.z,y:cam.y+(pointer.y-H/2)/cam.z};
   }
   for(const p of players){
@@ -1806,7 +1850,7 @@ const syncPats=()=>{patEl.style.setProperty('--c',col(STAINS[settings.stain]));[
   b.addEventListener('click',()=>{settings.skin=i;syncPats();});patEl.appendChild(b);});
 swEl.addEventListener('click',()=>setTimeout(syncPats,0));syncPats();
 const achLine=()=>{$('achLine').textContent=`Achievements ${ACH.filter(a=>achGot.has(a.id)).length} of ${ACH.length}`+(achGot.size?' — '+ACH.filter(a=>achGot.has(a.id)).map(a=>a.name).join(', '):'');};achLine();
-const diffEl=$('diff');const syncDiff=()=>[...diffEl.children].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.d===settings.diff)));
+const diffEl=$('diff');const syncDiff=()=>{[...diffEl.children].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.d===settings.diff)));const b=diffEl.querySelector('[aria-pressed=true]');if(b)$('diffSum').textContent=b.firstChild.textContent.trim()+' · '+b.querySelector('small').textContent;};
 diffEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.diff=b.dataset.d;syncDiff();});syncDiff();
 $('nameIn').value=settings.name||'';
 $('go').addEventListener('click',startGame);
@@ -1822,13 +1866,25 @@ $('copyInvite').addEventListener('click',()=>{const b=$('copyInvite'),i=$('invit
 /* ================= input ================= */
 let touchId=null;
 cv.addEventListener('pointermove',e=>{if(e.pointerType==='touch'&&e.pointerId!==touchId)return;pointer.x=e.clientX;pointer.y=e.clientY;});
-cv.addEventListener('pointerdown',e=>{if(e.pointerType==='touch'){if(touchId!==null)return;touchId=e.pointerId;try{cv.setPointerCapture(e.pointerId);}catch(_){}}pointer.x=e.clientX;pointer.y=e.clientY;});
+cv.addEventListener('pointerdown',e=>{if(e.pointerType==='touch'){if(TOUCH_UI||touchId!==null)return;touchId=e.pointerId;try{cv.setPointerCapture(e.pointerId);}catch(_){}}pointer.x=e.clientX;pointer.y=e.clientY;});
 const release=e=>{if(e.pointerId===touchId){touchId=null;pointer.x=W/2;pointer.y=H/2;}};
 cv.addEventListener('pointerup',release);cv.addEventListener('pointercancel',release);
 cv.addEventListener('contextmenu',e=>e.preventDefault());
 const bindAct=(id,fn)=>$(id).addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();if(mode==='play'&&!paused)fn(human);});
 $('evOpts').addEventListener('pointerdown',e=>{const b=e.target.closest('.evo');if(!b)return;e.preventDefault();e.stopPropagation();takeEvo(+b.dataset.i);});
 bindAct('splitBtn',split);bindAct('ejectBtn',eject);bindAct('dashBtn',dash);
+// virtual joystick
+const joyEl=$('joy'),joyKnob=joyEl.querySelector('.knob');
+function joySet(ex,ey){const r=joyEl.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let dx=ex-cx,dy=ey-cy;const d=Math.hypot(dx,dy)||0;
+  const R=joy.R,k=d>R?R/d:1;dx*=k;dy*=k;joy.m=d<R*.12?0:Math.min(1,d/R);joy.ux=d?(ex-cx)/d:0;joy.uy=d?(ey-cy)/d:0;joyKnob.style.transform=`translate(${dx.toFixed(1)}px,${dy.toFixed(1)}px)`;}
+joyEl.addEventListener('pointerdown',e=>{if(joy.id!==null)return;joy.id=e.pointerId;joyEl.classList.add('active');try{joyEl.setPointerCapture(e.pointerId);}catch(_){}joySet(e.clientX,e.clientY);e.preventDefault();});
+joyEl.addEventListener('pointermove',e=>{if(e.pointerId!==joy.id)return;joySet(e.clientX,e.clientY);});
+const joyEnd=e=>{if(e.pointerId!==joy.id)return;joy.id=null;joy.m=0;joy.ux=joy.uy=0;joyEl.classList.remove('active');joyKnob.style.transform='';};
+joyEl.addEventListener('pointerup',joyEnd);joyEl.addEventListener('pointercancel',joyEnd);joyEl.addEventListener('lostpointercapture',joyEnd);
+// collapsible leaderboard (remembered)
+const boardBox=$('board'),boardTg=$('boardToggle');
+const syncBoard=()=>{const c=!!settings.boardMin;boardBox.classList.toggle('collapsed',c);boardTg.textContent=c?'▸':'▾';boardTg.setAttribute('aria-expanded',String(!c));boardTg.setAttribute('aria-label',c?'Expand ranking':'Collapse ranking');};
+boardTg.addEventListener('click',()=>{settings.boardMin=!settings.boardMin;saveSettings();syncBoard();});syncBoard();
 addEventListener('keydown',e=>{
   const tag=e.target&&e.target.tagName;
   if(tag==='INPUT'){if(e.key==='Enter'&&e.target.id==='nameIn')startGame();return;}
