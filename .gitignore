@@ -2,3 +2,24 @@ node_modules/
 .DS_Store
 Thumbs.db
 *.log
+
+# Server data (wallets, skins, purchases) — never commit
+data/
+
+# iOS
+ios/build/
+ios/DerivedData/
+ios/*.xcarchive
+ios/export/
+xcuserdata/
+*.xcuserstate
+
+# Android
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+android/*.iml
+android/app/*.iml
+android/.kotlin/

@@ -1,13 +1,19 @@
-// Mitosis local server — serves the game and relays live play between players.
-// No dependencies: needs only Node.js (https://nodejs.org). Run:  node server.js
+// Mitosis server — serves the game, relays live play between players over
+// WebSockets, and runs the ATP economy API (wallets, skins, purchases).
+// No dependencies: needs only Node.js 20+ (https://nodejs.org). Run:  node server.js
 'use strict';
 const http = require('http'), fs = require('fs'), path = require('path'), crypto = require('crypto'), os = require('os');
+const { openStore, DATA_DIR } = require('./store');
+const economy = require('./economy');
 
 const PORT = Number(process.env.PORT) || 3000;
 const MAX_PLAYERS = 16;
 const MAX_MSG = 16 * 1024;          // bytes per message
 const MAX_RATE = 90;                // messages per second per player
+const MAX_BODY = 64 * 1024;         // bytes per API request
+const API_RATE = 120;               // API requests per minute per IP
 const page = fs.readFileSync(path.join(__dirname, 'index.html'));
+const store = openStore();
 
 function lanUrls() {
   const out = [];
@@ -17,14 +23,61 @@ function lanUrls() {
   return out;
 }
 
+/* ---------- HTTP: game page, health, economy API ---------- */
+const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Authorization', 'Access-Control-Max-Age': '86400' };
+const ROUTES = {
+  'POST /api/session': { fn: economy.handlers.session, auth: false },
+  'POST /api/run/start': { fn: economy.handlers.runStart, auth: true },
+  'POST /api/run/end': { fn: economy.handlers.runEnd, auth: true },
+  'POST /api/skins/buy': { fn: economy.handlers.buySkin, auth: true },
+  'POST /api/iap/apple': { fn: economy.handlers.iapApple, auth: true },
+  'POST /api/iap/google': { fn: economy.handlers.iapGoogle, auth: true },
+  'GET /api/catalog': { fn: () => economy.catalog(), auth: false },
+};
+const ipHits = new Map();
+function rateLimited(ip) {
+  const now = Date.now(); let h = ipHits.get(ip);
+  if (!h || now - h.at > 60000) { h = { at: now, n: 0 }; ipHits.set(ip, h); }
+  if (ipHits.size > 5000) for (const [k, v] of ipHits) if (now - v.at > 60000) ipHits.delete(k);
+  return ++h.n > API_RATE;
+}
+function readJson(req) {
+  return new Promise((resolve, reject) => {
+    let size = 0; const chunks = [];
+    req.on('data', d => { size += d.length; if (size > MAX_BODY) { reject(new economy.ApiError(413, 'request too large')); req.destroy(); } else chunks.push(d); });
+    req.on('end', () => { if (!chunks.length) return resolve({}); try { const j = JSON.parse(Buffer.concat(chunks).toString('utf8')); resolve(j && typeof j === 'object' ? j : {}); } catch (e) { reject(new economy.ApiError(400, 'invalid JSON')); } });
+    req.on('error', reject);
+  });
+}
+function sendJson(res, status, obj) {
+  res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', ...CORS });
+  res.end(JSON.stringify(obj));
+}
+async function api(req, res, url) {
+  if (req.method === 'OPTIONS') { res.writeHead(204, CORS); return res.end(); }
+  const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket.remoteAddress || '?';
+  if (rateLimited(ip)) return sendJson(res, 429, { error: 'slow down' });
+  const route = ROUTES[req.method + ' ' + url];
+  if (!route) return sendJson(res, 404, { error: 'no such endpoint' });
+  try {
+    const body = req.method === 'POST' ? await readJson(req) : {};
+    const player = route.auth ? economy.auth(store, req.headers) : null;
+    sendJson(res, 200, await route.fn(store, body, player));
+  } catch (e) {
+    if (e instanceof economy.ApiError || e.status) sendJson(res, e.status || 400, { error: e.message });
+    else { console.error('API error on ' + url + ': ' + (e.stack || e)); sendJson(res, 500, { error: 'server error' }); }
+  }
+}
+
 const server = http.createServer((req, res) => {
   const url = (req.url || '/').split('?')[0];
+  if (url.startsWith('/api/')) { api(req, res, url); return; }
   if (url === '/' || url === '/index.html') {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
     res.end(page);
   } else if (url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ players: clients.size }));
+    res.end(JSON.stringify({ players: clients.size, accounts: store.playerCount(), store: store.kind, iap: economy.catalog().iap }));
   } else {
     res.writeHead(404, { 'Content-Type': 'text/plain' });
     res.end('Not found');
@@ -128,10 +181,12 @@ server.on('error', e => {
   process.exit(1);
 });
 server.listen(PORT, '0.0.0.0', () => {
-  const lan = lanUrls();
+  const lan = lanUrls(), iap = economy.catalog().iap;
   console.log('\n  Mitosis server is running.\n');
   console.log(`  Play on this computer:   http://localhost:${PORT}`);
   if (lan.length) console.log(`  Send to friends on your Wi-Fi / network:\n` + lan.map(u => '      ' + u).join('\n'));
+  console.log(`\n  Wallets and skins:  ${store.kind} store in ${DATA_DIR}`);
+  console.log(`  Purchases:          Apple ${iap.apple ? 'verified' : 'not configured'} · Google Play ${iap.google ? 'verified' : 'not configured'}${iap.unverified ? '  (IAP_UNVERIFIED=1: trusting clients — dev only!)' : ''}`);
   console.log(`\n  Friends somewhere else? Keep this window open, then run share-online.bat`);
   console.log(`  and send them the https://....trycloudflare.com link it prints.\n`);
   console.log('  If Windows asks about network access, choose Allow (Private networks).');

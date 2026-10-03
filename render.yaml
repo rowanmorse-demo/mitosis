@@ -6,3 +6,24 @@ services:
     buildCommand: npm install
     startCommand: node server.js
     healthCheckPath: /health
+    envVars:
+      # Wallets, skins and purchases are stored here. On the free plan this folder is wiped on
+      # every deploy and sleep/wake, so for real players attach a disk (Starter plan or higher):
+      #   disk: { name: mitosis-data, mountPath: /var/data, sizeGB: 1 }
+      # and set DATA_DIR to that mount path.
+      - key: DATA_DIR
+        value: ./data
+      # In-app purchase verification. Leave unset until the apps are in the stores; purchases
+      # are then rejected rather than trusted. Set in the Render dashboard, never in git.
+      - key: APPLE_ISSUER_ID
+        sync: false
+      - key: APPLE_KEY_ID
+        sync: false
+      - key: APPLE_PRIVATE_KEY
+        sync: false
+      - key: APPLE_BUNDLE_ID
+        value: com.eclipseforeverbeyond.mitosis
+      - key: GOOGLE_PACKAGE_NAME
+        value: com.eclipseforeverbeyond.mitosis
+      - key: GOOGLE_SERVICE_ACCOUNT
+        sync: false

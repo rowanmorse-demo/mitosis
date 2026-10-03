@@ -6,7 +6,7 @@
 <title>Mitosis</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" media="print" onload="this.media='all'">
 <style>
 :root{
   color-scheme: dark;
@@ -72,7 +72,7 @@ body{margin:0;background:var(--void);color:var(--ink);font-family:var(--display)
 body:not(.playing) #stats, body:not(.playing) #actions, body:not(.playing) #scale, body:not(.playing) #feed{display:none}
 
 /* overlay + cards */
-#overlay{position:fixed;inset:0;z-index:5;display:grid;place-items:center;padding:var(--gut);background:radial-gradient(ellipse at center,rgba(2,8,9,.2),rgba(2,8,9,.75));animation:ov .35s ease-out}
+#overlay{position:fixed;inset:0;z-index:5;display:grid;place-items:center;padding:calc(var(--gut) + env(safe-area-inset-top,0px)) calc(var(--gut) + env(safe-area-inset-right,0px)) calc(var(--gut) + env(safe-area-inset-bottom,0px)) calc(var(--gut) + env(safe-area-inset-left,0px));background:radial-gradient(ellipse at center,rgba(2,8,9,.2),rgba(2,8,9,.75));animation:ov .35s ease-out}
 @keyframes ov{from{opacity:0}}
 .card{width:100%;max-width:444px;max-height:calc(100% - 8px);overflow:auto;box-sizing:border-box;padding:28px 28px 24px;display:grid;gap:18px;user-select:text;-webkit-user-select:text;touch-action:auto;animation:up .4s cubic-bezier(.2,.8,.2,1)}
 @keyframes up{from{opacity:0;transform:translateY(14px) scale(.985)}}
@@ -179,6 +179,25 @@ body:not(.playing) #evolve{display:none!important}
   #massVal{font-size:34px}
   .card{padding:22px 20px 20px;gap:15px}
 }
+/* ATP, skins, store */
+.fhead{display:flex;align-items:center;gap:10px}.fhead .label{flex:1}
+.atp{font:600 13px var(--mono);color:var(--amber)}.atp b{font-weight:700;font-variant-numeric:tabular-nums}
+.skins{display:grid;grid-template-columns:repeat(auto-fill,minmax(82px,1fr));gap:8px}
+.skin{appearance:none;border:1px solid var(--line);background:rgba(0,0,0,.25);border-radius:12px;padding:8px 4px 7px;display:grid;gap:3px;justify-items:center;color:var(--muted);cursor:pointer;transition:border-color .15s,transform .12s,background .15s}
+.skin canvas{width:56px;height:56px;border-radius:50%}
+.skin .sn{font:600 12px var(--display);color:var(--ink)}.skin .sp{font:500 10px var(--mono);color:var(--amber);text-align:center}
+.skin.own .sp{color:var(--muted)}.skin[aria-pressed=true]{border-color:var(--ink);background:rgba(255,92,138,.1)}
+.skin.confirm{border-color:var(--amber);background:rgba(242,177,52,.1)}.skin.confirm .sp{color:var(--ink)}
+.skin:hover{transform:translateY(-1px);border-color:var(--line-strong)}.skin:disabled{opacity:.5;cursor:default}
+.hint{margin:0;font:12px/1.45 var(--display);color:var(--dim)}
+.atpbig{margin:-6px 0 0;font:600 15px var(--display);color:var(--muted)}.atpbig b{color:var(--amber);font-size:22px;font-variant-numeric:tabular-nums}
+.packs{display:grid;gap:8px}
+.pack{appearance:none;display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;text-align:left;border:1px solid var(--line);background:rgba(0,0,0,.25);border-radius:12px;padding:12px 14px;color:var(--ink);cursor:pointer;transition:border-color .15s}
+.pack:hover{border-color:var(--line-strong)}.pack b{font:800 18px var(--display)}.pack small{display:block;font:11px var(--mono);color:var(--muted);margin-top:2px}
+.pack .pr{font:700 14px var(--mono);color:var(--amber);border:1px solid rgba(242,177,52,.4);border-radius:999px;padding:6px 10px}
+.pack .tag{font:600 9px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--violet);margin-left:6px;vertical-align:middle}
+.pack:disabled{opacity:.5;cursor:default}
+.earn{margin:-6px 0 0;font:600 14px var(--display);color:var(--amber)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -219,6 +238,7 @@ body:not(.playing) #evolve{display:none!important}
     <div class="field"><label class="label" for="nameIn">Specimen name</label><input id="nameIn" type="text" maxlength="16" placeholder="Unnamed cell" autocomplete="off" spellcheck="false"></div>
     <div class="field"><span class="label">Stain</span><div class="swatches" id="sw"></div></div>
     <div class="field"><span class="label">Pattern</span><div class="pats" id="pats"></div></div>
+    <div class="field"><div class="fhead"><span class="label">Skins</span><span class="atp"><b id="atpBal">0</b> ATP</span><button id="getAtp" class="tiny" type="button">Get ATP</button></div><div class="skins" id="skins"></div><p class="hint" id="skinHint">Earn ATP by surviving, absorbing cells and growing. Spend it on skins.</p></div>
     <div class="field"><span class="label">Culture density</span>
       <div class="seg" id="diff">
         <button type="button" data-d="calm">Calm<small>40 cells</small></button>
@@ -252,6 +272,16 @@ body:not(.playing) #evolve{display:none!important}
     <p class="achline" id="achLine"></p>
   </div>
 
+  <div class="card panel" id="storeCard" hidden>
+    <p class="eyebrow">ATP store</p>
+    <h2>Get ATP</h2>
+    <p class="lede">ATP buys skins. Earn it slowly by playing, or top up here.</p>
+    <p class="atpbig"><b id="storeBal">0</b> ATP in your wallet</p>
+    <div class="packs" id="packs"></div>
+    <p class="hint" id="storeHint"></p>
+    <div class="row"><button id="storeBack" class="primary" type="button">Back</button></div>
+  </div>
+
   <div class="card panel" id="pauseCard" hidden>
     <p class="eyebrow">Culture on hold</p>
     <h2>Paused</h2>
@@ -270,6 +300,7 @@ body:not(.playing) #evolve{display:none!important}
       <div><span class="label">Best peak</span><b id="dBest">0</b></div>
     </div>
     <p id="dAch" hidden></p>
+    <p id="dEarn" class="earn" hidden></p>
     <div class="chartbox"><span class="label">Mass over time</span><canvas id="dChart"></canvas></div>
     <div class="row"><button id="again" class="primary" type="button">Re-inoculate</button><button id="setup" class="ghost" type="button">Settings</button></div>
   </div>
@@ -278,7 +309,10 @@ body:not(.playing) #evolve{display:none!important}
 <script>
 /* Live room over this computer's Mitosis server — same interface the game uses on claude.ai. */
 (()=>{
-  if(location.protocol!=='http:'&&location.protocol!=='https:')return;
+  // On the website the server is wherever the page came from. In the iOS/Android apps the page is
+  // bundled, so the server is given as ?server=… (or defaults to the public one).
+  const SERVER=window.MITOSIS_SERVER=(()=>{if(location.protocol==='http:'||location.protocol==='https:')return location.origin;
+    let o='';try{o=new URLSearchParams(location.search).get('server')||'';}catch(e){}return (o||'https://mitosis-zmbc.onrender.com').replace(/\/+$/,'');})();
   const myId=(Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2)).replace(/[^a-z0-9]/g,'').slice(0,12);
   const N=window.__mitosisNet={lan:[],state:'connecting'};
   let ws=null,connected=false,mine={},mineObj=Object.freeze({}),snap=Object.freeze([]),connFns=[],pending=false,lastSend=0,retry=0;
@@ -290,7 +324,7 @@ body:not(.playing) #evolve{display:none!important}
   function later(){retry=Math.min(retry+1,8);setTimeout(connect,400*retry);}
   function connect(){
     N.state=N.state==='full'?'full':'connecting';
-    try{ws=new WebSocket((location.protocol==='https:'?'wss:':'ws:')+'//'+location.host+'/ws');}catch(e){later();return;}
+    try{ws=new WebSocket(SERVER.replace(/^http/,'ws')+'/ws');}catch(e){later();return;}
     ws.onopen=()=>{retry=0;ws.send(JSON.stringify({t:'hello',id:myId}));};
     ws.onmessage=ev=>{let m;try{m=JSON.parse(ev.data);}catch(e){return;}if(!m||typeof m!=='object')return;
       if(m.t==='welcome'){others.clear();for(const q of Array.isArray(m.peers)?m.peers:[])if(q&&typeof q.id==='string'&&q.p&&typeof q.p==='object')others.set(q.id,Object.freeze(q.p));
@@ -331,6 +365,9 @@ const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const R=6800,TAU=Math.PI*2,NP=40,OFF=R+2000;
 const MAX_CELLS=16,VIRUS_M=100,VSLOTS=140,MAX_FREEV=16,PELLETS=19200,MAX_PU=24,MAX_MASS=9000;
 const MAX_HUNTERS=6,HUNTER_R=42,INF_MIN=8,INF_MAX=10,PROTO=3,SEED=90210;
+// Balance: a cell is absorbed once EAT_COVER of its diameter is inside a cell at least 10% heavier (see need()).
+// Ejecting costs EJECT_COST and makes a blob of EJECT_MASS, at most once every EJECT_GAP seconds.
+const EAT_COVER=.3,EJECT_COST=16,EJECT_MASS=15,EJECT_GAP=.12,BOTS_PER_PLAYER=5,SKIN_FREE=5;
 const COS=new Float32Array(NP),SIN=new Float32Array(NP);for(let i=0;i<NP;i++){COS[i]=Math.cos(i/NP*TAU);SIN[i]=Math.sin(i/NP*TAU);}
 const PX=new Float32Array(NP),PY=new Float32Array(NP),TMP=new Float32Array(NP);
 const rand=(a,b)=>a+Math.random()*(b-a);
@@ -354,13 +391,62 @@ function dec(s,o,w){let n=0;for(let i=0;i<w;i++){const c=s.charCodeAt(o+i);const
 
 const DIFF={calm:{bots:40,aggr:.35,think:.36},standard:{bots:60,aggr:.65,think:.26},hostile:{bots:80,aggr:.95,think:.18}};
 const STAINS=[[340,100,68],[250,100,76],[174,62,54],[40,90,58],[18,100,64],[200,25,88]];
+/* Premium skins, bought with ATP. Ids continue after the 5 free patterns. Prices here are only a
+   fallback for display: the server (economy.js) is the source of truth and overrides them. Each draw()
+   runs with the context clipped to the membrane; a base colour replaces the chosen stain. */
+const PREMIUM=[
+{id:5,key:'nebula',name:'Nebula',price:400,base:[262,72,42],draw(g,c,r,k){
+  const C=['rgba(255,120,220,.5)','rgba(90,200,255,.45)','rgba(255,200,120,.35)'];
+  for(let i=0;i<3;i++){const a=c.wob+i*2.1+T*.15,x=c.x+Math.cos(a)*r*.45,y=c.y+Math.sin(a)*r*.45,gr=g.createRadialGradient(x,y,0,x,y,r*.7);gr.addColorStop(0,C[i]);gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.beginPath();g.arc(x,y,r*.7,0,TAU);g.fill();}
+  g.fillStyle='rgba(255,255,255,.9)';for(let i=0;i<14;i++){const a=i*2.399+c.wob,d=((i*.618)%1)*r*.9,s=r*(.015+((i*.37)%1)*.02)*(.7+.5*Math.sin(T*3+i));g.beginPath();g.arc(c.x+Math.cos(a)*d,c.y+Math.sin(a)*d,s,0,TAU);g.fill();}}},
+{id:6,key:'magma',name:'Magma',price:500,base:[12,72,20],draw(g,c,r,k){
+  const p=.55+.45*Math.sin(T*2.5+c.wob);g.lineWidth=r*.06;g.lineCap='round';g.strokeStyle=`rgba(255,${130+Math.round(90*p)},40,${.65+.35*p})`;g.shadowColor='rgba(255,140,40,.9)';g.shadowBlur=r*.3*p;
+  g.beginPath();for(let i=0;i<5;i++){let a=c.wob+i*1.26,x=c.x+Math.cos(a)*r*.12,y=c.y+Math.sin(a)*r*.12;g.moveTo(x,y);for(let s=0;s<4;s++){a+=Math.sin(i*3.1+s*2.3+c.wob)*.7;x+=Math.cos(a)*r*.26;y+=Math.sin(a)*r*.26;g.lineTo(x,y);}}g.stroke();}},
+{id:7,key:'honeycomb',name:'Honeycomb',price:350,base:[40,88,52],draw(g,c,r,k){
+  const s=r*.2,h=s*Math.sqrt(3);g.lineWidth=r*.035;g.strokeStyle=col(k,-34,.6);g.beginPath();
+  for(let q=-4;q<=4;q++)for(let w=-4;w<=4;w++){const x=c.x+q*1.5*s,y=c.y+w*h+(q&1?h/2:0);if(Math.hypot(x-c.x,y-c.y)>r*1.15)continue;for(let i=0;i<=6;i++){const a=i/6*TAU,px=x+Math.cos(a)*s*.9,py=y+Math.sin(a)*s*.9;i?g.lineTo(px,py):g.moveTo(px,py);}}g.stroke();
+  g.fillStyle='rgba(255,230,150,.25)';for(let i=0;i<3;i++){const a=c.wob+i*2.3,x=c.x+Math.cos(a)*r*.45,y=c.y+Math.sin(a)*r*.45;g.beginPath();g.arc(x,y,s*.75,0,TAU);g.fill();}}},
+{id:8,key:'circuit',name:'Circuit',price:450,base:[186,62,22],draw(g,c,r,k){
+  g.lineWidth=r*.035;g.strokeStyle='rgba(120,255,220,.55)';g.lineCap='round';g.beginPath();
+  for(let i=0;i<6;i++){const a=c.wob+i*1.047;let x=c.x+Math.cos(a)*r*.12,y=c.y+Math.sin(a)*r*.12;g.moveTo(x,y);for(let s=0;s<3;s++){const L=r*(.22+((i*7+s*3)%5)*.06);if((i+s)%2)x+=L*(Math.cos(a)>0?1:-1);else y+=L*(Math.sin(a)>0?1:-1);g.lineTo(x,y);}}g.stroke();
+  const p=.5+.5*Math.sin(T*4+c.wob);g.fillStyle=`rgba(140,255,230,${.5+.5*p})`;for(let i=0;i<6;i++){const a=c.wob+i*1.047+.5,d=r*(.35+(i%3)*.17);g.beginPath();g.arc(c.x+Math.cos(a)*d,c.y+Math.sin(a)*d,r*.045,0,TAU);g.fill();}}},
+{id:9,key:'leopard',name:'Leopard',price:300,base:[34,72,56],draw(g,c,r,k){
+  g.lineWidth=r*.05;g.strokeStyle='rgba(60,30,10,.75)';g.fillStyle='rgba(120,70,20,.45)';
+  for(let i=0;i<9;i++){const a=i*2.399+c.wob,d=((i*.618)%1)*r*.85,x=c.x+Math.cos(a)*d,y=c.y+Math.sin(a)*d,s=r*(.1+(i%3)*.03);
+    g.beginPath();g.arc(x,y,s*.6,0,TAU);g.fill();g.beginPath();g.arc(x,y,s,a,a+2.4);g.stroke();g.beginPath();g.arc(x,y,s,a+3.3,a+5.6);g.stroke();}}},
+{id:10,key:'glacier',name:'Glacier',price:350,base:[198,72,72],draw(g,c,r,k){
+  g.fillStyle='rgba(255,255,255,.28)';for(let i=0;i<6;i++){const a=c.wob+i*1.047+.3,w=.18;g.beginPath();g.moveTo(c.x,c.y);g.lineTo(c.x+Math.cos(a-w)*r*1.1,c.y+Math.sin(a-w)*r*1.1);g.lineTo(c.x+Math.cos(a+w*.4)*r*1.1,c.y+Math.sin(a+w*.4)*r*1.1);g.closePath();g.fill();}
+  g.lineWidth=r*.03;g.strokeStyle='rgba(255,255,255,.55)';g.beginPath();for(let i=0;i<6;i++){const a=c.wob+i*1.047;g.moveTo(c.x,c.y);g.lineTo(c.x+Math.cos(a)*r*1.1,c.y+Math.sin(a)*r*1.1);}g.stroke();
+  const p=.5+.5*Math.sin(T*2+c.wob);g.fillStyle=`rgba(255,255,255,${.4+.6*p})`;g.beginPath();g.arc(c.x+r*.3,c.y-r*.35,r*.05,0,TAU);g.fill();}},
+{id:11,key:'toxic',name:'Toxic',price:400,base:[96,90,44],draw(g,c,r,k){
+  g.fillStyle='rgba(20,60,10,.3)';g.beginPath();g.arc(c.x,c.y,r*1.1,0,TAU);g.fill();
+  for(let i=0;i<9;i++){const sp=.25+((i*.37)%1)*.3,ph=((T*sp+i*.618)%1),x=c.x+Math.cos(i*2.399+c.wob)*r*.7,y=c.y+r*.95-ph*r*1.9,s=r*(.05+((i*.53)%1)*.06)*(.6+.4*ph);
+    g.strokeStyle='rgba(200,255,120,.75)';g.lineWidth=r*.02;g.beginPath();g.arc(x,y,s,0,TAU);g.stroke();g.fillStyle='rgba(220,255,160,.25)';g.fill();}}},
+{id:12,key:'eyeball',name:'Eyeball',price:600,base:[0,0,93],pupil:true,draw(g,c,r,k,stain){
+  const mv=Math.hypot(c.svx,c.svy)+1,nx=c.x-c.svx/mv*r*.12,ny=c.y-c.svy/mv*r*.12,ir=r*.5,K=stain||[200,25,60];
+  g.lineWidth=r*.025;g.strokeStyle='rgba(220,40,40,.45)';g.beginPath();for(let i=0;i<7;i++){const a=c.wob+i*.9;let x=c.x+Math.cos(a)*r,y=c.y+Math.sin(a)*r;g.moveTo(x,y);for(let s=0;s<3;s++){const b=a+Math.PI+Math.sin(i*2+s*1.7)*.6;x+=Math.cos(b)*r*.2;y+=Math.sin(b)*r*.2;g.lineTo(x,y);}}g.stroke();
+  const gr=g.createRadialGradient(nx,ny,ir*.3,nx,ny,ir);gr.addColorStop(0,col(K,10,1));gr.addColorStop(.7,col(K,-8,1));gr.addColorStop(1,col(K,-30,1));g.fillStyle=gr;g.beginPath();g.arc(nx,ny,ir,0,TAU);g.fill();
+  g.strokeStyle='rgba(0,0,0,.35)';g.lineWidth=r*.02;g.beginPath();for(let i=0;i<24;i++){const a=i/24*TAU;g.moveTo(nx+Math.cos(a)*ir*.4,ny+Math.sin(a)*ir*.4);g.lineTo(nx+Math.cos(a+.15)*ir*.95,ny+Math.sin(a+.15)*ir*.95);}g.stroke();}},
+{id:13,key:'galaxy',name:'Galaxy',price:700,base:[250,60,14],draw(g,c,r,k){
+  const rot=T*.25+c.wob;g.lineWidth=r*.05;g.lineCap='round';
+  for(let arm=0;arm<2;arm++){g.strokeStyle=arm?'rgba(170,150,255,.45)':'rgba(255,170,230,.4)';g.beginPath();for(let i=0;i<=22;i++){const t=i/22,a=rot+arm*Math.PI+t*4.2,d=t*r*.95,x=c.x+Math.cos(a)*d,y=c.y+Math.sin(a)*d;i?g.lineTo(x,y):g.moveTo(x,y);}g.stroke();}
+  const cg=g.createRadialGradient(c.x,c.y,0,c.x,c.y,r*.35);cg.addColorStop(0,'rgba(255,240,220,.9)');cg.addColorStop(1,'rgba(255,200,240,0)');g.fillStyle=cg;g.beginPath();g.arc(c.x,c.y,r*.35,0,TAU);g.fill();
+  g.fillStyle='rgba(255,255,255,.85)';for(let i=0;i<16;i++){const a=i*2.399,d=((i*.618)%1)*r*.95,s=r*(.012+((i*.41)%1)*.018)*(.6+.6*Math.abs(Math.sin(T*2.2+i)));g.beginPath();g.arc(c.x+Math.cos(a)*d,c.y+Math.sin(a)*d,s,0,TAU);g.fill();}}},
+{id:14,key:'gilded',name:'Gilded',price:800,base:[46,92,54],draw(g,c,r,k){
+  const sh=(T*.6+c.wob)%2-1,m=.5+sh*.4,lg=g.createLinearGradient(c.x-r,c.y-r,c.x+r,c.y+r);lg.addColorStop(0,'rgba(255,255,255,0)');lg.addColorStop(clamp(m-.12,0,1),'rgba(255,255,255,0)');lg.addColorStop(clamp(m,0,1),'rgba(255,255,240,.55)');lg.addColorStop(clamp(m+.12,0,1),'rgba(255,255,255,0)');lg.addColorStop(1,'rgba(255,255,255,0)');
+  g.fillStyle=lg;g.beginPath();g.arc(c.x,c.y,r*1.1,0,TAU);g.fill();
+  g.lineWidth=r*.04;g.strokeStyle='rgba(120,70,0,.45)';g.beginPath();for(let i=1;i<=2;i++){g.moveTo(c.x+r*i*.38,c.y);g.arc(c.x,c.y,r*i*.38,0,TAU);}g.stroke();
+  const tw=Math.max(0,Math.sin(T*3+c.wob));g.fillStyle=`rgba(255,255,255,${tw})`;const sx=c.x+r*.45,sy=c.y-r*.4,ss=r*.16*tw;g.beginPath();g.moveTo(sx,sy-ss);g.quadraticCurveTo(sx,sy,sx+ss,sy);g.quadraticCurveTo(sx,sy,sx,sy+ss);g.quadraticCurveTo(sx,sy,sx-ss,sy);g.quadraticCurveTo(sx,sy,sx,sy-ss);g.fill();}}
+];
+const SKIN_COUNT=SKIN_FREE+PREMIUM.length;
+function skinColor(stain,skin){const S=skin>=SKIN_FREE?PREMIUM[skin-SKIN_FREE]:null;return (S&&S.base)||STAINS[clamp(stain|0,0,STAINS.length-1)];}
 const PU={magnet:{label:'Magnet',glyph:'Mg',c:[190,90,62],dur:9},shield:{label:'Phase',glyph:'Φ',c:[250,100,78],dur:6},surge:{label:'Surge',glyph:'»',c:[40,95,60],dur:7}};
 const PUK=Object.keys(PU);
 const INF_C=[352,100,62];
 const PERKS=[
   {id:'flagella',name:'Flagella',desc:'+12% speed'},
-  {id:'membrane',name:'Thick membrane',desc:'Others need 40% more mass than you to absorb you'},
-  {id:'enzymes',name:'Digestive enzymes',desc:'Absorb cells only 15% smaller than you'},
+  {id:'membrane',name:'Thick membrane',desc:'Others need 20% more mass than you to absorb you'},
+  {id:'enzymes',name:'Digestive enzymes',desc:'Absorb cells only 5% smaller than you'},
   {id:'cilia',name:'Cilia',desc:'Dash recharges in 2.2 s instead of 4 s'},
   {id:'mitotic',name:'Rapid mitosis',desc:'Split cells fuse back 40% sooner'},
   {id:'vacuole',name:'Food vacuole',desc:'Food is worth 40% more'},
@@ -373,7 +459,7 @@ const PBIT={};PERKS.forEach((p,i)=>{PBIT[p.id]=1<<i;});
 const BOT_PERKS=['flagella','membrane','enzymes','cilia','mitotic','vacuole','metabolism','photo','armored'];
 const EVO=[80,200,450,900,1600,2800];
 const has=(p,id)=>!!(p&&(p.pk&PBIT[id]));
-const need=(eater,victim)=>(has(eater,'enzymes')?1.15:1.25)+(has(victim,'membrane')?.15:0);
+const need=(eater,victim)=>(has(eater,'enzymes')?1.05:1.1)+(has(victim,'membrane')?.1:0);
 const mdel=(p,m)=>mergeDelay(m)*(has(p,'mitotic')?.6:1);
 const EVT={1:{name:'Nutrient bloom',desc:'Golden food is worth triple inside the glowing zone.',dur:32,c:'#f2c14e'},
   2:{name:'Antibiotic tide',desc:'The well is closing in. Stay inside the ring or dissolve.',dur:38,c:'#a99bff'},
@@ -396,7 +482,134 @@ const botColor=b=>b===BOSS_BID?[275,62,50]:[Math.floor(h32(b*977+11)*360),55+Mat
 
 let settings={name:'',stain:0,diff:'standard',skin:0};
 try{const s=JSON.parse(localStorage.getItem('mitosis.settings')||'null');if(s&&typeof s==='object')settings=Object.assign(settings,s);}catch(e){}
-if(!DIFF[settings.diff])settings.diff='standard';settings.stain=clamp(settings.stain|0,0,STAINS.length-1);settings.skin=clamp(settings.skin|0,0,4);
+if(!DIFF[settings.diff])settings.diff='standard';settings.stain=clamp(settings.stain|0,0,STAINS.length-1);settings.skin=clamp(settings.skin|0,0,SKIN_COUNT-1);
+const saveSettings=()=>{try{localStorage.setItem('mitosis.settings',JSON.stringify(settings));}catch(e){}};
+
+/* ================= ATP economy: wallet, runs, skins, store ================= */
+/* The server owns every wallet (see economy.js). The page only asks: "this run ended", "buy this skin",
+   "credit this purchase". A device secret in localStorage identifies the player — no sign-up. */
+const ATP_PACKS=[{id:'atp_500',atp:500,label:'Pouch'},{id:'atp_1500',atp:1500,label:'Flask',tag:'Popular'},{id:'atp_5000',atp:5000,label:'Culture',tag:'Best value'},{id:'atp_12000',atp:12000,label:'Bioreactor'}];
+const escH=s=>String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[ch]);
+let wallet={balance:0,earned:0,skins:[],online:false,playerId:null};
+try{const w=JSON.parse(localStorage.getItem('mitosis.wallet')||'null');if(w&&typeof w==='object'){wallet.balance=w.balance|0;wallet.skins=Array.isArray(w.skins)?w.skins:[];}}catch(e){}
+let secret='';try{secret=localStorage.getItem('mitosis.secret')||'';}catch(e){}
+if(!/^[a-z0-9]{24,64}$/.test(secret)){secret='';const a=new Uint8Array(32);crypto.getRandomValues(a);for(const b of a)secret+=(b%36).toString(36);try{localStorage.setItem('mitosis.secret',secret);}catch(e){}}
+const ownsSkin=id=>id<SKIN_FREE||wallet.skins.includes(id);
+
+// Bridge to the iOS / Android shells (purchases, haptics). Absent on the website.
+const Native=(()=>{
+  const ios=!!(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.mitosis);
+  const android=typeof MitosisAndroid!=='undefined'&&MitosisAndroid&&typeof MitosisAndroid.post==='function';
+  const platform=ios?'ios':android?'android':null;let seq=0;const waits=new Map();
+  function send(m){try{if(ios)window.webkit.messageHandlers.mitosis.postMessage(m);else if(android)MitosisAndroid.post(JSON.stringify(m));}catch(e){}}
+  function call(type,payload){if(!platform)return Promise.reject(new Error('Only available in the app'));
+    return new Promise((res,rej)=>{const id=++seq;waits.set(id,{res,rej});send({id,type,...payload});
+      setTimeout(()=>{if(waits.delete(id))rej(new Error('No reply from the app'));},type==='buy'?600000:20000);});}
+  window.MitosisBridge={onNative(m){if(!m||typeof m!=='object')return;
+    if(m.id&&waits.has(m.id)){const w=waits.get(m.id);waits.delete(m.id);if(m.ok===false)w.rej(new Error(m.error||'Failed'));else w.res(m);return;}
+    if(m.type==='purchase'&&m.purchase)redeem(m.purchase).catch(()=>{});}};
+  return{platform,send,call,haptic(style){if(platform)send({type:'haptic',style});}};
+})();
+
+async function api(path,body,auth=true){
+  const h={'Content-Type':'application/json'};if(auth)h.Authorization='Bearer '+secret;let r;
+  try{r=await fetch(window.MITOSIS_SERVER+'/api/'+path,{method:'POST',headers:h,body:JSON.stringify(body||{})});}
+  catch(e){const err=new Error('Can\'t reach the server');err.status=0;throw err;}
+  const j=await r.json().catch(()=>({}));if(!r.ok){const err=new Error(j.error||('HTTP '+r.status));err.status=r.status;throw err;}return j;
+}
+function applyWallet(w){
+  if(!w)return;wallet.balance=w.balance|0;wallet.earned=w.earned|0;if(Array.isArray(w.skins))wallet.skins=w.skins;wallet.playerId=w.playerId||wallet.playerId;wallet.online=true;
+  try{localStorage.setItem('mitosis.wallet',JSON.stringify({balance:wallet.balance,skins:wallet.skins}));}catch(e){}
+  if(w.catalog){for(const s of w.catalog.skins||[]){const P=PREMIUM.find(x=>x.id===s.id);if(P&&s.price>0)P.price=s.price;}for(const p of w.catalog.packs||[]){const K=ATP_PACKS.find(x=>x.id===p.id);if(K&&p.atp>0)K.atp=p.atp;}}
+  if(settings.skin>=SKIN_FREE&&!ownsSkin(settings.skin)){settings.skin=0;saveSettings();}
+  renderSkins();
+}
+let econDelay=5000;
+async function econInit(){
+  try{applyWallet(await api('session',{secret},false));econDelay=5000;Native.send({type:'ready'});flushRuns();}
+  catch(e){wallet.online=false;renderSkins();setTimeout(econInit,econDelay);econDelay=Math.min(60000,econDelay*2);}
+}
+// Runs: the server stamps when a run starts, so survival time can't be inflated.
+let runId=null,runPromise=null;
+function econRunStart(){runId=null;runPromise=api('run/start').then(r=>{runId=r.runId;return r.runId;}).catch(()=>null);}
+async function econRunEnd(){
+  if(!human)return;const s=human.stats,rep={survived:Math.max(0,T-s.born),eaten:s.eaten|0,peak:Math.round(s.peak),show:1};
+  const rid=runId||(runPromise?await runPromise:null);runId=null;runPromise=null;
+  if(!rid){showEarn(wallet.online?'':'Offline — ATP is only earned while connected');return;}
+  rep.runId=rid;const a=loadPending();a.push(rep);savePending(a);showEarn('Counting ATP…');flushRuns();
+}
+function showEarn(t){const el=$('dEarn');el.hidden=!t;el.textContent=t||'';}
+function loadPending(){try{const a=JSON.parse(localStorage.getItem('mitosis.runs')||'[]');return Array.isArray(a)?a:[];}catch(e){return[];}}
+function savePending(a){try{localStorage.setItem('mitosis.runs',JSON.stringify(a.slice(-10)));}catch(e){}}
+let flushing=false;
+async function flushRuns(){ // report finished runs; keep them queued while the server is unreachable
+  if(flushing)return;flushing=true;
+  try{let a=loadPending();while(a.length){const rep=a[0];
+    try{const w=await api('run/end',rep);applyWallet(w);if(rep.show)showEarn(w.payout?`+${w.payout} ATP earned`:w.capped?'Hourly ATP cap reached — more next hour':'');}
+    catch(e){if(!e.status||e.status>=500){if(rep.show)showEarn('ATP will be counted when the server is back');break;}}
+    a.shift();savePending(a);}}
+  finally{flushing=false;}
+}
+// Skins grid on the start card
+let confirmSkin=0,confirmT=0;
+function renderSkins(){
+  const el=$('skins');if(!el)return;$('atpBal').textContent=wallet.balance;$('storeBal').textContent=wallet.balance;
+  $('skinHint').textContent=wallet.online?'Earn ATP by surviving, absorbing cells and growing. Tap a skin to buy or wear it.':'Connect to the server to earn or spend ATP. Skins you own still work.';
+  let html='';for(const S of PREMIUM){const own=ownsSkin(S.id),eq=settings.skin===S.id,cf=confirmSkin===S.id&&performance.now()-confirmT<4000;
+    html+=`<button type="button" class="skin${own?' own':''}${cf?' confirm':''}" data-id="${S.id}" aria-pressed="${eq}" aria-label="${escH(S.name)} skin"><canvas width="144" height="144" data-skin="${S.id}"></canvas><span class="sn">${escH(S.name)}</span><span class="sp">${own?(eq?'Wearing':'Owned'):cf?'Tap again · '+S.price:S.price+' ATP'}</span></button>`;}
+  el.innerHTML=html;renderPreviews();
+}
+function drawPreview(cv,S){
+  const g=cv.getContext('2d'),x=72,y=72,r=60,k=S.base||STAINS[settings.stain],c={x,y,wob:1.3,svx:0,svy:0};g.clearRect(0,0,144,144);
+  g.beginPath();g.arc(x,y,r,0,TAU);const gr=g.createRadialGradient(x-r*.35,y-r*.4,r*.05,x,y,r*1.05);gr.addColorStop(0,col(k,18,.97));gr.addColorStop(.62,col(k,2,.92));gr.addColorStop(1,col(k,-10,.94));g.fillStyle=gr;g.fill();
+  g.save();g.beginPath();g.arc(x,y,r*.95,0,TAU);g.clip();g.fillStyle=g.strokeStyle=col(k,-30,.3);S.draw(g,c,r,k,STAINS[settings.stain]);g.restore();
+  if(S.pupil){g.beginPath();g.arc(x,y,r*.24,0,TAU);g.fillStyle='#0a0608';g.fill();g.beginPath();g.arc(x+r*.08,y-r*.08,r*.06,0,TAU);g.fillStyle='rgba(255,255,255,.85)';g.fill();}
+  g.beginPath();g.arc(x,y,r,0,TAU);g.lineWidth=r*.085;g.strokeStyle=col(k,-26,.96);g.stroke();
+}
+function renderPreviews(){const el=$('skins');if(!el)return;for(const cv of el.querySelectorAll('canvas')){const S=PREMIUM[+cv.dataset.skin-SKIN_FREE];if(S)drawPreview(cv,S);}}
+setInterval(()=>{if(!$('startCard').hidden&&!document.hidden&&!RM)renderPreviews();},100);
+$('skins').addEventListener('click',async e=>{
+  const b=e.target.closest('.skin');if(!b)return;const id=+b.dataset.id,S=PREMIUM[id-SKIN_FREE];if(!S)return;
+  if(ownsSkin(id)){settings.skin=id;saveSettings();syncPats();return;}
+  if(!wallet.online){toast('ATP','Not connected','Skins can be bought once the server is reachable.');return;}
+  if(wallet.balance<S.price){openStore(`${S.name} costs ${S.price} ATP — you need ${S.price-wallet.balance} more.`);return;}
+  if(confirmSkin!==id||performance.now()-confirmT>4000){confirmSkin=id;confirmT=performance.now();renderSkins();return;}
+  confirmSkin=0;b.disabled=true;
+  try{const w=await api('skins/buy',{skinId:id});applyWallet(w);settings.skin=id;saveSettings();syncPats();toast('ATP','Skin unlocked',S.name+' is yours');Native.haptic('success');}
+  catch(err){toast('ATP','Could not buy',err.message);renderSkins();}
+});
+// ATP store (packs are sold through the App Store / Google Play from inside the apps)
+let storeNote='';
+async function openStore(note){
+  storeNote=note||'';showCard('storeCard');$('storeBal').textContent=wallet.balance;renderPacks([]);
+  if(!Native.platform){renderPacks(null);$('storeHint').textContent=(storeNote?storeNote+' ':'')+'ATP packs are sold in the Mitosis app for iPhone and Android. On the web you earn ATP by playing.';return;}
+  $('storeHint').textContent='Loading prices…';
+  try{const r=await Native.call('products',{ids:ATP_PACKS.map(p=>p.id)});const ps=r.products||[];renderPacks(ps);
+    $('storeHint').textContent=(storeNote?storeNote+' ':'')+(ps.length?'Purchases go through '+(Native.platform==='ios'?'the App Store':'Google Play')+'.':'The store is not available right now.');}
+  catch(e){renderPacks([]);$('storeHint').textContent='Store unavailable: '+e.message;}
+}
+function renderPacks(products){
+  const el=$('packs');let html='';
+  for(const P of ATP_PACKS){const pr=products&&products.find(x=>x.id===P.id);
+    html+=`<button type="button" class="pack" data-id="${P.id}"${pr?'':' disabled'}><span><b>${P.atp.toLocaleString()} ATP</b>${P.tag?'<span class="tag">'+P.tag+'</span>':''}<small>${escH(P.label)}</small></span><span class="pr">${pr?escH(pr.price):'—'}</span></button>`;}
+  el.innerHTML=html;
+}
+let buying=false;
+async function buyPack(id){
+  if(buying)return;buying=true;const btns=[...$('packs').children];btns.forEach(b=>b.disabled=true);
+  try{const r=await Native.call('buy',{productId:id});if(r&&r.purchase)await redeem(r.purchase);}
+  catch(e){toast('ATP','Purchase failed',e.message);}
+  finally{buying=false;btns.forEach(b=>b.disabled=false);}
+}
+async function redeem(p){ // server verifies with Apple/Google, credits ATP, then the app finishes the transaction
+  const w=await api(p.platform==='ios'?'iap/apple':'iap/google',p);applyWallet(w);
+  Native.send({type:'finish',transactionId:p.transactionId||'',purchaseToken:p.purchaseToken||''});
+  if(w.credited){toast('ATP','ATP added',`+${w.credited} ATP — ${w.balance} in your wallet`);Native.haptic('success');}
+}
+$('packs').addEventListener('click',e=>{const b=e.target.closest('.pack');if(b&&!b.disabled)buyPack(b.dataset.id);});
+$('getAtp').addEventListener('click',()=>openStore());
+$('storeBack').addEventListener('click',()=>showCard('startCard'));
+econInit();
 let best=0;try{best=+localStorage.getItem('mitosis.best')||0;}catch(e){}
 
 /* ================= prerendered sprites ================= */
@@ -428,7 +641,7 @@ let T=0,nextId=1,nidC=1,vidC=1,puC=1,hidC=1,human=null,mode='attract',leader=nul
 const cam={x:0,y:0,z:.6,shake:0};
 const pointer={x:innerWidth/2,y:innerHeight/2};
 // live room
-let room=null,netState='pending',myPeer=null,isHost=true,claimReady=false,roomAt=-1,netSendT=0,seq=0,recs=[],peLog=[],peerCount=1,hostPeer=null,yielded=false,netNames=[];
+let lastPeerCount=1,room=null,netState='pending',myPeer=null,isHost=true,claimReady=false,roomAt=-1,netSendT=0,seq=0,recs=[],peLog=[],peerCount=1,hostPeer=null,yielded=false,netNames=[];
 const proxies=new Map(),botProx=new Map(),remoteEj=new Map(),lastSeen=new Map(),lastSeq=new Map(),vSup=new Map(),wSup=new Map(),puSup=new Map(),hSup=new Map();
 const now=()=>performance.now()/1000;
 const myKey=()=>myPeer||'me';
@@ -496,17 +709,18 @@ function split(p){
     const n=addCell(p,c.x+nx*c.r*.4,c.y+ny*c.r*.4,half,nx*sp,ny*sp);n.dr=c.dr*.78;n.org=c.org.map(o=>({...o,a:o.a+rand(-.5,.5)}));n.inf=c.inf;
     c.mergeAt=n.mergeAt=T+mdel(p,half*2);kick(c,2.2);kick(n,2.2);count++;did=true;
   }
-  if(did&&p===human){sfx('split');flash('splitBtn');}
+  if(did&&p===human){sfx('split');flash('splitBtn');Native.haptic('light');}
 }
 function eject(p){
-  if(!p||!p.alive)return;let did=false;
+  if(!p||!p.alive||T-(p.ejectAt||-9)<EJECT_GAP)return;let did=false; // holding W repeats the key ~30×/s; cap it
   for(const c of p.cells){
     if(c.dead||c.mass<35)continue;const[nx,ny]=aim(p,c);
-    c.mass-=16;c.r=radius(c.mass);
-    ejected.push({x:c.x+nx*(c.r+10),y:c.y+ny*(c.r+10),vx:nx*860,vy:ny*860,dx:nx,dy:ny,mass:13,r:14,color:p.color,owner:p,born:T,dead:false});
+    c.mass-=EJECT_COST;c.r=radius(c.mass);
+    ejected.push({x:c.x+nx*(c.r+10),y:c.y+ny*(c.r+10),vx:nx*860,vy:ny*860,dx:nx,dy:ny,mass:EJECT_MASS,r:14,color:p.color,owner:p,born:T,dead:false});
     for(let i=0;i<NP;i++){const d=COS[i]*nx+SIN[i]*ny;if(d>.7)c.pv[i]+=1.6*d;}
     did=true;
   }
+  if(did)p.ejectAt=T;
   if(did&&p===human){sfx('eject');flash('ejectBtn');}
 }
 function dash(p){
@@ -582,6 +796,7 @@ function killed(v,k){
   v.alive=false;v.stats.killer=k.name;v.stats.killerRef=k;
   if(v.boss){const me=myKey(),kk=keyOf(k);pushFeed(`<b>${esc(kk===me?'You':k.name)}</b> slew <b>the Leviathan</b>`,kk===me);rec(['k',kk,k.name,keyOf(v),'the Leviathan']);v.respawnAt=Infinity;return;}
   feedKill(keyOf(k),k.name,keyOf(v),v.name);rec(['k',keyOf(k),k.name,keyOf(v),v.name]);
+  if(k===human)Native.haptic('medium');
   if(v===human)die();else v.respawnAt=T+rand(2,5);
 }
 function unlock(id){
@@ -892,7 +1107,7 @@ function step(dt){
       if(b.dead||a.owner===b.owner)continue;
       let big=a,sm=b;if(b.mass>a.mass){big=b;sm=a;}
       if(sm.owner.remote||big.mass<sm.mass*need(big.owner,sm.owner)||sm.owner.fx.shield>0)continue;
-      const dx=big.x-sm.x,dy=big.y-sm.y,lim=big.r-sm.r*.35;if(lim<=0||Math.abs(dx)>lim||Math.abs(dy)>lim)continue;
+      const dx=big.x-sm.x,dy=big.y-sm.y,lim=big.r+sm.r*(1-2*EAT_COVER);if(lim<=0||Math.abs(dx)>lim||Math.abs(dy)>lim)continue;
       if(dx*dx+dy*dy<lim*lim)resolveEat(big,sm);
     }}
   // mutations
@@ -907,7 +1122,7 @@ function step(dt){
   for(const c of cells){
     if(c.dead)continue;
     if(!c.owner.remote){
-      if(c.mass>120)c.mass-=c.mass*(has(c.owner,'metabolism')?.0011:.0022)*dt;
+      if(c.mass>120)c.mass-=c.mass*(has(c.owner,'metabolism')?.0006:.0012)*dt;
       if(has(c.owner,'photo'))c.mass=Math.min(MAX_MASS,c.mass+1.5*dt);
       if(ev.type===2&&Math.hypot(c.x,c.y)+c.r*.3>tideSafe()){c.mass=Math.max(8,c.mass-c.mass*.08*dt);c.toxic=T;
         if(Math.random()<dt*6&&parts.length<700){const a=rand(0,TAU);parts.push({x:c.x+Math.cos(a)*c.r,y:c.y+Math.sin(a)*c.r,vx:Math.cos(a)*60,vy:Math.sin(a)*60,t:0,life:.6,color:'rgba(170,150,255,.9)',r:rand(3,7)});}}
@@ -1032,9 +1247,10 @@ function drawCell(c){
   ctx.lineWidth=Math.max(1.5/z,r*.085);ctx.strokeStyle=sick?col(INF_C,-20+pulse*20,.96):col(k,-26,.96);ctx.stroke();
   if(sr>14){ctx.beginPath();membranePath(c,r,.9);ctx.lineWidth=Math.max(1/z,r*.018);ctx.strokeStyle=col(k,24,.32);ctx.stroke();}
   const sk=p.skin|0;
-  if(sk&&sr>14&&!lowFx){ // stain pattern, clipped to the membrane
+  if(sk&&sr>14&&(!lowFx||sk>=SKIN_FREE)){ // stain pattern, clipped to the membrane
     ctx.save();ctx.beginPath();membranePath(c,r,.95);ctx.clip();ctx.fillStyle=ctx.strokeStyle=col(k,-30,.3);
-    if(sk===1){for(let i=0;i<7;i++){const a=i*2.4+c.wob,d=(.2+(i%3)*.24)*r;ctx.beginPath();ctx.arc(c.x+Math.cos(a)*d,c.y+Math.sin(a)*d,r*(.08+(i%2)*.06),0,TAU);ctx.fill();}}
+    if(sk>=SKIN_FREE){const S=PREMIUM[sk-SKIN_FREE];if(S)S.draw(ctx,c,r,k,STAINS[p.stain|0]);}
+    else if(sk===1){for(let i=0;i<7;i++){const a=i*2.4+c.wob,d=(.2+(i%3)*.24)*r;ctx.beginPath();ctx.arc(c.x+Math.cos(a)*d,c.y+Math.sin(a)*d,r*(.08+(i%2)*.06),0,TAU);ctx.fill();}}
     else if(sk===2){ctx.lineWidth=r*.1;const ro=c.wob,ux=Math.cos(ro),uy=Math.sin(ro);ctx.beginPath();for(let i=-4;i<=4;i++){const o=i*r*.3;ctx.moveTo(c.x+ux*o+uy*r*1.2,c.y+uy*o-ux*r*1.2);ctx.lineTo(c.x+ux*o-uy*r*1.2,c.y+uy*o+ux*r*1.2);}ctx.stroke();}
     else if(sk===3){ctx.lineWidth=r*.07;ctx.beginPath();for(let i=1;i<=3;i++){ctx.moveTo(c.x+r*i*.27,c.y);ctx.arc(c.x,c.y,r*i*.27,0,TAU);}ctx.stroke();}
     else{ctx.lineWidth=r*.08;ctx.beginPath();for(let i=0;i<3;i++){const a=c.wob+i*2.1;ctx.moveTo(c.x+Math.cos(a)*r,c.y+Math.sin(a)*r);
@@ -1050,9 +1266,13 @@ function drawCell(c){
       ctx.beginPath();ctx.arc(c.x+Math.cos(a+T*.2)*d,c.y+Math.sin(a+T*.2)*d,s,0,TAU);ctx.fillStyle=col(INF_C,-18,.45+sick*.4);ctx.fill();}
   }
   const mv=Math.hypot(c.svx,c.svy)+1,ox=-c.svx/mv*r*.12,oy=-c.svy/mv*r*.12,nx=c.x+ox,ny=c.y+oy;
+  if(sk>=SKIN_FREE&&PREMIUM[sk-SKIN_FREE]&&PREMIUM[sk-SKIN_FREE].pupil){ // skins like Eyeball draw a pupil instead of a nucleus
+    ctx.beginPath();ctx.arc(nx,ny,r*.24,0,TAU);ctx.fillStyle=sick?col(INF_C,-30,.9):'#0a0608';ctx.fill();
+    ctx.beginPath();ctx.arc(nx+r*.08,ny-r*.08,r*.06,0,TAU);ctx.fillStyle='rgba(255,255,255,.85)';ctx.fill();
+  }else{
   const ng=ctx.createRadialGradient(nx-r*.08,ny-r*.08,0,nx,ny,r*.3);ng.addColorStop(0,col(sick?INF_C:k,-4,.5));ng.addColorStop(1,col(sick?INF_C:k,-22,.62));
   ctx.beginPath();ctx.arc(nx,ny,r*.28,0,TAU);ctx.fillStyle=ng;ctx.fill();ctx.lineWidth=Math.max(1/z,r*.012);ctx.strokeStyle=col(k,-34,.45);ctx.stroke();
-  ctx.beginPath();ctx.arc(nx+r*.07,ny-r*.05,r*.085,0,TAU);ctx.fillStyle=col(k,-38,.6);ctx.fill();
+  ctx.beginPath();ctx.arc(nx+r*.07,ny-r*.05,r*.085,0,TAU);ctx.fillStyle=col(k,-38,.6);ctx.fill();}
   if(sr>12){ctx.beginPath();ctx.ellipse(c.x-r*.36,c.y-r*.42,r*.22,r*.09,-.72,0,TAU);ctx.fillStyle='rgba(255,255,255,.17)';ctx.fill();}
   if(c.inf&&sr>8){const left=clamp((c.inf-T)/(c.infLen||INF_MAX),0,1);ctx.beginPath();ctx.arc(c.x,c.y,r*1.12,-Math.PI/2,-Math.PI/2+left*TAU);
     ctx.lineWidth=Math.max(2/z,r*.04);ctx.lineCap='round';ctx.strokeStyle=col(INF_C,0,.55+pulse*.4);ctx.stroke();ctx.lineCap='butt';}
@@ -1269,6 +1489,7 @@ function hud(){
   renderEvo();
 }
 function inviteLinks(){const N=window.__mitosisNet;if(!N)return[];const h=location.hostname;
+  if(!/^https?:$/.test(location.protocol))return[window.MITOSIS_SERVER]; // in the app: share the public site
   if(h==='localhost'||h==='127.0.0.1'||h==='[::1]'||h==='::1')return N.lan||[];return[location.origin];}
 function netUI(){
   const pill=$('netPill'),line=$('netLine'),others=peerCount-1,N=window.__mitosisNet;
@@ -1283,7 +1504,7 @@ function netUI(){
   line.classList.toggle('live',live);const sp=line.querySelector('span');if(sp.textContent!==txt)sp.textContent=txt;
   const row=$('inviteRow'),inp=$('inviteUrl'),help=$('inviteHelp');row.hidden=!N;
   if(N){const links=inviteLinks(),v=links[0]||'No network address found';if(inp.value!==v)inp.value=v;
-    const t=location.hostname.endsWith('trycloudflare.com')?'Anyone with this link can join while your server and share-online.bat are running.':location.protocol==='https:'?'Anyone with this link can join.':'Send this link to a friend on the same Wi-Fi. For friends elsewhere, run share-online.bat and send the https link it prints.';
+    const t=location.hostname.endsWith('trycloudflare.com')?'Anyone with this link can join while your server and share-online.bat are running.':(window.MITOSIS_SERVER||'').startsWith('https:')?'Anyone with this link can join.':'Send this link to a friend on the same Wi-Fi. For friends elsewhere, run share-online.bat and send the https link it prints.';
     if(help.textContent!==t)help.textContent=t;}
   else help.textContent='Multiplayer runs through the Mitosis server on your computer.';
 }
@@ -1381,7 +1602,7 @@ function applyRec(r){
 function ingest(peer,P,fromHost){
   let pl=proxies.get(peer);
   if(!pl){pl=makePlayer('',STAINS[0],false);pl.remote=true;pl.key=peer;proxies.set(peer,pl);players.push(pl);}
-  pl.name=cleanName(P.n)||'Guest cell';pl.color=STAINS[clamp(P.s|0,0,STAINS.length-1)];setFx(pl,P.f|0);pl.skin=clamp(P.k|0,0,4);
+  pl.name=cleanName(P.n)||'Guest cell';pl.stain=clamp(P.s|0,0,STAINS.length-1);pl.skin=clamp(P.k|0,0,SKIN_COUNT-1);pl.color=skinColor(pl.stain,pl.skin);setFx(pl,P.f|0);
   if(typeof P.em==='string'&&P.em.length===3){const i=dec(P.em,0,1),s=dec(P.em,1,2);if(!Number.isNaN(i+s)&&s!==pl.emSeq){if(pl.emSeq!==-1)pl.emote={i:i%EMOTES.length,t:T};pl.emSeq=s;}}
   const alive=P.a===1;
   syncProxyCells(pl,alive&&typeof P.cl==='string'?decCells(P.cl,0,MAX_CELLS):[]);
@@ -1480,6 +1701,7 @@ function netTick(dt){
   if(!myPeer)return;
   const others=peers.filter(p=>!p.sameTab&&p.kind==='viewer'&&p.presence&&p.presence.v===PROTO);
   peerCount=1+others.length;netNames=others.map(p=>cleanName(p.presence.n)||'Guest cell');
+  if(peerCount!==lastPeerCount){lastPeerCount=peerCount;if(isHost)syncBots();}
   const claims=others.filter(p=>p.presence.h===1).map(p=>p.peer).sort();
   if(!claimReady&&T-roomAt>1.5){claimReady=true;if(claims.length)becomeClient();}
   if(claimReady){
@@ -1496,7 +1718,7 @@ function netTick(dt){
   netSendT-=dt;if(netSendT<=0){netSendT=.066;send();}
 }
 function onRoomErr(){
-  room=null;netState='solo';myPeer=null;peerCount=1;
+  room=null;netState='solo';myPeer=null;peerCount=1;lastPeerCount=1;if(isHost)syncBots();
   for(const [,pl] of proxies)removePlayer(pl);proxies.clear();remoteEj.clear();
   if(!isHost)becomeHost();
 }
@@ -1510,13 +1732,16 @@ function onRoomErr(){
 
 /* ================= flow ================= */
 const botSkin=b=>b===BOSS_BID?4:h32(b*53+3)<.45?0:1+Math.floor(h32(b*59+1)*4);
+// Every real player who joins replaces BOTS_PER_PLAYER microbes, down to 30% of the chosen density.
+function botTarget(){const n=DIFF[settings.diff].bots;return Math.max(Math.round(n*.3),n-Math.max(0,peerCount-1)*BOTS_PER_PLAYER);}
 function syncBots(){
   if(!isHost)return;
-  const cfg=DIFF[settings.diff];let bots=players.filter(p=>p.bot&&!p.remote&&!p.boss);
-  while(bots.length>cfg.bots)removePlayer(bots.pop());
+  const cfg=DIFF[settings.diff],want=botTarget();let bots=players.filter(p=>p.bot&&!p.remote&&!p.boss);
+  const massOf=p=>p.cells.reduce((s,c)=>s+(c.dead?0:c.mass),0);bots.sort((a,b)=>massOf(b)-massOf(a));
+  while(bots.length>want)removePlayer(bots.pop()); // the smallest microbes leave first
   cells=cells.filter(c=>!c.dead);
   const used=new Set(bots.map(b=>b.bid));let nb=0;
-  while(bots.length<cfg.bots){while(used.has(nb))nb++;used.add(nb);
+  while(bots.length<want){while(used.has(nb))nb++;used.add(nb);
     const b=makePlayer(botName(nb),botColor(nb),true);b.bid=nb;b.skin=botSkin(nb);b.ai.pers=PERS[PERS_LIST[Math.floor(h32(nb*31+7)*PERS_LIST.length)]];players.push(b);bots.push(b);
     spawn(b,Math.random()<.5?rand(20,60):rand(60,420));b.fx.shield=0;}
   for(const b of bots)b.ai.aggr=clamp(cfg.aggr*rand(.6,1.3),.1,1);
@@ -1528,13 +1753,14 @@ function init(){
   rebuildViruses();syncBots();
 }
 function removeHuman(){if(!human)return;removePlayer(human);cells=cells.filter(c=>!c.dead);human=null;}
-function showCard(id){for(const c of['startCard','pauseCard','deathCard'])$(c).hidden=c!==id;$('overlay').hidden=!id;}
+function showCard(id){for(const c of['startCard','pauseCard','deathCard','storeCard'])$(c).hidden=c!==id;$('overlay').hidden=!id;}
 function startGame(){
   settings.name=cleanName($('nameIn').value);
   try{localStorage.setItem('mitosis.settings',JSON.stringify(settings));}catch(e){}
   initAudio();if(actx&&actx.state==='suspended')actx.resume();
   syncBots();removeHuman();
-  human=makePlayer(settings.name||'Unnamed cell',STAINS[settings.stain]||STAINS[0],false);human.skin=settings.skin;players.push(human);evoOffer=null;runAch=[];lysedAt=0;
+  if(settings.skin>=SKIN_FREE&&!ownsSkin(settings.skin))settings.skin=0;
+  human=makePlayer(settings.name||'Unnamed cell',skinColor(settings.stain,settings.skin),false);human.skin=settings.skin;human.stain=settings.stain;players.push(human);evoOffer=null;runAch=[];lysedAt=0;econRunStart();
   spawn(human,25);cam.x=human.cells[0].x;cam.y=human.cells[0].y;dispMass=25;shownMass=-1;histT=0;
   pointer.x=W/2;pointer.y=H/2;mode='play';paused=false;slow=1;feed.length=0;renderFeed();
   showCard(null);document.body.classList.add('playing');$('pauseBtn').textContent='Pause';cv.focus({preventScroll:true});
@@ -1546,11 +1772,12 @@ function setPaused(v){
   if(v)$('resume').focus();else cv.focus({preventScroll:true});
 }
 function die(){
-  mode='dead';if(!multi())slow=.22;sfx('die');const s=human.stats;human.hist.push(0);paused=false;
+  mode='dead';if(!multi())slow=.22;sfx('die');Native.haptic('heavy');const s=human.stats;human.hist.push(0);paused=false;
   const pb=s.peak>best;if(pb){best=s.peak;try{localStorage.setItem('mitosis.best',String(Math.round(best)));}catch(e){}}
   $('deathWhy').textContent=`Absorbed by ${s.killer} after ${fmtT(T-s.born)}.`;
   $('dPeak').textContent=Math.round(s.peak);$('dPeak').classList.toggle('pb',pb);$('dEaten').textContent=s.eaten;$('dTime').textContent=fmtT(T-s.born);$('dBest').textContent=Math.round(best);
   const dA=$('dAch');dA.hidden=!runAch.length;dA.textContent=runAch.length?'Unlocked: '+runAch.join(', '):'';evoOffer=null;renderEvo();lysedAt=0;
+  econRunEnd();
   const hist=human.hist.slice();
   setTimeout(()=>{if(mode!=='dead')return;document.body.classList.remove('playing');showCard('deathCard');drawChart(hist);$('again').focus();},1200);
 }
@@ -1574,7 +1801,7 @@ const swEl=$('sw');
 STAINS.forEach((c,i)=>{const b=document.createElement('button');b.type='button';b.className='sw';b.style.background=col(c);b.setAttribute('aria-label','Stain '+(i+1));
   b.setAttribute('aria-pressed',String(i===settings.stain));b.addEventListener('click',()=>{settings.stain=i;[...swEl.children].forEach((x,j)=>x.setAttribute('aria-pressed',String(j===i)));});swEl.appendChild(b);});
 const patEl=$('pats');
-const syncPats=()=>{patEl.style.setProperty('--c',col(STAINS[settings.stain]));[...patEl.children].forEach((x,j)=>x.setAttribute('aria-pressed',String(j===settings.skin)));};
+const syncPats=()=>{patEl.style.setProperty('--c',col(STAINS[settings.stain]));[...patEl.children].forEach((x,j)=>x.setAttribute('aria-pressed',String(j===settings.skin)));renderSkins();};
 ['Plain','Spots','Stripes','Rings','Marbled'].forEach((n,i)=>{const b=document.createElement('button');b.type='button';b.className='pat p'+i;b.setAttribute('aria-label',n+' pattern');b.title=n;
   b.addEventListener('click',()=>{settings.skin=i;syncPats();});patEl.appendChild(b);});
 swEl.addEventListener('click',()=>setTimeout(syncPats,0));syncPats();
@@ -1586,7 +1813,7 @@ $('go').addEventListener('click',startGame);
 $('again').addEventListener('click',startGame);
 $('setup').addEventListener('click',()=>{mode='attract';achLine();showCard('startCard');});
 $('resume').addEventListener('click',()=>setPaused(false));
-$('quit').addEventListener('click',()=>{paused=false;removeHuman();mode='attract';document.body.classList.remove('playing');showCard('startCard');$('pauseBtn').textContent='Pause';});
+$('quit').addEventListener('click',()=>{paused=false;econRunEnd();removeHuman();mode='attract';document.body.classList.remove('playing');showCard('startCard');$('pauseBtn').textContent='Pause';});
 $('pauseBtn').addEventListener('click',()=>setPaused(!paused));
 $('copyInvite').addEventListener('click',()=>{const b=$('copyInvite'),i=$('inviteUrl');const done=t=>{b.textContent=t;setTimeout(()=>{b.textContent='Copy';},1600);};
   const pick=()=>{i.focus();i.select();done('Press Ctrl+C');};

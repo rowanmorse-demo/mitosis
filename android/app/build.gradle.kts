@@ -1,0 +1,54 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
+plugins {
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+}
+
+android {
+    namespace = "com.eclipseforeverbeyond.mitosis"
+    compileSdk = 35
+
+    defaultConfig {
+        applicationId = "com.eclipseforeverbeyond.mitosis"
+        minSdk = 26
+        targetSdk = 35
+        versionCode = 1
+        versionName = "2.1.0"
+        // Where the app finds the Mitosis server (WebSocket relay + ATP API).
+        buildConfigField("String", "SERVER_URL", "\"https://mitosis-zmbc.onrender.com\"")
+    }
+    buildTypes {
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
+    }
+    buildFeatures { buildConfig = true }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+}
+
+kotlin {
+    compilerOptions { jvmTarget.set(JvmTarget.JVM_17) }
+}
+
+// The whole game is ../../index.html at the repo root. Copy it into the APK's
+// assets on every build so the app and the website always ship the same game.
+val webDir = layout.buildDirectory.dir("generated/web")
+val copyWeb by tasks.registering(Copy::class) {
+    from(rootProject.file("../index.html"))
+    into(webDir)
+}
+android.sourceSets.getByName("main").assets.srcDir(webDir)
+tasks.named("preBuild") { dependsOn(copyWeb) }
+
+dependencies {
+    implementation("androidx.core:core-ktx:1.15.0")
+    implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("androidx.webkit:webkit:1.12.1")
+    implementation("com.android.billingclient:billing-ktx:7.1.1")
+}

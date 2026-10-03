@@ -1,8 +1,12 @@
 {
   "name": "mitosis",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
-  "description": "Mitosis multiplayer cell arena: game page and live relay server",
-  "scripts": { "start": "node server.js" },
-  "engines": { "node": ">=18" }
+  "description": "Mitosis multiplayer cell arena: game page, live relay server and ATP economy API",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "IAP_UNVERIFIED=1 node server.js",
+    "test": "node test.js"
+  },
+  "engines": { "node": ">=20" }
 }
