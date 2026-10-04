@@ -741,7 +741,7 @@ if(/[?&]autopilot=1/.test(location.search)){
       if(Math.random()<.03)split(human);if(Math.random()<.04)eject(human);if(Math.random()<.01)dash(human);}
     else if(mode==='dead'||mode==='attract'){if(!dieAt)dieAt=performance.now();if(performance.now()-dieAt>4000){dieAt=0;joy.m=0;startGame();}}
     if(mode==='play')dieAt=0;};
-  setInterval(auto,100);setTimeout(()=>{if(mode!=='play')startGame();},2500);reportHitch('autopilot on');
+  setInterval(auto,100);setTimeout(()=>{reportHitch('autopilot on');if(mode!=='play')startGame();},2500);
 }
 $('shopBtn').addEventListener('click',()=>openStore());
 
