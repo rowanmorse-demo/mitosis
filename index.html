@@ -733,6 +733,16 @@ async function redeem(p){ // server verifies with Apple/Google, credits ATP, the
   if(w.credited){toast('ATP','ATP added',`+${w.credited} ATP — ${w.balance} in your wallet`);Native.haptic('success');}
 }
 $('packs').addEventListener('click',e=>{const b=e.target.closest('.pack');if(b&&!b.disabled)buyPack(b.dataset.id);});
+// Autopilot (?autopilot=1): the page plays itself for soak tests — drives the joystick, splits now and then, restarts on death.
+if(/[?&]autopilot=1/.test(location.search)){
+  let ang=Math.random()*TAU,dieAt=0;const auto=()=>{
+    if(mode==='play'&&human&&human.alive&&!paused){ang+=rand(-.35,.35);if(Math.random()<.02)ang+=Math.PI*rand(.5,1);
+      const m=Math.random()<.15?0:rand(.6,1);joy.id='auto';joy.ux=Math.cos(ang);joy.uy=Math.sin(ang);joy.m=m;
+      if(Math.random()<.03)split(human);if(Math.random()<.04)eject(human);if(Math.random()<.01)dash(human);}
+    else if(mode==='dead'||mode==='attract'){if(!dieAt)dieAt=performance.now();if(performance.now()-dieAt>4000){dieAt=0;joy.m=0;startGame();}}
+    if(mode==='play')dieAt=0;};
+  setInterval(auto,100);setTimeout(()=>{if(mode!=='play')startGame();},2500);reportHitch('autopilot on');
+}
 $('shopBtn').addEventListener('click',()=>openStore());
 
 $('storeBack').addEventListener('click',()=>{showCard('startCard');renderSkins();});

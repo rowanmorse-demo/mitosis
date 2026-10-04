@@ -62,6 +62,10 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
         resolveServerURL { server in
             var comps = URLComponents(url: index, resolvingAgainstBaseURL: false)!
             comps.queryItems = [URLQueryItem(name: "server", value: server)]
+            #if DEBUG
+            // "-autopilot 1" makes the page play by itself (soak testing a device without touching it)
+            if UserDefaults.standard.bool(forKey: "autopilot") { comps.queryItems?.append(URLQueryItem(name: "autopilot", value: "1")) }
+            #endif
             self.webView.loadFileURL(comps.url ?? index, allowingReadAccessTo: index.deletingLastPathComponent())
         }
     }
