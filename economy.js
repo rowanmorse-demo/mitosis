@@ -29,7 +29,7 @@ const RULES = { perTenSec: 1, perEat: 2, eatCap: 30, peakPer: 50, peakCap: 40, r
 const HOUR = 3600 * 1000;
 // Rating (Elo-like): survival and kills raise it, dying quickly lowers it. Gains shrink and losses
 // grow as the rating climbs, so it settles instead of inflating forever. Everyone starts at 1000.
-const RATING = { base: 1000, perTenSec: 1, survCap: 60, perKill: 4, killCap: 60, quickDeathSec: 60, quickPenalty: 20, scale: 2000 };
+const RATING = { base: 1000, perTenSec: .5, survCap: 25, perKill: 2, killCap: 30, quickDeathSec: 60, quickPenalty: 10, scale: 2000 };
 const TIERS = [[900, 'Bronze'], [1100, 'Silver'], [1400, 'Gold'], [1800, 'Platinum'], [2300, 'Diamond'], [Infinity, 'Legend']];
 const tierOf = r => TIERS.find(t => r < t[0])[1];
 function ratingDelta(rating, survived, eaten) {

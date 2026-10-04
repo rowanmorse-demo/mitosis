@@ -30,15 +30,15 @@ async function post(url, body, secret) {
   r = await post('/api/run/end', { runId, survived: 9999, eaten: 10, peak: 800 }, secret); assert.equal(r.status, 200);
   // survival is capped by what elapsed on the server (~0 s + 15 s grace): 1 + 10 eats × 2 + 800/50 = 37
   assert.equal(r.body.payout, 37); assert.equal(r.body.balance, 37);
-  // rating: that run (15 s on the server clock, 10 kills) is a quick death: +1 survival +40 kills -15 penalty = +26
-  assert.equal(r.body.ratingDelta, 26); assert.equal(r.body.rating, 1026); assert.equal(r.body.tier, 'Silver');
+  // rating: that run (15 s on the server clock, 10 kills) is a quick death: +0.5 survival +20 kills -7.5 penalty = +13
+  assert.equal(r.body.ratingDelta, 13); assert.equal(r.body.rating, 1013); assert.equal(r.body.tier, 'Silver');
   r = await post('/api/run/end', { runId, survived: 9999, eaten: 10, peak: 800 }, secret);
   assert.equal(r.body.duplicate, true); assert.equal(r.body.balance, 37, 'ending a run twice pays once');
   r = await post('/api/run/end', { runId: 'nope' }, secret); assert.equal(r.status, 404);
   // an instant death with no kills loses rating
   r = await post('/api/run/start', {}, secret); const run2 = r.body.runId;
-  r = await post('/api/run/end', { runId: run2, survived: 0, eaten: 0, peak: 25, name: 'Tester' }, secret); assert.equal(r.body.ratingDelta, -20); assert.equal(r.body.rating, 1006);
-  const lb = await (await fetch(base + '/api/leaderboard')).json(); assert.equal(lb.top[0].name, 'Tester'); assert.equal(lb.top[0].rating, 1006);
+  r = await post('/api/run/end', { runId: run2, survived: 0, eaten: 0, peak: 25, name: 'Tester' }, secret); assert.equal(r.body.ratingDelta, -10); assert.equal(r.body.rating, 1003);
+  const lb = await (await fetch(base + '/api/leaderboard')).json(); assert.equal(lb.top[0].name, 'Tester'); assert.equal(lb.top[0].rating, 1003);
 
   r = await post('/api/skins/buy', { skinId: 9 }, secret); assert.equal(r.status, 402, 'cannot afford yet');
 

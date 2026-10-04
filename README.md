@@ -43,9 +43,9 @@ Every player has an Elo-style rating, starting at 1000, adjusted by the server a
 
 | Factor | Effect |
 | --- | --- |
-| Surviving | +1 per 10 s, up to +60 |
-| Each cell absorbed | +4, up to +60 |
-| Dying inside the first minute | up to −20, the sooner the worse |
+| Surviving | +1 per 20 s, up to +25 |
+| Each cell absorbed | +2, up to +30 |
+| Dying inside the first minute | up to −10, the sooner the worse |
 | Rating above 1000 | gains shrink and losses grow (at 2000, gains ×0.5 and losses ×1.5), so ratings settle rather than inflate |
 
 Tiers: Bronze (<900), Silver, Gold (1400+), Platinum (1800+), Diamond (2300+), Legend. The lobby shows your rating and the top ten, and the results screen after every run (death or Return to lobby) shows the change. `GET /api/leaderboard` returns the top ten.
