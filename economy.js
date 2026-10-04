@@ -17,6 +17,7 @@ const SKINS = [
   { id: 12, key: 'eyeball', name: 'Eyeball', price: 600 },
   { id: 13, key: 'galaxy', name: 'Galaxy', price: 700 },
   { id: 14, key: 'gilded', name: 'Gilded', price: 800 },
+  { id: 15, key: 'blackhole', name: 'Black Hole', price: 10000 },
 ];
 const PACKS = [
   { id: 'atp_500', atp: 500 },
@@ -24,8 +25,9 @@ const PACKS = [
   { id: 'atp_5000', atp: 5000 },
   { id: 'atp_12000', atp: 12000 },
 ];
-// Payout for one run. Survival pays steadily; kills and peak mass add a bonus.
-const RULES = { perTenSec: 1, perEat: 2, eatCap: 30, peakPer: 50, peakCap: 40, runCap: 120, hourCap: 500, maxRunSec: 3 * 3600 };
+// Payout for one run. Deliberately slow: a strong player makes about 60-70 ATP an hour, so the
+// 10,000 ATP Black Hole is roughly 150 hours of play, and the packs are the realistic shortcut.
+const RULES = { perMinute: 1, survCap: 30, perEat: .5, eatCap: 10, peakPer: 200, peakCap: 5, runCap: 40, hourCap: 70, maxRunSec: 3 * 3600 };
 const HOUR = 3600 * 1000;
 // Rating (Elo-like): survival and kills raise it, dying quickly lowers it. Gains shrink and losses
 // grow as the rating climbs, so it settles instead of inflating forever. Everyone starts at 1000.
@@ -46,9 +48,10 @@ const catalog = () => ({ skins: SKINS, packs: PACKS, rules: RULES, rating: RATIN
 
 function payoutFor({ survived, eaten, peak }) {
   const sec = Math.max(0, Math.min(RULES.maxRunSec, +survived || 0));
-  const e = Math.max(0, Math.min(RULES.eatCap, Math.floor(+eaten || 0)));
+  const surv = Math.min(RULES.survCap, Math.floor(sec / 60) * RULES.perMinute);
+  const e = Math.min(RULES.eatCap, Math.floor(Math.max(0, +eaten || 0) * RULES.perEat));
   const p = Math.max(0, Math.min(RULES.peakCap, Math.floor((+peak || 0) / RULES.peakPer)));
-  return Math.min(RULES.runCap, Math.floor(sec / 10) * RULES.perTenSec + e * RULES.perEat + p);
+  return Math.min(RULES.runCap, surv + e + p);
 }
 
 class ApiError extends Error { constructor(status, msg) { super(msg); this.status = status; } }

@@ -56,12 +56,12 @@ Tiers: Bronze (<900), Silver, Gold (1400+), Platinum (1800+), Diamond (2300+), L
 
 | Source | ATP |
 | --- | --- |
-| Surviving | 1 per 10 s |
-| Each cell absorbed | 2 (up to 30 cells) |
-| Peak mass | 1 per 50 mass (up to 40) |
-| Cap | 120 per run, 500 per hour |
+| Surviving | 1 per minute (up to 30) |
+| Each cell absorbed | 0.5 (up to 10) |
+| Peak mass | 1 per 200 mass (up to 5) |
+| Cap | 40 per run, 70 per hour |
 
-A ten-minute run with a few kills is worth roughly 80–120 ATP. Skins cost 300–800 ATP, so the first one takes an evening of play, or an ATP pack from the app store:
+Earning is deliberately slow: a strong player makes 60–70 ATP an hour. Skins cost 300–800 ATP (an evening or two of play) and the Black Hole costs 10,000 ATP, roughly 150 hours, so the packs are the realistic way to get it:
 
 | Pack | ATP |
 | --- | --- |
@@ -72,7 +72,7 @@ A ten-minute run with a few kills is worth roughly 80–120 ATP. Skins cost 300�
 
 Prices are set in App Store Connect and the Play Console; the apps show them from there. Packs can only be bought inside the iOS and Android apps. The website earns ATP but does not sell it.
 
-**Skins** (Nebula, Magma, Honeycomb, Circuit, Leopard, Glacier, Toxic, Eyeball, Galaxy, Gilded) are picked on the start card next to the free patterns. Owned skins are visible to every other player. The list, with prices, lives in two places that must match: `PREMIUM` in `index.html` (how each skin is drawn) and `SKINS` in `economy.js` (what the server charges).
+**Skins** (Nebula, Magma, Honeycomb, Circuit, Leopard, Glacier, Toxic, Eyeball, Galaxy, Gilded, Black Hole) are picked on the start card next to the free patterns. Owned skins are visible to every other player. The list, with prices, lives in two places that must match: `PREMIUM` in `index.html` (how each skin is drawn) and `SKINS` in `economy.js` (what the server charges).
 
 **Where it lives.** The server owns every wallet. The page only reports "this run ended", "buy this skin" and "credit this purchase"; the server decides the payout, caps it, checks the price and verifies receipts with Apple or Google. A player is a random device secret stored in the browser or app, so there is no sign-up. Clearing site data or deleting the app starts a fresh wallet.
 
