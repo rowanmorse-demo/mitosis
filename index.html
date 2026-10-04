@@ -614,17 +614,52 @@ const PREMIUM=[
   g.lineWidth=r*.035;g.strokeStyle=`rgba(255,240,210,${.75+.25*Math.sin(T*5+c.wob)})`;g.beginPath();g.arc(c.x,c.y,r*.33,0,TAU);g.stroke();
   g.beginPath();g.arc(c.x,c.y,r*.5,0,TAU);fillUnit(g,grad(g,'bh2',q=>{const u=q.createRadialGradient(0,0,.28,0,0,.5);u.addColorStop(0,'rgba(0,0,0,0)');u.addColorStop(1,'rgba(120,60,200,.35)');return u;}),c.x,c.y,r);}},
 {id:16,key:'onering',name:'One Cell to Rule Them All',price:12000000,base:[42,92,46],pupil:true,noGlint:true,
-  // obsidian veined with lava, a band of molten gold with script burning across it, an eye of flame, and fire licking out past the membrane
-  aura(g,c,r,k,sr){
-    const n=sr>70?14:sr>30?10:6,base=T*.6+c.wob;
-    g.beginPath();g.arc(c.x,c.y,r*1.55,0,TAU);fillUnit(g,grad(g,'ring_glow',q=>{const u=q.createRadialGradient(0,0,.9,0,0,1.55);u.addColorStop(0,'rgba(255,120,20,.42)');u.addColorStop(.45,'rgba(255,60,10,.16)');u.addColorStop(1,'rgba(255,40,0,0)');return u;}),c.x,c.y,r);
-    for(let i=0;i<n;i++){const a=base+i*TAU/n+Math.sin(T*2.3+i*1.7)*.12,fl=.5+.5*Math.sin(T*6.5+i*2.1),h=r*(1.12+fl*.32),w=r*(.16+.06*Math.sin(T*4+i)),ca=Math.cos(a),sa=Math.sin(a);
-      const bx=c.x+ca*r*.9,by=c.y+sa*r*.9,sw=Math.sin(T*5+i)*r*.08,tx=c.x+ca*h-sa*sw,ty=c.y+sa*h+ca*sw;
-      g.beginPath();g.moveTo(bx-sa*w,by+ca*w);g.quadraticCurveTo(c.x+ca*h*.8-sa*w*.6,c.y+sa*h*.8+ca*w*.6,tx,ty);g.quadraticCurveTo(c.x+ca*h*.8+sa*w*.6,c.y+sa*h*.8-ca*w*.6,bx+sa*w,by-ca*w);g.closePath();
-      g.fillStyle=`rgba(255,${Math.round(90+fl*60)},20,${.55+fl*.3})`;g.fill();
-      const h2=r*(1+fl*.18),w2=w*.45;g.beginPath();g.moveTo(bx-sa*w2,by+ca*w2);g.quadraticCurveTo(c.x+ca*h2*.85-sa*w2*.5,c.y+sa*h2*.85+ca*w2*.5,c.x+ca*h2,c.y+sa*h2);g.quadraticCurveTo(c.x+ca*h2*.85+sa*w2*.5,c.y+sa*h2*.85-ca*w2*.5,bx+sa*w2,by-ca*w2);g.closePath();g.fillStyle=`rgba(255,235,${Math.round(120+fl*80)},${.7+fl*.3})`;g.fill();}
-    if(sr>24)for(let i=0;i<10;i++){const ph=(T*.45+i*.137)%1,a=i*TAU/10+T*.15+Math.sin(T*.9+i)*.3,d=r*(1.05+ph*.9),sz=r*.035*(1-ph*.7);
-      g.beginPath();g.arc(c.x+Math.cos(a)*d,c.y+Math.sin(a)*d,sz,0,TAU);g.fillStyle=`rgba(255,${Math.round(220-ph*160)},${Math.round(120-ph*110)},${(1-ph)*.9})`;g.fill();}
+  // obsidian veined with lava, a band of molten gold with script burning across it, an eye of flame, and beyond the membrane a sigil of
+  // orbiting runes, god rays, lightning off the band, flame satellites, a shockwave every few seconds, embers and a fire trail when it moves
+  aura(g,c,r,k,sr,lead){
+    const H=n=>{const x=Math.sin(n*12.9898)*43758.5453;return x-Math.floor(x);},big=lead&&sr>44,mid=sr>22,show=lead&&mid,w0=c.wob;
+    // darkness pooling around it, then rays of light sweeping slowly
+    g.beginPath();g.arc(c.x,c.y,r*2.7,0,TAU);fillUnit(g,grad(g,'ring_dark',q=>{const u=q.createRadialGradient(0,0,1.2,0,0,2.7);u.addColorStop(0,'rgba(10,0,0,.32)');u.addColorStop(1,'rgba(10,0,0,0)');return u;}),c.x,c.y,r);
+    if(show){const ray=grad(g,'ring_ray',q=>{const u=q.createRadialGradient(0,0,.9,0,0,3);u.addColorStop(0,'rgba(255,215,100,.34)');u.addColorStop(.45,'rgba(255,140,30,.14)');u.addColorStop(1,'rgba(255,100,0,0)');return u;});
+      for(let i=0;i<10;i++){const a=T*.18+i*TAU/10+Math.sin(T*.7+i)*.08,L=r*(2.6+.4*Math.sin(T*1.3+i*2)),ca=Math.cos(a),sa=Math.sin(a),hw=r*.4;
+        g.beginPath();g.moveTo(c.x+ca*r*.9,c.y+sa*r*.9);g.lineTo(c.x+ca*L-sa*hw,c.y+sa*L+ca*hw);g.lineTo(c.x+ca*L+sa*hw,c.y+sa*L-ca*hw);g.closePath();fillUnit(g,ray,c.x,c.y,r);}}
+    // warm glow hugging the membrane
+    g.beginPath();g.arc(c.x,c.y,r*1.6,0,TAU);fillUnit(g,grad(g,'ring_glow',q=>{const u=q.createRadialGradient(0,0,.9,0,0,1.6);u.addColorStop(0,'rgba(255,120,20,.45)');u.addColorStop(.4,'rgba(255,60,10,.18)');u.addColorStop(1,'rgba(255,40,0,0)');return u;}),c.x,c.y,r);
+    // a shockwave every few seconds
+    if(lead){const ph=(T*.38+w0*.05)%1;g.beginPath();g.arc(c.x,c.y,r*(1+ph*1.9),0,TAU);g.lineWidth=r*(.02+.1*(1-ph));g.strokeStyle=`rgba(255,${Math.round(200-ph*120)},80,${.6*(1-ph)*(1-ph)})`;g.stroke();}
+    // the sigil: two rings of light with two dozen runes drifting round them and four bright nodes
+    if(show){const R=r*1.78,rot=-T*.22+w0;g.lineCap='round';
+      g.lineWidth=r*.016;g.strokeStyle='rgba(255,225,160,.5)';g.beginPath();g.arc(c.x,c.y,r*1.66,0,TAU);g.stroke();g.beginPath();g.arc(c.x,c.y,r*1.9,0,TAU);g.stroke();g.lineWidth=r*.006;g.strokeStyle='rgba(255,235,190,.3)';g.beginPath();g.arc(c.x,c.y,r*1.6,0,TAU);g.stroke();
+      const n=big?24:12;for(let i=0;i<n;i++){const a=rot+i*TAU/n,x=c.x+Math.cos(a)*R,y=c.y+Math.sin(a)*R,ca=Math.cos(a),sa=Math.sin(a),tx=-sa,ty=ca,L=r*.06,burn=.35+.65*Math.max(0,Math.sin(T*2.1+i*.8)),kind=i%3;
+        g.beginPath();
+        if(kind===0){g.moveTo(x-ca*L*1.2,y-sa*L*1.2);g.lineTo(x+ca*L*1.2,y+sa*L*1.2);g.moveTo(x-tx*L*.8,y-ty*L*.8);g.lineTo(x+tx*L*.8,y+ty*L*.8);}
+        else if(kind===1){g.arc(x,y,L*.9,a+.6,a+4.2);}
+        else{g.moveTo(x-tx*L,y-ty*L-0);g.lineTo(x+ca*L*1.1,y+sa*L*1.1);g.lineTo(x+tx*L,y+ty*L);g.lineTo(x-ca*L*1.1,y-sa*L*1.1);g.closePath();}
+        g.lineWidth=r*.05;g.strokeStyle=`rgba(255,120,20,${burn*.5})`;g.stroke();g.lineWidth=r*.018;g.strokeStyle=`rgba(255,${Math.round(235+burn*20)},${Math.round(190+burn*60)},${burn})`;g.stroke();}
+      for(let i=0;i<4;i++){const a=rot*1.5+i*TAU/4,x=c.x+Math.cos(a)*R,y=c.y+Math.sin(a)*R,d=r*.11,pl=.6+.4*Math.sin(T*4+i);
+        g.beginPath();g.moveTo(x,y-d);g.lineTo(x+d*.6,y);g.lineTo(x,y+d);g.lineTo(x-d*.6,y);g.closePath();g.fillStyle=`rgba(255,250,220,${pl})`;g.fill();g.lineWidth=r*.02;g.strokeStyle='rgba(255,160,40,.9)';g.stroke();}
+      g.lineCap='butt';}
+    // lightning crackling from the band out to the sigil
+    if(big){g.lineCap='round';g.lineJoin='round';for(let i=0;i<3;i++){const seed=Math.floor(T*7)+i*131;if(H(seed)>.4)continue;const a=H(seed+1)*TAU,ca=Math.cos(a),sa=Math.sin(a);
+        g.beginPath();for(let st=0;st<=6;st++){const d=r*(.85+st*.15),j=st&&st<6?(H(seed+2+st)-.5)*r*.26:0,x=c.x+ca*d-sa*j,y=c.y+sa*d+ca*j;st?g.lineTo(x,y):g.moveTo(x,y);}
+        g.lineWidth=r*.09;g.strokeStyle='rgba(255,180,60,.3)';g.stroke();g.lineWidth=r*.028;g.strokeStyle='rgba(255,250,230,.95)';g.stroke();}g.lineCap='butt';g.lineJoin='miter';}
+    // fire licking out past the membrane: three layers per tongue, red to white-hot
+    const n=big?16:mid?10:6,base=T*.5+w0;
+    for(let i=0;i<n;i++){const a=base+i*TAU/n+Math.sin(T*2.3+i*1.7)*.1,fl=.5+.5*Math.sin(T*6.5+i*2.1),ca=Math.cos(a),sa=Math.sin(a),sw=Math.sin(T*5+i)*r*.1,bx=c.x+ca*r*.88,by=c.y+sa*r*.88;
+      const tongue=(h,w,fill)=>{const tx=c.x+ca*h-sa*sw,ty=c.y+sa*h+ca*sw;g.beginPath();g.moveTo(bx-sa*w,by+ca*w);g.quadraticCurveTo(c.x+ca*h*.75-sa*w*.7,c.y+sa*h*.75+ca*w*.7,tx,ty);g.quadraticCurveTo(c.x+ca*h*.75+sa*w*.7,c.y+sa*h*.75-ca*w*.7,bx+sa*w,by-ca*w);g.closePath();g.fillStyle=fill;g.fill();};
+      tongue(r*(1.2+fl*.42),r*(.2+.05*Math.sin(T*4+i)),`rgba(220,40,10,${.45+fl*.25})`);
+      tongue(r*(1.12+fl*.3),r*.14,`rgba(255,${Math.round(110+fl*60)},20,${.7+fl*.3})`);
+      tongue(r*(1.02+fl*.16),r*.07,`rgba(255,240,${Math.round(150+fl*80)},${.8+fl*.2})`);}
+    // three flaming satellites on their own orbits, each with a short trail
+    if(show){const orb=grad(g,'ring_orb',q=>{const u=q.createRadialGradient(0,0,0,0,0,1);u.addColorStop(0,'rgba(255,255,235,1)');u.addColorStop(.3,'rgba(255,200,60,.95)');u.addColorStop(.65,'rgba(255,90,10,.5)');u.addColorStop(1,'rgba(255,40,0,0)');return u;});
+      for(let i=0;i<3;i++){const sp=(1.1+i*.35)*(i%2?-1:1),R=r*(2.08+i*.12);for(let t=4;t>=0;t--){const a=T*sp+i*TAU/3+w0-t*.11*Math.sign(sp),x=c.x+Math.cos(a)*R,y=c.y+Math.sin(a)*R,sz=r*(.16-t*.025);
+          g.save();g.globalAlpha=t?.5-t*.1:1;g.beginPath();g.arc(x,y,sz,0,TAU);fillUnit(g,orb,x,y,sz);g.restore();}}}
+    // embers drifting up and away, and a fire trail when it is moving
+    if(mid)for(let i=0;i<14;i++){const ph=(T*.5+i*.071)%1,a=i*TAU/14+T*.1+Math.sin(T+i)*.4,d=r*(1.05+ph*1.1),x=c.x+Math.cos(a)*d,y=c.y+Math.sin(a)*d-ph*r*.5,sz=r*.04*(1-ph*.7),fk=.6+.4*Math.sin(T*13+i*5);
+      g.beginPath();g.arc(x,y,sz,0,TAU);g.fillStyle=`rgba(255,${Math.round(230-ph*170)},${Math.round(140-ph*130)},${(1-ph)*fk})`;g.fill();}
+    const spd=Math.hypot(c.svx||0,c.svy||0);if(mid&&spd>40){const ux=-c.svx/spd,uy=-c.svy/spd,len=Math.min(1,spd/300);
+      for(let t=1;t<=5;t++){const d=r*(.5+t*.42*len),x=c.x+ux*d+(-uy)*Math.sin(T*9+t)*r*.12,y=c.y+uy*d+ux*Math.sin(T*9+t)*r*.12,sz=r*(.85-t*.14);
+        g.beginPath();g.arc(x,y,sz,0,TAU);g.fillStyle=`rgba(255,${Math.round(150-t*22)},20,${(.42-t*.07)*len})`;g.fill();}}
   },
   draw(g,c,r,k){
     const rot=T*.25+c.wob,sr=r*(g===ctx?cam.z:1),gn=sr>60?22:sr>28?14:0;
@@ -649,10 +684,16 @@ const PREMIUM=[
   },
   eye(g,c,r,nx,ny,sick){
     const fl=.5+.5*Math.sin(T*5.3+c.wob),flare=1+.18*Math.sin(T*7+c.wob*2);
-    g.beginPath();g.arc(nx,ny,r*.5,0,TAU);fillUnit(g,grad(g,'ring2',q=>{const u=q.createRadialGradient(0,0,0,0,0,.5);u.addColorStop(0,'rgba(255,252,220,1)');u.addColorStop(.3,'rgba(255,190,50,.95)');u.addColorStop(.62,'rgba(235,70,10,.7)');u.addColorStop(.85,'rgba(160,20,0,.3)');u.addColorStop(1,'rgba(0,0,0,0)');return u;}),nx,ny,r*(.95+.1*fl));
-    g.lineCap='round';for(let i=0;i<8;i++){const a=i*TAU/8+T*.7+c.wob,d=r*(.3+.1*Math.sin(T*4+i*2));g.beginPath();g.moveTo(nx+Math.cos(a)*r*.18,ny+Math.sin(a)*r*.18);g.lineTo(nx+Math.cos(a)*d,ny+Math.sin(a)*d);g.lineWidth=r*.025;g.strokeStyle=`rgba(255,120,20,${.35+.4*Math.max(0,Math.sin(T*3+i))})`;g.stroke();}
-    const h=r*.4,w=r*.14*flare;g.beginPath();g.moveTo(nx,ny-h);g.quadraticCurveTo(nx+w*1.8,ny,nx,ny+h);g.quadraticCurveTo(nx-w*1.8,ny,nx,ny-h);g.closePath();
-    g.fillStyle=sick?col(INF_C,-30,.9):'#040102';g.fill();g.lineWidth=r*.02;g.strokeStyle=`rgba(255,235,150,${.6+.4*fl})`;g.stroke();g.lineCap='butt';
+    g.beginPath();g.arc(nx,ny,r*.54,0,TAU);fillUnit(g,grad(g,'ring2',q=>{const u=q.createRadialGradient(0,0,0,0,0,.54);u.addColorStop(0,'rgba(255,252,220,1)');u.addColorStop(.28,'rgba(255,190,50,.95)');u.addColorStop(.6,'rgba(235,70,10,.7)');u.addColorStop(.85,'rgba(160,20,0,.3)');u.addColorStop(1,'rgba(0,0,0,0)');return u;}),nx,ny,r*(.95+.1*fl));
+    g.lineCap='round';
+    for(let i=0;i<16;i++){const a=i*TAU/16+T*.3+c.wob;g.beginPath();g.moveTo(nx+Math.cos(a)*r*.2,ny+Math.sin(a)*r*.2);g.lineTo(nx+Math.cos(a)*r*.44,ny+Math.sin(a)*r*.44);g.lineWidth=r*.018;g.strokeStyle='rgba(120,20,0,.35)';g.stroke();}
+    for(let i=0;i<8;i++){const a=i*TAU/8+T*.7+c.wob,d=r*(.32+.12*Math.sin(T*4+i*2));g.beginPath();g.moveTo(nx+Math.cos(a)*r*.18,ny+Math.sin(a)*r*.18);g.lineTo(nx+Math.cos(a)*d,ny+Math.sin(a)*d);g.lineWidth=r*.028;g.strokeStyle=`rgba(255,140,20,${.4+.45*Math.max(0,Math.sin(T*3+i))})`;g.stroke();}
+    const h=r*.42,w=r*.15*flare;
+    g.beginPath();g.moveTo(nx,ny-h*1.15);g.quadraticCurveTo(nx+w*2.6,ny,nx,ny+h*1.15);g.quadraticCurveTo(nx-w*2.6,ny,nx,ny-h*1.15);g.closePath();g.fillStyle=`rgba(255,235,150,${.35+.3*fl})`;g.fill();
+    g.beginPath();g.moveTo(nx,ny-h);g.quadraticCurveTo(nx+w*1.8,ny,nx,ny+h);g.quadraticCurveTo(nx-w*1.8,ny,nx,ny-h);g.closePath();
+    g.fillStyle=sick?col(INF_C,-30,.9):'#040102';g.fill();g.lineWidth=r*.022;g.strokeStyle=`rgba(255,240,170,${.7+.3*fl})`;g.stroke();
+    for(const sgn of[-1,1]){const t=.6+.4*Math.sin(T*9+sgn*1.3+c.wob),ty=ny+sgn*h,tip=ny+sgn*(h+r*(.12+.1*t));g.beginPath();g.moveTo(nx-r*.05,ty);g.quadraticCurveTo(nx+r*.03*Math.sin(T*11),tip,nx+r*.05,ty);g.closePath();g.fillStyle=`rgba(255,220,120,${.5+.5*t})`;g.fill();}
+    g.lineCap='butt';
   }},
 ];
 const SKIN_COUNT=SKIN_FREE+PREMIUM.length;
@@ -807,7 +848,7 @@ function renderSkins(){
   renderPreviews();
 }
 function drawPreview(cv,S){
-  const g=cv.getContext('2d'),x=72,y=72,r=S.aura?50:60,k=S.base||STAINS[settings.stain],c={x,y,wob:1.3,svx:0,svy:0};g.clearRect(0,0,144,144);if(S.aura)S.aura(g,c,r,k,r);
+  const g=cv.getContext('2d'),x=72,y=72,r=S.aura?35:60,k=S.base||STAINS[settings.stain],c={x,y,wob:1.3,svx:0,svy:0};g.clearRect(0,0,144,144);if(S.aura)S.aura(g,c,r,k,r,true);
   g.beginPath();g.arc(x,y,r,0,TAU);fillUnit(g,grad(g,'body'+k,q=>{const u=q.createRadialGradient(-.35,-.4,.05,0,0,1.05);u.addColorStop(0,col(k,18,.97));u.addColorStop(.62,col(k,2,.92));u.addColorStop(1,col(k,-10,.94));return u;}),x,y,r);
   g.save();g.beginPath();g.arc(x,y,r*.95,0,TAU);g.clip();g.fillStyle=g.strokeStyle=col(k,-30,.3);S.draw(g,c,r,k,STAINS[settings.stain]);g.restore();
   if(S.eye)S.eye(g,c,r,x,y,false);else if(S.pupil){g.beginPath();g.arc(x,y,r*.24,0,TAU);g.fillStyle='#0a0608';g.fill();if(!S.noGlint){g.beginPath();g.arc(x+r*.08,y-r*.08,r*.06,0,TAU);g.fillStyle='rgba(255,255,255,.85)';g.fill();}}
@@ -1659,7 +1700,7 @@ function drawCell(c){
     const sx=c.x+r*.05,sy=c.y+r*.14;ctx.beginPath();ctx.arc(sx,sy,r*1.28,0,TAU);
     fillUnit(ctx,grad(ctx,'shadow',g=>{const q=g.createRadialGradient(0,0,.75,0,0,1.28);q.addColorStop(0,'rgba(0,0,0,.36)');q.addColorStop(1,'rgba(0,0,0,0)');return q;}),sx,sy,r);
   }
-  const sk=p.skin|0,SK=sk>=SKIN_FREE?PREMIUM[sk-SKIN_FREE]:null;if(SK&&SK.aura&&sr>12&&!lowFx)SK.aura(ctx,c,r,k,sr); // skins that burn past the membrane
+  const sk=p.skin|0,SK=sk>=SKIN_FREE?PREMIUM[sk-SKIN_FREE]:null;if(SK&&SK.aura&&sr>12&&!lowFx)SK.aura(ctx,c,r,k,sr,c===p.cells[0]); // skins that burn past the membrane; the full show only on the lead cell
   ctx.beginPath();membranePath(c,r,1);
   fillUnit(ctx,grad(ctx,'body'+k,g=>{const q=g.createRadialGradient(-.35,-.4,.05,0,0,1.05);q.addColorStop(0,col(k,18,.97));q.addColorStop(.62,col(k,2,.92));q.addColorStop(1,col(k,-10,.94));return q;}),c.x,c.y,r);
   const pulse=sick?(.5+.5*Math.sin(T*(5+sick*16))):0;
