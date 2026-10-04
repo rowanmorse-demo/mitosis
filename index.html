@@ -203,7 +203,7 @@ body:not(.playing) #joy{display:none!important}
   #actions{left:auto;right:calc(var(--gut) + env(safe-area-inset-right,0px));transform:none;bottom:calc(var(--gut) + env(safe-area-inset-bottom,0px));display:block;width:170px;height:180px}
   /* landscape lobby: two columns so rating, top players and settings fit without scrolling */
   @media (orientation:landscape){#startCard{max-width:420px;gap:10px;padding:16px 22px}#startCard h1{font-size:44px;line-height:.9}
-  #storeCard{max-width:820px;grid-template-columns:3fr 2fr;gap:12px 20px;padding:16px 22px}#storeCard .shophead,#storeCard .row{grid-column:1/-1}#storeCard .shopsec{padding-top:10px}
+  #storeCard{max-width:820px;grid-template-columns:3fr 2fr;gap:12px 20px;padding:16px 22px}#storeCard h2{font-size:32px}#storeCard .balance b{font-size:24px}#storeCard .shophead,#storeCard .row{grid-column:1/-1}#storeCard .shopsec{padding-top:10px}
   #lookCard,#settingsCard,#rankCard{max-width:640px;grid-template-columns:1fr 1fr;gap:10px 18px;padding:16px 22px}#lookCard .eyebrow,#lookCard h2,#lookCard .row,#settingsCard .eyebrow,#settingsCard h2,#settingsCard .row,#settingsCard .sec,#rankCard .eyebrow,#rankCard h2,#rankCard .row,#rankCard .field{grid-column:1/-1}#lookCard h2,#settingsCard h2,#rankCard h2{font-size:34px}
   #deathCard{max-width:620px;grid-template-columns:1fr 1fr;gap:8px 16px;padding:16px 22px}#deathCard .eyebrow,#deathCard h2,#deathCard #deathWhy,#deathCard .statgrid,#deathCard .row{grid-column:1/-1}#deathCard h2{font-size:40px}#deathCard .statgrid{grid-template-columns:repeat(4,1fr)}#deathCard .statgrid b{font-size:24px}#deathCard .chartbox{display:none}}
   .act{position:absolute;width:72px;height:72px;padding:0;justify-content:center;border-radius:50%;font:700 13px var(--display)}
