@@ -701,7 +701,7 @@ const cam={x:0,y:0,z:.6,shake:0};
 const pointer={x:innerWidth/2,y:innerHeight/2};
 // Touch devices steer with the on-screen joystick (bottom left) instead of the finger position.
 const TOUCH_UI=matchMedia('(pointer:coarse)').matches;
-const joy={id:null,ux:0,uy:0,m:0,R:46};
+const joy={id:null,ux:0,uy:0,m:0,R:46,lx:1,ly:0};
 // live room
 let lastPeerCount=1,room=null,netState='pending',myPeer=null,isHost=true,claimReady=false,roomAt=-1,netSendT=0,seq=0,recs=[],peLog=[],peerCount=1,hostPeer=null,yielded=false,netNames=[];
 const proxies=new Map(),botProx=new Map(),remoteEj=new Map(),lastSeen=new Map(),lastSeq=new Map(),vSup=new Map(),wSup=new Map(),puSup=new Map(),hSup=new Map();
@@ -759,7 +759,7 @@ function forPellets(x,y,rad,fn){
 const EAT=[];
 
 /* ================= actions ================= */
-function aim(p,c){if(TOUCH_UI&&joy.m>0)return[joy.ux,joy.uy]; // joystick: every piece flies straight where you push
+function aim(p,c){if(TOUCH_UI&&p===human)return joy.m>0?[joy.ux,joy.uy]:[joy.lx,joy.ly]; // joystick: pieces fly where you push, or where you last pushed
   const dx=p.target.x-c.x,dy=p.target.y-c.y,d=Math.hypot(dx,dy);if(d<1){const a=Math.atan2(c.svy,c.svx)||0;return[Math.cos(a),Math.sin(a)];}return[dx/d,dy/d];}
 function flash(id){const b=$(id);b.classList.add('flash');setTimeout(()=>b.classList.remove('flash'),120);}
 function split(p){
@@ -768,11 +768,11 @@ function split(p){
   for(const c of list){
     if(count>=MAX_CELLS)break;if(c.mass<36)continue;
     const[nx,ny]=aim(p,c);const half=c.mass/2;c.mass=half;c.r=radius(half);
-    const sp=1050+c.r*3.5; // a violent lunge: the half covers roughly eight radii before it slows
+    const sp=2300; // Agar.io-style fixed boost: about 720 units of travel however big the cell is
     const n=addCell(p,c.x+nx*c.r*.4,c.y+ny*c.r*.4,half,nx*sp,ny*sp);n.dr=c.dr*.78;n.org=c.org.map(o=>({...o,a:o.a+rand(-.5,.5)}));n.inf=c.inf;
-    c.mergeAt=n.mergeAt=T+mdel(p,half*2);kick(c,3);kick(n,3.2);count++;did=true;
+    c.mergeAt=n.mergeAt=T+mdel(p,half*2);kick(c,1.6);kick(n,2);count++;did=true;
   }
-  if(did&&p===human){sfx('split');flash('splitBtn');Native.haptic('medium');cam.shake=Math.max(cam.shake,7);}
+  if(did&&p===human){sfx('split');flash('splitBtn');Native.haptic('medium');cam.shake=Math.max(cam.shake,3);}
 }
 function eject(p){
   if(!p||!p.alive||T-(p.ejectAt||-9)<EJECT_GAP)return;let did=false; // holding W repeats the key ~30×/s; cap it
@@ -1900,7 +1900,7 @@ bindAct('splitBtn',split);bindAct('ejectBtn',eject);bindAct('dashBtn',dash);
 // virtual joystick
 const joyEl=$('joy'),joyKnob=joyEl.querySelector('.knob');
 function joySet(ex,ey){const r=joyEl.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let dx=ex-cx,dy=ey-cy;const d=Math.hypot(dx,dy)||0;
-  const R=joy.R,k=d>R?R/d:1;dx*=k;dy*=k;joy.m=d<R*.12?0:Math.min(1,d/R);joy.ux=d?(ex-cx)/d:0;joy.uy=d?(ey-cy)/d:0;joyKnob.style.transform=`translate(${dx.toFixed(1)}px,${dy.toFixed(1)}px)`;}
+  const R=joy.R,k=d>R?R/d:1;dx*=k;dy*=k;joy.m=d<R*.12?0:Math.min(1,d/R);joy.ux=d?(ex-cx)/d:0;joy.uy=d?(ey-cy)/d:0;if(joy.m>0){joy.lx=joy.ux;joy.ly=joy.uy;}joyKnob.style.transform=`translate(${dx.toFixed(1)}px,${dy.toFixed(1)}px)`;}
 joyEl.addEventListener('pointerdown',e=>{if(joy.id!==null)return;joy.id=e.pointerId;joyEl.classList.add('active');try{joyEl.setPointerCapture(e.pointerId);}catch(_){}joySet(e.clientX,e.clientY);e.preventDefault();});
 joyEl.addEventListener('pointermove',e=>{if(e.pointerId!==joy.id)return;joySet(e.clientX,e.clientY);});
 const joyEnd=e=>{if(e.pointerId!==joy.id)return;joy.id=null;joy.m=0;joy.ux=joy.uy=0;joyEl.classList.remove('active');joyKnob.style.transform='';};
