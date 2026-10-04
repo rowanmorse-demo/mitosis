@@ -55,7 +55,7 @@ const cleanName = s => String(s || '').replace(/[^\p{L}\p{N} _.\-'!?]/gu, '').tr
 
 const skinById = id => SKINS.find(s => s.id === id);
 const packById = id => PACKS.find(p => p.id === id);
-const catalog = () => ({ skins: SKINS, packs: PACKS, rules: RULES, rating: RATING, tiers: TIERS.map(t => t[1]), iap: iap.status(), auth: signin.status() });
+const catalog = () => ({ skins: SKINS, packs: PACKS, rules: RULES, rating: RATING, tiers: TIERS.map(t => t[1]), tierAt: TIERS.map(t => t[0]), iap: iap.status(), auth: signin.status() });
 
 function payoutFor({ survived, bestRank, place }) {
   const sec = Math.max(0, Math.min(RULES.maxRunSec, +survived || 0));

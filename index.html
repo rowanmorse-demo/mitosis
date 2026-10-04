@@ -202,7 +202,8 @@ body:not(.playing) #evolve{display:none!important}
   .card>.eyebrow{margin-bottom:-4px}
   h1,.home h1{font-size:44px;line-height:.9}h2{font-size:30px}
   .home{max-width:600px;gap:8px 14px}
-  .home .field{grid-column:1}.home #go{grid-column:2;align-self:end}.home .practice{grid-column:1/-1;margin-top:-2px}
+  #startCard.home{max-width:640px;grid-template-columns:3fr 2fr}.home .idrow{grid-column:1}.home #go{grid-column:2;align-self:center}.idmain .label{white-space:nowrap}.home .status{grid-column:1/-1}.home .practice{grid-column:1/-1;margin-top:-2px}
+  .avatar{width:66px;height:66px;border-radius:16px}.avatar canvas{width:52px;height:52px}.home .primary{padding:14px;font-size:19px}
   .iconbtn{padding:9px 4px;font-size:12px}
   .primary{padding:11px;font-size:16px}.ghost{padding:9px 12px;font-size:13px}
   input[type=text]{padding:9px 11px;font-size:15px}
@@ -243,7 +244,7 @@ body:not(.playing) #joy{display:none!important}
   /* corner cluster like Agar.io mobile: Shoot in the corner, Boost to its left, Split above it */
   #actions{left:auto;right:calc(var(--gut) + env(safe-area-inset-right,0px));transform:none;bottom:calc(var(--gut) + 18px + env(safe-area-inset-bottom,0px));display:block;width:170px;height:180px}
   /* landscape lobby: two columns so rating, top players and settings fit without scrolling */
-  @media (orientation:landscape){#startCard{max-width:420px;gap:10px;padding:16px 22px}#startCard h1{font-size:44px;line-height:.9}
+  @media (orientation:landscape){#startCard{max-width:640px;gap:10px 16px;padding:16px 22px}#startCard h1{font-size:44px;line-height:.9}
   #storeCard{max-width:820px;grid-template-columns:3fr 2fr;gap:12px 20px;padding:16px 22px}#storeCard h2{font-size:32px}#storeCard .balance b{font-size:24px}#storeCard .shophead,#storeCard .row{grid-column:1/-1}#storeCard .shopsec{padding-top:10px}
   #lookCard,#settingsCard,#rankCard{max-width:640px;grid-template-columns:1fr 1fr;gap:10px 18px;padding:16px 22px}#lookCard .eyebrow,#lookCard h2,#lookCard .row,#settingsCard .eyebrow,#settingsCard h2,#settingsCard .row,#settingsCard .sec,#rankCard .eyebrow,#rankCard h2,#rankCard .row,#rankCard .field{grid-column:1/-1}#lookCard h2,#settingsCard h2,#rankCard h2{font-size:34px}
   #deathCard{max-width:620px;grid-template-columns:1fr 1fr;gap:8px 16px;padding:16px 22px}#deathCard .eyebrow,#deathCard h2,#deathCard #deathWhy,#deathCard .statgrid,#deathCard .row{grid-column:1/-1}#deathCard h2{font-size:40px}#deathCard .statgrid{grid-template-columns:repeat(4,1fr)}#deathCard .statgrid b{font-size:24px}#deathCard .chartbox{display:none}}
@@ -277,12 +278,24 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
 .sec .body{display:grid;gap:14px;padding:4px 14px 14px}
 .sec .atp{margin-left:auto;flex:none}
 .row2{display:grid;grid-template-columns:1fr auto;gap:10px}
-.home{max-width:400px;text-align:center;gap:14px}.home h1{font-size:clamp(52px,14vw,76px)}
+.home{max-width:400px;text-align:center;gap:12px}.home h1{font-size:clamp(52px,14vw,76px);background:linear-gradient(180deg,#f6fcf9 0%,#d9efe7 60%,#a9d9ca 100%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none}
+.idrow{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;text-align:left}
+.avatar{appearance:none;border:1px solid var(--line);background:rgba(0,0,0,.28);border-radius:20px;padding:0;width:80px;height:80px;display:grid;place-items:center;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.05);transition:border-color .15s,transform .15s}
+.avatar:hover{border-color:var(--line-strong)}.avatar:active{transform:scale(.97)}.avatar canvas{width:64px;height:64px;display:block}
+.idmain{display:grid;gap:7px;min-width:0}.idmain .field{gap:5px}.idmain input[type=text]{padding:10px 12px;font-size:16px}
+.rankline{display:flex;align-items:baseline;gap:8px;font:600 12px var(--mono);color:var(--muted);min-width:0}
+.rankline b{font:800 17px var(--display);color:var(--ink);letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.rankline .tier{color:var(--violet);letter-spacing:.1em;text-transform:uppercase;font-size:10px}
+.rankline .next{margin-left:auto;font-size:10.5px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tierbar{height:4px;border-radius:2px;background:rgba(255,255,255,.07);overflow:hidden}.tierbar i{display:block;height:100%;width:0;border-radius:2px;background:linear-gradient(90deg,var(--violet),var(--accent));transition:width .5s cubic-bezier(.2,.8,.2,1)}
+.home .primary{padding:16px;font-size:21px;border-radius:14px}
+.status{display:grid;gap:4px;justify-items:center}#roundLine{margin:0;font:11px/1.3 var(--mono);color:var(--dim);letter-spacing:.02em}
 .chips{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
 .chip2{display:inline-flex;align-items:center;gap:6px;margin:0;padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:rgba(0,0,0,.25);font:600 12px var(--mono)!important;color:var(--muted)!important}
 .chip2 b{color:var(--ink);font-weight:700}.chip2 .tier{color:var(--violet);letter-spacing:.08em;text-transform:uppercase;font-size:10px}
 .iconrow{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
-.iconbtn{appearance:none;border:1px solid var(--line);background:rgba(0,0,0,.22);color:var(--ink);border-radius:11px;padding:11px 4px;font:600 13px var(--display);cursor:pointer;transition:border-color .15s,background .15s}
+.iconbtn{appearance:none;border:1px solid var(--line);background:rgba(0,0,0,.22);color:var(--muted);border-radius:12px;padding:10px 2px 8px;font:600 11px var(--display);cursor:pointer;display:grid;justify-items:center;gap:5px;transition:border-color .15s,background .15s,color .15s}
+.iconbtn svg{width:21px;height:21px;fill:none;stroke:var(--ink);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.iconbtn:hover{color:var(--ink)}
 .iconbtn:hover{border-color:var(--line-strong);background:rgba(255,255,255,.04)}
 .shop{max-width:560px}.shophead{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
 .balance{text-align:right;display:grid;justify-items:end;gap:2px}.balance b{font:800 30px/1 var(--display);color:var(--amber);font-variant-numeric:tabular-nums}.balance span:last-child{font:600 11px var(--mono);letter-spacing:.1em;color:var(--muted)}
@@ -346,16 +359,23 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
 <div id="overlay">
   <div class="card panel home" id="startCard">
     <h1>Mitosis</h1>
-    <div class="chips"><span class="chip2" id="rankChip"><b id="rankVal">1000</b><span class="tier" id="rankTier">Silver</span></span><p id="netLine" class="netline chip2"><i></i><span>Connecting…</span></p></div>
-    <div class="field"><label class="label" for="nameIn">Specimen name</label><input id="nameIn" type="text" maxlength="16" placeholder="Unnamed cell" autocomplete="off" spellcheck="false"></div>
+    <div class="idrow">
+      <button type="button" class="avatar" id="avatarBtn" aria-label="Change your look"><canvas id="avatarCv" width="144" height="144"></canvas></button>
+      <div class="idmain">
+        <div class="field"><label class="label" for="nameIn">Specimen name</label><input id="nameIn" type="text" maxlength="16" placeholder="Unnamed cell" autocomplete="off" spellcheck="false"></div>
+        <div class="rankline" id="rankChip"><b id="rankVal">1000</b><span class="tier" id="rankTier">Silver</span><span class="next" id="rankNext"></span></div>
+        <div class="tierbar" aria-hidden="true"><i id="tierFill"></i></div>
+      </div>
+    </div>
     <button id="go" class="primary" type="button">Play</button>
+    <div class="status"><p id="netLine" class="netline chip2"><i></i><span>Connecting…</span></p><p id="roundLine" hidden></p></div>
     <button id="practiceBtn" class="ghost practice" type="button">Practice against bots · unranked</button>
     <div class="iconrow">
-      <button class="iconbtn" id="profBtn" type="button">Profile</button>
-      <button class="iconbtn" id="shopBtn" type="button">Shop</button>
-      <button class="iconbtn" id="lookBtn" type="button">Look</button>
-      <button class="iconbtn" id="rankBtn" type="button">Ranks</button>
-      <button class="iconbtn" id="setBtn" type="button">Settings</button>
+      <button class="iconbtn" id="profBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-3.6 3.6-6 8-6s8 2.4 8 6"/></svg>Profile</button>
+      <button class="iconbtn" id="shopBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>Shop</button>
+      <button class="iconbtn" id="lookBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.6"/><circle cx="7.5" cy="9" r="1" fill="currentColor"/><circle cx="16.5" cy="9.5" r="1" fill="currentColor"/><circle cx="9" cy="16" r="1" fill="currentColor"/></svg>Look</button>
+      <button class="iconbtn" id="rankBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3"/><path d="M12 14v4M8 20h8"/></svg>Ranks</button>
+      <button class="iconbtn" id="setBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>Settings</button>
     </div>
   </div>
 
@@ -782,8 +802,9 @@ function applyWallet(w){
   if(typeof w.rating==='number'){wallet.rating=w.rating;wallet.tier=w.tier||wallet.tier;}wallet.runs=w.runs|0;renderRank();renderProfile();
   if('account' in w){wallet.account=w.account||null;renderAccount();}
   try{localStorage.setItem('mitosis.wallet',JSON.stringify({balance:wallet.balance,skins:wallet.skins}));}catch(e){}
-  if(w.catalog){for(const s of w.catalog.skins||[]){const P=PREMIUM.find(x=>x.id===s.id);if(P&&s.price>0)P.price=s.price;}for(const p of w.catalog.packs||[]){const K=ATP_PACKS.find(x=>x.id===p.id);if(K&&p.atp>0)K.atp=p.atp;}}
+  if(w.catalog){wallet.catalog=w.catalog;for(const s of w.catalog.skins||[]){const P=PREMIUM.find(x=>x.id===s.id);if(P&&s.price>0)P.price=s.price;}for(const p of w.catalog.packs||[]){const K=ATP_PACKS.find(x=>x.id===p.id);if(K&&p.atp>0)K.atp=p.atp;}renderRank();}
   if(settings.skin>=SKIN_FREE&&!ownsSkin(settings.skin)){settings.skin=0;saveSettings();}
+  drawAvatar();
   renderSkins();
 }
 let econDelay=5000;
@@ -802,14 +823,20 @@ async function econRunEnd(){
   rep.runId=rid;const a=loadPending();a.push(rep);savePending(a);showEarn('Counting ATP…');flushRuns();
 }
 function showEarn(t){const el=$('dEarn');el.hidden=!t;el.textContent=t||'';}
-function renderRank(){$('rankVal').textContent=wallet.rating;$('rankTier').textContent=wallet.tier;}
+function renderRank(){$('rankVal').textContent=wallet.rating;$('rankTier').textContent=wallet.tier;
+  const names=(wallet.catalog&&wallet.catalog.tiers)||[],at=(wallet.catalog&&wallet.catalog.tierAt)||[],i=names.indexOf(wallet.tier),nx=$('rankNext'),fill=$('tierFill');if(!nx||!fill)return;
+  if(i<0||at.length!==names.length){nx.textContent='';fill.style.width='0%';return;}
+  const hi=at[i]==null?Infinity:at[i],lo=i>0?at[i-1]:Math.min(at[0]-300,wallet.rating);
+  if(!isFinite(hi)){nx.textContent='top tier';fill.style.width='100%';}
+  else{fill.style.width=Math.round(clamp((wallet.rating-lo)/(hi-lo),0,1)*100)+'%';nx.textContent=`${hi-wallet.rating} to ${names[i+1]}`;}
+}
 function showRank(w){const el=$('dRank');if(typeof w.ratingDelta!=='number'){el.hidden=true;return;}const d=w.ratingDelta;
   el.innerHTML=`Rating <b>${d>=0?'+':'−'}${Math.abs(d)}</b> → <b>${w.rating}</b> · ${escH(w.tier)}`;el.hidden=false;}
 async function loadTop(){try{const r=await fetch(window.MITOSIS_SERVER+'/api/leaderboard');const j=await r.json();const me=wallet.playerId;
   $('topList').innerHTML=(j.top||[]).map(t=>`<li><span class="rk">${t.rank}</span><span class="n">${escH(t.name)}</span><span class="tr">${escH(t.tier)}</span><span class="rt">${t.rating}</span></li>`).join('')||'<li><span class="rk"></span><span>No runs yet — be the first.</span></li>';
   }catch(e){$('topList').innerHTML='<li><span class="rk"></span><span>Not available offline.</span></li>';}}
 $('rankBtn').addEventListener('click',()=>{showCard('rankCard');loadTop();});
-$('lookBtn').addEventListener('click',()=>{showCard('lookCard');renderSkins();});
+$('avatarBtn').addEventListener('click',()=>$('lookBtn').click());$('lookBtn').addEventListener('click',()=>{showCard('lookCard');renderSkins();});
 $('setBtn').addEventListener('click',()=>showCard('settingsCard'));
 function renderProfile(){if(!$('profName'))return;$('profName').textContent=cleanName($('nameIn').value)||settings.name||'Unnamed cell';$('pRating').textContent=wallet.rating;$('pTier').textContent=wallet.tier;$('pAtp').textContent=wallet.balance.toLocaleString();$('pEarned').textContent=(wallet.earned|0).toLocaleString();$('pRuns').textContent=wallet.runs|0;$('pSkins').textContent=wallet.skins.filter(id=>id>=SKIN_FREE).length;}
 $('profBtn').addEventListener('click',()=>{renderProfile();renderAccount();showCard('profileCard');});
@@ -854,8 +881,18 @@ function drawPreview(cv,S){
   if(S.eye)S.eye(g,c,r,x,y,false);else if(S.pupil){g.beginPath();g.arc(x,y,r*.24,0,TAU);g.fillStyle='#0a0608';g.fill();if(!S.noGlint){g.beginPath();g.arc(x+r*.08,y-r*.08,r*.06,0,TAU);g.fillStyle='rgba(255,255,255,.85)';g.fill();}}
   g.beginPath();g.arc(x,y,r,0,TAU);g.lineWidth=r*.085;g.strokeStyle=col(k,-26,.96);g.stroke();
 }
+function drawAvatar(){ // the lobby's live portrait of your cell: stain, pattern or premium skin
+  const cv=$('avatarCv');if(!cv)return;const sk=settings.skin|0;
+  if(sk>=SKIN_FREE&&PREMIUM[sk-SKIN_FREE]){drawPreview(cv,PREMIUM[sk-SKIN_FREE]);return;}
+  const g=cv.getContext('2d'),x=72,y=72,r=58,k=STAINS[settings.stain|0]||STAINS[0],c={x,y,wob:1.3,svx:0,svy:0};g.clearRect(0,0,144,144);
+  g.beginPath();g.arc(x,y,r,0,TAU);fillUnit(g,grad(g,'body'+k,q=>{const u=q.createRadialGradient(-.35,-.4,.05,0,0,1.05);u.addColorStop(0,col(k,18,.97));u.addColorStop(.62,col(k,2,.92));u.addColorStop(1,col(k,-10,.94));return u;}),x,y,r);
+  if(sk){g.save();g.beginPath();g.arc(x,y,r*.95,0,TAU);g.clip();g.fillStyle=g.strokeStyle=col(k,-30,.3);drawFreePattern(g,c,r,sk);g.restore();}
+  g.beginPath();g.arc(x,y,r*.28,0,TAU);fillUnit(g,grad(g,'nuc'+k,q=>{const u=q.createRadialGradient(-.08,-.08,0,0,0,.3);u.addColorStop(0,col(k,-4,.5));u.addColorStop(1,col(k,-22,.62));return u;}),x,y,r);g.lineWidth=1;g.strokeStyle=col(k,-34,.45);g.stroke();
+  g.beginPath();g.arc(x,y,r,0,TAU);g.lineWidth=r*.085;g.strokeStyle=col(k,-26,.96);g.stroke();
+  g.beginPath();g.ellipse(x-r*.36,y-r*.42,r*.22,r*.09,-.72,0,TAU);g.fillStyle='rgba(255,255,255,.17)';g.fill();
+}
 function renderPreviews(){for(const cv of document.querySelectorAll('#skins canvas, #ownedSkins canvas')){const S=PREMIUM[+cv.dataset.skin-SKIN_FREE];if(S)drawPreview(cv,S);}}
-setInterval(()=>{if((!$('storeCard').hidden||!$('lookCard').hidden)&&!document.hidden&&!RM)renderPreviews();},100);
+setInterval(()=>{if(document.hidden||RM)return;if(!$('storeCard').hidden||!$('lookCard').hidden)renderPreviews();if(!$('startCard').hidden)drawAvatar();},100);
 $('ownedSkins').addEventListener('click',e=>{const b=e.target.closest('.skin');if(!b)return;const id=+b.dataset.id;if(ownsSkin(id)){settings.skin=id;saveSettings();syncPats();}});
 $('skins').addEventListener('click',async e=>{
   const b=e.target.closest('.skin');if(!b)return;const id=+b.dataset.id,S=PREMIUM[id-SKIN_FREE];if(!S)return;
@@ -1692,6 +1729,13 @@ function labelSprite(text,px){ // sprite of outlined text at a screen-pixel size
   g.lineWidth=px*.16;g.strokeStyle='rgba(0,0,0,.42)';g.fillStyle='#fff';g.strokeText(text,w/2,h/2);g.fillText(text,w/2,h/2);
   L={c:m,w,h,tw:w-px*.6};LABELS.set(key,L);return L;
 }
+function drawFreePattern(g,c,r,sk){ // the four free patterns, shared by cells in play and the lobby avatar
+  if(sk===1){for(let i=0;i<7;i++){const a=i*2.4+c.wob,d=(.2+(i%3)*.24)*r;g.beginPath();g.arc(c.x+Math.cos(a)*d,c.y+Math.sin(a)*d,r*(.08+(i%2)*.06),0,TAU);g.fill();}}
+  else if(sk===2){g.lineWidth=r*.1;const ro=c.wob,ux=Math.cos(ro),uy=Math.sin(ro);g.beginPath();for(let i=-4;i<=4;i++){const o=i*r*.3;g.moveTo(c.x+ux*o+uy*r*1.2,c.y+uy*o-ux*r*1.2);g.lineTo(c.x+ux*o-uy*r*1.2,c.y+uy*o+ux*r*1.2);}g.stroke();}
+  else if(sk===3){g.lineWidth=r*.07;g.beginPath();for(let i=1;i<=3;i++){g.moveTo(c.x+r*i*.27,c.y);g.arc(c.x,c.y,r*i*.27,0,TAU);}g.stroke();}
+  else{g.lineWidth=r*.08;g.beginPath();for(let i=0;i<3;i++){const a=c.wob+i*2.1;g.moveTo(c.x+Math.cos(a)*r,c.y+Math.sin(a)*r);
+    g.bezierCurveTo(c.x+Math.cos(a+1)*r*.2,c.y+Math.sin(a+1)*r*.2,c.x+Math.cos(a+2.2)*r*.6,c.y+Math.sin(a+2.2)*r*.6,c.x+Math.cos(a+3.4)*r,c.y+Math.sin(a+3.4)*r);}g.stroke();}
+}
 function drawCell(c){
   const p=c.owner,k=p.color,r=Math.max(2,c.dr),z=cam.z,sr=r*z;
   const sick=c.inf?clamp(1-(c.inf-T)/(c.infLen||INF_MAX),0,1):(c.infVis?.6:0);
@@ -1709,11 +1753,7 @@ function drawCell(c){
   if(sk&&sr>14&&(!lowFx||sk>=SKIN_FREE)){ // stain pattern, clipped to the membrane
     ctx.save();ctx.beginPath();membranePath(c,r,.95);ctx.clip();ctx.fillStyle=ctx.strokeStyle=col(k,-30,.3);
     if(SK)SK.draw(ctx,c,r,k,STAINS[p.stain|0]);
-    else if(sk===1){for(let i=0;i<7;i++){const a=i*2.4+c.wob,d=(.2+(i%3)*.24)*r;ctx.beginPath();ctx.arc(c.x+Math.cos(a)*d,c.y+Math.sin(a)*d,r*(.08+(i%2)*.06),0,TAU);ctx.fill();}}
-    else if(sk===2){ctx.lineWidth=r*.1;const ro=c.wob,ux=Math.cos(ro),uy=Math.sin(ro);ctx.beginPath();for(let i=-4;i<=4;i++){const o=i*r*.3;ctx.moveTo(c.x+ux*o+uy*r*1.2,c.y+uy*o-ux*r*1.2);ctx.lineTo(c.x+ux*o-uy*r*1.2,c.y+uy*o+ux*r*1.2);}ctx.stroke();}
-    else if(sk===3){ctx.lineWidth=r*.07;ctx.beginPath();for(let i=1;i<=3;i++){ctx.moveTo(c.x+r*i*.27,c.y);ctx.arc(c.x,c.y,r*i*.27,0,TAU);}ctx.stroke();}
-    else{ctx.lineWidth=r*.08;ctx.beginPath();for(let i=0;i<3;i++){const a=c.wob+i*2.1;ctx.moveTo(c.x+Math.cos(a)*r,c.y+Math.sin(a)*r);
-      ctx.bezierCurveTo(c.x+Math.cos(a+1)*r*.2,c.y+Math.sin(a+1)*r*.2,c.x+Math.cos(a+2.2)*r*.6,c.y+Math.sin(a+2.2)*r*.6,c.x+Math.cos(a+3.4)*r,c.y+Math.sin(a+3.4)*r);}ctx.stroke();}
+    else drawFreePattern(ctx,c,r,sk);
     ctx.restore();
   }
   if(T-(c.toxic||0)<.3){ctx.beginPath();membranePath(c,r,1);ctx.fillStyle='rgba(150,125,255,.2)';ctx.fill();}
@@ -1969,6 +2009,7 @@ function netUI(){
   else if(others<=0){txt='Live · nobody else is here yet.';live=true;}
   else{txt=`Live · ${others} other${others>1?'s':''} here${netNames.length?': '+netNames.slice(0,3).join(', ')+(netNames.length>3?'…':''):''}`;live=true;}
   line.classList.toggle('live',live);const sp=line.querySelector('span');if(sp.textContent!==txt)sp.textContent=txt;
+  const rl=$('roundLine');if(rl){let rt='';if(live&&!local&&(round.synced||isHost)&&!round.over&&roundT()>=0&&roundT()<ROUND_SEC){const left=ROUND_SEC-roundT();rt=`Round · ${Math.floor(left/60)}:${String(Math.floor(left%60)).padStart(2,'0')} left · ${roundOpen()?'spawns open':'spawns closed'}`;}rl.hidden=!rt;if(rl.textContent!==rt)rl.textContent=rt;}
   const row=$('inviteRow'),inp=$('inviteUrl'),help=$('inviteHelp');row.hidden=!N;
   if(N){const links=inviteLinks(),v=links[0]||'No network address found';if(inp.value!==v)inp.value=v;
     const srv=window.MITOSIS_SERVER||'',priv=/^https?:\/\/(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|\[::1\])/.test(srv); // a server on this computer or LAN
@@ -2233,7 +2274,7 @@ let shownCard='startCard';
 function showCard(id){
   // diagnostic: a report of what sends the page from Settings back to the start card (Settings → Account → sign in)
   if(id==='startCard'&&shownCard==='settingsCard')reportHitch('settings->start via '+String(new Error().stack||'').split('\n').slice(1,4).map(s=>s.trim()).join(' | '));
-  shownCard=id;
+  shownCard=id;if(id==='startCard')setTimeout(drawAvatar,0);
   for(const c of['startCard','pauseCard','deathCard','storeCard','lookCard','rankCard','settingsCard','profileCard'])$(c).hidden=c!==id;$('overlay').hidden=!id;}
 function startGame(){
   if(!spawnOpen()){
@@ -2291,7 +2332,7 @@ const swEl=$('sw');
 STAINS.forEach((c,i)=>{const b=document.createElement('button');b.type='button';b.className='sw';b.style.background=col(c);b.setAttribute('aria-label','Stain '+(i+1));
   b.setAttribute('aria-pressed',String(i===settings.stain));b.addEventListener('click',()=>{settings.stain=i;[...swEl.children].forEach((x,j)=>x.setAttribute('aria-pressed',String(j===i)));});swEl.appendChild(b);});
 const patEl=$('pats');
-const syncPats=()=>{patEl.style.setProperty('--c',col(STAINS[settings.stain]));[...patEl.children].forEach((x,j)=>x.setAttribute('aria-pressed',String(j===settings.skin)));renderSkins();};
+const syncPats=()=>{patEl.style.setProperty('--c',col(STAINS[settings.stain]));[...patEl.children].forEach((x,j)=>x.setAttribute('aria-pressed',String(j===settings.skin)));renderSkins();drawAvatar();};
 ['Plain','Spots','Stripes','Rings','Marbled'].forEach((n,i)=>{const b=document.createElement('button');b.type='button';b.className='pat p'+i;b.setAttribute('aria-label',n+' pattern');b.title=n;
   b.addEventListener('click',()=>{settings.skin=i;syncPats();});patEl.appendChild(b);});
 swEl.addEventListener('click',()=>setTimeout(syncPats,0));syncPats();
