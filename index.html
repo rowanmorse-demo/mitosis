@@ -211,7 +211,8 @@ body:not(.playing) #joy{display:none!important}
   #feed{bottom:calc(var(--gut) + 200px + env(safe-area-inset-bottom,0px))}
 }
 /* collapsible leaderboard */
-#boardToggle{width:22px;height:22px;padding:0;display:grid;place-items:center;font-size:11px;line-height:1;flex:none}
+#boardToggle{appearance:none;background:none;border:0;color:inherit;font:inherit;width:100%;padding:4px 0;margin:-4px 0;text-align:left;cursor:pointer;pointer-events:auto;-webkit-tap-highlight-color:transparent}
+#board .chev{margin-left:auto;font-size:12px;color:var(--muted);flex:none}#board.collapsed .chev{transform:rotate(-90deg)}
 #board.collapsed ol{display:none}#board.collapsed{width:auto!important}
 /* the lobby hides the in-game HUD and buttons so only the card and the drifting culture show */
 body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
@@ -263,7 +264,7 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
   <div id="metaVal">1 cell · rank –</div>
   <div id="fx"></div>
 </div>
-<div id="board" class="hud panel"><div class="bhead"><span class="label">Culture ranking</span><span id="netPill" class="pill" hidden>Live</span><button id="boardToggle" class="tiny" type="button" aria-label="Collapse ranking" aria-expanded="true">▾</button></div><ol id="boardList"></ol></div>
+<div id="board" class="hud panel"><button class="bhead" id="boardToggle" type="button" aria-expanded="true"><span class="label">Culture ranking</span><span id="netPill" class="pill" hidden>Live</span><span class="chev">▾</span></button><ol id="boardList"></ol></div>
 <div id="feed" class="hud" aria-live="polite"></div>
 <div id="scale" class="hud">
   <div class="bar"><div id="scaleBar" style="width:80px"></div><span id="scaleLbl">100 µm</span></div>
@@ -1906,7 +1907,7 @@ joyEl.addEventListener('pointerup',joyEnd);joyEl.addEventListener('pointercancel
 // collapsible leaderboard (remembered)
 const boardBox=$('board'),boardTg=$('boardToggle');
 const syncBoard=()=>{if(settings.boardMin===undefined)settings.boardMin=TOUCH_UI; // phones start with the ranking folded
-  const c=!!settings.boardMin;boardBox.classList.toggle('collapsed',c);boardTg.textContent=c?'▸':'▾';boardTg.setAttribute('aria-expanded',String(!c));boardTg.setAttribute('aria-label',c?'Expand ranking':'Collapse ranking');};
+  const c=!!settings.boardMin;boardBox.classList.toggle('collapsed',c);boardTg.setAttribute('aria-expanded',String(!c));};
 boardTg.addEventListener('click',()=>{settings.boardMin=!settings.boardMin;saveSettings();syncBoard();});syncBoard();
 addEventListener('keydown',e=>{
   const tag=e.target&&e.target.tagName;
