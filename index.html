@@ -637,7 +637,7 @@ async function econInit(){
 let runId=null,runPromise=null;
 function econRunStart(){runId=null;runPromise=api('run/start').then(r=>{runId=r.runId;return r.runId;}).catch(()=>null);}
 async function econRunEnd(){
-  if(!human)return;const s=human.stats,rep={survived:Math.max(0,T-s.born),eaten:s.eaten|0,peak:Math.round(s.peak),show:1};
+  if(!human)return;const s=human.stats,rep={survived:Math.max(0,T-s.born),eaten:s.eaten|0,peak:Math.round(s.peak),bestRank:s.bestRank||999,show:1};
   rep.name=human.name;const rid=runId||(runPromise?await runPromise:null);runId=null;runPromise=null;
   if(!rid){showEarn(wallet.online?'':'Offline — ATP is only earned while connected');return;}
   rep.runId=rid;const a=loadPending();a.push(rep);savePending(a);showEarn('Counting ATP…');flushRuns();
@@ -668,7 +668,7 @@ let flushing=false;
 async function flushRuns(){ // report finished runs; keep them queued while the server is unreachable
   if(flushing)return;flushing=true;
   try{let a=loadPending();while(a.length){const rep=a[0];
-    try{const w=await api('run/end',rep);applyWallet(w);if(rep.show){showEarn(w.payout?`+${w.payout} ATP earned`:w.capped?'Hourly ATP cap reached — more next hour':'');showRank(w);}}
+    try{const w=await api('run/end',rep);applyWallet(w);if(rep.show){const br=rep.bestRank<999?` · best rank #${rep.bestRank}`:'';showEarn(w.payout?`+${w.payout} ATP${br}`:rep.survived<20?'No ATP — survive at least 20 seconds':`No ATP — reach the top 20 for a payout${br}`);showRank(w);}}
     catch(e){if(!e.status||e.status>=500){if(rep.show)showEarn('ATP will be counted when the server is back');break;}}
     a.shift();savePending(a);}}
   finally{flushing=false;}
@@ -1596,7 +1596,7 @@ function hud(){
   const small=phone.matches||shortScreen.matches,N=small?5:8;let html='';
   const row=(r,i)=>{const hu=r.p.remote&&!r.p.bot;return`<li class="${r.p===human?'me':''}"><span class="rk">${i===0?'♛':i+1}</span><span class="dot" style="background:${col(r.p.color)}"></span><span class="nm">${esc(r.p===human?r.p.name+' (you)':r.p.name)}</span>${r.p.boss?'<span class="tag boss">boss</span>':hu?'<span class="tag">player</span>':''}<span class="ms">${Math.round(r.m)}</span></li>`;};
   ranked.slice(0,N).forEach((r,i)=>{html+=row(r,i);});
-  const hi=ranked.findIndex(r=>r.p===human);
+  const hi=ranked.findIndex(r=>r.p===human);if(human&&human.alive&&hi>=0){const rk=hi+1;if(!human.stats.bestRank||rk<human.stats.bestRank)human.stats.bestRank=rk;}
   if(hi>=N)html+=`<li class="gap">⋯</li>`+row(ranked[hi],hi);
   for(const [,pl] of proxies){const ri=ranked.findIndex(r=>r.p===pl);if(ri>=N&&pl!==human&&!small)html+=row(ranked[ri],ri);}
   boardEl.innerHTML=html;

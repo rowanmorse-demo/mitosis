@@ -54,14 +54,15 @@ Tiers: Bronze (<900), Silver, Gold (1400+), Platinum (1800+), Diamond (2300+), L
 
 **ATP** is the in-game currency. Every run pays out when it ends:
 
-| Source | ATP |
+| Best rank reached in the run | ATP |
 | --- | --- |
-| Surviving | 1 per minute (up to 30) |
-| Each cell absorbed | 0.5 (up to 10) |
-| Peak mass | 1 per 200 mass (up to 5) |
-| Cap | 40 per run, 70 per hour |
+| #1 | 10 |
+| Top 3 | 6 |
+| Top 10 | 3 |
+| Top 20 | 1 |
+| Lower, or a run under 20 seconds | 0 |
 
-Earning is deliberately slow: a strong player makes 60–70 ATP an hour. Skins cost 300–800 ATP (an evening or two of play) and the Black Hole costs 10,000 ATP, roughly 150 hours, so the packs are the realistic way to get it:
+There is no hourly cap, but the amounts are deliberately small: reaching #1 every ten minutes is 60 ATP an hour. Skins cost 300–800 ATP and the Black Hole costs 10,000, a very long grind, so the packs are the realistic way to get it:
 
 | Pack | ATP |
 | --- | --- |
@@ -180,7 +181,7 @@ All endpoints take and return JSON. Authenticated ones need `Authorization: Bear
 | --- | --- |
 | `POST /api/session` `{secret}` | Create or load the player; returns wallet, owned skins and the catalogue |
 | `POST /api/run/start` | Begin a run (server timestamps it) |
-| `POST /api/run/end` `{runId, survived, eaten, peak}` | Pay out the run; idempotent |
+| `POST /api/run/end` `{runId, survived, eaten, peak, bestRank, name}` | Pay out the run and adjust the rating; idempotent |
 | `POST /api/skins/buy` `{skinId}` | Spend ATP on a skin |
 | `POST /api/iap/apple` `{transactionId, jws}` | Verify a StoreKit 2 transaction and credit ATP |
 | `POST /api/iap/google` `{purchaseToken, productId, orderId}` | Verify a Play purchase and credit ATP |

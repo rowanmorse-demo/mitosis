@@ -28,12 +28,16 @@ async function post(url, body, secret) {
 
   r = await post('/api/run/start', {}, secret); assert.equal(r.status, 200); const runId = r.body.runId;
   r = await post('/api/run/end', { runId, survived: 9999, eaten: 10, peak: 800 }, secret); assert.equal(r.status, 200);
-  // survival is capped by what elapsed on the server (~0 s + 15 s grace): 0 minutes + 10 eats × 0.5 + 800/200 = 9
-  assert.equal(r.body.payout, 9); assert.equal(r.body.balance, 9);
+  // survival is capped by what elapsed on the server (~0 s + 15 s grace), under the 20 s minimum: nothing
+  assert.equal(r.body.payout, 0); assert.equal(r.body.balance, 0);
+  const { payoutFor } = require('./economy');
+  assert.equal(payoutFor({ survived: 300, bestRank: 1 }), 10); assert.equal(payoutFor({ survived: 300, bestRank: 3 }), 6);
+  assert.equal(payoutFor({ survived: 300, bestRank: 7 }), 3); assert.equal(payoutFor({ survived: 300, bestRank: 15 }), 1);
+  assert.equal(payoutFor({ survived: 300, bestRank: 40 }), 0); assert.equal(payoutFor({ survived: 10, bestRank: 1 }), 0, 'insta-death pays nothing');
   // rating: that run (15 s on the server clock, 10 kills) is a quick death: +0.5 survival +20 kills -7.5 penalty = +13
   assert.equal(r.body.ratingDelta, 13); assert.equal(r.body.rating, 1013); assert.equal(r.body.tier, 'Silver');
   r = await post('/api/run/end', { runId, survived: 9999, eaten: 10, peak: 800 }, secret);
-  assert.equal(r.body.duplicate, true); assert.equal(r.body.balance, 9, 'ending a run twice pays once');
+  assert.equal(r.body.duplicate, true); assert.equal(r.body.balance, 0, 'ending a run twice pays once');
   r = await post('/api/run/end', { runId: 'nope' }, secret); assert.equal(r.status, 404);
   // an instant death with no kills loses rating
   r = await post('/api/run/start', {}, secret); const run2 = r.body.runId;
@@ -44,16 +48,16 @@ async function post(url, body, secret) {
 
   // Purchases: with IAP_UNVERIFIED the server trusts the receipt's payload (dev only)
   const jws = 'h.' + Buffer.from(JSON.stringify({ productId: 'atp_500', transactionId: 't1' })).toString('base64url') + '.s';
-  r = await post('/api/iap/apple', { transactionId: 't1', jws }, secret); assert.equal(r.status, 200); assert.equal(r.body.credited, 500); assert.equal(r.body.balance, 509);
-  r = await post('/api/iap/apple', { transactionId: 't1', jws }, secret); assert.equal(r.body.duplicate, true); assert.equal(r.body.balance, 509, 'same transaction credits once');
-  r = await post('/api/iap/google', { purchaseToken: 'tok1', productId: 'atp_1500', orderId: 'GPA.1' }, secret); assert.equal(r.body.credited, 1500); assert.equal(r.body.balance, 2009);
+  r = await post('/api/iap/apple', { transactionId: 't1', jws }, secret); assert.equal(r.status, 200); assert.equal(r.body.credited, 500); assert.equal(r.body.balance, 500);
+  r = await post('/api/iap/apple', { transactionId: 't1', jws }, secret); assert.equal(r.body.duplicate, true); assert.equal(r.body.balance, 500, 'same transaction credits once');
+  r = await post('/api/iap/google', { purchaseToken: 'tok1', productId: 'atp_1500', orderId: 'GPA.1' }, secret); assert.equal(r.body.credited, 1500); assert.equal(r.body.balance, 2000);
   r = await post('/api/iap/google', { purchaseToken: 'tok2', productId: 'not_a_pack', orderId: 'GPA.2' }, secret); assert.equal(r.status, 400, 'unknown product rejected');
 
-  r = await post('/api/skins/buy', { skinId: 9 }, secret); assert.equal(r.status, 200); assert.deepEqual(r.body.skins, [9]); assert.equal(r.body.balance, 1709);
-  r = await post('/api/skins/buy', { skinId: 9 }, secret); assert.equal(r.body.already, true); assert.equal(r.body.balance, 1709, 'owned skins are not sold twice');
+  r = await post('/api/skins/buy', { skinId: 9 }, secret); assert.equal(r.status, 200); assert.deepEqual(r.body.skins, [9]); assert.equal(r.body.balance, 1700);
+  r = await post('/api/skins/buy', { skinId: 9 }, secret); assert.equal(r.body.already, true); assert.equal(r.body.balance, 1700, 'owned skins are not sold twice');
   r = await post('/api/skins/buy', { skinId: 99 }, secret); assert.equal(r.status, 404);
 
-  r = await post('/api/session', { secret }); assert.equal(r.body.balance, 1709); assert.deepEqual(r.body.skins, [9], 'wallet persists');
+  r = await post('/api/session', { secret }); assert.equal(r.body.balance, 1700); assert.deepEqual(r.body.skins, [9], 'wallet persists');
   r = await post('/api/session', { secret: 'short' }); assert.equal(r.status, 400);
 
   const h = await (await fetch(base + '/health')).json(); assert.equal(h.accounts, 1);

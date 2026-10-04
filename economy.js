@@ -25,9 +25,11 @@ const PACKS = [
   { id: 'atp_5000', atp: 5000 },
   { id: 'atp_12000', atp: 12000 },
 ];
-// Payout for one run. Deliberately slow: a strong player makes about 60-70 ATP an hour, so the
-// 10,000 ATP Black Hole is roughly 150 hours of play, and the packs are the realistic shortcut.
-const RULES = { perMinute: 1, survCap: 30, perEat: .5, eatCap: 10, peakPer: 200, peakCap: 5, runCap: 40, hourCap: 70, maxRunSec: 3 * 3600 };
+// Payout for one run, by the best rank reached in the well: #1 pays 10, top 3 pays 6, top 10 pays 3,
+// top 20 pays 1, anything else 0, and a run shorter than minSec pays nothing. No hourly cap: it is
+// deliberately small per game so the 10,000 ATP Black Hole is a very long grind and the packs are
+// the realistic shortcut.
+const RULES = { byRank: [[1, 10], [3, 6], [10, 3], [20, 1]], minSec: 20, maxRunSec: 3 * 3600 };
 const HOUR = 3600 * 1000;
 // Rating (Elo-like): survival and kills raise it, dying quickly lowers it. Gains shrink and losses
 // grow as the rating climbs, so it settles instead of inflating forever. Everyone starts at 1000.
@@ -46,22 +48,17 @@ const skinById = id => SKINS.find(s => s.id === id);
 const packById = id => PACKS.find(p => p.id === id);
 const catalog = () => ({ skins: SKINS, packs: PACKS, rules: RULES, rating: RATING, tiers: TIERS.map(t => t[1]), iap: iap.status() });
 
-function payoutFor({ survived, eaten, peak }) {
+function payoutFor({ survived, bestRank }) {
   const sec = Math.max(0, Math.min(RULES.maxRunSec, +survived || 0));
-  const surv = Math.min(RULES.survCap, Math.floor(sec / 60) * RULES.perMinute);
-  const e = Math.min(RULES.eatCap, Math.floor(Math.max(0, +eaten || 0) * RULES.perEat));
-  const p = Math.max(0, Math.min(RULES.peakCap, Math.floor((+peak || 0) / RULES.peakPer)));
-  return Math.min(RULES.runCap, surv + e + p);
+  if (sec < RULES.minSec) return 0;
+  const rank = Math.max(1, Math.floor(+bestRank || 0));
+  const tier = RULES.byRank.find(([r]) => rank <= r);
+  return tier ? tier[1] : 0;
 }
 
 class ApiError extends Error { constructor(status, msg) { super(msg); this.status = status; } }
 const hash = s => crypto.createHash('sha256').update(String(s)).digest('hex');
 const wallet = (store, p) => ({ playerId: p.id, balance: Number(p.balance), earned: Number(p.earned), skins: store.skins(p.id), rating: Number(p.rating ?? RATING.base), tier: tierOf(Number(p.rating ?? RATING.base)), runs: Number(p.runs || 0) });
-
-function hourlyAllowance(p, now) {
-  const inWindow = now - Number(p.hour_at) < HOUR;
-  return { used: inWindow ? Number(p.hour_sum) : 0, at: inWindow ? Number(p.hour_at) : now };
-}
 
 /* ---------- handlers: each gets (store, body, player?) and returns a JSON-able object ---------- */
 function session(store, body) {
@@ -95,17 +92,15 @@ function runEnd(store, body, p) {
   // The client can't claim more survival time than actually elapsed on the server.
   const elapsed = (now - Number(run.started)) / 1000 + 15;
   const survived = Math.min(+body.survived || 0, elapsed);
-  let payout = payoutFor({ survived, eaten: body.eaten, peak: body.peak });
-  const hr = hourlyAllowance(p, now);
-  payout = Math.max(0, Math.min(payout, RULES.hourCap - hr.used));
-  const w = { balance: Number(p.balance) + payout, earned: Number(p.earned) + payout, hour_at: hr.at, hour_sum: hr.used + payout };
+  const payout = payoutFor({ survived, bestRank: body.bestRank });
+  const w = { balance: Number(p.balance) + payout, earned: Number(p.earned) + payout, hour_at: Number(p.hour_at), hour_sum: Number(p.hour_sum) };
   store.setWallet(p.id, w); store.endRun(run.id, now, payout);
   Object.assign(p, w);
   // rating
   const before = Number(p.rating ?? RATING.base), delta = ratingDelta(before, survived, body.eaten), rating = Math.max(0, before + delta);
   const name = cleanName(body.name) || p.name || null;
   store.setRating(p.id, rating, name); p.rating = rating; p.name = name; p.runs = Number(p.runs || 0) + 1;
-  return { payout, capped: hr.used + payout >= RULES.hourCap, ratingDelta: delta, ...wallet(store, p) };
+  return { payout, ratingDelta: delta, ...wallet(store, p) };
 }
 function buySkin(store, body, p) {
   const skin = skinById(body.skinId | 0);
