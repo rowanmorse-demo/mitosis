@@ -786,7 +786,7 @@ const TOUCH_UI=matchMedia('(pointer:coarse)').matches;
 const joy={id:null,ux:0,uy:0,m:0,R:46,lx:1,ly:0};
 // live room
 let lastPeerCount=1,room=null,netState='pending',myPeer=null,isHost=true,claimReady=false,roomAt=-1,netSendT=0,seq=0,recs=[],peLog=[],peerCount=1,hostPeer=null,yielded=false,netNames=[];
-const proxies=new Map(),botProx=new Map(),remoteEj=new Map(),lastSeen=new Map(),lastSeq=new Map(),vSup=new Map(),wSup=new Map(),puSup=new Map(),hSup=new Map();
+const proxies=new Map(),botProx=new Map(),remoteEj=new Map(),lastSeen=new Map(),seenAt=new Map(),lastSeq=new Map(),vSup=new Map(),wSup=new Map(),puSup=new Map(),hSup=new Map();
 const now=()=>performance.now()/1000;
 const myKey=()=>myPeer||'me';
 const multi=()=>!!(room&&myPeer&&peerCount>1);
@@ -1860,7 +1860,7 @@ function netTick(dt){
   const others=peers.filter(p=>!p.sameTab&&p.kind==='viewer'&&p.presence&&p.presence.v===PROTO);
   peerCount=1+others.length;netNames=others.map(p=>cleanName(p.presence.n)||'Guest cell');
   if(peerCount!==lastPeerCount){lastPeerCount=peerCount;if(isHost)syncBots();}
-  const claims=others.filter(p=>p.presence.h===1).map(p=>p.peer).sort();
+  const claims=others.filter(p=>p.presence.h===1&&T-(seenAt.get(p.peer)??T)<3).map(p=>p.peer).sort(); // stalled hosts are ignored
   if(!claimReady&&T-roomAt>1.5){claimReady=true;if(claims.length)becomeClient();}
   if(claimReady){
     if(isHost&&claims.length&&claims[0]<myPeer)becomeClient();
@@ -1869,9 +1869,9 @@ function netTick(dt){
   const newHost=isHost?myPeer:(claims[0]||null);
   if(newHost!==hostPeer){hostPeer=newHost;if(hostPeer&&hostPeer!==myPeer)lastSeen.delete(hostPeer);}
   const live=new Set();
-  for(const p of others){live.add(p.peer);if(lastSeen.get(p.peer)===p.presence)continue;lastSeen.set(p.peer,p.presence);
+  for(const p of others){live.add(p.peer);if(lastSeen.get(p.peer)===p.presence)continue;lastSeen.set(p.peer,p.presence);seenAt.set(p.peer,T);
     try{ingest(p.peer,p.presence,p.peer===hostPeer);}catch(e){}}
-  for(const [k,pl] of proxies)if(!live.has(k)){removePlayer(pl);proxies.delete(k);remoteEj.delete(k);lastSeen.delete(k);lastSeq.delete(k);}
+  for(const [k,pl] of proxies)if(!live.has(k)){removePlayer(pl);proxies.delete(k);remoteEj.delete(k);lastSeen.delete(k);seenAt.delete(k);lastSeq.delete(k);}
   for(const m of [vSup,wSup,puSup,hSup])for(const [k,t] of m)if(T-t>4)m.delete(k);
   netSendT-=dt;if(netSendT<=0){netSendT=.066;send();}
 }
