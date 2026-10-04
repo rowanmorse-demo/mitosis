@@ -172,6 +172,9 @@ body:not(.playing) #evolve{display:none!important}
   .toast{padding:6px 12px;border-radius:10px}.toast b{font-size:14px}.toast span:last-child{font-size:11px}
   #evolve{bottom:auto;top:calc(var(--gut) + 60px + env(safe-area-inset-top,0px));width:min(560px,calc(100% - 400px));gap:6px}
   .evo{padding:7px 10px}.evo span{font-size:11px}
+  #actions{gap:8px}.act{width:60px;height:60px;font-size:12px}
+  #board{width:170px;padding:8px 10px}#board li{font-size:11px}
+  #feed{display:none}
 }
 @media (max-width:640px){#evolve{bottom:auto;top:calc(236px + env(safe-area-inset-top,0px))}.evopts{grid-template-columns:1fr}.evo{padding:8px 10px}.evo span{font-size:11px}}
 @media (pointer:coarse){.kbd-only{display:none!important}}
@@ -197,7 +200,7 @@ body:not(.playing) #evolve{display:none!important}
 body:not(.playing) #joy{display:none!important}
 @media (pointer:coarse){
   body.playing #joy{display:block}
-  #actions{left:auto;right:calc(var(--gut) + env(safe-area-inset-right,0px));transform:none;bottom:calc(var(--gut) + 112px + env(safe-area-inset-bottom,0px));flex-direction:column;gap:12px}
+  #actions{left:auto;right:calc(var(--gut) + env(safe-area-inset-right,0px));transform:none;bottom:calc(var(--gut) + env(safe-area-inset-bottom,0px));flex-direction:column;gap:12px}
   .act{width:72px;height:72px;padding:0;justify-content:center;border-radius:50%;font:700 13px var(--display)}
   .act kbd{display:none}
   #scale{left:50%;transform:translateX(-50%);bottom:calc(var(--gut) + env(safe-area-inset-bottom,0px))}
@@ -1512,18 +1515,18 @@ function drawMini(){
 
 /* ================= HUD ================= */
 const boardEl=$('boardList'),massEl=$('massVal'),metaEl=$('metaVal'),fxEl=$('fx'),feedEl=$('feed'),dashBtn=$('dashBtn');
-const phone=matchMedia('(max-width:640px)');
+const phone=matchMedia('(max-width:640px)'),shortScreen=matchMedia('(max-height:520px)');
 let dispMass=0,shownMass=-1,glowPrey=false,glowMass=0;
 function renderFeed(){feedEl.innerHTML=feed.map(f=>`<div class="${f.you?'you':''}" style="opacity:${T-f.t>6?0:1}">${f.html}</div>`).join('');}
 function hud(){
   const ranked=players.filter(p=>p.alive&&p.cells.length).map(p=>({p,m:p.cells.reduce((s,c)=>s+c.mass,0)})).sort((a,b)=>b.m-a.m);
   leader=ranked.length?ranked[0].p:null;
-  const N=phone.matches?5:8;let html='';
+  const small=phone.matches||shortScreen.matches,N=small?5:8;let html='';
   const row=(r,i)=>{const hu=r.p.remote&&!r.p.bot;return`<li class="${r.p===human?'me':''}"><span class="rk">${i===0?'♛':i+1}</span><span class="dot" style="background:${col(r.p.color)}"></span><span class="nm">${esc(r.p===human?r.p.name+' (you)':r.p.name)}</span>${r.p.boss?'<span class="tag boss">boss</span>':hu?'<span class="tag">player</span>':''}<span class="ms">${Math.round(r.m)}</span></li>`;};
   ranked.slice(0,N).forEach((r,i)=>{html+=row(r,i);});
   const hi=ranked.findIndex(r=>r.p===human);
   if(hi>=N)html+=`<li class="gap">⋯</li>`+row(ranked[hi],hi);
-  for(const [,pl] of proxies){const ri=ranked.findIndex(r=>r.p===pl);if(ri>=N&&pl!==human&&!phone.matches)html+=row(ranked[ri],ri);}
+  for(const [,pl] of proxies){const ri=ranked.findIndex(r=>r.p===pl);if(ri>=N&&pl!==human&&!small)html+=row(ranked[ri],ri);}
   boardEl.innerHTML=html;
   if(human&&human.alive){
     const n=human.cells.length;metaEl.textContent=`${n} cell${n>1?'s':''} · rank ${hi+1} of ${ranked.length}${human.evo?` · ${human.evo} evolution${human.evo>1?'s':''}`:''}`;
