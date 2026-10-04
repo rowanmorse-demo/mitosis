@@ -200,11 +200,11 @@ body:not(.playing) #joy{display:none!important}
 @media (pointer:coarse){
   body.playing #joy{display:block}
   /* corner cluster like Agar.io mobile: Shoot in the corner, Boost to its left, Split above it */
-  #actions{left:auto;right:calc(var(--gut) + env(safe-area-inset-right,0px));transform:none;bottom:calc(var(--gut) + env(safe-area-inset-bottom,0px));display:block;width:146px;height:150px}
-  .act{position:absolute;width:64px;height:64px;padding:0;justify-content:center;border-radius:50%;font:700 12px var(--display)}
+  #actions{left:auto;right:calc(var(--gut) + env(safe-area-inset-right,0px));transform:none;bottom:calc(var(--gut) + env(safe-area-inset-bottom,0px));display:block;width:170px;height:180px}
+  .act{position:absolute;width:72px;height:72px;padding:0;justify-content:center;border-radius:50%;font:700 13px var(--display)}
   #ejectBtn{right:0;bottom:0}
-  #dashBtn{right:74px;bottom:0}
-  #splitBtn{right:0;bottom:76px;width:72px;height:72px;font-size:13px}
+  #dashBtn{right:98px;bottom:0}
+  #splitBtn{right:0;bottom:98px;width:82px;height:82px;font-size:14px}
   .act kbd{display:none}
   #scale{left:50%;transform:translateX(-50%);bottom:calc(var(--gut) + env(safe-area-inset-bottom,0px))}
   #scale .bar,#magLbl{display:none}
