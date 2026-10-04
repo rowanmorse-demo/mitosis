@@ -419,12 +419,13 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
     N.state=N.state==='full'?'full':'connecting';
     try{ws=new WebSocket(SERVER.replace(/^http/,'ws')+'/ws');}catch(e){later();return;}
     ws.onopen=()=>{retry=0;ws.send(JSON.stringify({t:'hello',id:myId}));};
-    ws.onmessage=ev=>{let m;try{m=JSON.parse(ev.data);}catch(e){return;}if(!m||typeof m!=='object')return;
+    ws.onmessage=ev=>{const w0=performance.now();try{onMsg(ev);}finally{const w=performance.now()-w0;if(window.__wsTime)window.__wsTime(w);}};
+  function onMsg(ev){let m;try{m=JSON.parse(ev.data);}catch(e){return;}if(!m||typeof m!=='object')return;
       if(m.t==='welcome'){others.clear();for(const q of Array.isArray(m.peers)?m.peers:[])if(q&&typeof q.id==='string'&&q.p&&typeof q.p==='object')others.set(q.id,Object.freeze(q.p));
         N.lan=Array.isArray(m.lan)?m.lan.filter(u=>typeof u==='string'):[];N.state='live';rebuild();setConn(true);flush();}
       else if(m.t==='p'&&typeof m.id==='string'&&m.p&&typeof m.p==='object'){others.set(m.id,Object.freeze(m.p));rebuild();}
       else if(m.t==='bye'&&typeof m.id==='string'){others.delete(m.id);rebuild();}
-      else if(m.t==='full')N.state='full';};
+      else if(m.t==='full')N.state='full';}
     ws.onclose=()=>{setConn(false);others.clear();rebuild();if(N.state!=='full'){N.state='offline';later();}};
     ws.onerror=()=>{};
   }
@@ -2008,11 +2009,13 @@ init();
 for(let i=0;i<90;i++)step(1/30);
 hud();if(leader&&leader.cells[0]){cam.x=leader.cells[0].x;cam.y=leader.cells[0].y;}
 showCard('startCard');
-let last=performance.now(),hudT=0,ema=16,playT=0,lastHitchAt=0,hitchSent=0;
+let last=performance.now(),hudT=0,ema=16,playT=0,lastHitchAt=0,hitchSent=0,wsMax=0,lastTouchAt=0;
+addEventListener('pointerdown',()=>{lastTouchAt=performance.now();},true);
+window.__wsTime=w=>{if(w>wsMax)wsMax=w;};setInterval(()=>{wsMax=0;},1000);
 function reportHitch(text){Native.send({type:'log',text});if(hitchSent++>40)return; // at most 40 reports per session
   try{fetch(window.MITOSIS_SERVER+'/api/log',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({who:(Native.platform||'web')+':'+(wallet.playerId||'?').slice(0,8),text})}).catch(()=>{});}catch(e){}}
 function frame(nowMs){
-  const raw=Math.min(.05,Math.max(0,(nowMs-last)/1000));last=nowMs;
+  const gapMs=nowMs-last,raw=Math.min(.05,Math.max(0,gapMs/1000));last=nowMs;
   ema=ema*.95+raw*1000*.05;
   if(!lowFx&&mode==='play'&&!paused){playT+=raw;if(playT>5&&ema>27)lowFx=true;}
   slow+=(1-slow)*Math.min(1,raw*1.2);
@@ -2021,7 +2024,7 @@ function frame(nowMs){
   const t1=performance.now();try{netTick(raw);}catch(e){}
   const t2=performance.now();updateCam(raw);draw();tickMass(raw);const t3=performance.now();
   // watchdog: tell the app shell about long frames so stalls can be read from the device log
-  if(t3-t0>180||raw>=.05&&nowMs-lastHitchAt>1000){lastHitchAt=nowMs;reportHitch(`hitch frame=${Math.round(nowMs-last+raw*1000)}ms step=${(t1-t0).toFixed(0)} net=${(t2-t1).toFixed(0)} draw=${(t3-t2).toFixed(0)} cells=${cells.length} players=${players.length} parts=${parts.length} ej=${ejected.length} host=${isHost} peers=${peerCount} mode=${mode} z=${cam.z.toFixed(2)}`);}
+  if((t3-t0>180||gapMs>=400)&&nowMs-lastHitchAt>1000){lastHitchAt=nowMs;reportHitch(`hitch gap=${Math.round(gapMs)}ms wsmax=${Math.round(wsMax)}ms sinceTouch=${Math.round(nowMs-lastTouchAt)}ms step=${(t1-t0).toFixed(0)} net=${(t2-t1).toFixed(0)} draw=${(t3-t2).toFixed(0)} cells=${cells.length} players=${players.length} parts=${parts.length} ej=${ejected.length} host=${isHost} peers=${peerCount} mode=${mode} z=${cam.z.toFixed(2)}`);}
   hudT-=raw;if(hudT<=0){hudT=.12;hud();}
   requestAnimationFrame(frame);
 }
