@@ -77,12 +77,12 @@ body:not(.playing) #stats, body:not(.playing) #actions, body:not(.playing) #scal
 /* overlay + cards */
 #overlay{position:fixed;inset:0;z-index:5;display:grid;place-items:center;padding:calc(var(--gut) + env(safe-area-inset-top,0px)) calc(var(--gut) + env(safe-area-inset-right,0px)) calc(var(--gut) + env(safe-area-inset-bottom,0px)) calc(var(--gut) + env(safe-area-inset-left,0px));background:radial-gradient(ellipse at center,rgba(2,8,9,.2),rgba(2,8,9,.75));animation:ov .35s ease-out}
 @keyframes ov{from{opacity:0}}
-.card{width:100%;max-width:444px;max-height:calc(100% - 8px);overflow:auto;box-sizing:border-box;padding:28px 28px 24px;display:grid;gap:18px;user-select:text;-webkit-user-select:text;touch-action:pan-y;animation:up .4s cubic-bezier(.2,.8,.2,1)}
+.card{width:100%;max-width:444px;max-height:calc(100% - 8px);overflow:auto;box-sizing:border-box;padding:24px 26px 22px;display:grid;gap:14px;user-select:text;-webkit-user-select:text;touch-action:pan-y;animation:up .4s cubic-bezier(.2,.8,.2,1)}
 @keyframes up{from{opacity:0;transform:translateY(14px) scale(.985)}}
 .eyebrow{margin:0;font:500 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
 h1{margin:0;font:800 clamp(58px,16vw,94px)/.86 var(--display);letter-spacing:-.055em}
 h1 sup{font:600 15px var(--mono);letter-spacing:0;color:var(--accent);vertical-align:top;position:relative;top:.5em;margin-left:4px}
-h2{margin:0;font:800 56px/.9 var(--display);letter-spacing:-.05em}
+h2{margin:0;font:800 44px/.92 var(--display);letter-spacing:-.045em}
 .lede{margin:-4px 0 0;font:400 16px/1.45 var(--display);color:var(--muted);text-wrap:balance}
 .field{display:grid;gap:8px}
 input[type=text]{appearance:none;width:100%;box-sizing:border-box;background:rgba(0,0,0,.32);border:1px solid var(--line);border-radius:9px;color:var(--ink);font:500 16px var(--display);padding:11px 12px;transition:border-color .15s}
@@ -106,7 +106,7 @@ input[type=text]:focus{outline:2px solid var(--accent);outline-offset:1px}
 .ghost{appearance:none;border:1px solid var(--line);border-radius:11px;background:transparent;color:var(--muted);font:600 14px var(--display);padding:11px 14px;cursor:pointer}
 .ghost:hover{color:var(--ink);border-color:var(--line-strong)}
 /* Account: Sign in with Apple / Google, drawn to the providers' button guidelines */
-.acct .who{margin:0;font:13px/1.45 var(--mono);color:var(--muted)}.acct .who b{color:var(--ink);font-weight:600}
+.acct .who{margin:0;font:500 13px/1.45 var(--display);color:var(--muted)}.acct .who b{color:var(--ink);font-weight:600}
 .pstats{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.pstat{display:grid;gap:3px;padding:9px 6px;border:1px solid var(--line);border-radius:11px;background:rgba(0,0,0,.22);text-align:center}.pstat b{font:800 18px/1 var(--display);letter-spacing:-.02em}.pstat span{font:10px var(--mono);color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
 .sbtns{display:grid;gap:8px}
 .sbtn{appearance:none;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;border-radius:11px;padding:11px 14px;font:600 15px/1 var(--display);cursor:pointer;border:1px solid transparent;transition:filter .15s}
@@ -189,6 +189,29 @@ body:not(.playing) #evolve{display:none!important}
   .evo{padding:7px 10px}.evo span{font-size:11px}
   #board{width:170px;padding:8px 10px}#board li{font-size:11px}
   #feed{display:none}
+}
+/* Short, wide screens (phones held sideways): wide two-column cards that fit without scrolling,
+   smaller headings and tighter spacing instead of a tall portrait column */
+@media (orientation:landscape) and (max-height:520px){
+  .card{max-width:min(740px,100%);max-height:calc(100% - 4px);padding:16px 20px 14px;gap:10px 16px;align-content:start}
+  #startCard,#profileCard,#settingsCard,#lookCard,#rankCard{grid-template-columns:1fr 1fr;align-items:start}
+  .card>.eyebrow,.card>h1,.card>h2,.card>.row,.card>.chips,.card>.iconrow,.card>.pstats,.card>p{grid-column:1/-1}
+  .card>.eyebrow{margin-bottom:-4px}
+  h1,.home h1{font-size:44px;line-height:.9}h2{font-size:30px}
+  .home{max-width:600px;gap:8px 14px}
+  .home .field{grid-column:1}.home #go{grid-column:2;align-self:end}
+  .iconbtn{padding:9px 4px;font-size:12px}
+  .primary{padding:11px;font-size:16px}.ghost{padding:9px 12px;font-size:13px}
+  input[type=text]{padding:9px 11px;font-size:15px}
+  .seg button{padding:7px 4px;font-size:12px}.seg button small{font-size:9.5px}
+  .pstat{padding:7px 4px;gap:2px}.pstat b{font-size:16px}.pstat span{font-size:9.5px}
+  #profileCard .acct{grid-column:1/-1;grid-template-columns:1fr 1fr;gap:6px 14px;align-items:start}
+  #profileCard .acct>.label,#profileCard .acct>.hint{grid-column:1/-1}
+  .acct .who{font-size:12px}.sbtn{padding:9px 12px;font-size:14px}.sbtns{gap:6px}
+  #settingsCard #helpSec{grid-column:2;align-self:start}#settingsCard #helpSec .body{max-height:150px;overflow:auto}
+  #inviteHelp{font-size:11px}
+  #lookCard .field:has(#ownedSkins){grid-column:1/-1}
+  #rankCard .field{grid-column:1/-1}
 }
 @media (max-width:640px){#evolve{bottom:auto;top:calc(236px + env(safe-area-inset-top,0px))}.evopts{grid-template-columns:1fr}.evo{padding:8px 10px}.evo span{font-size:11px}}
 @media (pointer:coarse){.kbd-only{display:none!important}}
