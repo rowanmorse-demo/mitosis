@@ -89,7 +89,7 @@ input[type=text]:focus{outline:2px solid var(--accent);outline-offset:1px}
 .sw{appearance:none;width:32px;height:32px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;box-shadow:inset 0 0 0 3px rgba(0,0,0,.28),inset -4px -6px 10px rgba(0,0,0,.18);transition:transform .15s}
 .sw:hover{transform:scale(1.08)}
 .sw[aria-pressed=true]{border-color:var(--ink)}
-.seg{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:9px;overflow:hidden}.seg.two{grid-template-columns:1fr 1fr}
 .seg button{appearance:none;border:0;background:transparent;color:var(--muted);font:600 13px var(--display);padding:9px 4px;cursor:pointer;display:grid;gap:2px;transition:background .15s,color .15s}
 .seg button:hover{color:var(--ink)}
 .seg button small{font:10px var(--mono);color:var(--dim)}
@@ -342,6 +342,7 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
         <button type="button" data-d="hostile">Hostile<small>80 cells</small></button>
       </div>
     </div>
+    <div class="field"><span class="label">Vibration</span><div class="seg two" id="hapSeg"><button type="button" data-h="0">Off<small>recommended</small></button><button type="button" data-h="1">On<small>taps on split and kills</small></button></div></div>
     <div class="field"><span class="label">Invite friends</span><div class="invite" id="inviteRow"><input id="inviteUrl" type="text" readonly aria-label="Invite link" value=""><button id="copyInvite" class="ghost" type="button">Invite friends</button></div><p id="inviteHelp">Send this link to a friend on the same Wi-Fi. For friends elsewhere, run <b>share-online.bat</b> and send the https link it prints.</p></div>
     <details class="sec" id="helpSec"><summary><span class="label">How to play</span></summary><div class="body">
     <dl class="keys kbd-only">
@@ -612,7 +613,7 @@ const Native=(()=>{
     if(m.id&&waits.has(m.id)){const w=waits.get(m.id);waits.delete(m.id);if(m.ok===false)w.rej(new Error(m.error||'Failed'));else w.res(m);return;}
     if(m.type==='purchase'&&m.purchase)redeem(m.purchase).catch(()=>{});
     if(m.type==='app')reportHitch('app '+m.text);}};
-  let lastHap=0;return{platform,send,call,haptic(style){if(!platform)return;const n=performance.now();if(n-lastHap<120)return;lastHap=n;send({type:'haptic',style});}};
+  let lastHap=0;return{platform,send,call,haptic(style){if(!platform||!settings.haptics)return;const n=performance.now();if(n-lastHap<120)return;lastHap=n;send({type:'haptic',style});}};
 })();
 
 async function api(path,body,auth=true){
@@ -1966,6 +1967,8 @@ swEl.addEventListener('click',()=>setTimeout(syncPats,0));syncPats();
 const achLine=()=>{$('achLine').textContent=`Achievements ${ACH.filter(a=>achGot.has(a.id)).length} of ${ACH.length}`+(achGot.size?' — '+ACH.filter(a=>achGot.has(a.id)).map(a=>a.name).join(', '):'');};achLine();
 const diffEl=$('diff');const syncDiff=()=>{[...diffEl.children].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.d===settings.diff)));};
 diffEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.diff=b.dataset.d;syncDiff();});syncDiff();
+const hapEl=$('hapSeg'),syncHap=()=>[...hapEl.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.h==='1')===!!settings.haptics)));
+hapEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.haptics=b.dataset.h==='1';saveSettings();syncHap();});syncHap();
 $('nameIn').value=settings.name||'';
 $('go').addEventListener('click',startGame);
 $('again').addEventListener('click',startGame);
