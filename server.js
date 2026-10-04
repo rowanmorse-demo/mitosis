@@ -34,6 +34,8 @@ const ROUTES = {
   'POST /api/iap/google': { fn: economy.handlers.iapGoogle, auth: true },
   'GET /api/catalog': { fn: () => economy.catalog(), auth: false },
   'GET /api/leaderboard': { fn: store => economy.handlers.leaderboard(store), auth: false },
+  // clients report long frames here so stalls on phones can be read from the server log
+  'POST /api/log': { fn: (store, body) => { log('[client ' + String(body.who || '?').slice(0, 24) + '] ' + String(body.text || '').slice(0, 300)); return { ok: true }; }, auth: false },
 };
 const ipHits = new Map();
 function rateLimited(ip) {
