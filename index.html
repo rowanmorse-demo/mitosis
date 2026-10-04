@@ -743,7 +743,8 @@ if(/[?&]autopilot=1/.test(location.search)){
       if(Math.random()<.03)split(human);if(Math.random()<.04)eject(human);if(Math.random()<.01)dash(human);}
     else if(mode==='dead'||mode==='attract'){if(!dieAt)dieAt=performance.now();if(performance.now()-dieAt>4000){dieAt=0;joy.m=0;startGame();}}
     if(mode==='play')dieAt=0;};
-  setInterval(auto,100);setTimeout(()=>{reportHitch('autopilot on');if(mode!=='play')startGame();},2500);
+  setInterval(auto,100);setTimeout(()=>{reportHitch('autopilot on'+(/[?&]big=1/.test(location.search)?' (big)':''));if(mode!=='play')startGame();},2500);
+  setInterval(()=>{if(mode==='play'&&human&&human.alive)reportHitch(`autopilot alive mass=${Math.round(human.cells.reduce((a,c)=>a+c.mass,0))} cells=${human.cells.length} z=${cam.z.toFixed(2)}`);},60000);
 }
 $('shopBtn').addEventListener('click',()=>openStore());
 
@@ -1919,7 +1920,8 @@ function startGame(){
   syncBots();removeHuman();
   if(settings.skin>=SKIN_FREE&&!ownsSkin(settings.skin))settings.skin=0;
   human=makePlayer(settings.name||'Unnamed cell',skinColor(settings.stain,settings.skin),false);human.skin=settings.skin;human.stain=settings.stain;players.push(human);evoOffer=null;runAch=[];lysedAt=0;econRunStart();
-  spawn(human,25);cam.x=human.cells[0].x;cam.y=human.cells[0].y;dispMass=25;shownMass=-1;histT=0;
+  const m0=/[?&]autopilot=1/.test(location.search)&&/[?&]big=1/.test(location.search)?2500:25;
+  spawn(human,m0);cam.x=human.cells[0].x;cam.y=human.cells[0].y;dispMass=m0;shownMass=-1;histT=0;
   pointer.x=W/2;pointer.y=H/2;mode='play';paused=false;slow=1;feed.length=0;renderFeed();
   showCard(null);document.body.classList.add('playing');$('pauseBtn').textContent='Pause';cv.focus({preventScroll:true});
   setTimeout(()=>sfx('start'),30);

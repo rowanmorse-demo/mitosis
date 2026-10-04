@@ -69,6 +69,9 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
             #if DEBUG
             // "-autopilot 1" makes the page play by itself (soak testing a device without touching it)
             if UserDefaults.standard.bool(forKey: "autopilot") { comps.queryItems?.append(URLQueryItem(name: "autopilot", value: "1")) }
+            if UserDefaults.standard.bool(forKey: "big") { comps.queryItems?.append(URLQueryItem(name: "big", value: "1")) }
+            // "-safari <url>" hands a URL to Safari instead (A/B test of the page outside this shell)
+            if let s = UserDefaults.standard.string(forKey: "safari"), let u = URL(string: s) { DispatchQueue.main.asyncAfter(deadline: .now() + 1) { UIApplication.shared.open(u) } }
             #endif
             self.webView.loadFileURL(comps.url ?? index, allowingReadAccessTo: index.deletingLastPathComponent())
         }
