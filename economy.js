@@ -27,10 +27,22 @@ const PACKS = [
 // Payout for one run. Survival pays steadily; kills and peak mass add a bonus.
 const RULES = { perTenSec: 1, perEat: 2, eatCap: 30, peakPer: 50, peakCap: 40, runCap: 120, hourCap: 500, maxRunSec: 3 * 3600 };
 const HOUR = 3600 * 1000;
+// Rating (Elo-like): survival and kills raise it, dying quickly lowers it. Gains shrink and losses
+// grow as the rating climbs, so it settles instead of inflating forever. Everyone starts at 1000.
+const RATING = { base: 1000, perTenSec: 1, survCap: 60, perKill: 4, killCap: 60, quickDeathSec: 60, quickPenalty: 20, scale: 2000 };
+const TIERS = [[900, 'Bronze'], [1100, 'Silver'], [1400, 'Gold'], [1800, 'Platinum'], [2300, 'Diamond'], [Infinity, 'Legend']];
+const tierOf = r => TIERS.find(t => r < t[0])[1];
+function ratingDelta(rating, survived, eaten) {
+  const gain = Math.min(RATING.survCap, Math.floor(survived / 10) * RATING.perTenSec) + Math.min(RATING.killCap, Math.max(0, eaten | 0) * RATING.perKill);
+  const quick = survived < RATING.quickDeathSec ? (RATING.quickDeathSec - survived) / RATING.quickDeathSec * RATING.quickPenalty : 0;
+  const k = Math.max(0, rating - RATING.base) / RATING.scale;
+  return Math.round(gain * Math.max(.35, 1 - k) - quick * (1 + k));
+}
+const cleanName = s => String(s || '').replace(/[^\p{L}\p{N} _.\-'!?]/gu, '').trim().slice(0, 16) || null;
 
 const skinById = id => SKINS.find(s => s.id === id);
 const packById = id => PACKS.find(p => p.id === id);
-const catalog = () => ({ skins: SKINS, packs: PACKS, rules: RULES, iap: iap.status() });
+const catalog = () => ({ skins: SKINS, packs: PACKS, rules: RULES, rating: RATING, tiers: TIERS.map(t => t[1]), iap: iap.status() });
 
 function payoutFor({ survived, eaten, peak }) {
   const sec = Math.max(0, Math.min(RULES.maxRunSec, +survived || 0));
@@ -41,7 +53,7 @@ function payoutFor({ survived, eaten, peak }) {
 
 class ApiError extends Error { constructor(status, msg) { super(msg); this.status = status; } }
 const hash = s => crypto.createHash('sha256').update(String(s)).digest('hex');
-const wallet = (store, p) => ({ playerId: p.id, balance: Number(p.balance), earned: Number(p.earned), skins: store.skins(p.id) });
+const wallet = (store, p) => ({ playerId: p.id, balance: Number(p.balance), earned: Number(p.earned), skins: store.skins(p.id), rating: Number(p.rating ?? RATING.base), tier: tierOf(Number(p.rating ?? RATING.base)), runs: Number(p.runs || 0) });
 
 function hourlyAllowance(p, now) {
   const inWindow = now - Number(p.hour_at) < HOUR;
@@ -86,7 +98,11 @@ function runEnd(store, body, p) {
   const w = { balance: Number(p.balance) + payout, earned: Number(p.earned) + payout, hour_at: hr.at, hour_sum: hr.used + payout };
   store.setWallet(p.id, w); store.endRun(run.id, now, payout);
   Object.assign(p, w);
-  return { payout, capped: hr.used + payout >= RULES.hourCap, ...wallet(store, p) };
+  // rating
+  const before = Number(p.rating ?? RATING.base), delta = ratingDelta(before, survived, body.eaten), rating = Math.max(0, before + delta);
+  const name = cleanName(body.name) || p.name || null;
+  store.setRating(p.id, rating, name); p.rating = rating; p.name = name; p.runs = Number(p.runs || 0) + 1;
+  return { payout, capped: hr.used + payout >= RULES.hourCap, ratingDelta: delta, ...wallet(store, p) };
 }
 function buySkin(store, body, p) {
   const skin = skinById(body.skinId | 0);
@@ -118,4 +134,6 @@ async function iapGoogle(store, body, p) {
   return credit(store, p, 'google', v, v.orderId);
 }
 
-module.exports = { SKINS, PACKS, RULES, catalog, payoutFor, ApiError, auth, handlers: { session, runStart, runEnd, buySkin, iapApple, iapGoogle } };
+function leaderboard(store) { return { top: store.top(10).map((r, i) => ({ rank: i + 1, name: r.name || 'Unnamed cell', rating: r.rating, tier: tierOf(r.rating), runs: r.runs })) }; }
+
+module.exports = { SKINS, PACKS, RULES, RATING, catalog, payoutFor, ratingDelta, tierOf, ApiError, auth, handlers: { session, runStart, runEnd, buySkin, iapApple, iapGoogle, leaderboard } };

@@ -37,6 +37,19 @@ On phones, drag to steer and use the on-screen buttons. In the Android app the b
 - Ejecting costs 16 mass and makes a 15-mass blob, at most about 8 times a second however hard you hold W.
 - Dash costs 4% of your mass.
 
+## Rating
+
+Every player has an Elo-style rating, starting at 1000, adjusted by the server at the end of each run:
+
+| Factor | Effect |
+| --- | --- |
+| Surviving | +1 per 10 s, up to +60 |
+| Each cell absorbed | +4, up to +60 |
+| Dying inside the first minute | up to −20, the sooner the worse |
+| Rating above 1000 | gains shrink and losses grow (at 2000, gains ×0.5 and losses ×1.5), so ratings settle rather than inflate |
+
+Tiers: Bronze (<900), Silver, Gold (1400+), Platinum (1800+), Diamond (2300+), Legend. The lobby shows your rating and the top ten, and the results screen after every run (death or Return to lobby) shows the change. `GET /api/leaderboard` returns the top ten.
+
 ## ATP, skins and purchases
 
 **ATP** is the in-game currency. Every run pays out when it ends:

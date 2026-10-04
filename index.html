@@ -230,7 +230,10 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
 .sec summary .label{flex:none}.sec .sum{font:500 13px var(--display);color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sec .body{display:grid;gap:14px;padding:4px 14px 14px}
 .sec .atp{margin-left:auto;flex:none}
-.row2{display:grid;grid-template-columns:1fr auto;gap:10px}.ghost.big{font:700 17px var(--display);padding:14px 20px;color:var(--ink);border-color:var(--line-strong)}
+.row2{display:grid;grid-template-columns:1fr auto;gap:10px}
+.rankrow{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}.rankrow b{font:800 18px var(--display);letter-spacing:-.01em}.rankrow .tier{font:600 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--violet);border:1px solid rgba(154,140,255,.45);border-radius:5px;padding:3px 6px}
+.top{margin:0;padding:0;list-style:none;display:grid;gap:7px}.top li{display:grid;grid-template-columns:22px 1fr auto auto;gap:8px;align-items:center;font:14px var(--display)}.top .rk{font:500 11px var(--mono);color:var(--muted)}.top .tr{font:500 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--violet)}.top .rt{font:600 13px var(--mono);color:var(--amber);font-variant-numeric:tabular-nums}.top li.me{color:var(--accent)}
+#dRank{margin:-6px 0 0;font:600 14px var(--display);color:var(--violet)}#dRank b{color:var(--ink)}.ghost.big{font:700 17px var(--display);padding:14px 20px;color:var(--ink);border-color:var(--line-strong)}
 /* ATP, skins, store */
 .fhead{display:flex;align-items:center;gap:10px}.fhead .label{flex:1}
 .atp{font:600 13px var(--mono);color:var(--amber)}.atp b{font-weight:700;font-variant-numeric:tabular-nums}
@@ -289,6 +292,8 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
     <p class="lede">Absorb smaller cells, divide to strike, avoid anything bigger.</p>
     <div class="field"><label class="label" for="nameIn">Specimen name</label><input id="nameIn" type="text" maxlength="16" placeholder="Unnamed cell" autocomplete="off" spellcheck="false"></div>
     <div class="row2"><button id="go" class="primary" type="button">Inoculate</button><button id="shopBtn" class="ghost big" type="button">Shop</button></div>
+    <div class="rankrow"><span class="label">Rating</span><b id="rankVal">1000</b><span class="tier" id="rankTier">Silver</span><span class="hint" id="rankHint">Survive longer and absorb more to climb; dying fast costs rating.</span></div>
+    <details class="sec" id="topSec"><summary><span class="label">Top players</span><span class="sum" id="topSum"></span></summary><div class="body"><ol class="top" id="topList"><li><span class="rk"></span><span>Loading…</span></li></ol></div></details>
     <details class="sec" id="lookSec"><summary><span class="label">Appearance</span><span class="sum" id="lookSum"></span><span class="atp"><b id="atpBal">0</b> ATP</span></summary><div class="body">
       <div class="field"><span class="label">Stain</span><div class="swatches" id="sw"></div></div>
       <div class="field"><span class="label">Pattern</span><div class="pats" id="pats"></div></div>
@@ -346,8 +351,8 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
   </div>
 
   <div class="card panel" id="deathCard" hidden>
-    <p class="eyebrow">Specimen lost</p>
-    <h2>Lysed</h2>
+    <p class="eyebrow" id="dEyebrow">Specimen lost</p>
+    <h2 id="dTitle">Lysed</h2>
     <p id="deathWhy">Absorbed.</p>
     <div class="statgrid">
       <div><span class="label">Peak mass</span><b id="dPeak">0</b></div>
@@ -357,6 +362,7 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
     </div>
     <p id="dAch" hidden></p>
     <p id="dEarn" class="earn" hidden></p>
+    <p id="dRank" hidden></p>
     <div class="chartbox"><span class="label">Mass over time</span><canvas id="dChart"></canvas></div>
     <div class="row"><button id="again" class="primary" type="button">Re-inoculate</button><button id="setup" class="ghost" type="button">Lobby</button></div>
   </div>
@@ -546,7 +552,7 @@ const saveSettings=()=>{try{localStorage.setItem('mitosis.settings',JSON.stringi
    "credit this purchase". A device secret in localStorage identifies the player — no sign-up. */
 const ATP_PACKS=[{id:'atp_500',atp:500,label:'Pouch'},{id:'atp_1500',atp:1500,label:'Flask',tag:'Popular'},{id:'atp_5000',atp:5000,label:'Culture',tag:'Best value'},{id:'atp_12000',atp:12000,label:'Bioreactor'}];
 const escH=s=>String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[ch]);
-let wallet={balance:0,earned:0,skins:[],online:false,playerId:null};
+let wallet={balance:0,earned:0,skins:[],online:false,playerId:null,rating:1000,tier:'Silver'};
 try{const w=JSON.parse(localStorage.getItem('mitosis.wallet')||'null');if(w&&typeof w==='object'){wallet.balance=w.balance|0;wallet.skins=Array.isArray(w.skins)?w.skins:[];}}catch(e){}
 let secret='';try{secret=localStorage.getItem('mitosis.secret')||'';}catch(e){}
 if(!/^[a-z0-9]{24,64}$/.test(secret)){secret='';const a=new Uint8Array(32);crypto.getRandomValues(a);for(const b of a)secret+=(b%36).toString(36);try{localStorage.setItem('mitosis.secret',secret);}catch(e){}}
@@ -575,6 +581,7 @@ async function api(path,body,auth=true){
 }
 function applyWallet(w){
   if(!w)return;wallet.balance=w.balance|0;wallet.earned=w.earned|0;if(Array.isArray(w.skins))wallet.skins=w.skins;wallet.playerId=w.playerId||wallet.playerId;wallet.online=true;
+  if(typeof w.rating==='number'){wallet.rating=w.rating;wallet.tier=w.tier||wallet.tier;}renderRank();
   try{localStorage.setItem('mitosis.wallet',JSON.stringify({balance:wallet.balance,skins:wallet.skins}));}catch(e){}
   if(w.catalog){for(const s of w.catalog.skins||[]){const P=PREMIUM.find(x=>x.id===s.id);if(P&&s.price>0)P.price=s.price;}for(const p of w.catalog.packs||[]){const K=ATP_PACKS.find(x=>x.id===p.id);if(K&&p.atp>0)K.atp=p.atp;}}
   if(settings.skin>=SKIN_FREE&&!ownsSkin(settings.skin)){settings.skin=0;saveSettings();}
@@ -590,18 +597,33 @@ let runId=null,runPromise=null;
 function econRunStart(){runId=null;runPromise=api('run/start').then(r=>{runId=r.runId;return r.runId;}).catch(()=>null);}
 async function econRunEnd(){
   if(!human)return;const s=human.stats,rep={survived:Math.max(0,T-s.born),eaten:s.eaten|0,peak:Math.round(s.peak),show:1};
-  const rid=runId||(runPromise?await runPromise:null);runId=null;runPromise=null;
+  rep.name=human.name;const rid=runId||(runPromise?await runPromise:null);runId=null;runPromise=null;
   if(!rid){showEarn(wallet.online?'':'Offline — ATP is only earned while connected');return;}
   rep.runId=rid;const a=loadPending();a.push(rep);savePending(a);showEarn('Counting ATP…');flushRuns();
 }
 function showEarn(t){const el=$('dEarn');el.hidden=!t;el.textContent=t||'';}
+function renderRank(){$('rankVal').textContent=wallet.rating;$('rankTier').textContent=wallet.tier;}
+function showRank(w){const el=$('dRank');if(typeof w.ratingDelta!=='number'){el.hidden=true;return;}const d=w.ratingDelta;
+  el.innerHTML=`Rating <b>${d>=0?'+':'−'}${Math.abs(d)}</b> → <b>${w.rating}</b> · ${escH(w.tier)}`;el.hidden=false;}
+async function loadTop(){try{const r=await fetch(window.MITOSIS_SERVER+'/api/leaderboard');const j=await r.json();const me=wallet.playerId;
+  $('topList').innerHTML=(j.top||[]).map(t=>`<li><span class="rk">${t.rank}</span><span class="n">${escH(t.name)}</span><span class="tr">${escH(t.tier)}</span><span class="rt">${t.rating}</span></li>`).join('')||'<li><span class="rk"></span><span>No runs yet — be the first.</span></li>';
+  const top=(j.top||[])[0];$('topSum').textContent=top?`#1 ${top.name} · ${top.rating}`:'';}catch(e){$('topList').innerHTML='<li><span class="rk"></span><span>Not available offline.</span></li>';}}
+$('topSec').addEventListener('toggle',()=>{if($('topSec').open)loadTop();});
+// ending a run on purpose shows the same results screen as dying
+function showResults(title,eyebrow,why){
+  if(!human)return;const s=human.stats,m=human.cells.reduce((a,c)=>a+(c.dead?0:c.mass),0);
+  $('dEyebrow').textContent=eyebrow;$('dTitle').textContent=title;$('deathWhy').textContent=why;
+  $('dPeak').textContent=Math.round(s.peak);$('dPeak').classList.remove('pb');$('dEaten').textContent=s.eaten;$('dTime').textContent=fmtT(T-s.born);$('dBest').textContent=Math.round(Math.max(best,s.peak));
+  const dA=$('dAch');dA.hidden=!runAch.length;dA.textContent=runAch.length?'Unlocked: '+runAch.join(', '):'';
+  const hist=human.hist.slice();hist.push(m);showCard('deathCard');drawChart(hist);
+}
 function loadPending(){try{const a=JSON.parse(localStorage.getItem('mitosis.runs')||'[]');return Array.isArray(a)?a:[];}catch(e){return[];}}
 function savePending(a){try{localStorage.setItem('mitosis.runs',JSON.stringify(a.slice(-10)));}catch(e){}}
 let flushing=false;
 async function flushRuns(){ // report finished runs; keep them queued while the server is unreachable
   if(flushing)return;flushing=true;
   try{let a=loadPending();while(a.length){const rep=a[0];
-    try{const w=await api('run/end',rep);applyWallet(w);if(rep.show)showEarn(w.payout?`+${w.payout} ATP earned`:w.capped?'Hourly ATP cap reached — more next hour':'');}
+    try{const w=await api('run/end',rep);applyWallet(w);if(rep.show){showEarn(w.payout?`+${w.payout} ATP earned`:w.capped?'Hourly ATP cap reached — more next hour':'');showRank(w);if($('topSec').open)loadTop();}}
     catch(e){if(!e.status||e.status>=500){if(rep.show)showEarn('ATP will be counted when the server is back');break;}}
     a.shift();savePending(a);}}
   finally{flushing=false;}
@@ -668,7 +690,7 @@ $('packs').addEventListener('click',e=>{const b=e.target.closest('.pack');if(b&&
 $('shopBtn').addEventListener('click',()=>openStore());
 $('lookSec').querySelector('.atp').addEventListener('click',e=>{e.preventDefault();e.stopPropagation();openStore();});
 $('storeBack').addEventListener('click',()=>{showCard('startCard');renderSkins();});
-econInit();
+renderRank();econInit();
 let best=0;try{best=+localStorage.getItem('mitosis.best')||0;}catch(e){}
 
 /* ================= prerendered sprites ================= */
@@ -1840,6 +1862,7 @@ function setPaused(v){
 function die(){
   mode='dead';if(!multi())slow=.22;sfx('die');Native.haptic('heavy');const s=human.stats;human.hist.push(0);paused=false;
   const pb=s.peak>best;if(pb){best=s.peak;try{localStorage.setItem('mitosis.best',String(Math.round(best)));}catch(e){}}
+  $('dEyebrow').textContent='Specimen lost';$('dTitle').textContent='Lysed';$('dRank').hidden=true;
   $('deathWhy').textContent=`Absorbed by ${s.killer} after ${fmtT(T-s.born)}.`;
   $('dPeak').textContent=Math.round(s.peak);$('dPeak').classList.toggle('pb',pb);$('dEaten').textContent=s.eaten;$('dTime').textContent=fmtT(T-s.born);$('dBest').textContent=Math.round(best);
   const dA=$('dAch');dA.hidden=!runAch.length;dA.textContent=runAch.length?'Unlocked: '+runAch.join(', '):'';evoOffer=null;renderEvo();lysedAt=0;
@@ -1879,7 +1902,7 @@ $('go').addEventListener('click',startGame);
 $('again').addEventListener('click',startGame);
 $('setup').addEventListener('click',()=>{mode='attract';achLine();showCard('startCard');});
 $('resume').addEventListener('click',()=>setPaused(false));
-$('quit').addEventListener('click',()=>{paused=false;econRunEnd();removeHuman();mode='attract';document.body.classList.remove('playing');showCard('startCard');$('pauseBtn').textContent='Pause';});
+$('quit').addEventListener('click',()=>{paused=false;$('dRank').hidden=true;econRunEnd();showResults('Run over','Returned to the lobby',`You left the well after ${fmtT(T-human.stats.born)}.`);removeHuman();mode='attract';document.body.classList.remove('playing');$('pauseBtn').textContent='Pause';});
 $('pauseBtn').addEventListener('click',()=>setPaused(!paused));
 $('copyInvite').addEventListener('click',()=>{const b=$('copyInvite'),i=$('inviteUrl');const done=t=>{b.textContent=t;setTimeout(()=>{b.textContent='Invite friends';},1600);};
   if(navigator.share&&TOUCH_UI){navigator.share({title:'Mitosis',text:'Come play Mitosis with me',url:i.value}).catch(()=>{});return;}

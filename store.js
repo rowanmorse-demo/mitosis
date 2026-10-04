@@ -31,6 +31,8 @@ class SqliteStore {
       CREATE TABLE IF NOT EXISTS runs(id TEXT PRIMARY KEY, player TEXT, started INTEGER, ended INTEGER, payout INTEGER);
       CREATE TABLE IF NOT EXISTS purchases(id TEXT PRIMARY KEY, player TEXT, product TEXT, amount INTEGER, platform TEXT, at INTEGER);
       CREATE INDEX IF NOT EXISTS runs_player ON runs(player, started);`);
+    for (const sql of ['ALTER TABLE players ADD COLUMN rating INTEGER NOT NULL DEFAULT 1000', 'ALTER TABLE players ADD COLUMN name TEXT', 'ALTER TABLE players ADD COLUMN runs INTEGER NOT NULL DEFAULT 0'])
+      try { this.db.exec(sql); } catch (e) {} // already migrated
     const p = s => this.db.prepare(s);
     this.q = {
       bySecret: p('SELECT * FROM players WHERE secret = ?'),
@@ -47,6 +49,8 @@ class SqliteStore {
       purchase: p('SELECT * FROM purchases WHERE id = ?'),
       insPurchase: p('INSERT INTO purchases(id, player, product, amount, platform, at) VALUES(?, ?, ?, ?, ?, ?)'),
       count: p('SELECT COUNT(*) AS n FROM players'),
+      setRating: p('UPDATE players SET rating = ?, name = ?, runs = runs + 1 WHERE id = ?'),
+      top: p('SELECT name, rating, runs FROM players WHERE runs > 0 ORDER BY rating DESC, runs DESC LIMIT ?'),
     };
   }
   playerBySecret(h) { return this.q.bySecret.get(h) || null; }
@@ -63,6 +67,8 @@ class SqliteStore {
   purchase(id) { return this.q.purchase.get(id) || null; }
   addPurchase(id, player, product, amount, platform, now) { this.q.insPurchase.run(id, player, product, amount, platform, now); }
   playerCount() { return Number(this.q.count.get().n); }
+  setRating(id, rating, name) { this.q.setRating.run(rating, name, id); }
+  top(n) { return this.q.top.all(n).map(r => ({ name: r.name, rating: Number(r.rating), runs: Number(r.runs) })); }
 }
 
 /* ---------- JSON file (fallback) ---------- */
@@ -83,7 +89,7 @@ class JsonStore {
   playerBySecret(h) { const id = this.d.secrets[h]; return id ? this.player(id) : null; }
   player(id) { const p = this.d.players[id]; return p ? { ...p } : null; }
   createPlayer(id, h, now) {
-    this.d.players[id] = { id, secret: h, created: now, seen: now, balance: 0, earned: 0, hour_at: 0, hour_sum: 0 };
+    this.d.players[id] = { id, secret: h, created: now, seen: now, balance: 0, earned: 0, hour_at: 0, hour_sum: 0, rating: 1000, name: null, runs: 0 };
     this.d.secrets[h] = id; this.save(); return this.player(id);
   }
   touch(id, now) { const p = this.d.players[id]; if (p) { p.seen = now; this.save(); } }
@@ -97,6 +103,8 @@ class JsonStore {
   purchase(id) { const p = this.d.purchases[id]; return p ? { ...p } : null; }
   addPurchase(id, player, product, amount, platform, now) { this.d.purchases[id] = { id, player, product, amount, platform, at: now }; this.save(); }
   playerCount() { return Object.keys(this.d.players).length; }
+  setRating(id, rating, name) { const p = this.d.players[id]; if (p) { p.rating = rating; p.name = name; p.runs = (p.runs || 0) + 1; this.save(); } }
+  top(n) { return Object.values(this.d.players).filter(p => p.runs > 0).sort((a, b) => (b.rating - a.rating) || (b.runs - a.runs)).slice(0, n).map(p => ({ name: p.name, rating: p.rating, runs: p.runs })); }
   prune() { // keep the run log small
     const ids = Object.keys(this.d.runs); if (ids.length < 5000) return;
     ids.sort((a, b) => this.d.runs[a].started - this.d.runs[b].started);

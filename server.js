@@ -33,6 +33,7 @@ const ROUTES = {
   'POST /api/iap/apple': { fn: economy.handlers.iapApple, auth: true },
   'POST /api/iap/google': { fn: economy.handlers.iapGoogle, auth: true },
   'GET /api/catalog': { fn: () => economy.catalog(), auth: false },
+  'GET /api/leaderboard': { fn: store => economy.handlers.leaderboard(store), auth: false },
 };
 const ipHits = new Map();
 function rateLimited(ip) {
