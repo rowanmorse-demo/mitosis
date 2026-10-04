@@ -1527,7 +1527,7 @@ function draw(){
   if(z<.34){ // big player, camera far out: thousands of pellets in view, so draw them as flat dots, one path per colour
     for(const a of PBUCK)a.length=0;
     for(let gy=gy0;gy<=gy1;gy++)for(let gx=gx0;gx<=gx1;gx++){const b=grid[gy*GN+gx];
-      for(let i=0;i<b.length;i++){const pl=b[i];if(pl.x<x0||pl.x>x1||pl.y<y0||pl.y>y1)continue;const a=PBUCK[pl.h];a.push(pl.x,pl.y,pl.r*2.2);}}
+      const skip=z<.2?3:z<.27?1:0;for(let i=0;i<b.length;i++){const pl=b[i];if((pl.i&skip)||pl.x<x0||pl.x>x1||pl.y<y0||pl.y>y1)continue;const a=PBUCK[pl.h];a.push(pl.x,pl.y,pl.r*(skip?3:2.2));}}
     for(let h=0;h<PBUCK.length;h++){const a=PBUCK[h];if(!a.length)continue;ctx.fillStyle=PCOL[h];ctx.beginPath();for(let i=0;i<a.length;i+=3){const d=a[i+2];ctx.rect(a[i]-d/2,a[i+1]-d/2,d,d);}ctx.fill();}
   }else{
   for(let gy=gy0;gy<=gy1;gy++)for(let gx=gx0;gx<=gx1;gx++){const b=grid[gy*GN+gx];
@@ -2051,7 +2051,7 @@ function frame(nowMs){
   const t1=performance.now();try{netTick(raw);}catch(e){}
   const t2=performance.now();updateCam(raw);draw();tickMass(raw);const t3=performance.now();
   // watchdog: tell the app shell about long frames so stalls can be read from the device log
-  if((t3-t0>180||gapMs>=400)&&nowMs-lastHitchAt>1000){lastHitchAt=nowMs;reportHitch(`hitch gap=${Math.round(gapMs)}ms wsmax=${Math.round(wsMax)}ms sinceTouch=${Math.round(nowMs-lastTouchAt)}ms step=${(t1-t0).toFixed(0)} net=${(t2-t1).toFixed(0)} draw=${(t3-t2).toFixed(0)} cells=${cells.length} players=${players.length} parts=${parts.length} ej=${ejected.length} host=${isHost} peers=${peerCount} mode=${mode} z=${cam.z.toFixed(2)}`);}
+  if((t3-t0>180||gapMs>=400)&&nowMs-lastHitchAt>1000){lastHitchAt=nowMs;reportHitch(`hitch gap=${Math.round(gapMs)}ms wsmax=${Math.round(wsMax)}ms sinceTouch=${Math.round(nowMs-lastTouchAt)}ms step=${(t1-t0).toFixed(0)} net=${(t2-t1).toFixed(0)} draw=${(t3-t2).toFixed(0)} cells=${cells.length} players=${players.length} parts=${parts.length} ej=${ejected.length} host=${isHost} peers=${peerCount} mode=${mode} z=${cam.z.toFixed(2)} audio=${liveNodes}`);}
   hudT-=raw;if(hudT<=0){hudT=.12;hud();}
   requestAnimationFrame(frame);
 }

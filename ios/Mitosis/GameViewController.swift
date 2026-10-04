@@ -96,6 +96,16 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
         #endif
     }
 
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
+        reply(["type": "app", "text": "memoryWarning"])
+    }
+
+    func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+        NSLog("[Mitosis] web content process terminated; reloading")
+        webView.reload()
+    }
+
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         tameGestures()
         gestureTimer?.invalidate()
