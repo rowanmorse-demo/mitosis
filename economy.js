@@ -19,6 +19,7 @@ const SKINS = [
   { id: 13, key: 'galaxy', name: 'Galaxy', price: 700 },
   { id: 14, key: 'gilded', name: 'Gilded', price: 800 },
   { id: 15, key: 'blackhole', name: 'Black Hole', price: 10000 },
+  { id: 16, key: 'onering', name: 'One Cell to Rule Them All', price: 12000000 }, // what $10,000 of the biggest pack buys
 ];
 const PACKS = [
   { id: 'atp_500', atp: 500 },

@@ -30,7 +30,7 @@ A LIVING WORLD
 Nutrient blooms triple the value of food. Antibiotic tides close the well. Phage swarms break in through the rim and inject anything they touch. The Leviathan hunts the arena: lure it onto phages to break it up. The leader wears a crown and pays a bounty to whoever takes it.
 
 SKINS AND ATP
-Earn ATP by surviving and absorbing, and spend it on eleven skins, from Nebula and Magma to the Black Hole. Prefer a shortcut? ATP packs are available in the shop. Other players see your skin in every round.
+Earn ATP by surviving and absorbing, and spend it on twelve skins, from Nebula and Magma to the Black Hole and the One Cell to Rule Them All. Prefer a shortcut? ATP packs are available in the shop. Other players see your skin in every round.
 
 YOUR PROGRESS, EVERYWHERE
 Sign in with Apple and your ATP, skins and rating follow you to any phone. Not signed in? Everything stays safely on your device.

@@ -34,6 +34,7 @@ async function post(url, body, secret) {
   const secret = 'testsecret' + 'a'.repeat(20);
   let r = await post('/api/session', { secret });
   assert.equal(r.status, 200); assert.equal(r.body.balance, 0); assert.ok(r.body.catalog.skins.length >= 10, 'catalog has skins');
+  assert.equal(r.body.catalog.skins.find(s => s.id === 16).price, 12000000, 'One Cell to Rule Them All costs 12,000,000 ATP');
 
   r = await post('/api/run/start', {}); assert.equal(r.status, 401, 'auth required');
 

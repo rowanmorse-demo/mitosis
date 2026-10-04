@@ -73,7 +73,7 @@ Tiers: Bronze (<900), Silver, Gold (1400+), Platinum (1800+), Diamond (2300+), L
 | Top 20 | 1 |
 | Lower, or a run under 20 seconds | 0 |
 
-There is no hourly cap, but the amounts are deliberately small: winning every ten-minute round is 60 ATP an hour. Skins cost 300–800 ATP and the Black Hole costs 10,000, a very long grind, so the packs are the realistic way to get it:
+There is no hourly cap, but the amounts are deliberately small: winning every ten-minute round is 60 ATP an hour. Skins cost 300–800 ATP, the Black Hole costs 10,000 and the One Cell to Rule Them All costs 12,000,000 (what $10,000 of the biggest pack buys), a very long grind, so the packs are the realistic way to get it:
 
 | Pack | ATP |
 | --- | --- |
@@ -84,7 +84,7 @@ There is no hourly cap, but the amounts are deliberately small: winning every te
 
 Prices are set in App Store Connect and the Play Console; the apps show them from there. Packs can only be bought inside the iOS and Android apps. The website earns ATP but does not sell it.
 
-**Skins** (Nebula, Magma, Honeycomb, Circuit, Leopard, Glacier, Toxic, Eyeball, Galaxy, Gilded, Black Hole) are picked on the start card next to the free patterns. Owned skins are visible to every other player. The list, with prices, lives in two places that must match: `PREMIUM` in `index.html` (how each skin is drawn) and `SKINS` in `economy.js` (what the server charges).
+**Skins** (Nebula, Magma, Honeycomb, Circuit, Leopard, Glacier, Toxic, Eyeball, Galaxy, Gilded, Black Hole, One Cell to Rule Them All) are picked on the start card next to the free patterns. Owned skins are visible to every other player. The list, with prices, lives in two places that must match: `PREMIUM` in `index.html` (how each skin is drawn) and `SKINS` in `economy.js` (what the server charges).
 
 **Where it lives.** The server owns every wallet. The page only reports "this run ended", "buy this skin" and "credit this purchase"; the server decides the payout, caps it, checks the price and verifies receipts with Apple or Google. A player starts as a random device secret stored in the browser or app, so there is no sign-up. Clearing site data or deleting the app starts a fresh wallet.
 
