@@ -13,7 +13,8 @@ A multiplayer cell-eating arena set in a giant petri well. Absorb anything small
 - **World events**: Nutrient Bloom, Antibiotic Tide, Phage Swarm and the Leviathan boss
 - **Hunter phages** that breach the rim and inject cells; the cell bursts into up to 16 pieces 8–10 s later
 - **ATP and skins**: earn ATP by playing (or buy it in the apps) and spend it on ten premium skins
-- **Mutations** (Magnet, Phase, Surge), dash, frenzy streaks, a leader bounty, emotes, stain patterns and 12 achievements
+- **Rounds of ten minutes**: the arena is full size for the first 2½ minutes, then closes in to 12% of the dish by 9:30. Anything caught outside dissolves. When time is up the survivors are ranked by mass and everyone sees where they placed
+- **Mutations** (Magnet, Phase, Surge), dash, frenzy streaks, a leader bounty, stain patterns and 12 achievements. There is no chat
 
 ## Controls
 
@@ -32,6 +33,11 @@ On phones, drag to steer and use the on-screen buttons. In the Android app the b
 
 ## Rules of the well
 
+- A **round lasts 10 minutes**. The dish is full size for the first 2½ minutes, then the safe arena shrinks smoothly to 12% of the dish by 9:30 and holds there until the round ends. The clock at the top of the screen counts down and says when the collapse starts.
+- Cells outside the arena lose 20% of their mass per second plus 12 mass per second, and dissolve below 10 mass. Bots steer back inside; new cells always spawn inside.
+- **Placement**: when you die, your place is the number of cells still alive plus one, out of everyone who took part in the round. When the round ends, the survivors are ranked by mass and the biggest wins. The results screen shows "7th of 23" (or *Victory*).
+- The host's clock is the round clock; everyone else follows it, so a new host carries the round on. In solo play the page keeps its own clock. `?round=60` on the web shortens rounds for testing.
+
 - You absorb a cell once **30% of its diameter** is inside you and you are at least **10% heavier**. *Digestive enzymes* lowers that to 5%; *Thick membrane* makes others need 20%.
 - Cells above 120 mass lose **0.12% of their mass per second** (half that with *Slow metabolism*).
 - Ejecting costs 16 mass and makes a 15-mass blob, at most about 8 times a second however hard you hold W.
@@ -45,6 +51,7 @@ Every player has an Elo-style rating, starting at 1000, adjusted by the server a
 | --- | --- |
 | Surviving | +1 per 20 s, up to +25 |
 | Each cell absorbed | +2, up to +30 |
+| Placing | up to +8 for 1st, scaling down to 0 for last (rounds with at least 4 players) |
 | Dying inside the first minute | up to −10, the sooner the worse |
 | Rating above 1000 | gains shrink and losses grow (at 2000, gains ×0.5 and losses ×1.5), so ratings settle rather than inflate |
 
@@ -54,15 +61,15 @@ Tiers: Bronze (<900), Silver, Gold (1400+), Platinum (1800+), Diamond (2300+), L
 
 **ATP** is the in-game currency. Every run pays out when it ends:
 
-| Best rank reached in the run | ATP |
+| Where you placed in the round | ATP |
 | --- | --- |
-| #1 | 10 |
+| 1st | 10 |
 | Top 3 | 6 |
 | Top 10 | 3 |
 | Top 20 | 1 |
 | Lower, or a run under 20 seconds | 0 |
 
-There is no hourly cap, but the amounts are deliberately small: reaching #1 every ten minutes is 60 ATP an hour. Skins cost 300–800 ATP and the Black Hole costs 10,000, a very long grind, so the packs are the realistic way to get it:
+There is no hourly cap, but the amounts are deliberately small: winning every ten-minute round is 60 ATP an hour. Skins cost 300–800 ATP and the Black Hole costs 10,000, a very long grind, so the packs are the realistic way to get it:
 
 | Pack | ATP |
 | --- | --- |
@@ -98,7 +105,8 @@ On Windows, double-click `start.bat`. On macOS, double-click `start.command`.
 | --- | --- |
 | `PORT` | Port to listen on (default 3000) |
 | `DATA_DIR` | Folder for wallets, skins, runs and purchases (default `./data`). Uses SQLite on Node 22.13+, a JSON file on older Node |
-| `APPLE_ISSUER_ID`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY`, `APPLE_BUNDLE_ID` | App Store Server API key (App Store Connect → Users and Access → Integrations → In-App Purchase). `APPLE_PRIVATE_KEY` is the `.p8` contents; `\n` may stand in for newlines |
+| `APPLE_BUNDLE_ID` | Bundle id purchases must belong to (default `com.mitosisgame.app`). Apple purchases need nothing else: StoreKit 2 hands the app a transaction signed by Apple, and the server checks the certificate chain (to Apple Root CA G3, embedded in `iap.js`), the signature and the payload itself |
+| `APPLE_ISSUER_ID`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY` | Optional App Store Server API key (App Store Connect → Users and Access → Integrations → In-App Purchase). When set, the server also looks every transaction up at Apple. `APPLE_PRIVATE_KEY` is the `.p8` contents; `\n` may stand in for newlines |
 | `GOOGLE_PACKAGE_NAME`, `GOOGLE_SERVICE_ACCOUNT` | Play Console service account with *View financial data* on the app. The variable holds the JSON key, raw or base64 |
 | `IAP_UNVERIFIED=1` | **Dev only.** Trusts purchases without asking Apple/Google, so the StoreKit test store and Play test purchases work locally. `npm run dev` sets it |
 
@@ -164,7 +172,7 @@ Regenerate the icon with `swift ios/tools/make-icon.swift ios/Mitosis/Assets.xca
 | `index.html` | The whole game: rendering, simulation, bot AI, skins, the ATP client and UI in one self-contained page |
 | `server.js` | A zero-dependency Node server that serves the page, relays live state over WebSockets (`/ws`), hosts the economy API (`/api/*`) and a health check at `/health` |
 | `economy.js` | ATP rules: run payouts, caps, the skin catalogue, crediting purchases |
-| `iap.js` | Receipt verification with the App Store Server API and the Google Play Developer API |
+| `iap.js` | Purchase verification: Apple-signed StoreKit 2 transactions checked offline (plus the App Store Server API when a key is set), Google Play Developer API for Android. `node iap.test.js` exercises the Apple check with a generated certificate chain |
 | `store.js` | Storage: SQLite built into Node, or a JSON file on older Node |
 | `test.js` | End-to-end test of the API (`npm test`) |
 | `ios/` | iOS app (Swift, WKWebView, StoreKit 2). `project.yml` describes the Xcode project |
@@ -181,7 +189,7 @@ All endpoints take and return JSON. Authenticated ones need `Authorization: Bear
 | --- | --- |
 | `POST /api/session` `{secret}` | Create or load the player; returns wallet, owned skins and the catalogue |
 | `POST /api/run/start` | Begin a run (server timestamps it) |
-| `POST /api/run/end` `{runId, survived, eaten, peak, bestRank, name}` | Pay out the run and adjust the rating; idempotent |
+| `POST /api/run/end` `{runId, survived, eaten, peak, place, of, bestRank, name}` | Pay out the run by placement and adjust the rating; idempotent |
 | `POST /api/skins/buy` `{skinId}` | Spend ATP on a skin |
 | `POST /api/iap/apple` `{transactionId, jws}` | Verify a StoreKit 2 transaction and credit ATP |
 | `POST /api/iap/google` `{purchaseToken, productId, orderId}` | Verify a Play purchase and credit ATP |

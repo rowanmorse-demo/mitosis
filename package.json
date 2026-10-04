@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "IAP_UNVERIFIED=1 node server.js",
-    "test": "node test.js"
+    "test": "node test.js && node iap.test.js"
   },
   "engines": { "node": ">=20" }
 }

@@ -34,6 +34,11 @@ async function post(url, body, secret) {
   assert.equal(payoutFor({ survived: 300, bestRank: 1 }), 10); assert.equal(payoutFor({ survived: 300, bestRank: 3 }), 6);
   assert.equal(payoutFor({ survived: 300, bestRank: 7 }), 3); assert.equal(payoutFor({ survived: 300, bestRank: 15 }), 1);
   assert.equal(payoutFor({ survived: 300, bestRank: 40 }), 0); assert.equal(payoutFor({ survived: 10, bestRank: 1 }), 0, 'insta-death pays nothing');
+  assert.equal(payoutFor({ survived: 300, place: 1, bestRank: 40 }), 10, 'placement wins over mass rank'); assert.equal(payoutFor({ survived: 300, place: 9 }), 3);
+  const { ratingDelta } = require('./economy');
+  assert.equal(ratingDelta(1000, 300, 0, 1, 20), ratingDelta(1000, 300, 0) + 8, '1st of 20 adds the full placing bonus');
+  assert.equal(ratingDelta(1000, 300, 0, 20, 20), ratingDelta(1000, 300, 0), 'last place adds nothing');
+  assert.equal(ratingDelta(1000, 300, 0, 1, 3), ratingDelta(1000, 300, 0), 'placing needs at least 4 in the round');
   // rating: that run (15 s on the server clock, 10 kills) is a quick death: +0.5 survival +20 kills -7.5 penalty = +13
   assert.equal(r.body.ratingDelta, 13); assert.equal(r.body.rating, 1013); assert.equal(r.body.tier, 'Silver');
   r = await post('/api/run/end', { runId, survived: 9999, eaten: 10, peak: 800 }, secret);

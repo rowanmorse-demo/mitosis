@@ -30,6 +30,9 @@ body{margin:0;background:var(--void);color:var(--ink);font-family:var(--display)
 #massVal{font:800 48px/1 var(--display);letter-spacing:-.04em;font-variant-numeric:tabular-nums;text-shadow:0 2px 18px rgba(0,0,0,.5)}
 #metaVal{font:12px/1.4 var(--mono);color:var(--muted)}
 #fx{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;max-width:280px;min-height:24px}
+#roundClock{top:calc(var(--gut) + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);font:500 12px/1 var(--mono);color:#9fc6bd;background:rgba(2,8,9,.55);border:1px solid rgba(150,220,210,.25);border-radius:999px;padding:7px 12px;white-space:nowrap}
+#roundClock b{font-weight:700;color:#dcefe9}#roundClock.hot{color:#ffb3bd;border-color:rgba(255,120,135,.5)}#roundClock.hot b{color:#fff}
+.place{font:800 30px/1 var(--display);margin:2px 0 8px;color:#dcefe9}
 .chip{font:500 11px/1 var(--mono);padding:6px 9px 7px;border-radius:6px;border:1px solid currentColor;position:relative;overflow:hidden;background:rgba(2,8,9,.55)}
 .chip i{position:absolute;left:0;bottom:0;height:2px;background:currentColor;width:calc(var(--p)*100%)}
 
@@ -284,6 +287,7 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
 </div>
 <div id="board" class="hud panel"><button class="bhead" id="boardToggle" type="button" aria-expanded="true"><span class="label">Culture ranking</span><span id="netPill" class="pill" hidden>Live</span><span class="chev">▾</span></button><ol id="boardList"></ol></div>
 <div id="feed" class="hud" aria-live="polite"></div>
+<div id="roundClock" class="hud" hidden></div>
 <div id="scale" class="hud">
   <div class="bar"><div id="scaleBar" style="width:80px"></div><span id="scaleLbl">100 µm</span></div>
   <span id="magLbl">×400</span>
@@ -385,6 +389,7 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
     <p class="eyebrow" id="dEyebrow">Specimen lost</p>
     <h2 id="dTitle">Lysed</h2>
     <p id="deathWhy">Absorbed.</p>
+    <p id="dPlace" class="place" hidden></p>
     <div class="statgrid">
       <div><span class="label">Peak mass</span><b id="dPeak">0</b></div>
       <div><span class="label">Cells absorbed</span><b id="dEaten">0</b></div>
@@ -458,7 +463,11 @@ addEventListener('resize',resize);resize();
 const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const R=6800,TAU=Math.PI*2,NP=40,OFF=R+2000;
 const MAX_CELLS=16,VIRUS_M=100,VSLOTS=140,MAX_FREEV=16,PELLETS=19200,MAX_PU=24,MAX_MASS=9000;
-const MAX_HUNTERS=6,HUNTER_R=42,INF_MIN=8,INF_MAX=10,PROTO=3,SEED=90210;
+const MAX_HUNTERS=6,HUNTER_R=42,INF_MIN=8,INF_MAX=10,PROTO=4,SEED=90210;
+// Rounds: the well is full size for the first quarter, then the arena closes in to 12% of the dish by the
+// last 5%, and the round ends at ROUND_SEC with the survivors ranked by mass. ?round=60 shortens it for tests.
+const ROUND_SEC=+((location.search.match(/[?&]round=(\d+)/)||[])[1])||600,ROUND_GRACE=Math.round(ROUND_SEC*.25),ROUND_HOLD=Math.round(ROUND_SEC*.05),R_MIN=R*.12,ROUND_GAP=6;
+let round={id:1,start:0,n:0,synced:false,over:false};
 // Balance: a cell is absorbed once EAT_COVER of its diameter is inside a cell at least 10% heavier (see need()).
 // Ejecting costs EJECT_COST and makes a blob of EJECT_MASS, at most once every EJECT_GAP seconds.
 const EAT_COVER=.3,EJECT_COST=16,EJECT_MASS=15,EJECT_GAP=.06,BOTS_PER_PLAYER=5,SKIN_FREE=5;
@@ -470,7 +479,7 @@ const num=v=>typeof v==='number'&&isFinite(v)?v:0;
 const radius=m=>4+Math.sqrt(m)*6;
 const speedOf=r=>1000*Math.pow(r,-0.45);
 const mergeDelay=m=>8+m*0.012;
-function randInDish(margin=0){const rr=(R-margin)*Math.sqrt(Math.random()),t=Math.random()*TAU;return{x:Math.cos(t)*rr,y:Math.sin(t)*rr};}
+function randInDish(margin=0,rad=arenaR()){const rr=Math.max(150,rad-margin)*Math.sqrt(Math.random()),t=Math.random()*TAU;return{x:Math.cos(t)*rr,y:Math.sin(t)*rr};}
 const col=(c,dl=0,a=1)=>`hsla(${c[0]},${c[1]}%,${clamp(c[2]+dl,0,100)}%,${a})`;
 // Canvas gradients are native objects. Making hundreds per frame (every cell, virus and blob) left WebKit's
 // garbage collector with millions to finalize and froze phones for seconds. Each gradient is now built once
@@ -644,7 +653,7 @@ async function econInit(){
 let runId=null,runPromise=null;
 function econRunStart(){runId=null;runPromise=api('run/start').then(r=>{runId=r.runId;return r.runId;}).catch(()=>null);}
 async function econRunEnd(){
-  if(!human)return;const s=human.stats,rep={survived:Math.max(0,T-s.born),eaten:s.eaten|0,peak:Math.round(s.peak),bestRank:s.bestRank||999,show:1};
+  if(!human)return;const s=human.stats,rep={survived:Math.max(0,T-s.born),eaten:s.eaten|0,peak:Math.round(s.peak),bestRank:s.bestRank||999,place:s.place|0,of:s.of|0,show:1};
   rep.name=human.name;const rid=runId||(runPromise?await runPromise:null);runId=null;runPromise=null;
   if(!rid){showEarn(wallet.online?'':'Offline — ATP is only earned while connected');return;}
   rep.runId=rid;const a=loadPending();a.push(rep);savePending(a);showEarn('Counting ATP…');flushRuns();
@@ -665,6 +674,7 @@ for(const b of document.querySelectorAll('.card .back'))b.addEventListener('clic
 function showResults(title,eyebrow,why){
   if(!human)return;const s=human.stats,m=human.cells.reduce((a,c)=>a+(c.dead?0:c.mass),0);
   $('dEyebrow').textContent=eyebrow;$('dTitle').textContent=title;$('deathWhy').textContent=why;
+  const pe=$('dPlace');if(s.place){pe.textContent=`${ordinal(s.place)} of ${s.of}`;pe.hidden=false;}else pe.hidden=true;
   $('dPeak').textContent=Math.round(s.peak);$('dPeak').classList.remove('pb');$('dEaten').textContent=s.eaten;$('dTime').textContent=fmtT(T-s.born);$('dBest').textContent=Math.round(Math.max(best,s.peak));
   const dA=$('dAch');dA.hidden=!runAch.length;dA.textContent=runAch.length?'Unlocked: '+runAch.join(', '):'';
   const hist=human.hist.slice();hist.push(m);showCard('deathCard');drawChart(hist);
@@ -675,7 +685,7 @@ let flushing=false;
 async function flushRuns(){ // report finished runs; keep them queued while the server is unreachable
   if(flushing)return;flushing=true;
   try{let a=loadPending();while(a.length){const rep=a[0];
-    try{const w=await api('run/end',rep);applyWallet(w);if(rep.show){const br=rep.bestRank<999?` · best rank #${rep.bestRank}`:'';showEarn(w.payout?`+${w.payout} ATP${br}`:rep.survived<20?'No ATP — survive at least 20 seconds':`No ATP — reach the top 20 for a payout${br}`);showRank(w);}}
+    try{const w=await api('run/end',rep);applyWallet(w);if(rep.show){const br=rep.bestRank<999?` · best rank #${rep.bestRank}`:'';showEarn(w.payout?`+${w.payout} ATP${br}`:rep.survived<20?'No ATP — survive at least 20 seconds':`No ATP — finish in the top 20`);showRank(w);}}
     catch(e){if(!e.status||e.status>=500){if(rep.show)showEarn('ATP will be counted when the server is back');break;}}
     a.shift();savePending(a);}}
   finally{flushing=false;}
@@ -741,7 +751,10 @@ async function redeem(p){ // server verifies with Apple/Google, credits ATP, the
 }
 $('packs').addEventListener('click',e=>{const b=e.target.closest('.pack');if(b&&!b.disabled)buyPack(b.dataset.id);});
 const BISECT={tag:(location.search.match(/[?&]tag=([\w-]+)/)||[])[1]||''};for(const k of ['nocanvas','nohud','noeject','nosend','lowfx'])BISECT[k]=new RegExp('[?&]'+k+'=1').test(location.search);
-const SKIP=new Set(((location.search.match(/[?&]skip=([\w,]+)/)||[,''])[1]).split(',').filter(Boolean));BISECT.skip=[...SKIP].join(',');
+const SKIP=new Set(((location.search.match(/[?&]skip=([\w,]+)/)||[,''])[1]).split(',').filter(Boolean));BISECT.skip=[...SKIP].join(',');BISECT.auto=/[?&]autopilot=1/.test(location.search);
+// page errors go to the same diagnostics channel as frame hitches (the server log, and the app's log)
+addEventListener('error',e=>{try{reportHitch('error '+(e.message||'?')+' @'+(e.lineno||0)+':'+(e.colno||0));}catch(x){}});
+addEventListener('unhandledrejection',e=>{try{reportHitch('rejection '+(e.reason&&e.reason.message||e.reason||'?'));}catch(x){}});
 // Autopilot (?autopilot=1): the page plays itself for soak tests — drives the joystick, splits now and then, restarts on death.
 if(/[?&]autopilot=1/.test(location.search)){
   let ang=Math.random()*TAU,dieAt=0;const auto=()=>{
@@ -979,6 +992,32 @@ function takeEvo(i){
 }
 /* ---- world events (the host runs them; everyone renders them) ---- */
 function tideSafe(){if(ev.type!==2)return R;const p=clamp(1-(ev.end-T)/EVT[2].dur,0,1),e=p<.28?p/.28:p<.72?1:(1-p)/.28;return R*(1-.52*(e*e*(3-2*e)));}
+const roundT=()=>T-round.start;
+function arenaR(){ // the round's safe radius: full for ROUND_GRACE s, then closing smoothly to R_MIN by ROUND_SEC-ROUND_HOLD
+  if(multi()&&!isHost&&!round.synced)return R;const t=roundT();if(t<ROUND_GRACE)return R;
+  const p=clamp((t-ROUND_GRACE)/(ROUND_SEC-ROUND_HOLD-ROUND_GRACE),0,1),e=p*p*(3-2*p);return R-(R-R_MIN)*e;}
+function safeR(){return Math.min(tideSafe(),arenaR());}
+const ordinal=n=>{const t=n%10,h=n%100;return n+(t===1&&h!==11?'st':t===2&&h!==12?'nd':t===3&&h!==13?'rd':'th');};
+function placeOf(){const alive=players.filter(p=>p.alive&&p!==human&&p.cells.length).length;return{place:alive+1,of:Math.max(round.n,alive+1)};}
+function roundTick(){ // host (or solo) clock: ends the round, then starts the next one after a short gap
+  if(!round.over&&roundT()>=ROUND_SEC){round.over=true;round.id=(round.id%4095)+1;round.start=T+ROUND_GAP;finishHumanRound();
+    for(const p of players.filter(p=>p.bot&&!p.remote))removePlayer(p);cells=cells.filter(c=>!c.dead);pushFeed('<b>Round over</b> — a fresh well opens in a moment',false);}
+  else if(round.over&&T>=round.start){round.over=false;round.n=0;syncBots();pushFeed('<b>New round</b> — the arena starts closing in '+fmtT(ROUND_GRACE),false);}
+}
+function finishHumanRound(){ // the arena closed: whoever is still alive is ranked by mass, biggest wins
+  if(!human||!human.alive||mode!=='play')return;
+  const ranked=players.filter(p=>p.alive&&p.cells.length).map(p=>({p,m:p.cells.reduce((s,c)=>s+(c.dead?0:c.mass),0)})).sort((a,b)=>b.m-a.m);
+  const place=Math.max(1,ranked.findIndex(r=>r.p===human)+1),of=Math.max(round.n,ranked.length);human.stats.place=place;human.stats.of=of;
+  paused=false;$('dRank').hidden=true;econRunEnd();
+  showResults(place===1?'You won the round':'Round over',place===1?'Victory':'Time is up',`${place===1?'Last one standing':ordinal(place)+' of '+of} when the arena closed, after ${fmtT(T-human.stats.born)}.`);
+  if(BISECT.auto)reportHitch(`autopilot round over place=${place} of=${of} round=${round.id}`);
+  removeHuman();mode='dead';document.body.classList.remove('playing');sfx(place===1?'ach':'die');
+}
+function dissolve(c){ // a cell caught outside the closing arena breaks down completely
+  const p=c.owner;if(c.dead)return;c.dead=true;c.mass=0;burst(c.x,c.y,'rgba(255,120,130,.9)',14,420);
+  if(p.cells.every(x=>x.dead)){p.alive=false;p.stats.killer='the collapse';p.stats.killerRef=null;
+    if(p===human)die();else{p.respawnAt=p.boss?Infinity:T+rand(2,5);pushFeed(`<b>${esc(p.name)}</b> dissolved outside the arena`,false);}}
+}
 function announce(type){
   const E=EVT[type];if(!E)return;pushFeed(`<b>${esc(E.name)}</b> — ${esc(E.desc)}`,false);
   if(human)human.bloomEats=0;sfx(type===4?'boss':'event');
@@ -1054,7 +1093,7 @@ function bestFood(me){ // densest nearby patch of food, weighted by distance
     if(x<0||y<0||x>=GN||y>=GN)continue;const b=grid[y*GN+x];if(!b.length)continue;
     const wx=(x+.5)*GS-R,wy=(y+.5)*GS-R,d=Math.hypot(wx-me.x,wy-me.y);if(d<me.r*.4)continue;
     let s=b.length/(1+d/350)*rand(.8,1.2);if(ev.type===1&&(wx-ev.x)**2+(wy-ev.y)**2<BLOOM_R2)s*=3;
-    if(ev.type===2&&Math.hypot(wx,wy)>tideSafe()-me.r)s*=.05;
+    if(Math.hypot(wx,wy)>safeR()-me.r)s*=.05;
     if(s>bs){bs=s;best={x:wx,y:wy};}
   }
   return best;
@@ -1085,7 +1124,7 @@ function think(p){
   const hz=[];
   if(!boss&&me.mass>VIRUS_M*1.3&&!has(p,'armored')&&p.fx.shield<=0)
     for(const v of viruses)if(Math.abs(v.x-me.x)<me.r+600&&Math.abs(v.y-me.y)<me.r+600)hz.push(v);
-  const safe=ev.type===2?tideSafe():R;
+  const safe=safeR();
   // ---- goal
   let gx=0,gy=0,goalW,mode='food',exact=null;
   if(prey&&preyScore*aggr>.07){
@@ -1171,6 +1210,7 @@ function step(dt){
     if(p.bot&&isHost){if(p.alive&&T>=p.ai.t)think(p);else if(!p.alive&&!p.boss&&T>=p.respawnAt)spawn(p,rand(20,45));}
   }
   if(isHost){for(const p of players.filter(p=>p.boss&&!p.remote&&!p.alive))removePlayer(p);eventTick();}
+  if(isHost||!multi())roundTick();
   for(const c of cells){c.px=c.x;c.py=c.y;}
   smoothRemote(dt);
   // movement (our own cells only; others arrive over the room)
@@ -1280,8 +1320,9 @@ function step(dt){
     if(!c.owner.remote){
       if(c.mass>120)c.mass-=c.mass*(has(c.owner,'metabolism')?.0006:.0012)*dt;
       if(has(c.owner,'photo'))c.mass=Math.min(MAX_MASS,c.mass+1.5*dt);
-      if(ev.type===2&&Math.hypot(c.x,c.y)+c.r*.3>tideSafe()){c.mass=Math.max(8,c.mass-c.mass*.08*dt);c.toxic=T;
-        if(Math.random()<dt*6&&parts.length<700){const a=rand(0,TAU);parts.push({x:c.x+Math.cos(a)*c.r,y:c.y+Math.sin(a)*c.r,vx:Math.cos(a)*60,vy:Math.sin(a)*60,t:0,life:.6,color:'rgba(170,150,255,.9)',r:rand(3,7)});}}
+      const dC=Math.hypot(c.x,c.y)+c.r*.3,outA=dC>arenaR(),outT=dC>tideSafe();
+      if(outA||outT){c.toxic=T;if(outA){c.mass-=(c.mass*.2+12)*dt;if(c.mass<10)dissolve(c);}else c.mass=Math.max(8,c.mass-c.mass*.08*dt);
+        if(!c.dead&&Math.random()<dt*6&&parts.length<700){const a=rand(0,TAU);parts.push({x:c.x+Math.cos(a)*c.r,y:c.y+Math.sin(a)*c.r,vx:Math.cos(a)*60,vy:Math.sin(a)*60,t:0,life:.6,color:outA?'rgba(255,120,130,.9)':'rgba(170,150,255,.9)',r:rand(3,7)});}}
       if(c.inf&&T>=c.inf)lyse(c);
     }
     c.r=radius(c.mass);c.dr+=(c.r-c.dr)*Math.min(1,dt*9);
@@ -1387,6 +1428,21 @@ function drawGrid(x0,y0,x1,y1){
   for(let y=Math.floor(y0/250)*250;y<=y1;y+=250){for(const o of triple?[-5,0,5]:[0]){ctx.moveTo(x0,y+o);ctx.lineTo(x1,y+o);}}
   ctx.lineWidth=1/z;ctx.strokeStyle='rgba(120,200,190,.14)';ctx.stroke();
 }
+const LABELS=new Map(),LABEL_MAX=160,FONTS=new Map();
+function fontStr(k,px){let f=FONTS.get(k+px);if(!f){f=k==='m'?`500 ${px}px "IBM Plex Mono",monospace`:k==='p'?`600 ${px}px "IBM Plex Mono",monospace`:`800 ${px}px "Bricolage Grotesque",system-ui,sans-serif`;FONTS.set(k+px,f);}return f;}
+const monoFont=px=>fontStr('m',px),boldFont=px=>fontStr('b',px);
+const scrX=x=>(x-cam.x)*cam.z+W/2,scrY=y=>(y-cam.y)*cam.z+H/2; // world -> screen (CSS px)
+function labelPx(px){px=Math.round(Math.min(40,Math.max(10,px)));return px>16?px&~1:px;} // 10..16, then even sizes up to 40
+function labelSprite(text,px){ // sprite of outlined text at a screen-pixel size; LRU-cached so fonts and glyphs stay stable
+  const key=text+'\u0001'+px;let L=LABELS.get(key);if(L){LABELS.delete(key);LABELS.set(key,L);return L;}
+  if(LABELS.size>=LABEL_MAX)LABELS.delete(LABELS.keys().next().value);
+  const m=document.createElement('canvas'),g=m.getContext('2d'),font=`700 ${px}px "Bricolage Grotesque",system-ui,sans-serif`;
+  g.font=font;const w=Math.ceil(g.measureText(text).width+px*.6),h=Math.ceil(px*1.6);
+  m.width=Math.max(1,Math.round(w*DPR));m.height=Math.max(1,Math.round(h*DPR));
+  g.setTransform(DPR,0,0,DPR,0,0);g.font=font;g.textAlign='center';g.textBaseline='middle';g.lineJoin='round';
+  g.lineWidth=px*.16;g.strokeStyle='rgba(0,0,0,.42)';g.fillStyle='#fff';g.strokeText(text,w/2,h/2);g.fillText(text,w/2,h/2);
+  L={c:m,w,h,tw:w-px*.6};LABELS.set(key,L);return L;
+}
 function drawCell(c){
   const p=c.owner,k=p.color,r=Math.max(2,c.dr),z=cam.z,sr=r*z;
   const sick=c.inf?clamp(1-(c.inf-T)/(c.infLen||INF_MAX),0,1):(c.infVis?.6:0);
@@ -1434,14 +1490,14 @@ function drawCell(c){
     ctx.strokeStyle=col(PU.shield.c,0,.35+.3*Math.sin(T*8)**2);ctx.beginPath();ctx.arc(c.x,c.y,r*1.2,0,TAU);ctx.stroke();ctx.restore();}
   if(p.fx.magnet>0){const ph=(T*.8+c.wob)%1;ctx.beginPath();ctx.arc(c.x,c.y,r+300*(1-ph),0,TAU);ctx.lineWidth=1.5/z;ctx.strokeStyle=col(PU.magnet.c,0,.2*ph);ctx.stroke();}
   if(p.fx.surge>0&&!lowFx){ctx.beginPath();ctx.arc(c.x,c.y,r*1.06,0,TAU);ctx.lineWidth=Math.max(1.5/z,r*.03);ctx.strokeStyle=col(PU.surge.c,0,.35+.25*Math.sin(T*14));ctx.stroke();}
-  if(sr>15&&!SKIP.has('text')){
-    let fs=Math.max(r*.34,11/z);ctx.font=`700 ${fs}px "Bricolage Grotesque",system-ui,sans-serif`;
-    const tw=ctx.measureText(p.name).width,maxW=r*1.72;if(tw>maxW){fs*=maxW/tw;ctx.font=`700 ${fs}px "Bricolage Grotesque",system-ui,sans-serif`;}
-    ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.lineJoin='round';ctx.lineWidth=fs*.16;ctx.strokeStyle='rgba(0,0,0,.42)';ctx.fillStyle='#fff';
-    ctx.strokeText(p.name,c.x,c.y);ctx.fillText(p.name,c.x,c.y);
-    if(p===human&&sr>24){const ms=fs*.56;ctx.font=`500 ${ms}px "IBM Plex Mono",monospace`;ctx.lineWidth=ms*.16;
-      const t=c.inf?Math.max(0,c.inf-T).toFixed(1)+'s':Math.round(c.mass);ctx.fillStyle=c.inf?col(INF_C,20):'#fff';ctx.strokeText(t,c.x,c.y+fs*.82);ctx.fillText(t,c.x,c.y+fs*.82);}
+  if(sr>15&&!SKIP.has('text')&&p.name){
+    let px=labelPx(Math.max(sr*.34,11));const maxW=sr*1.72;let L=labelSprite(p.name,px);
+    if(L.tw>maxW){px=labelPx(px*maxW/L.tw);L=labelSprite(p.name,px);}
+    ctx.drawImage(L.c,c.x-L.w/2/z,c.y-L.h/2/z,L.w/z,L.h/z); // sprite is in screen pixels: undo the camera scale so it stays crisp
+    if(p===human&&sr>24){ // the live mass readout changes every frame, so it is drawn directly, in screen space at a fixed set of sizes
+      const ms=labelPx(px*.56),t=c.inf?Math.max(0,c.inf-T).toFixed(1)+'s':String(Math.round(c.mass));
+      ctx.save();ctx.setTransform(DPR,0,0,DPR,0,0);ctx.font=monoFont(ms);ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';ctx.lineWidth=ms*.16;ctx.strokeStyle='rgba(0,0,0,.42)';
+      ctx.fillStyle=c.inf?col(INF_C,20):'#fff';const X=scrX(c.x),Y=scrY(c.y)+px*.82;ctx.strokeText(t,X,Y);ctx.fillText(t,X,Y);ctx.restore();}
   }
 }
 function drawVirus(v){
@@ -1497,7 +1553,7 @@ function drawPU(u){
   ctx.beginPath();ctx.ellipse(u.x,u.y,r*1.7,r*.55,u.t*.9,0,TAU);ctx.lineWidth=Math.max(1/z,1.5);ctx.strokeStyle=col(d.c,10,.5);ctx.stroke();
   const sa=u.t*2.4,ca=Math.cos(u.t*.9),sn=Math.sin(u.t*.9),ex=Math.cos(sa)*r*1.7,ey=Math.sin(sa)*r*.55;
   ctx.beginPath();ctx.arc(u.x+ex*ca-ey*sn,u.y+ex*sn+ey*ca,Math.max(2/z,3.5),0,TAU);ctx.fillStyle=col(d.c,20);ctx.fill();
-  ctx.font=`600 ${r*.9}px "IBM Plex Mono",monospace`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=col(d.c,26);ctx.fillText(d.glyph,u.x,u.y+1);
+  ctx.font=fontStr('p',Math.round(r*.9));ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=col(d.c,26);ctx.fillText(d.glyph,u.x,u.y+1);
 }
 function drawEj(x,y,r,color,vx=0,vy=0){
   const z=cam.z,sp=Math.hypot(vx,vy),st=Math.min(.5,sp/1800),a=Math.atan2(vy,vx);
@@ -1546,18 +1602,19 @@ function draw(){
   list.sort((a,b)=>a.mass-b.mass);
   if(!SKIP.has('cell'))for(const o of list)o.owner?drawCell(o):drawVirus(o);
   if(!SKIP.has('ent'))for(const h of hunters)if(h.x>x0-100&&h.x<x1+100&&h.y>y0-100&&h.y<y1+100)drawHunter(h);
-  if(ev.type===2){const s=tideSafe();ctx.beginPath();ctx.arc(0,0,R+60,0,TAU);ctx.arc(0,0,s,0,TAU,true);ctx.fillStyle='rgba(120,100,255,.15)';ctx.fill();
-    ctx.save();ctx.setLineDash([46,26]);ctx.lineDashOffset=-T*60;ctx.beginPath();ctx.arc(0,0,s,0,TAU);ctx.lineWidth=Math.max(2/z,7);ctx.strokeStyle='rgba(175,160,255,.8)';ctx.stroke();ctx.restore();}
+  const sR=safeR();if(sR<R-1){const cl=arenaR()<=sR+1;ctx.beginPath();ctx.arc(0,0,R+60,0,TAU);ctx.arc(0,0,sR,0,TAU,true);ctx.fillStyle=cl?'rgba(255,60,80,.16)':'rgba(120,100,255,.15)';ctx.fill();
+    ctx.save();ctx.setLineDash([46,26]);ctx.lineDashOffset=-T*60;ctx.beginPath();ctx.arc(0,0,sR,0,TAU);ctx.lineWidth=Math.max(2/z,7);ctx.strokeStyle=cl?'rgba(255,120,135,.85)':'rgba(175,160,255,.8)';ctx.stroke();ctx.restore();}
   for(const gh of ghosts){const f=gh.t/gh.life,e=f*f,x=gh.x+(gh.to.x-gh.x)*e,y=gh.y+(gh.to.y-gh.y)*e,r=gh.r*(1-f);
     if(r<=0)continue;ctx.globalAlpha=1-f*.6;ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fillStyle=col(gh.color,6);ctx.fill();ctx.lineWidth=Math.max(1/z,r*.08);ctx.strokeStyle=col(gh.color,-24);ctx.stroke();}
   ctx.globalAlpha=1;
   ctx.globalCompositeOperation='lighter';
   if(!SKIP.has('parts'))for(const pt of parts){if(pt.x<x0-50||pt.x>x1+50||pt.y<y0-50||pt.y>y1+50)continue;const a=1-pt.t/pt.life;ctx.globalAlpha=a*.9;ctx.beginPath();ctx.arc(pt.x,pt.y,pt.r*(.4+a*.6),0,TAU);ctx.fillStyle=pt.color;ctx.fill();}
   ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;
-  if(!SKIP.has('floats'))for(const f of floats){const a=1-f.t/f.life,e=1-Math.pow(1-Math.min(1,f.t*5),3);ctx.globalAlpha=Math.min(1,a*2);
-    const fs=f.size/z*(.7+.3*e);ctx.font=`800 ${fs}px "Bricolage Grotesque",system-ui,sans-serif`;
-    ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';ctx.lineWidth=4/z;ctx.strokeStyle='rgba(0,0,0,.5)';ctx.fillStyle=col(f.c,12);
-    const y=f.y-f.t*55/z;ctx.strokeText(f.text,f.x,y);ctx.fillText(f.text,f.x,y);}
+  if(!SKIP.has('floats')&&floats.length){ctx.save();ctx.setTransform(DPR,0,0,DPR,0,0);ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';ctx.lineWidth=4;ctx.strokeStyle='rgba(0,0,0,.5)';
+    for(const f of floats){const a=1-f.t/f.life,e=1-Math.pow(1-Math.min(1,f.t*5),3);ctx.globalAlpha=Math.min(1,a*2);
+      ctx.font=boldFont(Math.round(Math.min(48,Math.max(10,f.size*(.7+.3*e)))));ctx.fillStyle=col(f.c,12);
+      const X=scrX(f.x),Y=scrY(f.y)-f.t*55;ctx.strokeText(f.text,X,Y);ctx.fillText(f.text,X,Y);}
+    ctx.restore();}
   ctx.globalAlpha=1;
   ctx.setTransform(DPR,0,0,DPR,0,0);
   if(!lowFx&&!SKIP.has('bokeh'))drawBokeh(BOK_FRONT);
@@ -1614,7 +1671,9 @@ let dispMass=0,shownMass=-1,glowPrey=false,glowMass=0;
 function renderFeed(){feedEl.innerHTML=feed.map(f=>`<div class="${f.you?'you':''}" style="opacity:${T-f.t>6?0:1}">${f.html}</div>`).join('');}
 function hud(){
   const ranked=players.filter(p=>p.alive&&p.cells.length).map(p=>({p,m:p.cells.reduce((s,c)=>s+c.mass,0)})).sort((a,b)=>b.m-a.m);
-  leader=ranked.length?ranked[0].p:null;
+  leader=ranked.length?ranked[0].p:null;round.n=Math.max(round.n,ranked.length);
+  const rc=$('roundClock');if(rc){const t=roundT(),a=arenaR();rc.hidden=mode!=='play'||(multi()&&!isHost&&!round.synced);rc.classList.toggle('hot',a<R-1);
+    rc.innerHTML=round.over?'<b>Round over</b>':`<b>${fmtT(Math.max(0,ROUND_SEC-t))}</b> ${a<R-1?(a<=R_MIN+1?'· final arena':'· arena closing'):'· closes in '+fmtT(ROUND_GRACE-t)}`;}
   const small=phone.matches||shortScreen.matches,N=small?5:8;let html='';
   const row=(r,i)=>{const hu=r.p.remote&&!r.p.bot;return`<li class="${r.p===human?'me':''}"><span class="rk">${i===0?'♛':i+1}</span><span class="dot" style="background:${col(r.p.color)}"></span><span class="nm">${esc(r.p===human?r.p.name+' (you)':r.p.name)}</span>${r.p.boss?'<span class="tag boss">boss</span>':hu?'<span class="tag">player</span>':''}<span class="ms">${Math.round(r.m)}</span></li>`;};
   ranked.slice(0,N).forEach((r,i)=>{html+=row(r,i);});
@@ -1628,7 +1687,7 @@ function hud(){
     let fx='';for(const k in PU){const t=human.fx[k];if(t>0)fx+=`<span class="chip" style="color:${col(PU[k].c)};--p:${(t/PU[k].dur).toFixed(3)}">${PU[k].label} ${t.toFixed(1)}s<i></i></span>`;}
     let inf=0;for(const c of human.cells)if(c.inf&&(!inf||c.inf<inf))inf=c.inf;
     if(inf){const left=Math.max(0,inf-T),len=(human.cells.find(c=>c.inf===inf)||{}).infLen||INF_MAX;fx+=`<span class="chip" style="color:${col(INF_C,6)};--p:${(left/len).toFixed(3)}">Infected · lysis ${left.toFixed(1)}s<i></i></span>`;}
-    if(ev.type===2&&human.cells.some(c=>T-(c.toxic||0)<.3))fx+=`<span class="chip" style="color:#b3a6ff;--p:1">Outside the ring · dissolving<i></i></span>`;
+    if(human.cells.some(c=>T-(c.toxic||0)<.3))fx+=`<span class="chip" style="color:#ff8a9a;--p:1">Outside the arena · dissolving<i></i></span>`;
     if(human.combo>=2&&T-human.comboT<3)fx+=`<span class="chip" style="color:${col([340,100,72])};--p:${((3-(T-human.comboT))/3).toFixed(3)}">Streak ×${human.combo}<i></i></span>`;
     fxEl.innerHTML=fx;
     dashBtn.style.setProperty('--cd',(human.dashCd/(has(human,'cilia')?2.2:4)).toFixed(3));dashBtn.classList.toggle('ready',human.dashCd<=0);
@@ -1786,6 +1845,9 @@ function ingestWorld(P){
     if(P.ev.length>=11){const t=dec(P.ev,0,1),id=dec(P.ev,1,2),rem=dec(P.ev,3,2),x=dec(P.ev,5,3)-OFF,y=dec(P.ev,8,3)-OFF;
       if(!Number.isNaN(t+id+rem+x+y)&&EVT[t]){const fresh=id!==ev.id;ev={type:t,id,end:T+rem/10,x,y};if(fresh)announce(t);}}
     else ev={type:0,id:0,end:0,x:0,y:0};}
+  if(!isHost&&typeof P.rd==='string'&&P.rd.length>=5){const id=dec(P.rd,0,2),el=dec(P.rd,2,3)/10;
+    if(!Number.isNaN(id+el)){if(id!==round.id){const was=round.synced;round.id=id;round.start=T-el;round.synced=true;round.over=false;round.n=0;if(was)finishHumanRound();}
+      else if(Math.abs(roundT()-el)>1.5)round.start=T-el;}}
   if(typeof P.vs==='string'){for(let i=0;i<VSLOTS&&i*2+2<=P.vs.length;i++){const code=dec(P.vs,i*2,2);if(Number.isNaN(code))break;
       const v=vslots[i],g=code>>4,feed=(code>>1)&7;let alive=!!(code&1);
       if(v.g!==g){v.g=g;placeSlot(v);}const sup=vSup.get(i+':'+g);if(sup!==undefined&&T-sup<3)alive=false;
@@ -1826,7 +1888,7 @@ function becomeHost(){
 }
 function send(){
   const P={v:PROTO,h:(isHost&&claimReady&&!yielded)?1:0,n:(human?human.name:(cleanName($('nameIn').value)||'Unnamed cell')).slice(0,16),s:settings.stain|0,
-    a:human&&human.alive?1:0,f:human?fxBits(human):0,k:human?human.skin:settings.skin,em:null,ev:null,cl:null,ej:null,r:null,pe:null,b:null,vs:null,vw:null,pu:null,hv:null};
+    a:human&&human.alive?1:0,f:human?fxBits(human):0,k:human?human.skin:settings.skin,em:null,ev:null,rd:null,cl:null,ej:null,r:null,pe:null,b:null,vs:null,vw:null,pu:null,hv:null};
   if(human&&human.alive)P.cl=human.cells.slice(0,MAX_CELLS).map(encCell).join('');
   if(ejected.length)P.ej=ejected.slice(-16).map(e=>enc(e.x+OFF,3)+enc(e.y+OFF,3)).join('');
   recs=recs.filter(r=>T-r.t<3).slice(-20);if(recs.length)P.r=recs.map(r=>r.d);
@@ -1842,6 +1904,7 @@ function send(){
     P.vw=freeV.map(v=>enc(v.id,2)+enc(v.x+OFF,3)+enc(v.y+OFF,3)).join('');
     P.pu=powerups.map(u=>enc(u.id,2)+enc(u.x+OFF,3)+enc(u.y+OFF,3)+enc(PUK.indexOf(u.type),1)).join('');
     P.ev=ev.type?enc(ev.type,1)+enc(ev.id,2)+enc(Math.max(0,ev.end-T)*10,2)+enc(ev.x+OFF,3)+enc(ev.y+OFF,3):'';
+    P.rd=enc(round.id,2)+enc(Math.max(0,Math.min(262143,Math.round(roundT()*10))),3);
     P.hv=hunters.map(h=>enc(h.id,2)+enc(h.x+OFF,3)+enc(h.y+OFF,3)+enc(h.kind,1)+enc(Math.max(0,h.hp),1)).join('');
   }
   let js=JSON.stringify(P),budget=3900;
@@ -1934,7 +1997,8 @@ function die(){
   mode='dead';if(!multi())slow=.22;sfx('die');Native.haptic('heavy');const s=human.stats;human.hist.push(0);paused=false;
   const pb=s.peak>best;if(pb){best=s.peak;try{localStorage.setItem('mitosis.best',String(Math.round(best)));}catch(e){}}
   $('dEyebrow').textContent='Specimen lost';$('dTitle').textContent='Lysed';$('dRank').hidden=true;
-  $('deathWhy').textContent=`Absorbed by ${s.killer} after ${fmtT(T-s.born)}.`;
+  const pl=placeOf();s.place=pl.place;s.of=pl.of;if(BISECT.auto)reportHitch(`autopilot died place=${pl.place} of=${pl.of} by=${s.killer} t=${fmtT(T-s.born)} roundT=${roundT().toFixed(0)}`);$('dPlace').textContent=`${ordinal(s.place)} of ${s.of}`;$('dPlace').hidden=false;
+  $('deathWhy').textContent=(s.killer==='the collapse'?'Dissolved outside the closing arena':`Absorbed by ${s.killer}`)+` after ${fmtT(T-s.born)}.`;
   $('dPeak').textContent=Math.round(s.peak);$('dPeak').classList.toggle('pb',pb);$('dEaten').textContent=s.eaten;$('dTime').textContent=fmtT(T-s.born);$('dBest').textContent=Math.round(best);
   const dA=$('dAch');dA.hidden=!runAch.length;dA.textContent=runAch.length?'Unlocked: '+runAch.join(', '):'';evoOffer=null;renderEvo();lysedAt=0;
   econRunEnd();

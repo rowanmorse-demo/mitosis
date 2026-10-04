@@ -25,19 +25,23 @@ const PACKS = [
   { id: 'atp_5000', atp: 5000 },
   { id: 'atp_12000', atp: 12000 },
 ];
-// Payout for one run, by the best rank reached in the well: #1 pays 10, top 3 pays 6, top 10 pays 3,
-// top 20 pays 1, anything else 0, and a run shorter than minSec pays nothing. No hourly cap: it is
-// deliberately small per game so the 10,000 ATP Black Hole is a very long grind and the packs are
-// the realistic shortcut.
+// Payout for one run, by where the player placed in the round (last one standing is 1st; dying
+// with 6 others still alive is 7th): 1st pays 10, top 3 pays 6, top 10 pays 3, top 20 pays 1,
+// anything else 0, and a run shorter than minSec pays nothing. No hourly cap: it is deliberately
+// small per game so the 10,000 ATP Black Hole is a very long grind and the packs are the realistic
+// shortcut. Older clients that only report their best mass rank are paid by that instead.
 const RULES = { byRank: [[1, 10], [3, 6], [10, 3], [20, 1]], minSec: 20, maxRunSec: 3 * 3600 };
 const HOUR = 3600 * 1000;
-// Rating (Elo-like): survival and kills raise it, dying quickly lowers it. Gains shrink and losses
-// grow as the rating climbs, so it settles instead of inflating forever. Everyone starts at 1000.
-const RATING = { base: 1000, perTenSec: .5, survCap: 25, perKill: 2, killCap: 30, quickDeathSec: 60, quickPenalty: 10, scale: 2000 };
+// Rating (Elo-like): survival, kills and a high placing raise it, dying quickly lowers it. Gains
+// shrink and losses grow as the rating climbs, so it settles instead of inflating forever.
+// Everyone starts at 1000.
+const RATING = { base: 1000, perTenSec: .5, survCap: 25, perKill: 2, killCap: 30, placeBonus: 8, quickDeathSec: 60, quickPenalty: 10, scale: 2000 };
 const TIERS = [[900, 'Bronze'], [1100, 'Silver'], [1400, 'Gold'], [1800, 'Platinum'], [2300, 'Diamond'], [Infinity, 'Legend']];
 const tierOf = r => TIERS.find(t => r < t[0])[1];
-function ratingDelta(rating, survived, eaten) {
-  const gain = Math.min(RATING.survCap, Math.floor(survived / 10) * RATING.perTenSec) + Math.min(RATING.killCap, Math.max(0, eaten | 0) * RATING.perKill);
+function ratingDelta(rating, survived, eaten, place, of) {
+  // placing: 1st of N earns the full bonus, last earns none; needs at least 4 in the round to count
+  const n = Math.max(0, of | 0), pl = Math.max(1, place | 0), placing = n >= 4 && pl <= n ? RATING.placeBonus * (1 - (pl - 1) / (n - 1)) : 0;
+  const gain = Math.min(RATING.survCap, Math.floor(survived / 10) * RATING.perTenSec) + Math.min(RATING.killCap, Math.max(0, eaten | 0) * RATING.perKill) + placing;
   const quick = survived < RATING.quickDeathSec ? (RATING.quickDeathSec - survived) / RATING.quickDeathSec * RATING.quickPenalty : 0;
   const k = Math.max(0, rating - RATING.base) / RATING.scale;
   return Math.round(gain * Math.max(.35, 1 - k) - quick * (1 + k));
@@ -48,10 +52,10 @@ const skinById = id => SKINS.find(s => s.id === id);
 const packById = id => PACKS.find(p => p.id === id);
 const catalog = () => ({ skins: SKINS, packs: PACKS, rules: RULES, rating: RATING, tiers: TIERS.map(t => t[1]), iap: iap.status() });
 
-function payoutFor({ survived, bestRank }) {
+function payoutFor({ survived, bestRank, place }) {
   const sec = Math.max(0, Math.min(RULES.maxRunSec, +survived || 0));
   if (sec < RULES.minSec) return 0;
-  const rank = Math.max(1, Math.floor(+bestRank || 0));
+  const rank = Math.max(1, Math.floor(+place || +bestRank || 0));
   const tier = RULES.byRank.find(([r]) => rank <= r);
   return tier ? tier[1] : 0;
 }
@@ -92,12 +96,12 @@ function runEnd(store, body, p) {
   // The client can't claim more survival time than actually elapsed on the server.
   const elapsed = (now - Number(run.started)) / 1000 + 15;
   const survived = Math.min(+body.survived || 0, elapsed);
-  const payout = payoutFor({ survived, bestRank: body.bestRank });
+  const payout = payoutFor({ survived, bestRank: body.bestRank, place: body.place });
   const w = { balance: Number(p.balance) + payout, earned: Number(p.earned) + payout, hour_at: Number(p.hour_at), hour_sum: Number(p.hour_sum) };
   store.setWallet(p.id, w); store.endRun(run.id, now, payout);
   Object.assign(p, w);
   // rating
-  const before = Number(p.rating ?? RATING.base), delta = ratingDelta(before, survived, body.eaten), rating = Math.max(0, before + delta);
+  const before = Number(p.rating ?? RATING.base), delta = ratingDelta(before, survived, body.eaten, body.place, body.of), rating = Math.max(0, before + delta);
   const name = cleanName(body.name) || p.name || null;
   store.setRating(p.id, rating, name); p.rating = rating; p.name = name; p.runs = Number(p.runs || 0) + 1;
   return { payout, ratingDelta: delta, ...wallet(store, p) };
