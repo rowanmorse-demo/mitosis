@@ -352,7 +352,7 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
   // On the website the server is wherever the page came from. In the iOS/Android apps the page is
   // bundled, so the server is given as ?server=… (or defaults to the public one).
   const SERVER=window.MITOSIS_SERVER=(()=>{if(location.protocol==='http:'||location.protocol==='https:')return location.origin;
-    let o='';try{o=new URLSearchParams(location.search).get('server')||'';}catch(e){}return (o||'https://mitosis-zmbc.onrender.com').replace(/\/+$/,'');})();
+    let o='';try{o=new URLSearchParams(location.search).get('server')||'';}catch(e){}return (o||'http://51.81.81.166:3000').replace(/\/+$/,'');})();
   const myId=(Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2)).replace(/[^a-z0-9]/g,'').slice(0,12);
   const N=window.__mitosisNet={lan:[],state:'connecting'};
   let ws=null,connected=false,mine={},mineObj=Object.freeze({}),snap=Object.freeze([]),connFns=[],pending=false,lastSend=0,retry=0;

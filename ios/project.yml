@@ -15,7 +15,7 @@ settings:
     MARKETING_VERSION: "2.1.0"
     CURRENT_PROJECT_VERSION: "2"
     # Where the app finds the Mitosis server (WebSocket relay + ATP API).
-    MITOSIS_SERVER: https://mitosis-zmbc.onrender.com
+    MITOSIS_SERVER: http://51.81.81.166:3000
 targets:
   Mitosis:
     type: application
@@ -43,6 +43,7 @@ targets:
         UIUserInterfaceStyle: Dark
         ITSAppUsesNonExemptEncryption: false
         NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: true     # the game server is reached by IP over plain HTTP (see README: Deploy)
           NSAllowsLocalNetworking: true
           NSExceptionDomains:          # debug builds in the simulator may use http://localhost:3000
             localhost:

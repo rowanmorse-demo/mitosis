@@ -2,9 +2,7 @@
 
 A multiplayer cell-eating arena set in a giant petri well. Absorb anything smaller than you, divide to strike, and keep clear of anything bigger. Plays in a browser, and as native apps for iPhone/iPad and Android.
 
-**Play now: https://mitosis-zmbc.onrender.com**. Send the link to friends and everyone who opens it shares the same world.
-
-> The free server sleeps after 15 minutes with nobody playing. The first visitor then waits about 50 seconds while it wakes up.
+**Play now: http://51.81.81.166:3000**. Send the link to friends and everyone who opens it shares the same world.
 
 ## Features
 
@@ -94,6 +92,28 @@ Until the Apple/Google variables are set, real purchases are refused (HTTP 503) 
 
 ## Deploy
 
+### Your own server (Docker)
+
+Any Linux box with Docker works; the game currently runs this way on an OVH VPS.
+
+```bash
+git clone https://github.com/rowanmorse-demo/mitosis.git /opt/mitosis && cd /opt/mitosis
+docker compose up -d            # serves http://<server>:3000, data in the mitosis-data volume
+./deploy.sh                     # later: pull the latest main and restart
+```
+
+Put the `APPLE_*` and `GOOGLE_*` variables in `/opt/mitosis/.env`; compose passes them to the container. For HTTPS put a reverse proxy in front. With Caddy, a site block like this is all it takes (Caddy fetches and renews the certificate itself):
+
+```
+play.example.com {
+	reverse_proxy mitosis:3000
+}
+```
+
+Then set that https address as `MITOSIS_SERVER` in `ios/project.yml`, `SERVER_URL` in `android/app/build.gradle.kts` and the default in `index.html`.
+
+### Render
+
 `render.yaml` is a Render Blueprint for a free web service:
 
 1. Fork or clone this repository.
@@ -105,7 +125,7 @@ Until the Apple/Google variables are set, real purchases are refused (HTTP 503) 
 
 ## iOS app
 
-`ios/` is a native Swift app that bundles `index.html` in a full-screen `WKWebView` and adds StoreKit 2 purchases and haptics. The game loads instantly and plays solo offline; multiplayer and ATP use the server in `MITOSIS_SERVER` (`ios/project.yml`).
+`ios/` is a native Swift app that bundles `index.html` in a full-screen `WKWebView` and adds StoreKit 2 purchases and haptics. The game loads instantly and plays solo offline; multiplayer and ATP use the server in `MITOSIS_SERVER` (`ios/project.yml`, currently the OVH box by IP, which is why Info.plist allows arbitrary loads).
 
 - Open `ios/Mitosis.xcodeproj` in Xcode 16+ and run. Signing is automatic for team `4M7HR323EA`; change `DEVELOPMENT_TEAM` and the bundle id in `project.yml` for another account, then `xcodegen generate` (`brew install xcodegen`).
 - **Testing purchases in the simulator:** the scheme uses `Mitosis/Products.storekit`, a fake App Store with the four packs. Run a local server with `npm run dev` first: debug builds in the simulator use `http://localhost:3000` when it answers, and the production server otherwise.

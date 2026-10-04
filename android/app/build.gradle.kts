@@ -16,7 +16,7 @@ android {
         versionCode = 1
         versionName = "2.1.0"
         // Where the app finds the Mitosis server (WebSocket relay + ATP API).
-        buildConfigField("String", "SERVER_URL", "\"https://mitosis-zmbc.onrender.com\"")
+        buildConfigField("String", "SERVER_URL", "\"http://51.81.81.166:3000\"")
     }
     buildTypes {
         release {
