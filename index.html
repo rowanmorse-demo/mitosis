@@ -1902,7 +1902,8 @@ const joyEnd=e=>{if(e.pointerId!==joy.id)return;joy.id=null;joy.m=0;joy.ux=joy.u
 joyEl.addEventListener('pointerup',joyEnd);joyEl.addEventListener('pointercancel',joyEnd);joyEl.addEventListener('lostpointercapture',joyEnd);
 // collapsible leaderboard (remembered)
 const boardBox=$('board'),boardTg=$('boardToggle');
-const syncBoard=()=>{const c=!!settings.boardMin;boardBox.classList.toggle('collapsed',c);boardTg.textContent=c?'▸':'▾';boardTg.setAttribute('aria-expanded',String(!c));boardTg.setAttribute('aria-label',c?'Expand ranking':'Collapse ranking');};
+const syncBoard=()=>{if(settings.boardMin===undefined)settings.boardMin=TOUCH_UI; // phones start with the ranking folded
+  const c=!!settings.boardMin;boardBox.classList.toggle('collapsed',c);boardTg.textContent=c?'▸':'▾';boardTg.setAttribute('aria-expanded',String(!c));boardTg.setAttribute('aria-label',c?'Expand ranking':'Collapse ranking');};
 boardTg.addEventListener('click',()=>{settings.boardMin=!settings.boardMin;saveSettings();syncBoard();});syncBoard();
 addEventListener('keydown',e=>{
   const tag=e.target&&e.target.tagName;
