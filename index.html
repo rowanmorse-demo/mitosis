@@ -191,7 +191,7 @@ body:not(.playing) #evolve{display:none!important}
   .card{padding:22px 20px 20px;gap:15px}
 }
 /* touch layout: joystick bottom-left, Split / Shoot / Boost on the right, pause+sound bottom-centre */
-#joy{display:none;position:fixed;z-index:3;left:calc(var(--gut) + env(safe-area-inset-left,0px));bottom:calc(var(--gut) + env(safe-area-inset-bottom,0px));width:150px;height:150px;touch-action:none;pointer-events:auto}
+#joy{display:none;position:fixed;z-index:3;left:calc(var(--gut) + env(safe-area-inset-left,0px));bottom:calc(var(--gut) + 18px + env(safe-area-inset-bottom,0px));width:150px;height:150px;touch-action:none;pointer-events:auto}
 #joy .base{position:absolute;left:15px;top:15px;width:120px;height:120px;border-radius:50%;border:1.5px solid var(--line-strong);background:rgba(6,20,22,.55);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 #joy .base::after{content:"";position:absolute;inset:34px;border-radius:50%;border:1px dashed rgba(140,210,200,.25)}
 #joy .knob{position:absolute;left:49px;top:49px;width:52px;height:52px;border-radius:50%;background:rgba(220,239,233,.85);box-shadow:0 4px 14px rgba(0,0,0,.45);transition:transform .1s}
@@ -200,7 +200,7 @@ body:not(.playing) #joy{display:none!important}
 @media (pointer:coarse){
   body.playing #joy{display:block}
   /* corner cluster like Agar.io mobile: Shoot in the corner, Boost to its left, Split above it */
-  #actions{left:auto;right:calc(var(--gut) + env(safe-area-inset-right,0px));transform:none;bottom:calc(var(--gut) + env(safe-area-inset-bottom,0px));display:block;width:170px;height:180px}
+  #actions{left:auto;right:calc(var(--gut) + env(safe-area-inset-right,0px));transform:none;bottom:calc(var(--gut) + 18px + env(safe-area-inset-bottom,0px));display:block;width:170px;height:180px}
   /* landscape lobby: two columns so rating, top players and settings fit without scrolling */
   @media (orientation:landscape){#startCard{max-width:420px;gap:10px;padding:16px 22px}#startCard h1{font-size:44px;line-height:.9}
   #storeCard{max-width:820px;grid-template-columns:3fr 2fr;gap:12px 20px;padding:16px 22px}#storeCard h2{font-size:32px}#storeCard .balance b{font-size:24px}#storeCard .shophead,#storeCard .row{grid-column:1/-1}#storeCard .shopsec{padding-top:10px}
@@ -610,7 +610,8 @@ const Native=(()=>{
       setTimeout(()=>{if(waits.delete(id))rej(new Error('No reply from the app'));},type==='buy'?600000:20000);});}
   window.MitosisBridge={onNative(m){if(!m||typeof m!=='object')return;
     if(m.id&&waits.has(m.id)){const w=waits.get(m.id);waits.delete(m.id);if(m.ok===false)w.rej(new Error(m.error||'Failed'));else w.res(m);return;}
-    if(m.type==='purchase'&&m.purchase)redeem(m.purchase).catch(()=>{});}};
+    if(m.type==='purchase'&&m.purchase)redeem(m.purchase).catch(()=>{});
+    if(m.type==='app')reportHitch('app '+m.text);}};
   let lastHap=0;return{platform,send,call,haptic(style){if(!platform)return;const n=performance.now();if(n-lastHap<120)return;lastHap=n;send({type:'haptic',style});}};
 })();
 
@@ -2020,7 +2021,7 @@ addEventListener('keydown',e=>{
   else if(/^Digit[123]$/.test(e.code)&&evoOffer){takeEvo(+e.code.slice(5)-1);}
   else if(['KeyZ','KeyX','KeyC','KeyV'].includes(e.code)&&!e.repeat&&human&&human.alive){human.emote={i:['KeyZ','KeyX','KeyC','KeyV'].indexOf(e.code),t:T};emSeq++;}
 });
-document.addEventListener('visibilitychange',()=>{Native.send({type:'log',text:'visibility '+(document.hidden?'hidden':'visible')});
+document.addEventListener('visibilitychange',()=>{reportHitch('visibility '+(document.hidden?'hidden':'visible'));
   if(document.hidden){
     if(mode==='play'&&!paused)setPaused(true);
     if(multi()&&isHost){yielded=true;becomeClient();try{send();}catch(e){}} // hand the bots to someone whose tab is running

@@ -50,6 +50,10 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
 
         UIApplication.shared.isIdleTimerDisabled = true
         impact.prepare()
+        // tell the page when iOS takes the app out of the foreground (Reachability, app switcher, Control Centre)
+        for (name, label) in [(UIApplication.willResignActiveNotification, "resignActive"), (UIApplication.didBecomeActiveNotification, "becomeActive"), (UIApplication.didEnterBackgroundNotification, "background")] {
+            NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in self?.reply(["type": "app", "text": label]) }
+        }
         loadGame()
     }
 
