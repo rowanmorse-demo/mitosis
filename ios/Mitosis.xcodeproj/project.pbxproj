@@ -11,6 +11,7 @@
 		2F61960C85A3C3A2778616A3 /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = D22E25D1E8F242C73B91AC1C /* Store.swift */; };
 		3A661457A5E8B40927BA4F6A /* Products.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 288647F01627982FF8E5C854 /* Products.storekit */; };
 		3EFF471C12CFE60617A0A5AB /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC78B5F1AA3365E3D30A6A33 /* AppDelegate.swift */; };
+		67CB41589261C98FF5DEF42A /* CrashReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9810CDBF06BB4874ED519410 /* CrashReporter.swift */; };
 		9AFA2974D76293BDD5B60FD0 /* PurchaseFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21F43300ED7D9FACC9F97FFB /* PurchaseFlowTests.swift */; };
 		B62872990EC920AE3E702C0E /* Products.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 288647F01627982FF8E5C854 /* Products.storekit */; };
 		C9D13A4C51CD1B9A85C3D4D5 /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = 1169830FBF7B1B6A14EEF743 /* index.html */; };
@@ -37,6 +38,7 @@
 		4E0A34706C21BCEBC879982D /* MitosisTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = MitosisTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		6C87C55256CBCC6CD8A2BD3C /* GameViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameViewController.swift; sourceTree = "<group>"; };
 		9530BC88744AE81130065B91 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		9810CDBF06BB4874ED519410 /* CrashReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashReporter.swift; sourceTree = "<group>"; };
 		BC78B5F1AA3365E3D30A6A33 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		D22E25D1E8F242C73B91AC1C /* Store.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
 		F40391A8EC0E4ED8BE6CA2B7 /* SignIn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignIn.swift; sourceTree = "<group>"; };
@@ -84,6 +86,7 @@
 			children = (
 				BC78B5F1AA3365E3D30A6A33 /* AppDelegate.swift */,
 				9530BC88744AE81130065B91 /* Assets.xcassets */,
+				9810CDBF06BB4874ED519410 /* CrashReporter.swift */,
 				6C87C55256CBCC6CD8A2BD3C /* GameViewController.swift */,
 				1E7F54B87615C3BEB3EDA007 /* Mitosis.entitlements */,
 				288647F01627982FF8E5C854 /* Products.storekit */,
@@ -199,6 +202,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3EFF471C12CFE60617A0A5AB /* AppDelegate.swift in Sources */,
+				67CB41589261C98FF5DEF42A /* CrashReporter.swift in Sources */,
 				D7AF4C1BE590B4EE61B9643F /* GameViewController.swift in Sources */,
 				D18435CC2C316056C895EF16 /* SignIn.swift in Sources */,
 				2F61960C85A3C3A2778616A3 /* Store.swift in Sources */,

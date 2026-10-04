@@ -102,6 +102,7 @@ input[type=text]:focus{outline:2px solid var(--accent);outline-offset:1px}
 .primary{appearance:none;border:0;border-radius:11px;background:var(--accent);color:var(--accent-ink);font:800 18px var(--display);letter-spacing:-.01em;padding:14px;cursor:pointer;box-shadow:0 6px 24px rgba(255,92,138,.28),inset 0 -2px 0 rgba(0,0,0,.15);transition:transform .12s,filter .15s}
 .primary:hover{filter:brightness(1.07)}
 .primary:active{transform:translateY(1px)}
+.primary:disabled{opacity:.55;cursor:default;filter:none;box-shadow:none;transform:none}
 .ghost{appearance:none;border:1px solid var(--line);border-radius:11px;background:transparent;color:var(--muted);font:600 14px var(--display);padding:11px 14px;cursor:pointer}
 .ghost:hover{color:var(--ink);border-color:var(--line-strong)}
 /* Account: Sign in with Apple / Google, drawn to the providers' button guidelines */
@@ -151,6 +152,9 @@ button:focus-visible,.sw:focus-visible{outline:2px solid var(--ink);outline-offs
 .evo span{font:12px/1.35 var(--display);color:var(--muted)}
 #banner{top:calc(var(--gut) + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);width:min(380px,calc(100% - 540px));min-width:260px;box-sizing:border-box;padding:10px 14px 12px;display:grid;gap:4px;background:var(--panel);border:1px solid var(--ec,var(--line));border-radius:12px;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);animation:up .4s cubic-bezier(.2,.8,.2,1)}
 .bnrow{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+/* after 2 s an event banner shrinks into a small pill in the top-left corner so it stops covering the arena */
+#banner.mini{left:calc(var(--gut) + env(safe-area-inset-left,0px));transform:none;width:auto;min-width:0;max-width:200px;padding:5px 10px 6px;gap:3px;animation:none;opacity:.9;transition:opacity .3s}
+#banner.mini #bnDesc{display:none}#banner.mini #bnTitle{font-size:12px}#banner.mini #bnTime{font-size:11px}#banner.mini .bnbar{height:2px}
 #bnTitle{font:800 18px/1.1 var(--display);letter-spacing:-.02em;color:var(--ec)}
 #bnTime{font:12px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
 #bnDesc{font:12.5px/1.35 var(--display);color:var(--muted)}
@@ -346,6 +350,15 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
   <div class="card panel" id="settingsCard" hidden>
     <p class="eyebrow">Settings</p>
     <h2>Culture</h2>
+    <div class="field acct" id="acctField"><span class="label">Account</span>
+      <p class="who" id="acctWho">Not signed in. Sign in so your ATP, skins and rating follow you to any phone.</p>
+      <div class="sbtns" id="acctBtns">
+        <button type="button" class="sbtn apple" id="appleBtn" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.37 12.7c-.03-2.6 2.12-3.85 2.22-3.91-1.21-1.77-3.09-2.01-3.76-2.04-1.6-.16-3.12.94-3.93.94-.81 0-2.06-.92-3.39-.9-1.74.03-3.35 1.01-4.25 2.57-1.81 3.14-.46 7.79 1.3 10.33.86 1.24 1.89 2.64 3.23 2.59 1.3-.05 1.79-.84 3.36-.84 1.57 0 2.01.84 3.39.81 1.4-.02 2.28-1.26 3.14-2.51.99-1.44 1.4-2.84 1.42-2.91-.03-.01-2.72-1.04-2.73-4.13zM13.78 5.06c.72-.87 1.2-2.08 1.07-3.28-1.03.04-2.28.69-3.02 1.55-.66.77-1.24 1.99-1.09 3.17 1.15.09 2.32-.58 3.04-1.44z"/></svg>Sign in with Apple</button>
+        <button type="button" class="sbtn google" id="googleBtn" hidden><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Sign in with Google</button>
+        <button type="button" class="ghost" id="signOutBtn" hidden>Sign out</button>
+      </div>
+      <p class="hint" id="acctHint" hidden></p>
+    </div>
     <div class="field"><span class="label">Culture density</span>
       <div class="seg" id="diff">
         <button type="button" data-d="calm">Calm<small>40 cells</small></button>
@@ -355,15 +368,6 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
     </div>
     <div class="field"><span class="label">Vibration</span><div class="seg two" id="hapSeg"><button type="button" data-h="0">Off<small>recommended</small></button><button type="button" data-h="1">On<small>taps on split and kills</small></button></div></div>
     <div class="field"><span class="label">Invite friends</span><div class="invite" id="inviteRow"><input id="inviteUrl" type="text" readonly aria-label="Invite link" value=""><button id="copyInvite" class="ghost" type="button">Invite friends</button></div><p id="inviteHelp">Send this link to a friend on the same Wi-Fi. For friends elsewhere, run <b>share-online.bat</b> and send the https link it prints.</p></div>
-    <div class="field acct" id="acctField"><span class="label">Account</span>
-      <p class="who" id="acctWho">Not signed in — ATP, skins and rating stay on this device.</p>
-      <div class="sbtns" id="acctBtns">
-        <button type="button" class="sbtn apple" id="appleBtn" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.37 12.7c-.03-2.6 2.12-3.85 2.22-3.91-1.21-1.77-3.09-2.01-3.76-2.04-1.6-.16-3.12.94-3.93.94-.81 0-2.06-.92-3.39-.9-1.74.03-3.35 1.01-4.25 2.57-1.81 3.14-.46 7.79 1.3 10.33.86 1.24 1.89 2.64 3.23 2.59 1.3-.05 1.79-.84 3.36-.84 1.57 0 2.01.84 3.39.81 1.4-.02 2.28-1.26 3.14-2.51.99-1.44 1.4-2.84 1.42-2.91-.03-.01-2.72-1.04-2.73-4.13zM13.78 5.06c.72-.87 1.2-2.08 1.07-3.28-1.03.04-2.28.69-3.02 1.55-.66.77-1.24 1.99-1.09 3.17 1.15.09 2.32-.58 3.04-1.44z"/></svg>Sign in with Apple</button>
-        <button type="button" class="sbtn google" id="googleBtn" hidden><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Sign in with Google</button>
-        <button type="button" class="ghost" id="signOutBtn" hidden>Sign out</button>
-      </div>
-      <p class="hint" id="acctHint" hidden></p>
-    </div>
     <details class="sec" id="helpSec"><summary><span class="label">How to play</span></summary><div class="body">
     <dl class="keys kbd-only">
       <dt>Mouse</dt><dd>Steer toward the cursor</dd>
@@ -380,7 +384,7 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
     </dl>
     <div class="new"><strong>New in 2.0</strong>
       <em>Evolve</em> at mass milestones — pick one of three traits, six times a life. <em>World events</em>: nutrient blooms, antibiotic tides that close the well, phage swarms and the <em>Leviathan</em> — lure it onto phages to break it up. The leader wears a crown and pays a <em>1.5× bounty</em>.
-      <span class="danger">Hunter phages</span> break in through the rim and inject any cell they touch — it bursts into up to 16 pieces 8–10 s later. Phase blocks them and three ejected blobs kill one.
+      <span class="danger">Hunter phages</span> break in through the rim and inject any cell they touch — it bursts into up to 16 pieces 8–10 s later. Nothing is immune to them; three ejected blobs kill one.
       Also: mutations (Magnet, Phase, Surge), dash, frenzy streaks, stain patterns and achievements.</div>
     <p class="achline" id="achLine"></p>
     </div></details>
@@ -478,8 +482,11 @@ addEventListener('resize',resize);resize();
 /* ================= constants & helpers ================= */
 const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const R=6800,TAU=Math.PI*2,NP=40,OFF=R+2000;
-const MAX_CELLS=16,VIRUS_M=100,VSLOTS=140,MAX_FREEV=16,PELLETS=19200,MAX_PU=24,MAX_MASS=9000;
-const MAX_HUNTERS=6,HUNTER_R=42,INF_MIN=8,INF_MAX=10,PROTO=4,SEED=90210;
+const MAX_CELLS=16,VIRUS_M=100,VSLOTS=140,MAX_FREEV=16,PELLETS=19200,MAX_PU=24;
+// No gameplay cap on a single cell's mass: MAX_MASS is only the ceiling the network packet can carry
+// (23 bits; the 24th bit of the field flags an infected cell), far beyond anything reachable in play.
+const MAX_MASS=8388607,INF_FLAG=8388608;
+const MAX_HUNTERS=6,HUNTER_R=42,INF_MIN=8,INF_MAX=10,PROTO=5,SEED=90210; // PROTO 5: 4-char mass field (no cell mass cap)
 // Rounds: the well is full size for the first quarter, then the arena closes in to 12% of the dish by the
 // last 5%, and the round ends at ROUND_SEC with the survivors ranked by mass. ?round=60 shortens it for tests.
 const ROUND_SEC=+((location.search.match(/[?&]round=(\d+)/)||[])[1])||600,ROUND_GRACE=Math.round(ROUND_SEC*.25),ROUND_HOLD=Math.round(ROUND_SEC*.05),R_MIN=R*.12,ROUND_GAP=6;
@@ -585,12 +592,11 @@ const PERKS=[
   {id:'mitotic',name:'Rapid mitosis',desc:'Split cells fuse back 40% sooner'},
   {id:'vacuole',name:'Food vacuole',desc:'Food is worth 40% more'},
   {id:'lysozyme',name:'Lysozyme',desc:'Infections take twice as long to burst you'},
-  {id:'armored',name:'Armored cortex',desc:'Phages can no longer burst you'},
   {id:'metabolism',name:'Slow metabolism',desc:'Large cells lose mass half as fast'},
   {id:'chemotaxis',name:'Chemotaxis',desc:'See 20% farther, and prey you can eat glows'},
   {id:'photo',name:'Chloroplasts',desc:'Every cell gains 1.5 mass per second'}];
 const PBIT={};PERKS.forEach((p,i)=>{PBIT[p.id]=1<<i;});
-const BOT_PERKS=['flagella','membrane','enzymes','cilia','mitotic','vacuole','metabolism','photo','armored'];
+const BOT_PERKS=['flagella','membrane','enzymes','cilia','mitotic','vacuole','metabolism','photo'];
 const EVO=[80,200,450,900,1600,2800];
 const has=(p,id)=>!!(p&&(p.pk&PBIT[id]));
 const need=(eater,victim)=>(has(eater,'enzymes')?1.05:1.1)+(has(victim,'membrane')?.1:0);
@@ -790,12 +796,12 @@ $('storeBack').addEventListener('click',()=>{showCard('startCard');renderSkins()
 let authProviders=null,webAuthConfig=null,signingIn=false; // which sign-in buttons this build can offer
 function renderAccount(){
   const a=wallet.account||null,who=$('acctWho');if(!who)return;
-  if(a)who.innerHTML=`Signed in with <b>${a.provider==='apple'?'Apple':'Google'}</b>${a.email?' · <b>'+escH(a.email)+'</b>':''}. Your ATP, skins and rating follow you to any device you sign in on.`;
-  else who.textContent=wallet.online?'Not signed in — ATP, skins and rating stay on this device. Sign in to keep them if you switch phones or reinstall.':'Not signed in. Signing in needs a connection to the server.';
+  if(a)who.innerHTML=`Signed in with <b>${a.provider==='apple'?'Apple':'Google'}</b>${a.email?' · <b>'+escH(a.email)+'</b>':''}. Your ATP, skins and rating follow you.`;
+  else who.textContent=wallet.online?'Not signed in. Sign in so your ATP, skins and rating follow you to any phone.':'Not signed in. Signing in needs a connection.';
   const p=authProviders||[];
   $('appleBtn').hidden=!!a||!p.includes('apple');$('googleBtn').hidden=!!a||!p.includes('google');$('signOutBtn').hidden=!a;
   const none=!a&&authProviders&&!p.length;$('acctHint').hidden=!none;
-  if(none)$('acctHint').textContent=Native.platform?'Sign-in is not set up in this build yet.':'Sign in from the Mitosis app for iPhone or Android; the website keeps a device-only wallet.';
+  if(none)$('acctHint').textContent=Native.platform?'Sign-in is not set up in this build yet.':'Sign in from the Mitosis app for iPhone or Android.';
 }
 async function loadAuthProviders(cat){
   try{
@@ -899,12 +905,12 @@ function addCell(p,x,y,mass,vx=0,vy=0){
 }
 function kick(c,s){for(let i=0;i<NP;i++)c.pv[i]+=rand(-s,s);}
 function spawn(p,mass){
-  let bestS=null,bestD=-1;
+  let bestS=null,bestD=-Infinity; // the least-crowded of 16 samples, even when every sample is inside something's reach (small final arena)
   for(let k=0;k<16;k++){
     const s=randInDish(300);let md=1e9;
-    for(const c of cells){if(c.dead||c.mass<mass*1.2)continue;const d=Math.hypot(c.x-s.x,c.y-s.y)-c.r;if(d<md)md=d;}
-    for(const h of hunters){const d=Math.hypot(h.x-s.x,h.y-s.y);if(d-400<md)md=d-400;}
-    if(md>bestD){bestD=md;bestS=s;}if(md>900)break;
+    for(const c of cells){if(!c||c.dead||c.mass<mass*1.2)continue;const d=Math.hypot(c.x-s.x,c.y-s.y)-c.r;if(d<md)md=d;}
+    for(const h of hunters){if(!h)continue;const d=Math.hypot(h.x-s.x,h.y-s.y);if(d-400<md)md=d-400;}
+    if(!(md<=bestD)){bestD=md;bestS=s;}if(md>900)break;
   }
   p.cells=[];const c=addCell(p,bestS.x,bestS.y,mass);c.dr=3;
   p.alive=true;p.fx={magnet:0,shield:2.5,surge:0};p.dashCd=0;p.combo=0;p.hist=[mass];p.pk=0;p.evo=0;p.bloomEats=0;
@@ -1064,6 +1070,19 @@ function takeEvo(i){
 /* ---- world events (the host runs them; everyone renders them) ---- */
 function tideSafe(){if(ev.type!==2)return R;const p=clamp(1-(ev.end-T)/EVT[2].dur,0,1),e=p<.28?p/.28:p<.72?1:(1-p)/.28;return R*(1-.52*(e*e*(3-2*e)));}
 const roundT=()=>T-round.start;
+// Nobody spawns in the last SPAWN_CUTOFF seconds of a round: latecomers and the dead wait for the next one.
+const SPAWN_CUTOFF=Math.min(300,Math.round(ROUND_SEC*.5)); // 5 min of a 10-min round (?round= test rounds: half)
+function spawnOpen(){if(multi()&&!isHost&&!round.synced)return true;return round.over||roundT()<ROUND_SEC-SPAWN_CUTOFF;}
+function spawnWait(){return round.over?Math.max(0,round.start-T):Math.max(0,ROUND_SEC-roundT())+ROUND_GAP;} // seconds until the next round opens
+let spawnLockToastAt=-1e9;
+function updateSpawnLock(){
+  const open=spawnOpen(),go=$('go'),ag=$('again');if(!go||!ag)return;
+  const label=open?null:'Next round in '+fmtT(spawnWait());
+  go.disabled=!open;ag.disabled=!open;
+  const goT=open?'Play':label,agT=open?'Re-inoculate':label;
+  if(go.textContent!==goT)go.textContent=goT;if(ag.textContent!==agT)ag.textContent=agT;
+}
+setInterval(updateSpawnLock,500);
 function arenaR(){ // the round's safe radius: full for ROUND_GRACE s, then closing smoothly to R_MIN by ROUND_SEC-ROUND_HOLD
   if(multi()&&!isHost&&!round.synced)return R;const t=roundT();if(t<ROUND_GRACE)return R;
   const p=clamp((t-ROUND_GRACE)/(ROUND_SEC-ROUND_HOLD-ROUND_GRACE),0,1),e=p*p*(3-2*p);return R-(R-R_MIN)*e;}
@@ -1135,7 +1154,7 @@ function spawnHunter(){
 function hunterBrain(h,dt){
   h.retarget-=dt;
   if(h.retarget<=0){
-    if(h.kind===1){h.retarget=.8;let b=null,bd=2200*2200;for(const c of cells){if(c.dead||c.mass<30||c.owner.fx.shield>0)continue;const d=(c.x-h.x)**2+(c.y-h.y)**2;if(d<bd){bd=d;b=c;}}if(b)h.aim={x:b.x,y:b.y};}
+    if(h.kind===1){h.retarget=.8;let b=null,bd=2200*2200;for(const c of cells){if(c.dead||c.mass<30)continue;const d=(c.x-h.x)**2+(c.y-h.y)**2;if(d<bd){bd=d;b=c;}}if(b)h.aim={x:b.x,y:b.y};}
     else{h.retarget=5;const d=Math.hypot(h.aim.x-h.x,h.aim.y-h.y);if(d<120){const s=randInDish(600);h.aim=s;}}
   }
   let dx=h.aim.x-h.x,dy=h.aim.y-h.y;const d=Math.hypot(dx,dy)||1;dx/=d;dy/=d;
@@ -1190,10 +1209,10 @@ function think(p){
       if(s>preyScore){preyScore=s;prey=c;}
     }
   }
-  if(!boss&&p.fx.shield<=0)for(const h of hunters){const d=Math.hypot(h.x-me.x,h.y-me.y);
+  if(!boss)for(const h of hunters){const d=Math.hypot(h.x-me.x,h.y-me.y);
     if(d<me.r+900){threats.push({x:h.x+h.vx*.5,y:h.y+h.vy*.5,reach:HUNTER_R+70,w:2.4,m:0,hunter:h});if(d-me.r-HUNTER_R-70<minGap)minGap=d-me.r-HUNTER_R-70;}}
   const hz=[];
-  if(!boss&&me.mass>VIRUS_M*1.3&&!has(p,'armored')&&p.fx.shield<=0)
+  if(!boss&&me.mass>VIRUS_M*1.3) // nothing is immune to phages: every big cell steers clear
     for(const v of viruses)if(Math.abs(v.x-me.x)<me.r+600&&Math.abs(v.y-me.y)<me.r+600)hz.push(v);
   const safe=safeR();
   // ---- goal
@@ -1229,7 +1248,7 @@ function think(p){
     const d=Math.hypot(exact.x-me.x,exact.y-me.y),gap=d-me.r,half=me.mass/2,reach=194+.75*radius(half);
     let safeHalves=true;for(const t of threats)if(t.m>half*1.25&&Math.hypot(t.x-exact.x,t.y-exact.y)<t.reach+600){safeHalves=false;break;}
     let blocked=false;
-    if(me.mass>VIRUS_M*1.3&&!has(p,'armored'))for(const v of viruses){const t=((v.x-me.x)*(exact.x-me.x)+(v.y-me.y)*(exact.y-me.y))/(d*d||1);
+    if(me.mass>VIRUS_M*1.3)for(const v of viruses){const t=((v.x-me.x)*(exact.x-me.x)+(v.y-me.y)*(exact.y-me.y))/(d*d||1);
       if(t>0&&t<1.2&&Math.hypot(v.x-(me.x+(exact.x-me.x)*t),v.y-(me.y+(exact.y-me.y)*t))<v.r+radius(half)*.6){blocked=true;break;}}
     if(half>prey.mass*need(p,prey.owner)&&gap<reach+me.r*.15&&safeHalves&&!blocked&&p.cells.length<=Math.ceil(2+4*aggr)&&Math.random()<.35+aggr*.35){p.target=exact;split(p);return;}
     if(gap<280&&p.dashCd<=0&&speedOf(prey.r)>=speedOf(me.r)*.95&&Math.random()<aggr*.3){p.target=exact;dash(p);return;}
@@ -1346,7 +1365,7 @@ function step(dt){
   }
   rebuildViruses();
   for(const v of viruses){v.spin+=dt*.25;if(v.dead)continue;
-    for(const c of cells){if(c.dead||c.owner.remote||c.mass<v.mass*1.3||c.owner.fx.shield>0||has(c.owner,'armored'))continue;
+    for(const c of cells){if(c.dead||c.owner.remote||c.mass<v.mass*1.3)continue; // no immunity: Phase and traits never stop a phage
       if(Math.abs(c.x-v.x)>c.r||Math.abs(c.y-v.y)>c.r)continue;
       if(Math.hypot(c.x-v.x,c.y-v.y)<c.r-v.r*.2){popVirus(v);c.mass=Math.min(MAX_MASS,c.mass+v.mass);c.r=radius(c.mass);pop(c);break;}}
   }
@@ -1360,7 +1379,6 @@ function step(dt){
     for(const c of cells){if(c.dead||c.owner.remote||c.mass<12)continue;
       if(Math.abs(c.x-h.x)>c.r+HUNTER_R||Math.abs(c.y-h.y)>c.r+HUNTER_R)continue;
       if(Math.hypot(c.x-h.x,c.y-h.y)<c.r+HUNTER_R*.6){
-        if(c.owner.fx.shield>0){const d=Math.hypot(h.x-c.x,h.y-c.y)||1;h.vx=(h.x-c.x)/d*320;h.vy=(h.y-c.y)/d*320;continue;}
         infect(c,rand(INF_MIN,INF_MAX));h.dead=true;burst(h.x,h.y,col(INF_C),8,140);
         if(!isHost){rec(['i',h.id]);hSup.set(h.id,T);}
         break;}}
@@ -1769,6 +1787,7 @@ function hud(){
   netUI();
   const bn=$('banner');
   if(ev.type&&EVT[ev.type]){const E=EVT[ev.type],left=Math.max(0,ev.end-T);bn.hidden=false;bn.style.setProperty('--ec',E.c);
+    if(bn._evId!==ev.id){bn._evId=ev.id;bn._shownAt=T;}bn.classList.toggle('mini',T-bn._shownAt>2); // full banner for 2 s, then a corner pill
     if($('bnTitle').textContent!==E.name){$('bnTitle').textContent=E.name;$('bnDesc').textContent=E.desc;}
     $('bnTime').textContent=ev.type===3?'':fmtT(left);$('bnBar').style.width=(left/E.dur*100).toFixed(1)+'%';}
   else bn.hidden=true;
@@ -1790,7 +1809,8 @@ function netUI(){
   line.classList.toggle('live',live);const sp=line.querySelector('span');if(sp.textContent!==txt)sp.textContent=txt;
   const row=$('inviteRow'),inp=$('inviteUrl'),help=$('inviteHelp');row.hidden=!N;
   if(N){const links=inviteLinks(),v=links[0]||'No network address found';if(inp.value!==v)inp.value=v;
-    const t=location.hostname.endsWith('trycloudflare.com')?'Anyone with this link can join while your server and share-online.bat are running.':(window.MITOSIS_SERVER||'').startsWith('https:')?'Anyone with this link can join.':'Send this link to a friend on the same Wi-Fi. For friends elsewhere, run share-online.bat and send the https link it prints.';
+    const srv=window.MITOSIS_SERVER||'',priv=/^https?:\/\/(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|\[::1\])/.test(srv); // a server on this computer or LAN
+    const t=location.hostname.endsWith('trycloudflare.com')?'Anyone with this link can join while your server and share-online.bat are running.':(!priv||srv.startsWith('https:'))?'Anyone with this link can join.':'Send this link to a friend on the same Wi-Fi. For friends elsewhere, run share-online.bat and send the https link it prints.';
     if(help.textContent!==t)help.textContent=t;}
   else help.textContent='Multiplayer runs through the Mitosis server on your computer.';
 }
@@ -1853,7 +1873,7 @@ function removePlayer(pl){for(const c of pl.cells)c.dead=true;pl.cells=[];pl.ali
 function syncProxyCells(pl,list){
   const t=now(),seen=new Set();
   for(const [id,x,y,m0] of list){
-    const inf=m0>=131072,m=clamp(inf?m0-131072:m0,1,MAX_MASS);seen.add(id);
+    const inf=m0>=INF_FLAG,m=clamp(inf?m0-INF_FLAG:m0,1,MAX_MASS);seen.add(id);
     let c=pl.cells.find(c=>c.nid===id);
     if(!c){c=addCell(pl,x,y,m);c.nid=id;c.tx=x;c.ty=y;c.tt=t;c.dr=radius(m)*.9;}
     else{const dt=Math.max(.03,t-c.tt);c.nvx=clamp((x-c.tx)/dt,-1600,1600);c.nvy=clamp((y-c.ty)/dt,-1600,1600);c.tx=x;c.ty=y;c.tt=t;}
@@ -1864,11 +1884,11 @@ function syncProxyCells(pl,list){
 }
 function decCells(s,o,n){
   const out=[];if(typeof s!=='string')return out;
-  for(let i=0;i<n&&o+11<=s.length;i++,o+=11){const id=dec(s,o,2),x=dec(s,o+2,3)-OFF,y=dec(s,o+5,3)-OFF,m=dec(s,o+8,3);
+  for(let i=0;i<n&&o+12<=s.length;i++,o+=12){const id=dec(s,o,2),x=dec(s,o+2,3)-OFF,y=dec(s,o+5,3)-OFF,m=dec(s,o+8,4);
     if(Number.isNaN(id+x+y+m))break;out.push([id,clamp(x,-R-1500,R+1500),clamp(y,-R-1500,R+1500),m]);}
   return out;
 }
-const encCell=c=>enc(c.nid,2)+enc(c.x+OFF,3)+enc(c.y+OFF,3)+enc(Math.min(MAX_MASS,c.mass)+(c.inf?131072:0),3);
+const encCell=c=>enc(c.nid,2)+enc(c.x+OFF,3)+enc(c.y+OFF,3)+enc(Math.min(MAX_MASS,c.mass)+(c.inf?INF_FLAG:0),4); // 12 chars per cell
 function fxBits(p){return(p.fx.shield>0?1:0)|(p.fx.magnet>0?2:0)|(p.fx.surge>0?4:0)|(has(p,'membrane')?8:0)|(has(p,'enzymes')?16:0);}
 function setFx(p,b){p.fx.shield=b&1?1:0;p.fx.magnet=b&2?1:0;p.fx.surge=b&4?1:0;if(p.remote)p.pk=(b&8?PBIT.membrane:0)|(b&16?PBIT.enzymes:0);}
 function localByKey(k){if(human&&human.alive&&k===myKey())return human;if(isHost&&k[0]==='b'){const bid=+k.slice(1);return players.find(p=>p.bot&&!p.remote&&p.bid===bid&&p.alive)||null;}return null;}
@@ -1907,7 +1927,7 @@ function ingestWorld(P){
   const t=now();
   if(typeof P.b==='string'){const s=P.b,seenB=new Set();let o=0;
     while(o+4<=s.length&&seenB.size<120){const bid=dec(s,o,2),f=dec(s,o+2,1),n=dec(s,o+3,1);if(Number.isNaN(bid+f+n))break;
-      const list=decCells(s,o+4,Math.min(n,MAX_CELLS));o+=4+n*11;seenB.add(bid);
+      const list=decCells(s,o+4,Math.min(n,MAX_CELLS));o+=4+n*12;seenB.add(bid);
       let pl=botProx.get(bid);if(!pl){pl=makePlayer(botName(bid),botColor(bid),true);pl.bid=bid;pl.remote=true;pl.boss=bid===BOSS_BID;pl.skin=botSkin(bid);botProx.set(bid,pl);players.push(pl);}
       setFx(pl,f);syncProxyCells(pl,list);pl.alive=pl.cells.length>0;}
     for(const [bid,pl] of botProx)if(!seenB.has(bid)){removePlayer(pl);botProx.delete(bid);}
@@ -2045,8 +2065,14 @@ function init(){
   rebuildViruses();syncBots();
 }
 function removeHuman(){if(!human)return;removePlayer(human);cells=cells.filter(c=>!c.dead);human=null;}
-function showCard(id){for(const c of['startCard','pauseCard','deathCard','storeCard','lookCard','rankCard','settingsCard'])$(c).hidden=c!==id;$('overlay').hidden=!id;}
+let shownCard='startCard';
+function showCard(id){
+  // diagnostic: a report of what sends the page from Settings back to the start card (Settings → Account → sign in)
+  if(id==='startCard'&&shownCard==='settingsCard')reportHitch('settings->start via '+String(new Error().stack||'').split('\n').slice(1,4).map(s=>s.trim()).join(' | '));
+  shownCard=id;
+  for(const c of['startCard','pauseCard','deathCard','storeCard','lookCard','rankCard','settingsCard'])$(c).hidden=c!==id;$('overlay').hidden=!id;}
 function startGame(){
+  if(!spawnOpen()){updateSpawnLock();if(performance.now()-spawnLockToastAt>8000){spawnLockToastAt=performance.now();toast('Round','Too late to join this round',`The next one opens in ${fmtT(spawnWait())}`);}return;}
   settings.name=cleanName($('nameIn').value);
   try{localStorage.setItem('mitosis.settings',JSON.stringify(settings));}catch(e){}
   initAudio();if(actx&&actx.state==='suspended')actx.resume();

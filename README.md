@@ -35,6 +35,9 @@ On phones, drag to steer and use the on-screen buttons. In the Android app the b
 
 - A **round lasts 10 minutes**. The dish is full size for the first 2½ minutes, then the safe arena shrinks smoothly to 12% of the dish by 9:30 and holds there until the round ends. The clock at the top of the screen counts down and says when the collapse starts.
 - Cells outside the arena lose 20% of their mass per second plus 12 mass per second, and dissolve below 10 mass. Bots steer back inside; new cells always spawn inside.
+- **No spawning in the last 5 minutes.** Once a round is past its halfway mark, Play and Re-inoculate show a countdown to the next round instead; the dead and latecomers wait it out.
+- There is **no cap on a single cell's mass** (the packet format tops out at 8,388,607, far beyond play), and **nothing is immune to phages**: the Phase power-up still stops you being eaten, but phages burst and hunters infect anyone.
+- Event banners (blooms, tides, swarms, the Leviathan) show in full for two seconds, then shrink to a small pill in the top-left corner.
 - **Placement**: when you die, your place is the number of cells still alive plus one, out of everyone who took part in the round. When the round ends, the survivors are ranked by mass and the biggest wins. The results screen shows "7th of 23" (or *Victory*).
 - The host's clock is the round clock; everyone else follows it, so a new host carries the round on. In solo play the page keeps its own clock. `?round=60` on the web shortens rounds for testing.
 
@@ -161,6 +164,8 @@ Then set that https address as `MITOSIS_SERVER` in `ios/project.yml`, `SERVER_UR
 - **Purchase test:** `MitosisTests/PurchaseFlowTests.swift` buys a pack through the real Shop against the StoreKit test store and a local `npm run dev` server. Run it from Xcode; `xcodebuild test` cannot start the StoreKit test environment.
 - **TestFlight:** Product → Archive, then Distribute App → App Store Connect. From the terminal: `xcodebuild -project ios/Mitosis.xcodeproj -scheme Mitosis -configuration Release archive -archivePath ios/build/Mitosis.xcarchive -allowProvisioningUpdates`, then export with `ios/ExportOptions.plist`.
 
+- **Crash reports:** `CrashReporter.swift` sends MetricKit crash and hang diagnostics (on a later launch) and an immediate backtrace from the exception and signal handlers to the server's `/api/crash`. Read them with `docker logs mitosis | grep '!!'` or in `DATA_DIR/crashes/`.
+
 Regenerate the icon with `swift ios/tools/make-icon.swift ios/Mitosis/Assets.xcassets/AppIcon.appiconset/icon-1024.png`.
 
 ## Android app
@@ -205,4 +210,6 @@ All endpoints take and return JSON. Authenticated ones need `Authorization: Bear
 | `POST /api/auth/apple` `{identityToken, nonce}` | Sign in with Apple: link the account to this wallet, or join the account's wallet (`merged: true`) |
 | `POST /api/auth/google` `{idToken, nonce}` | Sign in with Google, same behaviour |
 | `POST /api/auth/signout` | Detach this device from the account (the page then starts a fresh secret) |
+| `POST /api/crash` `{platform, kind, app, os, device, report}` | Crash and hang reports from the apps; logged (`!!` lines) and kept in `DATA_DIR/crashes/` |
+| `POST /api/log` `{who, text}` | Client diagnostics: frame stalls, page errors, autopilot events; printed in the server log |
 | `GET /api/catalog` | Skins, packs, payout rules and which stores are verified |

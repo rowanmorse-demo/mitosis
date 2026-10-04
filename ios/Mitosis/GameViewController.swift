@@ -106,6 +106,7 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
 
     func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
         NSLog("[Mitosis] web content process terminated; reloading")
+        CrashReporter.shared.note("webkit-terminated", "the web content process was terminated (memory pressure or a WebKit crash); the game reloaded")
         webView.reload()
     }
 

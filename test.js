@@ -116,6 +116,12 @@ async function post(url, body, secret) {
   r = await post('/api/session', { secret }); assert.equal(r.body.balance, 1850, 'the account is untouched');
   r = await post('/api/auth/signout', {}, secret); r = await post('/api/session', { secret }); assert.equal(r.body.balance, 1850, 'the original device secret still opens the account');
 
+  // Crash reports from the apps are logged and kept as files
+  r = await post('/api/crash', { platform: 'ios', kind: 'signal', app: '2.2.0 (4)', os: 'iOS 26', device: 'iPhone14,7', report: 'signal 11\n0 Mitosis 0x1 main + 42' });
+  assert.equal(r.status, 200); assert.ok(/^.*-ios-signal\.txt$/.test(r.body.saved), 'report file named by platform and kind');
+  assert.ok(fs.readFileSync(path.join(dataDir, 'crashes', r.body.saved), 'utf8').includes('main + 42'), 'report body stored');
+  r = await post('/api/crash', { platform: '../x', kind: 'a b', report: 'x' }); assert.ok(/^.*-x-ab\.txt$/.test(r.body.saved), 'file name is sanitised');
+
   const h = await (await fetch(base + '/health')).json(); assert.equal(h.accounts, 2, 'the account plus the signed-out device');
   console.log(`all economy API tests passed (${h.store} store)`);
 })().then(() => { child.kill(); keyServer.close(); process.exit(0); }).catch(e => { console.error(e); child.kill(); keyServer.close(); process.exit(1); });

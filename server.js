@@ -39,7 +39,20 @@ const ROUTES = {
   'GET /api/leaderboard': { fn: store => economy.handlers.leaderboard(store), auth: false },
   // clients report long frames here so stalls on phones can be read from the server log
   'POST /api/log': { fn: (store, body) => { log('[client ' + String(body.who || '?').slice(0, 24) + '] ' + String(body.text || '').slice(0, 300)); return { ok: true }; }, auth: false },
+  // the apps send crash and hang reports here (see ios/Mitosis/CrashReporter.swift, android/.../CrashReporter.kt)
+  'POST /api/crash': { fn: crashReport, auth: false, body: 512 * 1024 },
 };
+const crashDir = path.join(DATA_DIR, 'crashes');
+function crashReport(store, body) {
+  const platform = String(body.platform || '?').replace(/[^\w-]/g, '').slice(0, 16) || 'unknown', kind = String(body.kind || 'crash').replace(/[^\w-]/g, '').slice(0, 32) || 'crash';
+  const report = String(body.report || '').slice(0, 400 * 1024);
+  const meta = { platform, kind, app: String(body.app || '').slice(0, 40), os: String(body.os || '').slice(0, 40), device: String(body.device || '').slice(0, 40), at: new Date().toISOString() };
+  const name = `${meta.at.replace(/[:.]/g, '-')}-${platform}-${kind}.txt`;
+  try { fs.mkdirSync(crashDir, { recursive: true }); fs.writeFileSync(path.join(crashDir, name), JSON.stringify(meta) + '\n\n' + report); }
+  catch (e) { log('crash report not saved: ' + e.message); }
+  log(`!! ${platform} ${kind} — ${meta.app} on ${meta.os} ${meta.device} → crashes/${name} :: ${report.replace(/\s+/g, ' ').slice(0, 240)}`);
+  return { ok: true, saved: name };
+}
 const ipHits = new Map();
 function rateLimited(ip) {
   const now = Date.now(); let h = ipHits.get(ip);
@@ -47,10 +60,10 @@ function rateLimited(ip) {
   if (ipHits.size > 5000) for (const [k, v] of ipHits) if (now - v.at > 60000) ipHits.delete(k);
   return ++h.n > API_RATE;
 }
-function readJson(req) {
+function readJson(req, max = MAX_BODY) {
   return new Promise((resolve, reject) => {
     let size = 0; const chunks = [];
-    req.on('data', d => { size += d.length; if (size > MAX_BODY) { reject(new economy.ApiError(413, 'request too large')); req.destroy(); } else chunks.push(d); });
+    req.on('data', d => { size += d.length; if (size > max) { reject(new economy.ApiError(413, 'request too large')); req.destroy(); } else chunks.push(d); });
     req.on('end', () => { if (!chunks.length) return resolve({}); try { const j = JSON.parse(Buffer.concat(chunks).toString('utf8')); resolve(j && typeof j === 'object' ? j : {}); } catch (e) { reject(new economy.ApiError(400, 'invalid JSON')); } });
     req.on('error', reject);
   });
@@ -66,7 +79,7 @@ async function api(req, res, url) {
   const route = ROUTES[req.method + ' ' + url];
   if (!route) return sendJson(res, 404, { error: 'no such endpoint' });
   try {
-    const body = req.method === 'POST' ? await readJson(req) : {};
+    const body = req.method === 'POST' ? await readJson(req, route.body || MAX_BODY) : {};
     const player = route.auth ? economy.auth(store, req.headers) : null;
     sendJson(res, 200, await route.fn(store, body, player));
   } catch (e) {
