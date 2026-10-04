@@ -202,7 +202,8 @@ body:not(.playing) #joy{display:none!important}
   /* corner cluster like Agar.io mobile: Shoot in the corner, Boost to its left, Split above it */
   #actions{left:auto;right:calc(var(--gut) + env(safe-area-inset-right,0px));transform:none;bottom:calc(var(--gut) + env(safe-area-inset-bottom,0px));display:block;width:170px;height:180px}
   /* landscape lobby: two columns so rating, top players and settings fit without scrolling */
-  @media (orientation:landscape){#startCard{max-width:780px;grid-template-columns:1fr 1fr;gap:10px 16px;padding:18px 22px}#startCard h1,#startCard .lede{grid-column:1/-1}#startCard h1{font-size:48px;line-height:.9}#startCard .lede{margin-top:-8px;font-size:14px}}
+  @media (orientation:landscape){#startCard{max-width:780px;grid-template-columns:1fr 1fr;gap:10px 16px;padding:18px 22px}#startCard h1,#startCard .lede{grid-column:1/-1}#startCard h1{font-size:48px;line-height:.9}#startCard .lede{margin-top:-8px;font-size:14px}
+  #deathCard{max-width:620px;grid-template-columns:1fr 1fr;gap:8px 16px;padding:16px 22px}#deathCard .eyebrow,#deathCard h2,#deathCard #deathWhy,#deathCard .statgrid,#deathCard .row{grid-column:1/-1}#deathCard h2{font-size:40px}#deathCard .statgrid{grid-template-columns:repeat(4,1fr)}#deathCard .statgrid b{font-size:24px}#deathCard .chartbox{display:none}}
   .act{position:absolute;width:72px;height:72px;padding:0;justify-content:center;border-radius:50%;font:700 13px var(--display)}
   #ejectBtn{right:0;bottom:0}
   #dashBtn{right:98px;bottom:0}
