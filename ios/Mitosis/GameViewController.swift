@@ -93,7 +93,23 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
     }
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        webView.scrollView.pinchGestureRecognizer?.isEnabled = false
+        tameGestures()
+        gestureTimer?.invalidate()
+        gestureTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in self?.tameGestures() }
+    }
+
+    /// WebKit's own long-press, double-tap and pinch recognizers cancel the page's touches mid-hold,
+    /// which stops the joystick dead. A game wants none of them; WebKit re-arms them, hence the timer.
+    private var gestureTimer: Timer?
+    private func tameGestures() {
+        let sv = webView.scrollView
+        sv.pinchGestureRecognizer?.isEnabled = false
+        for view in sv.subviews {
+            for g in view.gestureRecognizers ?? [] {
+                if g is UILongPressGestureRecognizer || g is UIPinchGestureRecognizer { g.isEnabled = false }
+                if let tap = g as? UITapGestureRecognizer, tap.numberOfTapsRequired >= 2 { tap.isEnabled = false }
+            }
+        }
     }
 
     /// Returning nil disables WebKit zooming entirely, including double-tap zoom.

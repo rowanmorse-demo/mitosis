@@ -19,7 +19,7 @@
 }
 [hidden]{display:none!important}
 html,body{height:100%}
-body{margin:0;background:var(--void);color:var(--ink);font-family:var(--display);overflow:hidden;overscroll-behavior:none;-webkit-user-select:none;user-select:none;touch-action:none;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
+body{margin:0;background:var(--void);color:var(--ink);font-family:var(--display);overflow:hidden;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:none;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
 #game{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:crosshair;outline:none}
 .hud{position:fixed;z-index:2;pointer-events:none}
 .label{font:500 10.5px/1.2 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
@@ -1977,7 +1977,7 @@ $('evOpts').addEventListener('pointerdown',e=>{const b=e.target.closest('.evo');
 bindAct('splitBtn',split);bindAct('dashBtn',dash);
 { // Shoot: a tap fires once; holding keeps firing, faster and faster (180 ms down to 70 ms between shots)
   const b=$('ejectBtn');let timer=null,held=0;
-  const stop=()=>{if(timer){clearTimeout(timer);timer=null;}};
+  const stop=e=>{if(e&&e.type==='pointercancel')reportHitch('shoot pointercancel');if(timer){clearTimeout(timer);timer=null;}};
   const fire=()=>{if(mode!=='play'||paused||!human){stop();return;}eject(human);held++;timer=setTimeout(fire,Math.max(70,180-held*12));};
   b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();try{b.setPointerCapture(e.pointerId);}catch(_){}stop();held=0;fire();});
   for(const ev of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(ev,stop);
@@ -1986,9 +1986,10 @@ bindAct('splitBtn',split);bindAct('dashBtn',dash);
 const joyEl=$('joy'),joyKnob=joyEl.querySelector('.knob');
 function joySet(ex,ey){const r=joyEl.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let dx=ex-cx,dy=ey-cy;const d=Math.hypot(dx,dy)||0;
   const R=joy.R,k=d>R?R/d:1;dx*=k;dy*=k;joy.m=d<R*.12?0:Math.min(1,d/R);joy.ux=d?(ex-cx)/d:0;joy.uy=d?(ey-cy)/d:0;if(joy.m>0){joy.lx=joy.ux;joy.ly=joy.uy;}joyKnob.style.transform=`translate(${dx.toFixed(1)}px,${dy.toFixed(1)}px)`;}
-joyEl.addEventListener('pointerdown',e=>{if(joy.id!==null)return;joy.id=e.pointerId;joyEl.classList.add('active');try{joyEl.setPointerCapture(e.pointerId);}catch(_){}joySet(e.clientX,e.clientY);e.preventDefault();});
+let joyDownAt=0;
+joyEl.addEventListener('pointerdown',e=>{if(joy.id!==null)return;joy.id=e.pointerId;joyDownAt=performance.now();joyEl.classList.add('active');try{joyEl.setPointerCapture(e.pointerId);}catch(_){}joySet(e.clientX,e.clientY);e.preventDefault();});
 joyEl.addEventListener('pointermove',e=>{if(e.pointerId!==joy.id)return;joySet(e.clientX,e.clientY);});
-const joyEnd=e=>{if(e.pointerId!==joy.id)return;joy.id=null;joy.m=0;joy.ux=joy.uy=0;joyEl.classList.remove('active');joyKnob.style.transform='';};
+const joyEnd=e=>{if(e.pointerId!==joy.id)return;if(e.type!=='pointerup')reportHitch('joystick '+e.type+' after '+Math.round(performance.now()-joyDownAt)+'ms hold');joy.id=null;joy.m=0;joy.ux=joy.uy=0;joyEl.classList.remove('active');joyKnob.style.transform='';};
 joyEl.addEventListener('pointerup',joyEnd);joyEl.addEventListener('pointercancel',joyEnd);joyEl.addEventListener('lostpointercapture',joyEnd);
 // collapsible leaderboard (remembered)
 const boardBox=$('board'),boardTg=$('boardToggle');
