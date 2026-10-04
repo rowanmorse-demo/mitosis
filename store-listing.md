@@ -24,7 +24,7 @@ A RATING THAT MEANS SOMETHING
 Climb from Silver through Gold, Platinum and Diamond to Legend. Surviving, absorbing and placing high raise your rating; dying fast lowers it. Winning a round pays a bonus, and runs on your second or third life earn less, so careful play is rewarded.
 
 EVOLVE SIX TIMES A LIFE
-At mass milestones, pick one of three traits: faster flagella, a tougher membrane, enzymes that digest faster, cilia, mitotic splits, a vacuole, metabolism, photosynthesis. Build the cell you want to play.
+At mass milestones your cell mutates on its own: faster flagella, a tougher membrane, enzymes that digest faster, cilia, mitotic splits, a vacuole, metabolism, photosynthesis. Every cell wears a badge for each trait it carries, so you can read an opponent before you commit.
 
 A LIVING WORLD
 Nutrient blooms triple the value of food. Antibiotic tides close the well. Phage swarms break in through the rim and inject anything they touch. The Leviathan hunts the arena: lure it onto phages to break it up. The leader wears a crown and pays a bounty to whoever takes it.
@@ -49,6 +49,7 @@ agar,cell,arena,multiplayer,io,eat,grow,evolve,petri,microbe,battle,casual,skins
 • Ten-minute rounds with a closing arena and placement
 • Two lives per round; search for a game for up to 30 seconds, then play with bots
 • Practice mode against bots, unranked
+• Mutations apply themselves, and every cell shows badges for its traits
 • No cap on cell mass; nothing is immune to phages
 • Smoother play on phones; event banners stay out of the way
 • Crash reporting so problems get fixed faster

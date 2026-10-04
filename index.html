@@ -410,16 +410,15 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
       <dt>Space</dt><dd>Divide — launch half your mass forward</dd>
       <dt>W</dt><dd>Eject mass (feed phages to make them replicate)</dd>
       <dt>Shift</dt><dd>Dash — a burst of speed for 4% mass</dd>
-      <dt>1 2 3</dt><dd>Pick an evolution when one is offered</dd>
       <dt>Esc</dt><dd>Pause</dd>
     </dl>
     <dl class="keys touch-only">
       <dt>Joystick</dt><dd>Bottom left — push it to steer, further for faster</dd>
-      <dt>Buttons</dt><dd>Split, Shoot and Boost sit on the right; tap an evolution card to take it</dd>
+      <dt>Buttons</dt><dd>Split, Shoot and Boost sit on the right</dd>
       <dt>Pause</dt><dd>Bottom centre, with a Return to lobby option</dd>
     </dl>
     <div class="new"><strong>New in 2.0</strong>
-      <em>Evolve</em> at mass milestones — pick one of three traits, six times a life. <em>World events</em>: nutrient blooms, antibiotic tides that close the well, phage swarms and the <em>Leviathan</em> — lure it onto phages to break it up. The leader wears a crown and pays a <em>1.5× bounty</em>.
+      <em>Mutate</em> at mass milestones — a random trait is applied, six times a life, and every cell wears badges for the traits it has. <em>World events</em>: nutrient blooms, antibiotic tides that close the well, phage swarms and the <em>Leviathan</em> — lure it onto phages to break it up. The leader wears a crown and pays a <em>1.5× bounty</em>.
       <span class="danger">Hunter phages</span> break in through the rim and inject any cell they touch — it bursts into up to 16 pieces 8–10 s later. Nothing is immune to them; three ejected blobs kill one.
       Also: mutations (Magnet, Phase, Surge), dash, frenzy streaks, stain patterns and achievements.</div>
     <p class="achline" id="achLine"></p>
@@ -497,7 +496,7 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
     onConnection(fn){connFns.push(fn);setTimeout(()=>fn(connected),0);return()=>{connFns=connFns.filter(f=>f!==fn);};},
     onPeers(){return()=>{};},connected:()=>connected,emit:()=>Promise.resolve(),on:()=>()=>{}
   });
-  rebuild();connect();
+  rebuild();connect();N.peers=()=>snap;
   window.claude={use:async n=>n==='room'?room:null};
 })();
 </script>
@@ -522,7 +521,7 @@ const MAX_CELLS=16,VIRUS_M=100,VSLOTS=140,MAX_FREEV=16,PELLETS=19200,MAX_PU=24;
 // No gameplay cap on a single cell's mass: MAX_MASS is only the ceiling the network packet can carry
 // (23 bits; the 24th bit of the field flags an infected cell), far beyond anything reachable in play.
 const MAX_MASS=8388607,INF_FLAG=8388608;
-const MAX_HUNTERS=6,HUNTER_R=42,INF_MIN=8,INF_MAX=10,PROTO=5,SEED=90210; // PROTO 5: 4-char mass field (no cell mass cap)
+const MAX_HUNTERS=6,HUNTER_R=42,INF_MIN=8,INF_MAX=10,PROTO=6,SEED=90210; // PROTO 6: 4-char mass field, 3-char bot effect/mutation field
 // Rounds: the well is full size for the first quarter, then the arena closes in to 12% of the dish by the
 // last 5%, and the round ends at ROUND_SEC with the survivors ranked by mass. ?round=60 shortens it for tests.
 const ROUND_SEC=+((location.search.match(/[?&]round=(\d+)/)||[])[1])||600,ROUND_GRACE=Math.round(ROUND_SEC*.25),ROUND_HOLD=Math.round(ROUND_SEC*.05),R_MIN=R*.12,ROUND_GAP=6;
@@ -632,6 +631,8 @@ const PERKS=[
   {id:'chemotaxis',name:'Chemotaxis',desc:'See 20% farther, and prey you can eat glows'},
   {id:'photo',name:'Chloroplasts',desc:'Every cell gains 1.5 mass per second'}];
 const PBIT={};PERKS.forEach((p,i)=>{PBIT[p.id]=1<<i;});
+// glyph and colour of each mutation's badge, drawn under the cell's name for everyone to see
+const PERK_GLYPH={flagella:['»',[200,90,62]],membrane:['◎',[40,70,62]],enzymes:['✂',[12,85,62]],cilia:['↯',[48,95,60]],mitotic:['⁂',[320,80,66]],vacuole:['◉',[90,70,52]],lysozyme:['✚',[150,70,52]],metabolism:['◐',[260,60,68]],chemotaxis:['◇',[185,80,58]],photo:['✿',[110,75,50]]};
 const BOT_PERKS=['flagella','membrane','enzymes','cilia','mitotic','vacuole','metabolism','photo'];
 const EVO=[80,200,450,900,1600,2800];
 const has=(p,id)=>!!(p&&(p.pk&PBIT[id]));
@@ -1096,7 +1097,8 @@ function toast(kind,title,desc){
 function offerEvo(){
   const pool=PERKS.filter(x=>!has(human,x.id));if(!pool.length){human.evo=EVO.length;return;}
   const pick=[];while(pick.length<3&&pool.length)pick.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]);
-  evoOffer=pick;renderEvo();sfx('evolve');
+  // mutations choose themselves: one of three random traits is applied the moment the milestone is reached
+  evoOffer=pick;takeEvo(Math.floor(Math.random()*pick.length));
 }
 function renderEvo(){
   const el=$('evolve');if(!evoOffer||!human||!human.alive||mode!=='play'){el.hidden=true;return;}
@@ -1106,7 +1108,7 @@ function renderEvo(){
 function takeEvo(i){
   if(!evoOffer||!evoOffer[i]||!human||!human.alive)return;const x=evoOffer[i];
   human.pk|=PBIT[x.id];human.evo++;evoOffer=null;renderEvo();for(const c of human.cells)kick(c,2.4);
-  const c=human.cells[0];if(c)floatText(c.x,c.y-c.r-16,x.name,[250,100,80],22);sfx('power');
+  const c=human.cells[0];if(c)floatText(c.x,c.y-c.r-16,x.name,[250,100,80],22);sfx('power');toast('Mutation '+human.evo+' of '+EVO.length,x.name,x.desc);
   if(human.evo>=EVO.length)unlock('evolve');
 }
 /* ---- world events (the host runs them; everyone renders them) ---- */
@@ -1588,6 +1590,16 @@ function fontStr(k,px){let f=FONTS.get(k+px);if(!f){f=k==='m'?`500 ${px}px "IBM 
 const monoFont=px=>fontStr('m',px),boldFont=px=>fontStr('b',px);
 const scrX=x=>(x-cam.x)*cam.z+W/2,scrY=y=>(y-cam.y)*cam.z+H/2; // world -> screen (CSS px)
 function labelPx(px){px=Math.round(Math.min(40,Math.max(10,px)));return px>16?px&~1:px;} // 10..16, then even sizes up to 40
+const PERKSPRITES=new Map();
+function perkSprite(pk,px){ // row of badges for a mutation set, at a screen-pixel size; cached like the name sprites
+  const key=pk+'\u0001'+px;let S=PERKSPRITES.get(key);if(S){PERKSPRITES.delete(key);PERKSPRITES.set(key,S);return S;}
+  if(PERKSPRITES.size>=120)PERKSPRITES.delete(PERKSPRITES.keys().next().value);
+  const ids=PERKS.filter(x=>pk&PBIT[x.id]).map(x=>x.id),d=Math.round(px*1.5),gap=Math.round(px*.25),w=ids.length*d+(ids.length-1)*gap+4,h=d+4;
+  const m=document.createElement('canvas'),g=m.getContext('2d');m.width=Math.max(1,Math.round(w*DPR));m.height=Math.max(1,Math.round(h*DPR));
+  g.setTransform(DPR,0,0,DPR,0,0);g.font=`700 ${px}px "Bricolage Grotesque",system-ui,sans-serif`;g.textAlign='center';g.textBaseline='middle';
+  ids.forEach((id,i)=>{const [glyph,c]=PERK_GLYPH[id],x=2+i*(d+gap)+d/2,y=2+d/2;g.beginPath();g.arc(x,y,d/2,0,TAU);g.fillStyle=col(c,-22,.92);g.fill();g.lineWidth=Math.max(1,px*.12);g.strokeStyle=col(c,25,.9);g.stroke();g.fillStyle='#fff';g.fillText(glyph,x,y+px*.04);});
+  S={c:m,w,h};PERKSPRITES.set(key,S);return S;
+}
 function labelSprite(text,px){ // sprite of outlined text at a screen-pixel size; LRU-cached so fonts and glyphs stay stable
   const key=text+'\u0001'+px;let L=LABELS.get(key);if(L){LABELS.delete(key);LABELS.set(key,L);return L;}
   if(LABELS.size>=LABEL_MAX)LABELS.delete(LABELS.keys().next().value);
@@ -1649,6 +1661,7 @@ function drawCell(c){
     let px=labelPx(Math.max(sr*.34,11));const maxW=sr*1.72;let L=labelSprite(p.name,px);
     if(L.tw>maxW){px=labelPx(px*maxW/L.tw);L=labelSprite(p.name,px);}
     ctx.drawImage(L.c,c.x-L.w/2/z,c.y-L.h/2/z,L.w/z,L.h/z); // sprite is in screen pixels: undo the camera scale so it stays crisp
+    if(p.pk&&sr>26&&c===p.cells[0]){const bp=labelPx(Math.max(sr*.2,8)),B=perkSprite(p.pk,bp),dy=(L.h/2+(p===human?px*1.25:px*.35)+B.h/2)/z;ctx.drawImage(B.c,c.x-B.w/2/z,c.y+dy-B.h/2/z,B.w/z,B.h/z);} // mutation badges, on the biggest cell only
     if(p===human&&sr>24){ // the live mass readout changes every frame, so it is drawn directly, in screen space at a fixed set of sizes
       const ms=labelPx(px*.56),t=c.inf?Math.max(0,c.inf-T).toFixed(1)+'s':String(Math.round(c.mass));
       ctx.save();ctx.setTransform(DPR,0,0,DPR,0,0);ctx.font=monoFont(ms);ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';ctx.lineWidth=ms*.16;ctx.strokeStyle='rgba(0,0,0,.42)';
@@ -1955,8 +1968,8 @@ function decCells(s,o,n){
   return out;
 }
 const encCell=c=>enc(c.nid,2)+enc(c.x+OFF,3)+enc(c.y+OFF,3)+enc(Math.min(MAX_MASS,c.mass)+(c.inf?INF_FLAG:0),4); // 12 chars per cell
-function fxBits(p){return(p.fx.shield>0?1:0)|(p.fx.magnet>0?2:0)|(p.fx.surge>0?4:0)|(has(p,'membrane')?8:0)|(has(p,'enzymes')?16:0);}
-function setFx(p,b){p.fx.shield=b&1?1:0;p.fx.magnet=b&2?1:0;p.fx.surge=b&4?1:0;if(p.remote)p.pk=(b&8?PBIT.membrane:0)|(b&16?PBIT.enzymes:0);}
+function fxBits(p){return(p.fx.shield>0?1:0)|(p.fx.magnet>0?2:0)|(p.fx.surge>0?4:0)|((p.pk&1023)<<3);} // 3 effect bits + the 10 mutation bits
+function setFx(p,b){p.fx.shield=b&1?1:0;p.fx.magnet=b&2?1:0;p.fx.surge=b&4?1:0;if(p.remote)p.pk=(b>>3)&1023;}
 function localByKey(k){if(human&&human.alive&&k===myKey())return human;if(isHost&&k[0]==='b'){const bid=+k.slice(1);return players.find(p=>p.bot&&!p.remote&&p.bid===bid&&p.alive)||null;}return null;}
 function colorByKey(k){if(k===myKey()&&human)return human.color;if(k[0]==='b')return botColor(+k.slice(1)||0);const p=proxies.get(k);return p?p.color:[180,20,70];}
 function applyRec(r){
@@ -1992,8 +2005,8 @@ function ingest(peer,P,fromHost){
 function ingestWorld(P){
   const t=now();
   if(typeof P.b==='string'){const s=P.b,seenB=new Set();let o=0;
-    while(o+4<=s.length&&seenB.size<120){const bid=dec(s,o,2),f=dec(s,o+2,1),n=dec(s,o+3,1);if(Number.isNaN(bid+f+n))break;
-      const list=decCells(s,o+4,Math.min(n,MAX_CELLS));o+=4+n*12;seenB.add(bid);
+    while(o+6<=s.length&&seenB.size<120){const bid=dec(s,o,2),f=dec(s,o+2,3),n=dec(s,o+5,1);if(Number.isNaN(bid+f+n))break;
+      const list=decCells(s,o+6,Math.min(n,MAX_CELLS));o+=6+n*12;seenB.add(bid);
       let pl=botProx.get(bid);if(!pl){pl=makePlayer(botName(bid),botColor(bid),true);pl.bid=bid;pl.remote=true;pl.boss=bid===BOSS_BID;pl.skin=botSkin(bid);botProx.set(bid,pl);players.push(pl);}
       setFx(pl,f);syncProxyCells(pl,list);pl.alive=pl.cells.length>0;}
     for(const [bid,pl] of botProx)if(!seenB.has(bid)){removePlayer(pl);botProx.delete(bid);}
@@ -2055,7 +2068,7 @@ function send(){
   if(local){P.h=0;P.a=0;P.cl=null;P.ej=null;P.r=null;P.pe=null;}   // a local game is invisible to the room
   const host=P.h===1;
   const bots=perCell=>{let s='';for(const b of players){if(!b.bot||b.remote||!b.alive||!b.cells.length)continue;
-      const cs=b.cells.slice().sort((a,c)=>c.mass-a.mass).slice(0,perCell);s+=enc(b.bid,2)+enc(fxBits(b),1)+enc(cs.length,1)+cs.map(encCell).join('');}return s;};
+      const cs=b.cells.slice().sort((a,c)=>c.mass-a.mass).slice(0,perCell);s+=enc(b.bid,2)+enc(fxBits(b),3)+enc(cs.length,1)+cs.map(encCell).join('');}return s;};
   if(host){
     P.b=bots(4);
     P.vs=vslots.map(v=>enc(v.g*16+Math.min(5,v.feed)*2+(v.alive?1:0),2)).join('');

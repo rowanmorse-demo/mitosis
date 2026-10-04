@@ -9,7 +9,7 @@ A multiplayer cell-eating arena set in a giant petri well. Absorb anything small
 - **Soft-body cells** that squash against each other and the dish wall, with shadows, organelles and a nucleus that trails motion
 - **Live multiplayer** for up to 16 players. AI microbes fill the well, and every real player who joins replaces five of them
 - **Smarter bots** with personalities (hunters, farmers, opportunists, snipers) that steer around threats, predict prey, split-kill, shoot hunter phages and fire viruses at big targets
-- **Evolution**: at mass milestones, pick one of three permanent traits, six times a life
+- **Mutation**: at mass milestones a random permanent trait is applied, six times a life; every cell shows badges for the traits it carries
 - **World events**: Nutrient Bloom, Antibiotic Tide, Phage Swarm and the Leviathan boss
 - **Hunter phages** that breach the rim and inject cells; the cell bursts into up to 16 pieces 8–10 s later
 - **ATP and skins**: earn ATP by playing (or buy it in the apps) and spend it on ten premium skins
@@ -24,7 +24,6 @@ A multiplayer cell-eating arena set in a giant petri well. Absorb anything small
 | Space | Divide: launch half your mass forward |
 | W | Eject mass (feed phages to make them replicate) |
 | Shift | Dash |
-| 1 · 2 · 3 | Pick an evolution when one is offered |
 | Z · X · C · V | Emotes: gg · Help! · Run! · Nice one |
 | Esc | Pause |
 | M | Sound on/off |
