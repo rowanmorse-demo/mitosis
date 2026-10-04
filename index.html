@@ -759,8 +759,7 @@ function forPellets(x,y,rad,fn){
 const EAT=[];
 
 /* ================= actions ================= */
-function aim(p,c){if(TOUCH_UI&&p===human)return joy.m>0?[joy.ux,joy.uy]:[joy.lx,joy.ly]; // joystick: pieces fly where you push, or where you last pushed
-  const dx=p.target.x-c.x,dy=p.target.y-c.y,d=Math.hypot(dx,dy);if(d<1){const a=Math.atan2(c.svy,c.svx)||0;return[Math.cos(a),Math.sin(a)];}return[dx/d,dy/d];}
+function aim(p,c){const dx=p.target.x-c.x,dy=p.target.y-c.y,d=Math.hypot(dx,dy);if(d<1){const a=Math.atan2(c.svy,c.svx)||0;return[Math.cos(a),Math.sin(a)];}return[dx/d,dy/d];}
 function flash(id){const b=$(id);b.classList.add('flash');setTimeout(()=>b.classList.remove('flash'),120);}
 function split(p){
   if(!p||!p.alive)return;let did=false;
@@ -1069,11 +1068,10 @@ function step(dt){
   T+=dt;
   if(human&&human.alive){
     if(paused){let sx=0,sy=0,sm=0;for(const c of human.cells){sx+=c.x*c.mass;sy+=c.y*c.mass;sm+=c.mass;}if(sm)human.target={x:sx/sm,y:sy/sm};}
-    else if(TOUCH_UI){ // joystick: direction × deflection, scaled so full deflection is full speed for the biggest cell
-      let sx=0,sy=0,sm=0,mr=0;for(const c of human.cells){if(c.dead)continue;sx+=c.x*c.mass;sy+=c.y*c.mass;sm+=c.mass;if(c.r>mr)mr=c.r;}
-      // aim far away so a split half keeps flying instead of turning back; speed comes from the stick deflection (see movement)
-      // held in the middle: every piece heads for the shared centre and the group gathers
-      if(sm){const cx=sx/sm,cy=sy/sm,L=joy.m>0?2000:0;human.target={x:cx+joy.ux*L,y:cy+joy.uy*L};}
+    else if(TOUCH_UI){ // Agar.io model: the stick places a virtual cursor relative to your cells (full push = screen edge);
+      // every piece heads for that cursor, so they bunch up as they go, slow down on arrival, and keep going after you let go
+      if(joy.id!==null){let sx=0,sy=0,sm=0;for(const c of human.cells){if(c.dead)continue;sx+=c.x*c.mass;sy+=c.y*c.mass;sm+=c.mass;}
+        if(sm){const cx=sx/sm,cy=sy/sm,K=(Math.max(W,H)/2)/cam.z*joy.m;human.target={x:cx+joy.ux*K,y:cy+joy.uy*K};}}
     }
     else human.target={x:cam.x+(pointer.x-W/2)/cam.z,y:cam.y+(pointer.y-H/2)/cam.z};
   }
@@ -1091,7 +1089,7 @@ function step(dt){
   for(const c of cells){
     const p=c.owner;if(p.remote)continue;
     let dx=p.target.x-c.x,dy=p.target.y-c.y;const d=Math.hypot(dx,dy);
-    const sp=speedOf(c.r)*(p.fx.surge>0?1.45:1)*(has(p,'flagella')?1.12:1)*(p===human&&TOUCH_UI?(joy.id!==null&&joy.m===0?1:joy.m):1),f=Math.min(1,d/(c.r*.8+20));
+    const sp=speedOf(c.r)*(p.fx.surge>0?1.45:1)*(has(p,'flagella')?1.12:1),f=Math.min(1,d/(c.r*.8+20));
     if(d>.01){dx/=d;dy/=d;}else{dx=dy=0;}
     c.x+=(dx*sp*f+c.vx)*dt;c.y+=(dy*sp*f+c.vy)*dt;c.vx*=kd;c.vy*=kd;
     const dc=Math.hypot(c.x,c.y),lim=Math.max(0,R-c.r*.9);if(dc>lim){c.x*=lim/dc;c.y*=lim/dc;}
