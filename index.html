@@ -58,7 +58,7 @@ body{margin:0;background:var(--void);color:var(--ink);font-family:var(--display)
 .tiny{pointer-events:auto;appearance:none;background:rgba(2,8,9,.5);border:1px solid var(--line);color:var(--muted);font:11px var(--mono);border-radius:6px;padding:5px 8px;cursor:pointer}
 .tiny:hover{color:var(--ink);border-color:var(--line-strong)}
 
-#mini{right:calc(var(--gut) + env(safe-area-inset-right,0px));bottom:calc(var(--gut) + env(safe-area-inset-bottom,0px));width:140px;height:140px}
+#mini{right:calc(var(--gut) + env(safe-area-inset-right,0px));bottom:calc(var(--gut) + env(safe-area-inset-bottom,0px));width:140px;height:140px;display:none}
 
 /* actions */
 #actions{position:fixed;z-index:3;left:50%;transform:translateX(-50%);bottom:calc(var(--gut) + env(safe-area-inset-bottom,0px));display:flex;gap:10px}
@@ -1459,7 +1459,6 @@ function draw(){
   drawTags();
   if(touchId!==null&&mode==='play'){ctx.beginPath();ctx.arc(pointer.x,pointer.y,26,0,TAU);ctx.lineWidth=1.5;ctx.strokeStyle='rgba(220,239,233,.35)';ctx.stroke();
     ctx.beginPath();ctx.arc(pointer.x,pointer.y,4,0,TAU);ctx.fillStyle='rgba(220,239,233,.6)';ctx.fill();}
-  drawMini();
 }
 function drawTags(){ // crown on the leader, emote bubbles, in screen space
   const z=cam.z,sx=x=>(x-cam.x)*z+W/2,sy=y=>(y-cam.y)*z+H/2;
