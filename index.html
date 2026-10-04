@@ -743,7 +743,8 @@ function forPellets(x,y,rad,fn){
 const EAT=[];
 
 /* ================= actions ================= */
-function aim(p,c){const dx=p.target.x-c.x,dy=p.target.y-c.y,d=Math.hypot(dx,dy);if(d<1){const a=Math.atan2(c.svy,c.svx)||0;return[Math.cos(a),Math.sin(a)];}return[dx/d,dy/d];}
+function aim(p,c){if(TOUCH_UI&&joy.m>0)return[joy.ux,joy.uy]; // joystick: every piece flies straight where you push
+  const dx=p.target.x-c.x,dy=p.target.y-c.y,d=Math.hypot(dx,dy);if(d<1){const a=Math.atan2(c.svy,c.svx)||0;return[Math.cos(a),Math.sin(a)];}return[dx/d,dy/d];}
 function flash(id){const b=$(id);b.classList.add('flash');setTimeout(()=>b.classList.remove('flash'),120);}
 function split(p){
   if(!p||!p.alive)return;let did=false;
@@ -751,11 +752,11 @@ function split(p){
   for(const c of list){
     if(count>=MAX_CELLS)break;if(c.mass<36)continue;
     const[nx,ny]=aim(p,c);const half=c.mass/2;c.mass=half;c.r=radius(half);
-    const sp=620+c.r*2.4;
+    const sp=1050+c.r*3.5; // a violent lunge: the half covers roughly eight radii before it slows
     const n=addCell(p,c.x+nx*c.r*.4,c.y+ny*c.r*.4,half,nx*sp,ny*sp);n.dr=c.dr*.78;n.org=c.org.map(o=>({...o,a:o.a+rand(-.5,.5)}));n.inf=c.inf;
-    c.mergeAt=n.mergeAt=T+mdel(p,half*2);kick(c,2.2);kick(n,2.2);count++;did=true;
+    c.mergeAt=n.mergeAt=T+mdel(p,half*2);kick(c,3);kick(n,3.2);count++;did=true;
   }
-  if(did&&p===human){sfx('split');flash('splitBtn');Native.haptic('light');}
+  if(did&&p===human){sfx('split');flash('splitBtn');Native.haptic('medium');cam.shake=Math.max(cam.shake,7);}
 }
 function eject(p){
   if(!p||!p.alive||T-(p.ejectAt||-9)<EJECT_GAP)return;let did=false; // holding W repeats the key ~30×/s; cap it
