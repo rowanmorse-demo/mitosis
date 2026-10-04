@@ -351,7 +351,6 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
       <dt>W</dt><dd>Eject mass (feed phages to make them replicate)</dd>
       <dt>Shift</dt><dd>Dash — a burst of speed for 4% mass</dd>
       <dt>1 2 3</dt><dd>Pick an evolution when one is offered</dd>
-      <dt>Z X C V</dt><dd>Emotes: gg · Help! · Run! · Nice one</dd>
       <dt>Esc</dt><dd>Pause</dd>
     </dl>
     <dl class="keys touch-only">
@@ -741,6 +740,7 @@ async function redeem(p){ // server verifies with Apple/Google, credits ATP, the
   if(w.credited){toast('ATP','ATP added',`+${w.credited} ATP — ${w.balance} in your wallet`);Native.haptic('success');}
 }
 $('packs').addEventListener('click',e=>{const b=e.target.closest('.pack');if(b&&!b.disabled)buyPack(b.dataset.id);});
+const BISECT={tag:(location.search.match(/[?&]tag=([\w-]+)/)||[])[1]||''};for(const k of ['nocanvas','nohud','noeject','nosend','lowfx'])BISECT[k]=new RegExp('[?&]'+k+'=1').test(location.search);
 // Autopilot (?autopilot=1): the page plays itself for soak tests — drives the joystick, splits now and then, restarts on death.
 if(/[?&]autopilot=1/.test(location.search)){
   let ang=Math.random()*TAU,dieAt=0;const auto=()=>{
@@ -790,7 +790,6 @@ const cam={x:0,y:0,z:.6,shake:0};
 const pointer={x:innerWidth/2,y:innerHeight/2};
 // Touch devices steer with the on-screen joystick (bottom left) instead of the finger position.
 const TOUCH_UI=matchMedia('(pointer:coarse)').matches;
-const BISECT={};for(const k of ['nocanvas','nohud','noeject','nosend','lowfx'])BISECT[k]=new RegExp('[?&]'+k+'=1').test(location.search);
 const joy={id:null,ux:0,uy:0,m:0,R:46,lx:1,ly:0};
 // live room
 let lastPeerCount=1,room=null,netState='pending',myPeer=null,isHost=true,claimReady=false,roomAt=-1,netSendT=0,seq=0,recs=[],peLog=[],peerCount=1,hostPeer=null,yielded=false,netNames=[];
@@ -941,7 +940,6 @@ function resolveEat(big,sm){ // sm is always ours; its owner's client decides
   else{rec(['e',keyOf(bp),keyOf(sp),Math.round(mass),Math.round(sm.x),Math.round(sm.y),Math.round(sm.dr),+infRem.toFixed(1),bounty?1:0]);
     ghosts.push({x:sm.x,y:sm.y,r:sm.dr,color:sp.color,to:big,t:0,life:.2});burst(sm.x,sm.y,col(sp.color,8),6,180);}
   if(sp===human)cam.shake=Math.max(cam.shake,12);
-  if(bp.bot&&!bp.remote&&sp===human&&Math.random()<.5)bp.emote={i:Math.random()<.7?0:3,t:T};
   if(sp.cells.every(c=>c.dead))killed(sp,bp);
 }
 function killed(v,k){
@@ -1764,7 +1762,6 @@ function ingest(peer,P,fromHost){
   let pl=proxies.get(peer);
   if(!pl){pl=makePlayer('',STAINS[0],false);pl.remote=true;pl.key=peer;proxies.set(peer,pl);players.push(pl);}
   pl.name=cleanName(P.n)||'Guest cell';pl.stain=clamp(P.s|0,0,STAINS.length-1);pl.skin=clamp(P.k|0,0,SKIN_COUNT-1);pl.color=skinColor(pl.stain,pl.skin);setFx(pl,P.f|0);
-  if(typeof P.em==='string'&&P.em.length===3){const i=dec(P.em,0,1),s=dec(P.em,1,2);if(!Number.isNaN(i+s)&&s!==pl.emSeq){if(pl.emSeq!==-1)pl.emote={i:i%EMOTES.length,t:T};pl.emSeq=s;}}
   const alive=P.a===1;
   syncProxyCells(pl,alive&&typeof P.cl==='string'?decCells(P.cl,0,MAX_CELLS):[]);
   pl.alive=alive&&pl.cells.length>0;
@@ -1829,7 +1826,7 @@ function becomeHost(){
 }
 function send(){
   const P={v:PROTO,h:(isHost&&claimReady&&!yielded)?1:0,n:(human?human.name:(cleanName($('nameIn').value)||'Unnamed cell')).slice(0,16),s:settings.stain|0,
-    a:human&&human.alive?1:0,f:human?fxBits(human):0,k:human?human.skin:settings.skin,em:human&&human.emote?enc(human.emote.i,1)+enc(emSeq%4096,2):null,ev:null,cl:null,ej:null,r:null,pe:null,b:null,vs:null,vw:null,pu:null,hv:null};
+    a:human&&human.alive?1:0,f:human?fxBits(human):0,k:human?human.skin:settings.skin,em:null,ev:null,cl:null,ej:null,r:null,pe:null,b:null,vs:null,vw:null,pu:null,hv:null};
   if(human&&human.alive)P.cl=human.cells.slice(0,MAX_CELLS).map(encCell).join('');
   if(ejected.length)P.ej=ejected.slice(-16).map(e=>enc(e.x+OFF,3)+enc(e.y+OFF,3)).join('');
   recs=recs.filter(r=>T-r.t<3).slice(-20);if(recs.length)P.r=recs.map(r=>r.d);
@@ -2026,7 +2023,6 @@ addEventListener('keydown',e=>{
   else if(e.code==='KeyW')eject(human);
   else if(e.key==='Shift'||e.code==='KeyE'){if(!e.repeat)dash(human);}
   else if(/^Digit[123]$/.test(e.code)&&evoOffer){takeEvo(+e.code.slice(5)-1);}
-  else if(['KeyZ','KeyX','KeyC','KeyV'].includes(e.code)&&!e.repeat&&human&&human.alive){human.emote={i:['KeyZ','KeyX','KeyC','KeyV'].indexOf(e.code),t:T};emSeq++;}
 });
 document.addEventListener('visibilitychange',()=>{reportHitch('visibility '+(document.hidden?'hidden':'visible'));
   if(document.hidden){
@@ -2055,7 +2051,7 @@ function frame(nowMs){
   const t1=performance.now();try{netTick(raw);}catch(e){}
   const t2=performance.now();updateCam(raw);if(!BISECT.nocanvas)draw();tickMass(raw);const t3=performance.now();
   // watchdog: tell the app shell about long frames so stalls can be read from the device log
-  if((t3-t0>180||gapMs>=400)&&nowMs-lastHitchAt>1000){lastHitchAt=nowMs;reportHitch(`hitch gap=${Math.round(gapMs)}ms wsmax=${Math.round(wsMax)}ms sinceTouch=${Math.round(nowMs-lastTouchAt)}ms step=${(t1-t0).toFixed(0)} net=${(t2-t1).toFixed(0)} draw=${(t3-t2).toFixed(0)} cells=${cells.length} players=${players.length} parts=${parts.length} ej=${ejected.length} host=${isHost} peers=${peerCount} mode=${mode} z=${cam.z.toFixed(2)} audio=${liveNodes}`);}
+  if((t3-t0>180||gapMs>=400)&&nowMs-lastHitchAt>1000){lastHitchAt=nowMs;reportHitch(`hitch gap=${Math.round(gapMs)}ms wsmax=${Math.round(wsMax)}ms sinceTouch=${Math.round(nowMs-lastTouchAt)}ms step=${(t1-t0).toFixed(0)} net=${(t2-t1).toFixed(0)} draw=${(t3-t2).toFixed(0)} cells=${cells.length} players=${players.length} parts=${parts.length} ej=${ejected.length} host=${isHost} peers=${peerCount} mode=${mode} z=${cam.z.toFixed(2)} audio=${liveNodes} tag=${BISECT.tag}`);}
   hudT-=raw;if(hudT<=0){hudT=.12;if(!BISECT.nohud)hud();}
   requestAnimationFrame(frame);
 }
