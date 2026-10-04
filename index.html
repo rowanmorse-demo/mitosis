@@ -198,6 +198,13 @@ body:not(.playing) #joy{display:none!important}
 /* collapsible leaderboard */
 #boardToggle{width:22px;height:22px;padding:0;display:grid;place-items:center;font-size:11px;line-height:1;flex:none}
 #board.collapsed ol{display:none}#board.collapsed{width:auto!important}
+/* the lobby hides the in-game HUD and buttons so only the card and the drifting culture show */
+body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
+#startCard h1{margin-top:-4px}
+.together.compact{padding:10px 12px;gap:8px}
+.together.compact .invite{grid-template-columns:1fr auto;align-items:center}
+.together.compact #inviteHelp{display:none}
+@media (pointer:coarse){.together.compact #inviteUrl{display:none}.together.compact .invite{grid-template-columns:1fr}}
 /* lobby sections */
 .sec{border:1px solid var(--line);border-radius:12px;background:rgba(0,0,0,.18)}
 .sec summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:11px 14px;user-select:none;-webkit-user-select:none}
@@ -207,6 +214,7 @@ body:not(.playing) #joy{display:none!important}
 .sec summary .label{flex:none}.sec .sum{font:500 13px var(--display);color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sec .body{display:grid;gap:14px;padding:4px 14px 14px}
 .sec .atp{margin-left:auto;flex:none}
+.row2{display:grid;grid-template-columns:1fr auto;gap:10px}.ghost.big{font:700 17px var(--display);padding:14px 20px;color:var(--ink);border-color:var(--line-strong)}
 /* ATP, skins, store */
 .fhead{display:flex;align-items:center;gap:10px}.fhead .label{flex:1}
 .atp{font:600 13px var(--mono);color:var(--amber)}.atp b{font-weight:700;font-variant-numeric:tabular-nums}
@@ -261,15 +269,14 @@ body:not(.playing) #joy{display:none!important}
 
 <div id="overlay">
   <div class="card panel" id="startCard">
-    <p class="eyebrow">Culture well · Ø 13.6 mm</p>
-    <h1>Mitosis<sup>2.0</sup></h1>
-    <p class="lede">Absorb anything smaller than you. Divide to strike. Keep clear of anything bigger.</p>
+    <h1>Mitosis</h1>
+    <p class="lede">Absorb smaller cells, divide to strike, avoid anything bigger.</p>
     <div class="field"><label class="label" for="nameIn">Specimen name</label><input id="nameIn" type="text" maxlength="16" placeholder="Unnamed cell" autocomplete="off" spellcheck="false"></div>
-    <button id="go" class="primary" type="button">Inoculate</button>
+    <div class="row2"><button id="go" class="primary" type="button">Inoculate</button><button id="shopBtn" class="ghost big" type="button">Shop</button></div>
     <details class="sec" id="lookSec"><summary><span class="label">Appearance</span><span class="sum" id="lookSum"></span><span class="atp"><b id="atpBal">0</b> ATP</span></summary><div class="body">
       <div class="field"><span class="label">Stain</span><div class="swatches" id="sw"></div></div>
       <div class="field"><span class="label">Pattern</span><div class="pats" id="pats"></div></div>
-      <div class="field"><div class="fhead"><span class="label">Skins</span><button id="getAtp" class="tiny" type="button">Get ATP</button></div><div class="skins" id="skins"></div><p class="hint" id="skinHint">Earn ATP by surviving, absorbing cells and growing. Spend it on skins.</p></div>
+      <p class="hint">Premium skins are in the Shop; tap the ATP balance above or the Shop button.</p>
     </div></details>
     <details class="sec" id="diffSec"><summary><span class="label">Culture density</span><span class="sum" id="diffSum"></span></summary><div class="body">
       <div class="seg" id="diff">
@@ -278,10 +285,10 @@ body:not(.playing) #joy{display:none!important}
         <button type="button" data-d="hostile">Hostile<small>80 cells</small></button>
       </div>
     </div></details>
-    <div class="together"><strong>Play together</strong>
-      <p id="inviteHelp">Send this link to a friend on the same Wi-Fi. For friends elsewhere, run <b>share-online.bat</b> and send the https link it prints.</p>
-      <div class="invite" id="inviteRow"><input id="inviteUrl" type="text" readonly aria-label="Invite link" value=""><button id="copyInvite" class="ghost" type="button">Copy</button></div>
+    <div class="together compact">
       <p id="netLine" class="netline"><i></i><span>Connecting to the server…</span></p>
+      <p id="inviteHelp">Send this link to a friend on the same Wi-Fi. For friends elsewhere, run <b>share-online.bat</b> and send the https link it prints.</p>
+      <div class="invite" id="inviteRow"><input id="inviteUrl" type="text" readonly aria-label="Invite link" value=""><button id="copyInvite" class="ghost" type="button">Invite friends</button></div>
     </div>
     <details class="sec" id="helpSec"><summary><span class="label">How to play</span></summary><div class="body">
     <dl class="keys kbd-only">
@@ -302,17 +309,16 @@ body:not(.playing) #joy{display:none!important}
       <em>Evolve</em> at mass milestones — pick one of three traits, six times a life. <em>World events</em>: nutrient blooms, antibiotic tides that close the well, phage swarms and the <em>Leviathan</em> — lure it onto phages to break it up. The leader wears a crown and pays a <em>1.5× bounty</em>.
       <span class="danger">Hunter phages</span> break in through the rim and inject any cell they touch — it bursts into up to 16 pieces 8–10 s later. Phase blocks them and three ejected blobs kill one.
       Also: mutations (Magnet, Phase, Surge), dash, frenzy streaks, stain patterns and achievements.</div>
-    </div></details>
     <p class="achline" id="achLine"></p>
+    </div></details>
   </div>
 
   <div class="card panel" id="storeCard" hidden>
-    <p class="eyebrow">ATP store</p>
-    <h2>Get ATP</h2>
-    <p class="lede">ATP buys skins. Earn it slowly by playing, or top up here.</p>
+    <p class="eyebrow">Shop</p>
+    <h2>Skins &amp; ATP</h2>
     <p class="atpbig"><b id="storeBal">0</b> ATP in your wallet</p>
-    <div class="packs" id="packs"></div>
-    <p class="hint" id="storeHint"></p>
+    <div class="field"><span class="label">Skins</span><div class="skins" id="skins"></div><p class="hint" id="skinHint"></p></div>
+    <div class="field"><span class="label">ATP packs</span><div class="packs" id="packs"></div><p class="hint" id="storeHint"></p></div>
     <div class="row"><button id="storeBack" class="primary" type="button">Back</button></div>
   </div>
 
@@ -603,7 +609,7 @@ function drawPreview(cv,S){
   g.beginPath();g.arc(x,y,r,0,TAU);g.lineWidth=r*.085;g.strokeStyle=col(k,-26,.96);g.stroke();
 }
 function renderPreviews(){const el=$('skins');if(!el)return;for(const cv of el.querySelectorAll('canvas')){const S=PREMIUM[+cv.dataset.skin-SKIN_FREE];if(S)drawPreview(cv,S);}}
-setInterval(()=>{if(!$('startCard').hidden&&!document.hidden&&!RM)renderPreviews();},100);
+setInterval(()=>{if(!$('storeCard').hidden&&!document.hidden&&!RM)renderPreviews();},100);
 $('skins').addEventListener('click',async e=>{
   const b=e.target.closest('.skin');if(!b)return;const id=+b.dataset.id,S=PREMIUM[id-SKIN_FREE];if(!S)return;
   if(ownsSkin(id)){settings.skin=id;saveSettings();syncPats();return;}
@@ -617,7 +623,7 @@ $('skins').addEventListener('click',async e=>{
 // ATP store (packs are sold through the App Store / Google Play from inside the apps)
 let storeNote='';
 async function openStore(note){
-  storeNote=note||'';showCard('storeCard');$('storeBal').textContent=wallet.balance;renderPacks([]);
+  storeNote=note||'';showCard('storeCard');renderSkins();renderPacks([]);
   if(!Native.platform){renderPacks(null);$('storeHint').textContent=(storeNote?storeNote+' ':'')+'ATP packs are sold in the Mitosis app for iPhone and Android. On the web you earn ATP by playing.';return;}
   $('storeHint').textContent='Loading prices…';
   try{const r=await Native.call('products',{ids:ATP_PACKS.map(p=>p.id)});const ps=r.products||[];renderPacks(ps);
@@ -643,9 +649,9 @@ async function redeem(p){ // server verifies with Apple/Google, credits ATP, the
   if(w.credited){toast('ATP','ATP added',`+${w.credited} ATP — ${w.balance} in your wallet`);Native.haptic('success');}
 }
 $('packs').addEventListener('click',e=>{const b=e.target.closest('.pack');if(b&&!b.disabled)buyPack(b.dataset.id);});
-$('getAtp').addEventListener('click',()=>openStore());
+$('shopBtn').addEventListener('click',()=>openStore());
 $('lookSec').querySelector('.atp').addEventListener('click',e=>{e.preventDefault();e.stopPropagation();openStore();});
-$('storeBack').addEventListener('click',()=>showCard('startCard'));
+$('storeBack').addEventListener('click',()=>{showCard('startCard');renderSkins();});
 econInit();
 let best=0;try{best=+localStorage.getItem('mitosis.best')||0;}catch(e){}
 
@@ -1247,8 +1253,8 @@ function updateCam(dt){
     tx=sx/sm;ty=sy/sm;tz=base*Math.pow(Math.min(1,55/Math.sqrt(r2)),.5)*(has(human,'chemotaxis')?.8:1);
   }else if(mode==='dead'&&human&&human.stats.killerRef&&human.stats.killerRef.alive&&human.stats.killerRef.cells.length){
     const kr=human.stats.killerRef,c=kr.cells.reduce((a,b)=>a.mass>b.mass?a:b);tx=c.x;ty=c.y;tz=base*Math.pow(Math.min(1,55/c.r),.5)*.85;
-  }else if(mode==='attract'&&leader&&leader.cells.length){
-    const c=leader.cells.reduce((a,b)=>a.mass>b.mass?a:b);tx=c.x;ty=c.y;
+  }else if(mode==='attract'){ // lobby: slow cinematic drift around the well, no shaking
+    const a=T*.04;tx=Math.cos(a)*R*.3;ty=Math.sin(a*1.3)*R*.3;tz=base*.5;cam.shake=0;
   }
   const k=Math.min(1,dt*(human&&human.alive?7:1.5));cam.x+=(tx-cam.x)*k;cam.y+=(ty-cam.y)*k;cam.z+=(tz-cam.z)*Math.min(1,dt*2.5);
   cam.shake*=Math.exp(-9*dt);if(RM)cam.shake=0;
@@ -1859,7 +1865,8 @@ $('setup').addEventListener('click',()=>{mode='attract';achLine();showCard('star
 $('resume').addEventListener('click',()=>setPaused(false));
 $('quit').addEventListener('click',()=>{paused=false;econRunEnd();removeHuman();mode='attract';document.body.classList.remove('playing');showCard('startCard');$('pauseBtn').textContent='Pause';});
 $('pauseBtn').addEventListener('click',()=>setPaused(!paused));
-$('copyInvite').addEventListener('click',()=>{const b=$('copyInvite'),i=$('inviteUrl');const done=t=>{b.textContent=t;setTimeout(()=>{b.textContent='Copy';},1600);};
+$('copyInvite').addEventListener('click',()=>{const b=$('copyInvite'),i=$('inviteUrl');const done=t=>{b.textContent=t;setTimeout(()=>{b.textContent='Invite friends';},1600);};
+  if(navigator.share&&TOUCH_UI){navigator.share({title:'Mitosis',text:'Come play Mitosis with me',url:i.value}).catch(()=>{});return;}
   const pick=()=>{i.focus();i.select();done('Press Ctrl+C');};
   if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(i.value).then(()=>done('Copied'),pick);else pick();});
 

@@ -12,7 +12,7 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
     override var prefersStatusBarHidden: Bool { true }
     override var prefersHomeIndicatorAutoHidden: Bool { true }
     override var preferredScreenEdgesDeferringSystemGestures: UIRectEdge { .all }
-    override var supportedInterfaceOrientations: UIInterfaceOrientationMask { .allButUpsideDown }
+    override var supportedInterfaceOrientations: UIInterfaceOrientationMask { .landscape }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -62,6 +62,11 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
     /// the simulator prefer a local `node server.js` on port 3000 when one is running.
     private func resolveServerURL(_ done: @escaping (String) -> Void) {
         let production = (Bundle.main.object(forInfoDictionaryKey: "MitosisServerURL") as? String) ?? "https://mitosis-zmbc.onrender.com"
+        #if DEBUG
+        // Development builds accept a launch argument, e.g. from a Mac:
+        //   xcrun devicectl device process launch --device <id> com.mitosisgame.app -- -server http://192.168.1.20:3000
+        if let override = UserDefaults.standard.string(forKey: "server"), override.hasPrefix("http") { done(override); return }
+        #endif
         #if DEBUG && targetEnvironment(simulator)
         let local = "http://localhost:3000"
         var req = URLRequest(url: URL(string: local + "/health")!)

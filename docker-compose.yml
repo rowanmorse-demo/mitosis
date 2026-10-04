@@ -1,0 +1,33 @@
+# Run the Mitosis server anywhere Docker runs:
+#   docker compose up -d          # start (or apply changes after git pull: docker compose up -d --force-recreate)
+#   docker compose logs -f        # watch
+# Wallets, skins and purchases live in the mitosis-data volume. Put the IAP verification
+# variables in a .env file next to this file (see README); compose passes them through.
+services:
+  mitosis:
+    image: node:22-alpine
+    container_name: mitosis
+    working_dir: /app
+    command: node server.js
+    volumes:
+      - ./:/app:ro
+      - mitosis-data:/data
+    environment:
+      PORT: "3000"
+      DATA_DIR: /data
+      APPLE_ISSUER_ID: ${APPLE_ISSUER_ID:-}
+      APPLE_KEY_ID: ${APPLE_KEY_ID:-}
+      APPLE_PRIVATE_KEY: ${APPLE_PRIVATE_KEY:-}
+      APPLE_BUNDLE_ID: ${APPLE_BUNDLE_ID:-com.mitosisgame.app}
+      GOOGLE_PACKAGE_NAME: ${GOOGLE_PACKAGE_NAME:-com.mitosisgame.app}
+      GOOGLE_SERVICE_ACCOUNT: ${GOOGLE_SERVICE_ACCOUNT:-}
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+volumes:
+  mitosis-data:
