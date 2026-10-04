@@ -180,7 +180,7 @@ body:not(.playing) #evolve{display:none!important}
   .card{padding:22px 20px 20px;gap:15px}
 }
 /* touch layout: joystick bottom-left, Split / Shoot / Boost on the right, pause+sound bottom-centre */
-#joy{display:none;position:fixed;z-index:3;left:calc(var(--gut) + env(safe-area-inset-left,0px));bottom:calc(var(--gut) + 44px + env(safe-area-inset-bottom,0px));width:150px;height:150px;touch-action:none;pointer-events:auto}
+#joy{display:none;position:fixed;z-index:3;left:calc(var(--gut) + env(safe-area-inset-left,0px));bottom:calc(var(--gut) + env(safe-area-inset-bottom,0px));width:150px;height:150px;touch-action:none;pointer-events:auto}
 #joy .base{position:absolute;left:15px;top:15px;width:120px;height:120px;border-radius:50%;border:1.5px solid var(--line-strong);background:rgba(6,20,22,.55);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 #joy .base::after{content:"";position:absolute;inset:34px;border-radius:50%;border:1px dashed rgba(140,210,200,.25)}
 #joy .knob{position:absolute;left:49px;top:49px;width:52px;height:52px;border-radius:50%;background:rgba(220,239,233,.85);box-shadow:0 4px 14px rgba(0,0,0,.45);transition:transform .1s}
