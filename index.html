@@ -107,6 +107,7 @@ input[type=text]:focus{outline:2px solid var(--accent);outline-offset:1px}
 .ghost:hover{color:var(--ink);border-color:var(--line-strong)}
 /* Account: Sign in with Apple / Google, drawn to the providers' button guidelines */
 .acct .who{margin:0;font:13px/1.45 var(--mono);color:var(--muted)}.acct .who b{color:var(--ink);font-weight:600}
+.pstats{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.pstat{display:grid;gap:3px;padding:9px 6px;border:1px solid var(--line);border-radius:11px;background:rgba(0,0,0,.22);text-align:center}.pstat b{font:800 18px/1 var(--display);letter-spacing:-.02em}.pstat span{font:10px var(--mono);color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
 .sbtns{display:grid;gap:8px}
 .sbtn{appearance:none;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;border-radius:11px;padding:11px 14px;font:600 15px/1 var(--display);cursor:pointer;border:1px solid transparent;transition:filter .15s}
 .sbtn svg{width:18px;height:18px;flex:none}.sbtn:disabled{opacity:.6;cursor:default}
@@ -254,7 +255,7 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
 .chips{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
 .chip2{display:inline-flex;align-items:center;gap:6px;margin:0;padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:rgba(0,0,0,.25);font:600 12px var(--mono)!important;color:var(--muted)!important}
 .chip2 b{color:var(--ink);font-weight:700}.chip2 .tier{color:var(--violet);letter-spacing:.08em;text-transform:uppercase;font-size:10px}
-.iconrow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.iconrow{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
 .iconbtn{appearance:none;border:1px solid var(--line);background:rgba(0,0,0,.22);color:var(--ink);border-radius:11px;padding:11px 4px;font:600 13px var(--display);cursor:pointer;transition:border-color .15s,background .15s}
 .iconbtn:hover{border-color:var(--line-strong);background:rgba(255,255,255,.04)}
 .shop{max-width:560px}.shophead{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
@@ -323,6 +324,7 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
     <div class="field"><label class="label" for="nameIn">Specimen name</label><input id="nameIn" type="text" maxlength="16" placeholder="Unnamed cell" autocomplete="off" spellcheck="false"></div>
     <button id="go" class="primary" type="button">Play</button>
     <div class="iconrow">
+      <button class="iconbtn" id="profBtn" type="button">Profile</button>
       <button class="iconbtn" id="shopBtn" type="button">Shop</button>
       <button class="iconbtn" id="lookBtn" type="button">Look</button>
       <button class="iconbtn" id="rankBtn" type="button">Ranks</button>
@@ -347,9 +349,10 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
     <div class="row"><button class="primary back" type="button">Back</button></div>
   </div>
 
-  <div class="card panel" id="settingsCard" hidden>
-    <p class="eyebrow">Settings</p>
-    <h2>Culture</h2>
+  <div class="card panel" id="profileCard" hidden>
+    <p class="eyebrow">Profile</p>
+    <h2 id="profName">Unnamed cell</h2>
+    <div class="pstats"><div class="pstat"><b id="pRating">1000</b><span id="pTier">Silver</span></div><div class="pstat"><b id="pAtp">0</b><span>ATP</span></div><div class="pstat"><b id="pEarned">0</b><span>earned</span></div><div class="pstat"><b id="pRuns">0</b><span>runs</span></div><div class="pstat"><b id="pSkins">0</b><span>skins</span></div></div>
     <div class="field acct" id="acctField"><span class="label">Account</span>
       <p class="who" id="acctWho">Not signed in. Sign in so your ATP, skins and rating follow you to any phone.</p>
       <div class="sbtns" id="acctBtns">
@@ -359,6 +362,12 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
       </div>
       <p class="hint" id="acctHint" hidden></p>
     </div>
+    <div class="row"><button class="primary back" type="button">Back</button><button class="ghost" id="profShop" type="button">Open shop</button></div>
+  </div>
+
+  <div class="card panel" id="settingsCard" hidden>
+    <p class="eyebrow">Settings</p>
+    <h2>Culture</h2>
     <div class="field"><span class="label">Culture density</span>
       <div class="seg" id="diff">
         <button type="button" data-d="calm">Calm<small>40 cells</small></button>
@@ -660,7 +669,7 @@ async function api(path,body,auth=true){
 }
 function applyWallet(w){
   if(!w)return;wallet.balance=w.balance|0;wallet.earned=w.earned|0;if(Array.isArray(w.skins))wallet.skins=w.skins;wallet.playerId=w.playerId||wallet.playerId;wallet.online=true;
-  if(typeof w.rating==='number'){wallet.rating=w.rating;wallet.tier=w.tier||wallet.tier;}renderRank();
+  if(typeof w.rating==='number'){wallet.rating=w.rating;wallet.tier=w.tier||wallet.tier;}wallet.runs=w.runs|0;renderRank();renderProfile();
   if('account' in w){wallet.account=w.account||null;renderAccount();}
   try{localStorage.setItem('mitosis.wallet',JSON.stringify({balance:wallet.balance,skins:wallet.skins}));}catch(e){}
   if(w.catalog){for(const s of w.catalog.skins||[]){const P=PREMIUM.find(x=>x.id===s.id);if(P&&s.price>0)P.price=s.price;}for(const p of w.catalog.packs||[]){const K=ATP_PACKS.find(x=>x.id===p.id);if(K&&p.atp>0)K.atp=p.atp;}}
@@ -691,6 +700,9 @@ async function loadTop(){try{const r=await fetch(window.MITOSIS_SERVER+'/api/lea
 $('rankBtn').addEventListener('click',()=>{showCard('rankCard');loadTop();});
 $('lookBtn').addEventListener('click',()=>{showCard('lookCard');renderSkins();});
 $('setBtn').addEventListener('click',()=>showCard('settingsCard'));
+function renderProfile(){if(!$('profName'))return;$('profName').textContent=cleanName($('nameIn').value)||settings.name||'Unnamed cell';$('pRating').textContent=wallet.rating;$('pTier').textContent=wallet.tier;$('pAtp').textContent=wallet.balance.toLocaleString();$('pEarned').textContent=(wallet.earned|0).toLocaleString();$('pRuns').textContent=wallet.runs|0;$('pSkins').textContent=wallet.skins.filter(id=>id>=SKIN_FREE).length;}
+$('profBtn').addEventListener('click',()=>{renderProfile();renderAccount();showCard('profileCard');});
+$('profShop').addEventListener('click',()=>openStore());
 $('lookShop').addEventListener('click',()=>openStore());
 for(const b of document.querySelectorAll('.card .back'))b.addEventListener('click',()=>showCard('startCard'));
 // ending a run on purpose shows the same results screen as dying
@@ -2070,7 +2082,7 @@ function showCard(id){
   // diagnostic: a report of what sends the page from Settings back to the start card (Settings → Account → sign in)
   if(id==='startCard'&&shownCard==='settingsCard')reportHitch('settings->start via '+String(new Error().stack||'').split('\n').slice(1,4).map(s=>s.trim()).join(' | '));
   shownCard=id;
-  for(const c of['startCard','pauseCard','deathCard','storeCard','lookCard','rankCard','settingsCard'])$(c).hidden=c!==id;$('overlay').hidden=!id;}
+  for(const c of['startCard','pauseCard','deathCard','storeCard','lookCard','rankCard','settingsCard','profileCard'])$(c).hidden=c!==id;$('overlay').hidden=!id;}
 function startGame(){
   if(!spawnOpen()){updateSpawnLock();if(performance.now()-spawnLockToastAt>8000){spawnLockToastAt=performance.now();toast('Round','Too late to join this round',`The next one opens in ${fmtT(spawnWait())}`);}return;}
   settings.name=cleanName($('nameIn').value);
