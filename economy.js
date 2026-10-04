@@ -4,6 +4,7 @@
 'use strict';
 const crypto = require('crypto');
 const iap = require('./iap');
+const signin = require('./auth');
 
 // Keep SKINS and PACKS in sync with PREMIUM and ATP_PACKS in index.html.
 const SKINS = [
@@ -50,7 +51,7 @@ const cleanName = s => String(s || '').replace(/[^\p{L}\p{N} _.\-'!?]/gu, '').tr
 
 const skinById = id => SKINS.find(s => s.id === id);
 const packById = id => PACKS.find(p => p.id === id);
-const catalog = () => ({ skins: SKINS, packs: PACKS, rules: RULES, rating: RATING, tiers: TIERS.map(t => t[1]), iap: iap.status() });
+const catalog = () => ({ skins: SKINS, packs: PACKS, rules: RULES, rating: RATING, tiers: TIERS.map(t => t[1]), iap: iap.status(), auth: signin.status() });
 
 function payoutFor({ survived, bestRank, place }) {
   const sec = Math.max(0, Math.min(RULES.maxRunSec, +survived || 0));
@@ -62,7 +63,9 @@ function payoutFor({ survived, bestRank, place }) {
 
 class ApiError extends Error { constructor(status, msg) { super(msg); this.status = status; } }
 const hash = s => crypto.createHash('sha256').update(String(s)).digest('hex');
-const wallet = (store, p) => ({ playerId: p.id, balance: Number(p.balance), earned: Number(p.earned), skins: store.skins(p.id), rating: Number(p.rating ?? RATING.base), tier: tierOf(Number(p.rating ?? RATING.base)), runs: Number(p.runs || 0) });
+// The sign-in a wallet belongs to (Apple or Google), or null for a device-only wallet.
+const accountOf = (store, p) => { const i = store.identities(p.id)[0]; return i ? { provider: i.provider, email: i.email || null, since: Number(i.at) } : null; };
+const wallet = (store, p) => ({ playerId: p.id, balance: Number(p.balance), earned: Number(p.earned), skins: store.skins(p.id), rating: Number(p.rating ?? RATING.base), tier: tierOf(Number(p.rating ?? RATING.base)), runs: Number(p.runs || 0), account: accountOf(store, p) });
 
 /* ---------- handlers: each gets (store, body, player?) and returns a JSON-able object ---------- */
 function session(store, body) {
@@ -77,9 +80,36 @@ function session(store, body) {
 function auth(store, headers) {
   const m = /^Bearer\s+([a-z0-9]{24,64})$/.exec(headers.authorization || '');
   if (!m) throw new ApiError(401, 'sign in first');
-  const p = store.playerBySecret(hash(m[1]));
+  const h = hash(m[1]), p = store.playerBySecret(h);
   if (!p) throw new ApiError(401, 'unknown player');
+  p.deviceHash = h;   // which device secret this request came from (not stored)
   return p;
+}
+
+/* ---------- sign-in: Apple / Google identities, so a wallet follows the player ---------- */
+// A device that signs in to an account it did not create joins that account: its own wallet
+// (ATP, skins, history) is folded into the account's and its secret now opens the account.
+async function signInWith(verify, store, body, p) {
+  let ident;
+  try { ident = await verify(body); }
+  catch (e) { throw new ApiError(e.status || 401, e.message); }
+  const now = Date.now(), existing = store.identity(ident.provider, ident.subject);
+  let player = p, merged = false;
+  if (existing && existing.player !== p.id && store.player(existing.player)) {
+    store.mergePlayers(p.id, existing.player); player = store.player(existing.player); merged = true;
+  } else if (!existing) {
+    store.linkIdentity(ident.provider, ident.subject, p.id, ident.email, now);
+  }
+  console.log(`+ ${ident.provider} sign-in${merged ? ' (joined existing account)' : ''}`);
+  return { ...wallet(store, player), merged };
+}
+const signInApple = (store, body, p) => signInWith(signin.verifyApple, store, body, p);
+const signInGoogle = (store, body, p) => signInWith(signin.verifyGoogle, store, body, p);
+// Sign out only detaches this device; the account and its wallet stay for the next sign-in.
+// The device then starts a fresh wallet with a new secret (the page does that).
+function signOut(store, body, p) {
+  if (p.deviceHash && p.deviceHash !== p.secret) store.forgetDevice(p.deviceHash);
+  return { ok: true };
 }
 function runStart(store, body, p) {
   const now = Date.now();
@@ -138,4 +168,4 @@ async function iapGoogle(store, body, p) {
 
 function leaderboard(store) { return { top: store.top(10).map((r, i) => ({ rank: i + 1, name: r.name || 'Unnamed cell', rating: r.rating, tier: tierOf(r.rating), runs: r.runs })) }; }
 
-module.exports = { SKINS, PACKS, RULES, RATING, catalog, payoutFor, ratingDelta, tierOf, ApiError, auth, handlers: { session, runStart, runEnd, buySkin, iapApple, iapGoogle, leaderboard } };
+module.exports = { SKINS, PACKS, RULES, RATING, catalog, payoutFor, ratingDelta, tierOf, ApiError, auth, handlers: { session, runStart, runEnd, buySkin, iapApple, iapGoogle, leaderboard, signInApple, signInGoogle, signOut } };

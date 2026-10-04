@@ -1,77 +1,140 @@
 {
-  "identifier": "C0FFEE01",
-  "nonRenewingSubscriptions": [],
-  "products": [
+  "appPolicies" : {
+    "eula" : "",
+    "policies" : [
+      {
+        "locale" : "en_US",
+        "policyText" : "",
+        "policyURL" : ""
+      }
+    ]
+  },
+  "identifier" : "C0FFEE01A1B2",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
     {
-      "displayPrice": "0.99",
-      "familyShareable": false,
-      "internalID": "1001",
-      "localizations": [
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "6818892833",
+      "localizations" : [
         {
-          "description": "500 ATP for skins",
-          "displayName": "Pouch of ATP",
-          "locale": "en_US"
+          "description" : "500 ATP to spend on skins",
+          "displayName" : "Pouch of ATP",
+          "locale" : "en_US"
         }
       ],
-      "productID": "atp_500",
-      "referenceName": "Pouch of ATP (500)",
-      "type": "Consumable"
+      "productID" : "atp_500",
+      "referenceName" : "Pouch of ATP (500)",
+      "type" : "Consumable"
     },
     {
-      "displayPrice": "1.99",
-      "familyShareable": false,
-      "internalID": "1002",
-      "localizations": [
+      "displayPrice" : "1.99",
+      "familyShareable" : false,
+      "internalID" : "6818893167",
+      "localizations" : [
         {
-          "description": "1,500 ATP for skins",
-          "displayName": "Flask of ATP",
-          "locale": "en_US"
+          "description" : "1,500 ATP to spend on skins",
+          "displayName" : "Flask of ATP",
+          "locale" : "en_US"
         }
       ],
-      "productID": "atp_1500",
-      "referenceName": "Flask of ATP (1500)",
-      "type": "Consumable"
+      "productID" : "atp_1500",
+      "referenceName" : "Flask of ATP (1500)",
+      "type" : "Consumable"
     },
     {
-      "displayPrice": "4.99",
-      "familyShareable": false,
-      "internalID": "1003",
-      "localizations": [
+      "displayPrice" : "4.99",
+      "familyShareable" : false,
+      "internalID" : "6818893477",
+      "localizations" : [
         {
-          "description": "5,000 ATP for skins",
-          "displayName": "Culture of ATP",
-          "locale": "en_US"
+          "description" : "5,000 ATP to spend on skins",
+          "displayName" : "Culture of ATP",
+          "locale" : "en_US"
         }
       ],
-      "productID": "atp_5000",
-      "referenceName": "Culture of ATP (5000)",
-      "type": "Consumable"
+      "productID" : "atp_5000",
+      "referenceName" : "Culture of ATP (5000)",
+      "type" : "Consumable"
     },
     {
-      "displayPrice": "9.99",
-      "familyShareable": false,
-      "internalID": "1004",
-      "localizations": [
+      "displayPrice" : "9.99",
+      "familyShareable" : false,
+      "internalID" : "6818893521",
+      "localizations" : [
         {
-          "description": "12,000 ATP for skins",
-          "displayName": "Bioreactor of ATP",
-          "locale": "en_US"
+          "description" : "12,000 ATP to spend on skins",
+          "displayName" : "Bioreactor of ATP",
+          "locale" : "en_US"
         }
       ],
-      "productID": "atp_12000",
-      "referenceName": "Bioreactor of ATP (12000)",
-      "type": "Consumable"
+      "productID" : "atp_12000",
+      "referenceName" : "Bioreactor of ATP (12000)",
+      "type" : "Consumable"
     }
   ],
-  "settings": {
-    "_failTransactionsEnabled": false,
-    "_locale": "en_US",
-    "_storefront": "USA",
-    "_storeKitErrors": []
+  "settings" : {
+    "_applicationInternalID" : "6818890370",
+    "_developerTeamID" : "4M7HR323EA",
+    "_failTransactionsEnabled" : false,
+    "_lastSynchronizedDate" : 780000000,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Purchase"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Verification"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Store Sync"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Subscription Status"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Transaction"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Manage Subscriptions Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Refund Request Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Offer Code Redeem Sheet"
+      }
+    ]
   },
-  "subscriptionGroups": [],
-  "version": {
-    "major": 3,
-    "minor": 0
+  "subscriptionGroups" : [
+
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
   }
 }

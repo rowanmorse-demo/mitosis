@@ -16,6 +16,9 @@ settings:
     CURRENT_PROJECT_VERSION: "3"
     # Where the app finds the Mitosis server (WebSocket relay + ATP API).
     MITOSIS_SERVER: http://51.81.81.166:3000
+    # Sign in with Google: the iOS OAuth client id from Google Cloud Console (Credentials → OAuth client ID → iOS,
+    # bundle id com.mitosisgame.app). Leave empty to hide the Google button. The server must list it in GOOGLE_CLIENT_IDS.
+    GOOGLE_IOS_CLIENT_ID: ""
 targets:
   Mitosis:
     type: application
@@ -50,6 +53,11 @@ targets:
             localhost:
               NSExceptionAllowsInsecureHTTPLoads: true
         MitosisServerURL: $(MITOSIS_SERVER)
+        GoogleClientID: $(GOOGLE_IOS_CLIENT_ID)
+    entitlements:
+      path: Mitosis/Mitosis.entitlements
+      properties:
+        com.apple.developer.applesignin: [Default]     # Sign in with Apple
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.mitosisgame.app
@@ -60,13 +68,34 @@ targets:
         SUPPORTS_MACCATALYST: NO
         SWIFT_STRICT_CONCURRENCY: minimal
         ENABLE_USER_SCRIPT_SANDBOXING: NO
+  MitosisTests:                      # end-to-end purchase test (see MitosisTests/PurchaseFlowTests.swift)
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: MitosisTests
+      - path: Mitosis/Products.storekit    # the local store the test buys from
+        buildPhase: resources
+    dependencies:
+      - target: Mitosis
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mitosisgame.app.tests
+        GENERATE_INFOPLIST_FILE: YES
+        ENABLE_TESTING_SEARCH_PATHS: YES
+        SWIFT_STRICT_CONCURRENCY: minimal
 schemes:
   Mitosis:
     build:
       targets:
         Mitosis: all
+        MitosisTests: [test]
     run:
       config: Debug
       storeKitConfiguration: Mitosis/Products.storekit   # fake App Store for testing purchases in the simulator
+    test:
+      config: Debug
+      storeKitConfiguration: Mitosis/Products.storekit
+      targets:
+        - MitosisTests
     archive:
       config: Release

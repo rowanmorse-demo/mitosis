@@ -17,6 +17,10 @@ android {
         versionName = "2.1.0"
         // Where the app finds the Mitosis server (WebSocket relay + ATP API).
         buildConfigField("String", "SERVER_URL", "\"http://51.81.81.166:3000\"")
+        // Sign in with Google: the *web* OAuth client id from Google Cloud Console (plus an Android client
+        // registered with this package name and the signing key's SHA-1). Empty hides the Google button.
+        // The server must list the same id in GOOGLE_CLIENT_IDS.
+        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"\"")
     }
     buildTypes {
         release {
@@ -51,4 +55,9 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("androidx.webkit:webkit:1.12.1")
     implementation("com.android.billingclient:billing-ktx:7.1.1")
+    // Sign in with Google (Credential Manager)
+    implementation("androidx.credentials:credentials:1.5.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.5.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
 }

@@ -2,10 +2,21 @@
 'use strict';
 const { spawn } = require('child_process'), path = require('path'), fs = require('fs'), os = require('os'), assert = require('assert');
 
-const PORT = 3100 + Math.floor(Math.random() * 500);
+const PORT = 3100 + Math.floor(Math.random() * 500), KEY_PORT = PORT + 1;
 const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mitosis-test-'));
+
+// A stand-in for Apple's and Google's key servers: the sign-in tokens below are signed with this key.
+const crypto = require('crypto');
+const { publicKey: jwkPub, privateKey: jwkPriv } = crypto.generateKeyPairSync('rsa', { modulusLength: 2048 });
+const jwk = { ...jwkPub.export({ format: 'jwk' }), kid: 'test-key', alg: 'RS256', use: 'sig' };
+const keyServer = require('http').createServer((req, res) => { res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ keys: [jwk] })); });
+keyServer.listen(KEY_PORT, '127.0.0.1');
+const b64u = o => Buffer.from(typeof o === 'string' ? o : JSON.stringify(o)).toString('base64url');
+function signToken(claims) { const data = b64u({ alg: 'RS256', kid: 'test-key', typ: 'JWT' }) + '.' + b64u(claims); return data + '.' + crypto.sign('sha256', Buffer.from(data), jwkPriv).toString('base64url'); }
+const sha256 = s => crypto.createHash('sha256').update(s).digest('hex');
+
 const child = spawn(process.execPath, [path.join(__dirname, 'server.js')],
-  { env: { ...process.env, PORT, DATA_DIR: dataDir, IAP_UNVERIFIED: '1' }, stdio: ['ignore', 'ignore', 'inherit'] });
+  { env: { ...process.env, PORT, DATA_DIR: dataDir, IAP_UNVERIFIED: '1', AUTH_APPLE_JWKS: `http://127.0.0.1:${KEY_PORT}/apple`, AUTH_GOOGLE_JWKS: `http://127.0.0.1:${KEY_PORT}/google`, GOOGLE_CLIENT_IDS: 'test-google-client' }, stdio: ['ignore', 'ignore', 'inherit'] });
 const base = `http://127.0.0.1:${PORT}`;
 
 async function waitUp() {
@@ -63,8 +74,48 @@ async function post(url, body, secret) {
   r = await post('/api/skins/buy', { skinId: 99 }, secret); assert.equal(r.status, 404);
 
   r = await post('/api/session', { secret }); assert.equal(r.body.balance, 1700); assert.deepEqual(r.body.skins, [9], 'wallet persists');
+  assert.equal(r.body.account, null, 'device-only wallet has no account');
   r = await post('/api/session', { secret: 'short' }); assert.equal(r.status, 400);
 
-  const h = await (await fetch(base + '/health')).json(); assert.equal(h.accounts, 1);
+  // Sign in with Apple: the token must be signed by Apple's key, for this app, unexpired, and carry our nonce
+  const nowS = Math.floor(Date.now() / 1000);
+  const apple = (over = {}) => signToken({ iss: 'https://appleid.apple.com', aud: 'com.mitosisgame.app', sub: 'apple-user-1', email: 'cell@example.com', iat: nowS, exp: nowS + 600, nonce: sha256('n1'), ...over });
+  r = await post('/api/auth/apple', { identityToken: apple(), nonce: 'n1' }, secret);
+  assert.equal(r.status, 200); assert.equal(r.body.account.provider, 'apple'); assert.equal(r.body.account.email, 'cell@example.com'); assert.equal(r.body.balance, 1700); assert.equal(r.body.merged, false);
+  r = await post('/api/auth/apple', { identityToken: apple({ aud: 'com.other.app' }), nonce: 'n1' }, secret); assert.equal(r.status, 401, 'token for another app rejected');
+  r = await post('/api/auth/apple', { identityToken: apple({ exp: nowS - 600 }), nonce: 'n1' }, secret); assert.equal(r.status, 401, 'expired token rejected');
+  r = await post('/api/auth/apple', { identityToken: apple({ iss: 'https://evil.example' }), nonce: 'n1' }, secret); assert.equal(r.status, 401, 'other issuer rejected');
+  r = await post('/api/auth/apple', { identityToken: apple(), nonce: 'wrong' }, secret); assert.equal(r.status, 401, 'nonce mismatch rejected');
+  r = await post('/api/auth/apple', { identityToken: apple().slice(0, -6) + 'AAAAAA', nonce: 'n1' }, secret); assert.equal(r.status, 401, 'tampered signature rejected');
+  r = await post('/api/auth/apple', { identityToken: 'not.a.token', nonce: 'n1' }, secret); assert.equal(r.status, 401);
+  r = await post('/api/session', { secret }); assert.equal(r.body.account.provider, 'apple', 'the account shows on every session');
+
+  // A second device signs in with the same Apple account: it joins the account and brings its own ATP along
+  const secret2 = 'secondsecret' + 'b'.repeat(20);
+  r = await post('/api/session', { secret: secret2 }); assert.equal(r.body.balance, 0); assert.equal(r.body.account, null);
+  r = await post('/api/iap/google', { purchaseToken: 'tok3', productId: 'atp_500', orderId: 'GPA.3' }, secret2); assert.equal(r.body.balance, 500);
+  r = await post('/api/auth/apple', { identityToken: apple(), nonce: 'n1' }, secret2);
+  assert.equal(r.status, 200); assert.equal(r.body.merged, true); assert.equal(r.body.balance, 2200, 'the two wallets merge'); assert.deepEqual(r.body.skins, [9]); assert.equal(r.body.account.provider, 'apple');
+  r = await post('/api/session', { secret: secret2 }); assert.equal(r.body.balance, 2200, 'the second device now opens the account');
+  r = await post('/api/session', { secret }); assert.equal(r.body.balance, 2200, 'and so does the first');
+  r = await post('/api/skins/buy', { skinId: 10 }, secret2); assert.equal(r.status, 200); assert.equal(r.body.balance, 1850, 'the joined device can spend');
+  r = await post('/api/session', { secret }); assert.deepEqual(r.body.skins, [9, 10], 'both devices see the same skins');
+
+  // Sign in with Google on a device that already belongs to an Apple account: Google is linked to that same wallet
+  const google = (over = {}) => signToken({ iss: 'https://accounts.google.com', aud: 'test-google-client', sub: 'google-user-1', email: 'cell@gmail.com', email_verified: true, iat: nowS, exp: nowS + 600, nonce: 'n2', ...over });
+  r = await post('/api/auth/google', { idToken: google(), nonce: 'n2' }, secret); assert.equal(r.status, 200); assert.equal(r.body.balance, 1850); assert.equal(r.body.account.provider, 'apple', 'the first sign-in stays the account label');
+  r = await post('/api/auth/google', { idToken: google({ aud: 'someone-elses-client' }), nonce: 'n2' }, secret); assert.equal(r.status, 401, 'Google token for another client rejected');
+  // ...and a fresh device signing in with that Google account lands in the same wallet
+  const secret3 = 'thirdsecret' + 'c'.repeat(21);
+  r = await post('/api/session', { secret: secret3 }); assert.equal(r.body.balance, 0);
+  r = await post('/api/auth/google', { idToken: google(), nonce: 'n2' }, secret3); assert.equal(r.body.merged, true); assert.equal(r.body.balance, 1850);
+
+  // Signing out detaches the device; the account keeps the wallet
+  r = await post('/api/auth/signout', {}, secret2); assert.equal(r.body.ok, true);
+  r = await post('/api/session', { secret: secret2 }); assert.equal(r.body.balance, 0, 'a signed-out device starts fresh'); assert.equal(r.body.account, null);
+  r = await post('/api/session', { secret }); assert.equal(r.body.balance, 1850, 'the account is untouched');
+  r = await post('/api/auth/signout', {}, secret); r = await post('/api/session', { secret }); assert.equal(r.body.balance, 1850, 'the original device secret still opens the account');
+
+  const h = await (await fetch(base + '/health')).json(); assert.equal(h.accounts, 2, 'the account plus the signed-out device');
   console.log(`all economy API tests passed (${h.store} store)`);
-})().then(() => { child.kill(); process.exit(0); }).catch(e => { console.error(e); child.kill(); process.exit(1); });
+})().then(() => { child.kill(); keyServer.close(); process.exit(0); }).catch(e => { console.error(e); child.kill(); keyServer.close(); process.exit(1); });

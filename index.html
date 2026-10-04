@@ -104,6 +104,13 @@ input[type=text]:focus{outline:2px solid var(--accent);outline-offset:1px}
 .primary:active{transform:translateY(1px)}
 .ghost{appearance:none;border:1px solid var(--line);border-radius:11px;background:transparent;color:var(--muted);font:600 14px var(--display);padding:11px 14px;cursor:pointer}
 .ghost:hover{color:var(--ink);border-color:var(--line-strong)}
+/* Account: Sign in with Apple / Google, drawn to the providers' button guidelines */
+.acct .who{margin:0;font:13px/1.45 var(--mono);color:var(--muted)}.acct .who b{color:var(--ink);font-weight:600}
+.sbtns{display:grid;gap:8px}
+.sbtn{appearance:none;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;border-radius:11px;padding:11px 14px;font:600 15px/1 var(--display);cursor:pointer;border:1px solid transparent;transition:filter .15s}
+.sbtn svg{width:18px;height:18px;flex:none}.sbtn:disabled{opacity:.6;cursor:default}
+.sbtn.apple{background:#fff;color:#000}.sbtn.apple:hover{filter:brightness(.94)}
+.sbtn.google{background:#fff;color:#1f1f1f;border-color:#747775}.sbtn.google:hover{filter:brightness(.96)}
 button:focus-visible,.sw:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .keys{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font:13px/1.35 var(--display);color:var(--muted)}
 .keys dt{font:500 11px var(--mono);color:var(--ink);align-self:center}
@@ -348,6 +355,15 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
     </div>
     <div class="field"><span class="label">Vibration</span><div class="seg two" id="hapSeg"><button type="button" data-h="0">Off<small>recommended</small></button><button type="button" data-h="1">On<small>taps on split and kills</small></button></div></div>
     <div class="field"><span class="label">Invite friends</span><div class="invite" id="inviteRow"><input id="inviteUrl" type="text" readonly aria-label="Invite link" value=""><button id="copyInvite" class="ghost" type="button">Invite friends</button></div><p id="inviteHelp">Send this link to a friend on the same Wi-Fi. For friends elsewhere, run <b>share-online.bat</b> and send the https link it prints.</p></div>
+    <div class="field acct" id="acctField"><span class="label">Account</span>
+      <p class="who" id="acctWho">Not signed in — ATP, skins and rating stay on this device.</p>
+      <div class="sbtns" id="acctBtns">
+        <button type="button" class="sbtn apple" id="appleBtn" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.37 12.7c-.03-2.6 2.12-3.85 2.22-3.91-1.21-1.77-3.09-2.01-3.76-2.04-1.6-.16-3.12.94-3.93.94-.81 0-2.06-.92-3.39-.9-1.74.03-3.35 1.01-4.25 2.57-1.81 3.14-.46 7.79 1.3 10.33.86 1.24 1.89 2.64 3.23 2.59 1.3-.05 1.79-.84 3.36-.84 1.57 0 2.01.84 3.39.81 1.4-.02 2.28-1.26 3.14-2.51.99-1.44 1.4-2.84 1.42-2.91-.03-.01-2.72-1.04-2.73-4.13zM13.78 5.06c.72-.87 1.2-2.08 1.07-3.28-1.03.04-2.28.69-3.02 1.55-.66.77-1.24 1.99-1.09 3.17 1.15.09 2.32-.58 3.04-1.44z"/></svg>Sign in with Apple</button>
+        <button type="button" class="sbtn google" id="googleBtn" hidden><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Sign in with Google</button>
+        <button type="button" class="ghost" id="signOutBtn" hidden>Sign out</button>
+      </div>
+      <p class="hint" id="acctHint" hidden></p>
+    </div>
     <details class="sec" id="helpSec"><summary><span class="label">How to play</span></summary><div class="body">
     <dl class="keys kbd-only">
       <dt>Mouse</dt><dd>Steer toward the cursor</dd>
@@ -622,7 +638,7 @@ const Native=(()=>{
   function send(m){try{if(ios)window.webkit.messageHandlers.mitosis.postMessage(m);else if(android)MitosisAndroid.post(JSON.stringify(m));}catch(e){}}
   function call(type,payload){if(!platform)return Promise.reject(new Error('Only available in the app'));
     return new Promise((res,rej)=>{const id=++seq;waits.set(id,{res,rej});send({id,type,...payload});
-      setTimeout(()=>{if(waits.delete(id))rej(new Error('No reply from the app'));},type==='buy'?600000:20000);});}
+      setTimeout(()=>{if(waits.delete(id))rej(new Error('No reply from the app'));},type==='buy'||type==='signin'?600000:20000);});}
   window.MitosisBridge={onNative(m){if(!m||typeof m!=='object')return;
     if(m.id&&waits.has(m.id)){const w=waits.get(m.id);waits.delete(m.id);if(m.ok===false)w.rej(new Error(m.error||'Failed'));else w.res(m);return;}
     if(m.type==='purchase'&&m.purchase)redeem(m.purchase).catch(()=>{});
@@ -639,6 +655,7 @@ async function api(path,body,auth=true){
 function applyWallet(w){
   if(!w)return;wallet.balance=w.balance|0;wallet.earned=w.earned|0;if(Array.isArray(w.skins))wallet.skins=w.skins;wallet.playerId=w.playerId||wallet.playerId;wallet.online=true;
   if(typeof w.rating==='number'){wallet.rating=w.rating;wallet.tier=w.tier||wallet.tier;}renderRank();
+  if('account' in w){wallet.account=w.account||null;renderAccount();}
   try{localStorage.setItem('mitosis.wallet',JSON.stringify({balance:wallet.balance,skins:wallet.skins}));}catch(e){}
   if(w.catalog){for(const s of w.catalog.skins||[]){const P=PREMIUM.find(x=>x.id===s.id);if(P&&s.price>0)P.price=s.price;}for(const p of w.catalog.packs||[]){const K=ATP_PACKS.find(x=>x.id===p.id);if(K&&p.atp>0)K.atp=p.atp;}}
   if(settings.skin>=SKIN_FREE&&!ownsSkin(settings.skin)){settings.skin=0;saveSettings();}
@@ -646,7 +663,7 @@ function applyWallet(w){
 }
 let econDelay=5000;
 async function econInit(){
-  try{applyWallet(await api('session',{secret},false));econDelay=5000;Native.send({type:'ready'});flushRuns();}
+  try{const w=await api('session',{secret},false);applyWallet(w);loadAuthProviders(w.catalog);econDelay=5000;Native.send({type:'ready'});flushRuns();}
   catch(e){wallet.online=false;renderSkins();setTimeout(econInit,econDelay);econDelay=Math.min(60000,econDelay*2);}
 }
 // Runs: the server stamps when a run starts, so survival time can't be inflated.
@@ -693,7 +710,7 @@ async function flushRuns(){ // report finished runs; keep them queued while the 
 // Skins grid on the start card
 let confirmSkin=0,confirmT=0;
 function renderSkins(){
-  const el=$('skins');if(!el)return;$('atpBal').textContent=wallet.balance;$('storeBal').textContent=wallet.balance;
+  const el=$('skins');if(!el)return;const ab=$('atpBal');if(ab)ab.textContent=wallet.balance;$('storeBal').textContent=wallet.balance; // #atpBal only exists while no premium skin is owned
   $('skinHint').textContent=wallet.online?'Earn ATP by surviving, absorbing cells and growing. Tap a skin to buy or wear it.':'Connect to the server to earn or spend ATP. Skins you own still work.';
   const card=S=>{const own=ownsSkin(S.id),eq=settings.skin===S.id,cf=confirmSkin===S.id&&performance.now()-confirmT<4000;
     return `<button type="button" class="skin${own?' own':''}${cf?' confirm':''}" data-id="${S.id}" aria-pressed="${eq}" aria-label="${escH(S.name)} skin"><canvas width="144" height="144" data-skin="${S.id}"></canvas><span class="sn">${escH(S.name)}</span><span class="sp">${own?(eq?'✓ Wearing':'Owned'):cf?'Tap again · '+S.price.toLocaleString():S.price.toLocaleString()+' ATP'}</span></button>`;};
@@ -769,6 +786,60 @@ if(/[?&]autopilot=1/.test(location.search)){
 $('shopBtn').addEventListener('click',()=>openStore());
 
 $('storeBack').addEventListener('click',()=>{showCard('startCard');renderSkins();});
+/* ---------- Account: Sign in with Apple / Google, so the wallet follows the player across devices ---------- */
+let authProviders=null,webAuthConfig=null,signingIn=false; // which sign-in buttons this build can offer
+function renderAccount(){
+  const a=wallet.account||null,who=$('acctWho');if(!who)return;
+  if(a)who.innerHTML=`Signed in with <b>${a.provider==='apple'?'Apple':'Google'}</b>${a.email?' · <b>'+escH(a.email)+'</b>':''}. Your ATP, skins and rating follow you to any device you sign in on.`;
+  else who.textContent=wallet.online?'Not signed in — ATP, skins and rating stay on this device. Sign in to keep them if you switch phones or reinstall.':'Not signed in. Signing in needs a connection to the server.';
+  const p=authProviders||[];
+  $('appleBtn').hidden=!!a||!p.includes('apple');$('googleBtn').hidden=!!a||!p.includes('google');$('signOutBtn').hidden=!a;
+  const none=!a&&authProviders&&!p.length;$('acctHint').hidden=!none;
+  if(none)$('acctHint').textContent=Native.platform?'Sign-in is not set up in this build yet.':'Sign in from the Mitosis app for iPhone or Android; the website keeps a device-only wallet.';
+}
+async function loadAuthProviders(cat){
+  try{
+    if(Native.platform){const r=await Native.call('auth',{});authProviders=Array.isArray(r.providers)?r.providers:[];}
+    else{const a=(cat&&cat.auth)||{};webAuthConfig=a;authProviders=[a.apple&&a.apple.web?'apple':null,a.google&&a.google.web?'google':null].filter(Boolean);}
+  }catch(e){authProviders=[];}
+  renderAccount();
+}
+const randNonce=()=>{const a=new Uint8Array(16);crypto.getRandomValues(a);return[...a].map(b=>b.toString(16).padStart(2,'0')).join('');};
+async function signIn(provider){
+  if(signingIn)return;signingIn=true;const btns=[$('appleBtn'),$('googleBtn')];btns.forEach(b=>b.disabled=true);
+  try{
+    const nonce=randNonce();let cred;
+    if(Native.platform){const r=await Native.call('signin',{provider,nonce});if(r.cancelled)return;cred=r.credential||{};}
+    else cred=await webSignIn(provider,nonce);
+    const w=await api('auth/'+provider,{...cred,nonce});applyWallet(w);
+    toast('Account',w.merged?'Welcome back':'Signed in',w.merged?`Your wallet is back: ${w.balance} ATP`:'Your ATP and skins now follow you.');Native.haptic('success');
+  }catch(e){if(!/cancel/i.test(e.message))toast('Account','Sign-in failed',e.message);}
+  finally{signingIn=false;btns.forEach(b=>b.disabled=false);}
+}
+// The website signs in through the providers' JavaScript SDKs, loaded only when the server is configured for them.
+function loadScript(src){return new Promise((res,rej)=>{if(document.querySelector(`script[src="${src}"]`))return res();const s=document.createElement('script');s.src=src;s.async=true;s.onload=res;s.onerror=()=>rej(new Error('Could not load '+src.split('/')[2]));document.head.appendChild(s);});}
+async function webSignIn(provider,nonce){
+  const cfg=webAuthConfig||{};
+  if(provider==='google'){
+    await loadScript('https://accounts.google.com/gsi/client');
+    return new Promise((res,rej)=>{google.accounts.id.initialize({client_id:cfg.google.web,nonce,callback:r=>res({idToken:r.credential}),cancel_on_tap_outside:true});
+      google.accounts.id.prompt(n=>{if((n.isNotDisplayed&&n.isNotDisplayed())||(n.isSkippedMoment&&n.isSkippedMoment()))rej(new Error('Google sign-in was cancelled'));});});
+  }
+  await loadScript('https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js');
+  AppleID.auth.init({clientId:cfg.apple.web,scope:'name email',redirectURI:location.origin+'/',usePopup:true,nonce,state:'mitosis'});
+  const r=await AppleID.auth.signIn();const u=r.user||{};
+  return{identityToken:r.authorization.id_token,name:u.name?[u.name.firstName,u.name.lastName].filter(Boolean).join(' '):'',email:u.email||''};
+}
+async function signOut(){
+  try{await api('auth/signout');}catch(e){}
+  // forget this device's secret: the account keeps its wallet, this device starts a fresh one
+  secret='';const a=new Uint8Array(32);crypto.getRandomValues(a);for(const b of a)secret+=(b%36).toString(36);
+  try{localStorage.setItem('mitosis.secret',secret);localStorage.removeItem('mitosis.wallet');}catch(e){}
+  wallet={balance:0,earned:0,skins:[],online:false,playerId:null,rating:1000,tier:'Silver',account:null};
+  if(settings.skin>=SKIN_FREE){settings.skin=0;saveSettings();}
+  renderSkins();renderRank();renderAccount();toast('Account','Signed out','This device now has a fresh wallet.');econInit();
+}
+$('appleBtn').addEventListener('click',()=>signIn('apple'));$('googleBtn').addEventListener('click',()=>signIn('google'));$('signOutBtn').addEventListener('click',signOut);
 renderRank();econInit();
 let best=0;try{best=+localStorage.getItem('mitosis.best')||0;}catch(e){}
 

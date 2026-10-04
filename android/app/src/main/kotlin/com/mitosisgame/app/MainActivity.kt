@@ -21,16 +21,18 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import org.json.JSONArray
 import org.json.JSONObject
 
 /**
  * Hosts the whole game (index.html from the repo root, copied into assets at build
  * time) in a full-screen WebView and bridges it to the native side: Google Play
- * Billing for ATP packs, and haptics.
+ * Billing for ATP packs, Sign in with Google, and haptics.
  */
 class MainActivity : AppCompatActivity() {
     private lateinit var web: WebView
     private lateinit var billing: Billing
+    private lateinit var signIn: SignIn
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -69,6 +71,7 @@ class MainActivity : AppCompatActivity() {
         if (BuildConfig.DEBUG) WebView.setWebContentsDebuggingEnabled(true)
 
         billing = Billing(this) { reply(it) }
+        signIn = SignIn(this) { reply(it) }
 
         // Android's back button pauses the game, like Esc on a keyboard.
         onBackPressedDispatcher.addCallback(this) {
@@ -115,6 +118,8 @@ class MainActivity : AppCompatActivity() {
             }
             "buy" -> billing.buy(this, id, msg.optString("productId"))
             "finish" -> billing.consume(msg.optString("purchaseToken"))
+            "auth" -> reply(JSONObject().put("id", id).put("ok", true).put("providers", JSONArray(signIn.providers)))
+            "signin" -> signIn.signIn(id, msg.optString("provider"), msg.optString("nonce"))
             "haptic" -> haptic(msg.optString("style"))
         }
     }

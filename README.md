@@ -82,7 +82,9 @@ Prices are set in App Store Connect and the Play Console; the apps show them fro
 
 **Skins** (Nebula, Magma, Honeycomb, Circuit, Leopard, Glacier, Toxic, Eyeball, Galaxy, Gilded, Black Hole) are picked on the start card next to the free patterns. Owned skins are visible to every other player. The list, with prices, lives in two places that must match: `PREMIUM` in `index.html` (how each skin is drawn) and `SKINS` in `economy.js` (what the server charges).
 
-**Where it lives.** The server owns every wallet. The page only reports "this run ended", "buy this skin" and "credit this purchase"; the server decides the payout, caps it, checks the price and verifies receipts with Apple or Google. A player is a random device secret stored in the browser or app, so there is no sign-up. Clearing site data or deleting the app starts a fresh wallet.
+**Where it lives.** The server owns every wallet. The page only reports "this run ended", "buy this skin" and "credit this purchase"; the server decides the payout, caps it, checks the price and verifies receipts with Apple or Google. A player starts as a random device secret stored in the browser or app, so there is no sign-up. Clearing site data or deleting the app starts a fresh wallet.
+
+**Accounts (Sign in with Apple / Google).** Settings → Account lets a player sign in so the wallet follows them: the app hands the server an identity token, the server verifies it against Apple's or Google's published keys (`auth.js`, no SDK) and links that account to the wallet. Signing in on another device with the same account joins it to that wallet, bringing along any ATP and skins the device earned on its own. Sign out detaches the device and gives it a fresh wallet; the account keeps everything. The iOS app offers Apple sign-in out of the box and Google once `GOOGLE_IOS_CLIENT_ID` is set in `ios/project.yml`; the Android app offers Google once `GOOGLE_WEB_CLIENT_ID` is set in its `build.gradle.kts`. The website shows the buttons only when the server has `APPLE_SERVICES_ID` / `GOOGLE_WEB_CLIENT_ID`, which need a real domain with https.
 
 ## Run it yourself
 
@@ -108,6 +110,9 @@ On Windows, double-click `start.bat`. On macOS, double-click `start.command`.
 | `APPLE_BUNDLE_ID` | Bundle id purchases must belong to (default `com.mitosisgame.app`). Apple purchases need nothing else: StoreKit 2 hands the app a transaction signed by Apple, and the server checks the certificate chain (to Apple Root CA G3, embedded in `iap.js`), the signature and the payload itself |
 | `APPLE_ISSUER_ID`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY` | Optional App Store Server API key (App Store Connect → Users and Access → Integrations → In-App Purchase). When set, the server also looks every transaction up at Apple. `APPLE_PRIVATE_KEY` is the `.p8` contents; `\n` may stand in for newlines |
 | `GOOGLE_PACKAGE_NAME`, `GOOGLE_SERVICE_ACCOUNT` | Play Console service account with *View financial data* on the app. The variable holds the JSON key, raw or base64 |
+| `GOOGLE_CLIENT_IDS` | Sign in with Google: comma-separated OAuth client ids (iOS, Android, web) whose ID tokens the server accepts. Unset = Google sign-in refused (HTTP 503) |
+| `GOOGLE_WEB_CLIENT_ID` | The client id the website signs in with (also accepted). Needs the site's https origin registered in Google Cloud Console |
+| `APPLE_SERVICES_ID` | Sign in with Apple from the website or Android (a Services ID from the Apple Developer portal, with the site's domain verified). The iOS app needs nothing: its tokens are for `APPLE_BUNDLE_ID` |
 | `IAP_UNVERIFIED=1` | **Dev only.** Trusts purchases without asking Apple/Google, so the StoreKit test store and Play test purchases work locally. `npm run dev` sets it |
 
 Until the Apple/Google variables are set, real purchases are refused (HTTP 503) rather than trusted. ATP earned by playing works regardless.
@@ -152,6 +157,8 @@ Then set that https address as `MITOSIS_SERVER` in `ios/project.yml`, `SERVER_UR
 - Open `ios/Mitosis.xcodeproj` in Xcode 16+ and run. Signing is automatic for team `4M7HR323EA`; change `DEVELOPMENT_TEAM` and the bundle id in `project.yml` for another account, then `xcodegen generate` (`brew install xcodegen`).
 - **Testing purchases in the simulator:** the scheme uses `Mitosis/Products.storekit`, a fake App Store with the four packs. Run a local server with `npm run dev` first: debug builds in the simulator use `http://localhost:3000` when it answers, and the production server otherwise.
 - **App Store Connect:** create the app with bundle id `com.mitosisgame.app`, then four consumable in-app purchases with product ids `atp_500`, `atp_1500`, `atp_5000`, `atp_12000`. Create an In-App Purchase API key and set the `APPLE_*` variables on the server.
+- **Sign in:** `Mitosis.entitlements` carries the Sign in with Apple capability; automatic signing adds it to the App ID. For Google, create an *iOS* OAuth client in Google Cloud Console (bundle id `com.mitosisgame.app`), put its id in `GOOGLE_IOS_CLIENT_ID` in `project.yml`, regenerate, and list the same id in the server's `GOOGLE_CLIENT_IDS`. The app signs in through `ASWebAuthenticationSession` (no Google SDK).
+- **Purchase test:** `MitosisTests/PurchaseFlowTests.swift` buys a pack through the real Shop against the StoreKit test store and a local `npm run dev` server. Run it from Xcode; `xcodebuild test` cannot start the StoreKit test environment.
 - **TestFlight:** Product → Archive, then Distribute App → App Store Connect. From the terminal: `xcodebuild -project ios/Mitosis.xcodeproj -scheme Mitosis -configuration Release archive -archivePath ios/build/Mitosis.xcarchive -allowProvisioningUpdates`, then export with `ios/ExportOptions.plist`.
 
 Regenerate the icon with `swift ios/tools/make-icon.swift ios/Mitosis/Assets.xcassets/AppIcon.appiconset/icon-1024.png`.
@@ -164,6 +171,7 @@ Regenerate the icon with `swift ios/tools/make-icon.swift ios/Mitosis/Assets.xca
 - The server address is `SERVER_URL` in `android/app/build.gradle.kts`. For a local server from the emulator use `http://10.0.2.2:3000`.
 - **Play Console:** create the app with package `com.mitosisgame.app`, add four in-app products with the ids above, upload a signed build to a testing track, and add your Google account as a license tester so purchases are free. Create a service account with *View financial data* and set the `GOOGLE_*` variables on the server.
 - Release builds need a signing key: add a `signingConfigs` block in `app/build.gradle.kts` or use Android Studio's *Generate Signed Bundle*.
+- **Sign in with Google:** in Google Cloud Console create a *Web* OAuth client and an *Android* client (package `com.mitosisgame.app`, the signing key's SHA-1). Put the web client id in `GOOGLE_WEB_CLIENT_ID` in `app/build.gradle.kts` and in the server's `GOOGLE_CLIENT_IDS`. The app uses Credential Manager; Apple sign-in is not offered on Android until the server has an https domain.
 
 ## How it works
 
@@ -173,7 +181,8 @@ Regenerate the icon with `swift ios/tools/make-icon.swift ios/Mitosis/Assets.xca
 | `server.js` | A zero-dependency Node server that serves the page, relays live state over WebSockets (`/ws`), hosts the economy API (`/api/*`) and a health check at `/health` |
 | `economy.js` | ATP rules: run payouts, caps, the skin catalogue, crediting purchases |
 | `iap.js` | Purchase verification: Apple-signed StoreKit 2 transactions checked offline (plus the App Store Server API when a key is set), Google Play Developer API for Android. `node iap.test.js` exercises the Apple check with a generated certificate chain |
-| `store.js` | Storage: SQLite built into Node, or a JSON file on older Node |
+| `auth.js` | Sign in with Apple / Google: verifies identity tokens (RS256 JWTs) against the providers' published keys, no SDK |
+| `store.js` | Storage: SQLite built into Node, or a JSON file on older Node. Players, skins, runs, purchases, sign-in identities and device secrets |
 | `test.js` | End-to-end test of the API (`npm test`) |
 | `ios/` | iOS app (Swift, WKWebView, StoreKit 2). `project.yml` describes the Xcode project |
 | `android/` | Android app (Kotlin, WebView, Play Billing) |
@@ -193,4 +202,7 @@ All endpoints take and return JSON. Authenticated ones need `Authorization: Bear
 | `POST /api/skins/buy` `{skinId}` | Spend ATP on a skin |
 | `POST /api/iap/apple` `{transactionId, jws}` | Verify a StoreKit 2 transaction and credit ATP |
 | `POST /api/iap/google` `{purchaseToken, productId, orderId}` | Verify a Play purchase and credit ATP |
+| `POST /api/auth/apple` `{identityToken, nonce}` | Sign in with Apple: link the account to this wallet, or join the account's wallet (`merged: true`) |
+| `POST /api/auth/google` `{idToken, nonce}` | Sign in with Google, same behaviour |
+| `POST /api/auth/signout` | Detach this device from the account (the page then starts a fresh secret) |
 | `GET /api/catalog` | Skins, packs, payout rules and which stores are verified |

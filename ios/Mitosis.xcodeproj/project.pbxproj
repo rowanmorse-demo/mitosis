@@ -9,20 +9,37 @@
 /* Begin PBXBuildFile section */
 		2B4B79A44744FFFECEFEAA39 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9530BC88744AE81130065B91 /* Assets.xcassets */; };
 		2F61960C85A3C3A2778616A3 /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = D22E25D1E8F242C73B91AC1C /* Store.swift */; };
+		3A661457A5E8B40927BA4F6A /* Products.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 288647F01627982FF8E5C854 /* Products.storekit */; };
 		3EFF471C12CFE60617A0A5AB /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC78B5F1AA3365E3D30A6A33 /* AppDelegate.swift */; };
+		9AFA2974D76293BDD5B60FD0 /* PurchaseFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21F43300ED7D9FACC9F97FFB /* PurchaseFlowTests.swift */; };
 		B62872990EC920AE3E702C0E /* Products.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 288647F01627982FF8E5C854 /* Products.storekit */; };
 		C9D13A4C51CD1B9A85C3D4D5 /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = 1169830FBF7B1B6A14EEF743 /* index.html */; };
+		D18435CC2C316056C895EF16 /* SignIn.swift in Sources */ = {isa = PBXBuildFile; fileRef = F40391A8EC0E4ED8BE6CA2B7 /* SignIn.swift */; };
 		D7AF4C1BE590B4EE61B9643F /* GameViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C87C55256CBCC6CD8A2BD3C /* GameViewController.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		12DA68BE78D3CE4B5C277D1C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9D4A9F4F57C439B88A9E941A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DDC34A6C71F5EC682B3F6900;
+			remoteInfo = Mitosis;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		1169830FBF7B1B6A14EEF743 /* index.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = index.html; sourceTree = "<group>"; };
 		18E82E1EC5708F789464CBEF /* Mitosis.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Mitosis.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1E7F54B87615C3BEB3EDA007 /* Mitosis.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Mitosis.entitlements; sourceTree = "<group>"; };
+		21F43300ED7D9FACC9F97FFB /* PurchaseFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseFlowTests.swift; sourceTree = "<group>"; };
 		288647F01627982FF8E5C854 /* Products.storekit */ = {isa = PBXFileReference; path = Products.storekit; sourceTree = "<group>"; };
+		4E0A34706C21BCEBC879982D /* MitosisTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = MitosisTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		6C87C55256CBCC6CD8A2BD3C /* GameViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameViewController.swift; sourceTree = "<group>"; };
 		9530BC88744AE81130065B91 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		BC78B5F1AA3365E3D30A6A33 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		D22E25D1E8F242C73B91AC1C /* Store.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
+		F40391A8EC0E4ED8BE6CA2B7 /* SignIn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignIn.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -30,6 +47,7 @@
 			isa = PBXGroup;
 			children = (
 				18E82E1EC5708F789464CBEF /* Mitosis.app */,
+				4E0A34706C21BCEBC879982D /* MitosisTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -39,8 +57,17 @@
 			children = (
 				EFE721D49762B9CB4E8C604A /* Mitosis */,
 				B37A3DA7392143870CC66E20 /* mitosis */,
+				5357DFEEBCF23C431D6683ED /* MitosisTests */,
 				047B1ACCC9A9AC7333CD5227 /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		5357DFEEBCF23C431D6683ED /* MitosisTests */ = {
+			isa = PBXGroup;
+			children = (
+				21F43300ED7D9FACC9F97FFB /* PurchaseFlowTests.swift */,
+			);
+			path = MitosisTests;
 			sourceTree = "<group>";
 		};
 		B37A3DA7392143870CC66E20 /* mitosis */ = {
@@ -58,7 +85,9 @@
 				BC78B5F1AA3365E3D30A6A33 /* AppDelegate.swift */,
 				9530BC88744AE81130065B91 /* Assets.xcassets */,
 				6C87C55256CBCC6CD8A2BD3C /* GameViewController.swift */,
+				1E7F54B87615C3BEB3EDA007 /* Mitosis.entitlements */,
 				288647F01627982FF8E5C854 /* Products.storekit */,
+				F40391A8EC0E4ED8BE6CA2B7 /* SignIn.swift */,
 				D22E25D1E8F242C73B91AC1C /* Store.swift */,
 			);
 			path = Mitosis;
@@ -67,6 +96,25 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		1F2225367E21DC572C1FB475 /* MitosisTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3CFD9DB9D03A912DBB741205 /* Build configuration list for PBXNativeTarget "MitosisTests" */;
+			buildPhases = (
+				B80C7782D2A914726FA1C1D3 /* Sources */,
+				E7A09026DFED97ED5FC2BDD9 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A31E06F20C32A1BD39DA5C7E /* PBXTargetDependency */,
+			);
+			name = MitosisTests;
+			packageProductDependencies = (
+			);
+			productName = MitosisTests;
+			productReference = 4E0A34706C21BCEBC879982D /* MitosisTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		DDC34A6C71F5EC682B3F6900 /* Mitosis */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = DEFB323B3BF457CE8480810D /* Build configuration list for PBXNativeTarget "Mitosis" */;
@@ -94,6 +142,10 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
+					1F2225367E21DC572C1FB475 = {
+						DevelopmentTeam = 4M7HR323EA;
+						ProvisioningStyle = Automatic;
+					};
 					DDC34A6C71F5EC682B3F6900 = {
 						DevelopmentTeam = 4M7HR323EA;
 						ProvisioningStyle = Automatic;
@@ -115,6 +167,7 @@
 			projectRoot = "";
 			targets = (
 				DDC34A6C71F5EC682B3F6900 /* Mitosis */,
+				1F2225367E21DC572C1FB475 /* MitosisTests */,
 			);
 		};
 /* End PBXProject section */
@@ -130,6 +183,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		E7A09026DFED97ED5FC2BDD9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3A661457A5E8B40927BA4F6A /* Products.storekit in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -139,13 +200,68 @@
 			files = (
 				3EFF471C12CFE60617A0A5AB /* AppDelegate.swift in Sources */,
 				D7AF4C1BE590B4EE61B9643F /* GameViewController.swift in Sources */,
+				D18435CC2C316056C895EF16 /* SignIn.swift in Sources */,
 				2F61960C85A3C3A2778616A3 /* Store.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B80C7782D2A914726FA1C1D3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9AFA2974D76293BDD5B60FD0 /* PurchaseFlowTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		A31E06F20C32A1BD39DA5C7E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DDC34A6C71F5EC682B3F6900 /* Mitosis */;
+			targetProxy = 12DA68BE78D3CE4B5C277D1C /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		07A00E0FC2555CA1942D8997 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				ENABLE_TESTING_SEARCH_PATHS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mitosisgame.app.tests;
+				SDKROOT = iphoneos;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Mitosis.app/Mitosis";
+			};
+			name = Release;
+		};
+		2BA85A3015271A16B957F877 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				ENABLE_TESTING_SEARCH_PATHS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mitosisgame.app.tests;
+				SDKROOT = iphoneos;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Mitosis.app/Mitosis";
+			};
+			name = Debug;
+		};
 		8444B7C98E372F7581075ABB /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -181,7 +297,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 4M7HR323EA;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -194,8 +310,9 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				GOOGLE_IOS_CLIENT_ID = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
-				MARKETING_VERSION = 2.1.0;
+				MARKETING_VERSION = 2.2.0;
 				MITOSIS_SERVER = "http://51.81.81.166:3000";
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -242,7 +359,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 4M7HR323EA;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -261,8 +378,9 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				GOOGLE_IOS_CLIENT_ID = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
-				MARKETING_VERSION = 2.1.0;
+				MARKETING_VERSION = 2.2.0;
 				MITOSIS_SERVER = "http://51.81.81.166:3000";
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -279,6 +397,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Mitosis/Mitosis.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -300,6 +419,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Mitosis/Mitosis.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -320,6 +440,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		3CFD9DB9D03A912DBB741205 /* Build configuration list for PBXNativeTarget "MitosisTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2BA85A3015271A16B957F877 /* Debug */,
+				07A00E0FC2555CA1942D8997 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		9F70B24797578AABEE38F65E /* Build configuration list for PBXProject "Mitosis" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

@@ -32,6 +32,9 @@ const ROUTES = {
   'POST /api/skins/buy': { fn: economy.handlers.buySkin, auth: true },
   'POST /api/iap/apple': { fn: economy.handlers.iapApple, auth: true },
   'POST /api/iap/google': { fn: economy.handlers.iapGoogle, auth: true },
+  'POST /api/auth/apple': { fn: economy.handlers.signInApple, auth: true },
+  'POST /api/auth/google': { fn: economy.handlers.signInGoogle, auth: true },
+  'POST /api/auth/signout': { fn: economy.handlers.signOut, auth: true },
   'GET /api/catalog': { fn: () => economy.catalog(), auth: false },
   'GET /api/leaderboard': { fn: store => economy.handlers.leaderboard(store), auth: false },
   // clients report long frames here so stalls on phones can be read from the server log
@@ -190,6 +193,8 @@ server.listen(PORT, '0.0.0.0', () => {
   if (lan.length) console.log(`  Send to friends on your Wi-Fi / network:\n` + lan.map(u => '      ' + u).join('\n'));
   console.log(`\n  Wallets and skins:  ${store.kind} store in ${DATA_DIR}`);
   console.log(`  Purchases:          Apple ${iap.apple ? 'verified' : 'not configured'} · Google Play ${iap.google ? 'verified' : 'not configured'}${iap.unverified ? '  (IAP_UNVERIFIED=1: trusting clients — dev only!)' : ''}`);
+  const auth = economy.catalog().auth;
+  console.log(`  Sign-in:            Apple ready for the app${auth.apple.web ? ' and the website' : ''} · Google ${auth.google.configured ? 'ready' : 'not configured (set GOOGLE_CLIENT_IDS)'}`);
   console.log(`\n  Friends somewhere else? Keep this window open, then run share-online.bat`);
   console.log(`  and send them the https://....trycloudflare.com link it prints.\n`);
   console.log('  If Windows asks about network access, choose Allow (Private networks).');

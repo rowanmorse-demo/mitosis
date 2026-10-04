@@ -174,6 +174,15 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
         case "finish":
             let tid = msg["transactionId"] as? String ?? ""
             Task { await Store.shared.finish(transactionId: tid) }
+        case "auth":
+            reply(["id": id as Any, "ok": true, "providers": SignIn.shared.providers])
+        case "signin":
+            let provider = msg["provider"] as? String ?? "", nonce = msg["nonce"] as? String ?? ""
+            Task { @MainActor in
+                do { self.reply(["id": id as Any, "ok": true, "credential": try await SignIn.shared.signIn(provider: provider, nonce: nonce)]) }
+                catch SignIn.Failure.cancelled { self.reply(["id": id as Any, "ok": true, "cancelled": true]) }
+                catch { self.reply(["id": id as Any, "ok": false, "error": error.localizedDescription]) }
+            }
         case "haptic":
             haptic(msg["style"] as? String ?? "medium")
         case "log":
