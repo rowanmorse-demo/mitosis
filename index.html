@@ -163,7 +163,16 @@ button:focus-visible,.sw:focus-visible{outline:2px solid var(--ink);outline-offs
 #dAch{margin:0;font:600 13px/1.4 var(--display);color:#f2c14e}
 #board .tag.boss{color:#c9a2ff;border-color:rgba(201,162,255,.5)}
 body:not(.playing) #evolve{display:none!important}
-@media (max-width:900px){#banner{width:calc(100% - 2*var(--gut));top:calc(150px + env(safe-area-inset-top,0px))}#toasts{top:calc(240px + env(safe-area-inset-top,0px))}}
+@media (max-width:900px) and (orientation:portrait){#banner{width:calc(100% - 2*var(--gut));top:calc(150px + env(safe-area-inset-top,0px))}#toasts{top:calc(240px + env(safe-area-inset-top,0px))}}
+/* landscape phones and tablets: pop-ups stay in the strip between the stats and the ranking, clear of the joystick and buttons */
+@media (pointer:coarse) and (orientation:landscape){
+  #banner{width:min(340px,calc(100% - 480px));min-width:220px;padding:6px 12px 8px;top:calc(var(--gut) + env(safe-area-inset-top,0px))}
+  #banner b{font-size:13px}#banner #bnDesc{font-size:11px}#banner #bnTime{font-size:11px}
+  #toasts{top:calc(var(--gut) + 60px + env(safe-area-inset-top,0px));gap:6px}
+  .toast{padding:6px 12px;border-radius:10px}.toast b{font-size:14px}.toast span:last-child{font-size:11px}
+  #evolve{bottom:auto;top:calc(var(--gut) + 60px + env(safe-area-inset-top,0px));width:min(560px,calc(100% - 400px));gap:6px}
+  .evo{padding:7px 10px}.evo span{font-size:11px}
+}
 @media (max-width:640px){#evolve{bottom:auto;top:calc(236px + env(safe-area-inset-top,0px))}.evopts{grid-template-columns:1fr}.evo{padding:8px 10px}.evo span{font-size:11px}}
 @media (pointer:coarse){.kbd-only{display:none!important}}
 @media (pointer:fine){.touch-only{display:none!important}}
@@ -853,8 +862,8 @@ function unlock(id){
 }
 function toast(kind,title,desc){
   const el=document.createElement('div');el.className='toast';el.innerHTML=`<span class="label">${esc(kind)}</span><b>${esc(title)}</b><span>${esc(desc)}</span>`;
-  const box=$('toasts');box.appendChild(el);while(box.children.length>3)box.firstChild.remove();
-  setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),500);},3800);
+  const box=$('toasts');box.appendChild(el);while(box.children.length>(TOUCH_UI?1:3))box.firstChild.remove(); // phones: one at a time, briefer
+  setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),500);},TOUCH_UI?2600:3800);
 }
 /* ---- evolution ---- */
 function offerEvo(){
