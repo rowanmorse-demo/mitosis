@@ -746,10 +746,10 @@ if(/[?&]autopilot=1/.test(location.search)){
   let ang=Math.random()*TAU,dieAt=0;const auto=()=>{
     if(mode==='play'&&human&&human.alive&&!paused){ang+=rand(-.35,.35);if(Math.random()<.02)ang+=Math.PI*rand(.5,1);
       const m=Math.random()<.15?0:rand(.6,1);joy.id='auto';joy.ux=Math.cos(ang);joy.uy=Math.sin(ang);joy.m=m;
-      if(Math.random()<.03)split(human);if(Math.random()<.04)eject(human);if(Math.random()<.01)dash(human);}
+      if(Math.random()<.03)split(human);if(!BISECT.noeject&&Math.random()<.04)eject(human);if(Math.random()<.01)dash(human);}
     else if(mode==='dead'||mode==='attract'){if(!dieAt)dieAt=performance.now();if(performance.now()-dieAt>4000){dieAt=0;joy.m=0;startGame();}}
     if(mode==='play')dieAt=0;};
-  setInterval(auto,100);setTimeout(()=>{reportHitch('autopilot on'+(/[?&]big=1/.test(location.search)?' (big)':''));if(mode!=='play')startGame();},2500);
+  if(BISECT.lowfx)lowFx=true;setInterval(auto,100);setTimeout(()=>{reportHitch('autopilot on '+JSON.stringify(BISECT)+' '+(/[?&]big=1/.test(location.search)?' (big)':''));if(mode!=='play')startGame();},2500);
   setInterval(()=>{if(mode==='play'&&human&&human.alive)reportHitch(`autopilot alive mass=${Math.round(human.cells.reduce((a,c)=>a+c.mass,0))} cells=${human.cells.length} z=${cam.z.toFixed(2)}`);},60000);
 }
 $('shopBtn').addEventListener('click',()=>openStore());
@@ -790,6 +790,7 @@ const cam={x:0,y:0,z:.6,shake:0};
 const pointer={x:innerWidth/2,y:innerHeight/2};
 // Touch devices steer with the on-screen joystick (bottom left) instead of the finger position.
 const TOUCH_UI=matchMedia('(pointer:coarse)').matches;
+const BISECT={};for(const k of ['nocanvas','nohud','noeject','nosend','lowfx'])BISECT[k]=new RegExp('[?&]'+k+'=1').test(location.search);
 const joy={id:null,ux:0,uy:0,m:0,R:46,lx:1,ly:0};
 // live room
 let lastPeerCount=1,room=null,netState='pending',myPeer=null,isHost=true,claimReady=false,roomAt=-1,netSendT=0,seq=0,recs=[],peLog=[],peerCount=1,hostPeer=null,yielded=false,netNames=[];
@@ -1875,7 +1876,7 @@ function netTick(dt){
     try{ingest(p.peer,p.presence,p.peer===hostPeer);}catch(e){}}
   for(const [k,pl] of proxies)if(!live.has(k)){removePlayer(pl);proxies.delete(k);remoteEj.delete(k);lastSeen.delete(k);seenAt.delete(k);lastSeq.delete(k);}
   for(const m of [vSup,wSup,puSup,hSup])for(const [k,t] of m)if(T-t>4)m.delete(k);
-  netSendT-=dt;if(netSendT<=0){netSendT=.066;send();}
+  netSendT-=dt;if(netSendT<=0){netSendT=.066;if(!BISECT.nosend)send();}
 }
 function onRoomErr(){
   room=null;netState='solo';myPeer=null;peerCount=1;lastPeerCount=1;if(isHost)syncBots();
@@ -2052,10 +2053,10 @@ function frame(nowMs){
   const run=!paused||multi();const t0=performance.now();
   if(run){let dt=raw*slow;while(dt>0){const s=Math.min(dt,1/60);step(s);dt-=s;}}
   const t1=performance.now();try{netTick(raw);}catch(e){}
-  const t2=performance.now();updateCam(raw);draw();tickMass(raw);const t3=performance.now();
+  const t2=performance.now();updateCam(raw);if(!BISECT.nocanvas)draw();tickMass(raw);const t3=performance.now();
   // watchdog: tell the app shell about long frames so stalls can be read from the device log
   if((t3-t0>180||gapMs>=400)&&nowMs-lastHitchAt>1000){lastHitchAt=nowMs;reportHitch(`hitch gap=${Math.round(gapMs)}ms wsmax=${Math.round(wsMax)}ms sinceTouch=${Math.round(nowMs-lastTouchAt)}ms step=${(t1-t0).toFixed(0)} net=${(t2-t1).toFixed(0)} draw=${(t3-t2).toFixed(0)} cells=${cells.length} players=${players.length} parts=${parts.length} ej=${ejected.length} host=${isHost} peers=${peerCount} mode=${mode} z=${cam.z.toFixed(2)} audio=${liveNodes}`);}
-  hudT-=raw;if(hudT<=0){hudT=.12;hud();}
+  hudT-=raw;if(hudT<=0){hudT=.12;if(!BISECT.nohud)hud();}
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
