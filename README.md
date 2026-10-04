@@ -35,7 +35,9 @@ On phones, drag to steer and use the on-screen buttons. In the Android app the b
 
 - A **round lasts 10 minutes**. The dish is full size for the first 2½ minutes, then the safe arena shrinks smoothly to 12% of the dish by 9:30 and holds there until the round ends. The clock at the top of the screen counts down and says when the collapse starts.
 - Cells outside the arena lose 20% of their mass per second plus 12 mass per second, and dissolve below 10 mass. Bots steer back inside; new cells always spawn inside.
-- **No spawning in the last 5 minutes.** Once a round is past its halfway mark, Play and Re-inoculate show a countdown to the next round instead; the dead and latecomers wait it out.
+- **Lives and the spawn window.** Everyone gets two respawns per round, and nobody spawns in the last 5 minutes. When you can't join, Play **searches for a game** for up to 30 seconds (the round may open or a new one start); after that you're put into a game on your device where **bots fill every slot people didn't**. Those games are ranked like any other.
+- **Practice** (the button under Play) is the same bot-filled game but unranked: no ATP, no rating change, and no connection needed.
+- **Rating** rewards dying less and winning: finishing 1st of 4+ adds a win bonus, and a run on your second or third life of the round earns 75% or 50% of the gain.
 - There is **no cap on a single cell's mass** (the packet format tops out at 8,388,607, far beyond play), and **nothing is immune to phages**: the Phase power-up still stops you being eaten, but phages burst and hunters infect anyone.
 - Event banners (blooms, tides, swarms, the Leviathan) show in full for two seconds, then shrink to a small pill in the top-left corner.
 - **Placement**: when you die, your place is the number of cells still alive plus one, out of everyone who took part in the round. When the round ends, the survivors are ranked by mass and the biggest wins. The results screen shows "7th of 23" (or *Victory*).

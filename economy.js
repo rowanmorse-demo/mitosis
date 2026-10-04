@@ -36,13 +36,16 @@ const HOUR = 3600 * 1000;
 // Rating (Elo-like): survival, kills and a high placing raise it, dying quickly lowers it. Gains
 // shrink and losses grow as the rating climbs, so it settles instead of inflating forever.
 // Everyone starts at 1000.
-const RATING = { base: 1000, perTenSec: .5, survCap: 25, perKill: 2, killCap: 30, placeBonus: 8, quickDeathSec: 60, quickPenalty: 10, scale: 2000 };
+// winBonus: finishing 1st of 4+; lifePenalty: each respawn already used this round trims the gain (dying less pays more).
+const RATING = { base: 1000, perTenSec: .5, survCap: 25, perKill: 2, killCap: 30, placeBonus: 8, winBonus: 10, lifePenalty: .25, quickDeathSec: 60, quickPenalty: 10, scale: 2000 };
 const TIERS = [[900, 'Bronze'], [1100, 'Silver'], [1400, 'Gold'], [1800, 'Platinum'], [2300, 'Diamond'], [Infinity, 'Legend']];
 const tierOf = r => TIERS.find(t => r < t[0])[1];
-function ratingDelta(rating, survived, eaten, place, of) {
-  // placing: 1st of N earns the full bonus, last earns none; needs at least 4 in the round to count
+function ratingDelta(rating, survived, eaten, place, of, life = 0) {
+  // placing: 1st of N earns the full bonus, last earns none; needs at least 4 in the round to count. Winning adds more.
   const n = Math.max(0, of | 0), pl = Math.max(1, place | 0), placing = n >= 4 && pl <= n ? RATING.placeBonus * (1 - (pl - 1) / (n - 1)) : 0;
-  const gain = Math.min(RATING.survCap, Math.floor(survived / 10) * RATING.perTenSec) + Math.min(RATING.killCap, Math.max(0, eaten | 0) * RATING.perKill) + placing;
+  const won = n >= 4 && pl === 1 ? RATING.winBonus : 0;
+  const careful = Math.max(.4, 1 - RATING.lifePenalty * Math.max(0, Math.min(2, life | 0)));   // 2nd life earns 75%, 3rd 50%
+  const gain = (Math.min(RATING.survCap, Math.floor(survived / 10) * RATING.perTenSec) + Math.min(RATING.killCap, Math.max(0, eaten | 0) * RATING.perKill) + placing + won) * careful;
   const quick = survived < RATING.quickDeathSec ? (RATING.quickDeathSec - survived) / RATING.quickDeathSec * RATING.quickPenalty : 0;
   const k = Math.max(0, rating - RATING.base) / RATING.scale;
   return Math.round(gain * Math.max(.35, 1 - k) - quick * (1 + k));
@@ -131,7 +134,7 @@ function runEnd(store, body, p) {
   store.setWallet(p.id, w); store.endRun(run.id, now, payout);
   Object.assign(p, w);
   // rating
-  const before = Number(p.rating ?? RATING.base), delta = ratingDelta(before, survived, body.eaten, body.place, body.of), rating = Math.max(0, before + delta);
+  const before = Number(p.rating ?? RATING.base), delta = ratingDelta(before, survived, body.eaten, body.place, body.of, body.life), rating = Math.max(0, before + delta);
   const name = cleanName(body.name) || p.name || null;
   store.setRating(p.id, rating, name); p.rating = rating; p.name = name; p.runs = Number(p.runs || 0) + 1;
   return { payout, ratingDelta: delta, ...wallet(store, p) };

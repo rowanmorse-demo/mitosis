@@ -103,6 +103,9 @@ input[type=text]:focus{outline:2px solid var(--accent);outline-offset:1px}
 .primary:hover{filter:brightness(1.07)}
 .primary:active{transform:translateY(1px)}
 .primary:disabled{opacity:.55;cursor:default;filter:none;box-shadow:none;transform:none}
+.primary.queued{background:#2a2142;color:var(--ink);border:1px solid var(--violet);box-shadow:none;animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.25)}}
+.home .practice{font-size:13px;padding:9px 12px;margin-top:-6px}
 .ghost{appearance:none;border:1px solid var(--line);border-radius:11px;background:transparent;color:var(--muted);font:600 14px var(--display);padding:11px 14px;cursor:pointer}
 .ghost:hover{color:var(--ink);border-color:var(--line-strong)}
 /* Account: Sign in with Apple / Google, drawn to the providers' button guidelines */
@@ -199,7 +202,7 @@ body:not(.playing) #evolve{display:none!important}
   .card>.eyebrow{margin-bottom:-4px}
   h1,.home h1{font-size:44px;line-height:.9}h2{font-size:30px}
   .home{max-width:600px;gap:8px 14px}
-  .home .field{grid-column:1}.home #go{grid-column:2;align-self:end}
+  .home .field{grid-column:1}.home #go{grid-column:2;align-self:end}.home .practice{grid-column:1/-1;margin-top:-2px}
   .iconbtn{padding:9px 4px;font-size:12px}
   .primary{padding:11px;font-size:16px}.ghost{padding:9px 12px;font-size:13px}
   input[type=text]{padding:9px 11px;font-size:15px}
@@ -346,6 +349,7 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
     <div class="chips"><span class="chip2" id="rankChip"><b id="rankVal">1000</b><span class="tier" id="rankTier">Silver</span></span><p id="netLine" class="netline chip2"><i></i><span>Connecting…</span></p></div>
     <div class="field"><label class="label" for="nameIn">Specimen name</label><input id="nameIn" type="text" maxlength="16" placeholder="Unnamed cell" autocomplete="off" spellcheck="false"></div>
     <button id="go" class="primary" type="button">Play</button>
+    <button id="practiceBtn" class="ghost practice" type="button">Practice against bots · unranked</button>
     <div class="iconrow">
       <button class="iconbtn" id="profBtn" type="button">Profile</button>
       <button class="iconbtn" id="shopBtn" type="button">Shop</button>
@@ -706,9 +710,10 @@ async function econInit(){
 }
 // Runs: the server stamps when a run starts, so survival time can't be inflated.
 let runId=null,runPromise=null;
-function econRunStart(){runId=null;runPromise=api('run/start').then(r=>{runId=r.runId;return r.runId;}).catch(()=>null);}
+function econRunStart(){runId=null;if(local==='practice'){runPromise=null;return;}runPromise=api('run/start').then(r=>{runId=r.runId;return r.runId;}).catch(()=>null);}
 async function econRunEnd(){
-  if(!human)return;const s=human.stats,rep={survived:Math.max(0,T-s.born),eaten:s.eaten|0,peak:Math.round(s.peak),bestRank:s.bestRank||999,place:s.place|0,of:s.of|0,show:1};
+  if(!human)return;if(local==='practice'){showEarn('Practice — unranked, no ATP or rating');return;}
+  const s=human.stats,rep={survived:Math.max(0,T-s.born),eaten:s.eaten|0,peak:Math.round(s.peak),bestRank:s.bestRank||999,place:s.place|0,of:s.of|0,life:Math.max(0,livesUsed()-1),show:1};
   rep.name=human.name;const rid=runId||(runPromise?await runPromise:null);runId=null;runPromise=null;
   if(!rid){showEarn(wallet.online?'':'Offline — ATP is only earned while connected');return;}
   rep.runId=rid;const a=loadPending();a.push(rep);savePending(a);showEarn('Counting ATP…');flushRuns();
@@ -819,7 +824,7 @@ if(/[?&]autopilot=1/.test(location.search)){
     if(mode==='play'&&human&&human.alive&&!paused){ang+=rand(-.35,.35);if(Math.random()<.02)ang+=Math.PI*rand(.5,1);
       const m=Math.random()<.15?0:rand(.6,1);joy.id='auto';joy.ux=Math.cos(ang);joy.uy=Math.sin(ang);joy.m=m;
       if(Math.random()<.03)split(human);if(!BISECT.noeject&&Math.random()<.04)eject(human);if(Math.random()<.01)dash(human);}
-    else if(mode==='dead'||mode==='attract'){if(!dieAt)dieAt=performance.now();if(performance.now()-dieAt>4000){dieAt=0;joy.m=0;startGame();}}
+    else if(mode==='dead'||mode==='attract'){if(!dieAt)dieAt=performance.now();if(performance.now()-dieAt>4000){dieAt=0;joy.m=0;if(!queued)startGame();}}
     if(mode==='play')dieAt=0;};
   if(BISECT.lowfx)lowFx=true;setInterval(auto,100);setTimeout(()=>{reportHitch('autopilot on '+JSON.stringify(BISECT)+' '+(/[?&]big=1/.test(location.search)?' (big)':''));if(mode!=='play')startGame();},2500);
   setInterval(()=>{if(mode==='play'&&human&&human.alive)reportHitch(`autopilot alive mass=${Math.round(human.cells.reduce((a,c)=>a+c.mass,0))} cells=${human.cells.length} z=${cam.z.toFixed(2)}`);},60000);
@@ -918,11 +923,13 @@ const pointer={x:innerWidth/2,y:innerHeight/2};
 const TOUCH_UI=matchMedia('(pointer:coarse)').matches;
 const joy={id:null,ux:0,uy:0,m:0,R:46,lx:1,ly:0};
 // live room
+let local=null,queued=false,searchUntil=0,queuedPeers=0; // local: null | 'practice' (unranked) | 'auto' (a bot-filled game after a search)
+let lives={round:0,used:0};                               // spawns used in the current round
 let lastPeerCount=1,room=null,netState='pending',myPeer=null,isHost=true,claimReady=false,roomAt=-1,netSendT=0,seq=0,recs=[],peLog=[],peerCount=1,hostPeer=null,yielded=false,netNames=[];
 const proxies=new Map(),botProx=new Map(),remoteEj=new Map(),lastSeen=new Map(),seenAt=new Map(),lastSeq=new Map(),vSup=new Map(),wSup=new Map(),puSup=new Map(),hSup=new Map();
 const now=()=>performance.now()/1000;
 const myKey=()=>myPeer||'me';
-const multi=()=>!!(room&&myPeer&&peerCount>1);
+const multi=()=>!local&&!!(room&&myPeer&&peerCount>1);
 function keyOf(p){return p===human?myKey():p.bot?'b'+p.bid:(p.key||'?');}
 function rec(a){if(!room||!myPeer)return;recs.push({t:T,d:[++seq,...a]});}
 
@@ -1105,19 +1112,43 @@ function takeEvo(i){
 /* ---- world events (the host runs them; everyone renders them) ---- */
 function tideSafe(){if(ev.type!==2)return R;const p=clamp(1-(ev.end-T)/EVT[2].dur,0,1),e=p<.28?p/.28:p<.72?1:(1-p)/.28;return R*(1-.52*(e*e*(3-2*e)));}
 const roundT=()=>T-round.start;
-// Nobody spawns in the last SPAWN_CUTOFF seconds of a round: latecomers and the dead wait for the next one.
-const SPAWN_CUTOFF=Math.min(300,Math.round(ROUND_SEC*.5)); // 5 min of a 10-min round (?round= test rounds: half)
-function spawnOpen(){if(multi()&&!isHost&&!round.synced)return true;return round.over||roundT()<ROUND_SEC-SPAWN_CUTOFF;}
-function spawnWait(){return round.over?Math.max(0,round.start-T):Math.max(0,ROUND_SEC-roundT())+ROUND_GAP;} // seconds until the next round opens
-let spawnLockToastAt=-1e9;
+// Spawning: every player gets MAX_RESPAWNS respawns per round, and nobody spawns in the last SPAWN_CUTOFF seconds.
+// When you can't join, Play searches for a game for up to SEARCH_MAX seconds (the round may open, or a life come back
+// with the next round); after that you're put into a game on this device where bots fill every slot.
+const SPAWN_CUTOFF=Math.min(300,Math.round(ROUND_SEC*.5)),MAX_RESPAWNS=2,SEARCH_MAX=30;
+function livesUsed(){if(lives.round!==round.id){lives.round=round.id;lives.used=0;}return lives.used;}
+function roundOpen(){if(multi()&&!isHost&&!round.synced)return true;return round.over||roundT()<ROUND_SEC-SPAWN_CUTOFF;}
+function spawnOpen(){if(local==='practice')return true;return roundOpen()&&livesUsed()<=MAX_RESPAWNS;}
+function spawnBlockReason(){return !roundOpen()?'closed':livesUsed()>MAX_RESPAWNS?'lives':null;}
+function spawnWait(){return round.over?Math.max(0,round.start-T):Math.max(0,ROUND_SEC-roundT())+ROUND_GAP;}
 function updateSpawnLock(){
-  const open=spawnOpen(),go=$('go'),ag=$('again');if(!go||!ag)return;
-  const label=open?null:'Next round in '+fmtT(spawnWait());
-  go.disabled=!open;ag.disabled=!open;
-  const goT=open?'Play':label,agT=open?'Re-inoculate':label;
+  const go=$('go'),ag=$('again');if(!go||!ag)return;
+  const open=spawnOpen();
+  if(queued){
+    if(open){queued=false;startGame();return;}                                    // the round opened: in you go
+    if(performance.now()>=searchUntil){queued=false;startLocal('auto');return;}   // nothing to join in time: bots fill the slots
+  }
+  let goT='Play',agT='Re-inoculate';
+  if(queued){const left=Math.max(0,Math.ceil((searchUntil-performance.now())/1000));goT=agT=`Searching… 0:${String(left).padStart(2,'0')}${queuedPeers?' · '+(queuedPeers+1)+' waiting':''}`;}
+  else if(!open){const why=spawnBlockReason();goT=agT=(why==='lives'?'No lives left · ':'Round closed · ')+'find a game';}
+  else{const left=MAX_RESPAWNS+1-livesUsed();if(!local&&left<=MAX_RESPAWNS)agT=`Re-inoculate · ${left} ${left===1?'life':'lives'} left`;}
   if(go.textContent!==goT)go.textContent=goT;if(ag.textContent!==agT)ag.textContent=agT;
+  go.classList.toggle('queued',queued);ag.classList.toggle('queued',queued);
 }
 setInterval(updateSpawnLock,500);
+function startLocal(kind){ // a game on this device only: bots fill every slot. 'practice' is unranked; 'auto' follows a search
+  local=kind;queued=false;lastSeen.clear();
+  for(const p of players.filter(p=>p.remote))removePlayer(p);
+  round={id:(round.id%4095)+1,start:T,n:0,synced:true,over:false};isHost=true;claimReady=false;
+  syncBots();
+  toast(kind==='practice'?'Practice':'Game found',kind==='practice'?'Practice against bots':'Bots fill the empty slots',kind==='practice'?'Unranked: no ATP, no rating change':'Ranked like any other game');
+  startGame();
+}
+function leaveLocal(){ // back to the shared world
+  if(!local)return;local=null;queued=false;
+  for(const p of players.filter(p=>p.bot&&!p.remote))removePlayer(p);cells=cells.filter(c=>!c.dead);
+  round.synced=false;lastSeen.clear();lastPeerCount=-1;if(room&&myPeer){isHost=false;claimReady=false;yielded=false;}
+}
 function arenaR(){ // the round's safe radius: full for ROUND_GRACE s, then closing smoothly to R_MIN by ROUND_SEC-ROUND_HOLD
   if(multi()&&!isHost&&!round.synced)return R;const t=roundT();if(t<ROUND_GRACE)return R;
   const p=clamp((t-ROUND_GRACE)/(ROUND_SEC-ROUND_HOLD-ROUND_GRACE),0,1),e=p*p*(3-2*p);return R-(R-R_MIN)*e;}
@@ -1797,7 +1828,7 @@ function hud(){
   const ranked=players.filter(p=>p.alive&&p.cells.length).map(p=>({p,m:p.cells.reduce((s,c)=>s+c.mass,0)})).sort((a,b)=>b.m-a.m);
   leader=ranked.length?ranked[0].p:null;round.n=Math.max(round.n,ranked.length);
   const rc=$('roundClock');if(rc){const t=roundT(),a=arenaR();rc.hidden=mode!=='play'||(multi()&&!isHost&&!round.synced);rc.classList.toggle('hot',a<R-1);
-    rc.innerHTML=round.over?'<b>Round over</b>':`<b>${fmtT(Math.max(0,ROUND_SEC-t))}</b> ${a<R-1?(a<=R_MIN+1?'· final arena':'· arena closing'):'· closes in '+fmtT(ROUND_GRACE-t)}`;}
+    rc.innerHTML=(local==='practice'?'<b>Practice</b> · ':'')+(round.over?'<b>Round over</b>':`<b>${fmtT(Math.max(0,ROUND_SEC-t))}</b> ${a<R-1?(a<=R_MIN+1?'· final arena':'· arena closing'):'· closes in '+fmtT(ROUND_GRACE-t)}`);}
   const small=phone.matches||shortScreen.matches,N=small?5:8;let html='';
   const row=(r,i)=>{const hu=r.p.remote&&!r.p.bot;return`<li class="${r.p===human?'me':''}"><span class="rk">${i===0?'♛':i+1}</span><span class="dot" style="background:${col(r.p.color)}"></span><span class="nm">${esc(r.p===human?r.p.name+' (you)':r.p.name)}</span>${r.p.boss?'<span class="tag boss">boss</span>':hu?'<span class="tag">player</span>':''}<span class="ms">${Math.round(r.m)}</span></li>`;};
   ranked.slice(0,N).forEach((r,i)=>{html+=row(r,i);});
@@ -2014,13 +2045,14 @@ function becomeHost(){
 }
 function send(){
   const P={v:PROTO,h:(isHost&&claimReady&&!yielded)?1:0,n:(human?human.name:(cleanName($('nameIn').value)||'Unnamed cell')).slice(0,16),s:settings.stain|0,
-    a:human&&human.alive?1:0,f:human?fxBits(human):0,k:human?human.skin:settings.skin,em:null,ev:null,rd:null,cl:null,ej:null,r:null,pe:null,b:null,vs:null,vw:null,pu:null,hv:null};
+    a:human&&human.alive?1:0,f:human?fxBits(human):0,k:human?human.skin:settings.skin,q:queued?1:0,em:null,ev:null,rd:null,cl:null,ej:null,r:null,pe:null,b:null,vs:null,vw:null,pu:null,hv:null};
   if(human&&human.alive)P.cl=human.cells.slice(0,MAX_CELLS).map(encCell).join('');
   if(ejected.length)P.ej=ejected.slice(-16).map(e=>enc(e.x+OFF,3)+enc(e.y+OFF,3)).join('');
   recs=recs.filter(r=>T-r.t<3).slice(-20);if(recs.length)P.r=recs.map(r=>r.d);
   peLog=peLog.filter(p=>T-p.t<.7);
   const peStr=n=>peLog.slice(-n).map(p=>enc(p.i,3)+enc(p.g,3)).join('');
   P.pe=peLog.length?peStr(120):null;
+  if(local){P.h=0;P.a=0;P.cl=null;P.ej=null;P.r=null;P.pe=null;}   // a local game is invisible to the room
   const host=P.h===1;
   const bots=perCell=>{let s='';for(const b of players){if(!b.bot||b.remote||!b.alive||!b.cells.length)continue;
       const cs=b.cells.slice().sort((a,c)=>c.mass-a.mass).slice(0,perCell);s+=enc(b.bid,2)+enc(fxBits(b),1)+enc(cs.length,1)+cs.map(encCell).join('');}return s;};
@@ -2046,8 +2078,9 @@ function netTick(dt){
   let peers;try{peers=room.peers();}catch(e){return;}
   const me=peers.find(p=>p.sameTab);if(me&&!myPeer){myPeer=me.peer;roomAt=T;}
   if(!myPeer)return;
+  if(local){peerCount=1;queuedPeers=0;return;}   // a local game ignores the room until you leave it
   const others=peers.filter(p=>!p.sameTab&&p.kind==='viewer'&&p.presence&&p.presence.v===PROTO);
-  peerCount=1+others.length;netNames=others.map(p=>cleanName(p.presence.n)||'Guest cell');
+  peerCount=1+others.length;queuedPeers=others.filter(p=>p.presence.q===1).length;netNames=others.map(p=>cleanName(p.presence.n)||'Guest cell');
   if(peerCount!==lastPeerCount){lastPeerCount=peerCount;if(isHost)syncBots();}
   const claims=others.filter(p=>p.presence.h===1&&T-(seenAt.get(p.peer)??T)<3).map(p=>p.peer).sort(); // stalled hosts are ignored
   if(!claimReady&&T-roomAt>1.5){claimReady=true;if(claims.length)becomeClient();}
@@ -2107,7 +2140,12 @@ function showCard(id){
   shownCard=id;
   for(const c of['startCard','pauseCard','deathCard','storeCard','lookCard','rankCard','settingsCard','profileCard'])$(c).hidden=c!==id;$('overlay').hidden=!id;}
 function startGame(){
-  if(!spawnOpen()){updateSpawnLock();if(performance.now()-spawnLockToastAt>8000){spawnLockToastAt=performance.now();toast('Round','Too late to join this round',`The next one opens in ${fmtT(spawnWait())}`);}return;}
+  if(!spawnOpen()){
+    if(queued){queued=false;updateSpawnLock();toast('Search','Search cancelled','Tap again to look for a game');return;}
+    queued=true;searchUntil=performance.now()+SEARCH_MAX*1000;updateSpawnLock();
+    toast('Search','Searching for a game',`Up to ${SEARCH_MAX} s — empty slots are filled with bots`);return;
+  }
+  queued=false;livesUsed();lives.used++;
   settings.name=cleanName($('nameIn').value);
   try{localStorage.setItem('mitosis.settings',JSON.stringify(settings));}catch(e){}
   initAudio();if(actx&&actx.state==='suspended')actx.resume();
@@ -2168,10 +2206,11 @@ const hapEl=$('hapSeg'),syncHap=()=>[...hapEl.children].forEach(b=>b.setAttribut
 hapEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.haptics=b.dataset.h==='1';saveSettings();syncHap();});syncHap();
 $('nameIn').value=settings.name||'';
 $('go').addEventListener('click',startGame);
+$('practiceBtn').addEventListener('click',()=>startLocal('practice'));
 $('again').addEventListener('click',startGame);
-$('setup').addEventListener('click',()=>{mode='attract';achLine();showCard('startCard');});
+$('setup').addEventListener('click',()=>{leaveLocal();mode='attract';achLine();showCard('startCard');});
 $('resume').addEventListener('click',()=>setPaused(false));
-$('quit').addEventListener('click',()=>{paused=false;$('dRank').hidden=true;econRunEnd();showResults('Run over','Returned to the lobby',`You left the well after ${fmtT(T-human.stats.born)}.`);removeHuman();mode='attract';document.body.classList.remove('playing');$('pauseBtn').textContent='Pause';});
+$('quit').addEventListener('click',()=>{paused=false;$('dRank').hidden=true;econRunEnd();leaveLocal();showResults('Run over','Returned to the lobby',`You left the well after ${fmtT(T-human.stats.born)}.`);removeHuman();mode='attract';document.body.classList.remove('playing');$('pauseBtn').textContent='Pause';});
 $('pauseBtn').addEventListener('click',()=>setPaused(!paused));
 $('copyInvite').addEventListener('click',()=>{const b=$('copyInvite'),i=$('inviteUrl');const done=t=>{b.textContent=t;setTimeout(()=>{b.textContent='Invite friends';},1600);};
   if(navigator.share&&TOUCH_UI){navigator.share({title:'Mitosis',text:'Come play Mitosis with me',url:i.value}).catch(()=>{});return;}
