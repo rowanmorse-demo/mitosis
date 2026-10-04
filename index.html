@@ -611,7 +611,7 @@ const Native=(()=>{
   window.MitosisBridge={onNative(m){if(!m||typeof m!=='object')return;
     if(m.id&&waits.has(m.id)){const w=waits.get(m.id);waits.delete(m.id);if(m.ok===false)w.rej(new Error(m.error||'Failed'));else w.res(m);return;}
     if(m.type==='purchase'&&m.purchase)redeem(m.purchase).catch(()=>{});}};
-  return{platform,send,call,haptic(style){if(platform)send({type:'haptic',style});}};
+  let lastHap=0;return{platform,send,call,haptic(style){if(!platform)return;const n=performance.now();if(n-lastHap<120)return;lastHap=n;send({type:'haptic',style});}};
 })();
 
 async function api(path,body,auth=true){
@@ -761,6 +761,8 @@ const PSPR=Array.from({length:PH},(_,h)=>mk(48,(g)=>{
 }));
 const glow=(h,s,l,a)=>mk(128,(g)=>{const gr=g.createRadialGradient(64,64,0,64,64,64);gr.addColorStop(0,`hsla(${h},${s}%,${l}%,${a})`);gr.addColorStop(.5,`hsla(${h},${s}%,${l}%,${a*.3})`);gr.addColorStop(1,`hsla(${h},${s}%,${l}%,0)`);g.fillStyle=gr;g.fillRect(0,0,128,128);});
 const G_GOLD=glow(45,95,60,.7),G_VIRUS=glow(40,90,58,.32),G_SOFT=glow(175,45,82,1),G_HUNT=glow(352,100,60,.5);
+// flat colour of each pellet sprite (its centre pixel) and per-colour buckets for the zoomed-out fast path
+const PCOL=PSPR.map(c=>{const d=c.getContext('2d').getImageData(c.width>>1,c.height>>1,1,1).data;return `rgb(${d[0]},${d[1]},${d[2]})`;}),PBUCK=PSPR.map(()=>[]);
 const G_PU={};for(const k in PU)G_PU[k]=glow(PU[k].c[0],PU[k].c[1],PU[k].c[2],.55);
 const AGAR=mk(512,(g,s)=>{for(let i=0;i<80;i++){const x=Math.random()*s,y=Math.random()*s,r=rand(24,110),a=rand(.012,.04);
   for(const ox of[-s,0,s])for(const oy of[-s,0,s]){const cx=x+ox,cy=y+oy;if(cx+r<0||cx-r>s||cy+r<0||cy-r>s)continue;
@@ -1520,11 +1522,18 @@ function draw(){
   glowPrey=!!(human&&human.alive&&has(human,'chemotaxis'));glowMass=glowPrey?Math.max(...human.cells.map(c=>c.mass)):0;
   // food, from the visible grid buckets only
   const gx0=gi(x0),gx1=gi(x1),gy0=gi(y0),gy1=gi(y1);
+  if(z<.34){ // big player, camera far out: thousands of pellets in view, so draw them as flat dots, one path per colour
+    for(const a of PBUCK)a.length=0;
+    for(let gy=gy0;gy<=gy1;gy++)for(let gx=gx0;gx<=gx1;gx++){const b=grid[gy*GN+gx];
+      for(let i=0;i<b.length;i++){const pl=b[i];if(pl.x<x0||pl.x>x1||pl.y<y0||pl.y>y1)continue;const a=PBUCK[pl.h];a.push(pl.x,pl.y,pl.r*2.2);}}
+    for(let h=0;h<PBUCK.length;h++){const a=PBUCK[h];if(!a.length)continue;ctx.fillStyle=PCOL[h];ctx.beginPath();for(let i=0;i<a.length;i+=3){const d=a[i+2];ctx.rect(a[i]-d/2,a[i+1]-d/2,d,d);}ctx.fill();}
+  }else{
   for(let gy=gy0;gy<=gy1;gy++)for(let gx=gx0;gx<=gx1;gx++){const b=grid[gy*GN+gx];
     for(let i=0;i<b.length;i++){const pl=b[i];if(pl.x<x0||pl.x>x1||pl.y<y0||pl.y>y1)continue;
       const s=pl.r/9*48*Math.min(1,(T-pl.born)*4);
       if(ev.type===1&&(pl.x-ev.x)**2+(pl.y-ev.y)**2<BLOOM_R2)ctx.drawImage(G_GOLD,pl.x-s*.75,pl.y-s*.75,s*1.5,s*1.5);
       ctx.drawImage(PSPR[pl.h],pl.x-s/2,pl.y-s/2,s,s);}}
+  }
   for(const e of ejected)if(e.x>x0-30&&e.x<x1+30&&e.y>y0-30&&e.y<y1+30)drawEj(e.x,e.y,e.r,e.color,e.vx,e.vy);
   for(const [,list] of remoteEj)for(const e of list)if(e.x>x0-30&&e.x<x1+30&&e.y>y0-30&&e.y<y1+30)drawEj(e.x,e.y,14,e.color);
   for(const u of powerups)if(u.x>x0-80&&u.x<x1+80&&u.y>y0-80&&u.y<y1+80)drawPU(u);
@@ -1668,13 +1677,16 @@ function initAudio(){
   const comp=actx.createDynamicsCompressor();master.connect(lp);lp.connect(comp);comp.connect(actx.destination);
   noiseBuf=actx.createBuffer(1,actx.sampleRate*.8,actx.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
 }
+let liveNodes=0;const MAX_NODES=24;
 function tone(type,f0,f1,dur,vol,delay=0){
-  const t=actx.currentTime+delay,o=actx.createOscillator(),g=actx.createGain();o.type=type;o.connect(g);g.connect(master);
+  if(liveNodes>=MAX_NODES)return;liveNodes++;
+  const t=actx.currentTime+delay,o=actx.createOscillator(),g=actx.createGain();o.type=type;o.connect(g);g.connect(master);o.onended=()=>{liveNodes--;try{o.disconnect();g.disconnect();}catch(e){}};
   o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(Math.max(20,f1),t+dur);
   g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.008);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.start(t);o.stop(t+dur+.03);
 }
 function noise(dur,vol,f0,f1,q=1.2){
-  const t=actx.currentTime,s=actx.createBufferSource(),bp=actx.createBiquadFilter(),g=actx.createGain();s.buffer=noiseBuf;bp.type='bandpass';bp.Q.value=q;
+  if(liveNodes>=MAX_NODES)return;liveNodes++;
+  const t=actx.currentTime,s=actx.createBufferSource(),bp=actx.createBiquadFilter(),g=actx.createGain();s.buffer=noiseBuf;bp.type='bandpass';bp.Q.value=q;s.onended=()=>{liveNodes--;try{s.disconnect();bp.disconnect();g.disconnect();}catch(e){}};
   bp.frequency.setValueAtTime(f0,t);bp.frequency.exponentialRampToValueAtTime(f1,t+dur);s.connect(bp);bp.connect(g);g.connect(master);
   g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);s.start(t);s.stop(t+dur+.02);
 }
