@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Mitosis</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -74,7 +74,7 @@ body:not(.playing) #stats, body:not(.playing) #actions, body:not(.playing) #scal
 /* overlay + cards */
 #overlay{position:fixed;inset:0;z-index:5;display:grid;place-items:center;padding:calc(var(--gut) + env(safe-area-inset-top,0px)) calc(var(--gut) + env(safe-area-inset-right,0px)) calc(var(--gut) + env(safe-area-inset-bottom,0px)) calc(var(--gut) + env(safe-area-inset-left,0px));background:radial-gradient(ellipse at center,rgba(2,8,9,.2),rgba(2,8,9,.75));animation:ov .35s ease-out}
 @keyframes ov{from{opacity:0}}
-.card{width:100%;max-width:444px;max-height:calc(100% - 8px);overflow:auto;box-sizing:border-box;padding:28px 28px 24px;display:grid;gap:18px;user-select:text;-webkit-user-select:text;touch-action:auto;animation:up .4s cubic-bezier(.2,.8,.2,1)}
+.card{width:100%;max-width:444px;max-height:calc(100% - 8px);overflow:auto;box-sizing:border-box;padding:28px 28px 24px;display:grid;gap:18px;user-select:text;-webkit-user-select:text;touch-action:pan-y;animation:up .4s cubic-bezier(.2,.8,.2,1)}
 @keyframes up{from{opacity:0;transform:translateY(14px) scale(.985)}}
 .eyebrow{margin:0;font:500 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
 h1{margin:0;font:800 clamp(58px,16vw,94px)/.86 var(--display);letter-spacing:-.055em}

@@ -3,7 +3,7 @@ import WebKit
 
 /// Hosts the whole game (index.html from the repo root) in a full-screen web view
 /// and bridges it to the native side: in-app purchases (StoreKit 2) and haptics.
-final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDelegate {
+final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDelegate, UIScrollViewDelegate {
     static let voidColor = UIColor(red: 2 / 255, green: 8 / 255, blue: 9 / 255, alpha: 1)
 
     private var webView: WKWebView!
@@ -22,6 +22,11 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
         config.allowsInlineMediaPlayback = true
         config.mediaTypesRequiringUserActionForPlayback = []
         config.userContentController.add(BridgeProxy(self), name: "mitosis")
+        #if DEBUG
+        // Development builds forward page errors to the system log:  log stream --predicate 'process == "Mitosis"'
+        let errorHook = "window.addEventListener('error',e=>{try{window.webkit.messageHandlers.mitosis.postMessage({type:'log',text:'JS error: '+e.message+' @'+(e.filename||'').split('/').pop()+':'+e.lineno})}catch(_){}});window.addEventListener('unhandledrejection',e=>{try{window.webkit.messageHandlers.mitosis.postMessage({type:'log',text:'Unhandled rejection: '+(e.reason&&e.reason.message||e.reason)})}catch(_){}});"
+        config.userContentController.addUserScript(WKUserScript(source: errorHook, injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        #endif
 
         webView = WKWebView(frame: view.bounds, configuration: config)
         webView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
@@ -35,6 +40,9 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
         webView.scrollView.contentInsetAdjustmentBehavior = .never
         webView.allowsBackForwardNavigationGestures = false
         webView.allowsLinkPreview = false
+        webView.scrollView.delegate = self          // no pinch or double-tap zoom, ever (see viewForZooming)
+        webView.scrollView.maximumZoomScale = 1
+        webView.scrollView.minimumZoomScale = 1
         #if DEBUG
         if #available(iOS 16.4, *) { webView.isInspectable = true }
         #endif
@@ -84,6 +92,10 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
         webView.scrollView.pinchGestureRecognizer?.isEnabled = false
     }
 
+    /// Returning nil disables WebKit zooming entirely, including double-tap zoom.
+    func viewForZooming(in scrollView: UIScrollView) -> UIView? { nil }
+    func scrollViewDidZoom(_ scrollView: UIScrollView) { if scrollView.zoomScale != 1 { scrollView.setZoomScale(1, animated: false) } }
+
     // Open any external link (e.g. the invite link) in Safari instead of inside the game.
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
         if let url = navigationAction.request.url, url.isFileURL || navigationAction.navigationType == .other {
@@ -127,6 +139,8 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
             Task { await Store.shared.finish(transactionId: tid) }
         case "haptic":
             haptic(msg["style"] as? String ?? "medium")
+        case "log":
+            NSLog("[Mitosis page] %@", msg["text"] as? String ?? "")
         default:
             break
         }
