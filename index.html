@@ -423,7 +423,7 @@ const MAX_CELLS=16,VIRUS_M=100,VSLOTS=140,MAX_FREEV=16,PELLETS=19200,MAX_PU=24,M
 const MAX_HUNTERS=6,HUNTER_R=42,INF_MIN=8,INF_MAX=10,PROTO=3,SEED=90210;
 // Balance: a cell is absorbed once EAT_COVER of its diameter is inside a cell at least 10% heavier (see need()).
 // Ejecting costs EJECT_COST and makes a blob of EJECT_MASS, at most once every EJECT_GAP seconds.
-const EAT_COVER=.3,EJECT_COST=16,EJECT_MASS=15,EJECT_GAP=.12,BOTS_PER_PLAYER=5,SKIN_FREE=5;
+const EAT_COVER=.3,EJECT_COST=16,EJECT_MASS=15,EJECT_GAP=.06,BOTS_PER_PLAYER=5,SKIN_FREE=5;
 const COS=new Float32Array(NP),SIN=new Float32Array(NP);for(let i=0;i<NP;i++){COS[i]=Math.cos(i/NP*TAU);SIN[i]=Math.sin(i/NP*TAU);}
 const PX=new Float32Array(NP),PY=new Float32Array(NP),TMP=new Float32Array(NP);
 const rand=(a,b)=>a+Math.random()*(b-a);
@@ -1895,7 +1895,14 @@ cv.addEventListener('pointerup',release);cv.addEventListener('pointercancel',rel
 cv.addEventListener('contextmenu',e=>e.preventDefault());
 const bindAct=(id,fn)=>$(id).addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();if(mode==='play'&&!paused)fn(human);});
 $('evOpts').addEventListener('pointerdown',e=>{const b=e.target.closest('.evo');if(!b)return;e.preventDefault();e.stopPropagation();takeEvo(+b.dataset.i);});
-bindAct('splitBtn',split);bindAct('ejectBtn',eject);bindAct('dashBtn',dash);
+bindAct('splitBtn',split);bindAct('dashBtn',dash);
+{ // Shoot: a tap fires once; holding keeps firing, faster and faster (180 ms down to 70 ms between shots)
+  const b=$('ejectBtn');let timer=null,held=0;
+  const stop=()=>{if(timer){clearTimeout(timer);timer=null;}};
+  const fire=()=>{if(mode!=='play'||paused||!human){stop();return;}eject(human);held++;timer=setTimeout(fire,Math.max(70,180-held*12));};
+  b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();try{b.setPointerCapture(e.pointerId);}catch(_){}stop();held=0;fire();});
+  for(const ev of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(ev,stop);
+}
 // virtual joystick
 const joyEl=$('joy'),joyKnob=joyEl.querySelector('.knob');
 function joySet(ex,ey){const r=joyEl.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let dx=ex-cx,dy=ey-cy;const d=Math.hypot(dx,dy)||0;
