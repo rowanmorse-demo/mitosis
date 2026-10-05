@@ -171,7 +171,7 @@ def main():
                     pg.evaluate('o => window.__play(o)', opts); dead_at = None; lives += 1
                     if args.min_mass:
                         # don't film a tiny new cell: skip ahead (no drawing) until it has grown back
-                        regrow = max(250, args.min_mass * 0.5)
+                        regrow = max(200, args.min_mass * 0.3)
                         pg.evaluate('window.__NODRAW = true')
                         g = tick()
                         while g['mass'] < regrow and not g['over']:
