@@ -92,9 +92,9 @@ def events(G):
         if b.get('over') and not a.get('over'):
             # the round ended (time up, or last one standing). The player is removed at this moment, so it is
             # not a death; take the placement from the last frame before the end if the end frame lacks it.
-            place, of = (b.get('place') or a.get('place', 0)), (b.get('of') or a.get('of', 0))
-            if a['alive'] and a.get('players', 99) <= 1:
-                place = 1
+            # survivors are ranked by mass when the round ends, so a living player's place is its mass rank
+            place = a.get('rank', 0) if a['alive'] else (b.get('place') or a.get('place', 0))
+            of = b.get('of') or a.get('of', 0)
             ev.append((i, 'end', 1.0, a['mass'] if a['alive'] else 0, (place, of, bool(a['alive']))))
             continue
         if b.get('over'):
