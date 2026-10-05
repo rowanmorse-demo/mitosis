@@ -12,7 +12,9 @@ A multiplayer cell-eating arena set in a giant petri well. Absorb anything small
 - **Mutation**: at mass milestones a random permanent trait is applied, six times a life; every cell shows badges for the traits it carries
 - **World events**: Nutrient Bloom, Antibiotic Tide, Phage Swarm and the Leviathan boss
 - **Hunter phages** that breach the rim and inject cells; the cell bursts into up to 16 pieces 8–10 s later
-- **ATP and skins**: earn ATP by playing (or buy it in the apps) and spend it on ten premium skins
+- **ATP and skins**: earn ATP by playing (or buy it in the apps) and spend it on twelve premium skins, up to the 12,000,000 ATP One Cell to Rule Them All
+- **A lobby that knows you**: a live portrait of your cell, your rating with progress to the next tier, who is in the room and the round clock. First launch shows a three-step welcome card (Settings can bring it back). The Profile keeps your last runs with placement, time, peak mass and rating change
+- **Effects toggle** in Settings (Full or Reduced) for older phones; the game also drops to reduced effects on its own when frames run long
 - **Rounds of ten minutes**: the arena is full size for the first 2½ minutes, then closes in to 12% of the dish by 9:30. Anything caught outside dissolves. When time is up the survivors are ranked by mass and everyone sees where they placed
 - **Mutations** (Magnet, Phase, Surge), dash, frenzy streaks, a leader bounty, stain patterns and 12 achievements. There is no chat
 
