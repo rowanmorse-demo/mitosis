@@ -61,6 +61,7 @@ ap.add_argument('--min-mass', type=float, default=0)      # with --film-from: ne
 ap.add_argument('--tries', type=int, default=1)           # seeds to try for --min-mass (seed, seed+1, ...)
 ap.add_argument('--until-end', action='store_true')       # stop filming --after-end s after the round ends (results screen)
 ap.add_argument('--after-end', type=float, default=6)
+ap.add_argument('--then-endgame', type=float, default=None)  # after filming: if still alive, fast-forward to this round second and film to the results
 args = ap.parse_args()
 
 INIT_TMPL = """
@@ -171,6 +172,29 @@ def main():
             if n % (args.fps * 15) == 0:
                 print(f'{args.out}: {n/args.fps:.0f}s filmed, {time.time()-t1:.0f}s elapsed, round {g["rt"]:.0f}s, '
                       f'mass={g["mass"]} rank={g["rank"]} life={lives}', flush=True)
+        if args.then_endgame is not None and g['alive'] and g['mass'] >= 300 and not g['over'] and g['rt'] < args.then_endgame:
+            # the cell survived the main stretch: skip ahead (no drawing) and, if it is still alive, film the final ring
+            pg.evaluate('window.__NODRAW = true')
+            while g['rt'] < args.then_endgame and g['alive'] and not g['over']:
+                g = tick()
+            pg.evaluate('window.__NODRAW = false')
+            print(f'endgame check at {g["rt"]:.0f}s: alive={g["alive"]} mass={g["mass"]}', flush=True)
+            if g['alive'] and not g['over']:
+                for _ in range(10): tick()
+                lives += 1                     # new segment: the editor never cuts across it
+                over_at, m, dead_at = None, 0, None
+                while m < 150 * args.fps:
+                    g = tick()
+                    ff.stdin.write(base64.b64decode(cdp.send('Page.captureScreenshot', SHOT)['data']))
+                    g['f'] = n; g['life'] = lives; g['seg'] = 2
+                    log.write(json.dumps(g) + '\n')
+                    n += 1; m += 1
+                    if g['over'] and over_at is None: over_at = m
+                    if over_at is not None and m - over_at > args.after_end * args.fps: break
+                    if not g['alive'] and not g['over']:
+                        if dead_at is None: dead_at = m
+                        elif m - dead_at > args.after_death * args.fps: break
+                print(f'endgame filmed: {m/args.fps:.0f}s, place {g.get("place")} of {g.get("of")}', flush=True)
         ff.stdin.close(); ff.wait(); log.close()
         print(f'done {args.out}: seed {seed}, {n} frames ({n/args.fps:.0f}s) in {time.time()-t1:.0f}s; errors={errs[:3]}')
         b.close()

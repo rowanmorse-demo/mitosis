@@ -13,10 +13,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SKINS = [16, 15, 13, 6, 5, 14, 12, 11, 10, 9, 8, 7, 3, 1]
 NAMES = ['Nucleus', 'Voidcell', 'Blob', 'Mitochondria', 'Ribosome', 'Plasmid', 'Spore', 'Vesicle', 'Cytoplasm', 'Organelle']
 PLANS = [  # (label, extra record.py args)
-    ('late', ['--film-from', '200', '--min-mass', '700', '--tries', '6', '--seconds', '150']),
-    ('endgame', ['--film-from', '420', '--min-mass', '600', '--tries', '10', '--until-end', '--seconds', '200']),
-    ('mid', ['--film-from', '110', '--min-mass', '300', '--tries', '4', '--seconds', '150']),
-    ('late', ['--film-from', '280', '--min-mass', '800', '--tries', '6', '--seconds', '150']),
+    ('late', ['--film-from', '200', '--min-mass', '700', '--tries', '6', '--seconds', '140', '--then-endgame', '545']),
+    ('late', ['--film-from', '280', '--min-mass', '900', '--tries', '6', '--seconds', '140', '--then-endgame', '545']),
+    ('mid', ['--film-from', '110', '--min-mass', '300', '--tries', '4', '--seconds', '140', '--then-endgame', '545']),
 ]
 STYLES = [('hunter', 0.95), ('opportunist', 0.9), ('farmer', 0.8), ('hunter', 1.0), ('sniper', 0.9)]
 

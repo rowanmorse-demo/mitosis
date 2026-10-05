@@ -272,7 +272,7 @@ def render(take, c, idx, outdir, rng):
         elif k == 'crown':
             text_png(f'{tmp}/cap{capn}.png', [[('#1 IN THE DISH', GOLD)]], size=100, stroke=14)
             overlays.append((f'{tmp}/cap{capn}.png', t, min(dur, t + 2.6), 1180)); capn += 1
-        elif k == 'eat' and m >= 25 and t > 3.4 and t < dur - 1:
+        elif k == 'eat' and m >= 25 and t > 3.4 and t < dur - 1 and not any(e[1] in ('death', 'end') and 0 <= e[0] - i < 2 * FPS for e in c['events']):
             streak = sum(1 for x in eats_t if t - 4 <= x <= t)
             label = f'COMBO x{streak}' if streak >= 3 else f'+{int(m)}'
             text_png(f'{tmp}/cap{capn}.png', [[(label, ACCENT if streak < 3 else GOLD)]], size=88 if streak < 3 else 96, stroke=12)
