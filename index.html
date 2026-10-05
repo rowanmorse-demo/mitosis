@@ -292,7 +292,7 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
 .home .primary{padding:16px;font-size:21px;border-radius:14px}
 .phead{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center;text-align:left}
 .pavatar{width:72px;height:72px;border-radius:20px;border:1px solid var(--line);background:rgba(0,0,0,.28);display:block}
-.pmain{display:grid;gap:7px;min-width:0}.pmain h2{font-size:34px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pmain{display:grid;gap:7px;min-width:0}.pmain .hint{margin:0;text-align:left}.pmain h2{font-size:34px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .intro{max-width:440px}.intro h2{font-size:40px}
 .steps{list-style:none;margin:0;padding:0;display:grid;gap:10px}.steps li{display:grid;grid-template-columns:52px 1fr;gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:rgba(0,0,0,.22);text-align:left}
 .steps svg{width:48px;height:48px;fill:none;stroke:var(--ink);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}.steps li:nth-child(1) svg circle:first-child{fill:rgba(255,92,138,.18);stroke:var(--accent)}.steps li:nth-child(2) svg circle{fill:rgba(154,140,255,.14);stroke:var(--violet)}.steps li:nth-child(3) svg circle{stroke:#5fe0a8}
@@ -408,7 +408,7 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
 
   <div class="card panel" id="lookCard" hidden>
     <p class="eyebrow">Look</p>
-    <h2>Your cell</h2>
+    <div class="phead"><canvas id="lookCv" class="pavatar" width="144" height="144" aria-hidden="true"></canvas><div class="pmain"><h2>Your cell</h2><p class="hint" id="lookHint">Tap a stain and a pattern. Premium skins from the Shop replace both.</p></div></div>
     <div class="field"><span class="label">Stain</span><div class="swatches" id="sw"></div></div>
     <div class="field"><span class="label">Pattern</span><div class="pats" id="pats"></div></div>
     <div class="field"><span class="label">Your skins</span><div class="skins" id="ownedSkins"></div><p class="hint" id="ownedHint">Premium skins are in the Shop. You have <b id="atpBal">0</b> ATP.</p></div>
@@ -936,7 +936,7 @@ function drawAvatar(cv=$('avatarCv')){ // a live portrait of your cell: stain, p
   g.beginPath();g.ellipse(x-r*.36,y-r*.42,r*.22,r*.09,-.72,0,TAU);g.fillStyle='rgba(255,255,255,.17)';g.fill();
 }
 function renderPreviews(){for(const cv of document.querySelectorAll('#skins canvas, #ownedSkins canvas')){const S=PREMIUM[+cv.dataset.skin-SKIN_FREE];if(S)drawPreview(cv,S);}}
-setInterval(()=>{if(document.hidden||RM)return;if(!$('storeCard').hidden||!$('lookCard').hidden)renderPreviews();if(!$('startCard').hidden)drawAvatar();},100);
+setInterval(()=>{if(document.hidden||RM)return;if(!$('storeCard').hidden||!$('lookCard').hidden)renderPreviews();if(!$('startCard').hidden)drawAvatar();if(!$('lookCard').hidden)drawAvatar($('lookCv'));if(!$('profileCard').hidden)drawAvatar($('profCv'));},100);
 $('ownedSkins').addEventListener('click',e=>{const b=e.target.closest('.skin');if(!b)return;const id=+b.dataset.id;if(ownsSkin(id)){settings.skin=id;saveSettings();syncPats();}});
 $('skins').addEventListener('click',async e=>{
   const b=e.target.closest('.skin');if(!b)return;const id=+b.dataset.id,S=PREMIUM[id-SKIN_FREE];if(!S)return;
@@ -2318,7 +2318,7 @@ let shownCard='startCard';
 function showCard(id){
   // diagnostic: a report of what sends the page from Settings back to the start card (Settings → Account → sign in)
   if(id==='startCard'&&shownCard==='settingsCard')reportHitch('settings->start via '+String(new Error().stack||'').split('\n').slice(1,4).map(s=>s.trim()).join(' | '));
-  shownCard=id;if(id==='startCard')setTimeout(drawAvatar,0);
+  shownCard=id;if(id==='startCard')setTimeout(drawAvatar,0);if(id==='lookCard')setTimeout(()=>drawAvatar($('lookCv')),0);
   for(const c of['startCard','pauseCard','deathCard','storeCard','lookCard','rankCard','settingsCard','profileCard','introCard'])$(c).hidden=c!==id;$('overlay').hidden=!id;}
 function startGame(){
   if(!spawnOpen()){
@@ -2376,7 +2376,7 @@ const swEl=$('sw');
 STAINS.forEach((c,i)=>{const b=document.createElement('button');b.type='button';b.className='sw';b.style.background=col(c);b.setAttribute('aria-label','Stain '+(i+1));
   b.setAttribute('aria-pressed',String(i===settings.stain));b.addEventListener('click',()=>{settings.stain=i;[...swEl.children].forEach((x,j)=>x.setAttribute('aria-pressed',String(j===i)));});swEl.appendChild(b);});
 const patEl=$('pats');
-const syncPats=()=>{patEl.style.setProperty('--c',col(STAINS[settings.stain]));[...patEl.children].forEach((x,j)=>x.setAttribute('aria-pressed',String(j===settings.skin)));renderSkins();drawAvatar();};
+const syncPats=()=>{patEl.style.setProperty('--c',col(STAINS[settings.stain]));[...patEl.children].forEach((x,j)=>x.setAttribute('aria-pressed',String(j===settings.skin)));renderSkins();drawAvatar();drawAvatar($('lookCv'));drawAvatar($('profCv'));};
 ['Plain','Spots','Stripes','Rings','Marbled'].forEach((n,i)=>{const b=document.createElement('button');b.type='button';b.className='pat p'+i;b.setAttribute('aria-label',n+' pattern');b.title=n;
   b.addEventListener('click',()=>{settings.skin=i;syncPats();});patEl.appendChild(b);});
 swEl.addEventListener('click',()=>setTimeout(syncPats,0));syncPats();
