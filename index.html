@@ -28,6 +28,7 @@ body{margin:0;background:var(--void);color:var(--ink);font-family:var(--display)
 /* stats */
 #stats{top:calc(var(--gut) + env(safe-area-inset-top,0px));left:calc(var(--gut) + env(safe-area-inset-left,0px));display:grid;gap:2px;padding:7px 12px 8px;border-radius:14px;background:rgba(2,8,9,.5);border:1px solid rgba(150,220,210,.16);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);justify-items:start}
 #stats>.label{font-size:9.5px}#fx:empty{display:none}#fx{margin-top:4px}
+@media (orientation:portrait){#stats{max-width:min(60vw,300px)}#metaVal{white-space:normal;line-height:1.35}#board.collapsed:has(#netPill:not([hidden])) .bhead .label{display:none}#board.collapsed:has(#netPill:not([hidden])) .bhead{gap:6px}}
 .livesrow{display:flex;align-items:center;gap:7px;margin-top:2px}.livesrow .label{font-size:9.5px}#lives{display:flex;gap:5px}#lives i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);transition:background .3s,box-shadow .3s}#lives i.on{background:var(--accent);border-color:var(--accent);box-shadow:0 0 8px rgba(255,92,138,.55)}.livesrow.inf #lives i{background:#5fe0a8;border-color:#5fe0a8;box-shadow:none}
 #massVal{font:800 42px/1 var(--display);letter-spacing:-.04em;font-variant-numeric:tabular-nums;text-shadow:0 2px 18px rgba(0,0,0,.5)}
 #metaVal{font:11px/1.4 var(--mono);color:var(--muted)}
@@ -60,7 +61,7 @@ body{margin:0;background:var(--void);color:var(--ink);font-family:var(--display)
 #scale{left:calc(var(--gut) + env(safe-area-inset-left,0px));bottom:calc(var(--gut) + env(safe-area-inset-bottom,0px));display:flex;align-items:flex-end;gap:12px;font:11px var(--mono);color:var(--muted)}
 #scale .bar{display:grid;gap:4px}
 #scaleBar{height:6px;border:1.5px solid var(--ink);border-top:none;opacity:.8;transition:width .2s}
-.tiny{pointer-events:auto;appearance:none;background:rgba(2,8,9,.5);border:1px solid var(--line);color:var(--muted);font:11px var(--mono);border-radius:6px;padding:5px 8px;cursor:pointer}
+.tiny{pointer-events:auto;appearance:none;background:rgba(2,8,9,.55);border:1px solid rgba(150,220,210,.22);color:#9fc6bd;font:500 11px var(--mono);letter-spacing:.04em;border-radius:999px;padding:7px 13px;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}.tiny:active{background:rgba(150,220,210,.14)}
 .tiny:hover{color:var(--ink);border-color:var(--line-strong)}
 
 #mini{right:calc(var(--gut) + env(safe-area-inset-right,0px));bottom:calc(var(--gut) + env(safe-area-inset-bottom,0px));width:140px;height:140px;display:none}
@@ -161,6 +162,7 @@ button:focus-visible,.sw:focus-visible{outline:2px solid var(--ink);outline-offs
 /* after 2 s an event banner shrinks into a small pill in the top-left corner so it stops covering the arena */
 #banner.mini{left:calc(var(--gut) + env(safe-area-inset-left,0px));transform:none;width:auto;min-width:0;max-width:200px;padding:5px 10px 6px;gap:3px;animation:none;opacity:.9;transition:opacity .3s}
 #banner.mini #bnDesc{display:none}#banner.mini #bnTitle{font-size:12px}#banner.mini #bnTime{font-size:11px}#banner.mini .bnbar{height:2px}
+@media (orientation:landscape){#banner,#banner.mini{left:50%;transform:translateX(-50%);top:calc(var(--gut) + 42px + env(safe-area-inset-top,0px))}#banner.mini{max-width:260px}}
 #bnTitle{font:800 18px/1.1 var(--display);letter-spacing:-.02em;color:var(--ec)}
 #bnTime{font:12px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
 #bnDesc{font:12.5px/1.35 var(--display);color:var(--muted)}
@@ -183,7 +185,7 @@ button:focus-visible,.sw:focus-visible{outline:2px solid var(--ink);outline-offs
 #dAch{margin:0;font:600 13px/1.4 var(--display);color:#f2c14e}
 #board .tag.boss{color:#c9a2ff;border-color:rgba(201,162,255,.5)}
 body:not(.playing) #evolve{display:none!important}
-@media (max-width:900px) and (orientation:portrait){#banner{width:calc(100% - 2*var(--gut));top:calc(150px + env(safe-area-inset-top,0px))}#toasts{top:calc(240px + env(safe-area-inset-top,0px))}}
+@media (max-width:900px) and (orientation:portrait){#banner{width:calc(100% - 2*var(--gut));top:calc(205px + env(safe-area-inset-top,0px))}#toasts{top:calc(290px + env(safe-area-inset-top,0px))}}
 /* landscape phones and tablets: pop-ups stay in the strip between the stats and the ranking, clear of the joystick and buttons */
 @media (pointer:coarse) and (orientation:landscape){
   #banner{width:min(340px,calc(100% - 480px));min-width:220px;padding:6px 12px 8px;top:calc(var(--gut) + env(safe-area-inset-top,0px))}
