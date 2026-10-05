@@ -142,7 +142,9 @@ def candidates(G, ev, L=27.0):
         if any(not G[x]['alive'] or G[x].get('over') for x in range(a, b, 5)):
             continue
         pk = max(G[x]['mass'] for x in range(a, b, 3))
-        if pk >= MIN_FEAST_PEAK:                  # small cells grazing in empty space make dull clips
+        m0, m_end = G[a]['mass'], G[b - 1]['mass']
+        # a feeding clip must show real growth and finish near its peak (not a cell that shrank)
+        if pk >= MIN_FEAST_PEAK and pk >= 1.25 * max(m0, 1) and m_end >= 0.85 * pk:
             out.append(dict(kind='feast', a=a, b=b, peak=pk))
     for c in out:
         inside = [e for e in ev if c['a'] <= e[0] < c['b']]
