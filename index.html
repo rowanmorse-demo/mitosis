@@ -1828,7 +1828,7 @@ function drawCell(c){
     let px=labelPx(Math.max(sr*.34,11));const maxW=sr*1.72;let L=labelSprite(p.name,px);
     if(L.tw>maxW){px=labelPx(px*maxW/L.tw);L=labelSprite(p.name,px);}
     ctx.drawImage(L.c,c.x-L.w/2/z,c.y-L.h/2/z,L.w/z,L.h/z); // sprite is in screen pixels: undo the camera scale so it stays crisp
-    if(p.pk&&sr>26&&c===p.cells[0]){const bp=labelPx(Math.max(sr*.2,8)),B=perkSprite(p.pk,bp),dy=(L.h/2+(p===human?px*1.25:px*.35)+B.h/2)/z;ctx.drawImage(B.c,c.x-B.w/2/z,c.y+dy-B.h/2/z,B.w/z,B.h/z);} // mutation badges, on the biggest cell only
+    if(p.pk&&sr>26&&c===p.cells[0]){const bp=labelPx(Math.min(Math.max(sr*.2,8),22)),B=perkSprite(p.pk,bp),dy=(L.h/2+(p===human?px*1.25:px*.35)+B.h/2)/z;ctx.drawImage(B.c,c.x-B.w/2/z,c.y+dy-B.h/2/z,B.w/z,B.h/z);} // mutation badges, on the biggest cell only
     if(p===human&&sr>24){ // the live mass readout changes every frame, so it is drawn directly, in screen space at a fixed set of sizes
       const ms=labelPx(px*.56),t=c.inf?Math.max(0,c.inf-T).toFixed(1)+'s':String(Math.round(c.mass));
       ctx.save();ctx.setTransform(DPR,0,0,DPR,0,0);ctx.font=monoFont(ms);ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';ctx.lineWidth=ms*.16;ctx.strokeStyle='rgba(0,0,0,.42)';
