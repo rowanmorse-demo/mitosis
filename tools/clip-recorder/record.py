@@ -169,6 +169,19 @@ def main():
                 elif n - dead_at > args.after_death * args.fps:
                     if not args.respawn: break
                     pg.evaluate('o => window.__play(o)', opts); dead_at = None; lives += 1
+                    if args.min_mass:
+                        # don't film a tiny new cell: skip ahead (no drawing) until it has grown back
+                        regrow = max(250, args.min_mass * 0.5)
+                        pg.evaluate('window.__NODRAW = true')
+                        g = tick()
+                        while g['mass'] < regrow and not g['over']:
+                            g = tick()
+                            if not g['alive'] and not g['over']:
+                                pg.evaluate('o => window.__play(o)', opts)
+                        pg.evaluate('window.__NODRAW = false')
+                        for _ in range(10): tick()
+                        print(f'regrew to {g["mass"]} by round {g["rt"]:.0f}s', flush=True)
+                        if g['over']: break
             if n % (args.fps * 15) == 0:
                 print(f'{args.out}: {n/args.fps:.0f}s filmed, {time.time()-t1:.0f}s elapsed, round {g["rt"]:.0f}s, '
                       f'mass={g["mass"]} rank={g["rank"]} life={lives}', flush=True)

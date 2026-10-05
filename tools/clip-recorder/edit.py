@@ -19,6 +19,8 @@ ACCENT = (124, 255, 178)      # mitosis green
 GOLD = (255, 204, 77)
 RED = (255, 92, 92)
 END = 2.4                     # end card seconds (appended after the gameplay)
+MIN_DEATH_PEAK = 400          # death clips need a cell that got at least this big
+MIN_FEAST_PEAK = 1200         # feeding clips need a big cell
 
 
 # ---------------------------------------------------------------- text art
@@ -118,7 +120,7 @@ def candidates(G, ev, L=27.0):
     Lf = int(L * FPS)
     # deaths: the build-up and the moment it goes wrong
     for (i, k, s, m, *_) in ev:
-        if k == 'death' and m >= 120:
+        if k == 'death' and m >= MIN_DEATH_PEAK:
             a, b = max(0, i - int(23.5 * FPS)), min(n, i + int(3.5 * FPS))
             if G[a]['life'] != G[i - 1]['life']:
                 a = next(x for x in range(a, i) if G[x]['life'] == G[i - 1]['life'] and G[x]['alive'])
@@ -139,7 +141,9 @@ def candidates(G, ev, L=27.0):
             continue
         if any(not G[x]['alive'] or G[x].get('over') for x in range(a, b, 5)):
             continue
-        out.append(dict(kind='feast', a=a, b=b, peak=max(G[x]['mass'] for x in range(a, b, 3))))
+        pk = max(G[x]['mass'] for x in range(a, b, 3))
+        if pk >= MIN_FEAST_PEAK:                  # small cells grazing in empty space make dull clips
+            out.append(dict(kind='feast', a=a, b=b, peak=pk))
     for c in out:
         inside = [e for e in ev if c['a'] <= e[0] < c['b']]
         eats = [e for e in inside if e[1] == 'eat']
