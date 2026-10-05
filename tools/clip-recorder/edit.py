@@ -19,6 +19,7 @@ ACCENT = (124, 255, 178)      # mitosis green
 GOLD = (255, 204, 77)
 RED = (255, 92, 92)
 END = 2.4                     # end card seconds (appended after the gameplay)
+HOOK_Y = 470                  # below the game's event banners and toasts
 MIN_DEATH_PEAK = 400          # death clips need a cell that got at least this big
 MIN_FEAST_PEAK = 1200         # feeding clips need a big cell
 
@@ -260,7 +261,7 @@ def render(take, c, idx, outdir, rng):
     text_png(f'{tmp}/hook.png', hook_lines, size=104)
     text_png(f'{tmp}/sub.png', [[(sub, (220, 232, 240))]], size=52, stroke=8, pad=24)
     endcard_png(f'{tmp}/end.png')
-    overlays = [(f'{tmp}/hook.png', 0.15, 3.2, 300), (f'{tmp}/sub.png', 0.45, 3.2, None)]
+    overlays = [(f'{tmp}/hook.png', 0.15, 3.2, HOOK_Y), (f'{tmp}/sub.png', 0.45, 3.2, None)]
     # event captions
     capn = 0
     eats_t = [(e[0] - a) / FPS for e in c['events'] if e[1] == 'eat']
@@ -299,7 +300,7 @@ def render(take, c, idx, outdir, rng):
         fd = 0.18
         fg.append(f"[{src}:v]format=rgba,fade=t=in:st={t0:.3f}:d={fd}:alpha=1,fade=t=out:st={max(t0, t1 - fd):.3f}:d={fd}:alpha=1[o{n}]")
         if y is None:   # subtitle sits under the hook
-            yexpr = '300+%d' % (Image.open(overlays[0][0]).size[1] - 6)
+            yexpr = '%d+%d' % (HOOK_Y, Image.open(overlays[0][0]).size[1] - 6)
         else:
             yexpr = str(y)
         # hook slides down a little as it appears
