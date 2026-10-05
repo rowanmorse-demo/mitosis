@@ -316,7 +316,7 @@ def render(take, c, idx, outdir, rng):
     out = os.path.join(outdir, name + '.mp4')
     cmd = ['ffmpeg', '-y', '-loglevel', 'error'] + inputs + [
         '-filter_complex', ';'.join(fg), '-map', '[vout]', '-map', '1:a',
-        '-c:v', 'libx264', '-preset', 'fast', '-crf', '19', '-profile:v', 'high', '-r', str(FPS),
+        '-c:v', 'libx264', '-preset', 'fast', '-crf', '19', '-maxrate', '7M', '-bufsize', '14M', '-profile:v', 'high', '-r', str(FPS),
         '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-shortest', '-movflags', '+faststart', out]
     subprocess.run(cmd, check=True)
     meta = dict(file=name + '.mp4', kind=c['kind'], seconds=round(dur + END, 1), title=title,
