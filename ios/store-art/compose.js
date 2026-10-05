@@ -7,7 +7,7 @@ const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const SLIDES = [
   { n: 1, shot: '1-arena', side: 'right', eyebrow: 'Live arena', h1: 'Absorb everything smaller.|*Divide to strike.*', sub: 'Ten-minute rounds in a closing arena, against players and bots.', chips: 'Live rounds|Closing arena|Placement' },
   { n: 2, shot: '6-results', side: 'left', eyebrow: 'Ranked play', h1: 'Place every round.|*Climb to Legend.*', sub: 'Survive longer and place higher to raise your rating. Two lives a round. Dying fast costs you.', chips: 'Silver → Legend|Win bonus|Two lives' },
-  { n: 3, shot: '3-shop', side: 'right', eyebrow: 'Skins & ATP', h1: 'Twelve skins.|*Earn or buy them.*', sub: 'ATP comes from surviving and absorbing. Packs are there when you want a shortcut.', chips: 'Nebula|Magma|Black Hole' },
+  { n: 3, shot: '3-shop', side: 'right', eyebrow: 'Skins & ATP', h1: 'Twelve skins.|*Earn or buy them.*', sub: 'ATP comes from surviving and absorbing. Packs are there when you want a shortcut.', chips: 'Nebula|Black Hole|One Cell to Rule Them All' },
   { n: 4, shot: '4-profile', side: 'left', eyebrow: 'Your account', h1: 'Your rating|*follows you.*', sub: 'Sign in with Apple and keep ATP, skins and rank on any phone.', chips: 'Sign in with Apple|Profile|Stats' },
   { n: 5, shot: '5-events', side: 'right', eyebrow: 'A living world', h1: 'Phages, blooms, tides|*and the Leviathan.*', sub: 'Evolve six times a life. Dodge hunters. Take the leader’s bounty.', chips: 'Evolve|World events|Bounties' },
 ];

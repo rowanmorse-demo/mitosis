@@ -23,3 +23,8 @@ android/.idea/
 android/*.iml
 android/app/*.iml
 android/.kotlin/
+
+# store artwork build output (regenerate with ios/store-art/shots.js + compose.js)
+ios/store-art/raw/
+ios/store-art/final/
+ios/store-art/chrome-*/
