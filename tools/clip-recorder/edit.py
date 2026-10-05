@@ -89,13 +89,19 @@ def events(G):
         a, b = G[i - 1], G[i]
         if a['life'] != b['life']:
             continue
+        if b.get('over') and not a.get('over'):
+            # the round ended (time up, or last one standing). The player is removed at this moment, so it is
+            # not a death; take the placement from the last frame before the end if the end frame lacks it.
+            place, of = (b.get('place') or a.get('place', 0)), (b.get('of') or a.get('of', 0))
+            if a['alive'] and a.get('players', 99) <= 1:
+                place = 1
+            ev.append((i, 'end', 1.0, a['mass'] if a['alive'] else 0, (place, of, bool(a['alive']))))
+            continue
+        if b.get('over'):
+            continue                      # nothing after the round ends counts as a highlight
         if a['alive'] and not b['alive']:
             pk = max(G[x]['mass'] for x in range(max(0, i - 8 * FPS), i) if G[x]['life'] == a['life'])
             ev.append((i, 'death', max(1, pk / 300), pk, b.get('killer', '')))   # peak mass in the 8 s before dying
-        if b.get('over') and not a.get('over'):
-            ev.append((i, 'end', 1.0, a['mass'] if a['alive'] else 0, (b.get('place', 0), b.get('of', 0), bool(a['alive']))))
-        if b.get('over'):
-            continue                      # nothing after the round ends counts as a highlight
         if b['alive'] and b['leader'] and not a['leader']:
             ev.append((i, 'crown', 1.0, b['mass']))
         if b['alive'] and b['evo'] > a['evo']:
@@ -213,6 +219,8 @@ TITLES = {
 }
 
 
+WIN_HOOK = [[('Last cell ', None), ('standing', GOLD)]]
+WIN_TITLE = 'Last cell standing 👑 #mitosis'
 DISSOLVE_HOOK = [[('Stay inside', None)], [('the ring', RED)]]
 DISSOLVE_TITLE = 'Stay inside the ring 😬 #mitosis'
 _used = {}
@@ -251,11 +259,13 @@ def render(take, c, idx, outdir, rng):
     hi = next_hook(c['kind'], rng)
     if c['kind'] == 'death' and death_cause(c['events'], next((e[0] for e in c['events'] if e[1] == 'death'), -1)) == 'the collapse':
         hook, title = DISSOLVE_HOOK, DISSOLVE_TITLE
+    elif c['kind'] == 'endgame' and c.get('place') == 1:
+        hook, title = WIN_HOOK, WIN_TITLE
     else:
         hook, title = HOOKS[c['kind']][hi], TITLES[c['kind']][hi]
     hook_lines = fill(hook)
     if c['kind'] == 'endgame':
-        sub = f"final ring · {c['m1']:,} mass"
+        sub = f"1st of {c.get('of')} · {c['m1']:,} mass" if c.get('place') == 1 and c.get('of') else f"final ring · {c['m1']:,} mass"
     elif c['kind'] == 'death':
         sub = f"peaked at {c['m1']:,} mass"
     else:
