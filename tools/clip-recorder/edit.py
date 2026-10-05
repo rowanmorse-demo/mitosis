@@ -121,7 +121,7 @@ def candidates(G, ev, L=27.0):
     Lf = int(L * FPS)
     # deaths: the build-up and the moment it goes wrong
     for (i, k, s, m, *_) in ev:
-        if k == 'death' and m >= MIN_DEATH_PEAK:
+        if k == 'death' and m >= MIN_DEATH_PEAK and n - i >= 3 * FPS:   # the death card must be on screen
             a, b = max(0, i - int(23.5 * FPS)), min(n, i + int(3.5 * FPS))
             if G[a]['life'] != G[i - 1]['life']:
                 a = next(x for x in range(a, i) if G[x]['life'] == G[i - 1]['life'] and G[x]['alive'])
