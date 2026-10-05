@@ -89,6 +89,10 @@ def events(G):
         if a['alive'] and not b['alive']:
             pk = max(G[x]['mass'] for x in range(max(0, i - 8 * FPS), i) if G[x]['life'] == a['life'])
             ev.append((i, 'death', max(1, pk / 300), pk, b.get('killer', '')))   # peak mass in the 8 s before dying
+        if b.get('over') and not a.get('over'):
+            ev.append((i, 'end', 1.0, a['mass'] if a['alive'] else 0, (b.get('place', 0), b.get('of', 0), bool(a['alive']))))
+        if b.get('over'):
+            continue                      # nothing after the round ends counts as a highlight
         if b['alive'] and b['leader'] and not a['leader']:
             ev.append((i, 'crown', 1.0, b['mass']))
         if b['alive'] and b['evo'] > a['evo']:
@@ -120,6 +124,10 @@ def candidates(G, ev, L=27.0):
                 a = next(x for x in range(a, i) if G[x]['life'] == G[i - 1]['life'] and G[x]['alive'])
             if (b - a) / FPS >= 14:
                 out.append(dict(kind='death', a=a, b=b, peak=m))
+        if k == 'end' and _[0][2] and _[0][0] > 0:      # survived to the bell
+            a, b = max(0, i - int(23.5 * FPS)), min(n, i + int(5.5 * FPS))
+            if G[a]['life'] == G[i - 1]['life'] and (b - a) / FPS >= 16:
+                out.append(dict(kind='endgame', a=a, b=b, peak=max(G[x]['mass'] for x in range(a, i)), place=_[0][0], of=_[0][1]))
         if k == 'crown':
             a, b = max(0, i - int(17 * FPS)), min(n, i + int(9 * FPS))
             if all(G[x]['life'] == G[i]['life'] for x in (a, b - 1)):
@@ -129,7 +137,7 @@ def candidates(G, ev, L=27.0):
         b = a + Lf
         if b > n or G[a]['life'] != G[b - 1]['life'] or not all(G[x]['alive'] for x in (a, (a + b) // 2, b - 1)):
             continue
-        if any(not G[x]['alive'] for x in range(a, b, 5)):
+        if any(not G[x]['alive'] or G[x].get('over') for x in range(a, b, 5)):
             continue
         out.append(dict(kind='feast', a=a, b=b, peak=max(G[x]['mass'] for x in range(a, b, 3))))
     for c in out:
@@ -137,9 +145,10 @@ def candidates(G, ev, L=27.0):
         eats = [e for e in inside if e[1] == 'eat']
         m0, m1 = G[c['a']]['mass'], max(1, G[min(c['b'], len(G)) - 1]['mass'])
         c['eats'] = len(eats)
-        c['m0'], c['m1'] = m0, (c['peak'] if c['kind'] == 'death' else m1)
+        c['m0'], c['m1'] = m0, (c['peak'] if c['kind'] in ('death', 'endgame') else m1)
         c['score'] = sum(e[2] for e in eats) + 0.6 * math.log(max(1, c['peak']) / max(20, m0) + 1) \
             + (4 + c['peak'] / 250 if c['kind'] == 'death' else 0) + (5 if c['kind'] == 'crown' else 0) \
+            + ((9 + (6 if c.get('place') == 1 else max(0, 4 - c.get('place', 9) / 3))) if c['kind'] == 'endgame' else 0) \
             + c['peak'] / 1500
         c['events'] = inside
     return out
@@ -161,21 +170,37 @@ HOOKS = {
     'death': [[[('He got ', None), ('TOO greedy', RED)]],
               [[('One mistake.', None)], [("That's all it takes", RED)]],
               [[('From hunter', None)], [('to ', None), ('lunch', RED)]],
-              [[('Never get ', None), ('cocky', RED)], [('in Mitosis', None)]]],
+              [[('Never get ', None), ('cocky', RED)], [('in Mitosis', None)]],
+              [[('Wait for it...', None)]],
+              [[('The bigger', None)], [('they are...', RED)]],
+              [[('He thought', None)], [('he was ', None), ('safe', RED)]],
+              [[('Rise and', None)], [('FALL', RED)]]],
     'crown': [[[('From nothing', None)], [('to ', None), ('#1', GOLD)]],
               [[('Taking the ', None), ('crown', GOLD)]],
-              [[('Nobody', None)], [('could stop this', GOLD)]]],
+              [[('Nobody', None)], [('could stop this', GOLD)]],
+              [[('New ', None), ('#1', GOLD), (' in the dish', None)]]],
     'feast': [[[('This cell would', None)], [('NOT stop eating', ACCENT)]],
               [[('Feeding ', None), ('time', ACCENT)]],
               [[('POV: you are', None)], [('the food chain', ACCENT)]],
               [[('Absolute ', None), ('buffet', ACCENT)]],
-              [[('Everything', None)], [('is food', ACCENT)]]],
+              [[('Everything', None)], [('is food', ACCENT)]],
+              [[('Getting ', None), ('BIGGER', ACCENT)]],
+              [[('Nothing is', None)], [('safe from this', ACCENT)]]],
+    'endgame': [[[('The final', None)], [('30 seconds', GOLD)]],
+                [[('The dish is', None)], [('closing', GOLD)]],
+                [[('Last cell', None)], [('standing?', GOLD)]],
+                [[('Survive the', None)], [('collapse', GOLD)]],
+                [[('10 minutes', None)], [('for this moment', GOLD)]],
+                [[('Who survives', None)], [('the final ring?', GOLD)]]],
 }
 TITLES = {
-    'death': ['He got too greedy 💀 #mitosis', 'One mistake in Mitosis 😬', 'From hunter to lunch 💀', 'Never get cocky in Mitosis'],
-    'crown': ['From nothing to #1 👑 #mitosis', 'Taking the crown in Mitosis 👑', 'Nobody could stop this cell'],
+    'death': ['He got too greedy 💀 #mitosis', 'One mistake in Mitosis 😬', 'From hunter to lunch 💀', 'Never get cocky in Mitosis',
+              'Wait for it... 💀 #mitosis', 'The bigger they are... 💀', 'He thought he was safe 😬 #mitosis', 'Rise and FALL in Mitosis 💀'],
+    'crown': ['From nothing to #1 👑 #mitosis', 'Taking the crown in Mitosis 👑', 'Nobody could stop this cell', 'New #1 in the dish 👑'],
     'feast': ['This cell would NOT stop eating 🦠', 'Feeding time in Mitosis 🦠', 'POV: you are the food chain',
-              'Absolute buffet 🍽️ #mitosis', 'Everything is food 🦠'],
+              'Absolute buffet 🍽️ #mitosis', 'Everything is food 🦠', 'Getting BIGGER in Mitosis 🦠', 'Nothing is safe from this cell 🦠'],
+    'endgame': ['The final 30 seconds of Mitosis ⏳', 'The dish is closing ⏳ #mitosis', 'Last cell standing? 👀 #mitosis',
+                'Survive the collapse ⏳ #mitosis', '10 minutes for this moment 👀', 'Who survives the final ring? ⏳'],
 }
 
 
@@ -201,11 +226,11 @@ def fill(lines):
 # ---------------------------------------------------------------- render
 def zoom_expr(evs, a):
     """sum of short gaussian punches at the biggest eats/deaths, as an ffmpeg expression of t."""
-    big = sorted([e for e in evs if e[1] in ('eat', 'death', 'crown')], key=lambda e: -e[2])[:8]
+    big = sorted([e for e in evs if e[1] in ('eat', 'death', 'crown', 'end')], key=lambda e: -e[2])[:8]
     terms = []
     for (i, k, s, m, *_) in big:
         t = (i - a) / FPS
-        amp = 0.07 if k in ('death', 'crown') else 0.03 + 0.02 * min(s, 2)
+        amp = 0.07 if k in ('death', 'crown', 'end') else 0.03 + 0.02 * min(s, 2)
         terms.append(f'{amp:.3f}*exp(-pow((t-{t:.3f})/0.14\\,2))')
     return '1+' + '+'.join(terms) if terms else '1'
 
@@ -220,7 +245,12 @@ def render(take, c, idx, outdir, rng):
     else:
         hook, title = HOOKS[c['kind']][hi], TITLES[c['kind']][hi]
     hook_lines = fill(hook)
-    sub = f"{c['m0']:,} → {c['m1']:,} mass" if c['kind'] != 'death' else f"peaked at {c['m1']:,} mass"
+    if c['kind'] == 'endgame':
+        sub = f"final ring · {c['m1']:,} mass"
+    elif c['kind'] == 'death':
+        sub = f"peaked at {c['m1']:,} mass"
+    else:
+        sub = f"{c['m0']:,} → {c['m1']:,} mass"
     text_png(f'{tmp}/hook.png', hook_lines, size=104)
     text_png(f'{tmp}/sub.png', [[(sub, (220, 232, 240))]], size=52, stroke=8, pad=24)
     endcard_png(f'{tmp}/end.png')
@@ -234,6 +264,11 @@ def render(take, c, idx, outdir, rng):
             word = 'DISSOLVED' if death_cause(c['events'], i) == 'the collapse' else 'EATEN'
             text_png(f'{tmp}/cap{capn}.png', [[(word, RED)]], size=150 if word == 'EATEN' else 130, stroke=16)
             overlays.append((f'{tmp}/cap{capn}.png', t + 0.05, min(dur, t + 3.3) - 0.05, 120)); capn += 1  # above the game's death card
+        elif k == 'end' and c['kind'] == 'endgame':
+            pl, of = c.get('place', 0), c.get('of', 0)
+            word, colr = ('VICTORY', GOLD) if pl == 1 else (f'#{pl} OF {of}', ACCENT)
+            text_png(f'{tmp}/cap{capn}.png', [[(word, colr)]], size=140, stroke=16)
+            overlays.append((f'{tmp}/cap{capn}.png', t + 0.1, dur - 0.05, 120)); capn += 1
         elif k == 'crown':
             text_png(f'{tmp}/cap{capn}.png', [[('#1 IN THE DISH', GOLD)]], size=100, stroke=14)
             overlays.append((f'{tmp}/cap{capn}.png', t, min(dur, t + 2.6), 1180)); capn += 1
@@ -243,7 +278,7 @@ def render(take, c, idx, outdir, rng):
             text_png(f'{tmp}/cap{capn}.png', [[(label, ACCENT if streak < 3 else GOLD)]], size=88 if streak < 3 else 96, stroke=12)
             overlays.append((f'{tmp}/cap{capn}.png', t, min(dur, t + 1.1), 1220)); capn += 1
     # audio
-    aev = [((i - a) / FPS, k, s) for (i, k, s, m, *_) in c['events'] if k in ('eat', 'death', 'crown', 'evolve')]
+    aev = [((i - a) / FPS, 'crown' if k == 'end' else k, s) for (i, k, s, m, *_) in c['events'] if k in ('eat', 'death', 'crown', 'evolve', 'end')]
     track = audio.make_track(dur + END, aev, seed=idx * 7 + 3)
     wf.write(f'{tmp}/a.wav', audio.SR, track)
     # filter graph
@@ -271,7 +306,7 @@ def render(take, c, idx, outdir, rng):
     src = 2 + len(overlays)
     fg.append(f"[{src}:v]format=rgba,fade=t=in:st={dur:.3f}:d=0.35:alpha=1[oe]")
     fg.append(f"[{cur}][oe]overlay=0:0:enable='gte(t,{dur:.3f})',format=yuv420p[vout]")
-    name = f"mitosis_{idx:02d}_{c['kind']}"
+    name = f"mitosis_{os.path.basename(take)}_{idx:02d}_{c['kind']}"
     out = os.path.join(outdir, name + '.mp4')
     cmd = ['ffmpeg', '-y', '-loglevel', 'error'] + inputs + [
         '-filter_complex', ';'.join(fg), '-map', '[vout]', '-map', '1:a',
@@ -298,6 +333,8 @@ def main():
     ap.add_argument('--per-take', type=int, default=4)
     ap.add_argument('--seed', type=int, default=5)
     ap.add_argument('--dry', action='store_true')
+    ap.add_argument('--min-score', type=float, default=0)   # skip weak moments
+    ap.add_argument('--hook-seed', type=int, default=None)
     args = ap.parse_args()
     os.makedirs(args.out, exist_ok=True)
     rng = random.Random(args.seed)
@@ -308,7 +345,7 @@ def main():
         kinds = {}
         for e in ev:
             kinds[e[1]] = kinds.get(e[1], 0) + 1
-        ch = pick(candidates(G, ev), args.per_take)
+        ch = pick([c for c in candidates(G, ev) if c['score'] >= args.min_score], args.per_take)
         print(f'{t}: {len(G) / FPS:.0f}s, events {kinds}, picked ' +
               ', '.join(f"{c['kind']}@{c['a'] / FPS:.0f}s({c['score']:.1f})" for c in ch))
         plan += [(t, c) for c in ch]

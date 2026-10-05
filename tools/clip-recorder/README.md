@@ -18,6 +18,20 @@ python -m playwright install chromium
 
 `ffmpeg` must be on PATH. On Windows, `winget install Gyan.FFmpeg` works, then open a new terminal.
 
+## Make lots of clips (the easy way)
+
+```sh
+python batch.py --clips 30 --jobs 4
+```
+
+This keeps playing games until `clips/` holds 30 clips, then stops. Each game gets a new seed, skin, cell name and play style, and the filming plans alternate:
+
+- **mid**: around the 2-minute mark.
+- **late**: minutes 3–5, when cells are huge.
+- **endgame**: from about 7:00 through the final ring and the results screen.
+
+Each plan fast-forwards to its start without drawing (about 10× faster than filming) and tries more seeds if the player's cell is too small at that point. Finished takes are cut into their best moments (weak ones are skipped), raw footage is deleted, and every clip is added to `clips/manifest.csv` with its title and description. Set `--jobs` to roughly your CPU core count. Run it again with a different `--seed` for a fresh batch.
+
 ## Film a take
 
 ```sh
@@ -36,6 +50,9 @@ This writes `raw/take1.mp4` (1080×1920 master) and `raw/take1.jsonl` (per-frame
 | `--warmup` | Seconds of play before filming starts. Skips the slow pellet-grazing start |
 | `--seconds` | Seconds of gameplay to film |
 | `--respawn` | Respawn after a death and keep filming. Without it, filming stops 5 s after the first death |
+| `--film-from` | Start filming at this second of the round clock, fast-forwarding there without drawing (replaces `--warmup`) |
+| `--min-mass`, `--tries` | With `--film-from`: if the cell is smaller than this when filming would start, try the next seed (up to `--tries` seeds) |
+| `--until-end` | Stop filming a few seconds after the round ends, so the take finishes on the results screen |
 
 ## Cut clips
 
@@ -43,7 +60,14 @@ This writes `raw/take1.mp4` (1080×1920 master) and `raw/take1.jsonl` (per-frame
 python edit.py raw/take1 raw/take2 --out clips --per-take 4 --max 8
 ```
 
-Use `--dry` to only print which moments it would cut. Clip kinds are `death` (the build-up and the moment it goes wrong, ending on the game's death card), `crown` (taking #1) and `feast` (a feeding streak).
+Use `--dry` to only print which moments it would cut, and `--min-score 5` to skip weak moments. Clip kinds:
+
+- `death`: the build-up and the moment it goes wrong, ending on the game's death card. The caption says DISSOLVED instead of EATEN when the closing arena did it.
+- `endgame`: the final ring, ending on the results screen with VICTORY or the placement.
+- `crown`: taking #1.
+- `feast`: a feeding streak.
+
+The player's AI re-plans every 0.1 s, like a player steering continuously, instead of the bots' slower Calm-difficulty rate.
 
 ## Notes
 
