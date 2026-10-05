@@ -88,7 +88,7 @@ def events(G):
             continue
         if a['alive'] and not b['alive']:
             pk = max(G[x]['mass'] for x in range(max(0, i - 8 * FPS), i) if G[x]['life'] == a['life'])
-            ev.append((i, 'death', max(1, pk / 300), pk))   # peak mass in the 8 s before dying
+            ev.append((i, 'death', max(1, pk / 300), pk, b.get('killer', '')))   # peak mass in the 8 s before dying
         if b['alive'] and b['leader'] and not a['leader']:
             ev.append((i, 'crown', 1.0, b['mass']))
         if b['alive'] and b['evo'] > a['evo']:
@@ -102,11 +102,18 @@ def events(G):
     return ev
 
 
+def death_cause(evs, i):
+    for e in evs:
+        if e[0] == i and e[1] == 'death' and len(e) > 4:
+            return e[4]
+    return ''
+
+
 def candidates(G, ev, L=27.0):
     n, out = len(G), []
     Lf = int(L * FPS)
     # deaths: the build-up and the moment it goes wrong
-    for (i, k, s, m) in ev:
+    for (i, k, s, m, *_) in ev:
         if k == 'death' and m >= 120:
             a, b = max(0, i - int(23.5 * FPS)), min(n, i + int(3.5 * FPS))
             if G[a]['life'] != G[i - 1]['life']:
@@ -172,6 +179,21 @@ TITLES = {
 }
 
 
+DISSOLVE_HOOK = [[('Stay inside', None)], [('the ring', RED)]]
+DISSOLVE_TITLE = 'Stay inside the ring 😬 #mitosis'
+_used = {}
+
+
+def next_hook(kind, rng):
+    """cycle through a kind's hooks in a shuffled order so a batch doesn't repeat itself"""
+    q = _used.get(kind)
+    if not q:
+        q = list(range(len(HOOKS[kind])))
+        rng.shuffle(q)
+        _used[kind] = q
+    return q.pop()
+
+
 def fill(lines):
     return [[(t, c or (255, 255, 255)) for t, c in ln] for ln in lines]
 
@@ -181,7 +203,7 @@ def zoom_expr(evs, a):
     """sum of short gaussian punches at the biggest eats/deaths, as an ffmpeg expression of t."""
     big = sorted([e for e in evs if e[1] in ('eat', 'death', 'crown')], key=lambda e: -e[2])[:8]
     terms = []
-    for (i, k, s, m) in big:
+    for (i, k, s, m, *_) in big:
         t = (i - a) / FPS
         amp = 0.07 if k in ('death', 'crown') else 0.03 + 0.02 * min(s, 2)
         terms.append(f'{amp:.3f}*exp(-pow((t-{t:.3f})/0.14\\,2))')
@@ -192,7 +214,11 @@ def render(take, c, idx, outdir, rng):
     a, b = c['a'], c['b']
     dur = (b - a) / FPS
     tmp = tempfile.mkdtemp(dir=outdir)
-    hook = rng.choice(HOOKS[c['kind']])
+    hi = next_hook(c['kind'], rng)
+    if c['kind'] == 'death' and death_cause(c['events'], next((e[0] for e in c['events'] if e[1] == 'death'), -1)) == 'the collapse':
+        hook, title = DISSOLVE_HOOK, DISSOLVE_TITLE
+    else:
+        hook, title = HOOKS[c['kind']][hi], TITLES[c['kind']][hi]
     hook_lines = fill(hook)
     sub = f"{c['m0']:,} → {c['m1']:,} mass" if c['kind'] != 'death' else f"peaked at {c['m1']:,} mass"
     text_png(f'{tmp}/hook.png', hook_lines, size=104)
@@ -202,10 +228,11 @@ def render(take, c, idx, outdir, rng):
     # event captions
     capn = 0
     eats_t = [(e[0] - a) / FPS for e in c['events'] if e[1] == 'eat']
-    for (i, k, s, m) in c['events']:
+    for (i, k, s, m, *_) in c['events']:
         t = (i - a) / FPS
         if k == 'death':
-            text_png(f'{tmp}/cap{capn}.png', [[('EATEN', RED)]], size=150, stroke=16)
+            word = 'DISSOLVED' if death_cause(c['events'], i) == 'the collapse' else 'EATEN'
+            text_png(f'{tmp}/cap{capn}.png', [[(word, RED)]], size=150 if word == 'EATEN' else 130, stroke=16)
             overlays.append((f'{tmp}/cap{capn}.png', t + 0.05, min(dur, t + 3.3) - 0.05, 120)); capn += 1  # above the game's death card
         elif k == 'crown':
             text_png(f'{tmp}/cap{capn}.png', [[('#1 IN THE DISH', GOLD)]], size=100, stroke=14)
@@ -216,7 +243,7 @@ def render(take, c, idx, outdir, rng):
             text_png(f'{tmp}/cap{capn}.png', [[(label, ACCENT if streak < 3 else GOLD)]], size=88 if streak < 3 else 96, stroke=12)
             overlays.append((f'{tmp}/cap{capn}.png', t, min(dur, t + 1.1), 1220)); capn += 1
     # audio
-    aev = [((i - a) / FPS, k, s) for (i, k, s, m) in c['events'] if k in ('eat', 'death', 'crown', 'evolve')]
+    aev = [((i - a) / FPS, k, s) for (i, k, s, m, *_) in c['events'] if k in ('eat', 'death', 'crown', 'evolve')]
     track = audio.make_track(dur + END, aev, seed=idx * 7 + 3)
     wf.write(f'{tmp}/a.wav', audio.SR, track)
     # filter graph
@@ -251,7 +278,6 @@ def render(take, c, idx, outdir, rng):
         '-c:v', 'libx264', '-preset', 'fast', '-crf', '19', '-profile:v', 'high', '-r', str(FPS),
         '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-shortest', '-movflags', '+faststart', out]
     subprocess.run(cmd, check=True)
-    title = rng.choice(TITLES[c['kind']])
     meta = dict(file=name + '.mp4', kind=c['kind'], seconds=round(dur + END, 1), title=title,
                 description=("Gameplay from Mitosis practice mode (the player cell is driven by the game's AI). "
                              "Mitosis is a free multiplayer cell-eating arena: "

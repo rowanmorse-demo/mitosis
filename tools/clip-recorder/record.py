@@ -29,7 +29,7 @@ def patched_page(path):
         s = s.replace(a, b, 1)
     hook = """window.__G=()=>{let m=0,n=0;if(human)for(const c of human.cells)if(!c.dead){m+=c.mass;n++;}
   let rank=0;if(human&&human.alive){const tot=p=>p.cells.reduce((a,c)=>a+(c.dead?0:c.mass),0);const mm=tot(human);rank=1+players.filter(p=>p!==human&&p.alive&&tot(p)>mm).length;}
-  return{mode,T,alive:!!(human&&human.alive),mass:Math.round(m),ncells:n,eaten:human?human.stats.eaten:0,leader:!!(human&&leader===human),evo:human?human.evo:0,rank,ev:ev&&ev.type||0,players:players.filter(p=>p.alive).length};};
+  return{mode,T,alive:!!(human&&human.alive),mass:Math.round(m),ncells:n,eaten:human?human.stats.eaten:0,killer:human?human.stats.killer:'',leader:!!(human&&leader===human),evo:human?human.evo:0,rank,ev:ev&&ev.type||0,players:players.filter(p=>p.alive).length};};
 window.__play=o=>{$('nameIn').value=o.name||'';settings.skin=o.skin|0;settings.stain=o.stain|0;settings.diff=o.diff||'standard';
   if(local==='practice')startGame();else startLocal('practice');
   human.ai={t:0,aggr:o.aggr??.9,pers:PERS[o.pers||'hunter'],shotT:0};window.__AI=true;};
