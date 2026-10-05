@@ -20,8 +20,8 @@ GOLD = (255, 204, 77)
 RED = (255, 92, 92)
 END = 2.4                     # end card seconds (appended after the gameplay)
 HOOK_Y = 470                  # below the game's event banners and toasts
-MIN_DEATH_PEAK = 400          # death clips need a cell that got at least this big
-MIN_FEAST_PEAK = 1200         # feeding clips need a big cell
+MIN_DEATH_PEAK = 700          # death clips need a cell that got at least this big
+MIN_FEAST_PEAK = 1500         # feeding clips need a big cell
 
 
 # ---------------------------------------------------------------- text art
@@ -158,6 +158,8 @@ def candidates(G, ev, L=27.0):
             + ((9 + (6 if c.get('place') == 1 else max(0, 4 - c.get('place', 9) / 3))) if c['kind'] == 'endgame' else 0) \
             + c['peak'] / 1500
         c['events'] = inside
+        if c['kind'] == 'feast' and sum(1 for e in eats if e[0] < c['b'] - 2 * FPS) < 2:
+            c['score'] = -1               # a feeding clip needs at least two bites on screen
     return out
 
 
