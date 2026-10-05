@@ -26,9 +26,11 @@ body{margin:0;background:var(--void);color:var(--ink);font-family:var(--display)
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;-webkit-backdrop-filter:blur(10px) saturate(1.2);backdrop-filter:blur(10px) saturate(1.2);box-shadow:0 10px 40px rgba(0,0,0,.35)}
 
 /* stats */
-#stats{top:calc(var(--gut) + env(safe-area-inset-top,0px));left:calc(var(--gut) + env(safe-area-inset-left,0px));display:grid;gap:3px}
-#massVal{font:800 48px/1 var(--display);letter-spacing:-.04em;font-variant-numeric:tabular-nums;text-shadow:0 2px 18px rgba(0,0,0,.5)}
-#metaVal{font:12px/1.4 var(--mono);color:var(--muted)}
+#stats{top:calc(var(--gut) + env(safe-area-inset-top,0px));left:calc(var(--gut) + env(safe-area-inset-left,0px));display:grid;gap:2px;padding:7px 12px 8px;border-radius:14px;background:rgba(2,8,9,.5);border:1px solid rgba(150,220,210,.16);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);justify-items:start}
+#stats>.label{font-size:9.5px}#fx:empty{display:none}#fx{margin-top:4px}
+.livesrow{display:flex;align-items:center;gap:7px;margin-top:2px}.livesrow .label{font-size:9.5px}#lives{display:flex;gap:5px}#lives i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);transition:background .3s,box-shadow .3s}#lives i.on{background:var(--accent);border-color:var(--accent);box-shadow:0 0 8px rgba(255,92,138,.55)}.livesrow.inf #lives i{background:#5fe0a8;border-color:#5fe0a8;box-shadow:none}
+#massVal{font:800 42px/1 var(--display);letter-spacing:-.04em;font-variant-numeric:tabular-nums;text-shadow:0 2px 18px rgba(0,0,0,.5)}
+#metaVal{font:11px/1.4 var(--mono);color:var(--muted)}
 #fx{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;max-width:280px;min-height:24px}
 #roundClock{top:calc(var(--gut) + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);font:500 12px/1 var(--mono);color:#9fc6bd;background:rgba(2,8,9,.55);border:1px solid rgba(150,220,210,.25);border-radius:999px;padding:7px 12px;white-space:nowrap}
 #roundClock b{font-weight:700;color:#dcefe9}#roundClock.hot{color:#ffb3bd;border-color:rgba(255,120,135,.5)}#roundClock.hot b{color:#fff}
@@ -304,6 +306,7 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
   #introCard>.steps{grid-column:2;grid-row:1/4;gap:7px;align-self:center}.steps li{grid-template-columns:40px 1fr;gap:10px;padding:7px 10px}.steps svg{width:38px;height:38px}.steps b{font-size:13.5px}.steps span{font-size:11.5px;line-height:1.35;margin-top:2px}
 }
 .runs{margin:0;padding:0;list-style:none;display:grid;gap:6px}.runs li{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:baseline;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:rgba(0,0,0,.2);text-align:left}.runs b{font:700 13.5px var(--display);color:var(--ink);white-space:nowrap}.runs span{font:11.5px var(--mono);color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.runs .dl{font:600 12px var(--mono);color:var(--dim);text-align:right}.runs .dl.up{color:#5fe0a8}.runs .dl.dn{color:var(--accent)}
+.tiers{display:flex;flex-wrap:wrap;gap:6px}.tiers span{font:600 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;padding:4px 9px;border-radius:999px;border:1px solid var(--line);background:rgba(0,0,0,.2)}.tiers span b{font-weight:600;opacity:.75}.tiers span.cur{border-color:currentColor;background:rgba(255,255,255,.05)}
 .top li.me{border:1px solid rgba(255,92,138,.35);background:rgba(255,92,138,.08);border-radius:9px;padding:5px 8px;margin:0 -8px}.top li.me .n{color:var(--ink);font-weight:700}
 .status{display:grid;gap:4px;justify-items:center}.status .netline{max-width:100%;box-sizing:border-box}.status .netline span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}#roundLine{margin:0;font:11px/1.3 var(--mono);color:var(--dim);letter-spacing:.02em}
 .chips{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
@@ -326,6 +329,7 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
 .skin{appearance:none;border:1px solid var(--line);background:rgba(0,0,0,.25);border-radius:12px;padding:8px 4px 7px;display:grid;gap:3px;justify-items:center;color:var(--muted);cursor:pointer;transition:border-color .15s,transform .12s,background .15s}
 .skin canvas{width:64px;height:64px;border-radius:50%}
 .skin .sn{font:600 12px var(--display);color:var(--ink)}.skin .sp{font:600 10px var(--mono);color:var(--amber);text-align:center;background:rgba(242,177,52,.12);border-radius:999px;padding:3px 8px}
+.skin .rt{font:600 8.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--violet);margin-top:-2px}.skin.rare{border-color:rgba(154,140,255,.4)}.skin.epic{border-color:rgba(242,177,52,.45)}.skin.epic .rt{color:var(--amber)}.skin.legendary{border-color:rgba(255,92,138,.55);box-shadow:0 0 22px rgba(255,92,138,.18),inset 0 0 18px rgba(255,120,40,.08)}.skin.legendary .rt{color:var(--accent)}
 .skin.own .sp{color:#5fe0a8;background:rgba(95,224,168,.12)}.skin[aria-pressed=true]{border-color:var(--accent)}.skin[aria-pressed=true] .sp{background:var(--accent);color:var(--accent-ink)}
 .skin.confirm{border-color:var(--amber);background:rgba(242,177,52,.1)}.skin.confirm .sp{color:var(--ink)}
 .skin:hover{transform:translateY(-1px);border-color:var(--line-strong)}.skin:disabled{opacity:.5;cursor:default}
@@ -350,6 +354,7 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
   <div class="label">Mass</div>
   <div id="massVal">0</div>
   <div id="metaVal">1 cell · rank –</div>
+  <div class="livesrow" id="livesRow"><span class="label">Lives</span><div id="lives"><i></i><i></i><i></i></div></div>
   <div id="fx"></div>
 </div>
 <div id="board" class="hud panel"><button class="bhead" id="boardToggle" type="button" aria-expanded="true"><span class="label">Culture ranking</span><span id="netPill" class="pill" hidden>Live</span><span class="chev">▾</span></button><ol id="boardList"></ol></div>
@@ -418,6 +423,7 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
   <div class="card panel" id="rankCard" hidden>
     <p class="eyebrow">Ranks</p>
     <h2>Rating</h2>
+    <div class="tiers" id="tierLegend" hidden></div>
     <p class="hint" id="rankHint">Climb slowly by surviving and absorbing; dying fast costs rating. The higher you are, the harder it is to gain and the easier to lose.</p>
     <div class="field"><span class="label">Top players</span><ol class="top" id="topList"><li><span class="rk"></span><span>Loading…</span></li></ol></div>
     <div class="row"><button class="primary back" type="button">Back</button></div>
@@ -860,7 +866,9 @@ function tierProgress(){ // where this rating sits inside its tier, for the prog
   if(!isFinite(hi))return{text:'top tier',pct:100};
   return{text:`${hi-wallet.rating} to ${names[i+1]}`,pct:Math.round(clamp((wallet.rating-lo)/(hi-lo),0,1)*100)};
 }
-function renderRank(){$('rankVal').textContent=wallet.rating;$('rankTier').textContent=wallet.tier;$('rankTier').dataset.tier=wallet.tier;
+function renderTierLegend(){const el=$('tierLegend');if(!el)return;const names=(wallet.catalog&&wallet.catalog.tiers)||[],at=(wallet.catalog&&wallet.catalog.tierAt)||[];if(!names.length||at.length!==names.length){el.hidden=true;return;}
+  el.hidden=false;el.innerHTML=names.map((n,i)=>`<span class="tier${n===wallet.tier?' cur':''}" data-tier="${escH(n)}">${escH(n)}${i>0?' <b>'+at[i-1]+'+</b>':''}</span>`).join('');}
+function renderRank(){renderTierLegend();$('rankVal').textContent=wallet.rating;$('rankTier').textContent=wallet.tier;$('rankTier').dataset.tier=wallet.tier;
   const p=tierProgress(),nx=$('rankNext'),fill=$('tierFill');if(nx)nx.textContent=p.text;if(fill)fill.style.width=p.pct+'%';
 }
 function showRank(w){const el=$('dRank');if(typeof w.ratingDelta!=='number'){el.hidden=true;return;}const d=w.ratingDelta;updateRunDelta(d,w.rating);
@@ -909,11 +917,12 @@ async function flushRuns(){ // report finished runs; keep them queued while the 
 }
 // Skins grid on the start card
 let confirmSkin=0,confirmT=0;
+const RARITY={12:'rare',13:'rare',14:'rare',15:'epic',16:'legendary'};
 function renderSkins(){
   const el=$('skins');if(!el)return;const ab=$('atpBal');if(ab)ab.textContent=wallet.balance;$('storeBal').textContent=wallet.balance; // #atpBal only exists while no premium skin is owned
   $('skinHint').textContent=wallet.online?'Earn ATP by surviving, absorbing cells and growing. Tap a skin to buy or wear it.':'Connect to the server to earn or spend ATP. Skins you own still work.';
   const card=S=>{const own=ownsSkin(S.id),eq=settings.skin===S.id,cf=confirmSkin===S.id&&performance.now()-confirmT<4000;
-    return `<button type="button" class="skin${own?' own':''}${cf?' confirm':''}" data-id="${S.id}" aria-pressed="${eq}" aria-label="${escH(S.name)} skin"><canvas width="144" height="144" data-skin="${S.id}"></canvas><span class="sn">${escH(S.name)}</span><span class="sp">${own?(eq?'✓ Wearing':'Owned'):cf?'Tap again · '+S.price.toLocaleString():S.price.toLocaleString()+' ATP'}</span></button>`;};
+    const rar=RARITY[S.id]||'common';return `<button type="button" class="skin ${rar}${own?' own':''}${cf?' confirm':''}" data-id="${S.id}" aria-pressed="${eq}" aria-label="${escH(S.name)} skin"><canvas width="144" height="144" data-skin="${S.id}"></canvas><span class="sn">${escH(S.name)}</span>${rar!=='common'?`<span class="rt">${rar}</span>`:''}<span class="sp">${own?(eq?'✓ Wearing':'Owned'):cf?'Tap again · '+S.price.toLocaleString():S.price.toLocaleString()+' ATP'}</span></button>`;};
   el.innerHTML=PREMIUM.map(card).join('');
   const mine=PREMIUM.filter(S=>ownsSkin(S.id)),oe=$('ownedSkins');if(oe){oe.innerHTML=mine.map(card).join('');$('ownedHint').innerHTML=mine.length?'Tap a skin to wear it; the free patterns above always work too.':'No premium skins yet. The Shop has them, and you have <b id="atpBal">'+wallet.balance+'</b> ATP.';}
   renderPreviews();
@@ -2018,6 +2027,7 @@ function hud(){
   boardEl.innerHTML=html;
   if(human&&human.alive){
     const n=human.cells.length;metaEl.textContent=`${n} cell${n>1?'s':''} · rank ${hi+1} of ${ranked.length}${human.evo?` · ${human.evo} evolution${human.evo>1?'s':''}`:''}`;
+    const LV=$('lives');if(LV){const prac=local==='practice',left=prac?MAX_RESPAWNS+1:clamp(MAX_RESPAWNS+2-livesUsed(),0,MAX_RESPAWNS+1);[...LV.children].forEach((d,i)=>d.classList.toggle('on',i<left));LV.parentElement.classList.toggle('inf',prac);}
     if(hi===0&&ranked.length>5)unlock('rank1');
     let fx='';for(const k in PU){const t=human.fx[k];if(t>0)fx+=`<span class="chip" style="color:${col(PU[k].c)};--p:${(t/PU[k].dur).toFixed(3)}">${PU[k].label} ${t.toFixed(1)}s<i></i></span>`;}
     let inf=0;for(const c of human.cells)if(c.inf&&(!inf||c.inf<inf))inf=c.inf;
