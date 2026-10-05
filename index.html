@@ -213,6 +213,7 @@ body:not(.playing) #evolve{display:none!important}
   input[type=text]{padding:9px 11px;font-size:15px}
   .seg button{padding:7px 4px;font-size:12px}.seg button small{font-size:9.5px}
   .pstat{padding:7px 4px;gap:2px}.pstat b{font-size:16px}.pstat span{font-size:9.5px}
+  #board{width:240px;padding:9px 12px}#board .bhead{white-space:nowrap}#board ol{gap:3px;margin-top:7px}#board li{font-size:12px}#board li.gap{font-size:10px}
   .card>.phead,#runsField{grid-column:1/-1}.runs{grid-template-columns:1fr 1fr;gap:6px}.pavatar{width:60px;height:60px}.pmain h2{font-size:28px}
   #profileCard .acct{grid-column:1/-1;grid-template-columns:1fr 1fr;gap:6px 14px;align-items:start}
   #profileCard .acct>.label,#profileCard .acct>.hint{grid-column:1/-1}
@@ -1217,7 +1218,8 @@ function infect(c,delay){
 
 /* ================= effects ================= */
 function burst(x,y,color,n,sp=260){for(let i=0;i<n&&parts.length<700;i++){const a=Math.random()*TAU,s=rand(sp*.25,sp);parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,t:0,life:rand(.35,.85),color,r:rand(2.5,8)});}}
-function floatText(x,y,text,c,size=18){floats.push({x,y,text,c,size,t:0,life:1.2});}
+function floatText(x,y,text,c,size=18){const z=cam.z||1;let n=0;for(const f of floats)if(f.t<.9&&Math.abs(f.x-x)<90/z&&Math.abs(f.y-y)<90/z)n++;y-=n*size*1.9/z; // a burst of announcements stacks upward instead of overprinting
+  floats.push({x,y,text,c,size,t:0,life:1.2});}
 function pushFeed(html,you){feed.unshift({html,you,t:T});if(feed.length>5)feed.pop();renderFeed();}
 function feedKill(kk,kn,vk,vn){const me=myKey();pushFeed(`<b>${esc(kk===me?'You':kn)}</b> absorbed <b>${esc(vk===me?'you':vn)}</b>`,kk===me||vk===me);}
 function nearestCell(p,x,y){let b=null,bd=1e18;for(const c of p.cells){if(c.dead)continue;const d=(c.x-x)**2+(c.y-y)**2;if(d<bd){bd=d;b=c;}}return b;}
