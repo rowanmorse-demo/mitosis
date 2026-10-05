@@ -209,7 +209,7 @@ body:not(.playing) #evolve{display:none!important}
   input[type=text]{padding:9px 11px;font-size:15px}
   .seg button{padding:7px 4px;font-size:12px}.seg button small{font-size:9.5px}
   .pstat{padding:7px 4px;gap:2px}.pstat b{font-size:16px}.pstat span{font-size:9.5px}
-  .card>.phead{grid-column:1/-1}.pavatar{width:60px;height:60px}.pmain h2{font-size:28px}
+  .card>.phead,#runsField{grid-column:1/-1}.runs{grid-template-columns:1fr 1fr;gap:6px}.pavatar{width:60px;height:60px}.pmain h2{font-size:28px}
   #profileCard .acct{grid-column:1/-1;grid-template-columns:1fr 1fr;gap:6px 14px;align-items:start}
   #profileCard .acct>.label,#profileCard .acct>.hint{grid-column:1/-1}
   .acct .who{font-size:12px}.sbtn{padding:9px 12px;font-size:14px}.sbtns{gap:6px}
@@ -303,6 +303,7 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
   #introCard>.eyebrow,#introCard>h2,#introCard>.primary{grid-column:1}#introCard>h2{font-size:34px;align-self:start}#introCard>.primary{align-self:end;padding:12px;font-size:17px}
   #introCard>.steps{grid-column:2;grid-row:1/4;gap:7px;align-self:center}.steps li{grid-template-columns:40px 1fr;gap:10px;padding:7px 10px}.steps svg{width:38px;height:38px}.steps b{font-size:13.5px}.steps span{font-size:11.5px;line-height:1.35;margin-top:2px}
 }
+.runs{margin:0;padding:0;list-style:none;display:grid;gap:6px}.runs li{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:baseline;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:rgba(0,0,0,.2);text-align:left}.runs b{font:700 13.5px var(--display);color:var(--ink);white-space:nowrap}.runs span{font:11.5px var(--mono);color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.runs .dl{font:600 12px var(--mono);color:var(--dim);text-align:right}.runs .dl.up{color:#5fe0a8}.runs .dl.dn{color:var(--accent)}
 .top li.me{border:1px solid rgba(255,92,138,.35);background:rgba(255,92,138,.08);border-radius:9px;padding:5px 8px;margin:0 -8px}.top li.me .n{color:var(--ink);font-weight:700}
 .status{display:grid;gap:4px;justify-items:center}.status .netline{max-width:100%;box-sizing:border-box}.status .netline span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}#roundLine{margin:0;font:11px/1.3 var(--mono);color:var(--dim);letter-spacing:.02em}
 .chips{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
@@ -426,6 +427,7 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
     <p class="eyebrow">Profile</p>
     <div class="phead"><canvas id="profCv" class="pavatar" width="144" height="144" aria-hidden="true"></canvas><div class="pmain"><h2 id="profName">Unnamed cell</h2><div class="rankline"><span class="tier" id="pTierTxt">Silver</span><span class="next" id="pNext"></span></div><div class="tierbar" aria-hidden="true"><i id="pFill"></i></div></div></div>
     <div class="pstats"><div class="pstat"><b id="pRating">1000</b><span id="pTier">Silver</span></div><div class="pstat"><b id="pAtp">0</b><span>ATP</span></div><div class="pstat"><b id="pEarned">0</b><span>earned</span></div><div class="pstat"><b id="pRuns">0</b><span>runs</span></div><div class="pstat"><b id="pSkins">0</b><span>skins</span></div></div>
+    <div class="field" id="runsField" hidden><span class="label">Recent runs</span><ol class="runs" id="runList"></ol></div>
     <div class="field acct" id="acctField"><span class="label">Account</span>
       <p class="who" id="acctWho">Not signed in. Sign in so your ATP, skins and rating follow you to any phone.</p>
       <div class="sbtns" id="acctBtns">
@@ -861,7 +863,7 @@ function tierProgress(){ // where this rating sits inside its tier, for the prog
 function renderRank(){$('rankVal').textContent=wallet.rating;$('rankTier').textContent=wallet.tier;$('rankTier').dataset.tier=wallet.tier;
   const p=tierProgress(),nx=$('rankNext'),fill=$('tierFill');if(nx)nx.textContent=p.text;if(fill)fill.style.width=p.pct+'%';
 }
-function showRank(w){const el=$('dRank');if(typeof w.ratingDelta!=='number'){el.hidden=true;return;}const d=w.ratingDelta;
+function showRank(w){const el=$('dRank');if(typeof w.ratingDelta!=='number'){el.hidden=true;return;}const d=w.ratingDelta;updateRunDelta(d,w.rating);
   el.innerHTML=`Rating <b>${d>=0?'+':'−'}${Math.abs(d)}</b> → <b>${w.rating}</b> · ${escH(w.tier)}`;el.hidden=false;}
 async function loadTop(){try{const r=await fetch(window.MITOSIS_SERVER+'/api/leaderboard');const j=await r.json();const me=wallet.playerId;
   const myName=cleanName($('nameIn').value)||settings.name||'Unnamed cell';let seen=false;
@@ -873,7 +875,13 @@ async function loadTop(){try{const r=await fetch(window.MITOSIS_SERVER+'/api/lea
 $('rankBtn').addEventListener('click',()=>{showCard('rankCard');loadTop();});
 $('avatarBtn').addEventListener('click',()=>$('lookBtn').click());$('lookBtn').addEventListener('click',()=>{showCard('lookCard');renderSkins();});
 $('setBtn').addEventListener('click',()=>showCard('settingsCard'));
-function renderProfile(){if(!$('profName'))return;$('profName').textContent=cleanName($('nameIn').value)||settings.name||'Unnamed cell';$('pRating').textContent=wallet.rating;$('pTier').textContent=wallet.tier;$('pAtp').textContent=wallet.balance.toLocaleString();$('pEarned').textContent=(wallet.earned|0).toLocaleString();$('pRuns').textContent=wallet.runs|0;$('pSkins').textContent=wallet.skins.filter(id=>id>=SKIN_FREE).length;
+function loadHistory(){try{const a=JSON.parse(localStorage.getItem('mitosis.history')||'[]');return Array.isArray(a)?a:[];}catch(e){return[];}}
+function recordRun(e){const h=loadHistory();h.push(e);try{localStorage.setItem('mitosis.history',JSON.stringify(h.slice(-12)));}catch(err){}}
+function updateRunDelta(delta,rating){const h=loadHistory();const last=h[h.length-1];if(!last||last.delta!=null||Date.now()-last.t>60000)return;last.delta=delta;last.rating=rating;try{localStorage.setItem('mitosis.history',JSON.stringify(h));}catch(err){}}
+function renderRuns(){const el=$('runList'),f=$('runsField');if(!el||!f)return;const h=loadHistory().slice(-6).reverse();f.hidden=!h.length;
+  el.innerHTML=h.map(r=>{const d=typeof r.delta==='number'?`<span class="dl ${r.delta>0?'up':r.delta<0?'dn':''}">${r.delta>0?'+':''}${r.delta}</span>`:r.practice?'<span class="dl">practice</span>':'<span class="dl"></span>';
+    return `<li><b>${r.place?ordinal(r.place)+' of '+r.of:'—'}</b><span>${fmtT(r.sec|0)} · ${(r.peak|0).toLocaleString()} peak · ${r.eaten|0} eaten</span>${d}</li>`;}).join('');}
+function renderProfile(){if(!$('profName'))return;renderRuns();$('profName').textContent=cleanName($('nameIn').value)||settings.name||'Unnamed cell';$('pRating').textContent=wallet.rating;$('pTier').textContent=wallet.tier;$('pAtp').textContent=wallet.balance.toLocaleString();$('pEarned').textContent=(wallet.earned|0).toLocaleString();$('pRuns').textContent=wallet.runs|0;$('pSkins').textContent=wallet.skins.filter(id=>id>=SKIN_FREE).length;
   const p=tierProgress();$('pTierTxt').textContent=wallet.tier;$('pTierTxt').dataset.tier=wallet.tier;$('pTier').dataset.tier=wallet.tier;$('pNext').textContent=p.text;$('pFill').style.width=p.pct+'%';drawAvatar($('profCv'));}
 $('profBtn').addEventListener('click',()=>{renderProfile();renderAccount();showCard('profileCard');});
 $('profShop').addEventListener('click',()=>openStore());
@@ -2340,7 +2348,7 @@ function die(){
   mode='dead';if(!multi())slow=.22;sfx('die');Native.haptic('heavy');const s=human.stats;human.hist.push(0);paused=false;
   const pb=s.peak>best;if(pb){best=s.peak;try{localStorage.setItem('mitosis.best',String(Math.round(best)));}catch(e){}}
   $('dEyebrow').textContent='Specimen lost';$('dTitle').textContent='Lysed';$('dRank').hidden=true;
-  const pl=placeOf();s.place=pl.place;s.of=pl.of;if(BISECT.auto)reportHitch(`autopilot died place=${pl.place} of=${pl.of} by=${s.killer} t=${fmtT(T-s.born)} roundT=${roundT().toFixed(0)}`);$('dPlace').textContent=`${ordinal(s.place)} of ${s.of}`;$('dPlace').hidden=false;
+  const pl=placeOf();s.place=pl.place;s.of=pl.of;if(BISECT.auto)reportHitch(`autopilot died place=${pl.place} of=${pl.of} by=${s.killer} t=${fmtT(T-s.born)} roundT=${roundT().toFixed(0)}`);$('dPlace').textContent=`${ordinal(s.place)} of ${s.of}`;$('dPlace').hidden=false;recordRun({t:Date.now(),place:s.place,of:s.of,peak:Math.round(s.peak),eaten:s.eaten,sec:Math.round(T-s.born),practice:local==='practice'});
   $('deathWhy').textContent=(s.killer==='the collapse'?'Dissolved outside the closing arena':`Absorbed by ${s.killer}`)+` after ${fmtT(T-s.born)}.`;
   $('dPeak').textContent=Math.round(s.peak);$('dPeak').classList.toggle('pb',pb);$('dEaten').textContent=s.eaten;$('dTime').textContent=fmtT(T-s.born);$('dBest').textContent=Math.round(best);
   const dA=$('dAch');dA.hidden=!runAch.length;dA.textContent=runAch.length?'Unlocked: '+runAch.join(', '):'';evoOffer=null;renderEvo();lysedAt=0;
