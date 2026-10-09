@@ -1076,7 +1076,7 @@ const PSPR=Array.from({length:PH},(_,h)=>mk(48,(g)=>{
   g.beginPath();g.arc(24,24,9,0,TAU);g.fillStyle=gr;g.fill();
 }));
 const glow=(h,s,l,a)=>mk(128,(g)=>{const gr=g.createRadialGradient(64,64,0,64,64,64);gr.addColorStop(0,`hsla(${h},${s}%,${l}%,${a})`);gr.addColorStop(.5,`hsla(${h},${s}%,${l}%,${a*.3})`);gr.addColorStop(1,`hsla(${h},${s}%,${l}%,0)`);g.fillStyle=gr;g.fillRect(0,0,128,128);});
-const G_GOLD=glow(45,95,60,.7),G_VIRUS=glow(40,90,58,.32),G_SOFT=glow(175,45,82,1),G_HUNT=glow(352,100,60,.5);
+const G_GOLD=glow(45,95,60,.7),G_VIRUS=glow(100,85,52,.34),G_SOFT=glow(175,45,82,1),G_HUNT=glow(352,100,60,.5);
 // flat colour of each pellet sprite (its centre pixel) and per-colour buckets for the zoomed-out fast path
 const PCOL=PSPR.map(c=>{const d=c.getContext('2d').getImageData(c.width>>1,c.height>>1,1,1).data;return `rgb(${d[0]},${d[1]},${d[2]})`;}),PBUCK=PSPR.map(()=>[]);
 const G_PU={};for(const k in PU)G_PU[k]=glow(PU[k].c[0],PU[k].c[1],PU[k].c[2],.55);
@@ -1531,8 +1531,10 @@ function step(dt){
   if(human&&human.alive){
     if(paused){let sx=0,sy=0,sm=0;for(const c of human.cells){sx+=c.x*c.mass;sy+=c.y*c.mass;sm+=c.mass;}if(sm)human.target={x:sx/sm,y:sy/sm};}
     else if(TOUCH_UI){ // Agar.io model: the stick places a virtual cursor relative to your cells (full push = screen edge);
-      // every piece heads for that cursor, so they bunch up as they go, slow down on arrival, and keep going after you let go
-      if(joy.id!==null){let sx=0,sy=0,sm=0;for(const c of human.cells){if(c.dead)continue;sx+=c.x*c.mass;sy+=c.y*c.mass;sm+=c.mass;}
+      // every piece heads for that cursor, so they bunch up as they go, slow down on arrival, and keep going after you let go.
+      // A finger on the arena itself aims straight at that spot: touch the middle and every piece pulls together.
+      if(touchId!==null&&joy.id===null)human.target={x:cam.x+(pointer.x-W/2)/cam.z,y:cam.y+(pointer.y-H/2)/cam.z};
+      else if(joy.id!==null){let sx=0,sy=0,sm=0;for(const c of human.cells){if(c.dead)continue;sx+=c.x*c.mass;sy+=c.y*c.mass;sm+=c.mass;}
         if(sm){const cx=sx/sm,cy=sy/sm,K=(Math.max(W,H)/2)/cam.z*joy.m;human.target={x:cx+joy.ux*K,y:cy+joy.uy*K};}}
     }
     else human.target={x:cam.x+(pointer.x-W/2)/cam.z,y:cam.y+(pointer.y-H/2)/cam.z};
@@ -1848,18 +1850,36 @@ function drawCell(c){
       ctx.fillStyle=c.inf?col(INF_C,20):'#fff';const X=scrX(c.x),Y=scrY(c.y)+px*.82;ctx.strokeText(t,X,Y);ctx.fillText(t,X,Y);ctx.restore();}
   }
 }
+// Virus sprites, drawn once. The spun layer holds the spikes and the studded capsid; the fixed layer holds the light
+// (highlight and rim shadow) so the shading stays put while the particle turns. Body radius 100 on a 320 canvas = 1.6 r.
+const VIRUS_SPR=mk(320,g=>{const c=160,r=100,N=22;g.lineCap='round';
+  for(let i=0;i<N;i++){const a=i/N*TAU+(i%2?.06:0),ca=Math.cos(a),sa=Math.sin(a),L=r*(i%2?1.3:1.4),hr=r*(i%2?.085:.1);
+    g.strokeStyle='hsl(108,55%,26%)';g.lineWidth=r*.11;g.beginPath();g.moveTo(c+ca*r*.9,c+sa*r*.9);g.lineTo(c+ca*(L-hr),c+sa*(L-hr));g.stroke();
+    g.strokeStyle='hsl(96,62%,44%)';g.lineWidth=r*.06;g.beginPath();g.moveTo(c+ca*r*.9,c+sa*r*.9);g.lineTo(c+ca*(L-hr),c+sa*(L-hr));g.stroke();
+    const hx=c+ca*L,hy=c+sa*L,hg=g.createRadialGradient(hx-hr*.35,hy-hr*.35,hr*.1,hx,hy,hr*1.05);hg.addColorStop(0,'hsl(78,95%,74%)');hg.addColorStop(.6,'hsl(92,78%,48%)');hg.addColorStop(1,'hsl(110,65%,26%)');
+    g.fillStyle=hg;g.beginPath();g.arc(hx,hy,hr,0,TAU);g.fill();}
+  const bg=g.createRadialGradient(c-r*.32,c-r*.36,r*.08,c,c,r*1.02);bg.addColorStop(0,'hsl(82,88%,62%)');bg.addColorStop(.45,'hsl(100,72%,40%)');bg.addColorStop(.85,'hsl(126,68%,22%)');bg.addColorStop(1,'hsl(140,70%,14%)');
+  g.fillStyle=bg;g.beginPath();g.arc(c,c,r,0,TAU);g.fill();
+  g.save();g.beginPath();g.arc(c,c,r*.985,0,TAU);g.clip();
+  for(let k=0;k<=5;k++){const th=k*.29,rho=r*Math.sin(th),n=k?Math.round(6*k):1,sz=r*.075*Math.cos(th)+r*.02; // capsomeres on a sphere, foreshortened toward the rim
+    for(let j=0;j<n;j++){const a=j/n*TAU+k*.4,x=c+Math.cos(a)*rho,y=c+Math.sin(a)*rho;g.beginPath();g.arc(x,y,sz,0,TAU);
+      const dg=g.createRadialGradient(x-sz*.3,y-sz*.3,0,x,y,sz);dg.addColorStop(0,'rgba(225,255,170,.75)');dg.addColorStop(1,'rgba(40,110,30,.55)');g.fillStyle=dg;g.fill();
+      g.lineWidth=r*.008;g.strokeStyle='rgba(10,45,12,.45)';g.stroke();}}
+  g.lineWidth=r*.012;g.strokeStyle='rgba(200,255,150,.16)';for(let k=0;k<3;k++){g.beginPath();g.ellipse(c,c,r,r*(.35+k*.25),k*1.05,0,TAU);g.stroke();}
+  g.restore();
+  g.lineWidth=r*.045;g.strokeStyle='hsl(135,65%,16%)';g.beginPath();g.arc(c,c,r,0,TAU);g.stroke();
+});
+const VIRUS_LIT=mk(320,g=>{const c=160,r=100;
+  const sh=g.createRadialGradient(c,c,r*.62,c,c,r);sh.addColorStop(0,'rgba(0,20,6,0)');sh.addColorStop(1,'rgba(0,20,6,.5)');g.fillStyle=sh;g.beginPath();g.arc(c,c,r,0,TAU);g.fill();
+  const hl=g.createRadialGradient(c-r*.4,c-r*.45,0,c-r*.4,c-r*.45,r*.5);hl.addColorStop(0,'rgba(255,255,235,.55)');hl.addColorStop(1,'rgba(255,255,235,0)');g.fillStyle=hl;g.beginPath();g.arc(c,c,r,0,TAU);g.fill();
+  g.lineWidth=r*.02;g.strokeStyle='rgba(220,255,170,.35)';g.beginPath();g.arc(c,c,r*.955,Math.PI*1.05,Math.PI*1.6);g.stroke();
+});
 function drawVirus(v){
-  const z=cam.z,n=26;
-  if(!lowFx)ctx.drawImage(G_VIRUS,v.x-v.r*1.9,v.y-v.r*1.9,v.r*3.8,v.r*3.8);
-  ctx.beginPath();
-  for(let i=0;i<=n*2;i++){const a=v.spin+i/(n*2)*TAU,rr=v.r*(i%2?.92:1.08);const x=v.x+Math.cos(a)*rr,y=v.y+Math.sin(a)*rr;i?ctx.lineTo(x,y):ctx.moveTo(x,y);}
-  ctx.closePath();
-  fillUnit(ctx,grad(ctx,'virus',g=>{const q=g.createRadialGradient(-.3,-.3,0,0,0,1.08);q.addColorStop(0,'rgba(242,177,52,.16)');q.addColorStop(1,'rgba(242,177,52,.4)');return q;}),v.x,v.y,v.r);ctx.lineJoin='round';ctx.lineWidth=Math.max(1.5/z,3);ctx.strokeStyle='rgba(246,190,80,.9)';ctx.stroke();
-  const cr=v.r*.4,rot=-v.spin*1.5;ctx.beginPath();
-  for(let i=0;i<6;i++){const a=rot+i/6*TAU,x=v.x+Math.cos(a)*cr,y=v.y+Math.sin(a)*cr;i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.closePath();
-  ctx.fillStyle='rgba(242,177,52,.3)';ctx.fill();ctx.lineWidth=Math.max(1/z,2);ctx.stroke();
-  ctx.beginPath();for(let i=0;i<6;i+=2){const a=rot+i/6*TAU;ctx.moveTo(v.x,v.y);ctx.lineTo(v.x+Math.cos(a)*cr,v.y+Math.sin(a)*cr);}ctx.lineWidth=Math.max(.8/z,1.2);ctx.strokeStyle='rgba(246,190,80,.55)';ctx.stroke();
-  if(v.feed>0){ctx.beginPath();ctx.arc(v.x,v.y,v.r*.64,-Math.PI/2,-Math.PI/2+v.feed/6*TAU);ctx.lineWidth=Math.max(1.5/z,4);ctx.lineCap='round';ctx.strokeStyle='rgba(255,224,160,.85)';ctx.stroke();ctx.lineCap='butt';}
+  const z=cam.z,br=1+.03*Math.sin(T*2.2+v.x*.013+v.y*.007),s=v.r*1.6*br;
+  if(!lowFx)ctx.drawImage(G_VIRUS,v.x-v.r*2,v.y-v.r*2,v.r*4,v.r*4);
+  ctx.save();ctx.translate(v.x,v.y);ctx.rotate(v.spin);ctx.drawImage(VIRUS_SPR,-s,-s,s*2,s*2);ctx.restore();
+  ctx.drawImage(VIRUS_LIT,v.x-s,v.y-s,s*2,s*2);
+  if(v.feed>0){ctx.beginPath();ctx.arc(v.x,v.y,v.r*.72,-Math.PI/2,-Math.PI/2+v.feed/6*TAU);ctx.lineWidth=Math.max(1.5/z,5);ctx.lineCap='round';ctx.strokeStyle='rgba(235,255,190,.9)';ctx.stroke();ctx.lineCap='butt';}
 }
 function drawHunter(h){ // T4-style phage: capsid head, collar, tail sheath, splayed fibres leading
   const z=cam.z,s=HUNTER_R;
@@ -2417,7 +2437,7 @@ $('copyInvite').addEventListener('click',()=>{const b=$('copyInvite'),i=$('invit
 /* ================= input ================= */
 let touchId=null;
 cv.addEventListener('pointermove',e=>{if(e.pointerType==='touch'&&e.pointerId!==touchId)return;pointer.x=e.clientX;pointer.y=e.clientY;});
-cv.addEventListener('pointerdown',e=>{if(e.pointerType==='touch'){if(TOUCH_UI||touchId!==null)return;touchId=e.pointerId;try{cv.setPointerCapture(e.pointerId);}catch(_){}}pointer.x=e.clientX;pointer.y=e.clientY;});
+cv.addEventListener('pointerdown',e=>{if(e.pointerType==='touch'){if(touchId!==null)return;touchId=e.pointerId;try{cv.setPointerCapture(e.pointerId);}catch(_){}}pointer.x=e.clientX;pointer.y=e.clientY;});
 const release=e=>{if(e.pointerId===touchId){touchId=null;pointer.x=W/2;pointer.y=H/2;}};
 cv.addEventListener('pointerup',release);cv.addEventListener('pointercancel',release);
 cv.addEventListener('contextmenu',e=>e.preventDefault());
@@ -2427,7 +2447,7 @@ bindAct('splitBtn',split);bindAct('dashBtn',dash);
 { // Shoot: a tap fires once; holding keeps firing, faster and faster (180 ms down to 70 ms between shots)
   const b=$('ejectBtn');let timer=null,held=0;
   const stop=e=>{if(e&&e.type==='pointercancel')reportHitch('shoot pointercancel');if(timer){clearTimeout(timer);timer=null;}};
-  const fire=()=>{if(mode!=='play'||paused||!human){stop();return;}eject(human);held++;timer=setTimeout(fire,Math.max(70,180-held*12));};
+  const fire=()=>{if(mode!=='play'||paused||!human){stop();return;}eject(human);held++;timer=setTimeout(fire,65);};
   b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();try{b.setPointerCapture(e.pointerId);}catch(_){}stop();held=0;fire();});
   for(const ev of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(ev,stop);
 }
