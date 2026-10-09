@@ -32,7 +32,7 @@ body{margin:0;background:var(--void);color:var(--ink);font-family:var(--display)
 .livesrow{display:flex;align-items:center;gap:7px;margin-top:2px}.livesrow .label{font-size:9.5px}#lives{display:flex;gap:5px}#lives i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);transition:background .3s,box-shadow .3s}#lives i.on{background:var(--accent);border-color:var(--accent);box-shadow:0 0 8px rgba(255,92,138,.55)}.livesrow.inf #lives i{background:#5fe0a8;border-color:#5fe0a8;box-shadow:none}
 #massVal{font:800 42px/1 var(--display);letter-spacing:-.04em;font-variant-numeric:tabular-nums;text-shadow:0 2px 18px rgba(0,0,0,.5)}
 #metaVal{font:11px/1.4 var(--mono);color:var(--muted)}
-#fx{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;max-width:280px;min-height:24px}
+#fx{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;max-width:280px;min-height:24px}#fx .chip svg{width:13px;height:13px;vertical-align:-2px;margin-right:5px}
 #roundClock{top:calc(var(--gut) + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);font:500 12px/1 var(--mono);color:#9fc6bd;background:rgba(2,8,9,.55);border:1px solid rgba(150,220,210,.25);border-radius:999px;padding:7px 12px;white-space:nowrap}
 #roundClock b{font-weight:700;color:#dcefe9}#roundClock.hot{color:#ffb3bd;border-color:rgba(255,120,135,.5)}#roundClock.hot b{color:#fff}
 .place{font:800 30px/1 var(--display);margin:2px 0 8px;color:#dcefe9}
@@ -765,6 +765,7 @@ const PREMIUM=[
 ];
 const SKIN_COUNT=SKIN_FREE+PREMIUM.length;
 function skinColor(stain,skin){const S=skin>=SKIN_FREE?PREMIUM[skin-SKIN_FREE]:null;return (S&&S.base)||STAINS[clamp(stain|0,0,STAINS.length-1)];}
+const PU_ICON={magnet:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 6v6a5 5 0 0 0 10 0V6" fill="none" stroke="currentColor" stroke-width="3.2"/><path d="M5.4 2.5h3.2v4H5.4zM15.4 2.5h3.2v4h-3.2z" fill="currentColor"/></svg>',shield:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l8 3.5V11c0 5-3.5 8.5-8 10.5C7.5 19.5 4 16 4 11V5.5z" fill="currentColor"/></svg>',surge:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 2L5 13h6l-1.5 9L18 10h-6z" fill="currentColor"/></svg>'};
 const PU={magnet:{label:'Magnet',glyph:'Mg',c:[190,90,62],dur:9},shield:{label:'Phase',glyph:'Φ',c:[250,100,78],dur:6},surge:{label:'Surge',glyph:'»',c:[40,95,60],dur:7}};
 const PUK=Object.keys(PU);
 const INF_C=[352,100,62];
@@ -2074,7 +2075,7 @@ function hud(){
     const n=human.cells.length;metaEl.textContent=`${n} cell${n>1?'s':''} · rank ${hi+1} of ${ranked.length}${human.evo?` · ${human.evo} evolution${human.evo>1?'s':''}`:''}`;
     const LV=$('lives');if(LV){const prac=local==='practice',left=prac?MAX_RESPAWNS+1:clamp(MAX_RESPAWNS+2-livesUsed(),0,MAX_RESPAWNS+1);[...LV.children].forEach((d,i)=>d.classList.toggle('on',i<left));LV.parentElement.classList.toggle('inf',prac);}
     if(hi===0&&ranked.length>5)unlock('rank1');
-    let fx='';for(const k in PU){const t=human.fx[k];if(t>0)fx+=`<span class="chip" style="color:${col(PU[k].c)};--p:${(t/PU[k].dur).toFixed(3)}">${PU[k].label} ${t.toFixed(1)}s<i></i></span>`;}
+    let fx='';for(const k in PU){const t=human.fx[k];if(t>0)fx+=`<span class="chip" style="color:${col(PU[k].c)};--p:${(t/PU[k].dur).toFixed(3)}">${PU_ICON[k]}${PU[k].label} ${t.toFixed(1)}s<i></i></span>`;}
     let inf=0;for(const c of human.cells)if(c.inf&&(!inf||c.inf<inf))inf=c.inf;
     if(inf){const left=Math.max(0,inf-T),len=(human.cells.find(c=>c.inf===inf)||{}).infLen||INF_MAX;fx+=`<span class="chip" style="color:${col(INF_C,6)};--p:${(left/len).toFixed(3)}">Infected · lysis ${left.toFixed(1)}s<i></i></span>`;}
     if(human.cells.some(c=>T-(c.toxic||0)<.3))fx+=`<span class="chip" style="color:#ff8a9a;--p:1">Outside the arena · dissolving<i></i></span>`;
