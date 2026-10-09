@@ -30,6 +30,8 @@ A multiplayer cell-eating arena set in a giant petri well. Absorb anything small
 | Esc | Pause |
 | M | Sound on/off |
 
+On phones: the left stick steers, or touch the arena and every piece heads for your finger. Touch the middle of the screen to pull all your pieces together. Split and Shoot have no cooldown (hold Shoot to keep firing); Boost recharges in 4 s, or 2.2 s with Cilia.
+
 On phones, drag to steer and use the on-screen buttons. In the Android app the back button pauses.
 
 ## Rules of the well

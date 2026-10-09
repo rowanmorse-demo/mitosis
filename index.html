@@ -254,10 +254,16 @@ body:not(.playing) #joy{display:none!important}
   #storeCard{max-width:820px;grid-template-columns:3fr 2fr;gap:12px 20px;padding:16px 22px}#storeCard h2{font-size:32px}#storeCard .balance b{font-size:24px}#storeCard .shophead,#storeCard .row{grid-column:1/-1}#storeCard .shopsec{padding-top:10px}
   #lookCard,#settingsCard,#rankCard{max-width:640px;grid-template-columns:1fr 1fr;gap:10px 18px;padding:16px 22px}#lookCard .eyebrow,#lookCard h2,#lookCard .row,#settingsCard .eyebrow,#settingsCard h2,#settingsCard .row,#settingsCard .sec,#rankCard .eyebrow,#rankCard h2,#rankCard .row,#rankCard .field{grid-column:1/-1}#lookCard h2,#settingsCard h2,#rankCard h2{font-size:34px}
   #deathCard{max-width:620px;grid-template-columns:1fr 1fr;gap:8px 16px;padding:16px 22px}#deathCard .eyebrow,#deathCard h2,#deathCard #deathWhy,#deathCard .statgrid,#deathCard .row{grid-column:1/-1}#deathCard h2{font-size:40px}#deathCard .statgrid{grid-template-columns:repeat(4,1fr)}#deathCard .statgrid b{font-size:24px}#deathCard .chartbox{display:none}}
-  .act{position:absolute;width:72px;height:72px;padding:0;justify-content:center;border-radius:50%;font:700 13px var(--display)}
+  .act{position:absolute;width:72px;height:72px;padding:0;justify-content:center;border-radius:50%;font:700 11px var(--display);flex-direction:column;gap:2px;letter-spacing:.02em;background:rgba(2,8,9,.55);border-color:rgba(150,220,210,.22)}
+  .act .ico{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+  #splitBtn .ico circle:first-child,#ejectBtn .ico circle:first-child{fill:rgba(255,92,138,.22);stroke:var(--accent)}
+  #dashBtn::after{inset:0;border-radius:50%;transform:none;background:conic-gradient(rgba(2,8,9,.62) calc(var(--cd,0)*360deg),transparent 0)}
+  #dashBtn.ready{border-color:rgba(255,92,138,.75);box-shadow:0 0 0 3px rgba(255,92,138,.14),0 0 18px rgba(255,92,138,.25)}
+  #dashBtn.ready .ico{color:var(--accent)}
+  .act.flash{background:rgba(255,92,138,.32)}
   #ejectBtn{right:0;bottom:0}
   #dashBtn{right:98px;bottom:0}
-  #splitBtn{right:0;bottom:98px;width:82px;height:82px;font-size:14px}
+  #splitBtn{right:0;bottom:98px;width:82px;height:82px;font-size:12px}#splitBtn .ico{width:28px;height:28px}
   .act kbd{display:none}
   #scale{left:50%;transform:translateX(-50%);bottom:calc(var(--gut) + env(safe-area-inset-bottom,0px))}
   #scale .bar,#magLbl{display:none}
@@ -374,9 +380,9 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
 <div id="toasts" class="hud" aria-live="polite"></div>
 <div id="evolve" hidden><div class="evhead"><span class="label">Evolve</span><span id="evTier" class="evsub">Stage 1 of 6</span><span class="evsub kbd-only">Keys 1 · 2 · 3</span></div><div class="evopts" id="evOpts"></div></div>
 <div id="actions">
-  <button class="act" id="splitBtn" type="button"><span class="kbd-only">Divide</span><span class="touch-only">Split</span> <kbd>Space</kbd></button>
-  <button class="act" id="ejectBtn" type="button"><span class="kbd-only">Eject</span><span class="touch-only">Shoot</span> <kbd>W</kbd></button>
-  <button class="act" id="dashBtn" type="button"><span class="kbd-only">Dash</span><span class="touch-only">Boost</span> <kbd>Shift</kbd></button>
+  <button class="act" id="splitBtn" type="button"><svg class="touch-only ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8.5" cy="12" r="5.5"/><circle cx="18.5" cy="12" r="3.5"/></svg><span class="kbd-only">Divide</span><span class="touch-only">Split</span> <kbd>Space</kbd></button>
+  <button class="act" id="ejectBtn" type="button"><svg class="touch-only ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="12" r="5.5"/><path d="M14.5 12h2"/><circle cx="20" cy="12" r="1.8"/></svg><span class="kbd-only">Eject</span><span class="touch-only">Shoot</span> <kbd>W</kbd></button>
+  <button class="act" id="dashBtn" type="button"><svg class="touch-only ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5l5.5 5.5L5 17.5M12.5 6.5l5.5 5.5-5.5 5.5"/></svg><span class="kbd-only">Dash</span><span class="touch-only">Boost</span> <kbd>Shift</kbd></button>
 </div>
 <div id="joy" aria-hidden="true"><div class="base"></div><div class="knob"></div></div>
 
