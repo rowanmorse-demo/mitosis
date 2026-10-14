@@ -110,6 +110,8 @@ input[type=text]:focus{outline:2px solid var(--accent);outline-offset:1px}
 .primary.queued::after{content:'Tap to cancel · bots join at 0:00';display:block;font:500 10.5px/1.3 var(--mono);letter-spacing:.02em;color:rgba(220,215,255,.72);margin-top:3px}
 .primary.queued.sm::after{content:'Tap to cancel'}
 @keyframes pulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.25)}}
+.card .danger,.danger{appearance:none;border:0;border-radius:11px;background:#e5484d;color:#fff!important;font:800 16px var(--display);padding:13px 16px;cursor:pointer;flex:1}.danger:disabled{opacity:.6}
+.danger-link{appearance:none;background:none;border:0;color:#ff7a85;font:600 13px var(--display);padding:6px 0;cursor:pointer;justify-self:start;text-align:left;text-decoration:underline;text-underline-offset:3px}
 .ghost{appearance:none;border:1px solid var(--line);border-radius:11px;background:transparent;color:var(--muted);font:600 14px var(--display);padding:11px 14px;cursor:pointer}
 .ghost:hover{color:var(--ink);border-color:var(--line-strong)}
 /* Account: Sign in with Apple / Google, drawn to the providers' button guidelines */
@@ -475,6 +477,16 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
     <button class="primary" id="introGo" type="button">Into the arena</button>
   </div>
 
+  <div class="card panel" id="deleteCard" hidden>
+    <p class="eyebrow">Delete account</p>
+    <h2 id="delTitle">Delete everything?</h2>
+    <p class="hint" id="delBody">This permanently deletes your Mitosis account from our server: your rating, ATP, skins, run history, name, and any Sign in with Apple or Google link. It can't be undone, and ATP you bought can't be restored.</p>
+    <p class="hint" id="delApple">If you signed in with Apple, you can also stop using your Apple Account with Mitosis in iPhone Settings › your name › Sign in with Apple.</p>
+    <div class="row" id="delRow"><button class="danger" id="deleteGo" type="button">Delete permanently</button><button class="ghost" id="deleteCancel" type="button">Cancel</button></div>
+    <p class="hint" id="deleteMsg" hidden></p>
+    <button class="primary" id="deleteDone" type="button" hidden>Start fresh</button>
+  </div>
+
   <div class="card panel" id="lookCard" hidden>
     <p class="eyebrow">Look</p>
     <div class="phead"><canvas id="lookCv" class="pavatar" width="144" height="144" aria-hidden="true"></canvas><div class="pmain"><h2>Your cell</h2><p class="hint" id="lookHint">Tap a stain and a pattern. Premium skins from the Shop replace both.</p></div></div>
@@ -506,6 +518,7 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
         <button type="button" class="ghost" id="signOutBtn" hidden>Sign out</button>
       </div>
       <p class="hint" id="acctHint" hidden></p>
+      <button type="button" class="danger-link" id="deleteAcctBtn">Delete account…</button>
     </div>
     <div class="row"><button class="primary back" type="button">Back</button><button class="ghost" id="profShop" type="button">Open shop</button></div>
   </div>
@@ -523,6 +536,7 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
     <div class="field"><span class="label">Effects</span><div class="seg two" id="fxSeg"><button type="button" data-fx="0">Full<small>auras, embers, glow</small></button><button type="button" data-fx="1">Reduced<small>smoother on older phones</small></button></div></div>
     <div class="field"><span class="label">Vibration</span><div class="seg two" id="hapSeg"><button type="button" data-h="0">Off<small>recommended</small></button><button type="button" data-h="1">On<small>taps on split and kills</small></button></div></div>
     <div class="field"><span class="label">Invite friends</span><div class="invite" id="inviteRow"><input id="inviteUrl" type="text" readonly aria-label="Invite link" value=""><button id="copyInvite" class="ghost" type="button">Invite friends</button></div><p id="inviteHelp">Send this link to a friend on the same Wi-Fi. For friends elsewhere, run <b>share-online.bat</b> and send the https link it prints.</p></div>
+    <div class="field"><span class="label">Account &amp; data</span><button type="button" class="danger-link" id="deleteAcctBtn2">Delete account and all data…</button></div>
     <details class="sec" id="helpSec"><summary><span class="label">How to play</span></summary><div class="body">
     <dl class="keys kbd-only">
       <dt>Mouse</dt><dd>Steer toward the cursor</dd>
@@ -950,6 +964,20 @@ async function loadTop(){try{const r=await fetch(window.MITOSIS_SERVER+'/api/lea
 $('rankBtn').addEventListener('click',()=>{showCard('rankCard');loadTop();});
 $('avatarBtn').addEventListener('click',()=>$('lookBtn').click());$('lookBtn').addEventListener('click',()=>{showCard('lookCard');renderSkins();});
 $('setBtn').addEventListener('click',()=>showCard('settingsCard'));
+// account deletion (App Store guideline 5.1.1(v)): Profile › Account or Settings › Account & data
+let delFrom='profileCard';const DEL_BODY=$('delBody').textContent;
+function openDelete(from){delFrom=from;$('delTitle').textContent='Delete everything?';$('delBody').textContent=DEL_BODY;$('delBody').hidden=false;$('delApple').hidden=false;$('delRow').hidden=false;$('deleteDone').hidden=true;$('deleteMsg').hidden=true;$('deleteGo').disabled=false;$('deleteGo').textContent='Delete permanently';showCard('deleteCard');}
+$('deleteAcctBtn').addEventListener('click',()=>openDelete('profileCard'));
+$('deleteAcctBtn2').addEventListener('click',()=>openDelete('settingsCard'));
+$('deleteCancel').addEventListener('click',()=>showCard(delFrom));
+$('deleteGo').addEventListener('click',async()=>{
+  const b=$('deleteGo'),m=$('deleteMsg');b.disabled=true;b.textContent='Deleting…';m.hidden=true;
+  try{await api('account/delete',{confirm:'DELETE'});}
+  catch(e){b.disabled=false;b.textContent='Delete permanently';m.hidden=false;m.textContent=/fetch|network|load/i.test(e.message)?'Could not reach the server. Connect to the internet and try again.':'Could not delete: '+e.message;return;}
+  try{for(const k of Object.keys(localStorage))if(k.startsWith('mitosis.')&&k!=='mitosis.intro')localStorage.removeItem(k);}catch(e){}
+  $('delTitle').textContent='Account deleted';$('delBody').textContent='Your account and all of its data have been deleted from our server. Mitosis will start you fresh as a new, unnamed cell.';$('delApple').hidden=true;$('delRow').hidden=true;$('deleteDone').hidden=false;
+});
+$('deleteDone').addEventListener('click',()=>location.reload());
 function loadHistory(){try{const a=JSON.parse(localStorage.getItem('mitosis.history')||'[]');return Array.isArray(a)?a:[];}catch(e){return[];}}
 function recordRun(e){const h=loadHistory();h.push(e);try{localStorage.setItem('mitosis.history',JSON.stringify(h.slice(-12)));}catch(err){}}
 function updateRunDelta(delta,rating){const h=loadHistory();const last=h[h.length-1];if(!last||last.delta!=null||Date.now()-last.t>60000)return;last.delta=delta;last.rating=rating;try{localStorage.setItem('mitosis.history',JSON.stringify(h));}catch(err){}}
@@ -2431,7 +2459,7 @@ function showCard(id){
   // diagnostic: a report of what sends the page from Settings back to the start card (Settings → Account → sign in)
   if(id==='startCard'&&shownCard==='settingsCard')reportHitch('settings->start via '+String(new Error().stack||'').split('\n').slice(1,4).map(s=>s.trim()).join(' | '));
   shownCard=id;if(id==='startCard')setTimeout(drawAvatar,0);if(id==='lookCard')setTimeout(()=>drawAvatar($('lookCv')),0);
-  for(const c of['startCard','pauseCard','deathCard','storeCard','lookCard','rankCard','settingsCard','profileCard','introCard'])$(c).hidden=c!==id;$('overlay').hidden=!id;}
+  for(const c of['startCard','pauseCard','deathCard','storeCard','lookCard','rankCard','settingsCard','profileCard','introCard','deleteCard'])$(c).hidden=c!==id;$('overlay').hidden=!id;}
 function startGame(){
   if(!spawnOpen()){
     if(queued){queued=false;updateSpawnLock();toast('Search','Search cancelled','Tap again to look for a game');return;}

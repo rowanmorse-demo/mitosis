@@ -35,6 +35,7 @@ const ROUTES = {
   'POST /api/auth/apple': { fn: economy.handlers.signInApple, auth: true },
   'POST /api/auth/google': { fn: economy.handlers.signInGoogle, auth: true },
   'POST /api/auth/signout': { fn: economy.handlers.signOut, auth: true },
+  'POST /api/account/delete': { fn: economy.handlers.deleteAccount, auth: true },
   'GET /api/catalog': { fn: () => economy.catalog(), auth: false },
   'GET /api/leaderboard': { fn: store => economy.handlers.leaderboard(store), auth: false },
   // clients report long frames here so stalls on phones can be read from the server log

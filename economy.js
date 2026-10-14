@@ -111,6 +111,14 @@ const signInApple = (store, body, p) => signInWith(signin.verifyApple, store, bo
 const signInGoogle = (store, body, p) => signInWith(signin.verifyGoogle, store, body, p);
 // Sign out only detaches this device; the account and its wallet stay for the next sign-in.
 // The device then starts a fresh wallet with a new secret (the page does that).
+// Account deletion (App Store guideline 5.1.1(v)): removes the player and everything linked to them. Needs an explicit confirmation.
+function deleteAccount(store, body, p) {
+  if (!body || body.confirm !== 'DELETE') throw new ApiError(400, 'confirm deletion');
+  const linked = store.identities(p.id).map(i => i.provider);
+  store.deletePlayer(p.id);
+  console.log(`- account deleted${linked.length ? ' (' + linked.join(', ') + ' sign-in)' : ''}`);
+  return { ok: true, deleted: true };
+}
 function signOut(store, body, p) {
   if (p.deviceHash && p.deviceHash !== p.secret) store.forgetDevice(p.deviceHash);
   return { ok: true };
@@ -172,4 +180,4 @@ async function iapGoogle(store, body, p) {
 
 function leaderboard(store) { return { top: store.top(10).map((r, i) => ({ rank: i + 1, name: r.name || 'Unnamed cell', rating: r.rating, tier: tierOf(r.rating), runs: r.runs })) }; }
 
-module.exports = { SKINS, PACKS, RULES, RATING, catalog, payoutFor, ratingDelta, tierOf, ApiError, auth, handlers: { session, runStart, runEnd, buySkin, iapApple, iapGoogle, leaderboard, signInApple, signInGoogle, signOut } };
+module.exports = { SKINS, PACKS, RULES, RATING, catalog, payoutFor, ratingDelta, tierOf, ApiError, auth, handlers: { deleteAccount, session, runStart, runEnd, buySkin, iapApple, iapGoogle, leaderboard, signInApple, signInGoogle, signOut } };

@@ -72,6 +72,10 @@ class SqliteStore {
       delIdentities: p('DELETE FROM identities WHERE player = ?'),
       moveDevices: p('UPDATE OR REPLACE devices SET player = ? WHERE player = ?'),
       delPlayer: p('DELETE FROM players WHERE id = ?'),
+      // account deletion: everything about the player goes; purchase receipts stay as anonymous records so a replayed receipt cannot credit twice
+      delRuns: p('DELETE FROM runs WHERE player = ?'),
+      delDevicesOf: p('DELETE FROM devices WHERE player = ?'),
+      anonPurchases: p('UPDATE purchases SET player = NULL WHERE player = ?'),
     };
   }
   playerBySecret(h) { const p = this.q.bySecret.get(h); if (p) return p; const d = this.q.device.get(h); return d ? this.player(d.player) : null; }
@@ -94,6 +98,12 @@ class SqliteStore {
       this.q.insDevice.run(a.secret, to, Number(a.created) || Date.now(), Date.now());
       this.db.exec('COMMIT');
     } catch (e) { this.db.exec('ROLLBACK'); throw e; }
+  }
+  /** Deletes a player and everything linked to them (skins, runs, sign-ins, devices); purchase receipts are kept without the player. */
+  deletePlayer(id) {
+    this.db.exec('BEGIN');
+    try { this.q.delSkins.run(id); this.q.delRuns.run(id); this.q.delIdentities.run(id); this.q.delDevicesOf.run(id); this.q.anonPurchases.run(id); this.q.delPlayer.run(id); this.db.exec('COMMIT'); }
+    catch (e) { this.db.exec('ROLLBACK'); throw e; }
   }
   player(id) { return this.q.byId.get(id) || null; }
   createPlayer(id, h, now) { this.q.insPlayer.run(id, h, now, now); return this.player(id); }
@@ -144,6 +154,15 @@ class JsonStore {
     for (const d of Object.values(this.d.devices)) if (d.player === from) d.player = to;
     delete this.d.secrets[a.secret]; delete this.d.players[from];
     this.d.devices[a.secret] = { player: to, created: a.created, seen: Date.now() };
+    this.save();
+  }
+  deletePlayer(id) {
+    const a = this.d.players[id]; if (!a) return;
+    delete this.d.skins[id]; delete this.d.secrets[a.secret]; delete this.d.players[id];
+    for (const [k, r] of Object.entries(this.d.runs)) if (r.player === id) delete this.d.runs[k];
+    for (const [k, i] of Object.entries(this.d.identities)) if (i.player === id) delete this.d.identities[k];
+    for (const [k, d] of Object.entries(this.d.devices)) if (d.player === id) delete this.d.devices[k];
+    for (const p of Object.values(this.d.purchases)) if (p.player === id) p.player = null;
     this.save();
   }
   createPlayer(id, h, now) {

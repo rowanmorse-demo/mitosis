@@ -76,7 +76,7 @@ Data collected, all linked to the user, none used for tracking, none shared with
 - User Content → Other User Content (the display name shown to other players). Purpose: App Functionality.
 
 ## App Review notes
-Mitosis is a single-page HTML5 game inside a native shell. No account is needed to play: tap Play. Sign in with Apple is optional (Profile tab). In-app purchases: Profile or Shop → Get ATP; the four consumable packs credit ATP after the server verifies the StoreKit transaction. A sandbox tester can buy any pack; the wallet updates within a second. The game runs in landscape only.
+Mitosis is a single-page HTML5 game inside a native shell. No account is needed to play: tap Play. Sign in with Apple is optional (Profile tab). Account deletion: Profile › Account › Delete account (also Settings › Account & data) deletes the account and all its data from the server immediately, after one confirmation. In-app purchases: Profile or Shop → Get ATP; the four consumable packs credit ATP after the server verifies the StoreKit transaction. A sandbox tester can buy any pack; the wallet updates within a second. The game runs in landscape only.
 
 ## Screenshots
 Generated from the game at Apple's sizes (see the shots folder): iPhone 6.9-inch 2868×1320 (5 images) and iPad 13-inch 2752×2064 (5 images). Upload in the order 1–5.

@@ -215,6 +215,7 @@ All endpoints take and return JSON. Authenticated ones need `Authorization: Bear
 | `POST /api/auth/apple` `{identityToken, nonce}` | Sign in with Apple: link the account to this wallet, or join the account's wallet (`merged: true`) |
 | `POST /api/auth/google` `{idToken, nonce}` | Sign in with Google, same behaviour |
 | `POST /api/auth/signout` | Detach this device from the account (the page then starts a fresh secret) |
+| `POST /api/account/delete` | `{confirm:'DELETE'}`: delete the player and everything linked (skins, runs, sign-ins, devices); purchase receipts stay as anonymous ids so they cannot be replayed. In the game: Profile › Account › Delete account, or Settings › Account & data |
 | `POST /api/crash` `{platform, kind, app, os, device, report}` | Crash and hang reports from the apps; logged (`!!` lines) and kept in `DATA_DIR/crashes/` |
 | `POST /api/log` `{who, text}` | Client diagnostics: frame stalls, page errors, autopilot events; printed in the server log |
 | `GET /api/catalog` | Skins, packs, payout rules and which stores are verified |
