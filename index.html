@@ -270,6 +270,17 @@ body:not(.playing) #joy{display:none!important}
   #feed{bottom:calc(var(--gut) + 200px + env(safe-area-inset-bottom,0px))}
 }
 /* collapsible leaderboard */
+/* touch HUD: icon buttons and a compact ranking chip, so the arena keeps the screen */
+@media (pointer:coarse){
+  #roundClock{font-size:11px;padding:6px 11px}
+  #scale{gap:8px}#pauseBtn,#snd{width:36px;height:36px;padding:0;font-size:0;border-radius:50%;display:grid;place-items:center;color:#cfe8e2}
+  #pauseBtn::before{content:'';width:11px;height:13px;background:linear-gradient(90deg,currentColor 0 34%,transparent 34% 66%,currentColor 66%)}
+  #snd::before{content:'';width:17px;height:17px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 9h4l5-4v14l-5-4H4z'/%3E%3Cpath d='M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 9h4l5-4v14l-5-4H4z'/%3E%3Cpath d='M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat}
+  #snd[aria-pressed=false]::before{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 9h4l5-4v14l-5-4H4z'/%3E%3Cpath d='M16.5 9.5l5 5M21.5 9.5l-5 5' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 9h4l5-4v14l-5-4H4z'/%3E%3Cpath d='M16.5 9.5l5 5M21.5 9.5l-5 5' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E")}
+  #board.collapsed{padding:6px 10px}#board.collapsed .bhead .label{display:none}#board.collapsed .bhead{gap:7px}
+  #board.collapsed .bhead::before{content:'';width:16px;height:16px;flex:none;background:#cfe8e2;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 4h10v5a5 5 0 0 1-10 0V4z'/%3E%3Cpath d='M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3M12 14v4M8 20h8'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 4h10v5a5 5 0 0 1-10 0V4z'/%3E%3Cpath d='M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3M12 14v4M8 20h8'/%3E%3C/svg%3E") center/contain no-repeat}
+}
+
 #boardToggle{appearance:none;background:none;border:0;color:inherit;font:inherit;width:100%;padding:4px 0;margin:-4px 0;text-align:left;cursor:pointer;pointer-events:auto;-webkit-tap-highlight-color:transparent}
 #board .chev{margin-left:auto;font-size:12px;color:var(--muted);flex:none}#board.collapsed .chev{transform:rotate(-90deg)}
 #board.collapsed ol{display:none}#board.collapsed{width:auto!important}
@@ -2208,7 +2219,7 @@ function tickMass(dt){
 
 /* ================= audio ================= */
 let actx=null,master=null,noiseBuf=null,muted=false;try{muted=localStorage.getItem('mitosis.muted')==='1';}catch(e){}
-const sndBtn=$('snd');const syncSnd=()=>{sndBtn.textContent=muted?'Sound off':'Sound on';sndBtn.setAttribute('aria-pressed',String(!muted));};syncSnd();
+const sndBtn=$('snd');const syncSnd=()=>{sndBtn.textContent=muted?'Sound off':'Sound on';sndBtn.setAttribute('aria-pressed',String(!muted));sndBtn.setAttribute('aria-label',muted?'Turn sound on':'Turn sound off');};syncSnd();$('pauseBtn').setAttribute('aria-label','Pause');
 function toggleSnd(){muted=!muted;syncSnd();try{localStorage.setItem('mitosis.muted',muted?'1':'0');}catch(e){}}
 sndBtn.addEventListener('click',toggleSnd);
 function initAudio(){
