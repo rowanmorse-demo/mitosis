@@ -129,8 +129,8 @@ button:focus-visible,.sw:focus-visible{outline:2px solid var(--ink);outline-offs
 .new{border-top:1px solid var(--line);padding-top:14px;font:13px/1.5 var(--display);color:var(--muted)}
 .new strong{display:block;font:500 10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--violet);margin-bottom:6px}
 .new em{font-style:normal;color:var(--ink)}
-.statgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px 18px}
-.statgrid b{display:block;font:800 30px/1.1 var(--display);letter-spacing:-.03em;font-variant-numeric:tabular-nums;margin-top:3px}
+.statgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.statgrid>div{border:1px solid var(--line);border-radius:12px;background:rgba(0,0,0,.22);padding:9px 12px}
+.statgrid b{display:block;font:800 26px/1.1 var(--display);letter-spacing:-.03em;font-variant-numeric:tabular-nums;margin-top:3px}
 .statgrid b.pb{color:var(--accent)}
 #deathWhy{margin:-6px 0 0;color:var(--muted);font:16px/1.45 var(--display)}
 .chartbox{display:grid;gap:6px}
@@ -185,7 +185,9 @@ button:focus-visible,.sw:focus-visible{outline:2px solid var(--ink);outline-offs
 .pat.p3{background:repeating-radial-gradient(circle,rgba(0,0,0,.3) 0 2px,transparent 2px 6px),var(--c)}
 .pat.p4{background:conic-gradient(from 30deg,rgba(0,0,0,.3),transparent 25%,rgba(0,0,0,.22) 50%,transparent 75%,rgba(0,0,0,.3)),var(--c)}
 .achline{margin:0;font:12px/1.5 var(--mono);color:var(--muted)}
-#dAch{margin:0;font:600 13px/1.4 var(--display);color:#f2c14e}
+#dAch{margin:0;font:600 12.5px/1.3 var(--display);color:#f2c14e}
+.dchips{display:flex;flex-wrap:wrap;gap:6px}.dchips:not(:has(p:not([hidden]))){display:none}.dchips p{margin:0!important;padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:rgba(0,0,0,.25);font-size:12.5px!important;line-height:1.3}
+#dRank{border-color:rgba(154,140,255,.35)!important}.dchips .earn{border-color:rgba(242,177,52,.35)}#dAch{border-color:rgba(242,193,78,.35)}
 #board .tag.boss{color:#c9a2ff;border-color:rgba(201,162,255,.5)}
 body:not(.playing) #evolve{display:none!important}
 @media (max-width:900px) and (orientation:portrait){#banner{width:calc(100% - 2*var(--gut));top:calc(205px + env(safe-area-inset-top,0px))}#toasts{top:calc(290px + env(safe-area-inset-top,0px))}}
@@ -253,7 +255,8 @@ body:not(.playing) #joy{display:none!important}
   @media (orientation:landscape){
   #storeCard{max-width:820px;grid-template-columns:3fr 2fr;gap:12px 20px;padding:16px 22px}#storeCard h2{font-size:32px}#storeCard .balance b{font-size:24px}#storeCard .shophead,#storeCard .row{grid-column:1/-1}#storeCard .shopsec{padding-top:10px}
   #lookCard,#settingsCard,#rankCard{max-width:640px;grid-template-columns:1fr 1fr;gap:10px 18px;padding:16px 22px}#lookCard .eyebrow,#lookCard h2,#lookCard .row,#settingsCard .eyebrow,#settingsCard h2,#settingsCard .row,#settingsCard .sec,#rankCard .eyebrow,#rankCard h2,#rankCard .row,#rankCard .field{grid-column:1/-1}#lookCard h2,#settingsCard h2,#rankCard h2{font-size:34px}
-  #deathCard{max-width:620px;grid-template-columns:1fr 1fr;gap:8px 16px;padding:16px 22px}#deathCard .eyebrow,#deathCard h2,#deathCard #deathWhy,#deathCard .statgrid,#deathCard .row{grid-column:1/-1}#deathCard h2{font-size:40px}#deathCard .statgrid{grid-template-columns:repeat(4,1fr)}#deathCard .statgrid b{font-size:24px}#deathCard .chartbox{display:none}}
+  #deathCard{max-width:700px;grid-template-columns:1.05fr .95fr;grid-template-areas:"eye stats" "title stats" "why stats" "place stats" "chips stats" "row row";gap:6px 20px;padding:16px 22px;align-items:start}
+  #deathCard>.eyebrow{grid-area:eye}#deathCard>h2{grid-area:title;font-size:38px}#deathCard>#deathWhy{grid-area:why;margin:0}#deathCard>#dPlace{grid-area:place;margin:2px 0}#deathCard>.dchips{grid-area:chips}#deathCard>.statgrid{grid-area:stats;align-self:center}#deathCard>.row{grid-area:row;margin-top:6px}#deathCard .statgrid b{font-size:22px}#deathCard .chartbox{display:none}}
   .act{position:absolute;width:72px;height:72px;padding:0;justify-content:center;border-radius:50%;font:700 11px var(--display);flex-direction:column;gap:2px;letter-spacing:.02em;background:rgba(2,8,9,.55);border-color:rgba(150,220,210,.22)}
   .act .ico{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
   #splitBtn .ico circle:first-child,#ejectBtn .ico circle:first-child{fill:rgba(255,92,138,.22);stroke:var(--accent)}
@@ -596,9 +599,7 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
       <div><span class="label">Survived</span><b id="dTime">0:00</b></div>
       <div><span class="label">Best peak</span><b id="dBest">0</b></div>
     </div>
-    <p id="dAch" hidden></p>
-    <p id="dEarn" class="earn" hidden></p>
-    <p id="dRank" hidden></p>
+    <div class="dchips"><p id="dRank" hidden></p><p id="dEarn" class="earn" hidden></p><p id="dAch" hidden></p></div>
     <div class="chartbox"><span class="label">Mass over time</span><canvas id="dChart"></canvas></div>
     <div class="row"><button id="again" class="primary" type="button">Re-inoculate</button><button id="setup" class="ghost" type="button">Lobby</button></div>
   </div>
