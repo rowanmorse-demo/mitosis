@@ -509,7 +509,7 @@ body:not(.playing) #tip{display:none}
 :is(.shopview,#lookCard) .skin .rt{display:none}:is(.shopview,#lookCard) .skin::before{content:"";position:absolute;top:7px;left:7px;width:7px;height:7px;border-radius:50%;background:#8fd8c6;opacity:.8}
 :is(.shopview,#lookCard) .skin.rare::before{background:var(--violet)}:is(.shopview,#lookCard) .skin.epic::before{background:var(--amber)}:is(.shopview,#lookCard) .skin.legendary::before{background:#ff7a59;box-shadow:0 0 8px #ff7a59}
 .sv-atp{grid-column:1/-1;grid-row:2;min-height:0;overflow:auto;display:grid;align-content:center;justify-items:center;gap:16px;padding:4px 0 8px}
-.sv-atp .packs{grid-template-columns:repeat(4,minmax(0,170px));gap:12px;width:100%;justify-content:center}
+.sv-atp .packs{grid-template-columns:repeat(5,minmax(0,164px));gap:12px;width:100%;justify-content:center}
 .sv-atp .pack{padding:20px 10px 14px;background:linear-gradient(180deg,rgba(242,177,52,.12),rgba(2,8,9,.6))}
 .sv-atp .pack b{font-size:28px}
 .sv-earn{display:grid;gap:8px;justify-items:center}.sv-earn ul{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
@@ -529,7 +529,7 @@ body:not(.playing) #tip{display:none}
   .sv-feat{grid-template-columns:auto minmax(0,1fr);grid-template-rows:none;justify-items:start;text-align:left;gap:14px;align-items:center}
   .sv-stage{height:auto;width:min(36vw,170px)}.sv-info{justify-items:start}.sv-info h3{font-size:21px}.sv-info>p#featDesc{min-height:0;font-size:12.5px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}.sv-buy{max-width:none;font-size:16px;padding:12px 14px}
   :is(.shopview,#lookCard) .skins{grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:8px}:is(.shopview,#lookCard) .skin canvas{width:52px;height:52px}:is(.shopview,#lookCard) .skin .sp{font-size:9.5px;padding:3px 6px}
-  .sv-atp{grid-row:2/-1;align-content:start}.sv-atp .packs{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .sv-atp{grid-row:2/-1;align-content:start}.sv-atp .packs{grid-template-columns:repeat(2,minmax(0,1fr))}.sv-atp .pack:last-child{grid-column:1/-1}
 }
 @media (min-width:1100px){.shopview{padding-left:max(48px,calc(50vw - 620px));padding-right:max(48px,calc(50vw - 620px))}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -1144,7 +1144,7 @@ const saveSettings=()=>{try{localStorage.setItem('mitosis.settings',JSON.stringi
 /* ================= ATP economy: wallet, runs, skins, store ================= */
 /* The server owns every wallet (see economy.js). The page only asks: "this run ended", "buy this skin",
    "credit this purchase". A device secret in localStorage identifies the player — no sign-up. */
-const ATP_PACKS=[{id:'atp_500',atp:500,label:'Pouch'},{id:'atp_1500',atp:1500,label:'Flask',tag:'Popular'},{id:'atp_5000',atp:5000,label:'Culture',tag:'Best value'},{id:'atp_12000',atp:12000,label:'Bioreactor'}];
+const ATP_PACKS=[{id:'atp_500',atp:500,label:'Pouch'},{id:'atp_1500',atp:1500,label:'Flask',tag:'Popular'},{id:'atp_5000',atp:5000,label:'Culture',tag:'Best value'},{id:'atp_12000',atp:12000,label:'Bioreactor'},{id:'atp_150000',atp:150000,label:'Biosphere',tag:'Most ATP'}];
 const escH=s=>String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[ch]);
 let wallet={balance:0,earned:0,skins:[],online:false,playerId:null,rating:1000,tier:'Silver'};
 try{const w=JSON.parse(localStorage.getItem('mitosis.wallet')||'null');if(w&&typeof w==='object'){wallet.balance=w.balance|0;wallet.skins=Array.isArray(w.skins)?w.skins:[];}}catch(e){}
@@ -1317,7 +1317,7 @@ function renderSkins(){
 }
 function drawPreview(cv,S){
   const g=cv.getContext('2d'),x=72,y=72,r=S.aura?35:60,k=S.base||STAINS[settings.stain],c={x,y,wob:1.3,svx:0,svy:0};g.setTransform(cv.width/144,0,0,cv.width/144,0,0);g.clearRect(0,0,144,144);if(S.aura)S.aura(g,c,r,k,r,true);
-  g.beginPath();g.arc(x,y,r,0,TAU);fillUnit(g,grad(g,'body'+k,q=>{const u=q.createRadialGradient(-.35,-.4,.05,0,0,1.05);u.addColorStop(0,col(k,18,.97));u.addColorStop(.62,col(k,2,.92));u.addColorStop(1,col(k,-10,.94));return u;}),x,y,r);
+  g.beginPath();g.arc(x,y,r,0,TAU);fillUnit(g,grad(g,'body'+k,q=>{const u=q.createRadialGradient(-.35,-.4,.05,0,0,1.05);u.addColorStop(0,col(k,18,1));u.addColorStop(.62,col(k,2,1));u.addColorStop(1,col(k,-10,1));return u;}),x,y,r);
   g.save();g.beginPath();g.arc(x,y,r*.95,0,TAU);g.clip();g.fillStyle=g.strokeStyle=col(k,-30,.3);S.draw(g,c,r,k,STAINS[settings.stain]);g.restore();
   if(S.eye)S.eye(g,c,r,x,y,false);else if(S.pupil){g.beginPath();g.arc(x,y,r*.24,0,TAU);g.fillStyle='#0a0608';g.fill();if(!S.noGlint){g.beginPath();g.arc(x+r*.08,y-r*.08,r*.06,0,TAU);g.fillStyle='rgba(255,255,255,.85)';g.fill();}}
   g.beginPath();g.arc(x,y,r,0,TAU);g.lineWidth=r*.085;g.strokeStyle=col(k,-26,.96);g.stroke();
@@ -1327,7 +1327,7 @@ function drawAvatar(cv=$('avatarCv')){ // a live portrait of your cell: stain, p
   if(!cv)return;const sk=settings.skin|0;
   if(sk>=SKIN_FREE&&PREMIUM[sk-SKIN_FREE]){drawPreview(cv,PREMIUM[sk-SKIN_FREE]);return;}
   const g=cv.getContext('2d'),x=72,y=72,r=58,k=STAINS[settings.stain|0]||STAINS[0],c={x,y,wob:1.3,svx:0,svy:0};g.setTransform(cv.width/144,0,0,cv.width/144,0,0);g.clearRect(0,0,144,144);
-  g.beginPath();g.arc(x,y,r,0,TAU);fillUnit(g,grad(g,'body'+k,q=>{const u=q.createRadialGradient(-.35,-.4,.05,0,0,1.05);u.addColorStop(0,col(k,18,.97));u.addColorStop(.62,col(k,2,.92));u.addColorStop(1,col(k,-10,.94));return u;}),x,y,r);
+  g.beginPath();g.arc(x,y,r,0,TAU);fillUnit(g,grad(g,'body'+k,q=>{const u=q.createRadialGradient(-.35,-.4,.05,0,0,1.05);u.addColorStop(0,col(k,18,1));u.addColorStop(.62,col(k,2,1));u.addColorStop(1,col(k,-10,1));return u;}),x,y,r);
   if(sk){g.save();g.beginPath();g.arc(x,y,r*.95,0,TAU);g.clip();g.fillStyle=g.strokeStyle=col(k,-30,.3);drawFreePattern(g,c,r,sk);g.restore();}
   g.beginPath();g.arc(x,y,r*.28,0,TAU);fillUnit(g,grad(g,'nuc'+k,q=>{const u=q.createRadialGradient(-.08,-.08,0,0,0,.3);u.addColorStop(0,col(k,-4,.5));u.addColorStop(1,col(k,-22,.62));return u;}),x,y,r);g.lineWidth=1;g.strokeStyle=col(k,-34,.45);g.stroke();
   g.beginPath();g.arc(x,y,r,0,TAU);g.lineWidth=r*.085;g.strokeStyle=col(k,-26,.96);g.stroke();
@@ -2225,7 +2225,7 @@ function drawCell(c){
   }
   const sk=p.skin|0,SK=sk>=SKIN_FREE?PREMIUM[sk-SKIN_FREE]:null;if(SK&&SK.aura&&sr>12&&!lowFx)SK.aura(ctx,c,r,k,sr,c===p.cells[0]); // skins that burn past the membrane; the full show only on the lead cell
   ctx.beginPath();membranePath(c,r,1);
-  fillUnit(ctx,grad(ctx,'body'+k,g=>{const q=g.createRadialGradient(-.35,-.4,.05,0,0,1.05);q.addColorStop(0,col(k,18,.97));q.addColorStop(.62,col(k,2,.92));q.addColorStop(1,col(k,-10,.94));return q;}),c.x,c.y,r);
+  fillUnit(ctx,grad(ctx,'body'+k,g=>{const q=g.createRadialGradient(-.35,-.4,.05,0,0,1.05);q.addColorStop(0,col(k,18,1));q.addColorStop(.62,col(k,2,1));q.addColorStop(1,col(k,-10,1));return q;}),c.x,c.y,r);
   const pulse=sick?(.5+.5*Math.sin(T*(5+sick*16))):0;
   ctx.lineWidth=Math.max(1.5/z,r*.085);ctx.strokeStyle=sick?col(INF_C,-20+pulse*20,.96):col(k,-26,.96);ctx.stroke();
   if(sr>14){ctx.beginPath();membranePath(c,r,.9);ctx.lineWidth=Math.max(1/z,r*.018);ctx.strokeStyle=col(k,24,.32);ctx.stroke();}
@@ -2568,45 +2568,65 @@ function toggleSnd(){muted=!muted;syncSnd();try{localStorage.setItem('mitosis.mu
 sndBtn.addEventListener('click',toggleSnd);
 function initAudio(){
   if(actx)return;try{actx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){return;}
-  master=actx.createGain();master.gain.value=.55;const lp=actx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=4200;
-  const comp=actx.createDynamicsCompressor();master.connect(lp);lp.connect(comp);comp.connect(actx.destination);
+  // master → gentle low-pass → soft compressor → out, plus a small synthesised room on a send so sounds sit in a space
+  master=actx.createGain();master.gain.value=.5;const lp=actx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=7000;lp.Q.value=.5;
+  const comp=actx.createDynamicsCompressor();comp.threshold.value=-18;comp.knee.value=12;comp.ratio.value=4;comp.attack.value=.004;comp.release.value=.2;
+  master.connect(lp);lp.connect(comp);comp.connect(actx.destination);
   noiseBuf=actx.createBuffer(1,actx.sampleRate*.8,actx.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+  const n=Math.round(actx.sampleRate*1.3),ir=actx.createBuffer(2,n,actx.sampleRate); // decaying stereo noise: a small, soft room
+  for(let ch=0;ch<2;ch++){const b=ir.getChannelData(ch);for(let i=0;i<n;i++){const t=i/n;b[i]=(Math.random()*2-1)*Math.pow(1-t,3.2)*Math.min(1,i/96);}}
+  sfxRoom=actx.createConvolver();sfxRoom.buffer=ir;const wet=actx.createGain();wet.gain.value=.24;sfxRoom.connect(wet);wet.connect(comp);
 }
-let liveNodes=0;const MAX_NODES=24;
-function tone(type,f0,f1,dur,vol,delay=0){
+let sfxRoom=null,liveNodes=0;const MAX_NODES=40;
+const freeAfter=(src,nodes)=>{src.onended=()=>{liveNodes--;for(const x of nodes)try{x.disconnect();}catch(e){}};};
+// One soft voice: an oscillator through its own low-pass, with a click-free attack and decay; part of it goes to the room.
+function voice({type='sine',f0,f1=f0,dur,vol,attack=.006,delay=0,cut=5000,wet=.3,glide=dur}){
   if(liveNodes>=MAX_NODES)return;liveNodes++;
-  const t=actx.currentTime+delay,o=actx.createOscillator(),g=actx.createGain();o.type=type;o.connect(g);g.connect(master);o.onended=()=>{liveNodes--;try{o.disconnect();g.disconnect();}catch(e){}};
-  o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(Math.max(20,f1),t+dur);
-  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.008);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.start(t);o.stop(t+dur+.03);
+  const t=actx.currentTime+delay,o=actx.createOscillator(),f=actx.createBiquadFilter(),g=actx.createGain(),s=actx.createGain();
+  o.type=type;f.type='lowpass';f.frequency.value=cut;f.Q.value=.6;o.connect(f);f.connect(g);g.connect(master);s.gain.value=wet;g.connect(s);s.connect(sfxRoom);
+  o.frequency.setValueAtTime(f0,t);if(f1!==f0)o.frequency.exponentialRampToValueAtTime(Math.max(20,f1),t+glide);
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+attack);g.gain.exponentialRampToValueAtTime(.0001,t+Math.max(dur,attack+.02));
+  o.start(t);o.stop(t+dur+.05);freeAfter(o,[o,f,g,s]);
 }
-function noise(dur,vol,f0,f1,q=1.2){
+// Filtered noise for whooshes, puffs and splashes, with a sweeping filter.
+function hiss({dur,vol,f0,f1=f0,q=1,kind='bandpass',attack=.004,delay=0,wet=.3}){
   if(liveNodes>=MAX_NODES)return;liveNodes++;
-  const t=actx.currentTime,s=actx.createBufferSource(),bp=actx.createBiquadFilter(),g=actx.createGain();s.buffer=noiseBuf;bp.type='bandpass';bp.Q.value=q;s.onended=()=>{liveNodes--;try{s.disconnect();bp.disconnect();g.disconnect();}catch(e){}};
-  bp.frequency.setValueAtTime(f0,t);bp.frequency.exponentialRampToValueAtTime(f1,t+dur);s.connect(bp);bp.connect(g);g.connect(master);
-  g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);s.start(t);s.stop(t+dur+.02);
+  const t=actx.currentTime+delay,src=actx.createBufferSource(),f=actx.createBiquadFilter(),g=actx.createGain(),s=actx.createGain();
+  src.buffer=noiseBuf;f.type=kind;f.Q.value=q;f.frequency.setValueAtTime(f0,t);f.frequency.exponentialRampToValueAtTime(Math.max(30,f1),t+dur);
+  src.connect(f);f.connect(g);g.connect(master);s.gain.value=wet;g.connect(s);s.connect(sfxRoom);
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+attack);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  src.start(t,Math.random()*.4);src.stop(t+dur+.05);freeAfter(src,[src,f,g,s]);
 }
+const bell=(f,vol,delay=0,dur=.55)=>{voice({f0:f,dur,vol,delay,attack:.003,cut:6000,wet:.45});voice({f0:f*2,dur:dur*.4,vol:vol*.22,delay,attack:.002,cut:8000,wet:.45});};
+const bubbles=(n,vol,spread)=>{for(let i=0;i<n;i++){const f=rand(520,980);voice({f0:f,f1:f*1.5,dur:.07,vol:vol*rand(.6,1),delay:rand(.03,spread),cut:3500,wet:.35,glide:.05});}};
+const PENTA=[0,2,4,7,9,12,14,16,19,21];const semi=(f,n)=>f*Math.pow(2,n/12);
+const SFX_GAP={eat:.04,eject:.06,hit:.05,merge:.08,power:.08,pop:.06,lysisFar:.12,split:.05,dash:.1};const sfxLast={};let eatStep=0,eatAt=-9;
 function sfx(kind,amt=0){
   if(!actx||muted||actx.state!=='running')return;
+  const now=actx.currentTime;if(SFX_GAP[kind]&&now-(sfxLast[kind]||-9)<SFX_GAP[kind])return;sfxLast[kind]=now;
   switch(kind){
-    case'eat':{const f=clamp(820-amt*3.2,260,820)*rand(.94,1.06);tone('sine',f,f*1.7,.11,.2);tone('triangle',f*.5,f*.7,.14,.08,.02);break;}
-    case'merge':tone('sine',180,260,.2,.12);break;
-    case'split':noise(.14,.18,1400,500);tone('triangle',300,150,.14,.1);break;
-    case'eject':tone('sine',320,210,.06,.06);break;
-    case'hit':tone('square',520,300,.06,.05);break;
-    case'dash':noise(.26,.2,400,1800,.8);tone('triangle',110,360,.2,.1);break;
-    case'pop':noise(.4,.32,700,120,.9);tone('square',190,50,.3,.07);break;
-    case'power':tone('sine',520,1040,.16,.13);tone('sine',780,1560,.18,.09,.07);break;
-    case'frenzy':[0,.06,.12].forEach((d,i)=>tone('triangle',660*[1,1.25,1.5][i],660*[1,1.25,1.5][i]*1.02,.12,.09,d));break;
-    case'breach':noise(.7,.35,2600,180,.6);tone('sawtooth',90,45,.6,.08);break;
-    case'infect':tone('sawtooth',440,466,.35,.07);tone('sawtooth',311,293,.35,.07);noise(.2,.12,3000,1200);break;
-    case'lysis':noise(.8,.45,1200,60,.7);tone('square',160,30,.6,.1);tone('sine',90,40,.7,.18);break;
-    case'lysisFar':noise(.4,.12,900,120,.8);break;
-    case'die':tone('sawtooth',260,38,.8,.12);noise(.6,.22,900,90,.7);break;
-    case'evolve':[0,.07,.14,.21].forEach((d,i)=>tone('sine',392*[1,1.26,1.5,2][i],392*[1,1.26,1.5,2][i],.18,.07,d));break;
-    case'event':tone('triangle',220,440,.35,.1);tone('triangle',330,660,.4,.07,.12);break;
-    case'boss':tone('sawtooth',55,40,1.4,.16);noise(1.2,.2,300,60,.6);break;
-    case'ach':[0,.08,.16].forEach((d,i)=>tone('triangle',784*[1,1.25,1.5][i],784*[1,1.25,1.5][i],.2,.08,d));break;
-    case'start':tone('sine',330,660,.25,.12);tone('sine',495,990,.3,.08,.08);break;
+    case'eat':{ // a bloop on a pentatonic step that climbs while you keep absorbing; bigger prey is deeper, with a little squish
+      eatStep=now-eatAt<1.4?eatStep+1:0;eatAt=now;const base=amt>60?196:amt>25?294:392,f=semi(base,PENTA[Math.min(eatStep,PENTA.length-1)]);
+      voice({f0:f*.78,f1:f*1.22,dur:.18,vol:.2,cut:3200,glide:.06});voice({f0:f*.5,f1:f*.36,dur:.13,vol:.09,cut:900,wet:.15});
+      if(amt>25)hiss({dur:.08,vol:.05,f0:1800,f1:500,kind:'lowpass',wet:.2});break;}
+    case'merge':voice({f0:150,f1:240,dur:.2,vol:.13,cut:1200});voice({f0:240,f1:330,dur:.17,vol:.08,delay:.05,cut:1600});break;
+    case'split':hiss({dur:.13,vol:.11,f0:600,f1:2600,q:.9});voice({f0:440,f1:220,dur:.13,vol:.1,cut:2600,glide:.1});break;
+    case'eject':hiss({dur:.06,vol:.06,f0:1300,f1:500,q:.8,wet:.15});voice({f0:270,f1:205,dur:.06,vol:.04,cut:1500,wet:.1});break;
+    case'hit':voice({f0:380,f1:240,dur:.08,vol:.08,cut:2000});hiss({dur:.05,vol:.04,f0:2600,f1:1200,wet:.2});break;
+    case'dash':hiss({dur:.32,vol:.15,f0:300,f1:1700,q:.7,attack:.03});voice({f0:140,f1:290,dur:.24,vol:.05,cut:900});break;
+    case'pop':hiss({dur:.45,vol:.2,f0:2400,f1:200,kind:'lowpass',q:.7});voice({f0:170,f1:55,dur:.35,vol:.15,cut:900});bubbles(3,.04,.22);break;
+    case'power':[0,4,7,12].forEach((n,i)=>bell(semi(660,n),.06,i*.05,.4));break;
+    case'frenzy':[0,4,7].forEach((n,i)=>bell(semi(523,n+eatStep%5),.065,i*.055,.35));break;
+    case'breach':voice({f0:72,f1:55,dur:1.1,vol:.15,attack:.15,cut:400});hiss({dur:.9,vol:.11,f0:900,f1:180,q:.6,attack:.12});voice({type:'triangle',f0:220,f1:207,dur:.9,vol:.03,attack:.2,cut:700});break;
+    case'infect':voice({f0:440,f1:415,dur:.5,vol:.06,attack:.04,cut:1800});voice({f0:466,f1:440,dur:.5,vol:.05,attack:.04,cut:1800});hiss({dur:.18,vol:.04,f0:3000,f1:1400});break;
+    case'lysis':hiss({dur:.8,vol:.28,f0:3000,f1:120,kind:'lowpass',q:.7});voice({f0:130,f1:35,dur:.6,vol:.2,cut:700});bubbles(5,.05,.4);break;
+    case'lysisFar':hiss({dur:.35,vol:.07,f0:1200,f1:150,kind:'lowpass',wet:.5});break;
+    case'die':voice({f0:330,f1:70,dur:.95,vol:.14,attack:.01,cut:1500});voice({type:'triangle',f0:220,f1:55,dur:.95,vol:.05,cut:800});hiss({dur:.6,vol:.09,f0:800,f1:100,kind:'lowpass'});break;
+    case'evolve':[0,4,7,12].forEach((n,i)=>bell(semi(392,n),.06,i*.07));break;
+    case'event':voice({type:'triangle',f0:220,dur:.55,vol:.08,attack:.06,cut:1200});voice({type:'triangle',f0:330,dur:.6,vol:.06,attack:.06,delay:.12,cut:1400});break;
+    case'boss':voice({f0:48,f1:40,dur:1.7,vol:.2,attack:.3,cut:300});hiss({dur:1.5,vol:.18,f0:250,f1:80,kind:'lowpass',attack:.3});break;
+    case'ach':[0,4,7,12].forEach((n,i)=>bell(semi(784,n),.065,i*.07,.6));break;
+    case'start':hiss({dur:.4,vol:.05,f0:400,f1:2000,q:.8,attack:.05});bell(523,.06,.1);bell(semi(523,7),.055,.18);break;
   }
 }
 
@@ -2932,6 +2952,8 @@ $('copyInvite').addEventListener('click',()=>{const b=$('copyInvite'),i=$('invit
 
 /* ================= input ================= */
 let touchId=null;
+// ?debug=1: a handle on the game state for headless tests (movement, merging); never used by the game itself
+if(/[?&]debug=1/.test(location.search))window.__mt={get human(){return human;},get cam(){return cam;},get T(){return T;},split:()=>split(human),sfx:(k,a)=>sfx(k,a),audio:()=>({state:actx&&actx.state,live:liveNodes})};
 cv.addEventListener('pointermove',e=>{if(e.pointerType==='touch'&&e.pointerId!==touchId)return;pointer.x=e.clientX;pointer.y=e.clientY;});
 cv.addEventListener('pointerdown',e=>{if(e.pointerType==='touch'){if(touchId!==null)return;touchId=e.pointerId;try{cv.setPointerCapture(e.pointerId);}catch(_){}}pointer.x=e.clientX;pointer.y=e.clientY;});
 const release=e=>{if(e.pointerId===touchId){touchId=null;pointer.x=W/2;pointer.y=H/2;}};
@@ -2995,6 +3017,7 @@ let seenIntro=false;try{seenIntro=!!localStorage.getItem('mitosis.intro');}catch
 showCard(seenIntro?'startCard':'introCard');
 $('introGo').addEventListener('click',()=>{try{localStorage.setItem('mitosis.intro','1');}catch(e){}showCard('startCard');});
 $('introAgain').addEventListener('click',()=>showCard('introCard'));
+const PF=window.__mt?{n:0,step:0,net:0,draw:0,gap:0,slow:0}:null;if(PF)window.__mt.pf=PF; // ?debug=1: frame-phase timing for profiling
 let last=performance.now(),hudT=0,ema=16,playT=0,lastHitchAt=0,hitchSent=0,wsMax=0,lastTouchAt=0;
 addEventListener('pointerdown',()=>{lastTouchAt=performance.now();},true);
 window.__wsTime=w=>{if(w>wsMax)wsMax=w;};setInterval(()=>{wsMax=0;},1000);
@@ -3012,6 +3035,7 @@ function frame(nowMs){
   // watchdog: tell the app shell about long frames so stalls can be read from the device log
   if((t3-t0>180||gapMs>=400)&&nowMs-lastHitchAt>1000){lastHitchAt=nowMs;reportHitch(`hitch gap=${Math.round(gapMs)}ms wsmax=${Math.round(wsMax)}ms sinceTouch=${Math.round(nowMs-lastTouchAt)}ms step=${(t1-t0).toFixed(0)} net=${(t2-t1).toFixed(0)} draw=${(t3-t2).toFixed(0)} cells=${cells.length} players=${players.length} parts=${parts.length} ej=${ejected.length} host=${isHost} peers=${peerCount} mode=${mode} z=${cam.z.toFixed(2)} audio=${liveNodes} tag=${BISECT.tag}`);}
   hudT-=raw;if(hudT<=0){hudT=.12;if(!BISECT.nohud)hud();}
+  if(PF){PF.n++;PF.step+=t1-t0;PF.net+=t2-t1;PF.draw+=t3-t2;PF.gap+=gapMs;if(gapMs>25)PF.slow++;}
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);

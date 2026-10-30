@@ -19,7 +19,7 @@ const SKINS = [
   { id: 13, key: 'galaxy', name: 'Galaxy', price: 700 },
   { id: 14, key: 'gilded', name: 'Gilded', price: 800 },
   { id: 15, key: 'blackhole', name: 'Black Hole', price: 10000 },
-  { id: 16, key: 'onering', name: 'One Cell to Rule Them All', price: 12000000 }, // what $10,000 of the biggest pack buys
+  { id: 16, key: 'onering', name: 'One Cell to Rule Them All', price: 12000000 }, // eighty $99.99 Biosphere packs
   { id: 17, key: 'aurora', name: 'Aurora', price: 900 },
   { id: 18, key: 'koi', name: 'Koi', price: 500 },
   { id: 19, key: 'plasma', name: 'Plasma', price: 1200 },
@@ -33,6 +33,7 @@ const PACKS = [
   { id: 'atp_1500', atp: 1500 },
   { id: 'atp_5000', atp: 5000 },
   { id: 'atp_12000', atp: 12000 },
+  { id: 'atp_150000', atp: 150000 },   // the $99.99 pack: 25% more ATP per dollar than the Bioreactor
 ];
 // Payout for one run, by where the player placed in the round (last one standing is 1st; dying
 // with 6 others still alive is 7th): 1st pays 10, top 3 pays 6, top 10 pays 3, top 20 pays 1,

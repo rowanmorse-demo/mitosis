@@ -87,7 +87,7 @@ Tiers: Bronze (under 900), Silver (900+), Gold (1100+), Platinum (1400+), Diamon
 | 21st–30th | 1 |
 | Lower, or a run under 20 seconds | 0 |
 
-Practice and Nearby games pay nothing. There is no hourly cap, but the amounts are deliberately small: winning every ten-minute round is 150 ATP an hour. Most skins cost 300–2,500 ATP, Supernova 6,000, the Black Hole 10,000 and the One Cell to Rule Them All 12,000,000 (what $10,000 of the biggest pack buys), a very long grind, so the packs are the realistic way to get it:
+Practice and Nearby games pay nothing. There is no hourly cap, but the amounts are deliberately small: winning every ten-minute round is 150 ATP an hour. Most skins cost 300–2,500 ATP, Supernova 6,000, the Black Hole 10,000 and the One Cell to Rule Them All 12,000,000 (eighty $99.99 Biosphere packs), a very long grind, so the packs are the realistic way to get it:
 
 | Pack | ATP |
 | --- | --- |
@@ -95,6 +95,7 @@ Practice and Nearby games pay nothing. There is no hourly cap, but the amounts a
 | `atp_1500` | 1,500 |
 | `atp_5000` | 5,000 |
 | `atp_12000` | 12,000 |
+| `atp_150000` | 150,000 ($99.99) |
 
 Prices are set in App Store Connect and the Play Console; the apps show them from there. Packs can only be bought inside the iOS and Android apps. The website earns ATP but does not sell it.
 
@@ -174,7 +175,7 @@ Then set that https address as `MITOSIS_SERVER` in `ios/project.yml`, `SERVER_UR
 
 - Open `ios/Mitosis.xcodeproj` in Xcode 16+ and run. Signing is automatic for team `4M7HR323EA`; change `DEVELOPMENT_TEAM` and the bundle id in `project.yml` for another account, then `xcodegen generate` (`brew install xcodegen`).
 - **Testing purchases in the simulator:** the scheme uses `Mitosis/Products.storekit`, a fake App Store with the four packs. Run a local server with `npm run dev` first: debug builds in the simulator use `http://localhost:3000` when it answers, and the production server otherwise.
-- **App Store Connect:** create the app with bundle id `com.mitosisgame.app`, then four consumable in-app purchases with product ids `atp_500`, `atp_1500`, `atp_5000`, `atp_12000`. Create an In-App Purchase API key and set the `APPLE_*` variables on the server.
+- **App Store Connect:** create the app with bundle id `com.mitosisgame.app`, then five consumable in-app purchases with product ids `atp_500`, `atp_1500`, `atp_5000`, `atp_12000`, `atp_150000`. Create an In-App Purchase API key and set the `APPLE_*` variables on the server.
 - **Sign in:** `Mitosis.entitlements` carries the Sign in with Apple capability; automatic signing adds it to the App ID. For Google, create an *iOS* OAuth client in Google Cloud Console (bundle id `com.mitosisgame.app`), put its id in `GOOGLE_IOS_CLIENT_ID` in `project.yml`, regenerate, and list the same id in the server's `GOOGLE_CLIENT_IDS`. The app signs in through `ASWebAuthenticationSession` (no Google SDK).
 - **Purchase test:** `MitosisTests/PurchaseFlowTests.swift` buys a pack through the real Shop against the StoreKit test store and a local `npm run dev` server. Run it from Xcode; `xcodebuild test` cannot start the StoreKit test environment.
 - **TestFlight:** Product → Archive, then Distribute App → App Store Connect. From the terminal: `xcodebuild -project ios/Mitosis.xcodeproj -scheme Mitosis -configuration Release archive -archivePath ios/build/Mitosis.xcarchive -allowProvisioningUpdates`, then export with `ios/ExportOptions.plist`.

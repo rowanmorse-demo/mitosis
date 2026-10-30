@@ -1,6 +1,6 @@
 // Headless screenshot of a page in Chrome, for checking UI changes without a phone.
 // node tools/snap.js URL OUT.png [--w=430 --h=860 --dpr=2 --mobile --wait=3000 --until='js expr' --untilMax=ms --js='js before capture' --after=ms --intro --ls=json]
-// --mobile emulates a touch phone; --intro keeps the first-launch welcome card; --ls='{"key":"value"}' presets localStorage. Page exceptions are printed.
+// --mobile emulates a touch phone; --intro keeps the first-launch welcome card; --autoplay lets audio start without a tap; --ls='{"key":"value"}' presets localStorage. Page exceptions are printed.
 'use strict';
 const { spawn } = require('child_process'), fs = require('fs'), os = require('os'), path = require('path');
 const [url, out, ...rest] = process.argv.slice(2);
@@ -19,7 +19,7 @@ class CDP {
 }
 (async () => {
   const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'snap-'));
-  const chrome = spawn(CHROME, ['--headless=new', '--no-sandbox', '--disable-gpu', '--hide-scrollbars', '--mute-audio', `--remote-debugging-port=${PORT}`, `--user-data-dir=${profile}`, '--window-size=1400,1100'], { stdio: 'ignore' });
+  const chrome = spawn(CHROME, ['--headless=new', '--no-sandbox', '--disable-gpu', '--hide-scrollbars', '--mute-audio', ...(opt.autoplay ? ['--autoplay-policy=no-user-gesture-required'] : []), `--remote-debugging-port=${PORT}`, `--user-data-dir=${profile}`, '--window-size=1400,1100'], { stdio: 'ignore' });
   try {
     let v = null; for (let i = 0; i < 50 && !v; i++) { try { v = await json(`http://127.0.0.1:${PORT}/json/version`); } catch (e) { await sleep(200); } }
     if (!v) throw new Error('Chrome did not start');

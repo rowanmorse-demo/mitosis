@@ -11,15 +11,28 @@ const SIZES = {
 };
 const SHOTS_ALL = [
   { id: '1-arena', url: '?autopilot=1&big=1&tag=shot', wait: 16000, cap: 'Absorb everything smaller. Divide to strike.', sub: 'Live ten-minute rounds in a closing arena, against players and bots' },
-  { id: '2-menu', url: '?tag=shot', wait: 3500, fix: `(()=>{const g=id=>document.getElementById(id);g('rankVal').textContent='1480';g('rankTier').textContent='Gold';g('rankTier').dataset.tier='Gold';g('rankNext').textContent='320 to Platinum';g('tierFill').style.width='27%';g('nameIn').value='Volvox';const n=document.querySelector('#netLine span');if(n)n.textContent='Live · 6 others here';const r=g('roundLine');r.hidden=false;r.textContent='Round · 7:12 left · spawns open';return 'ok'})()`, cap: 'Into a live arena in seconds', sub: 'Placement every round and a rating that climbs from Silver to Legend', card: true },
-  { id: '3-shop', url: '?tag=shot', wait: 3500, click: 'shopBtn', fix: `(()=>{const prices={atp_500:'$0.99',atp_1500:'$1.99',atp_5000:'$4.99',atp_12000:'$9.99'};document.querySelectorAll('.pack').forEach(b=>{b.disabled=false;const pr=b.querySelector('.pr');if(pr)pr.textContent=prices[b.dataset.id]||'';});const h=document.getElementById('storeHint');if(h)h.textContent='Purchases go through the App Store.';document.getElementById('storeBal').textContent='2,350';return 'ok'})()`, cap: 'Eleven skins to unlock with ATP', sub: 'Earn ATP by surviving and absorbing, or pick up a pack', card: true },
-  { id: '4-profile', url: '?tag=shot', wait: 3500, click: 'profBtn', fix: `(()=>{const g=id=>document.getElementById(id);g('pTierTxt').textContent='Gold';g('pTierTxt').dataset.tier='Gold';g('pTier').dataset.tier='Gold';g('pNext').textContent='320 to Platinum';g('pFill').style.width='27%';document.getElementById('profName').textContent='Volvox';document.getElementById('pRating').textContent='1480';document.getElementById('pTier').textContent='Gold';document.getElementById('pAtp').textContent='2,350';document.getElementById('pEarned').textContent='4,120';document.getElementById('pRuns').textContent='38';document.getElementById('pSkins').textContent='3';document.getElementById('acctHint').hidden=true;document.getElementById('appleBtn').hidden=false;document.getElementById('acctWho').textContent='Not signed in. Sign in so your ATP, skins and rating follow you to any phone.';return 'ok'})()`, cap: 'Your rating follows you', sub: 'Sign in with Apple and keep ATP, skins and rank on any phone', card: true },
+  { id: '2-menu', url: '?tag=shot', wait: 3500, cap: 'Into a live arena in seconds', sub: 'Placement every round and a rating that climbs from Silver to Legend', card: true },
+  // the shop with Supernova picked: the wallet below is real (seeded on the local server)
+  { id: '3-shop', url: '?tag=shot', wait: 3500, click: 'shopBtn', fix: `(()=>{document.querySelector('#skins .skin[data-id="22"]').click();return 'ok'})()`, cap: 'Nineteen skins to unlock with ATP', sub: 'Win a round for 25 ATP, or pick up a pack', card: true },
+  { id: '4-profile', url: '?tag=shot', wait: 3500, click: 'profBtn', fix: `(()=>{const g=id=>document.getElementById(id);g('acctHint').hidden=true;g('appleBtn').hidden=false;g('achField').scrollIntoView({block:'end'});return 'ok'})()`, cap: 'Your rating follows you', sub: 'Sign in with Apple and keep ATP, skins and rank on any phone', card: true },
   { id: '5-events', url: '?autopilot=1&big=1&noeject=1&tag=shot', wait: 9000, until: "document.body.classList.contains('playing')&&!document.getElementById('banner').hidden&&!document.getElementById('banner').classList.contains('mini')", cap: 'Phages, blooms, tides and the Leviathan', sub: 'Evolve six times a life, dodge hunters and take the leader\'s bounty' },
-  { id: '6-results', url: '?autopilot=1&tag=shot', wait: 6000, until: "!document.getElementById('deathCard').hidden", fix: `(()=>{const g=id=>document.getElementById(id);g('deathWhy').textContent='Absorbed by Bacillus after 6:12.';g('dPlace').textContent='3rd of 61';g('dPlace').hidden=false;g('dPeak').textContent='2,806';g('dEaten').textContent='27';g('dTime').textContent='6:12';g('dBest').textContent='2,806';g('dEarn').hidden=false;g('dEarn').textContent='+6 ATP — top 3';g('dRank').hidden=false;g('dRank').innerHTML='Rating <b>+24</b> → <b>1504</b> · Gold';const a=g('dAch');a.hidden=false;a.textContent='Unlocked: Apex predator';return 'ok'})()`, cap: 'Placement every round', sub: 'Climb from Silver to Legend', card: true },
+  // a real ranked death against the local server: placement, ATP and the rating meter mid-way through its count-up
+  { id: '6-results', url: '?autopilot=1&norestart=1&tag=shot', wait: 6000, until: "!document.getElementById('deathCard').hidden", after: 900, cap: 'Placement every round', sub: 'Climb from Silver to Legend', card: true },
+  // Nearby is the iPhone app's switch: the page runs in its real Nearby mode with three phones simulated through the same hook the app uses
+  { id: '7-nearby', url: '?tag=shot', wait: 3500, fix: `(()=>{const N=window.__mitosisNet,g=id=>document.getElementById(id);N.useNearby(()=>{});
+    ['Amoeba','Diatom','Euglena'].forEach((n,i)=>N.onNearby({ev:'p',id:'zz'+i,data:JSON.stringify({v:6,n,s:i+2,a:0,f:0,k:i,q:0})}));
+    g('netSeg').hidden=false;[...g('netSeg').children].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.n==='nearby')));document.querySelector('.lb-play').classList.add('nearby');
+    g('modeLbl').textContent='Nearby · Bluetooth & Wi-Fi';g('modeSub').textContent='Phones around you · unranked';return 'ok'})()`, after: 1500, cap: 'Friends in the room? No internet needed', sub: 'Phones nearby play over Bluetooth and Wi-Fi', card: true },
 ];
 const SHOTS = process.env.ONLY ? SHOTS_ALL.filter(x => process.env.ONLY.split(',').includes(x.id)) : SHOTS_ALL;
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+// Storage the game finds on first load. The secret is the shot wallet that seed-wallet.js funds on the local server
+// (rating 1480, 8,350 ATP, a few skins, One Cell worn), so the lobby, shop and profile show real numbers.
+const SEED = `try{const s=localStorage;s.setItem('mitosis.intro','1');s.setItem('mitosis.secret','${require('./seed-wallet').SECRET}');
+  s.setItem('mitosis.settings',JSON.stringify({name:'Volvox',stain:1,diff:'standard',skin:16,boardMin:true}));
+  s.setItem('mitosis.ach',JSON.stringify(['first','m500','m2000','rank1','surv5','frenzy5','bounty']));
+  s.setItem('mitosis.history',JSON.stringify([{t:Date.now()-900000,place:3,of:61,peak:2806,eaten:27,sec:372,delta:24,rating:1480},{t:Date.now()-600000,place:12,of:58,peak:1240,eaten:9,sec:214,delta:4,rating:1456},{t:Date.now()-300000,place:41,of:60,peak:230,eaten:1,sec:38,delta:-6,rating:1452}]));}catch(e){}`;
 async function json(url, opts) { const r = await fetch(url, opts); return r.json(); }
 
 class CDP {
@@ -57,13 +70,14 @@ const captionJs = (cap, sub, s, card) => `(() => {
         await cdp.send('Emulation.setDeviceMetricsOverride', { width: s.w, height: s.h, deviceScaleFactor: s.dpr, mobile: true });
         await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
         await cdp.send('Emulation.setEmulatedMedia', { features: [{ name: 'pointer', value: 'coarse' }, { name: 'hover', value: 'none' }] });
+        await cdp.send('Page.addScriptToEvaluateOnNewDocument', { source: SEED });
         await cdp.send('Page.navigate', { url: BASE + shot.url });
         await sleep(700);
-        await cdp.eval(`(()=>{try{localStorage.setItem('mitosis.intro','1');localStorage.setItem('mitosis.settings',JSON.stringify({name:'Volvox',stain:1,diff:'standard',skin:3,boardMin:true}));localStorage.setItem('mitosis.history',JSON.stringify([{t:Date.now()-900000,place:3,of:61,peak:2806,eaten:27,sec:372,delta:24,rating:1480},{t:Date.now()-600000,place:12,of:58,peak:1240,eaten:9,sec:214,delta:4,rating:1456},{t:Date.now()-300000,place:41,of:60,peak:230,eaten:1,sec:38,delta:-6,rating:1452}]));}catch(e){}const g=document.getElementById('introGo');if(g&&!document.getElementById('introCard').hidden)g.click();return 'seeded'})()`);
         await sleep(Math.max(0, shot.wait - 700));
         if (shot.until) { const t0 = Date.now(); while (Date.now() - t0 < 110000 && !(await cdp.eval(shot.until))) await sleep(250); }
         if (shot.click) { await cdp.eval(`document.getElementById(${JSON.stringify(shot.click)}).click(); 'ok'`); await sleep(900); }
         if (shot.fix) { await cdp.eval(shot.fix); await sleep(300); }
+        if (shot.after) await sleep(shot.after);
         if (RAW) await cdp.eval("(()=>{const st=document.createElement('style');st.textContent='#toasts{display:none!important}';document.head.appendChild(st);return 'ok'})()");
         else await cdp.eval(captionJs(shot.cap, shot.sub, s, !!shot.card));
         await sleep(RAW ? 150 : 400);

@@ -73,6 +73,21 @@
       "productID" : "atp_12000",
       "referenceName" : "Bioreactor of ATP (12000)",
       "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "99.99",
+      "familyShareable" : false,
+      "internalID" : "6818893599",
+      "localizations" : [
+        {
+          "description" : "150,000 ATP to spend on skins",
+          "displayName" : "Biosphere of ATP",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "atp_150000",
+      "referenceName" : "Biosphere of ATP (150000)",
+      "type" : "Consumable"
     }
   ],
   "settings" : {
