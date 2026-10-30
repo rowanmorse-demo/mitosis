@@ -1,4 +1,4 @@
-# App Store listing — Mitosis: Cell Arena (2.2.0)
+# App Store listing — Mitosis: Cell Arena (2.3.0)
 
 Copy for App Store Connect. Character limits are Apple's.
 
@@ -9,16 +9,19 @@ Mitosis: Cell Arena
 Live multiplayer cell arena
 
 ## Promotional text (170)
-New: Sign in with Apple to keep your ATP, skins and rating on any phone. Ten-minute rounds, a closing arena, two lives, and practice against bots whenever you like.
+New: play friends nearby over Bluetooth, no internet needed. A new shop with seven new skins, bot difficulty levels, and a final arena that crowns the last cell standing.
 
 ## Description (4000)
-Mitosis is a fast, free cell-eating arena. Absorb anything smaller than you, divide to strike, and keep clear of anything bigger. Rounds last ten minutes, the arena closes in, and the last cells standing are ranked by mass.
+Mitosis is a fast, free cell-eating arena. Absorb anything smaller than you, divide to strike, and keep clear of anything bigger. Rounds last ten minutes, the arena closes in, and the last cell standing wins.
 
 LIVE ROUNDS
-Jump into a shared arena in seconds. Every round starts full size, then the safe zone shrinks until only the centre is left. Anything caught outside dissolves. Players and bots fill the well, and your placement is shown the moment you fall.
+Jump into a shared arena in seconds. Every round starts full size, then the safe zone shrinks until only the centre is left. Anything caught outside dissolves. Players and bots fill the well, bots stop respawning at seven minutes, and the round ends the moment one player is left. Your placement is shown the moment you fall, and placing high pays ATP: 25 for a win.
 
 TWO LIVES, THEN THE NEXT ROUND
 You can re-inoculate twice per round, and nobody spawns in the last five minutes. If you can't join, Mitosis searches for a game for up to thirty seconds and then fills the empty slots with bots so you are never waiting around.
+
+PLAY NEARBY, EVEN OFFLINE
+No internet? Play the bots at Easy, Normal, Hard or Expert, or switch to Nearby and play the phones in the same room over Bluetooth and Wi-Fi.
 
 A RATING THAT MEANS SOMETHING
 Climb from Silver through Gold, Platinum and Diamond to Legend. Surviving, absorbing and placing high raise your rating; dying fast lowers it. Winning a round pays a bonus, and runs on your second or third life earn less, so careful play is rewarded.
@@ -38,21 +41,26 @@ Sign in with Apple and your ATP, skins and rating follow you to any phone. Not s
 PRACTICE ANY TIME
 Practice against bots, unranked, with no connection needed.
 
+SKINS
+Spend ATP in the shop on nineteen premium skins, from Koi and Sakura to Supernova, the Black Hole and the One Cell to Rule Them All.
+
 Controls follow the classic mobile formula: a virtual joystick, Split, Shoot and Boost. No chat, no ads, no tracking.
 
 ## Keywords (100)
 agar,cell,arena,multiplayer,io,eat,grow,evolve,petri,microbe,battle,casual,skins,ranked,survival
 
-## What's New in 2.2.0
-• Sign in with Apple: keep ATP, skins and rating on any phone
-• Profile tab with your stats
-• Ten-minute rounds with a closing arena and placement
-• Two lives per round; search for a game for up to 30 seconds, then play with bots
-• Practice mode against bots, unranked
-• Mutations apply themselves, and every cell shows badges for its traits
-• No cap on cell mass; nothing is immune to phages
-• Smoother play on phones; event banners stay out of the way
-• Crash reporting so problems get fixed faster
+## What's New in 2.3.0
+• Nearby: play the phones around you over Bluetooth and Wi-Fi, no internet needed
+• A new full-screen shop, with seven new skins: Aurora, Koi, Plasma, Geode, Sakura, Supernova and Glitch
+• Earn ATP for placing: 25 for a win, down to 1 for 30th
+• Bots stop respawning at seven minutes, and the round ends when one player is left
+• The arena reaches its final size by 9:30
+• Four bot difficulties for practice and offline play
+• No connection? Play starts a game against bots straight away
+• See your rating rise or fall after every round
+• Smoother merging of split cells
+• Smaller in-game info on phones, and you can shrink or hide it
+• Redesigned menus, and a fix for round syncing in multiplayer
 
 ## URLs
 - Support URL: https://github.com/rowanmorse-demo/mitosis/issues

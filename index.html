@@ -310,6 +310,7 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
 .together.compact{padding:10px 12px;gap:8px}
 .together.compact .invite{grid-template-columns:1fr auto;align-items:center}
 #inviteHelp{margin:0;font:12px/1.45 var(--display);color:var(--dim)}
+.new .hot{color:#ff6b6b;font-weight:700}
 
 /* lobby sections */
 /* lobby: a full-screen menu over the drifting culture */
@@ -662,10 +663,11 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
       <dt>Buttons</dt><dd>Split, Shoot and Boost sit on the right</dd>
       <dt>Pause</dt><dd>Bottom centre, with a Return to lobby option</dd>
     </dl>
-    <div class="new"><strong>New in 2.0</strong>
-      <em>Mutate</em> at mass milestones — a random trait is applied, six times a life, and every cell wears badges for the traits it has. <em>World events</em>: nutrient blooms, antibiotic tides that close the well, phage swarms and the <em>Leviathan</em> — lure it onto phages to break it up. The leader wears a crown and pays a <em>1.5× bounty</em>.
-      <span class="danger">Hunter phages</span> break in through the rim and inject any cell they touch — it bursts into up to 16 pieces 8–10 s later. Nothing is immune to them; three ejected blobs kill one.
-      Also: mutations (Magnet, Phase, Surge), dash, frenzy streaks, stain patterns and achievements.</div>
+    <div class="new"><strong>Rounds</strong>
+      Ten minutes, two lives. The arena closes in from the one-minute mark and is down to its final size by 9:30; anything outside dissolves. Bots stop respawning at 7:00, and the round ends the moment one player is left. ATP pays for placing: 25 for a win, down to 1 for 30th.
+      <em>Mutate</em> at mass milestones — a random trait is applied, six times a life, and every cell wears badges for the traits it has. <em>World events</em>: nutrient blooms, antibiotic tides that close the well, phage swarms and the <em>Leviathan</em> — lure it onto phages to break it up. The leader wears a crown and pays a bounty.
+      <b class="hot">Hunter phages</b> break in through the rim and inject any cell they touch — it bursts into up to 16 pieces 8–10 s later. Nothing is immune to them; three ejected blobs kill one.
+      Practice plays the bots at the difficulty you pick, and on iPhone, Nearby plays the phones around you with no internet. Tap the mass readout or the clock in a game to shrink them, or the HUD button to hide the on-screen info.</div>
     <p class="achline" id="achLine"></p>
       <button type="button" class="ghost" id="introAgain">Show the welcome tips again</button>
     </div></details>

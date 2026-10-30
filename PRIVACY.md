@@ -1,6 +1,6 @@
 # Mitosis: Cell Arena — Privacy Policy
 
-_Last updated: 4 October 2026_
+_Last updated: 30 October 2026_
 
 Mitosis: Cell Arena ("Mitosis", "the game") is made by Catapult Consulting, LLC. This policy explains what the game stores, why, and how to remove it. It applies to the iPhone and Android apps and to the website.
 
@@ -14,6 +14,8 @@ Mitosis: Cell Arena ("Mitosis", "the game") is made by Catapult Consulting, LLC.
 
 **Gameplay.** Run results (how long you survived, cells absorbed, placement, chosen name) are sent to the server to pay out ATP and update your rating. The display name you type is shown to other players in live rounds and on the leaderboard.
 
+**Nearby play (iPhone app).** If you switch the lobby to Nearby, the app uses Bluetooth and peer-to-peer Wi-Fi (Apple's local network permission) to find other phones running Mitosis close by. While you play, your display name, chosen look and the positions of your cells go directly to those phones and nowhere else; nothing from a nearby game is sent to the server or stored, and nearby games do not pay ATP or change your rating. Turning Nearby off disconnects at once.
+
 **Diagnostics.** If the app crashes or stalls, a technical report (device model, OS version, app version and a stack trace) is sent to the server so the problem can be fixed. Reports contain no personal information.
 
 ## What the game does not do
@@ -21,7 +23,7 @@ Mitosis: Cell Arena ("Mitosis", "the game") is made by Catapult Consulting, LLC.
 - No advertising, no ad identifiers, no advertising networks.
 - No tracking across apps or websites, and no sale of data.
 - No analytics SDKs; the only server the apps talk to is the Mitosis game server, plus Apple's and Google's services for purchases and sign-in.
-- No access to contacts, photos, location, camera or microphone.
+- No access to contacts, photos, location, camera or microphone. The local network is used only for Nearby play, and only after you choose it.
 
 ## Where data is kept
 

@@ -12,10 +12,12 @@ A multiplayer cell-eating arena set in a giant petri well. Absorb anything small
 - **Mutation**: at mass milestones a random permanent trait is applied, six times a life; every cell shows badges for the traits it carries
 - **World events**: Nutrient Bloom, Antibiotic Tide, Phage Swarm and the Leviathan boss
 - **Hunter phages** that breach the rim and inject cells; the cell bursts into up to 16 pieces 8–10 s later
-- **ATP and skins**: earn ATP by playing (or buy it in the apps) and spend it on twelve premium skins, up to the 12,000,000 ATP One Cell to Rule Them All
+- **ATP and skins**: earn ATP by placing well (or buy it in the apps) and spend it in a full-screen shop on nineteen premium skins, up to the 12,000,000 ATP One Cell to Rule Them All
 - **A lobby that knows you**: a live portrait of your cell, your rating with progress to the next tier, who is in the room and the round clock. First launch shows a three-step welcome card (Settings can bring it back). The Profile keeps your last runs with placement, time, peak mass and rating change
 - **Effects toggle** in Settings (Full or Reduced) for older phones; the game also drops to reduced effects on its own when frames run long
-- **Rounds of ten minutes**: the arena is full size for the first 2½ minutes, then closes in to 12% of the dish by 9:30. Anything caught outside dissolves. When time is up the survivors are ranked by mass and everyone sees where they placed
+- **Rounds of ten minutes**: the arena is full size for the first minute, then closes in to 3% of the dish by 9:30. Anything caught outside dissolves. Bots stop respawning at 7:00, and the round ends as soon as one player's cells are all that is left: the last cell standing wins
+- **Practice and offline play** against bots at four difficulties (Easy, Normal, Hard, Expert). With no connection, Play starts a bot game straight away
+- **Nearby play** (iPhone app): phones in the same room play each other over Bluetooth and peer-to-peer Wi-Fi, no internet needed
 - **Mutations** (Magnet, Phase, Surge), dash, frenzy streaks, a leader bounty, stain patterns and 12 achievements. There is no chat
 
 ## Controls
@@ -30,16 +32,19 @@ A multiplayer cell-eating arena set in a giant petri well. Absorb anything small
 | Esc | Pause |
 | M | Sound on/off |
 
-On phones: the left stick steers, or touch the arena and every piece heads for your finger. Touch the middle of the screen to pull all your pieces together. Split and Shoot have no cooldown (hold Shoot to keep firing); Boost recharges in 4 s, or 2.2 s with Cilia.
+On phones: the left stick steers, or touch the arena and every piece heads for your finger. Touch the middle of the screen to pull all your pieces together. Split and Shoot have no cooldown (hold Shoot to keep firing); Boost recharges in 4 s, or 2.2 s with Cilia. Tap the mass readout, the round clock or the HUD button to shrink or hide the on-screen info.
 
 On phones, drag to steer and use the on-screen buttons. In the Android app the back button pauses.
 
 ## Rules of the well
 
-- A **round lasts 10 minutes**. The dish is full size for the first 2½ minutes, then the safe arena shrinks smoothly to 12% of the dish by 9:30 and holds there until the round ends. The clock at the top of the screen counts down and says when the collapse starts.
-- Cells outside the arena lose 20% of their mass per second plus 12 mass per second, and dissolve below 10 mass. Bots steer back inside; new cells always spawn inside.
+- A **round lasts 10 minutes**. The dish is full size for the first minute, then the safe area shrinks at a steady rate to 3% of the dish by 9:30 and holds there until 10:00. The clock at the top of the screen counts down and says when the collapse starts.
+- Cells outside the arena lose 20% of their mass per second plus 12 mass per second (60% in the final arena), and dissolve below 10 mass. A cell bigger than the final arena still counts as inside when it is centred. Bots steer back inside; new cells always spawn inside, including inside an antibiotic tide.
+- **Bots stop respawning at 7:00.** From then on, as soon as only one player's cells are left the round ends and that player wins. If more than one is still alive at 10:00 (rare, given the final arena), they are ranked by mass.
 - **Lives and the spawn window.** Everyone gets two respawns per round, and nobody spawns in the last 5 minutes. When you can't join, Play **searches for a game** for up to 30 seconds (the round may open or a new one start); after that you're put into a game on your device where **bots fill every slot people didn't**. Those games are ranked like any other.
-- **Practice** (the button under Play) is the same bot-filled game but unranked: no ATP, no rating change, and no connection needed.
+- **Practice** (the button under Play) is the same bot-filled game but unranked: no ATP, no rating change, and no connection needed. The pill beside it (and Settings) sets the bots to Easy, Normal, Hard or Expert. When the app has no connection, Play starts a practice game at once instead of searching.
+- **Nearby** (the Online / Nearby switch in the iPhone app's lobby) connects phones around you with MultipeerConnectivity, over Bluetooth and peer-to-peer Wi-Fi. The phones relay the game to each other the way the server does online, so rounds, bots and hosting work the same. Nearby games are unranked.
+- **Merging**: split pieces can fuse again after 15 s plus a little more for bigger cells (about 20–30 s at everyday sizes). Until then pieces that touch slide around each other; when it is time they glide together and fuse once they overlap.
 - **Rating** rewards dying less and winning: finishing 1st of 4+ adds a win bonus, and a run on your second or third life of the round earns 75% or 50% of the gain.
 - There is **no cap on a single cell's mass** (the packet format tops out at 8,388,607, far beyond play), and **nothing is immune to phages**: the Phase power-up still stops you being eaten, but phages burst and hunters infect anyone.
 - Event banners (blooms, tides, swarms, the Leviathan) show in full for two seconds, then shrink to a small pill in the top-left corner.
@@ -60,10 +65,11 @@ Every player has an Elo-style rating, starting at 1000, adjusted by the server a
 | Surviving | +1 per 20 s, up to +25 |
 | Each cell absorbed | +2, up to +30 |
 | Placing | up to +8 for 1st, scaling down to 0 for last (rounds with at least 4 players) |
+| Winning | +10 for 1st (rounds with at least 4 players) |
 | Dying inside the first minute | up to −10, the sooner the worse |
 | Rating above 1000 | gains shrink and losses grow (at 2000, gains ×0.5 and losses ×1.5), so ratings settle rather than inflate |
 
-Tiers: Bronze (<900), Silver, Gold (1400+), Platinum (1800+), Diamond (2300+), Legend. The lobby shows your rating and the top ten, and the results screen after every run (death or Return to lobby) shows the change. `GET /api/leaderboard` returns the top ten.
+Tiers: Bronze (under 900), Silver (900+), Gold (1100+), Platinum (1400+), Diamond (1800+), Legend (2300+). The lobby shows your rating and the top ten, and the results screen after every run (death or Return to lobby) shows the change. `GET /api/leaderboard` returns the top ten.
 
 ## ATP, skins and purchases
 
@@ -71,13 +77,17 @@ Tiers: Bronze (<900), Silver, Gold (1400+), Platinum (1800+), Diamond (2300+), L
 
 | Where you placed in the round | ATP |
 | --- | --- |
-| 1st | 10 |
-| Top 3 | 6 |
-| Top 10 | 3 |
-| Top 20 | 1 |
+| 1st | 25 |
+| 2nd | 20 |
+| 3rd | 16 |
+| 4th · 5th · 6th | 13 · 11 · 9 |
+| 7th · 8th · 9th · 10th | 8 · 7 · 6 · 5 |
+| 11th–15th | 3 |
+| 16th–20th | 2 |
+| 21st–30th | 1 |
 | Lower, or a run under 20 seconds | 0 |
 
-There is no hourly cap, but the amounts are deliberately small: winning every ten-minute round is 60 ATP an hour. Skins cost 300–800 ATP, the Black Hole costs 10,000 and the One Cell to Rule Them All costs 12,000,000 (what $10,000 of the biggest pack buys), a very long grind, so the packs are the realistic way to get it:
+Practice and Nearby games pay nothing. There is no hourly cap, but the amounts are deliberately small: winning every ten-minute round is 150 ATP an hour. Most skins cost 300–2,500 ATP, Supernova 6,000, the Black Hole 10,000 and the One Cell to Rule Them All 12,000,000 (what $10,000 of the biggest pack buys), a very long grind, so the packs are the realistic way to get it:
 
 | Pack | ATP |
 | --- | --- |
@@ -160,7 +170,7 @@ Then set that https address as `MITOSIS_SERVER` in `ios/project.yml`, `SERVER_UR
 
 ## iOS app
 
-`ios/` is a native Swift app that bundles `index.html` in a full-screen `WKWebView` and adds StoreKit 2 purchases and haptics. The game loads instantly and plays solo offline; multiplayer and ATP use the server in `MITOSIS_SERVER` (`ios/project.yml`, currently the OVH box by IP, which is why Info.plist allows arbitrary loads).
+`ios/` is a native Swift app that bundles `index.html` in a full-screen `WKWebView` and adds StoreKit 2 purchases, haptics, Sign in with Apple and Nearby play (`Nearby.swift`, MultipeerConnectivity; Info.plist declares the local network use and the `_mitosis-play` Bonjour service). The game loads instantly and plays solo offline; because the page is bundled, game and UI changes reach iPhones only through a new app build. Debug builds take `-nearby 1` to start in Nearby, so two simulators can test it without tapping either; multiplayer and ATP use the server in `MITOSIS_SERVER` (`ios/project.yml`, currently the OVH box by IP, which is why Info.plist allows arbitrary loads).
 
 - Open `ios/Mitosis.xcodeproj` in Xcode 16+ and run. Signing is automatic for team `4M7HR323EA`; change `DEVELOPMENT_TEAM` and the bundle id in `project.yml` for another account, then `xcodegen generate` (`brew install xcodegen`).
 - **Testing purchases in the simulator:** the scheme uses `Mitosis/Products.storekit`, a fake App Store with the four packs. Run a local server with `npm run dev` first: debug builds in the simulator use `http://localhost:3000` when it answers, and the production server otherwise.
