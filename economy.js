@@ -20,6 +20,13 @@ const SKINS = [
   { id: 14, key: 'gilded', name: 'Gilded', price: 800 },
   { id: 15, key: 'blackhole', name: 'Black Hole', price: 10000 },
   { id: 16, key: 'onering', name: 'One Cell to Rule Them All', price: 12000000 }, // what $10,000 of the biggest pack buys
+  { id: 17, key: 'aurora', name: 'Aurora', price: 900 },
+  { id: 18, key: 'koi', name: 'Koi', price: 500 },
+  { id: 19, key: 'plasma', name: 'Plasma', price: 1200 },
+  { id: 20, key: 'geode', name: 'Geode', price: 2500 },
+  { id: 21, key: 'sakura', name: 'Sakura', price: 450 },
+  { id: 22, key: 'supernova', name: 'Supernova', price: 6000 },
+  { id: 23, key: 'glitch', name: 'Glitch', price: 1500 },
 ];
 const PACKS = [
   { id: 'atp_500', atp: 500 },

@@ -1,6 +1,6 @@
 // Headless screenshot of a page in Chrome, for checking UI changes without a phone.
-// node tools/snap.js URL OUT.png [--w=430 --h=860 --dpr=2 --mobile --wait=3000 --until='js expr' --untilMax=ms --js='js before capture' --after=ms --intro]
-// --mobile emulates a touch phone; --intro keeps the first-launch welcome card. Page exceptions are printed.
+// node tools/snap.js URL OUT.png [--w=430 --h=860 --dpr=2 --mobile --wait=3000 --until='js expr' --untilMax=ms --js='js before capture' --after=ms --intro --ls=json]
+// --mobile emulates a touch phone; --intro keeps the first-launch welcome card; --ls='{"key":"value"}' presets localStorage. Page exceptions are printed.
 'use strict';
 const { spawn } = require('child_process'), fs = require('fs'), os = require('os'), path = require('path');
 const [url, out, ...rest] = process.argv.slice(2);
@@ -29,6 +29,7 @@ class CDP {
     await cdp.send('Emulation.setDeviceMetricsOverride', { width: W, height: H, deviceScaleFactor: DPR, mobile: !!opt.mobile });
     if (opt.mobile) { await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 }); await cdp.send('Emulation.setEmulatedMedia', { features: [{ name: 'pointer', value: 'coarse' }, { name: 'hover', value: 'none' }] }); }
     if (!opt.intro) await cdp.send('Page.addScriptToEvaluateOnNewDocument', { source: "try{localStorage.setItem('mitosis.intro','1')}catch(e){}" });
+    if (opt.ls) await cdp.send('Page.addScriptToEvaluateOnNewDocument', { source: `try{const o=${opt.ls};for(const k in o)localStorage.setItem(k,o[k])}catch(e){}` });
     await cdp.send('Page.navigate', { url }); await sleep(+(opt.wait || 3000));
     if (opt.until) { const t0 = Date.now(); while (Date.now() - t0 < +(opt.untilMax || 120000) && !(await cdp.eval(opt.until))) await sleep(300); }
     if (opt.js) { const r = await cdp.eval(opt.js); console.log('js:', JSON.stringify(r)); await sleep(+(opt.after || 500)); }

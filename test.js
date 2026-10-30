@@ -35,6 +35,8 @@ async function post(url, body, secret) {
   let r = await post('/api/session', { secret });
   assert.equal(r.status, 200); assert.equal(r.body.balance, 0); assert.ok(r.body.catalog.skins.length >= 10, 'catalog has skins');
   assert.equal(r.body.catalog.skins.find(s => s.id === 16).price, 12000000, 'One Cell to Rule Them All costs 12,000,000 ATP');
+  const premium = [...fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8').matchAll(/\{id:(\d+),key:'(\w+)',name:'([^']+)',price:(\d+)/g)].map(m => ({ id: +m[1], key: m[2], name: m[3], price: +m[4] }));
+  assert.deepEqual(r.body.catalog.skins.map(s => ({ id: s.id, key: s.key, name: s.name, price: s.price })), premium, 'the server sells exactly the skins the game draws');
 
   r = await post('/api/run/start', {}); assert.equal(r.status, 401, 'auth required');
 

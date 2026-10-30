@@ -260,7 +260,6 @@ body:not(.playing) #joy{display:none!important}
   #actions{left:auto;right:calc(var(--gut) + env(safe-area-inset-right,0px));transform:none;bottom:calc(var(--gut) + 18px + env(safe-area-inset-bottom,0px));display:block;width:170px;height:180px}
   /* landscape lobby: two columns so rating, top players and settings fit without scrolling */
   @media (orientation:landscape){
-  #storeCard{max-width:820px;grid-template-columns:3fr 2fr;gap:12px 20px;padding:16px 22px}#storeCard h2{font-size:32px}#storeCard .balance b{font-size:24px}#storeCard .shophead,#storeCard .row{grid-column:1/-1}#storeCard .shopsec{padding-top:10px}
   #lookCard,#settingsCard,#rankCard{max-width:640px;grid-template-columns:1fr 1fr;gap:10px 18px;padding:16px 22px}#lookCard .eyebrow,#lookCard h2,#lookCard .row,#settingsCard .eyebrow,#settingsCard h2,#settingsCard .row,#settingsCard .sec,#rankCard .eyebrow,#rankCard h2,#rankCard .row,#rankCard .field{grid-column:1/-1}#lookCard h2,#settingsCard h2,#rankCard h2{font-size:34px}
   #deathCard{max-width:720px;grid-template-columns:1.05fr .95fr;grid-template-areas:"eye stats" "title stats" "why stats" "place stats" "rank stats" "chips stats" "row row";gap:6px 20px;padding:16px 22px;align-items:start}
   #deathCard>.eyebrow{grid-area:eye}#deathCard>h2{grid-area:title;font-size:38px}#deathCard>#deathWhy{grid-area:why;margin:0}#deathCard>#dPlace{grid-area:place;margin:2px 0}#deathCard>.dchips{grid-area:chips}#deathCard>.rmeter{grid-area:rank}#deathCard>.statgrid{grid-area:stats;align-self:center}#deathCard>.row{grid-area:row;margin-top:6px}#deathCard .statgrid b{font-size:22px}#deathCard .chartbox{display:none}}
@@ -436,6 +435,69 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
 .pack .tag{position:absolute;top:-8px;left:50%;transform:translateX(-50%);font:600 9px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent-ink);background:var(--violet);border-radius:999px;padding:3px 8px;white-space:nowrap}
 .pack:disabled{opacity:.5;cursor:default}
 .earn{margin:-6px 0 0;font:600 14px var(--display);color:var(--amber)}
+/* shop: its own full-screen view over the culture, like the lobby */
+#overlay:has(#storeCard:not([hidden])){padding:0;place-items:stretch}
+.shopview{position:absolute;inset:0;display:grid;grid-template-columns:minmax(250px,.9fr) minmax(0,1.3fr);grid-template-rows:auto minmax(0,1fr);grid-template-areas:"top top" "feat list";gap:12px 24px;
+  padding:max(12px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));box-sizing:border-box;
+  background:radial-gradient(50% 70% at 24% 58%,var(--glow,rgba(154,140,255,.13)),transparent 70%),linear-gradient(90deg,rgba(2,8,9,.74),rgba(2,8,9,.6) 45%,rgba(2,8,9,.78));-webkit-backdrop-filter:blur(8px) saturate(1.1);backdrop-filter:blur(8px) saturate(1.1);animation:ov .3s ease-out;user-select:none;-webkit-user-select:none;}
+.shopview[data-r=common]{--glow:rgba(120,220,200,.12)}.shopview[data-r=rare]{--glow:rgba(154,140,255,.18)}.shopview[data-r=epic]{--glow:rgba(242,177,52,.17)}.shopview[data-r=legendary]{--glow:rgba(255,92,60,.22)}
+.sv-top{grid-area:top;display:grid;grid-template-columns:auto auto 1fr auto;align-items:center;gap:12px}
+.sv-title{margin:0;font:800 26px/1 var(--display);letter-spacing:-.04em}
+.sv-tabs{justify-self:center;display:flex;padding:3px;border-radius:999px;border:1px solid var(--line);background:rgba(2,8,9,.6)}
+.sv-tabs button{appearance:none;border:0;background:none;color:var(--muted);font:700 13px var(--display);padding:8px 18px;border-radius:999px;cursor:pointer;transition:background .15s,color .15s}
+.sv-tabs button[aria-selected=true]{background:var(--ink);color:#041012}
+.sv-bal{display:flex;align-items:center;gap:7px;height:40px;padding:0 14px 0 11px;border-radius:999px;border:1px solid rgba(242,177,52,.35);background:rgba(2,8,9,.6);color:var(--amber);font:800 16px var(--display);font-variant-numeric:tabular-nums}
+.sv-bal i{width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffe08a,#f2b134 55%,#a8700f);box-shadow:0 0 10px rgba(242,177,52,.45)}
+.sv-bal span{font:600 10px var(--mono);letter-spacing:.1em;color:var(--muted)}
+.sv-feat{grid-area:feat;display:grid;grid-template-rows:minmax(0,1fr) auto;justify-items:center;align-content:center;gap:6px;min-height:0;text-align:center}
+.sv-stage{position:relative;height:100%;max-height:min(300px,42vh);aspect-ratio:1;min-height:0;display:grid;place-items:center}
+.sv-stage::after{content:"";position:absolute;left:22%;right:22%;bottom:3%;height:8%;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.5),transparent)}
+.sv-stage canvas{position:relative;z-index:1;width:100%;height:100%;animation:bob 4.5s ease-in-out infinite}
+.sv-info{display:grid;gap:6px;justify-items:center;width:100%;max-width:360px}
+.sv-rar{font:700 9.5px var(--mono);letter-spacing:.18em;text-transform:uppercase;padding:4px 10px;border-radius:999px;border:1px solid currentColor;color:#8fd8c6}
+.sv-rar.rare{color:var(--violet)}.sv-rar.epic{color:var(--amber)}.sv-rar.legendary{color:#ff7a59;background:rgba(255,92,60,.1)}
+.sv-info h3{margin:0;font:800 24px/1.1 var(--display);letter-spacing:-.025em}
+.sv-info>p#featDesc{margin:0;font:13px/1.4 var(--display);color:var(--muted);min-height:2.8em}
+.sv-buy{width:100%;max-width:300px;padding:13px 18px;font-size:17px;border-radius:14px;display:flex;align-items:center;justify-content:center;gap:8px;font-variant-numeric:tabular-nums}
+.sv-buy i{width:15px;height:15px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffe08a,#f2b134 55%,#a8700f);flex:none}
+.sv-buy.own{background:#5fe0a8;color:#04140d}.sv-buy.wearing{background:rgba(95,224,168,.12);color:#5fe0a8;box-shadow:inset 0 0 0 1px rgba(95,224,168,.45);opacity:1}
+.sv-buy.confirm{background:var(--amber);color:#1d1300;animation:pulse 1s ease-in-out infinite}.sv-buy.short{background:rgba(242,177,52,.12);color:var(--amber);box-shadow:inset 0 0 0 1px rgba(242,177,52,.45)}
+.sv-buy.short i{display:none}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(242,177,52,.5)}50%{box-shadow:0 0 0 6px rgba(242,177,52,0)}}
+.sv-note{margin:0;min-height:1.3em;font:600 11px/1.3 var(--mono);color:var(--dim)}
+.sv-list{grid-area:list;min-height:0;overflow:auto;display:grid;align-content:start;gap:12px;padding:6px 4px 10px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;scrollbar-width:none}
+.sv-list::-webkit-scrollbar{display:none}
+.shopview .skins{grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:9px}
+.shopview .skin{padding:9px 4px 8px;background:rgba(2,8,9,.55);border-radius:14px;position:relative}
+.shopview .skin canvas{width:58px;height:58px}
+.shopview .skin .sn{font-size:11.5px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px;box-sizing:border-box}
+.shopview .skin.sel{background:rgba(255,255,255,.07);box-shadow:0 0 0 2px var(--ink);border-color:transparent}
+.shopview .skin .rt{display:none}.shopview .skin::before{content:"";position:absolute;top:7px;left:7px;width:7px;height:7px;border-radius:50%;background:#8fd8c6;opacity:.8}
+.shopview .skin.rare::before{background:var(--violet)}.shopview .skin.epic::before{background:var(--amber)}.shopview .skin.legendary::before{background:#ff7a59;box-shadow:0 0 8px #ff7a59}
+.sv-atp{grid-column:1/-1;grid-row:2;min-height:0;overflow:auto;display:grid;align-content:center;justify-items:center;gap:16px;padding:4px 0 8px}
+.sv-atp .packs{grid-template-columns:repeat(4,minmax(0,170px));gap:12px;width:100%;justify-content:center}
+.sv-atp .pack{padding:20px 10px 14px;background:linear-gradient(180deg,rgba(242,177,52,.12),rgba(2,8,9,.6))}
+.sv-atp .pack b{font-size:28px}
+.sv-earn{display:grid;gap:8px;justify-items:center}.sv-earn ul{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
+.sv-earn li{font:600 11.5px var(--mono);color:var(--muted);padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:rgba(2,8,9,.55)}.sv-earn li b{color:var(--amber)}
+.sv-atp .hint{text-align:center;max-width:520px}
+/* landscape phones: tighter */
+@media (orientation:landscape) and (max-height:520px){
+  .shopview{gap:8px 18px}.sv-title{font-size:22px}.sv-bal,.shopview .lb-icon{height:36px}.shopview .lb-icon{width:36px}.sv-tabs button{padding:7px 14px;font-size:12px}
+  .sv-info h3{font-size:20px}.sv-info>p#featDesc{font-size:12px;min-height:0}.sv-buy{padding:10px 16px;font-size:15px}.sv-info{gap:4px}
+  .shopview .skins{grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px}.shopview .skin canvas{width:50px;height:50px}
+  .sv-atp{gap:10px}.sv-atp .pack{padding:14px 8px 10px}.sv-atp .pack b{font-size:24px}
+}
+/* portrait: preview on top, the grid scrolls underneath */
+@media (orientation:portrait){
+  .shopview{grid-template-columns:1fr;grid-template-rows:auto auto minmax(0,1fr);grid-template-areas:"top" "feat" "list";gap:12px}
+  .sv-top{grid-template-columns:auto 1fr auto}.sv-title{display:none}
+  .sv-feat{grid-template-columns:auto minmax(0,1fr);grid-template-rows:none;justify-items:start;text-align:left;gap:14px;align-items:center}
+  .sv-stage{height:auto;width:min(36vw,170px)}.sv-info{justify-items:start}.sv-info h3{font-size:21px}.sv-info>p#featDesc{min-height:0;font-size:12.5px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}.sv-buy{max-width:none;font-size:16px;padding:12px 14px}
+  .shopview .skins{grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:8px}.shopview .skin canvas{width:52px;height:52px}.shopview .skin .sp{font-size:9.5px;padding:3px 6px}
+  .sv-atp{grid-row:2/-1;align-content:start}.sv-atp .packs{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (min-width:1100px){.shopview{padding-left:max(48px,calc(50vw - 620px));padding-right:max(48px,calc(50vw - 620px))}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -598,11 +660,29 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
     <div class="row"><button class="primary back" type="button">Back</button></div>
   </div>
 
-  <div class="card panel shop" id="storeCard" hidden>
-    <div class="shophead"><div><p class="eyebrow">Shop</p><h2>Skins &amp; ATP</h2></div><div class="balance"><span class="label">Wallet</span><b id="storeBal">0</b><span>ATP</span></div></div>
-    <section class="shopsec" id="skinSec"><div class="sechead"><span class="label">Skins</span><span class="hint" id="skinHint"></span></div><div class="skins" id="skins"></div></section>
-    <section class="shopsec" id="packSec"><div class="sechead"><span class="label">Get ATP</span><span class="hint" id="storeHint"></span></div><div class="packs" id="packs"></div></section>
-    <div class="row"><button id="storeBack" class="primary" type="button">Back</button></div>
+  <div class="shopview" id="storeCard" hidden>
+    <header class="sv-top">
+      <button class="lb-icon" id="storeBack" type="button" aria-label="Back to the lobby"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <h2 class="sv-title">Shop</h2>
+      <div class="sv-tabs" role="tablist" aria-label="Shop sections"><button type="button" role="tab" id="tabSkins" aria-controls="skinSec" aria-selected="true">Skins</button><button type="button" role="tab" id="tabAtp" aria-controls="packSec" aria-selected="false">Get ATP</button></div>
+      <div class="sv-bal" title="Your ATP"><i aria-hidden="true"></i><b id="storeBal">0</b><span>ATP</span></div>
+    </header>
+    <section class="sv-feat" id="skinFeat" aria-live="polite">
+      <div class="sv-stage"><canvas id="featCv" width="288" height="288" aria-hidden="true"></canvas></div>
+      <div class="sv-info">
+        <span class="sv-rar" id="featRar"></span>
+        <h3 id="featName"></h3>
+        <p id="featDesc"></p>
+        <button class="primary sv-buy" id="featBuy" type="button"></button>
+        <p class="sv-note" id="featNote"></p>
+      </div>
+    </section>
+    <section class="sv-list" id="skinSec" role="tabpanel" aria-labelledby="tabSkins"><div class="skins" id="skins"></div><p class="hint" id="skinHint"></p></section>
+    <section class="sv-atp" id="packSec" role="tabpanel" aria-labelledby="tabAtp" hidden>
+      <div class="packs" id="packs"></div>
+      <div class="sv-earn"><span class="label">Or earn it by placing in ranked rounds</span><ul id="earnList"></ul></div>
+      <p class="hint" id="storeHint"></p>
+    </section>
   </div>
 
   <div class="card panel" id="pauseCard" hidden>
@@ -693,9 +773,10 @@ const MAX_CELLS=16,VIRUS_M=100,VSLOTS=140,MAX_FREEV=16,PELLETS=19200,MAX_PU=24;
 // (23 bits; the 24th bit of the field flags an infected cell), far beyond anything reachable in play.
 const MAX_MASS=8388607,INF_FLAG=8388608;
 const MAX_HUNTERS=6,HUNTER_R=42,INF_MIN=8,INF_MAX=10,PROTO=6,SEED=90210; // PROTO 6: 4-char mass field, 3-char bot effect/mutation field
-// Rounds: the well is full size for the first quarter, then the arena closes in to 12% of the dish by the
-// last 5%, and the round ends at ROUND_SEC with the survivors ranked by mass. ?round=60 shortens it for tests.
-const ROUND_SEC=+((location.search.match(/[?&]round=(\d+)/)||[])[1])||600,ROUND_GRACE=Math.round(ROUND_SEC*.1),ROUND_HOLD=0,R_MIN=R*.03,ROUND_GAP=6,BOT_CUTOFF=Math.round(ROUND_SEC*.7); // arena full for the first minute, then closes to 3% at 10:00; bots stop respawning at 7:00
+// Rounds: the well is full size for the first 10%, then the arena closes in to 3% of the dish by 95% of the round
+// and the wall burns fast for the rest, so one cell is normally left before ROUND_SEC; anyone still alive then is
+// ranked by mass. ?round=60 shortens it for tests.
+const ROUND_SEC=+((location.search.match(/[?&]round=(\d+)/)||[])[1])||600,ROUND_GRACE=Math.round(ROUND_SEC*.1),ROUND_HOLD=Math.round(ROUND_SEC*.05),R_MIN=R*.03,ROUND_GAP=6,BOT_CUTOFF=Math.round(ROUND_SEC*.7); // arena full for the first minute, closed to 3% by 9:30; bots stop respawning at 7:00
 let round={id:1,start:0,n:0,synced:false,over:false};
 // Balance: a cell is absorbed once EAT_COVER of its diameter is inside a cell at least 10% heavier (see need()).
 // Ejecting costs EJECT_COST and makes a blob of EJECT_MASS, at most once every EJECT_GAP seconds.
@@ -869,8 +950,85 @@ const PREMIUM=[
     for(const sgn of[-1,1]){const t=.6+.4*Math.sin(T*9+sgn*1.3+c.wob),ty=ny+sgn*h,tip=ny+sgn*(h+r*(.12+.1*t));g.beginPath();g.moveTo(nx-r*.05,ty);g.quadraticCurveTo(nx+r*.03*Math.sin(T*11),tip,nx+r*.05,ty);g.closePath();g.fillStyle=`rgba(255,220,120,${.5+.5*t})`;g.fill();}
     g.lineCap='butt';
   }},
+{id:17,key:'aurora',name:'Aurora',price:900,base:[226,62,14],draw(g,c,r,k){
+  // curtains of northern light rippling across a night sky
+  g.fillStyle='rgba(255,255,255,.7)';for(let i=0;i<10;i++){const a=i*2.399+c.wob,d=((i*.618)%1)*r*.92;g.beginPath();g.arc(c.x+Math.cos(a)*d,c.y+Math.sin(a)*d,r*.016,0,TAU);g.fill();}
+  const C=['150,255,190','90,230,255','200,140,255'];g.lineCap='round';
+  for(let b=0;b<3;b++){const y0=c.y-r*.42+b*r*.36,sh=.18+.08*Math.sin(T*1.3+b*2);
+    g.beginPath();for(let s=0;s<=14;s++){const t=s/14,x=c.x-r*1.05+t*r*2.1,y=y0+Math.sin(t*5+T*(1+b*.3)+c.wob+b*2)*r*.12+Math.sin(t*11-T*1.7+b)*r*.035;s?g.lineTo(x,y):g.moveTo(x,y);}
+    g.lineWidth=r*.3;g.strokeStyle=`rgba(${C[b]},${sh})`;g.stroke();g.lineWidth=r*.11;g.strokeStyle=`rgba(${C[b]},${sh+.12})`;g.stroke();g.lineWidth=r*.025;g.strokeStyle=`rgba(${C[b]},.85)`;g.stroke();
+    g.beginPath();for(let s=0;s<14;s++){const t=(s+.5)/14,x=c.x-r*1.05+t*r*2.1,y=y0+Math.sin(t*5+T*(1+b*.3)+c.wob+b*2)*r*.12;g.moveTo(x,y);g.lineTo(x,y+r*(.1+.14*(.5+.5*Math.sin(T*2+s*1.7+b))));}
+    g.lineWidth=r*.04;g.strokeStyle=`rgba(${C[b]},.2)`;g.stroke();}
+  g.lineCap='butt';}},
+{id:18,key:'koi',name:'Koi',price:500,base:[194,46,32],draw(g,c,r,k){
+  // two koi chasing each other round a pond, and slow ripples
+  g.lineWidth=r*.02;for(let i=0;i<2;i++){const ph=(T*.3+i*.5+c.wob*.1)%1;g.strokeStyle=`rgba(220,255,255,${.4*(1-ph)})`;g.beginPath();g.arc(c.x+r*(i?.28:-.24),c.y+r*(i?-.22:.3),r*(.08+ph*.4),0,TAU);g.stroke();}
+  for(let i=0;i<2;i++){const a=T*.7+c.wob+i*Math.PI,x=c.x+Math.cos(a)*r*.47,y=c.y+Math.sin(a)*r*.47,L=r*.3,W=r*.11,wag=Math.sin(T*6+i*2)*.4;
+    g.save();g.translate(x,y);g.rotate(a+Math.PI/2);
+    g.fillStyle=i?'rgba(255,255,255,.88)':'rgba(255,128,48,.9)';g.beginPath();g.moveTo(-L*.7,0);g.quadraticCurveTo(-L*1.1,wag*W,-L*1.38,-W*1.05+wag*W);g.quadraticCurveTo(-L*1.15,wag*W*.6,-L*1.38,W*1.05+wag*W);g.quadraticCurveTo(-L*1.1,wag*W,-L*.7,0);g.fill();
+    g.fillStyle='rgba(255,255,255,.55)';g.beginPath();g.ellipse(L*.15,W*1.05,L*.2,W*.38,.7,0,TAU);g.fill();g.beginPath();g.ellipse(L*.15,-W*1.05,L*.2,W*.38,-.7,0,TAU);g.fill();
+    g.beginPath();g.ellipse(0,0,L,W,0,0,TAU);g.fillStyle=i?'rgba(252,250,244,.97)':'rgba(255,118,36,.97)';g.fill();
+    g.fillStyle=i?'rgba(232,60,30,.92)':'rgba(255,246,236,.92)';g.beginPath();g.ellipse(L*.3,-W*.15,L*.32,W*.6,.25,0,TAU);g.fill();
+    if(i){g.fillStyle='rgba(25,22,28,.85)';g.beginPath();g.ellipse(-L*.38,W*.22,L*.16,W*.42,-.3,0,TAU);g.fill();}
+    g.restore();}}},
+{id:19,key:'plasma',name:'Plasma',price:1200,base:[282,72,12],draw(g,c,r,k){
+  // a plasma globe: filaments flicker from the core out to the membrane, where they bloom
+  const H=n=>{const x=Math.sin(n*12.9898)*43758.5453;return x-Math.floor(x);},fr=Math.floor(T*14);g.lineCap='round';g.lineJoin='round';
+  for(let i=0;i<7;i++){const a=c.wob+i*.9+Math.sin(T*.8+i*1.7)*.55,ca=Math.cos(a),sa=Math.sin(a);
+    g.beginPath();g.arc(c.x+ca*r,c.y+sa*r,r*.16,0,TAU);g.fillStyle='rgba(255,140,255,.22)';g.fill();
+    g.beginPath();g.moveTo(c.x+ca*r*.1,c.y+sa*r*.1);for(let s=1;s<=6;s++){const d=r*(.1+s*.16),j=s<6?(H(fr*7+i*31+s)-.5)*r*.16:0;g.lineTo(c.x+ca*d-sa*j,c.y+sa*d+ca*j);}
+    g.lineWidth=r*.08;g.strokeStyle='rgba(190,70,255,.25)';g.stroke();g.lineWidth=r*.024;g.strokeStyle='rgba(255,215,255,.9)';g.stroke();}
+  g.lineCap='butt';g.lineJoin='miter';},
+  eye(g,c,r,nx,ny,sick){const p=1+.12*Math.sin(T*9+c.wob);g.beginPath();g.arc(nx,ny,r*.3*p,0,TAU);fillUnit(g,grad(g,'plasma0',q=>{const u=q.createRadialGradient(0,0,0,0,0,1);u.addColorStop(0,'rgba(255,255,255,1)');u.addColorStop(.3,'rgba(255,190,255,.95)');u.addColorStop(.65,'rgba(200,90,255,.45)');u.addColorStop(1,'rgba(160,50,255,0)');return u;}),nx,ny,r*.3*p);
+    if(sick){g.beginPath();g.arc(nx,ny,r*.12,0,TAU);g.fillStyle=col(INF_C,-30,.9);g.fill();}}},
+{id:20,key:'geode',name:'Geode',price:2500,base:[268,26,40],draw(g,c,r,k){
+  // cracked open: agate bands round a cavity lined with amethyst points, and a glint wandering over the facets
+  const B=['rgba(236,228,255,.6)','rgba(150,112,220,.55)','rgba(250,246,255,.7)','rgba(112,72,196,.6)'];
+  for(let i=0;i<4;i++){const rr=r*(.9-i*.075);g.beginPath();for(let s=0;s<=24;s++){const a=s/24*TAU,d=rr*(1+.03*Math.sin(a*5+i*1.3+c.wob));s?g.lineTo(c.x+Math.cos(a)*d,c.y+Math.sin(a)*d):g.moveTo(c.x+d,c.y);}g.lineWidth=r*.05;g.strokeStyle=B[i];g.stroke();}
+  g.beginPath();g.arc(c.x,c.y,r*.62,0,TAU);g.fillStyle='rgba(38,10,70,.92)';g.fill();
+  const n=13;for(let i=0;i<n;i++){const a=i*TAU/n+c.wob*.2,w=TAU/n*.55,d0=r*.64,d1=r*(.16+((i*.53)%1)*.16),lit=.5+.5*Math.sin(a*2-T*1.3),tx=c.x+Math.cos(a)*d1,ty=c.y+Math.sin(a)*d1,mx=c.x+Math.cos(a)*d0,my=c.y+Math.sin(a)*d0;
+    g.beginPath();g.moveTo(c.x+Math.cos(a-w)*d0,c.y+Math.sin(a-w)*d0);g.lineTo(tx,ty);g.lineTo(mx,my);g.closePath();g.fillStyle=`rgba(${Math.round(190+50*lit)},${Math.round(150+60*lit)},255,.92)`;g.fill();
+    g.beginPath();g.moveTo(c.x+Math.cos(a+w)*d0,c.y+Math.sin(a+w)*d0);g.lineTo(tx,ty);g.lineTo(mx,my);g.closePath();g.fillStyle=`rgba(${Math.round(110+40*lit)},${Math.round(50+30*lit)},${Math.round(190+30*lit)},.95)`;g.fill();}
+  const ga=-T*.5+c.wob,gx=c.x+Math.cos(ga)*r*.4,gy=c.y+Math.sin(ga)*r*.4,tw=Math.max(0,Math.sin(T*2.6+c.wob)),s=r*.17*tw;
+  if(tw>.05){g.fillStyle=`rgba(255,255,255,${tw})`;g.beginPath();g.moveTo(gx,gy-s);g.quadraticCurveTo(gx,gy,gx+s,gy);g.quadraticCurveTo(gx,gy,gx,gy+s);g.quadraticCurveTo(gx,gy,gx-s,gy);g.quadraticCurveTo(gx,gy,gx,gy-s);g.fill();}},
+  eye(g,c,r,nx,ny,sick){g.beginPath();g.arc(nx,ny,r*.16,0,TAU);g.fillStyle=sick?col(INF_C,-30,.9):'rgba(14,2,28,.95)';g.fill();}},
+{id:21,key:'sakura',name:'Sakura',price:450,base:[342,58,74],draw(g,c,r,k){
+  // a cherry branch in bloom, and petals drifting across on the breeze
+  const petal=(x,y,s,rot,fill)=>{g.save();g.translate(x,y);g.rotate(rot);g.beginPath();g.moveTo(0,0);g.bezierCurveTo(s*.35,-s*.45,s*.95,-s*.4,s,-s*.08);g.lineTo(s*.86,0);g.lineTo(s,s*.08);g.bezierCurveTo(s*.95,s*.4,s*.35,s*.45,0,0);g.fillStyle=fill;g.fill();g.restore();};
+  const flower=(x,y,s,rot)=>{for(let i=0;i<5;i++)petal(x,y,s,rot+i*TAU/5,'rgba(255,244,248,.97)');g.beginPath();g.arc(x,y,s*.28,0,TAU);g.fillStyle='rgba(255,120,165,.95)';g.fill();g.fillStyle='rgba(255,215,120,.95)';for(let i=0;i<5;i++){const a=rot+i*TAU/5+.6;g.beginPath();g.arc(x+Math.cos(a)*s*.42,y+Math.sin(a)*s*.42,s*.06,0,TAU);g.fill();}};
+  g.lineCap='round';g.strokeStyle='rgba(70,32,30,.88)';g.lineWidth=r*.09;g.beginPath();g.moveTo(c.x-r*1.05,c.y+r*.55);g.quadraticCurveTo(c.x-r*.1,c.y+r*.25,c.x+r*.55,c.y-r*.5);g.stroke();
+  g.lineWidth=r*.05;g.beginPath();g.moveTo(c.x-r*.25,c.y+r*.32);g.quadraticCurveTo(c.x-r*.2,c.y-r*.05,c.x-r*.45,c.y-r*.32);g.moveTo(c.x+r*.25,c.y-r*.15);g.quadraticCurveTo(c.x+r*.55,c.y-r*.05,c.x+r*.8,c.y+r*.12);g.stroke();g.lineCap='butt';
+  const sw=Math.sin(T*1.2+c.wob)*.12;flower(c.x+r*.55,c.y-r*.5,r*.24,sw);flower(c.x-r*.45,c.y-r*.32,r*.2,1+sw);flower(c.x+r*.8,c.y+r*.12,r*.18,2-sw);flower(c.x-r*.62,c.y+r*.45,r*.17,.5+sw);
+  for(let i=0;i<7;i++){const sp=.07+((i*.37)%1)*.06,ph=(T*sp+i*.143+c.wob*.05)%1,x=c.x-r*1.1+ph*r*2.2,y=c.y-r*.9+((i*.618)%1)*r*1.6+Math.sin(T*1.5+i*2)*r*.12+ph*r*.3;petal(x,y,r*.1,T*1.4+i*2,'rgba(255,190,215,.9)');}}},
+{id:22,key:'supernova',name:'Supernova',price:6000,base:[22,96,50],noGlint:true,
+  // a star in its final blaze: boiling plasma inside, a corona and flares burning past the membrane, a shock ring every few seconds
+  aura(g,c,r,k,sr,lead){
+    const p=.5+.5*Math.sin(T*2.2+c.wob);g.beginPath();g.arc(c.x,c.y,r*2.05,0,TAU);fillUnit(g,grad(g,'nova_c',q=>{const u=q.createRadialGradient(0,0,.85,0,0,1.85);u.addColorStop(0,'rgba(255,205,100,.55)');u.addColorStop(.3,'rgba(255,120,40,.24)');u.addColorStop(1,'rgba(255,60,20,0)');return u;}),c.x,c.y,r*(1+.06*p));
+    if(sr>14){const n=lead?18:10;for(let i=0;i<n;i++){const a=i*TAU/n+T*.1+c.wob+Math.sin(T*1.7+i*2.1)*.06,fl=.5+.5*Math.sin(T*3.1+i*2.3),ca=Math.cos(a),sa=Math.sin(a),
+        h=r*(1.1+.26*fl*(i%3?1:1.7)),w=r*(.09+.03*fl),bx=c.x+ca*r*.9,by=c.y+sa*r*.9,sw=Math.sin(T*4+i)*r*.05;
+        g.beginPath();g.moveTo(bx-sa*w,by+ca*w);g.quadraticCurveTo(c.x+ca*h*.8-sa*w*.6,c.y+sa*h*.8+ca*w*.6,c.x+ca*h-sa*sw,c.y+sa*h+ca*sw);g.quadraticCurveTo(c.x+ca*h*.8+sa*w*.6,c.y+sa*h*.8-ca*w*.6,bx+sa*w,by-ca*w);g.closePath();
+        g.fillStyle=`rgba(255,${Math.round(120+fl*90)},${Math.round(30+fl*60)},${.45+.35*fl})`;g.fill();}}
+    if(lead&&sr>24){g.lineCap='round';for(let i=0;i<2;i++){const a=T*.08+c.wob+i*2.8,sp=.32,h=r*(1.2+.1*Math.sin(T*1.1+i*3)); // prominences: glowing loops arching off the surface
+        g.beginPath();g.moveTo(c.x+Math.cos(a-sp)*r*.95,c.y+Math.sin(a-sp)*r*.95);g.bezierCurveTo(c.x+Math.cos(a-sp*.9)*h*1.3,c.y+Math.sin(a-sp*.9)*h*1.3,c.x+Math.cos(a+sp*.9)*h*1.3,c.y+Math.sin(a+sp*.9)*h*1.3,c.x+Math.cos(a+sp)*r*.95,c.y+Math.sin(a+sp)*r*.95);
+        g.lineWidth=r*.09;g.strokeStyle='rgba(255,110,40,.35)';g.stroke();g.lineWidth=r*.035;g.strokeStyle='rgba(255,225,160,.85)';g.stroke();}g.lineCap='butt';}
+    if(lead){const ph=(T*.45+c.wob*.03)%1;g.beginPath();g.arc(c.x,c.y,r*(1+ph*1.1),0,TAU);g.lineWidth=r*.05*(1-ph);g.strokeStyle=`rgba(255,225,170,${.55*(1-ph)})`;g.stroke();}},
+  draw(g,c,r,k){
+    g.beginPath();g.arc(c.x,c.y,r,0,TAU);fillUnit(g,grad(g,'nova0',q=>{const u=q.createRadialGradient(0,0,0,0,0,1);u.addColorStop(0,'rgba(255,250,215,1)');u.addColorStop(.35,'rgba(255,200,80,1)');u.addColorStop(.75,'rgba(255,110,25,1)');u.addColorStop(1,'rgba(190,40,10,1)');return u;}),c.x,c.y,r);
+    for(let i=0;i<11;i++){const a=i*2.399+c.wob+T*.12,d=(.2+((i*.618)%1)*.7)*r,s=r*(.1+.04*Math.sin(T*2.4+i*1.7));g.beginPath();g.arc(c.x+Math.cos(a)*d,c.y+Math.sin(a)*d,s,0,TAU);g.fillStyle=i%3?'rgba(255,245,190,.28)':'rgba(170,40,0,.22)';g.fill();}
+    for(let i=0;i<2;i++){const a=c.wob+i*2.6+T*.07,x=c.x+Math.cos(a)*r*.6,y=c.y+Math.sin(a)*r*.6;g.beginPath();g.arc(x,y,r*.09,0,TAU);g.fillStyle='rgba(90,20,0,.55)';g.fill();g.beginPath();g.arc(x,y,r*.15,0,TAU);g.fillStyle='rgba(140,40,0,.2)';g.fill();}},
+  eye(g,c,r,nx,ny,sick){const p=1+.1*Math.sin(T*6+c.wob);g.beginPath();g.arc(nx,ny,r*.38*p,0,TAU);fillUnit(g,grad(g,'nova1',q=>{const u=q.createRadialGradient(0,0,0,0,0,1);u.addColorStop(0,'rgba(255,255,255,1)');u.addColorStop(.35,'rgba(255,252,225,.9)');u.addColorStop(1,'rgba(255,230,150,0)');return u;}),nx,ny,r*.38*p);
+    if(sick){g.beginPath();g.arc(nx,ny,r*.12,0,TAU);g.fillStyle=col(INF_C,-30,.9);g.fill();}}},
+{id:23,key:'glitch',name:'Glitch',price:1500,base:[176,72,13],draw(g,c,r,k){
+  // a hologram that can't hold itself together: scanlines, a sweep, a split outline and slices that jump
+  const H=n=>{const x=Math.sin(n*12.9898)*43758.5453;return x-Math.floor(x);},fr=Math.floor(T*9+c.wob*3);
+  g.fillStyle='rgba(80,255,230,.13)';for(let y=-r;y<r;y+=r*.1)g.fillRect(c.x-r,c.y+y,r*2,r*.04);
+  const sw=((T*.45+c.wob*.1)%1)*2.4-1.2;g.fillStyle='rgba(120,255,240,.16)';g.fillRect(c.x-r,c.y+sw*r,r*2,r*.18);
+  const jit=H(fr)<.18?(H(fr+1)-.5)*r*.12:0;
+  for(const [dx,cl] of [[-r*.04,'rgba(255,40,130,.75)'],[r*.04,'rgba(40,220,255,.75)'],[0,'rgba(225,255,250,.95)']]){g.strokeStyle=cl;g.lineWidth=r*.035;g.beginPath();for(let i=0;i<=6;i++){const a=i*TAU/6+Math.PI/6+c.wob*.1,x=c.x+dx+jit+Math.cos(a)*r*.6,y=c.y+Math.sin(a)*r*.6;i?g.lineTo(x,y):g.moveTo(x,y);}g.stroke();}
+  for(let i=0;i<5;i++){if(H(fr*13+i*7)>.5)continue;const y=c.y+(H(fr*5+i)-.5)*r*1.6,x=c.x+(H(fr*3+i*11)-.5)*r*1.3,w=r*(.2+H(fr+i)*.6),hh=r*(.04+H(fr*2+i)*.08);g.fillStyle=i%2?'rgba(255,40,140,.6)':'rgba(40,255,230,.6)';g.fillRect(x-w/2,y,w,hh);}}},
 ];
-const SKIN_COUNT=SKIN_FREE+PREMIUM.length;
+const SKIN_COUNT=SKIN_FREE+PREMIUM.length,SKIN_V22=17; // 2.2.0 and older clamp any skin id they do not know to their last one (One Cell)
+const wireSkin=k=>k<SKIN_V22?k:0; // so newer skins go out as the plain cell in k, and in full in ks
 function skinColor(stain,skin){const S=skin>=SKIN_FREE?PREMIUM[skin-SKIN_FREE]:null;return (S&&S.base)||STAINS[clamp(stain|0,0,STAINS.length-1)];}
 const PU_ICON={magnet:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 6v6a5 5 0 0 0 10 0V6" fill="none" stroke="currentColor" stroke-width="3.2"/><path d="M5.4 2.5h3.2v4H5.4zM15.4 2.5h3.2v4h-3.2z" fill="currentColor"/></svg>',shield:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l8 3.5V11c0 5-3.5 8.5-8 10.5C7.5 19.5 4 16 4 11V5.5z" fill="currentColor"/></svg>',surge:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 2L5 13h6l-1.5 9L18 10h-6z" fill="currentColor"/></svg>'};
 const PU={magnet:{label:'Magnet',glyph:'Mg',c:[190,90,62],dur:9},shield:{label:'Phase',glyph:'Φ',c:[250,100,78],dur:6},surge:{label:'Surge',glyph:'»',c:[40,95,60],dur:7}};
@@ -1068,14 +1226,21 @@ async function flushRuns(){ // report finished runs; keep them queued while the 
 }
 // Skins grid on the start card
 let confirmSkin=0,confirmT=0;
-const RARITY={12:'rare',13:'rare',14:'rare',15:'epic',16:'legendary'};
+const RARITY={12:'rare',13:'rare',14:'rare',15:'epic',16:'legendary',17:'rare',19:'rare',20:'epic',22:'epic',23:'rare'};
+const SKIN_DESC={5:'Gas clouds and newborn stars drifting through the membrane.',6:'Cracks of molten rock that flare as it pulses.',7:'Wax cells and drops of honey.',8:'Traces and blinking nodes, like a living circuit board.',
+  9:'Rosettes on warm gold.',10:'Ice facets with a cold glint.',11:'Bubbles rising through radioactive slime.',12:'An eye that looks wherever you go.',13:'A spiral galaxy turning slowly inside you.',
+  14:'Solid gold, with a shine sweeping across it.',15:'Light spirals in and never comes out.',16:'Obsidian, molten gold and an eye of flame, with runes, lightning and fire beyond the membrane.',
+  17:'Curtains of northern light rippling over a night sky.',18:'Two koi circling a quiet pond.',19:'Arcs of plasma reaching from the core to the membrane.',20:'Cracked open to show the amethyst inside.',
+  21:'A cherry branch in bloom, with petals on the breeze.',22:'A star in its final blaze, with a corona that burns past the membrane.',23:'A hologram that cannot quite hold itself together.'};
+let shopSel=0; // the skin shown large in the shop
+const fmtAtp=n=>n>=1e6?(n/1e6).toLocaleString(undefined,{maximumFractionDigits:1})+'M':n.toLocaleString();
 function renderSkins(){
-  const el=$('skins');if(!el)return;const ab=$('atpBal');if(ab)ab.textContent=wallet.balance;$('storeBal').textContent=wallet.balance; // #atpBal only exists while no premium skin is owned
-  $('skinHint').textContent=wallet.online?'Earn ATP by surviving, absorbing cells and growing. Tap a skin to buy or wear it.':'Connect to the server to earn or spend ATP. Skins you own still work.';
-  const card=S=>{const own=ownsSkin(S.id),eq=settings.skin===S.id,cf=confirmSkin===S.id&&performance.now()-confirmT<4000;
-    const rar=RARITY[S.id]||'common';return `<button type="button" class="skin ${rar}${own?' own':''}${cf?' confirm':''}" data-id="${S.id}" aria-pressed="${eq}" aria-label="${escH(S.name)} skin"><canvas width="144" height="144" data-skin="${S.id}"></canvas><span class="sn">${escH(S.name)}</span>${rar!=='common'?`<span class="rt">${rar}</span>`:''}<span class="sp">${own?(eq?'✓ Wearing':'Owned'):cf?'Tap again · '+S.price.toLocaleString():S.price.toLocaleString()+' ATP'}</span></button>`;};
-  el.innerHTML=PREMIUM.map(card).join('');
-  const mine=PREMIUM.filter(S=>ownsSkin(S.id)),oe=$('ownedSkins');if(oe){oe.innerHTML=mine.map(card).join('');$('ownedHint').innerHTML=mine.length?'Tap a skin to wear it; the free patterns above always work too.':'No premium skins yet. The Shop has them, and you have <b id="atpBal">'+wallet.balance+'</b> ATP.';}
+  const el=$('skins');if(!el)return;const ab=$('atpBal');if(ab)ab.textContent=wallet.balance;$('storeBal').textContent=wallet.balance.toLocaleString(); // #atpBal only exists while no premium skin is owned
+  $('skinHint').textContent=wallet.online?'Tap a skin to see it up close. You earn ATP by placing well in ranked rounds.':'Offline: skins you own still work, and buying needs a connection.';
+  const card=(S,shop)=>{const own=ownsSkin(S.id),eq=settings.skin===S.id,sel=shop&&S.id===shopSel;
+    const rar=RARITY[S.id]||'common';return `<button type="button" class="skin ${rar}${own?' own':''}${sel?' sel':''}" data-id="${S.id}" aria-pressed="${eq}" aria-label="${escH(S.name)} skin, ${rar}${own?', owned':', '+S.price+' ATP'}"><canvas width="144" height="144" data-skin="${S.id}"></canvas><span class="sn">${escH(S.name)}</span>${rar!=='common'?`<span class="rt">${rar}</span>`:''}<span class="sp">${own?(eq?'✓ Wearing':'Owned'):fmtAtp(S.price)+' ATP'}</span></button>`;};
+  el.innerHTML=[...PREMIUM].sort((a,b)=>a.price-b.price||a.id-b.id).map(S=>card(S,true)).join('');renderFeat(); // cheapest first, the legendary last
+  const mine=PREMIUM.filter(S=>ownsSkin(S.id)),oe=$('ownedSkins');if(oe){oe.innerHTML=mine.map(S=>card(S,false)).join('');$('ownedHint').innerHTML=mine.length?'Tap a skin to wear it; the free patterns above always work too.':'No premium skins yet. The Shop has them, and you have <b id="atpBal">'+wallet.balance+'</b> ATP.';}
   renderPreviews();
 }
 function drawPreview(cv,S){
@@ -1099,25 +1264,49 @@ function drawAvatar(cv=$('avatarCv')){ // a live portrait of your cell: stain, p
 function renderPreviews(){for(const cv of document.querySelectorAll('#skins canvas, #ownedSkins canvas')){const S=PREMIUM[+cv.dataset.skin-SKIN_FREE];if(S)drawPreview(cv,S);}}
 setInterval(()=>{if(document.hidden||RM)return;if(!$('storeCard').hidden||!$('lookCard').hidden)renderPreviews();if(!$('startCard').hidden)drawAvatar($('meCv'));if(!$('lookCard').hidden)drawAvatar($('lookCv'));if(!$('profileCard').hidden)drawAvatar($('profCv'));},100);
 $('ownedSkins').addEventListener('click',e=>{const b=e.target.closest('.skin');if(!b)return;const id=+b.dataset.id;if(ownsSkin(id)){settings.skin=id;saveSettings();syncPats();}});
-$('skins').addEventListener('click',async e=>{
-  const b=e.target.closest('.skin');if(!b)return;const id=+b.dataset.id,S=PREMIUM[id-SKIN_FREE];if(!S)return;
-  if(ownsSkin(id)){settings.skin=id;saveSettings();syncPats();return;}
+// The shop: tap a skin to show it large, then buy (tap twice to confirm) or wear it from the big button
+function renderFeat(){
+  const S=PREMIUM.find(x=>x.id===shopSel)||PREMIUM[0],b=$('featBuy');if(!S||!b)return;shopSel=S.id;
+  const rar=RARITY[S.id]||'common',own=ownsSkin(S.id),eq=settings.skin===S.id,cf=confirmSkin===S.id&&performance.now()-confirmT<4000,need=S.price-wallet.balance,
+    st=eq?'wearing':own?'own':!wallet.online?'off':need>0?'short':cf?'confirm':'buy';
+  $('storeCard').dataset.r=rar;$('featRar').className='sv-rar '+rar;$('featRar').textContent=rar;$('featName').textContent=S.name;$('featDesc').textContent=SKIN_DESC[S.id]||'';
+  b.className='primary sv-buy '+st;b.disabled=eq;
+  b.innerHTML=eq?'✓ Wearing':own?'Wear this skin':st==='off'?'Connect to buy':st==='short'?`Get ${fmtAtp(need)} more ATP`:cf?`Tap to confirm · <i></i>${S.price.toLocaleString()}`:`Buy · <i></i>${S.price.toLocaleString()}`;
+  $('featNote').textContent=own?(eq?'Equipped — it shows in every game':'Yours to wear any time'):st==='off'?'Buying needs a connection':`${S.price.toLocaleString()} ATP · you have ${wallet.balance.toLocaleString()}`;
+  drawFeat();
+}
+function drawFeat(){const cv=$('featCv'),S=PREMIUM.find(x=>x.id===shopSel);if(!cv||!S||$('storeCard').hidden)return;
+  const w=Math.min(640,Math.round(cv.clientWidth*(window.devicePixelRatio||1)))||288;if(cv.width!==w)cv.width=cv.height=w;drawPreview(cv,S);}
+(function shopLoop(){if(!$('storeCard').hidden&&!document.hidden&&!RM)drawFeat();requestAnimationFrame(shopLoop);})();
+function shopTab(t){const atp=t==='atp';$('tabSkins').setAttribute('aria-selected',String(!atp));$('tabAtp').setAttribute('aria-selected',String(atp));$('skinFeat').hidden=$('skinSec').hidden=atp;$('packSec').hidden=!atp;if(!atp)renderFeat();}
+$('tabSkins').addEventListener('click',()=>shopTab('skins'));$('tabAtp').addEventListener('click',()=>shopTab('atp'));
+$('skins').addEventListener('click',e=>{const b=e.target.closest('.skin');if(!b)return;const id=+b.dataset.id;if(id===shopSel||!PREMIUM.some(x=>x.id===id))return;shopSel=id;confirmSkin=0;renderSkins();});
+$('featBuy').addEventListener('click',async()=>{
+  const id=shopSel,S=PREMIUM.find(x=>x.id===id),b=$('featBuy');if(!S)return;
+  if(ownsSkin(id)){settings.skin=id;saveSettings();syncPats();Native.haptic('medium');return;}
   if(!wallet.online){toast('ATP','Not connected','Skins can be bought once the server is reachable.');return;}
-  if(wallet.balance<S.price){openStore(`${S.name} costs ${S.price.toLocaleString()} ATP — you need ${(S.price-wallet.balance).toLocaleString()} more.`);return;}
-  if(confirmSkin!==id||performance.now()-confirmT>4000){confirmSkin=id;confirmT=performance.now();renderSkins();return;}
+  if(wallet.balance<S.price){storeNote=`${S.name} costs ${S.price.toLocaleString()} ATP — you need ${(S.price-wallet.balance).toLocaleString()} more.`;showStoreHint();shopTab('atp');return;}
+  if(confirmSkin!==id||performance.now()-confirmT>4000){confirmSkin=id;confirmT=performance.now();renderFeat();setTimeout(()=>{if(confirmSkin===id)renderFeat();},4100);return;}
   confirmSkin=0;b.disabled=true;
   try{const w=await api('skins/buy',{skinId:id});applyWallet(w);settings.skin=id;saveSettings();syncPats();toast('ATP','Skin unlocked',S.name+' is yours');Native.haptic('success');}
-  catch(err){toast('ATP','Could not buy',err.message);renderSkins();}
+  catch(err){toast('ATP','Could not buy',err.message);}
+  finally{renderSkins();}
 });
+function renderEarn(){ // the placement payouts, from the server's rules when we have them
+  const br=(wallet.catalog&&wallet.catalog.rules&&wallet.catalog.rules.byRank)||[[1,25],[2,20],[3,16],[10,5],[30,1]],at=n=>(br.find(([r])=>n<=r)||[0,0])[1],last=br[br.length-1][0];
+  $('earnList').innerHTML=[1,2,3,10,last].map(n=>`<li>${ordinal(n)} place <b>+${at(n)}</b></li>`).join('');
+}
 // ATP store (packs are sold through the App Store / Google Play from inside the apps)
-let storeNote='';
+let storeNote='',storeMsg='';
+const showStoreHint=()=>{$('storeHint').textContent=(storeNote?storeNote+' ':'')+storeMsg;};
 async function openStore(note){
-  storeNote=note||'';showCard('storeCard');renderSkins();renderPacks([]);
-  if(!Native.platform){renderPacks(null);$('storeHint').textContent=(storeNote?storeNote+' ':'')+'ATP packs are sold in the Mitosis app for iPhone and Android. On the web you earn ATP by playing.';return;}
-  $('storeHint').textContent='Loading prices…';
+  storeNote=note||'';if(!PREMIUM.some(x=>x.id===shopSel))shopSel=settings.skin>=SKIN_FREE?settings.skin:PREMIUM[0].id;confirmSkin=0;
+  showCard('storeCard');shopTab(note?'atp':'skins');renderSkins();renderEarn();renderPacks([]);
+  if(!Native.platform){renderPacks(null);storeMsg='ATP packs are sold in the Mitosis app for iPhone and Android.';showStoreHint();return;}
+  storeMsg='Loading prices…';showStoreHint();
   try{const r=await Native.call('products',{ids:ATP_PACKS.map(p=>p.id)});const ps=r.products||[];renderPacks(ps);
-    $('storeHint').textContent=(storeNote?storeNote+' ':'')+(ps.length?'Purchases go through '+(Native.platform==='ios'?'the App Store':'Google Play')+'.':'The store is not available right now.');}
-  catch(e){renderPacks([]);$('storeHint').textContent='Store unavailable: '+e.message;}
+    storeMsg=ps.length?'Purchases go through '+(Native.platform==='ios'?'the App Store':'Google Play')+'.':'The store is not available right now.';showStoreHint();}
+  catch(e){renderPacks([]);storeMsg='Store unavailable: '+e.message;showStoreHint();}
 }
 function renderPacks(products){
   const el=$('packs');let html='';
@@ -1478,7 +1667,7 @@ function leaveLocal(){ // back to the shared world
   for(const p of players.filter(p=>p.bot&&!p.remote))removePlayer(p);cells=cells.filter(c=>!c.dead);
   round.synced=false;lastSeen.clear();lastPeerCount=-1;if(room&&myPeer){isHost=false;claimReady=false;yielded=false;}
 }
-function arenaR(){ // the round's safe radius: full for ROUND_GRACE s, then the safe AREA shrinks at a steady rate to R_MIN at ROUND_SEC
+function arenaR(){ // the round's safe radius: full for ROUND_GRACE s, then the safe AREA shrinks at a steady rate to R_MIN at ROUND_SEC-ROUND_HOLD
   if(multi()&&!isHost&&!round.synced)return R;const t=roundT();if(t<ROUND_GRACE)return R;
   const p=clamp((t-ROUND_GRACE)/(ROUND_SEC-ROUND_HOLD-ROUND_GRACE),0,1);return Math.sqrt(R*R-(R*R-R_MIN*R_MIN)*p);}
 function safeR(){return Math.min(tideSafe(),arenaR());}
@@ -1811,8 +2000,8 @@ function step(dt){
     if(!c.owner.remote){
       if(c.mass>120)c.mass-=c.mass*(has(c.owner,'metabolism')?.0006:.0012)*dt;
       if(has(c.owner,'photo'))c.mass=Math.min(MAX_MASS,c.mass+1.5*dt);
-      const dC=Math.hypot(c.x,c.y)+c.r*.3,outA=dC>arenaR(),outT=dC>tideSafe();
-      if(outA||outT){c.toxic=T;if(outA){c.mass-=(c.mass*.2+12)*dt;if(c.mass<10)dissolve(c);}else c.mass=Math.max(8,c.mass-c.mass*.08*dt);
+      const aR=arenaR(),dC=Math.hypot(c.x,c.y)+Math.min(c.r*.3,aR*.5),outA=dC>aR,outT=dC>tideSafe(); // a cell bigger than the final arena still fits if it is centred
+      if(outA||outT){c.toxic=T;if(outA){c.mass-=(c.mass*(aR<=R_MIN+1?.6:.2)+12)*dt;if(c.mass<10)dissolve(c);}else c.mass=Math.max(8,c.mass-c.mass*.08*dt);
         if(!c.dead&&Math.random()<dt*6&&parts.length<700){const a=rand(0,TAU);parts.push({x:c.x+Math.cos(a)*c.r,y:c.y+Math.sin(a)*c.r,vx:Math.cos(a)*60,vy:Math.sin(a)*60,t:0,life:.6,color:outA?'rgba(255,120,130,.9)':'rgba(170,150,255,.9)',r:rand(3,7)});}}
       if(c.inf&&T>=c.inf)lyse(c);
     }
@@ -2365,7 +2554,7 @@ function applyRec(r){
 function ingest(peer,P,fromHost){
   let pl=proxies.get(peer);
   if(!pl){pl=makePlayer('',STAINS[0],false);pl.remote=true;pl.key=peer;proxies.set(peer,pl);players.push(pl);}
-  pl.name=cleanName(P.n)||'Guest cell';pl.stain=clamp(P.s|0,0,STAINS.length-1);pl.skin=clamp(P.k|0,0,SKIN_COUNT-1);pl.color=skinColor(pl.stain,pl.skin);setFx(pl,P.f|0);
+  pl.name=cleanName(P.n)||'Guest cell';pl.stain=clamp(P.s|0,0,STAINS.length-1);pl.skin=P.ks>0&&P.ks<SKIN_COUNT?P.ks|0:(P.k|0)<SKIN_COUNT?clamp(P.k|0,0,SKIN_COUNT-1):0;pl.color=skinColor(pl.stain,pl.skin);setFx(pl,P.f|0);
   const alive=P.a===1;
   syncProxyCells(pl,alive&&typeof P.cl==='string'?decCells(P.cl,0,MAX_CELLS):[]);
   pl.alive=alive&&pl.cells.length>0;
@@ -2433,7 +2622,7 @@ function becomeHost(){
 }
 function send(){
   const P={v:PROTO,h:(isHost&&claimReady&&!yielded)?1:0,n:(human?human.name:(cleanName($('nameIn').value)||'Unnamed cell')).slice(0,16),s:settings.stain|0,
-    a:human&&human.alive?1:0,f:human?fxBits(human):0,k:human?human.skin:settings.skin,q:queued?1:0,em:null,ev:null,rd:null,cl:null,ej:null,r:null,pe:null,b:null,vs:null,vw:null,pu:null,hv:null};
+    a:human&&human.alive?1:0,f:human?fxBits(human):0,k:wireSkin(human?human.skin:settings.skin),ks:human?human.skin:settings.skin,q:queued?1:0,em:null,ev:null,rd:null,cl:null,ej:null,r:null,pe:null,b:null,vs:null,vw:null,pu:null,hv:null};
   if(human&&human.alive)P.cl=human.cells.slice(0,MAX_CELLS).map(encCell).join('');
   if(ejected.length)P.ej=ejected.slice(-16).map(e=>enc(e.x+OFF,3)+enc(e.y+OFF,3)).join('');
   recs=recs.filter(r=>T-r.t<3).slice(-20);if(recs.length)P.r=recs.map(r=>r.d);
