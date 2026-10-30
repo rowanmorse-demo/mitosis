@@ -272,6 +272,18 @@ body:not(.playing) #joy{display:none!important}
   #scale .bar,#magLbl{display:none}
   #feed{bottom:calc(var(--gut) + 200px + env(safe-area-inset-bottom,0px))}
 }
+
+/* minimisable HUD: tap the mass pill or the clock to shrink it; the eye hides every info panel, leaving the controls */
+#stats,#roundClock{pointer-events:auto;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#stats.mini #metaVal,#stats.mini .livesrow{display:none}#stats.mini{padding:4px 10px}
+#roundClock.mini .rcx{display:none}
+body.hud-hidden #stats,body.hud-hidden #roundClock,body.hud-hidden #board,body.hud-hidden #mini,body.hud-hidden #fx,body.hud-hidden #feed,body.hud-hidden #banner.mini{display:none!important}
+#hudBtn{font-size:0;width:36px;height:36px;padding:0;border-radius:50%;display:grid;place-items:center;color:#cfe8e2}
+#hudBtn::before{content:'';width:18px;height:18px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E") center/contain no-repeat}
+#hudBtn[aria-pressed=true]::before{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 3l18 18M10.6 5.1A10.4 10.4 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4M6.6 6.6C3.8 8.4 2 12 2 12s3.6 7 10 7a9.6 9.6 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 3l18 18M10.6 5.1A10.4 10.4 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4M6.6 6.6C3.8 8.4 2 12 2 12s3.6 7 10 7a9.6 9.6 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2'/%3E%3C/svg%3E")}
+@media (pointer:fine){#hudBtn{width:auto;height:auto;font-size:11px;padding:7px 13px;border-radius:999px}#hudBtn::before{display:none}}
+/* mutation and achievement pop-ups: one small line on phones, under the clock */
+@media (pointer:coarse){#toasts{top:calc(var(--gut) + 40px + env(safe-area-inset-top,0px))!important;gap:4px}.toast{display:flex!important;gap:7px;align-items:baseline;padding:4px 12px!important;border-radius:999px!important;max-width:min(70vw,420px)}.toast .label{font-size:9px!important;letter-spacing:.12em}.toast b{font-size:12.5px!important;white-space:nowrap}.toast span:last-child{display:none}}
 /* collapsible leaderboard */
 /* touch HUD: icon buttons and a compact ranking chip, so the arena keeps the screen */
 @media (pointer:coarse){
@@ -437,6 +449,7 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
   <span id="magLbl">×400</span>
   <button id="pauseBtn" class="tiny" type="button">Pause</button>
   <button id="snd" class="tiny" type="button">Sound on</button>
+  <button id="hudBtn" class="tiny" type="button" aria-label="Hide the on-screen info" aria-pressed="false">HUD</button>
 </div>
 <canvas id="mini" class="hud" aria-hidden="true"></canvas>
 <div id="banner" class="hud" hidden><div class="bnrow"><b id="bnTitle"></b><span id="bnTime"></span></div><span id="bnDesc"></span><div class="bnbar"><i id="bnBar"></i></div></div>
@@ -1372,7 +1385,7 @@ function unlock(id){
 function toast(kind,title,desc){
   const el=document.createElement('div');el.className='toast';el.innerHTML=`<span class="label">${esc(kind)}</span><b>${esc(title)}</b><span>${esc(desc)}</span>`;
   const box=$('toasts');box.appendChild(el);while(box.children.length>(TOUCH_UI?1:3))box.firstChild.remove(); // phones: one at a time, briefer
-  setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),500);},TOUCH_UI?2600:3800);
+  setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),500);},TOUCH_UI?2000:3800);
 }
 /* ---- evolution ---- */
 function offerEvo(){
@@ -1389,7 +1402,7 @@ function renderEvo(){
 function takeEvo(i){
   if(!evoOffer||!evoOffer[i]||!human||!human.alive)return;const x=evoOffer[i];
   human.pk|=PBIT[x.id];human.evo++;evoOffer=null;renderEvo();for(const c of human.cells)kick(c,2.4);
-  const c=human.cells[0];if(c)floatText(c.x,c.y-c.r-16,x.name,[250,100,80],22);sfx('power');toast('Mutation '+human.evo+' of '+EVO.length,x.name,x.desc);
+  sfx('power');toast('Mutation '+human.evo+' of '+EVO.length,x.name,x.desc);
   if(human.evo>=EVO.length)unlock('evolve');
 }
 /* ---- world events (the host runs them; everyone renders them) ---- */
@@ -2159,7 +2172,7 @@ function hud(){
   const ranked=players.filter(p=>p.alive&&p.cells.length).map(p=>({p,m:p.cells.reduce((s,c)=>s+c.mass,0)})).sort((a,b)=>b.m-a.m);
   leader=ranked.length?ranked[0].p:null;round.n=Math.max(round.n,ranked.length);
   const rc=$('roundClock');if(rc){const t=roundT(),a=arenaR();rc.hidden=mode!=='play'||(multi()&&!isHost&&!round.synced);rc.classList.toggle('hot',a<R-1);
-    rc.innerHTML=(local==='practice'?'<b>Practice</b> · ':'')+(round.over?'<b>Round over</b>':`<b>${fmtT(Math.max(0,ROUND_SEC-t))}</b> ${a<R-1?(a<=R_MIN+1?'· final arena':'· arena closing'):'· closes in '+fmtT(ROUND_GRACE-t)}`);}
+    rc.innerHTML=(local==='practice'?'<b>Practice</b> · ':'')+(round.over?'<b>Round over</b>':`<b>${fmtT(Math.max(0,ROUND_SEC-t))}</b><span class="rcx"> ${a<R-1?(a<=R_MIN+1?'· final arena':'· arena closing'):'· closes in '+fmtT(ROUND_GRACE-t)}</span>`);}
   const small=phone.matches||shortScreen.matches,N=small?5:8;let html='';
   const row=(r,i)=>{const hu=r.p.remote&&!r.p.bot;return`<li class="${r.p===human?'me':''}"><span class="rk">${i===0?'♛':i+1}</span><span class="dot" style="background:${col(r.p.color)}"></span><span class="nm">${esc(r.p===human?r.p.name+' (you)':r.p.name)}</span>${r.p.boss?'<span class="tag boss">boss</span>':hu?'<span class="tag">player</span>':''}<span class="ms">${Math.round(r.m)}</span></li>`;};
   ranked.slice(0,N).forEach((r,i)=>{html+=row(r,i);});
@@ -2220,6 +2233,11 @@ function tickMass(dt){
 
 /* ================= audio ================= */
 let actx=null,master=null,noiseBuf=null,muted=false;try{muted=localStorage.getItem('mitosis.muted')==='1';}catch(e){}
+// minimisable HUD (remembered): tap the mass pill or the clock to shrink them; the eye hides every info panel
+const syncHud=()=>{$('stats').classList.toggle('mini',!!settings.hudStatsMini);$('roundClock').classList.toggle('mini',!!settings.hudClockMini);document.body.classList.toggle('hud-hidden',!!settings.hudHidden);const hb=$('hudBtn');hb.setAttribute('aria-pressed',String(!!settings.hudHidden));hb.setAttribute('aria-label',settings.hudHidden?'Show the on-screen info':'Hide the on-screen info');hb.textContent=settings.hudHidden?'Show HUD':'Hide HUD';};
+$('stats').addEventListener('click',()=>{settings.hudStatsMini=!settings.hudStatsMini;saveSettings();syncHud();});
+$('roundClock').addEventListener('click',()=>{settings.hudClockMini=!settings.hudClockMini;saveSettings();syncHud();});
+$('hudBtn').addEventListener('click',()=>{settings.hudHidden=!settings.hudHidden;saveSettings();syncHud();});syncHud();
 const sndBtn=$('snd');const syncSnd=()=>{sndBtn.textContent=muted?'Sound off':'Sound on';sndBtn.setAttribute('aria-pressed',String(!muted));sndBtn.setAttribute('aria-label',muted?'Turn sound on':'Turn sound off');};syncSnd();$('pauseBtn').setAttribute('aria-label','Pause');
 function toggleSnd(){muted=!muted;syncSnd();try{localStorage.setItem('mitosis.muted',muted?'1':'0');}catch(e){}}
 sndBtn.addEventListener('click',toggleSnd);
