@@ -16,6 +16,8 @@ Mitosis: Cell Arena ("Mitosis", "the game") is made by Catapult Consulting, LLC.
 
 **Nearby play (iPhone app).** If you switch the lobby to Nearby, the app uses Bluetooth and peer-to-peer Wi-Fi (Apple's local network permission) to find other phones running Mitosis close by. While you play, your display name, chosen look and the positions of your cells go directly to those phones and nowhere else; nothing from a nearby game is sent to the server or stored, and nearby games do not pay ATP or change your rating. Turning Nearby off disconnects at once.
 
+**Connection quality.** While you play online, the game measures how long messages take to reach the server and back, how many never come back, and how smoothly it draws. Every few minutes it sends those numbers, the app version and your device's time zone (for example "Europe/London") so we can see where a closer server would help. These reports carry no player identifier, and the server does not store IP addresses with them.
+
 **Diagnostics.** If the app crashes or stalls, a technical report (device model, OS version, app version and a stack trace) is sent to the server so the problem can be fixed. Reports contain no personal information.
 
 ## What the game does not do

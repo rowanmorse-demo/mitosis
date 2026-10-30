@@ -73,6 +73,8 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
         resolveServerURL { server in
             var comps = URLComponents(url: index, resolvingAgainstBaseURL: false)!
             comps.queryItems = [URLQueryItem(name: "server", value: server)]
+            // the app version, for the connection report (the page has no version of its own)
+            if let v = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String { comps.queryItems?.append(URLQueryItem(name: "app", value: "ios-" + v)) }
             #if DEBUG
             // "-autopilot 1" makes the page play by itself (soak testing a device without touching it)
             if UserDefaults.standard.bool(forKey: "autopilot") { comps.queryItems?.append(URLQueryItem(name: "autopilot", value: "1")) }

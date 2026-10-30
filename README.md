@@ -229,4 +229,6 @@ All endpoints take and return JSON. Authenticated ones need `Authorization: Bear
 | `POST /api/account/delete` | `{confirm:'DELETE'}`: delete the player and everything linked (skins, runs, sign-ins, devices); purchase receipts stay as anonymous ids so they cannot be replayed. In the game: Profile › Account › Delete account, or Settings › Account & data |
 | `POST /api/crash` `{platform, kind, app, os, device, report}` | Crash and hang reports from the apps; logged (`!!` lines) and kept in `DATA_DIR/crashes/` |
 | `POST /api/log` `{who, text}` | Client diagnostics: frame stalls, page errors, autopilot events; printed in the server log |
+| `POST /api/net` | Connection quality from the game: ping samples, lost pings, frame rate, time zone (anonymous) |
+| `GET /admin/net?token=…` | The connection report: ping and frame rate by area, time zone, platform and connection, and what most likely needs fixing. The token is `ADMIN_TOKEN`, or the one the server makes on first start in `data/admin-token` (also printed at start-up). `&days=30`, `&format=json` |
 | `GET /api/catalog` | Skins, packs, payout rules and which stores are verified |

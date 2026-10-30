@@ -448,6 +448,9 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
 .pack .tag{position:absolute;top:-8px;left:50%;transform:translateX(-50%);font:600 9px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent-ink);background:var(--violet);border-radius:999px;padding:3px 8px;white-space:nowrap}
 .pack:disabled{opacity:.5;cursor:default}
 .earn{margin:-6px 0 0;font:600 14px var(--display);color:var(--amber)}
+/* Settings › Show FPS & ping: a small readout in the top-right corner while playing */
+#perfHud{position:fixed;z-index:4;right:calc(var(--gut) + env(safe-area-inset-right,0px));top:calc(var(--gut) + 50px + env(safe-area-inset-top,0px));font:600 10.5px/1 var(--mono);color:var(--muted);background:rgba(2,8,9,.6);border:1px solid var(--line);border-radius:999px;padding:5px 9px;pointer-events:none;font-variant-numeric:tabular-nums}
+#perfHud b{font-weight:700}#perfHud .ok{color:#5fe0a8}#perfHud .warn{color:var(--amber)}#perfHud .bad{color:#ff6b6b}body:not(.playing) #perfHud{display:none}
 /* first-game tips: one short line above the controls */
 #tip{position:fixed;z-index:4;left:50%;bottom:calc(var(--gut) + 92px + env(safe-area-inset-bottom,0px));transform:translate(-50%,8px);width:max-content;max-width:min(80vw,460px);padding:8px 14px 8px 12px;border-radius:12px;background:rgba(2,8,9,.82);border:1px solid rgba(108,184,255,.4);color:var(--ink);font:600 13px/1.35 var(--display);text-align:center;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
 #tip.show{opacity:1;transform:translate(-50%,0)}#tip::before{content:"Tip";font:700 9.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:#6cb8ff;margin-right:8px}
@@ -561,6 +564,7 @@ body:not(.playing) #tip{display:none}
 <div id="banner" class="hud" hidden><div class="bnrow"><b id="bnTitle"></b><span id="bnTime"></span></div><span id="bnDesc"></span><div class="bnbar"><i id="bnBar"></i></div></div>
 <div id="toasts" class="hud" aria-live="polite"></div>
 <div id="tip" role="status" aria-live="polite"></div>
+<div id="perfHud" aria-hidden="true" hidden></div>
 <div id="evolve" hidden><div class="evhead"><span class="label">Evolve</span><span id="evTier" class="evsub">Stage 1 of 6</span><span class="evsub kbd-only">Keys 1 · 2 · 3</span></div><div class="evopts" id="evOpts"></div></div>
 <div id="actions">
   <button class="act" id="splitBtn" type="button"><svg class="touch-only ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8.5" cy="12" r="5.5"/><circle cx="18.5" cy="12" r="3.5"/></svg><span class="kbd-only">Divide</span><span class="touch-only">Split</span> <kbd>Space</kbd></button>
@@ -668,6 +672,7 @@ body:not(.playing) #tip{display:none}
     <div class="field"><span class="label">Bot difficulty <span class="hintx">practice &amp; offline</span></span><div class="seg four" id="skillSeg"><button type="button" data-k="easy">Easy</button><button type="button" data-k="normal">Normal</button><button type="button" data-k="hard">Hard</button><button type="button" data-k="expert">Expert</button></div></div>
     <div class="field"><span class="label">Effects</span><div class="seg two" id="fxSeg"><button type="button" data-fx="0">Full<small>auras, embers, glow</small></button><button type="button" data-fx="1">Reduced<small>smoother on older phones</small></button></div></div>
     <div class="field"><span class="label">Vibration</span><div class="seg two" id="hapSeg"><button type="button" data-h="0">Off<small>recommended</small></button><button type="button" data-h="1">On<small>taps on split and kills</small></button></div></div>
+    <div class="field"><span class="label">Show FPS &amp; ping</span><div class="seg two" id="perfSeg"><button type="button" data-p="0">Off</button><button type="button" data-p="1">On<small>frame rate and server ping</small></button></div></div>
     <div class="field touch-only"><span class="label">Joystick</span><div class="seg two" id="joySeg"><button type="button" data-j="fixed">Fixed<small>in the corner</small></button><button type="button" data-j="float">Floating<small>appears under your thumb</small></button></div></div>
     <div class="field touch-only"><span class="label">Layout</span><div class="seg two" id="handSeg"><button type="button" data-l="0">Right-handed<small>buttons on the right</small></button><button type="button" data-l="1">Left-handed<small>buttons on the left</small></button></div></div>
     <div class="field"><span class="label">Invite friends</span><div class="invite" id="inviteRow"><input id="inviteUrl" type="text" readonly aria-label="Invite link" value=""><button id="copyInvite" class="ghost" type="button">Invite friends</button></div><p id="inviteHelp">Send this link to a friend on the same Wi-Fi. For friends elsewhere, run <b>share-online.bat</b> and send the https link it prints.</p></div>
@@ -774,6 +779,7 @@ body:not(.playing) #tip{display:none}
         N.lan=Array.isArray(m.lan)?m.lan.filter(u=>typeof u==='string'):[];N.state='live';rebuild();setConn(true);flush();}
       else if(m.t==='p'&&typeof m.id==='string'&&m.p&&typeof m.p==='object'){others.set(m.id,Object.freeze(m.p));rebuild();}
       else if(m.t==='bye'&&typeof m.id==='string'){others.delete(m.id);rebuild();}
+      else if(m.t==='pong'&&typeof m.c==='number'&&pings.delete(m.c)){const rtt=performance.now()-m.c;if(rtt>=0&&rtt<60000){NS.rtts.push(rtt);if(NS.rtts.length>300)NS.rtts.shift();NS.pongs++;N.rtt=N.rtt==null?rtt:N.rtt*.7+rtt*.3;}}
       else if(m.t==='full')N.state='full';}
     ws.onclose=()=>{if(nearby)return;setConn(false);others.clear();rebuild();if(N.state!=='full'){N.state='offline';later();}};
     ws.onerror=()=>{};
@@ -797,6 +803,11 @@ body:not(.playing) #tip{display:none}
     if(m.ev==='p'&&typeof m.data==='string'){let p;try{p=JSON.parse(m.data);}catch(e){return;}if(p&&typeof p==='object'){others.set(m.id,Object.freeze(p));rebuild();}}
     else if(m.ev==='bye'){others.delete(m.id);rebuild();}
     else if(m.ev==='join')flush();};
+  // Ping: a small message every 4 s that the server echoes back. N.rtt is the smoothed round trip; NS collects samples
+  // and lost pings (no echo within 5 s) for the connection report. Servers too old to echo leave N.rtt null.
+  const pings=new Map(),NS=N.stats={rtts:[],pongs:0,lost:0};N.rtt=null;
+  setInterval(()=>{const now=performance.now();for(const [c,t] of pings)if(now-t>5000){pings.delete(c);if(NS.pongs)NS.lost++;}
+    if(nearby||!ws||ws.readyState!==1||document.hidden)return;const c=Math.round(now*1000)/1000;pings.set(c,now);try{ws.send(JSON.stringify({t:'ping',c}));}catch(e){}},4000);
   rebuild();connect();N.peers=()=>snap;
   window.claude={use:async n=>n==='room'?room:null};
 })();
@@ -2491,7 +2502,7 @@ function tipTick(){
     const el=$('tip');el.textContent=t.text();el.classList.remove('show');void el.offsetWidth;el.classList.add('show');clearTimeout(tipTick.h);tipTick.h=setTimeout(()=>el.classList.remove('show'),4500);break;}
 }
 function hud(){
-  tipTick();
+  tipTick();perfHudTick();
   const ranked=players.filter(p=>p.alive&&p.cells.length).map(p=>({p,m:p.cells.reduce((s,c)=>s+c.mass,0)})).sort((a,b)=>b.m-a.m);
   leader=ranked.length?ranked[0].p:null;round.n=Math.max(round.n,ranked.length);
   const rc=$('roundClock');if(rc){const t=roundT(),a=arenaR();rc.hidden=mode!=='play'||(multi()&&!isHost&&!round.synced);rc.classList.toggle('hot',a<R-1);
@@ -2510,6 +2521,7 @@ function hud(){
     let fx='';for(const k in PU){const t=human.fx[k];if(t>0)fx+=`<span class="chip" style="color:${col(PU[k].c)};--p:${(t/PU[k].dur).toFixed(3)}">${PU_ICON[k]}${PU[k].label} ${t.toFixed(1)}s<i></i></span>`;}
     let inf=0;for(const c of human.cells)if(c.inf&&(!inf||c.inf<inf))inf=c.inf;
     if(inf){const left=Math.max(0,inf-T),len=(human.cells.find(c=>c.inf===inf)||{}).infLen||INF_MAX;fx+=`<span class="chip" style="color:${col(INF_C,6)};--p:${(left/len).toFixed(3)}">Infected · lysis ${left.toFixed(1)}s<i></i></span>`;}
+    {const N=window.__mitosisNet;if(multi()&&N&&N.rtt>220)fx+=`<span class="chip" style="color:#ffb86b;--p:1">Slow connection · ${Math.round(N.rtt)} ms<i></i></span>`;}
     if(human.cells.some(c=>T-(c.toxic||0)<.3))fx+=`<span class="chip" style="color:#ff8a9a;--p:1">Outside the arena · dissolving<i></i></span>`;
     if(human.combo>=2&&T-human.comboT<3)fx+=`<span class="chip" style="color:${col([340,100,72])};--p:${((3-(T-human.comboT))/3).toFixed(3)}">Streak ×${human.combo}<i></i></span>`;
     fxEl.innerHTML=fx;
@@ -2542,6 +2554,7 @@ function netUI(){
   else if(N.state!=='live'||!myPeer)txt='Connecting to the server…';
   else if(others<=0){txt='Live · nobody else is here yet.';live=true;}
   else{txt=`Live · ${others} other${others>1?'s':''} here${netNames.length?': '+netNames.slice(0,3).join(', ')+(netNames.length>3?'…':''):''}`;live=true;}
+  if(live&&N&&N.mode!=='nearby'&&N.rtt!=null)txt+=` · ${Math.round(N.rtt)} ms`;
   line.classList.toggle('live',live);const sp=line.querySelector('span');if(sp.textContent!==txt)sp.textContent=txt;
   const rl=$('roundLine');if(rl){let rt='';if(live&&!local&&(round.synced||isHost)&&!round.over&&roundT()>=0&&roundT()<ROUND_SEC){const left=ROUND_SEC-roundT();rt=`Round · ${Math.floor(left/60)}:${String(Math.floor(left%60)).padStart(2,'0')} left · ${roundOpen()?'spawns open':'spawns closed'}`;}rl.hidden=!rt;if(rl.textContent!==rt)rl.textContent=rt;}
   const row=$('inviteRow'),inp=$('inviteUrl'),help=$('inviteHelp');row.hidden=!N;
@@ -2912,6 +2925,8 @@ const fxSegEl=$('fxSeg'),syncFxSeg=()=>[...fxSegEl.children].forEach(b=>b.setAtt
 fxSegEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.lowFx=b.dataset.fx==='1';lowFx=settings.lowFx;saveSettings();syncFxSeg();});syncFxSeg();
 const hapEl=$('hapSeg'),syncHap=()=>[...hapEl.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.h==='1')===!!settings.haptics)));
 hapEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.haptics=b.dataset.h==='1';saveSettings();syncHap();});syncHap();
+const perfSegEl=$('perfSeg'),syncPerf=()=>{[...perfSegEl.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.p==='1')===!!settings.perfHud)));$('perfHud').hidden=!settings.perfHud;};
+perfSegEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.perfHud=b.dataset.p==='1';saveSettings();syncPerf();});syncPerf();
 const joySegEl=$('joySeg'),handSegEl=$('handSeg'),syncControls=()=>{const fl=settings.joyMode==='float',lh=!!settings.lefty;document.body.classList.toggle('joy-float',fl);document.body.classList.toggle('lefty',lh);
   [...joySegEl.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.j==='float')===fl)));[...handSegEl.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.l==='1')===lh)));};
 joySegEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.joyMode=b.dataset.j==='float'?'float':'fixed';saveSettings();syncControls();});
@@ -2953,7 +2968,7 @@ $('copyInvite').addEventListener('click',()=>{const b=$('copyInvite'),i=$('invit
 /* ================= input ================= */
 let touchId=null;
 // ?debug=1: a handle on the game state for headless tests (movement, merging); never used by the game itself
-if(/[?&]debug=1/.test(location.search))window.__mt={get human(){return human;},get cam(){return cam;},get T(){return T;},split:()=>split(human),sfx:(k,a)=>sfx(k,a),audio:()=>({state:actx&&actx.state,live:liveNodes})};
+if(/[?&]debug=1/.test(location.search))window.__mt={get human(){return human;},get cam(){return cam;},get T(){return T;},split:()=>split(human),sfx:(k,a)=>sfx(k,a),audio:()=>({state:actx&&actx.state,live:liveNodes}),netReport:()=>netReport()};
 cv.addEventListener('pointermove',e=>{if(e.pointerType==='touch'&&e.pointerId!==touchId)return;pointer.x=e.clientX;pointer.y=e.clientY;});
 cv.addEventListener('pointerdown',e=>{if(e.pointerType==='touch'){if(touchId!==null)return;touchId=e.pointerId;try{cv.setPointerCapture(e.pointerId);}catch(_){}}pointer.x=e.clientX;pointer.y=e.clientY;});
 const release=e=>{if(e.pointerId===touchId){touchId=null;pointer.x=W/2;pointer.y=H/2;}};
@@ -3009,6 +3024,22 @@ document.addEventListener('visibilitychange',()=>{reportHitch('visibility '+(doc
   }else yielded=false;
 });
 
+// Connection report (netstats.js on the server): every few minutes, the ping samples and how smoothly frames came
+// while playing, with the time zone for a coarse region. Anonymous: no player id. Settings can also show it live.
+const FG=[],APP_VER=((location.search.match(/[?&]app=([\w.\-]+)/)||[])[1])||'web';
+const median=a=>{if(!a.length)return null;const b=a.slice().sort((x,y)=>x-y);return b[b.length>>1];};
+function netReport(){
+  const N=window.__mitosisNet,S=N&&N.stats;if(!S||S.rtts.length<3||N.mode==='nearby')return;
+  const r=S.rtts.slice().sort((a,b)=>a-b),q=k=>Math.round(r[Math.min(r.length-1,Math.floor(k*r.length))]),mean=r.reduce((a,b)=>a+b,0)/r.length,
+    fg=FG.slice(),fm=median(fg),body={platform:Native.platform||'web',app:APP_VER,n:r.length,lost:S.lost,min:Math.round(r[0]),med:q(.5),p90:q(.9),
+      jit:Math.round(Math.sqrt(r.reduce((a,b)=>a+(b-mean)**2,0)/r.length)),fps:fm?Math.round(1000/fm):null,slow:fg.length?Math.round(fg.filter(g=>g>25).length/fg.length*100):null,conn:(navigator.connection&&navigator.connection.effectiveType)||''};
+  try{body.tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'';}catch(e){}
+  S.rtts.length=0;S.lost=0;FG.length=0;
+  try{fetch(window.MITOSIS_SERVER+'/api/net',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),keepalive:true}).catch(()=>{});}catch(e){}
+}
+setInterval(netReport,180000);document.addEventListener('visibilitychange',()=>{if(document.hidden)netReport();});
+function perfHudTick(){if(!settings.perfHud)return;const N=window.__mitosisNet,fm=median(FG.slice(-90)),fps=fm?Math.round(1000/fm):0,p=N&&N.rtt!=null&&N.mode!=='nearby'?Math.round(N.rtt):null;
+  $('perfHud').innerHTML=`<b class="${fps>=50?'ok':fps>=35?'warn':'bad'}">${fps}</b> fps`+(p==null?'':` · <b class="${p<90?'ok':p<160?'warn':'bad'}">${p}</b> ms`);}
 /* ================= loop ================= */
 init();
 for(let i=0;i<90;i++)step(1/30);
@@ -3025,6 +3056,7 @@ function reportHitch(text){Native.send({type:'log',text});if(hitchSent++>40)retu
   try{fetch(window.MITOSIS_SERVER+'/api/log',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({who:(Native.platform||'web')+':'+(wallet.playerId||'?').slice(0,8),text})}).catch(()=>{});}catch(e){}}
 function frame(nowMs){
   const gapMs=nowMs-last,raw=Math.min(.05,Math.max(0,gapMs/1000));last=nowMs;
+  if(mode==='play'&&!paused&&!document.hidden&&gapMs<1000){FG.push(gapMs);if(FG.length>2400)FG.splice(0,600);}
   ema=ema*.95+raw*1000*.05;
   if(!lowFx&&mode==='play'&&!paused){playT+=raw;if(playT>5&&ema>27)lowFx=true;}
   slow+=(1-slow)*Math.min(1,raw*1.2);

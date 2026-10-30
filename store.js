@@ -35,7 +35,10 @@ class SqliteStore {
       CREATE TABLE IF NOT EXISTS identities(provider TEXT, subject TEXT, player TEXT, email TEXT, at INTEGER, PRIMARY KEY(provider, subject));
       CREATE INDEX IF NOT EXISTS identities_player ON identities(player);
       CREATE TABLE IF NOT EXISTS devices(secret TEXT PRIMARY KEY, player TEXT, created INTEGER, seen INTEGER);
-      CREATE INDEX IF NOT EXISTS devices_player ON devices(player);`);
+      CREATE INDEX IF NOT EXISTS devices_player ON devices(player);
+      -- connection quality reports (netstats.js): anonymous, no player id
+      CREATE TABLE IF NOT EXISTS netstats(at INTEGER, platform TEXT, app TEXT, tz TEXT, conn TEXT, n INTEGER, lost INTEGER, min INTEGER, med INTEGER, p90 INTEGER, jit INTEGER, fps INTEGER, slow INTEGER);
+      CREATE INDEX IF NOT EXISTS netstats_at ON netstats(at);`);
     for (const sql of ['ALTER TABLE players ADD COLUMN rating INTEGER NOT NULL DEFAULT 1000', 'ALTER TABLE players ADD COLUMN name TEXT', 'ALTER TABLE players ADD COLUMN runs INTEGER NOT NULL DEFAULT 0'])
       try { this.db.exec(sql); } catch (e) {} // already migrated
     const p = s => this.db.prepare(s);
@@ -76,6 +79,9 @@ class SqliteStore {
       delRuns: p('DELETE FROM runs WHERE player = ?'),
       delDevicesOf: p('DELETE FROM devices WHERE player = ?'),
       anonPurchases: p('UPDATE purchases SET player = NULL WHERE player = ?'),
+      insNet: p('INSERT INTO netstats(at, platform, app, tz, conn, n, lost, min, med, p90, jit, fps, slow) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'),
+      netSince: p('SELECT * FROM netstats WHERE at > ? ORDER BY at DESC LIMIT 50000'),
+      pruneNet: p('DELETE FROM netstats WHERE at < ?'),
     };
   }
   playerBySecret(h) { const p = this.q.bySecret.get(h); if (p) return p; const d = this.q.device.get(h); return d ? this.player(d.player) : null; }
@@ -120,13 +126,15 @@ class SqliteStore {
   playerCount() { return Number(this.q.count.get().n); }
   setRating(id, rating, name) { this.q.setRating.run(rating, name, id); }
   top(n) { return this.q.top.all(n).map(r => ({ name: r.name, rating: Number(r.rating), runs: Number(r.runs) })); }
+  addNet(r) { this.q.insNet.run(r.at, r.platform, r.app, r.tz, r.conn, r.n, r.lost, r.min, r.med, r.p90, r.jit, r.fps, r.slow); if (Math.random() < .01) this.q.pruneNet.run(r.at - 90 * 864e5); }
+  netSince(t) { return this.q.netSince.all(t).map(r => ({ ...r, fps: r.fps == null ? null : Number(r.fps) })); }
 }
 
 /* ---------- JSON file (fallback) ---------- */
 class JsonStore {
   constructor(file) {
     this.kind = 'json'; this.file = file; this.timer = null;
-    this.d = { players: {}, secrets: {}, skins: {}, runs: {}, purchases: {}, identities: {}, devices: {} };
+    this.d = { players: {}, secrets: {}, skins: {}, runs: {}, purchases: {}, identities: {}, devices: {}, net: [] };
     try { const raw = JSON.parse(fs.readFileSync(file, 'utf8')); if (raw && raw.players) this.d = Object.assign(this.d, raw); } catch (e) {}
   }
   save() {
@@ -182,6 +190,8 @@ class JsonStore {
   playerCount() { return Object.keys(this.d.players).length; }
   setRating(id, rating, name) { const p = this.d.players[id]; if (p) { p.rating = rating; p.name = name; p.runs = (p.runs || 0) + 1; this.save(); } }
   top(n) { return Object.values(this.d.players).filter(p => p.runs > 0).sort((a, b) => (b.rating - a.rating) || (b.runs - a.runs)).slice(0, n).map(p => ({ name: p.name, rating: p.rating, runs: p.runs })); }
+  addNet(r) { const a = this.d.net || (this.d.net = []); a.push(r); if (a.length > 20000) a.splice(0, a.length - 20000); this.save(); }
+  netSince(t) { return (this.d.net || []).filter(r => r.at > t); }
   prune() { // keep the run log small
     const ids = Object.keys(this.d.runs); if (ids.length < 5000) return;
     ids.sort((a, b) => this.d.runs[a].started - this.d.runs[b].started);

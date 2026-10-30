@@ -5,6 +5,7 @@
 const http = require('http'), fs = require('fs'), path = require('path'), crypto = require('crypto'), os = require('os');
 const { openStore, DATA_DIR } = require('./store');
 const economy = require('./economy');
+const netstats = require('./netstats');
 
 const PORT = Number(process.env.PORT) || 3000;
 const MAX_PLAYERS = 16;
@@ -42,7 +43,25 @@ const ROUTES = {
   'POST /api/log': { fn: (store, body) => { log('[client ' + String(body.who || '?').slice(0, 24) + '] ' + String(body.text || '').slice(0, 300)); return { ok: true }; }, auth: false },
   // the apps send crash and hang reports here (see ios/Mitosis/CrashReporter.swift, android/.../CrashReporter.kt)
   'POST /api/crash': { fn: crashReport, auth: false, body: 512 * 1024 },
+  // connection quality from the games (ping, lost pings, frame rate, time-zone region); read it at /admin/net
+  'POST /api/net': { fn: (store, body) => { const r = netstats.clean(body, Date.now()); if (r) store.addNet(r); return { ok: true }; }, auth: false },
 };
+// The connection report is for the operator: /admin/net?token=… The token is ADMIN_TOKEN, or one made on first start and kept in the data dir.
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN || (() => {
+  const f = path.join(DATA_DIR, 'admin-token');
+  try { return fs.readFileSync(f, 'utf8').trim(); } catch (e) {}
+  const t = crypto.randomBytes(18).toString('hex');
+  try { fs.mkdirSync(DATA_DIR, { recursive: true }); fs.writeFileSync(f, t + '\n', { mode: 0o600 }); } catch (e) {}
+  return t;
+})();
+function netReport(req, res) {
+  const q = new URL(req.url, 'http://x').searchParams, t = q.get('token') || '';
+  const ok = t.length === ADMIN_TOKEN.length && crypto.timingSafeEqual(Buffer.from(t), Buffer.from(ADMIN_TOKEN));
+  if (!ok) { res.writeHead(403, { 'Content-Type': 'text/plain' }); res.end('Forbidden'); return; }
+  const days = Math.min(90, Math.max(1, Number(q.get('days')) || 7)), sum = netstats.summary(store.netSince(Date.now() - days * 864e5));
+  if (q.get('format') === 'json') { res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify({ days, ...sum })); return; }
+  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }); res.end(netstats.page(sum, days));
+}
 const crashDir = path.join(DATA_DIR, 'crashes');
 function crashReport(store, body) {
   const platform = String(body.platform || '?').replace(/[^\w-]/g, '').slice(0, 16) || 'unknown', kind = String(body.kind || 'crash').replace(/[^\w-]/g, '').slice(0, 32) || 'crash';
@@ -95,6 +114,8 @@ const server = http.createServer((req, res) => {
   if (url === '/' || url === '/index.html') {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
     res.end(page);
+  } else if (url === '/admin/net') {
+    netReport(req, res);
   } else if (url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ players: clients.size, accounts: store.playerCount(), store: store.kind, iap: economy.catalog().iap }));
@@ -169,6 +190,7 @@ function onMessage(c, text) {
   if (++c.count > MAX_RATE) return;
   let m; try { m = JSON.parse(text); } catch (e) { return; }
   if (!m || typeof m !== 'object') return;
+  if (m.t === 'ping') { send(c, { t: 'pong', c: typeof m.c === 'number' ? m.c : 0 }); return; } // the game measures its round trip with these
   if (m.t === 'hello' && !c.id) {
     if (clients.size >= MAX_PLAYERS) { send(c, { t: 'full' }); setTimeout(() => kill(c), 200); return; }
     let id = typeof m.id === 'string' && /^[a-z0-9]{6,20}$/.test(m.id) ? m.id : crypto.randomBytes(6).toString('hex');
@@ -206,6 +228,7 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`  Play on this computer:   http://localhost:${PORT}`);
   if (lan.length) console.log(`  Send to friends on your Wi-Fi / network:\n` + lan.map(u => '      ' + u).join('\n'));
   console.log(`\n  Wallets and skins:  ${store.kind} store in ${DATA_DIR}`);
+  console.log(`  Connection report:  http://localhost:${PORT}/admin/net?token=${ADMIN_TOKEN}`);
   console.log(`  Purchases:          Apple ${iap.apple ? 'verified' : 'not configured'} · Google Play ${iap.google ? 'verified' : 'not configured'}${iap.unverified ? '  (IAP_UNVERIFIED=1: trusting clients — dev only!)' : ''}`);
   const auth = economy.catalog().auth;
   console.log(`  Sign-in:            Apple ready for the app${auth.apple.web ? ' and the website' : ''} · Google ${auth.google.configured ? 'ready' : 'not configured (set GOOGLE_CLIENT_IDS)'}`);

@@ -73,6 +73,25 @@ async function post(url, body, secret) {
   r = await post('/api/run/start', {}, secret); const run2 = r.body.runId;
   r = await post('/api/run/end', { runId: run2, survived: 0, eaten: 0, peak: 25, name: 'Tester' }, secret); assert.equal(r.body.ratingDelta, -10); assert.equal(r.body.rating, 1003);
   const lb = await (await fetch(base + '/api/leaderboard')).json(); assert.equal(lb.top[0].name, 'Tester'); assert.equal(lb.top[0].rating, 1003);
+  { // connection report: the relay echoes pings, reports are checked and kept anonymously, and only the token opens the report
+    const ws = new WebSocket(base.replace(/^http/, 'ws') + '/ws'); await new Promise((res, rej) => { ws.onopen = res; ws.onerror = rej; });
+    const pong = new Promise(res => { ws.onmessage = e => { const m = JSON.parse(e.data); if (m.t === 'pong') res(m); }; });
+    ws.send(JSON.stringify({ t: 'ping', c: 1234.5 })); assert.equal((await pong).c, 1234.5, 'the relay echoes pings'); ws.close();
+    for (const b of [
+      { platform: 'ios', app: 'ios-2.3.0', tz: 'Europe/London', n: 40, lost: 1, min: 120, med: 180, p90: 240, jit: 25, fps: 58, slow: 4 },
+      { platform: 'ios', tz: 'Europe/Berlin', n: 30, lost: 0, min: 150, med: 170, p90: 210, jit: 18, fps: 60, slow: 2 },
+      { platform: 'web', tz: 'Europe/Paris', n: 30, lost: 0, min: 140, med: 165, p90: 200, jit: 15, fps: 55, slow: 5 },
+      { platform: 'android', tz: 'America/Chicago', n: 25, lost: 0, min: 30, med: 42, p90: 60, jit: 8, fps: 60, slow: 1, conn: '4g' },
+      { tz: 'America/Chicago', n: 1, med: 40 }, { n: 'x' }, null,                     // too few samples or nonsense: ignored
+    ]) { r = await post('/api/net', b); assert.equal(r.status, 200); }
+    const token = fs.readFileSync(path.join(dataDir, 'admin-token'), 'utf8').trim();
+    assert.equal((await fetch(base + '/admin/net?token=wrong')).status, 403, 'the report needs the token');
+    const rep = await (await fetch(base + '/admin/net?format=json&token=' + token)).json();
+    assert.equal(rep.reports, 4, 'only usable reports are kept');
+    const eu = rep.areas.find(a => a.name === 'Europe'); assert.equal(eu.reports, 3); assert.equal(eu.ping, 170); assert.match(eu.verdict, /closer to this area/);
+    assert.match(rep.areas.find(a => a.name === 'US & Canada Central').verdict, /Not enough reports/);
+    const html = await (await fetch(base + '/admin/net?token=' + token)).text(); assert.match(html, /Connection report/); assert.match(html, /Europe/);
+  }
   // a refused name never reaches the leaderboard: the player keeps their last good one
   r = await post('/api/run/start', {}, secret); r = await post('/api/run/end', { runId: r.body.runId, survived: 30, eaten: 0, peak: 25, name: 'sh1t head' }, secret); assert.equal(r.status, 200);
   { const lb2 = await (await fetch(base + '/api/leaderboard')).json(); assert.equal(lb2.top[0].name, 'Tester', 'blocked names are not stored'); }
