@@ -21,6 +21,7 @@ services:
       APPLE_BUNDLE_ID: ${APPLE_BUNDLE_ID:-com.mitosisgame.app}
       GOOGLE_PACKAGE_NAME: ${GOOGLE_PACKAGE_NAME:-com.mitosisgame.app}
       GOOGLE_SERVICE_ACCOUNT: ${GOOGLE_SERVICE_ACCOUNT:-}
+      ADMIN_TOKEN: ${ADMIN_TOKEN:-}          # opens /admin/net (the connection report); empty: one is made in /data/admin-token
     ports:
       - "3000:3000"
     restart: unless-stopped
