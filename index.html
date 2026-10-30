@@ -186,8 +186,15 @@ button:focus-visible,.sw:focus-visible{outline:2px solid var(--ink);outline-offs
 .pat.p4{background:conic-gradient(from 30deg,rgba(0,0,0,.3),transparent 25%,rgba(0,0,0,.22) 50%,transparent 75%,rgba(0,0,0,.3)),var(--c)}
 .achline{margin:0;font:12px/1.5 var(--mono);color:var(--muted)}
 #dAch{margin:0;font:600 12.5px/1.3 var(--display);color:#f2c14e}
+.rmeter{display:grid;grid-template-columns:auto auto 1fr auto;align-items:center;gap:4px 10px;padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:rgba(0,0,0,.22);margin:0!important}
+.rmeter .label{grid-column:1/-1;font-size:9.5px}.rmeter .rnum{font:800 24px/1 var(--display);font-variant-numeric:tabular-nums;color:var(--ink)}
+.rmeter .rdelta{font:700 13px/1 var(--mono);padding:4px 8px;border-radius:999px;transform:scale(.6);opacity:0;transition:transform .35s cubic-bezier(.2,1.6,.4,1),opacity .2s}.rmeter .rdelta.show{transform:scale(1);opacity:1}
+.rmeter .rdelta.up{color:#5fe0a8;background:rgba(95,224,168,.14)}.rmeter .rdelta.dn{color:#ff7a85;background:rgba(255,92,138,.14)}
+.rmeter .rtier{justify-self:end;font:600 10.5px var(--mono);letter-spacing:.12em;text-transform:uppercase}
+.rmeter .rbar{grid-column:1/-1;height:5px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden}.rmeter .rbar i{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,var(--violet),var(--accent))}
+.rmeter .rmsg{grid-column:1/-1;font:700 12.5px var(--display);color:#f2c14e;min-height:0}.rmeter .rmsg:empty{display:none}.rmeter.promo{border-color:rgba(242,193,78,.55);box-shadow:0 0 18px rgba(242,193,78,.18)}
 .dchips{display:flex;flex-wrap:wrap;gap:6px}.dchips:not(:has(p:not([hidden]))){display:none}.dchips p{margin:0!important;padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:rgba(0,0,0,.25);font-size:12.5px!important;line-height:1.3}
-#dRank{border-color:rgba(154,140,255,.35)!important}.dchips .earn{border-color:rgba(242,177,52,.35)}#dAch{border-color:rgba(242,193,78,.35)}
+.dchips .earn{border-color:rgba(242,177,52,.35)}#dAch{border-color:rgba(242,193,78,.35)}
 #board .tag.boss{color:#c9a2ff;border-color:rgba(201,162,255,.5)}
 body:not(.playing) #evolve{display:none!important}
 @media (max-width:900px) and (orientation:portrait){#banner{width:calc(100% - 2*var(--gut));top:calc(205px + env(safe-area-inset-top,0px))}#toasts{top:calc(290px + env(safe-area-inset-top,0px))}}
@@ -255,8 +262,8 @@ body:not(.playing) #joy{display:none!important}
   @media (orientation:landscape){
   #storeCard{max-width:820px;grid-template-columns:3fr 2fr;gap:12px 20px;padding:16px 22px}#storeCard h2{font-size:32px}#storeCard .balance b{font-size:24px}#storeCard .shophead,#storeCard .row{grid-column:1/-1}#storeCard .shopsec{padding-top:10px}
   #lookCard,#settingsCard,#rankCard{max-width:640px;grid-template-columns:1fr 1fr;gap:10px 18px;padding:16px 22px}#lookCard .eyebrow,#lookCard h2,#lookCard .row,#settingsCard .eyebrow,#settingsCard h2,#settingsCard .row,#settingsCard .sec,#rankCard .eyebrow,#rankCard h2,#rankCard .row,#rankCard .field{grid-column:1/-1}#lookCard h2,#settingsCard h2,#rankCard h2{font-size:34px}
-  #deathCard{max-width:700px;grid-template-columns:1.05fr .95fr;grid-template-areas:"eye stats" "title stats" "why stats" "place stats" "chips stats" "row row";gap:6px 20px;padding:16px 22px;align-items:start}
-  #deathCard>.eyebrow{grid-area:eye}#deathCard>h2{grid-area:title;font-size:38px}#deathCard>#deathWhy{grid-area:why;margin:0}#deathCard>#dPlace{grid-area:place;margin:2px 0}#deathCard>.dchips{grid-area:chips}#deathCard>.statgrid{grid-area:stats;align-self:center}#deathCard>.row{grid-area:row;margin-top:6px}#deathCard .statgrid b{font-size:22px}#deathCard .chartbox{display:none}}
+  #deathCard{max-width:720px;grid-template-columns:1.05fr .95fr;grid-template-areas:"eye stats" "title stats" "why stats" "place stats" "rank stats" "chips stats" "row row";gap:6px 20px;padding:16px 22px;align-items:start}
+  #deathCard>.eyebrow{grid-area:eye}#deathCard>h2{grid-area:title;font-size:38px}#deathCard>#deathWhy{grid-area:why;margin:0}#deathCard>#dPlace{grid-area:place;margin:2px 0}#deathCard>.dchips{grid-area:chips}#deathCard>.rmeter{grid-area:rank}#deathCard>.statgrid{grid-area:stats;align-self:center}#deathCard>.row{grid-area:row;margin-top:6px}#deathCard .statgrid b{font-size:22px}#deathCard .chartbox{display:none}}
   .act{position:absolute;width:72px;height:72px;padding:0;justify-content:center;border-radius:50%;font:700 11px var(--display);flex-direction:column;gap:2px;letter-spacing:.02em;background:rgba(2,8,9,.55);border-color:rgba(150,220,210,.22)}
   .act .ico{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
   #splitBtn .ico circle:first-child,#ejectBtn .ico circle:first-child{fill:rgba(255,92,138,.22);stroke:var(--accent)}
@@ -612,7 +619,8 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
       <div><span class="label">Survived</span><b id="dTime">0:00</b></div>
       <div><span class="label">Best peak</span><b id="dBest">0</b></div>
     </div>
-    <div class="dchips"><p id="dRank" hidden></p><p id="dEarn" class="earn" hidden></p><p id="dAch" hidden></p></div>
+    <div class="rmeter" id="dRank" hidden></div>
+    <div class="dchips"><p id="dEarn" class="earn" hidden></p><p id="dAch" hidden></p></div>
     <div class="chartbox"><span class="label">Mass over time</span><canvas id="dChart"></canvas></div>
     <div class="row"><button id="again" class="primary" type="button">Re-inoculate</button><button id="setup" class="ghost" type="button">Lobby</button></div>
   </div>
@@ -683,7 +691,7 @@ const MAX_MASS=8388607,INF_FLAG=8388608;
 const MAX_HUNTERS=6,HUNTER_R=42,INF_MIN=8,INF_MAX=10,PROTO=6,SEED=90210; // PROTO 6: 4-char mass field, 3-char bot effect/mutation field
 // Rounds: the well is full size for the first quarter, then the arena closes in to 12% of the dish by the
 // last 5%, and the round ends at ROUND_SEC with the survivors ranked by mass. ?round=60 shortens it for tests.
-const ROUND_SEC=+((location.search.match(/[?&]round=(\d+)/)||[])[1])||600,ROUND_GRACE=Math.round(ROUND_SEC*.25),ROUND_HOLD=Math.round(ROUND_SEC*.05),R_MIN=R*.12,ROUND_GAP=6;
+const ROUND_SEC=+((location.search.match(/[?&]round=(\d+)/)||[])[1])||600,ROUND_GRACE=Math.round(ROUND_SEC*.1),ROUND_HOLD=0,R_MIN=R*.03,ROUND_GAP=6,BOT_CUTOFF=Math.round(ROUND_SEC*.7); // arena full for the first minute, then closes to 3% at 10:00; bots stop respawning at 7:00
 let round={id:1,start:0,n:0,synced:false,over:false};
 // Balance: a cell is absorbed once EAT_COVER of its diameter is inside a cell at least 10% heavier (see need()).
 // Ejecting costs EJECT_COST and makes a blob of EJECT_MASS, at most once every EJECT_GAP seconds.
@@ -695,7 +703,7 @@ const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const num=v=>typeof v==='number'&&isFinite(v)?v:0;
 const radius=m=>4+Math.sqrt(m)*6;
 const speedOf=r=>1000*Math.pow(r,-0.45);
-const mergeDelay=m=>8+m*0.012;
+const mergeDelay=m=>15+m*0.006; // seconds before split pieces may fuse: ~20-30 s at everyday sizes
 function randInDish(margin=0,rad=arenaR()){const rr=Math.max(150,rad-margin)*Math.sqrt(Math.random()),t=Math.random()*TAU;return{x:Math.cos(t)*rr,y:Math.sin(t)*rr};}
 const col=(c,dl=0,a=1)=>`hsla(${c[0]},${c[1]}%,${clamp(c[2]+dl,0,100)}%,${a})`;
 // Canvas gradients are native objects. Making hundreds per frame (every cell, virus and blob) left WebKit's
@@ -977,8 +985,24 @@ function renderMe(){const n=$('meName');if(n)n.textContent=cleanName($('nameIn')
 function renderRank(){renderTierLegend();renderMe();$('rankVal').textContent=wallet.rating;{const ht=$('heroTier');if(ht){ht.textContent=wallet.tier;ht.dataset.tier=wallet.tier;$('heroRating').textContent=wallet.rating;}}$('rankTier').textContent=wallet.tier;$('rankTier').dataset.tier=wallet.tier;
   const p=tierProgress(),nx=$('rankNext'),fill=$('tierFill');if(nx)nx.textContent=p.text;if(fill)fill.style.width=p.pct+'%';
 }
-function showRank(w){const el=$('dRank');if(typeof w.ratingDelta!=='number'){el.hidden=true;return;}const d=w.ratingDelta;updateRunDelta(d,w.rating);
-  el.innerHTML=`Rating <b>${d>=0?'+':'−'}${Math.abs(d)}</b> → <b>${w.rating}</b> · ${escH(w.tier)}`;el.hidden=false;}
+function tierAtRating(r){ // tier name and progress through it for any rating, from the server's tier table
+  const names=(wallet.catalog&&wallet.catalog.tiers)||[],at=((wallet.catalog&&wallet.catalog.tierAt)||[]).map(v=>v==null?Infinity:v);
+  if(!names.length||at.length!==names.length)return{name:wallet.tier||'',pct:0};let i=at.findIndex(v=>r<v);if(i<0)i=names.length-1;
+  const hi=at[i],lo=i>0?at[i-1]:Math.min(at[0]-300,r);return{name:names[i],pct:isFinite(hi)?clamp((r-lo)/(hi-lo),0,1):1};}
+let rankAnim=0;
+function showRank(w){const el=$('dRank');if(typeof w.ratingDelta!=='number'){el.hidden=true;return;}const d=w.ratingDelta,to=w.rating,from=to-d;updateRunDelta(d,to);
+  const a=tierAtRating(from),b=tierAtRating(to);
+  el.innerHTML=`<span class="label">Rating</span><b class="rnum">${from}</b><span class="rdelta ${d>=0?'up':'dn'}">${d>=0?'▲ +':'▼ −'}${Math.abs(d)}</span><span class="rtier tier" data-tier="${escH(a.name)}">${escH(a.name)}</span><div class="rbar"><i style="width:${Math.round(a.pct*100)}%"></i></div><span class="rmsg"></span>`;
+  el.hidden=false;el.classList.remove('promo');const num=el.querySelector('.rnum'),bar=el.querySelector('.rbar i'),chip=el.querySelector('.rdelta'),tierEl=el.querySelector('.rtier'),msg=el.querySelector('.rmsg');
+  const finish=()=>{num.textContent=to;bar.style.width=Math.round(b.pct*100)+'%';tierEl.textContent=b.name;tierEl.dataset.tier=b.name;
+    if(a.name!==b.name){msg.textContent=d>0?`Promoted to ${b.name}`:`Down to ${b.name}`;el.classList.toggle('promo',d>0);}};
+  cancelAnimationFrame(rankAnim);setTimeout(()=>chip.classList.add('show'),120);
+  if(RM||!d){finish();return;}
+  const t0=performance.now(),dur=1300;
+  const tick=now=>{const k=clamp((now-t0)/dur,0,1),e=1-Math.pow(1-k,3),r=Math.round(from+d*e),t=tierAtRating(r);
+    num.textContent=r;bar.style.width=Math.round(t.pct*100)+'%';if(tierEl.textContent!==t.name){tierEl.textContent=t.name;tierEl.dataset.tier=t.name;}
+    if(k<1)rankAnim=requestAnimationFrame(tick);else finish();};
+  rankAnim=requestAnimationFrame(tick);}
 async function loadTop(){try{const r=await fetch(window.MITOSIS_SERVER+'/api/leaderboard');const j=await r.json();const me=wallet.playerId;
   const myName=cleanName($('nameIn').value)||settings.name||'Unnamed cell';let seen=false;
   const row=(t,me)=>`<li${me?' class="me"':''}><span class="rk">${t.rank}</span><span class="n">${escH(t.name)}${me?' · you':''}</span><span class="tr" data-tier="${escH(t.tier)}">${escH(t.tier)}</span><span class="rt">${t.rating}</span></li>`;
@@ -1030,7 +1054,7 @@ let flushing=false;
 async function flushRuns(){ // report finished runs; keep them queued while the server is unreachable
   if(flushing)return;flushing=true;
   try{let a=loadPending();while(a.length){const rep=a[0];
-    try{const w=await api('run/end',rep);applyWallet(w);if(rep.show){const br=rep.bestRank<999?` · best rank #${rep.bestRank}`:'';showEarn(w.payout?`+${w.payout} ATP${br}`:rep.survived<20?'No ATP — survive at least 20 seconds':`No ATP — finish in the top 20`);showRank(w);}}
+    try{const w=await api('run/end',rep);applyWallet(w);if(rep.show){const br=rep.bestRank<999?` · best rank #${rep.bestRank}`:'';showEarn(w.payout?`+${w.payout} ATP${br}`:rep.survived<20?'No ATP — survive at least 20 seconds':`No ATP — finish in the top ${((wallet.catalog&&wallet.catalog.rules&&wallet.catalog.rules.byRank)||[[30]]).slice(-1)[0][0]}`);showRank(w);}}
     catch(e){if(!e.status||e.status>=500){if(rep.show)showEarn('ATP will be counted when the server is back');break;}}
     a.shift();savePending(a);}}
   finally{flushing=false;}
@@ -1107,7 +1131,7 @@ async function redeem(p){ // server verifies with Apple/Google, credits ATP, the
   if(w.credited){toast('ATP','ATP added',`+${w.credited} ATP — ${w.balance} in your wallet`);Native.haptic('success');}
 }
 $('packs').addEventListener('click',e=>{const b=e.target.closest('.pack');if(b&&!b.disabled)buyPack(b.dataset.id);});
-const BISECT={tag:(location.search.match(/[?&]tag=([\w-]+)/)||[])[1]||''};for(const k of ['nocanvas','nohud','noeject','nosend','lowfx'])BISECT[k]=new RegExp('[?&]'+k+'=1').test(location.search);
+const BISECT={tag:(location.search.match(/[?&]tag=([\w-]+)/)||[])[1]||''};for(const k of ['nocanvas','nohud','noeject','nosend','lowfx','norestart'])BISECT[k]=new RegExp('[?&]'+k+'=1').test(location.search);
 const SKIP=new Set(((location.search.match(/[?&]skip=([\w,]+)/)||[,''])[1]).split(',').filter(Boolean));BISECT.skip=[...SKIP].join(',');BISECT.auto=/[?&]autopilot=1/.test(location.search);
 // page errors go to the same diagnostics channel as frame hitches (the server log, and the app's log)
 addEventListener('error',e=>{try{reportHitch('error '+(e.message||'?')+' @'+(e.lineno||0)+':'+(e.colno||0));}catch(x){}});
@@ -1118,7 +1142,7 @@ if(/[?&]autopilot=1/.test(location.search)){
     if(mode==='play'&&human&&human.alive&&!paused){ang+=rand(-.35,.35);if(Math.random()<.02)ang+=Math.PI*rand(.5,1);
       const m=Math.random()<.15?0:rand(.6,1);joy.id='auto';joy.ux=Math.cos(ang);joy.uy=Math.sin(ang);joy.m=m;
       if(Math.random()<.03)split(human);if(!BISECT.noeject&&Math.random()<.04)eject(human);if(Math.random()<.01)dash(human);}
-    else if(mode==='dead'||mode==='attract'){if(!dieAt)dieAt=performance.now();if(performance.now()-dieAt>4000){dieAt=0;joy.m=0;if(!queued)startGame();}}
+    else if(mode==='dead'||mode==='attract'){if(!dieAt)dieAt=performance.now();if(performance.now()-dieAt>4000&&!BISECT.norestart){dieAt=0;joy.m=0;if(!queued)startGame();}}
     if(mode==='play')dieAt=0;};
   if(BISECT.lowfx)lowFx=true;setInterval(auto,100);setTimeout(()=>{reportHitch('autopilot on '+JSON.stringify(BISECT)+' '+(/[?&]big=1/.test(location.search)?' (big)':''));if(mode!=='play')startGame();},2500);
   setInterval(()=>{if(mode==='play'&&human&&human.alive)reportHitch(`autopilot alive mass=${Math.round(human.cells.reduce((a,c)=>a+c.mass,0))} cells=${human.cells.length} z=${cam.z.toFixed(2)}`);},60000);
@@ -1446,14 +1470,16 @@ function leaveLocal(){ // back to the shared world
   for(const p of players.filter(p=>p.bot&&!p.remote))removePlayer(p);cells=cells.filter(c=>!c.dead);
   round.synced=false;lastSeen.clear();lastPeerCount=-1;if(room&&myPeer){isHost=false;claimReady=false;yielded=false;}
 }
-function arenaR(){ // the round's safe radius: full for ROUND_GRACE s, then closing smoothly to R_MIN by ROUND_SEC-ROUND_HOLD
+function arenaR(){ // the round's safe radius: full for ROUND_GRACE s, then the safe AREA shrinks at a steady rate to R_MIN at ROUND_SEC
   if(multi()&&!isHost&&!round.synced)return R;const t=roundT();if(t<ROUND_GRACE)return R;
-  const p=clamp((t-ROUND_GRACE)/(ROUND_SEC-ROUND_HOLD-ROUND_GRACE),0,1),e=p*p*(3-2*p);return R-(R-R_MIN)*e;}
+  const p=clamp((t-ROUND_GRACE)/(ROUND_SEC-ROUND_HOLD-ROUND_GRACE),0,1);return Math.sqrt(R*R-(R*R-R_MIN*R_MIN)*p);}
 function safeR(){return Math.min(tideSafe(),arenaR());}
 const ordinal=n=>{const t=n%10,h=n%100;return n+(t===1&&h!==11?'st':t===2&&h!==12?'nd':t===3&&h!==13?'rd':'th');};
 function placeOf(){const alive=players.filter(p=>p.alive&&p!==human&&p.cells.length).length;return{place:alive+1,of:Math.max(round.n,alive+1)};}
-function roundTick(){ // host (or solo) clock: ends the round, then starts the next one after a short gap
-  if(!round.over&&roundT()>=ROUND_SEC){round.over=true;round.id=(round.id%4095)+1;round.start=T+ROUND_GAP;finishHumanRound();
+function survivors(){return players.filter(p=>p.alive&&!p.boss&&p.cells.some(c=>!c.dead));}
+function roundTick(){ // host (or solo) clock: ends the round at 10:00, or as soon as one cell owner is left after the bots stop respawning
+  const lastOne=!round.over&&roundT()>=BOT_CUTOFF&&survivors().length<=1&&(!human||!human.alive||local==='practice'||!spawnOpen());
+  if(!round.over&&(roundT()>=ROUND_SEC||lastOne)){if(lastOne){const w=survivors()[0];if(w&&w!==human)pushFeed(`<b>${esc(w.name)}</b> is the last cell standing`,false);}round.over=true;round.id=(round.id%4095)+1;round.start=T+ROUND_GAP;finishHumanRound();
     for(const p of players.filter(p=>p.bot&&!p.remote))removePlayer(p);cells=cells.filter(c=>!c.dead);pushFeed('<b>Round over</b> — a fresh well opens in a moment',false);}
   else if(round.over&&T>=round.start){round.over=false;round.n=0;syncBots();pushFeed('<b>New round</b> — the arena starts closing in '+fmtT(ROUND_GRACE),false);}
 }
@@ -1462,7 +1488,8 @@ function finishHumanRound(){ // the arena closed: whoever is still alive is rank
   const ranked=players.filter(p=>p.alive&&p.cells.length).map(p=>({p,m:p.cells.reduce((s,c)=>s+(c.dead?0:c.mass),0)})).sort((a,b)=>b.m-a.m);
   const place=Math.max(1,ranked.findIndex(r=>r.p===human)+1),of=Math.max(round.n,ranked.length);human.stats.place=place;human.stats.of=of;
   paused=false;$('dRank').hidden=true;econRunEnd();
-  showResults(place===1?'You won the round':'Round over',place===1?'Victory':'Time is up',`${place===1?'Last one standing':ordinal(place)+' of '+of} when the arena closed, after ${fmtT(T-human.stats.born)}.`);
+  const early=roundT()<ROUND_SEC-1;
+  showResults(place===1?'You won the round':'Round over',place===1?'Victory':'Time is up',`${place===1?'Last cell standing':ordinal(place)+' of '+of}${early?'':' when the arena closed'}, after ${fmtT(T-human.stats.born)}.`);
   if(BISECT.auto)reportHitch(`autopilot round over place=${place} of=${of} round=${round.id}`);
   removeHuman();mode='dead';document.body.classList.remove('playing');sfx(place===1?'ach':'die');
 }
@@ -1662,7 +1689,7 @@ function step(dt){
     if(p.remote)continue;
     for(const k in p.fx)if(p.fx[k]>0)p.fx[k]=Math.max(0,p.fx[k]-dt);
     if(p.dashCd>0)p.dashCd=Math.max(0,p.dashCd-dt);
-    if(p.bot&&isHost){if(p.alive&&T>=p.ai.t)think(p);else if(!p.alive&&!p.boss&&T>=p.respawnAt)spawn(p,rand(20,45));}
+    if(p.bot&&isHost){if(p.alive&&T>=p.ai.t)think(p);else if(!p.alive&&!p.boss&&T>=p.respawnAt&&roundT()<BOT_CUTOFF&&!round.over)spawn(p,rand(20,45));}
   }
   if(isHost){for(const p of players.filter(p=>p.boss&&!p.remote&&!p.alive))removePlayer(p);eventTick();}
   if(isHost||!multi())roundTick();
@@ -1685,10 +1712,12 @@ function step(dt){
       for(let j=i+1;j<cs.length;j++){const b=cs[j];if(b.dead)continue;
         let dx=b.x-a.x,dy=b.y-a.y;const d=Math.hypot(dx,dy)||.01;dx/=d;dy/=d;
         if(T>a.mergeAt&&T>b.mergeAt){
-          if(d<Math.max(a.r,b.r)-Math.min(a.r,b.r)*.3){const big=a.mass>=b.mass?a:b,sm=big===a?b:a;big.mass+=sm.mass;big.r=radius(big.mass);sm.dead=true;
+          if(d<Math.max(a.r,b.r)-Math.min(a.r,b.r)*.45){const big=a.mass>=b.mass?a:b,sm=big===a?b:a;big.mass+=sm.mass;big.r=radius(big.mass);sm.dead=true;
             if(sm.inf&&(!big.inf||sm.inf<big.inf))big.inf=sm.inf;
             ghosts.push({x:sm.x,y:sm.y,r:sm.dr,color:p.color,to:big,t:0,life:.16});kick(big,1.4);if(p===human)sfx('merge');}
-          else{const s=90*dt;a.x+=dx*s;a.y+=dy*s;b.x-=dx*s;b.y-=dy*s;}
+          else{ // both ready: slide together at the smaller piece's own speed (faster once touching), the way agar.io pieces slurp back in
+            const sm=a.mass<b.mass?a:b,touch=d<a.r+b.r,s=Math.min(d*.5,speedOf(sm.r)*(touch?1.1:.55)*dt),tot=a.mass+b.mass;
+            a.x+=dx*s*2*(b.mass/tot);a.y+=dy*s*2*(b.mass/tot);b.x-=dx*s*2*(a.mass/tot);b.y-=dy*s*2*(a.mass/tot);}
         }else{
           const ov=a.r+b.r-d;if(ov>0){const tot=a.mass+b.mass,k=Math.min(1,dt*14)*ov;a.x-=dx*k*(b.mass/tot);a.y-=dy*k*(b.mass/tot);b.x+=dx*k*(a.mass/tot);b.y+=dy*k*(a.mass/tot);}
         }
@@ -2472,6 +2501,7 @@ function syncBots(){
   while(bots.length>want)removePlayer(bots.pop()); // the smallest microbes leave first
   cells=cells.filter(c=>!c.dead);
   const used=new Set(bots.map(b=>b.bid));let nb=0;
+  if(roundT()>=BOT_CUTOFF&&!round.over)want=bots.length; // after 7:00 no new microbes join the round
   while(bots.length<want){while(used.has(nb))nb++;used.add(nb);
     const b=makePlayer(botName(nb),botColor(nb),true);b.bid=nb;b.skin=botSkin(nb);b.ai.pers=PERS[PERS_LIST[Math.floor(h32(nb*31+7)*PERS_LIST.length)]];players.push(b);bots.push(b);
     spawn(b,Math.random()<.5?rand(20,60):rand(60,420));b.fx.shield=0;}

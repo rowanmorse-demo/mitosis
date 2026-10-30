@@ -32,7 +32,7 @@ const PACKS = [
 // anything else 0, and a run shorter than minSec pays nothing. No hourly cap: it is deliberately
 // small per game so the 10,000 ATP Black Hole is a very long grind and the packs are the realistic
 // shortcut. Older clients that only report their best mass rank are paid by that instead.
-const RULES = { byRank: [[1, 10], [3, 6], [10, 3], [20, 1]], minSec: 20, maxRunSec: 3 * 3600 };
+const RULES = { byRank: [[1, 25], [2, 20], [3, 16], [4, 13], [5, 11], [6, 9], [7, 8], [8, 7], [9, 6], [10, 5], [15, 3], [20, 2], [30, 1]], minSec: 20, maxRunSec: 3 * 3600 }; // 25 ATP for the win, tapering with placement
 const HOUR = 3600 * 1000;
 // Rating (Elo-like): survival, kills and a high placing raise it, dying quickly lowers it. Gains
 // shrink and losses grow as the rating climbs, so it settles instead of inflating forever.

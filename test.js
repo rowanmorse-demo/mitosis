@@ -43,10 +43,11 @@ async function post(url, body, secret) {
   // survival is capped by what elapsed on the server (~0 s + 15 s grace), under the 20 s minimum: nothing
   assert.equal(r.body.payout, 0); assert.equal(r.body.balance, 0);
   const { payoutFor } = require('./economy');
-  assert.equal(payoutFor({ survived: 300, bestRank: 1 }), 10); assert.equal(payoutFor({ survived: 300, bestRank: 3 }), 6);
-  assert.equal(payoutFor({ survived: 300, bestRank: 7 }), 3); assert.equal(payoutFor({ survived: 300, bestRank: 15 }), 1);
-  assert.equal(payoutFor({ survived: 300, bestRank: 40 }), 0); assert.equal(payoutFor({ survived: 10, bestRank: 1 }), 0, 'insta-death pays nothing');
-  assert.equal(payoutFor({ survived: 300, place: 1, bestRank: 40 }), 10, 'placement wins over mass rank'); assert.equal(payoutFor({ survived: 300, place: 9 }), 3);
+  assert.equal(payoutFor({ survived: 300, bestRank: 1 }), 25, 'a win pays 25'); assert.equal(payoutFor({ survived: 300, bestRank: 2 }), 20); assert.equal(payoutFor({ survived: 300, bestRank: 3 }), 16);
+  assert.equal(payoutFor({ survived: 300, bestRank: 7 }), 8); assert.equal(payoutFor({ survived: 300, bestRank: 15 }), 3); assert.equal(payoutFor({ survived: 300, bestRank: 30 }), 1);
+  assert.equal(payoutFor({ survived: 300, bestRank: 31 }), 0); assert.equal(payoutFor({ survived: 10, bestRank: 1 }), 0, 'insta-death pays nothing');
+  assert.equal(payoutFor({ survived: 300, place: 1, bestRank: 40 }), 25, 'placement wins over mass rank'); assert.equal(payoutFor({ survived: 300, place: 9 }), 6);
+  { let last = 99; for (let p = 1; p <= 31; p++) { const v = payoutFor({ survived: 300, place: p }); assert.ok(v <= last, 'payout never rises as placement drops'); last = v; } }
   const { ratingDelta } = require('./economy');
   assert.equal(ratingDelta(1000, 300, 0, 1, 20), ratingDelta(1000, 300, 0) + 8 + 10, '1st of 20 adds the full placing bonus and the win bonus');
   assert.equal(ratingDelta(1000, 300, 0, 2, 20), ratingDelta(1000, 300, 0) + Math.round(8 * 18 / 19), '2nd gets a placing bonus but no win bonus');
