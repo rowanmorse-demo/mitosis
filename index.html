@@ -448,6 +448,10 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
 .pack .tag{position:absolute;top:-8px;left:50%;transform:translateX(-50%);font:600 9px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent-ink);background:var(--violet);border-radius:999px;padding:3px 8px;white-space:nowrap}
 .pack:disabled{opacity:.5;cursor:default}
 .earn{margin:-6px 0 0;font:600 14px var(--display);color:var(--amber)}
+/* first-game tips: one short line above the controls */
+#tip{position:fixed;z-index:4;left:50%;bottom:calc(var(--gut) + 92px + env(safe-area-inset-bottom,0px));transform:translate(-50%,8px);width:max-content;max-width:min(80vw,460px);padding:8px 14px 8px 12px;border-radius:12px;background:rgba(2,8,9,.82);border:1px solid rgba(108,184,255,.4);color:var(--ink);font:600 13px/1.35 var(--display);text-align:center;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+#tip.show{opacity:1;transform:translate(-50%,0)}#tip::before{content:"Tip";font:700 9.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:#6cb8ff;margin-right:8px}
+body:not(.playing) #tip{display:none}
 /* menu pages (Look, Ranks, Profile, Settings): full screen like the lobby, a bar on top and the content scrolling under it */
 #overlay:has(>.page:not([hidden])){padding:0;place-items:stretch}
 #overlay>.card.page{position:absolute;inset:0;width:auto;max-width:none;max-height:none;margin:0;border:0;border-radius:0;box-shadow:none;overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;align-content:start;gap:14px 24px;
@@ -556,6 +560,7 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
 <canvas id="mini" class="hud" aria-hidden="true"></canvas>
 <div id="banner" class="hud" hidden><div class="bnrow"><b id="bnTitle"></b><span id="bnTime"></span></div><span id="bnDesc"></span><div class="bnbar"><i id="bnBar"></i></div></div>
 <div id="toasts" class="hud" aria-live="polite"></div>
+<div id="tip" role="status" aria-live="polite"></div>
 <div id="evolve" hidden><div class="evhead"><span class="label">Evolve</span><span id="evTier" class="evsub">Stage 1 of 6</span><span class="evsub kbd-only">Keys 1 · 2 · 3</span></div><div class="evopts" id="evOpts"></div></div>
 <div id="actions">
   <button class="act" id="splitBtn" type="button"><svg class="touch-only ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8.5" cy="12" r="5.5"/><circle cx="18.5" cy="12" r="3.5"/></svg><span class="kbd-only">Divide</span><span class="touch-only">Split</span> <kbd>Space</kbd></button>
@@ -1272,7 +1277,13 @@ function showResults(title,eyebrow,why){
   const pe=$('dPlace');if(s.place){pe.textContent=`${ordinal(s.place)} of ${s.of}`;pe.hidden=false;}else pe.hidden=true;
   $('dPeak').textContent=Math.round(s.peak);$('dPeak').classList.remove('pb');$('dEaten').textContent=s.eaten;$('dTime').textContent=fmtT(T-s.born);$('dBest').textContent=Math.round(Math.max(best,s.peak));
   const dA=$('dAch');dA.hidden=!runAch.length;dA.textContent=runAch.length?'Unlocked: '+runAch.join(', '):'';
-  const hist=human.hist.slice();hist.push(m);showCard('deathCard');drawChart(hist);
+  const hist=human.hist.slice();hist.push(m);showCard('deathCard');drawChart(hist);maybeAskReview(s.place);
+}
+function maybeAskReview(place){ // after a top-3 finish, now and then, let iOS offer an App Store rating (iOS itself shows it at most 3 times a year)
+  if(Native.platform!=='ios'||!place||place>3||local==='practice'||isNearby()||(wallet.runs|0)<5)return;
+  let last=0;try{last=+localStorage.getItem('mitosis.reviewAt')||0;}catch(e){}
+  if(Date.now()-last<90*864e5)return;try{localStorage.setItem('mitosis.reviewAt',String(Date.now()));}catch(e){}
+  setTimeout(()=>Native.send({type:'review'}),2200); // once the rating count-up has settled
 }
 function loadPending(){try{const a=JSON.parse(localStorage.getItem('mitosis.runs')||'[]');return Array.isArray(a)?a:[];}catch(e){return[];}}
 function savePending(a){try{localStorage.setItem('mitosis.runs',JSON.stringify(a.slice(-10)));}catch(e){}}
@@ -2464,7 +2475,23 @@ const boardEl=$('boardList'),massEl=$('massVal'),metaEl=$('metaVal'),fxEl=$('fx'
 const phone=matchMedia('(max-width:640px)'),shortScreen=matchMedia('(max-height:520px)');
 let dispMass=0,shownMass=-1,glowPrey=false,glowMass=0;
 function renderFeed(){feedEl.innerHTML=feed.map(f=>`<div class="${f.you?'you':''}" style="opacity:${T-f.t>6?0:1}">${f.html}</div>`).join('');}
+// First games: one short tip at a time, each shown once, at the moment it matters. Players with a long history skip them.
+let tipSeen=new Set(),tipAt=-99,tipRuns=0;try{tipSeen=new Set(JSON.parse(localStorage.getItem('mitosis.tips')||'[]'));tipRuns=+localStorage.getItem('mitosis.tipRuns')||0;}catch(e){}
+const TIPS=[
+  {id:'move',when:()=>T-human.stats.born>2,text:()=>TOUCH_UI?'Push the stick to move, or touch the arena and your cells follow':'Move the mouse and your cell follows it'},
+  {id:'split',when:()=>T-human.stats.born>15&&human.cells.some(c=>c.mass>=70),text:()=>TOUCH_UI?'Tap Split to launch half your mass at a smaller cell':'Press Space to launch half your mass at a smaller cell'},
+  {id:'merge',when:()=>human.cells.length>1,text:()=>'Split pieces merge back together after about 20 seconds'},
+  {id:'virus',when:()=>human.cells.some(c=>c.mass>150&&viruses.some(v=>Math.hypot(v.x-c.x,v.y-c.y)<c.r+500)),text:()=>'Big cells burst on green phages: steer around them'},
+  {id:'arena',when:()=>arenaR()<R-1,text:()=>'The arena is closing: stay inside the ring'},
+];
+function tipTick(){
+  if(T-(tipTick.t||0)<.5)return;tipTick.t=T;
+  if(!human||!human.alive||tipRuns>6||(wallet.runs|0)>10||T-tipAt<10||document.body.classList.contains('hud-hidden'))return;
+  for(const t of TIPS){if(tipSeen.has(t.id)||!t.when())continue;tipSeen.add(t.id);tipAt=T;try{localStorage.setItem('mitosis.tips',JSON.stringify([...tipSeen]));}catch(e){}
+    const el=$('tip');el.textContent=t.text();el.classList.remove('show');void el.offsetWidth;el.classList.add('show');clearTimeout(tipTick.h);tipTick.h=setTimeout(()=>el.classList.remove('show'),4500);break;}
+}
 function hud(){
+  tipTick();
   const ranked=players.filter(p=>p.alive&&p.cells.length).map(p=>({p,m:p.cells.reduce((s,c)=>s+c.mass,0)})).sort((a,b)=>b.m-a.m);
   leader=ranked.length?ranked[0].p:null;round.n=Math.max(round.n,ranked.length);
   const rc=$('roundClock');if(rc){const t=roundT(),a=arenaR();rc.hidden=mode!=='play'||(multi()&&!isHost&&!round.synced);rc.classList.toggle('hot',a<R-1);
@@ -2797,7 +2824,7 @@ function startGame(){
     queued=true;searchUntil=performance.now()+SEARCH_MAX*1000;updateSpawnLock();
     toast('Search','Searching for a game',`Up to ${SEARCH_MAX} s — empty slots are filled with bots`);return;
   }
-  queued=false;livesUsed();lives.used++;
+  queued=false;livesUsed();lives.used++;tipRuns++;try{localStorage.setItem('mitosis.tipRuns',String(tipRuns));}catch(e){}
   const typed=$('nameIn').value.trim();settings.name=cleanName(typed);
   if(typed&&!settings.name){$('nameIn').value='';renderMe();toast('Name','Pick another name','That name is not allowed in Mitosis, so you are playing as Unnamed cell.');}
   try{localStorage.setItem('mitosis.settings',JSON.stringify(settings));}catch(e){}

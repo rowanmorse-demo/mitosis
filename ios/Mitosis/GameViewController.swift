@@ -1,3 +1,4 @@
+import StoreKit
 import UIKit
 import WebKit
 
@@ -205,6 +206,9 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
             case "stop": Nearby.shared.stop()
             default: break
             }
+        case "review":
+            // the page asks after a strong finish; iOS decides whether to show the prompt (at most 3 times a year)
+            if let scene = view.window?.windowScene { AppStore.requestReview(in: scene) }
         case "haptic":
             haptic(msg["style"] as? String ?? "medium")
         case "log":
