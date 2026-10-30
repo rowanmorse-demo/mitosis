@@ -37,6 +37,13 @@ async function post(url, body, secret) {
   assert.equal(r.body.catalog.skins.find(s => s.id === 16).price, 12000000, 'One Cell to Rule Them All costs 12,000,000 ATP');
   const premium = [...fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8').matchAll(/\{id:(\d+),key:'(\w+)',name:'([^']+)',price:(\d+)/g)].map(m => ({ id: +m[1], key: m[2], name: m[3], price: +m[4] }));
   assert.deepEqual(r.body.catalog.skins.map(s => ({ id: s.id, key: s.key, name: s.name, price: s.price })), premium, 'the server sells exactly the skins the game draws');
+  { // the name filter in the game and on the server refuse the same names
+    const page = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8'), src = page.slice(page.indexOf('const NAME_BAD_ANY'), page.indexOf('const cleanName=s=>{'));
+    const inGame = new Function(src + '\nreturn nameBlocked;')(), onServer = require('./economy').nameBlocked;
+    const bad = ['fuck', 'F u c k', 'fuuuck', 'sh1t', 'b1tch', 'a s s', 'Big Dick', 'kys', 'R@pe', 'Hitler', 'k i l l yourself'], ok = ['Unnamed cell', 'Bass', 'Cucumber', 'Torpedo', 'Dickens', 'Grass cell', 'Nigeria', 'Therapist', 'Peacock', 'Glass', 'Titan', 'Mass 5000'];
+    for (const n of bad) { assert.equal(inGame(n), true, 'game blocks ' + n); assert.equal(onServer(n), true, 'server blocks ' + n); }
+    for (const n of ok) { assert.equal(inGame(n), false, 'game allows ' + n); assert.equal(onServer(n), false, 'server allows ' + n); }
+  }
 
   r = await post('/api/run/start', {}); assert.equal(r.status, 401, 'auth required');
 
@@ -66,6 +73,9 @@ async function post(url, body, secret) {
   r = await post('/api/run/start', {}, secret); const run2 = r.body.runId;
   r = await post('/api/run/end', { runId: run2, survived: 0, eaten: 0, peak: 25, name: 'Tester' }, secret); assert.equal(r.body.ratingDelta, -10); assert.equal(r.body.rating, 1003);
   const lb = await (await fetch(base + '/api/leaderboard')).json(); assert.equal(lb.top[0].name, 'Tester'); assert.equal(lb.top[0].rating, 1003);
+  // a refused name never reaches the leaderboard: the player keeps their last good one
+  r = await post('/api/run/start', {}, secret); r = await post('/api/run/end', { runId: r.body.runId, survived: 30, eaten: 0, peak: 25, name: 'sh1t head' }, secret); assert.equal(r.status, 200);
+  { const lb2 = await (await fetch(base + '/api/leaderboard')).json(); assert.equal(lb2.top[0].name, 'Tester', 'blocked names are not stored'); }
 
   r = await post('/api/skins/buy', { skinId: 9 }, secret); assert.equal(r.status, 402, 'cannot afford yet');
 

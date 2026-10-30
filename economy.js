@@ -58,7 +58,21 @@ function ratingDelta(rating, survived, eaten, place, of, life = 0) {
   const k = Math.max(0, rating - RATING.base) / RATING.scale;
   return Math.round(gain * Math.max(.35, 1 - k) - quick * (1 + k));
 }
-const cleanName = s => String(s || '').replace(/[^\p{L}\p{N} _.\-'!?]/gu, '').trim().slice(0, 16) || null;
+// Names are shown to every player (keep in step with the copy in index.html), so slurs and obvious profanity are refused. Long words match anywhere once spacing,
+// l33t spellings and stretched letters are undone; short ones only as whole words; ALLOW keeps innocent words that contain them.
+const NAME_BAD_ANY = ['fuck', 'fuk', 'shit', 'cunt', 'bitch', 'nigger', 'nigga', 'faggot', 'retard', 'whore', 'slut', 'penis', 'vagina', 'porn', 'rapist', 'hitler', 'nazi', 'kike', 'tranny', 'paedo', 'pedophile', 'molest', 'jizz', 'dildo', 'blowjob', 'wank', 'twat', 'motherf', 'cocksuck', 'dickhead', 'asshole', 'bastard', 'killyourself'];
+const NAME_BAD_WORD = ['ass', 'fag', 'cum', 'dick', 'cock', 'rape', 'anal', 'sex', 'tit', 'tits', 'spic', 'chink', 'nig', 'coon', 'gook', 'homo', 'hoe', 'pedo', 'kys', 'nazis'];
+const NAME_ALLOW = ['niger', 'nigeria', 'snigger', 'scunthorpe', 'penistone', 'therapist', 'torpedo', 'cockatoo', 'peacock', 'hancock', 'shiitake', 'shitake', 'dickens', 'grape', 'drape', 'analysis', 'canal', 'cucumber', 'essex', 'sussex', 'pedometer', 'skunk', 'assassin', 'bass', 'class', 'grass', 'glass', 'pass', 'mass', 'cockpit', 'woodcock', 'bitcoin'];
+const NAME_LEET = { 0: 'o', 1: 'i', 3: 'e', 4: 'a', 5: 's', 7: 't', 8: 'b', '@': 'a', '$': 's', '!': 'i', '|': 'i', '+': 't' };
+const squashName = s => s.replace(/(.)\1+/g, '$1');
+function nameBlocked(s) {
+  let low = String(s || '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/[0-9@$!|+]/g, c => NAME_LEET[c] || c);
+  for (const w of NAME_ALLOW) low = low.split(w).join(' ');
+  const flat = low.replace(/[^a-z]/g, ''), squash = squashName(flat);
+  if (NAME_BAD_ANY.some(w => flat.includes(w) || squash.includes(squashName(w))) || NAME_BAD_WORD.includes(flat) || NAME_BAD_WORD.includes(squash)) return true;
+  return low.split(/[^a-z]+/).some(w => w && (NAME_BAD_WORD.includes(w) || NAME_BAD_WORD.includes(squashName(w))));
+}
+const cleanName = s => { const n = String(s || '').replace(/[^\p{L}\p{N} _.\-'!?]/gu, '').trim().slice(0, 16); return n && !nameBlocked(n) ? n : null; };
 
 const skinById = id => SKINS.find(s => s.id === id);
 const packById = id => PACKS.find(p => p.id === id);
@@ -185,6 +199,6 @@ async function iapGoogle(store, body, p) {
   return credit(store, p, 'google', v, v.orderId);
 }
 
-function leaderboard(store) { return { top: store.top(10).map((r, i) => ({ rank: i + 1, name: r.name || 'Unnamed cell', rating: r.rating, tier: tierOf(r.rating), runs: r.runs })) }; }
+function leaderboard(store) { return { top: store.top(10).map((r, i) => ({ rank: i + 1, name: (r.name && !nameBlocked(r.name) && r.name) || 'Unnamed cell', rating: r.rating, tier: tierOf(r.rating), runs: r.runs })) }; }
 
-module.exports = { SKINS, PACKS, RULES, RATING, catalog, payoutFor, ratingDelta, tierOf, ApiError, auth, handlers: { deleteAccount, session, runStart, runEnd, buySkin, iapApple, iapGoogle, leaderboard, signInApple, signInGoogle, signOut } };
+module.exports = { SKINS, PACKS, RULES, RATING, catalog, payoutFor, ratingDelta, tierOf, nameBlocked, ApiError, auth, handlers: { deleteAccount, session, runStart, runEnd, buySkin, iapApple, iapGoogle, leaderboard, signInApple, signInGoogle, signOut } };
