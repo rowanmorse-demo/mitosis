@@ -17,6 +17,7 @@
 		C9D13A4C51CD1B9A85C3D4D5 /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = 1169830FBF7B1B6A14EEF743 /* index.html */; };
 		D18435CC2C316056C895EF16 /* SignIn.swift in Sources */ = {isa = PBXBuildFile; fileRef = F40391A8EC0E4ED8BE6CA2B7 /* SignIn.swift */; };
 		D7AF4C1BE590B4EE61B9643F /* GameViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C87C55256CBCC6CD8A2BD3C /* GameViewController.swift */; };
+		FC858C209911773134917AC3 /* Nearby.swift in Sources */ = {isa = PBXBuildFile; fileRef = 418F5E7346F45CBFB7231490 /* Nearby.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -35,6 +36,7 @@
 		1E7F54B87615C3BEB3EDA007 /* Mitosis.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Mitosis.entitlements; sourceTree = "<group>"; };
 		21F43300ED7D9FACC9F97FFB /* PurchaseFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseFlowTests.swift; sourceTree = "<group>"; };
 		288647F01627982FF8E5C854 /* Products.storekit */ = {isa = PBXFileReference; path = Products.storekit; sourceTree = "<group>"; };
+		418F5E7346F45CBFB7231490 /* Nearby.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nearby.swift; sourceTree = "<group>"; };
 		4E0A34706C21BCEBC879982D /* MitosisTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = MitosisTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		6C87C55256CBCC6CD8A2BD3C /* GameViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameViewController.swift; sourceTree = "<group>"; };
 		9530BC88744AE81130065B91 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -89,6 +91,7 @@
 				9810CDBF06BB4874ED519410 /* CrashReporter.swift */,
 				6C87C55256CBCC6CD8A2BD3C /* GameViewController.swift */,
 				1E7F54B87615C3BEB3EDA007 /* Mitosis.entitlements */,
+				418F5E7346F45CBFB7231490 /* Nearby.swift */,
 				288647F01627982FF8E5C854 /* Products.storekit */,
 				F40391A8EC0E4ED8BE6CA2B7 /* SignIn.swift */,
 				D22E25D1E8F242C73B91AC1C /* Store.swift */,
@@ -204,6 +207,7 @@
 				3EFF471C12CFE60617A0A5AB /* AppDelegate.swift in Sources */,
 				67CB41589261C98FF5DEF42A /* CrashReporter.swift in Sources */,
 				D7AF4C1BE590B4EE61B9643F /* GameViewController.swift in Sources */,
+				FC858C209911773134917AC3 /* Nearby.swift in Sources */,
 				D18435CC2C316056C895EF16 /* SignIn.swift in Sources */,
 				2F61960C85A3C3A2778616A3 /* Store.swift in Sources */,
 			);

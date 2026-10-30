@@ -2,12 +2,13 @@ import UIKit
 import WebKit
 
 /// Hosts the whole game (index.html from the repo root) in a full-screen web view
-/// and bridges it to the native side: in-app purchases (StoreKit 2) and haptics.
+/// and bridges it to the native side: in-app purchases (StoreKit 2), haptics and nearby play.
 final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDelegate, UIScrollViewDelegate {
     static let voidColor = UIColor(red: 2 / 255, green: 8 / 255, blue: 9 / 255, alpha: 1)
 
     private var webView: WKWebView!
     private let impact = UIImpactFeedbackGenerator(style: .medium)
+    private var nearbyResume = false
 
     override var prefersStatusBarHidden: Bool { true }
     override var prefersHomeIndicatorAutoHidden: Bool { true }
@@ -52,7 +53,12 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
         impact.prepare()
         // tell the page when iOS takes the app out of the foreground (Reachability, app switcher, Control Centre)
         for (name, label) in [(UIApplication.willResignActiveNotification, "resignActive"), (UIApplication.didBecomeActiveNotification, "becomeActive"), (UIApplication.didEnterBackgroundNotification, "background")] {
-            NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in self?.reply(["type": "app", "text": label]) }
+            NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                self?.reply(["type": "app", "text": label])
+                // iOS ends a nearby session in the background; find the other phones again on return
+                if label == "background", Nearby.shared.isActive { self?.nearbyResume = true }
+                if label == "becomeActive", self?.nearbyResume == true { self?.nearbyResume = false; Nearby.shared.resume() }
+            }
         }
         loadGame()
     }
@@ -70,6 +76,8 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
             // "-autopilot 1" makes the page play by itself (soak testing a device without touching it)
             if UserDefaults.standard.bool(forKey: "autopilot") { comps.queryItems?.append(URLQueryItem(name: "autopilot", value: "1")) }
             if UserDefaults.standard.bool(forKey: "big") { comps.queryItems?.append(URLQueryItem(name: "big", value: "1")) }
+            // "-nearby 1" starts in Nearby play (two simulators can test it without tapping both)
+            if UserDefaults.standard.bool(forKey: "nearby") { comps.queryItems?.append(URLQueryItem(name: "nearby", value: "1")) }
             // "-safari <url>" hands a URL to Safari instead (A/B test of the page outside this shell)
             if let s = UserDefaults.standard.string(forKey: "safari"), let u = URL(string: s) { DispatchQueue.main.asyncAfter(deadline: .now() + 1) { UIApplication.shared.open(u) } }
             #endif
@@ -183,6 +191,19 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
                 do { self.reply(["id": id as Any, "ok": true, "credential": try await SignIn.shared.signIn(provider: provider, nonce: nonce)]) }
                 catch SignIn.Failure.cancelled { self.reply(["id": id as Any, "ok": true, "cancelled": true]) }
                 catch { self.reply(["id": id as Any, "ok": false, "error": error.localizedDescription]) }
+            }
+        case "nearby":
+            switch msg["cmd"] as? String ?? "" {
+            case "start":
+                Nearby.shared.onEvent = { [weak self] ev in
+                    var m = ev
+                    m["type"] = "nearby"
+                    self?.reply(m)
+                }
+                Nearby.shared.start(id: msg["id"] as? String ?? "")
+            case "send": Nearby.shared.send(msg["data"] as? String ?? "")
+            case "stop": Nearby.shared.stop()
+            default: break
             }
         case "haptic":
             haptic(msg["style"] as? String ?? "medium")

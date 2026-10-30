@@ -52,6 +52,8 @@ targets:
           NSExceptionDomains:          # debug builds in the simulator may use http://localhost:3000
             localhost:
               NSExceptionAllowsInsecureHTTPLoads: true
+        NSLocalNetworkUsageDescription: Mitosis looks for phones near you so you can play together without the internet.
+        NSBonjourServices: [_mitosis-play._tcp, _mitosis-play._udp]     # Nearby play (MultipeerConnectivity, see Nearby.swift)
         MitosisServerURL: $(MITOSIS_SERVER)
         GoogleClientID: $(GOOGLE_IOS_CLIENT_ID)
     entitlements:

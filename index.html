@@ -343,15 +343,20 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
 .hero-id input[type=text]{background:transparent;border:0;border-bottom:1.5px solid var(--line-strong);border-radius:0;padding:4px 0 6px;font:800 30px/1.1 var(--display);letter-spacing:-.03em;color:var(--ink);width:100%;box-sizing:border-box;outline:none;user-select:text;-webkit-user-select:text}
 .hero-id input[type=text]::placeholder{color:rgba(220,239,233,.55)}.hero-id input[type=text]:focus{border-bottom-color:var(--accent)}
 .hero-rank{display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:baseline}.hero-rank .tierbar{grid-column:1/-1;height:5px}.hero-rank .ht{font:700 13px var(--mono);color:var(--ink)}.hero-rank .ht .tier{font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-right:4px}.hero-rank .next{font:600 11px var(--mono);color:var(--muted)}
-.lb-play{grid-area:play;align-self:center;display:grid;gap:10px;padding:16px;border-radius:20px;border:1px solid var(--line);background:rgba(4,16,18,.72);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 18px 50px rgba(0,0,0,.4)}
+.lb-play{grid-area:play;align-self:center;min-width:0;display:grid;gap:10px;padding:16px;border-radius:20px;border:1px solid var(--line);background:rgba(4,16,18,.72);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 18px 50px rgba(0,0,0,.4)}
 .lb-mode{display:grid;gap:3px}.lb-mode .label{color:var(--accent)}.lb-mode-sub{font:600 15px var(--display);color:var(--ink)}
-.lb-play .status{justify-items:start;gap:5px}.lb-play .netline{margin:0;font:11.5px/1.35 var(--mono)!important;color:var(--muted)!important;background:none;border:0;padding:0}.lb-play .netline span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.lb-play .status{justify-items:start;gap:5px;min-width:0}.lb-play .status>p{max-width:100%;min-width:0}.lb-play .netline{margin:0;font:11.5px/1.35 var(--mono)!important;color:var(--muted)!important;background:none;border:0;padding:0}.lb-play .netline span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .lb-play #roundLine{margin:0;font:11px/1.3 var(--mono);color:var(--dim)}
 .primary.play{padding:18px 16px;font-size:24px;border-radius:16px;letter-spacing:-.02em;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
 .primary.play:not(.queued)::before{content:"";width:0;height:0;border-left:15px solid currentColor;border-top:10px solid transparent;border-bottom:10px solid transparent;margin-right:2px}
 .primary.play.queued{flex-direction:column;gap:0;font-size:20px}
-.lb-play .practice{width:100%;font-size:13px;padding:11px 12px;border-radius:12px}
-.prow{display:grid;grid-template-columns:1fr auto;gap:8px}.skillbtn{font:700 12px var(--mono)!important;letter-spacing:.06em;text-transform:uppercase;padding:0 14px!important;border-radius:12px!important}
+.lb-play .practice{width:100%;font-size:13px;padding:9px 12px;border-radius:12px;display:grid;justify-items:center;gap:1px;line-height:1.2}.lb-play .practice small{font:600 9.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.prow{display:grid;grid-template-columns:1fr auto;gap:8px}
+.lb-net{display:grid;grid-template-columns:1fr 1fr;padding:3px;border-radius:999px;border:1px solid var(--line);background:rgba(0,0,0,.3)}
+.lb-net button{appearance:none;border:0;background:none;color:var(--muted);font:700 12px var(--display);padding:6px 10px;border-radius:999px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px}
+.lb-net button svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.lb-net button[aria-pressed=true]{background:var(--ink);color:#041012}
+.lb-play.nearby .lb-mode .label{color:#6cb8ff}.lb-play.nearby{border-color:rgba(108,184,255,.35)}.skillbtn{font:700 12px var(--mono)!important;letter-spacing:.06em;text-transform:uppercase;padding:0 14px!important;border-radius:12px!important}
 .skillbtn[data-k=easy]{color:#5fe0a8!important;border-color:rgba(95,224,168,.4)!important}.skillbtn[data-k=normal]{color:#cfe8e2!important}.skillbtn[data-k=hard]{color:var(--amber)!important;border-color:rgba(242,177,52,.45)!important}.skillbtn[data-k=expert]{color:var(--accent)!important;border-color:rgba(255,92,138,.5)!important}
 .seg.four{grid-template-columns:repeat(4,1fr)}.hintx{text-transform:none;letter-spacing:0;color:var(--dim);margin-left:6px}
 /* landscape phones: tighter */
@@ -435,6 +440,17 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
 .pack .tag{position:absolute;top:-8px;left:50%;transform:translateX(-50%);font:600 9px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent-ink);background:var(--violet);border-radius:999px;padding:3px 8px;white-space:nowrap}
 .pack:disabled{opacity:.5;cursor:default}
 .earn{margin:-6px 0 0;font:600 14px var(--display);color:var(--amber)}
+/* menu pages (Look, Ranks, Profile, Settings): full screen like the lobby, a bar on top and the content scrolling under it */
+#overlay:has(>.page:not([hidden])){padding:0;place-items:stretch}
+#overlay>.card.page{position:absolute;inset:0;width:auto;max-width:none;max-height:none;margin:0;border:0;border-radius:0;box-shadow:none;overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;align-content:start;gap:14px 24px;
+  padding:0 max(18px,env(safe-area-inset-right),calc((100% - 880px)/2)) max(20px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left),calc((100% - 880px)/2));
+  background:radial-gradient(60% 60% at 50% 0%,rgba(255,92,138,.08),transparent 70%),linear-gradient(180deg,rgba(2,8,9,.9),rgba(2,8,9,.82));-webkit-backdrop-filter:blur(12px) saturate(1.1);backdrop-filter:blur(12px) saturate(1.1);animation:ov .3s ease-out}
+.pg-top{grid-column:1/-1;position:sticky;top:0;z-index:3;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;padding:max(12px,env(safe-area-inset-top)) 0 12px;background:linear-gradient(180deg,rgba(3,10,11,.97) 72%,rgba(3,10,11,0))}
+.pg-top>*{grid-row:1;grid-column:auto!important}.pg-top h2{margin:0;font:800 26px/1 var(--display)!important;letter-spacing:-.04em}
+.pg-top .ghost{flex:none;padding:9px 16px;font-size:13px;border-radius:999px}
+#overlay>#settingsCard #helpSec{grid-column:1/-1}#overlay>#settingsCard #helpSec .body{max-height:none}
+@media (orientation:landscape){#overlay>#profileCard,#overlay>#settingsCard,#overlay>#lookCard,#overlay>#rankCard{grid-template-columns:1fr 1fr}#overlay>.page>.phead,#overlay>.page>.pstats,#overlay>#rankCard>*,#overlay>#lookCard .field:has(#ownedSkins){grid-column:1/-1}}
+@media (orientation:landscape) and (max-height:520px){.pg-top h2{font-size:22px!important}.pg-top{padding-bottom:8px}}
 /* shop: its own full-screen view over the culture, like the lobby */
 #overlay:has(#storeCard:not([hidden])){padding:0;place-items:stretch}
 .shopview{position:absolute;inset:0;display:grid;grid-template-columns:minmax(250px,.9fr) minmax(0,1.3fr);grid-template-rows:auto minmax(0,1fr);grid-template-areas:"top top" "feat list";gap:12px 24px;
@@ -558,10 +574,11 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
       </div>
     </section>
     <section class="lb-play">
-      <div class="lb-mode"><span class="label">Ranked · live arena</span><span class="lb-mode-sub">10-minute rounds · two lives</span></div>
+      <div class="lb-net" id="netSeg" role="group" aria-label="Where to play" hidden><button type="button" data-n="online" aria-pressed="true">Online</button><button type="button" data-n="nearby" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10-5 4V3l5 4L7 17"/></svg>Nearby</button></div>
+      <div class="lb-mode"><span class="label" id="modeLbl">Ranked · live arena</span><span class="lb-mode-sub" id="modeSub">10-minute rounds · two lives</span></div>
       <div class="status"><p id="netLine" class="netline"><i></i><span>Connecting…</span></p><p id="roundLine" hidden></p></div>
       <button id="go" class="primary play" type="button">Play</button>
-      <div class="prow"><button id="practiceBtn" class="ghost practice" type="button">Practice vs bots · unranked</button><button id="skillBtn" class="ghost skillbtn" type="button" aria-label="Bot difficulty">Normal</button></div>
+      <div class="prow"><button id="practiceBtn" class="ghost practice" type="button">Practice vs bots<small>unranked</small></button><button id="skillBtn" class="ghost skillbtn" type="button" aria-label="Bot difficulty">Normal</button></div>
     </section>
   </div>
 
@@ -586,26 +603,23 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
     <button class="primary" id="deleteDone" type="button" hidden>Start fresh</button>
   </div>
 
-  <div class="card panel" id="lookCard" hidden>
-    <p class="eyebrow">Look</p>
+  <div class="card panel page" id="lookCard" hidden>
+    <header class="pg-top"><button class="lb-icon back" type="button" aria-label="Back to the lobby"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><h2>Look</h2><button class="ghost" id="lookShop" type="button">Shop</button></header>
     <div class="phead"><canvas id="lookCv" class="pavatar" width="144" height="144" aria-hidden="true"></canvas><div class="pmain"><h2>Your cell</h2><p class="hint" id="lookHint">Tap a stain and a pattern. Premium skins from the Shop replace both.</p></div></div>
     <div class="field"><span class="label">Stain</span><div class="swatches" id="sw"></div></div>
     <div class="field"><span class="label">Pattern</span><div class="pats" id="pats"></div></div>
     <div class="field"><span class="label">Your skins</span><div class="skins" id="ownedSkins"></div><p class="hint" id="ownedHint">Premium skins are in the Shop. You have <b id="atpBal">0</b> ATP.</p></div>
-    <div class="row"><button class="primary back" type="button">Back</button><button class="ghost" id="lookShop" type="button">Open shop</button></div>
   </div>
 
-  <div class="card panel" id="rankCard" hidden>
-    <p class="eyebrow">Ranks</p>
-    <h2>Rating</h2>
+  <div class="card panel page" id="rankCard" hidden>
+    <header class="pg-top"><button class="lb-icon back" type="button" aria-label="Back to the lobby"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><h2>Ranks</h2></header>
     <div class="tiers" id="tierLegend" hidden></div>
-    <p class="hint" id="rankHint">Climb slowly by surviving and absorbing; dying fast costs rating. The higher you are, the harder it is to gain and the easier to lose.</p>
+    <p class="hint" id="rankHint">Rating rises with how long you survive, what you absorb and where you place, with a bonus for winning. Dying fast costs rating, and the higher you climb the harder it is to gain.</p>
     <div class="field"><span class="label">Top players</span><ol class="top" id="topList"><li><span class="rk"></span><span>Loading…</span></li></ol></div>
-    <div class="row"><button class="primary back" type="button">Back</button></div>
   </div>
 
-  <div class="card panel" id="profileCard" hidden>
-    <p class="eyebrow">Profile</p>
+  <div class="card panel page" id="profileCard" hidden>
+    <header class="pg-top"><button class="lb-icon back" type="button" aria-label="Back to the lobby"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><h2>Profile</h2><button class="ghost" id="profShop" type="button">Shop</button></header>
     <div class="phead"><canvas id="profCv" class="pavatar" width="144" height="144" aria-hidden="true"></canvas><div class="pmain"><h2 id="profName">Unnamed cell</h2><div class="rankline"><span class="tier" id="pTierTxt">Silver</span><span class="next" id="pNext"></span></div><div class="tierbar" aria-hidden="true"><i id="pFill"></i></div></div></div>
     <div class="pstats"><div class="pstat"><b id="pRating">1000</b><span id="pTier">Silver</span></div><div class="pstat"><b id="pAtp">0</b><span>ATP</span></div><div class="pstat"><b id="pEarned">0</b><span>earned</span></div><div class="pstat"><b id="pRuns">0</b><span>runs</span></div><div class="pstat"><b id="pSkins">0</b><span>skins</span></div></div>
     <div class="field" id="runsField" hidden><span class="label">Recent runs</span><ol class="runs" id="runList"></ol></div>
@@ -619,12 +633,10 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
       <p class="hint" id="acctHint" hidden></p>
       <button type="button" class="danger-link" id="deleteAcctBtn">Delete account…</button>
     </div>
-    <div class="row"><button class="primary back" type="button">Back</button><button class="ghost" id="profShop" type="button">Open shop</button></div>
   </div>
 
-  <div class="card panel" id="settingsCard" hidden>
-    <p class="eyebrow">Settings</p>
-    <h2>Culture</h2>
+  <div class="card panel page" id="settingsCard" hidden>
+    <header class="pg-top"><button class="lb-icon back" type="button" aria-label="Back to the lobby"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><h2>Settings</h2></header>
     <div class="field"><span class="label">Culture density</span>
       <div class="seg" id="diff">
         <button type="button" data-d="calm">Calm<small>40 cells</small></button>
@@ -657,7 +669,6 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
     <p class="achline" id="achLine"></p>
       <button type="button" class="ghost" id="introAgain">Show the welcome tips again</button>
     </div></details>
-    <div class="row"><button class="primary back" type="button">Back</button></div>
   </div>
 
   <div class="shopview" id="storeCard" hidden>
@@ -720,33 +731,48 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
   const myId=(Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2)).replace(/[^a-z0-9]/g,'').slice(0,12);
   const N=window.__mitosisNet={lan:[],state:'connecting'};
   let ws=null,connected=false,mine={},mineObj=Object.freeze({}),snap=Object.freeze([]),connFns=[],pending=false,lastSend=0,retry=0;
+  let nearby=null; // set while playing phones nearby: posts our presence to them through the app instead of the server
   const others=new Map();
   function rebuild(){const a=[{peer:myId,by:null,isMe:true,sameTab:true,kind:'viewer',guest:false,presence:mineObj,updatedAt:0}];
     for(const [id,p] of others)a.push({peer:id,by:null,isMe:false,sameTab:false,kind:'viewer',guest:false,presence:p,updatedAt:0});snap=Object.freeze(a);}
   function setConn(v){if(connected===v)return;connected=v;for(const f of connFns){try{f(v);}catch(e){}}}
-  function flush(){pending=false;if(ws&&ws.readyState===1){lastSend=performance.now();try{ws.send(JSON.stringify({t:'p',p:mine}));}catch(e){}}}
+  function flush(){pending=false;if(nearby){lastSend=performance.now();nearby(JSON.stringify(mine));return;}
+    if(ws&&ws.readyState===1){lastSend=performance.now();try{ws.send(JSON.stringify({t:'p',p:mine}));}catch(e){}}}
   function later(){retry=Math.min(retry+1,8);setTimeout(connect,400*retry);}
   function connect(){
+    if(nearby)return;
     N.state=N.state==='full'?'full':'connecting';
     try{ws=new WebSocket(SERVER.replace(/^http/,'ws')+'/ws');}catch(e){later();return;}
     ws.onopen=()=>{retry=0;ws.send(JSON.stringify({t:'hello',id:myId}));};
     ws.onmessage=ev=>{const w0=performance.now();try{onMsg(ev);}finally{const w=performance.now()-w0;if(window.__wsTime)window.__wsTime(w);}};
-  function onMsg(ev){let m;try{m=JSON.parse(ev.data);}catch(e){return;}if(!m||typeof m!=='object')return;
+  function onMsg(ev){if(nearby)return;let m;try{m=JSON.parse(ev.data);}catch(e){return;}if(!m||typeof m!=='object')return;
       if(m.t==='welcome'){others.clear();for(const q of Array.isArray(m.peers)?m.peers:[])if(q&&typeof q.id==='string'&&q.p&&typeof q.p==='object')others.set(q.id,Object.freeze(q.p));
         N.lan=Array.isArray(m.lan)?m.lan.filter(u=>typeof u==='string'):[];N.state='live';rebuild();setConn(true);flush();}
       else if(m.t==='p'&&typeof m.id==='string'&&m.p&&typeof m.p==='object'){others.set(m.id,Object.freeze(m.p));rebuild();}
       else if(m.t==='bye'&&typeof m.id==='string'){others.delete(m.id);rebuild();}
       else if(m.t==='full')N.state='full';}
-    ws.onclose=()=>{setConn(false);others.clear();rebuild();if(N.state!=='full'){N.state='offline';later();}};
+    ws.onclose=()=>{if(nearby)return;setConn(false);others.clear();rebuild();if(N.state!=='full'){N.state='offline';later();}};
     ws.onerror=()=>{};
   }
   const room=Object.freeze({
     peers:()=>snap,
     presence(patch){mine={...mine};for(const k in patch){if(patch[k]===null)delete mine[k];else mine[k]=patch[k];}mineObj=Object.freeze(mine);rebuild();
-      if(!pending){pending=true;setTimeout(flush,Math.max(0,33-(performance.now()-lastSend)));}return Promise.resolve();},
+      if(!pending){pending=true;setTimeout(flush,Math.max(0,(nearby?66:33)-(performance.now()-lastSend)));}return Promise.resolve();}, // 15 a second nearby: Bluetooth is slower than the internet
     onConnection(fn){connFns.push(fn);setTimeout(()=>fn(connected),0);return()=>{connFns=connFns.filter(f=>f!==fn);};},
     onPeers(){return()=>{};},connected:()=>connected,emit:()=>Promise.resolve(),on:()=>()=>{}
   });
+  // Nearby play (iOS app): the app finds phones over Bluetooth and peer-to-peer Wi-Fi and relays presence between them.
+  // useNearby(send) switches to it (send posts one presence string to every phone); useNearby(null) goes back to the server.
+  N.id=myId;N.mode='server';
+  N.useNearby=send=>{
+    nearby=send||null;others.clear();rebuild();
+    if(nearby){N.mode='nearby';N.state='live';const w=ws;ws=null;try{if(w)w.close();}catch(e){}setConn(true);flush();}
+    else{N.mode='server';N.state='connecting';setConn(false);retry=0;connect();}
+  };
+  N.onNearby=m=>{if(!nearby||!m||typeof m.id!=='string')return;
+    if(m.ev==='p'&&typeof m.data==='string'){let p;try{p=JSON.parse(m.data);}catch(e){return;}if(p&&typeof p==='object'){others.set(m.id,Object.freeze(p));rebuild();}}
+    else if(m.ev==='bye'){others.delete(m.id);rebuild();}
+    else if(m.ev==='join')flush();};
   rebuild();connect();N.peers=()=>snap;
   window.claude={use:async n=>n==='room'?room:null};
 })();
@@ -1100,7 +1126,8 @@ const Native=(()=>{
   window.MitosisBridge={onNative(m){if(!m||typeof m!=='object')return;
     if(m.id&&waits.has(m.id)){const w=waits.get(m.id);waits.delete(m.id);if(m.ok===false)w.rej(new Error(m.error||'Failed'));else w.res(m);return;}
     if(m.type==='purchase'&&m.purchase)redeem(m.purchase).catch(()=>{});
-    if(m.type==='app')reportHitch('app '+m.text);}};
+    if(m.type==='app')reportHitch('app '+m.text);
+    if(m.type==='nearby'){const N=window.__mitosisNet;if(m.ev==='error'){toast('Nearby','Nearby play stopped',m.text||'');setNearby(false);}else if(N&&N.onNearby)N.onNearby(m);}}};
   let lastHap=0;return{platform,send,call,haptic(style){if(!platform||!settings.haptics)return;const n=performance.now();if(n-lastHap<120)return;lastHap=n;send({type:'haptic',style});}};
 })();
 
@@ -1127,9 +1154,10 @@ async function econInit(){
 }
 // Runs: the server stamps when a run starts, so survival time can't be inflated.
 let runId=null,runPromise=null;
-function econRunStart(){runId=null;if(local==='practice'){runPromise=null;return;}runPromise=api('run/start').then(r=>{runId=r.runId;return r.runId;}).catch(()=>null);}
+const isNearby=()=>{const N=window.__mitosisNet;return !!N&&N.mode==='nearby';};
+function econRunStart(){runId=null;if(local==='practice'||isNearby()){runPromise=null;return;}runPromise=api('run/start').then(r=>{runId=r.runId;return r.runId;}).catch(()=>null);}
 async function econRunEnd(){
-  if(!human)return;if(local==='practice'){showEarn('Practice — unranked, no ATP or rating');return;}
+  if(!human)return;if(local==='practice'||isNearby()){showEarn((local==='practice'?'Practice':'Nearby')+' — unranked, no ATP or rating');return;}
   const s=human.stats,rep={survived:Math.max(0,T-s.born),eaten:s.eaten|0,peak:Math.round(s.peak),bestRank:s.bestRank||999,place:s.place|0,of:s.of|0,life:Math.max(0,livesUsed()-1),show:1};
   rep.name=human.name;const rid=runId||(runPromise?await runPromise:null);runId=null;runPromise=null;
   if(!rid){showEarn(wallet.online?'':'Offline — ATP is only earned while connected');return;}
@@ -1462,8 +1490,9 @@ function addCell(p,x,y,mass,vx=0,vy=0){
 function kick(c,s){for(let i=0;i<NP;i++)c.pv[i]+=rand(-s,s);}
 function spawn(p,mass){
   let bestS=null,bestD=-Infinity; // the least-crowded of 16 samples, even when every sample is inside something's reach (small final arena)
+  const rad=ev.type===2?Math.min(arenaR(),R*.48):arenaR(); // during an antibiotic tide, inside the smallest well it will close to
   for(let k=0;k<16;k++){
-    const s=randInDish(300);let md=1e9;
+    const s=randInDish(300,rad);let md=1e9;
     for(const c of cells){if(!c||c.dead||c.mass<mass*1.2)continue;const d=Math.hypot(c.x-s.x,c.y-s.y)-c.r;if(d<md)md=d;}
     for(const h of hunters){if(!h)continue;const d=Math.hypot(h.x-s.x,h.y-s.y);if(d-400<md)md=d-400;}
     if(!(md<=bestD)){bestD=md;bestS=s;}if(md>900)break;
@@ -2187,7 +2216,7 @@ function drawCell(c){
   if(sr>15&&!SKIP.has('text')&&p.name){
     let px=labelPx(Math.max(sr*.34,11));const maxW=sr*1.72;let L=labelSprite(p.name,px);
     if(L.tw>maxW){px=labelPx(px*maxW/L.tw);L=labelSprite(p.name,px);}
-    ctx.drawImage(L.c,c.x-L.w/2/z,c.y-L.h/2/z,L.w/z,L.h/z); // sprite is in screen pixels: undo the camera scale so it stays crisp
+    if(L.tw<=sr*2.6)ctx.drawImage(L.c,c.x-L.w/2/z,c.y-L.h/2/z,L.w/z,L.h/z); // sprite is in screen pixels: undo the camera scale so it stays crisp; a name far wider than its cell waits until the cell grows
     if(p.pk&&sr>26&&c===p.cells[0]){const bp=labelPx(Math.min(Math.max(sr*.2,8),22)),B=perkSprite(p.pk,bp),dy=(L.h/2+(p===human?px*1.25:px*.35)+B.h/2)/z;ctx.drawImage(B.c,c.x-B.w/2/z,c.y+dy-B.h/2/z,B.w/z,B.h/z);} // mutation badges, on the biggest cell only
     if(p===human&&sr>24){ // the live mass readout changes every frame, so it is drawn directly, in screen space at a fixed set of sizes
       const ms=labelPx(px*.56),t=c.inf?Math.max(0,c.inf-T).toFixed(1)+'s':String(Math.round(c.mass));
@@ -2430,8 +2459,9 @@ function hud(){
   else bn.hidden=true;
   renderEvo();
 }
+const APP_STORE_URL='https://apps.apple.com/app/id6818890370';
 function inviteLinks(){const N=window.__mitosisNet;if(!N)return[];const h=location.hostname;
-  if(!/^https?:$/.test(location.protocol))return[window.MITOSIS_SERVER]; // in the app: share the public site
+  if(!/^https?:$/.test(location.protocol))return[Native.platform==='ios'?APP_STORE_URL:window.MITOSIS_SERVER]; // in the app: the App Store page, or the public site
   if(h==='localhost'||h==='127.0.0.1'||h==='[::1]'||h==='::1')return N.lan||[];return[location.origin];}
 function netUI(){
   const pill=$('netPill'),line=$('netLine'),others=peerCount-1,N=window.__mitosisNet;
@@ -2439,7 +2469,8 @@ function netUI(){
   let txt,live=false;
   if(!N)txt='Solo — double-click start.bat, then play at http://localhost:3000 to invite others.';
   else if(N.state==='full')txt='This well is full — 16 players max.';
-  else if(N.state==='offline')txt='Lost the server — reconnecting… (is start.bat still open?)';
+  else if(N.mode==='nearby'){txt=others>0?`Nearby · with ${netNames.slice(0,3).join(', ')}${netNames.length>3?` +${netNames.length-3}`:''}`:'Nearby · looking for phones… open Nearby on theirs too';live=true;}
+  else if(N.state==='offline')txt=Native.platform?'Offline · Play starts a game against bots, or try Nearby':'Lost the server — reconnecting… (is start.bat still open?)';
   else if(N.state!=='live'||!myPeer)txt='Connecting to the server…';
   else if(others<=0){txt='Live · nobody else is here yet.';live=true;}
   else{txt=`Live · ${others} other${others>1?'s':''} here${netNames.length?': '+netNames.slice(0,3).join(', ')+(netNames.length>3?'…':''):''}`;live=true;}
@@ -2448,7 +2479,7 @@ function netUI(){
   const row=$('inviteRow'),inp=$('inviteUrl'),help=$('inviteHelp');row.hidden=!N;
   if(N){const links=inviteLinks(),v=links[0]||'No network address found';if(inp.value!==v)inp.value=v;
     const srv=window.MITOSIS_SERVER||'',priv=/^https?:\/\/(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|\[::1\])/.test(srv); // a server on this computer or LAN
-    const t=location.hostname.endsWith('trycloudflare.com')?'Anyone with this link can join while your server and share-online.bat are running.':(!priv||srv.startsWith('https:'))?'Anyone with this link can join.':'Send this link to a friend on the same Wi-Fi. For friends elsewhere, run share-online.bat and send the https link it prints.';
+    const t=Native.platform==='ios'?'Sends the App Store link. Friends who install Mitosis play in the same live arena as you.':location.hostname.endsWith('trycloudflare.com')?'Anyone with this link can join while your server and share-online.bat are running.':(!priv||srv.startsWith('https:'))?'Anyone with this link can join.':'Send this link to a friend on the same Wi-Fi. For friends elsewhere, run share-online.bat and send the https link it prints.';
     if(help.textContent!==t)help.textContent=t;}
   else help.textContent='Multiplayer runs through the Mitosis server on your computer.';
 }
@@ -2581,7 +2612,7 @@ function ingestWorld(P){
     else ev={type:0,id:0,end:0,x:0,y:0};}
   if(!isHost&&typeof P.rd==='string'&&P.rd.length>=5){const id=dec(P.rd,0,2),el=dec(P.rd,2,3)/10;
     if(!Number.isNaN(id+el)){if(id!==round.id){const was=round.synced;round.id=id;round.start=T-el;round.synced=true;round.over=false;round.n=0;if(was)finishHumanRound();}
-      else if(Math.abs(roundT()-el)>1.5)round.start=T-el;}}
+      else{if(Math.abs(roundT()-el)>1.5)round.start=T-el;round.synced=true;}}} // same id as ours (both start at 1): still synced from here on
   if(typeof P.vs==='string'){for(let i=0;i<VSLOTS&&i*2+2<=P.vs.length;i++){const code=dec(P.vs,i*2,2);if(Number.isNaN(code))break;
       const v=vslots[i],g=code>>4,feed=(code>>1)&7;let alive=!!(code&1);
       if(v.g!==g){v.g=g;placeSlot(v);}const sup=vSup.get(i+':'+g);if(sup!==undefined&&T-sup<3)alive=false;
@@ -2790,6 +2821,23 @@ $('nameIn').value=settings.name||'';$('nameIn').addEventListener('input',renderM
 (function heroLoop(){if(!$('startCard').hidden&&!document.hidden&&!RM)drawAvatar();requestAnimationFrame(heroLoop);})();renderMe();
 $('go').addEventListener('click',startGame);
 $('practiceBtn').addEventListener('click',()=>startLocal('practice'));
+// Nearby (iOS app): play the phones around you over Bluetooth and peer-to-peer Wi-Fi, with no server or internet. Unranked.
+function setNearby(on){
+  const N=window.__mitosisNet;on=!!on;if(!N||!N.useNearby||Native.platform!=='ios'||on===isNearby()){syncNearby();return;}
+  if(local)leaveLocal();queued=false;
+  if(on){Native.send({type:'nearby',cmd:'start',id:N.id});N.useNearby(s=>Native.send({type:'nearby',cmd:'send',data:s}));
+    toast('Nearby','Looking for phones nearby','Open Nearby on the other phones too. These games are unranked.');}
+  else{Native.send({type:'nearby',cmd:'stop'});N.useNearby(null);}
+  claimReady=false;yielded=false;roomAt=T;lastPeerCount=-1;syncNearby(); // elect a host again among whoever is reachable now
+}
+function syncNearby(){
+  const on=isNearby(),seg=$('netSeg');seg.hidden=Native.platform!=='ios';for(const b of seg.children)b.setAttribute('aria-pressed',String((b.dataset.n==='nearby')===on));
+  document.querySelector('.lb-play').classList.toggle('nearby',on);
+  $('modeLbl').textContent=on?'Nearby · Bluetooth & Wi-Fi':'Ranked · live arena';$('modeSub').textContent=on?'Phones around you · unranked':'10-minute rounds · two lives';netUI();
+}
+$('netSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(b)setNearby(b.dataset.n==='nearby');});
+syncNearby();
+if(/[?&]nearby=1/.test(location.search))setTimeout(()=>setNearby(true),1500); // debug builds: -nearby 1 (testing with two simulators)
 const syncSkill=()=>{const k=SKILL[settings.botSkill]?settings.botSkill:'normal';const b=$('skillBtn');b.textContent=SKILL[k].label;b.dataset.k=k;[...$('skillSeg').children].forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.k===k)));};
 $('skillBtn').addEventListener('click',()=>{const i=SKILL_LIST.indexOf(settings.botSkill||'normal');settings.botSkill=SKILL_LIST[(i+1)%SKILL_LIST.length];saveSettings();syncSkill();toast('Bots',`${SKILL[settings.botSkill].label} bots`,'Used in practice and offline games');});
 $('skillSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.botSkill=b.dataset.k;saveSettings();syncSkill();});syncSkill();
