@@ -333,6 +333,11 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
 .lb-me-sub{display:flex;gap:7px;align-items:baseline;font:600 11px/1.3 var(--mono);color:var(--muted)}.lb-me-sub .tier{letter-spacing:.1em;text-transform:uppercase;font-size:9.5px}
 .lb-brand{margin:0;font:800 30px/1 var(--display);letter-spacing:-.05em;background:linear-gradient(180deg,#f6fcf9,#a9d9ca);-webkit-background-clip:text;background-clip:text;color:transparent}
 .lb-right{justify-self:end;display:flex;gap:8px;align-items:center}
+.lb-event{appearance:none;justify-self:center;display:flex;align-items:center;gap:10px;padding:6px 16px 6px 8px;border-radius:999px;border:1px solid rgba(255,138,42,.55);background:linear-gradient(90deg,rgba(255,110,20,.22),rgba(120,40,200,.22));color:var(--ink);cursor:pointer;box-shadow:0 0 22px rgba(255,120,30,.22);animation:evglow 2.4s ease-in-out infinite}
+.lb-event i{width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 50% 60%,#ffd27a 0 18%,#ff8a2a 19% 60%,#b44a00 61%);box-shadow:0 0 12px rgba(255,140,40,.7)}
+.lb-event span{display:grid;text-align:left;line-height:1.15}.lb-event b{font:800 14px var(--display);color:#ffb067}.lb-event small{font:600 10.5px var(--mono);color:var(--muted)}
+@keyframes evglow{0%,100%{box-shadow:0 0 16px rgba(255,120,30,.18)}50%{box-shadow:0 0 26px rgba(255,120,30,.38)}}
+.lobby.event .lb-brand{display:none}
 .lb-atp{appearance:none;display:flex;align-items:center;gap:7px;height:40px;padding:0 6px 0 10px;border-radius:999px;border:1px solid rgba(242,177,52,.35);background:rgba(2,8,9,.55);color:var(--amber);cursor:pointer;font:700 15px var(--display);font-variant-numeric:tabular-nums;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
 .lb-atp i{width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffe08a,#f2b134 55%,#a8700f);box-shadow:0 0 10px rgba(242,177,52,.45)}
 .lb-atp span{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--amber);color:#1d1300;font:800 17px/1 var(--display)}
@@ -378,7 +383,7 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
 /* portrait: stack */
 @media (orientation:portrait){
   .lobby{grid-template-columns:1fr;grid-template-rows:auto 1fr auto auto;grid-template-areas:"top" "hero" "play" "rail";gap:14px;align-content:stretch}
-  .lb-brand{display:none}.lb-top{grid-template-columns:1fr auto}
+  .lb-brand{display:none}.lb-top{grid-template-columns:1fr auto}.lb-event{grid-column:1/-1;grid-row:2}
   .lb-hero{grid-template-columns:1fr;justify-items:center;text-align:center;align-content:center}.hero-id{justify-items:center;width:100%}.hero-id input[type=text]{text-align:center}.hero-rank{width:100%}
   .hero-cell{width:min(52vw,230px)}
   .lb-play{align-self:end}.lb-rail{flex-direction:row;justify-content:space-between}.railbtn{flex:1;width:auto}
@@ -477,7 +482,7 @@ body:not(.playing) #tip{display:none}
 .shopview{position:absolute;inset:0;display:grid;grid-template-columns:minmax(250px,.9fr) minmax(0,1.3fr);grid-template-rows:auto minmax(0,1fr);grid-template-areas:"top top" "feat list";gap:12px 24px;
   padding:max(12px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));box-sizing:border-box;
   background:radial-gradient(50% 70% at 24% 58%,var(--glow,rgba(154,140,255,.13)),transparent 70%),linear-gradient(90deg,rgba(2,8,9,.74),rgba(2,8,9,.6) 45%,rgba(2,8,9,.78));-webkit-backdrop-filter:blur(8px) saturate(1.1);backdrop-filter:blur(8px) saturate(1.1);animation:ov .3s ease-out;user-select:none;-webkit-user-select:none;}
-.shopview[data-r=common]{--glow:rgba(120,220,200,.12)}.shopview[data-r=rare]{--glow:rgba(154,140,255,.18)}.shopview[data-r=epic]{--glow:rgba(242,177,52,.17)}.shopview[data-r=legendary]{--glow:rgba(255,92,60,.22)}
+.shopview[data-r=seasonal]{--glow:rgba(255,120,30,.2)}.shopview[data-r=common]{--glow:rgba(120,220,200,.12)}.shopview[data-r=rare]{--glow:rgba(154,140,255,.18)}.shopview[data-r=epic]{--glow:rgba(242,177,52,.17)}.shopview[data-r=legendary]{--glow:rgba(255,92,60,.22)}
 .sv-top{grid-area:top;display:grid;grid-template-columns:auto auto 1fr auto;align-items:center;gap:12px}
 .sv-title{margin:0;font:800 26px/1 var(--display);letter-spacing:-.04em}
 .sv-tabs{justify-self:center;display:flex;padding:3px;border-radius:999px;border:1px solid var(--line);background:rgba(2,8,9,.6)}
@@ -492,7 +497,7 @@ body:not(.playing) #tip{display:none}
 .sv-stage canvas{position:relative;z-index:1;width:100%;height:100%;animation:bob 4.5s ease-in-out infinite}
 .sv-info{display:grid;gap:6px;justify-items:center;width:100%;max-width:360px}
 .sv-rar{font:700 9.5px var(--mono);letter-spacing:.18em;text-transform:uppercase;padding:4px 10px;border-radius:999px;border:1px solid currentColor;color:#8fd8c6}
-.sv-rar.rare{color:var(--violet)}.sv-rar.epic{color:var(--amber)}.sv-rar.legendary{color:#ff7a59;background:rgba(255,92,60,.1)}
+.sv-rar.seasonal{color:#ff8a2a;background:rgba(255,120,30,.12)}.sv-rar.rare{color:var(--violet)}.sv-rar.epic{color:var(--amber)}.sv-rar.legendary{color:#ff7a59;background:rgba(255,92,60,.1)}
 .sv-info h3{margin:0;font:800 24px/1.1 var(--display);letter-spacing:-.025em}
 .sv-info>p#featDesc{margin:0;font:13px/1.4 var(--display);color:var(--muted);min-height:2.8em}
 .sv-buy{width:100%;max-width:300px;padding:13px 18px;font-size:17px;border-radius:14px;display:flex;align-items:center;justify-content:center;gap:8px;font-variant-numeric:tabular-nums}
@@ -511,6 +516,8 @@ body:not(.playing) #tip{display:none}
 :is(.shopview,#lookCard) .skin.sel{background:rgba(255,255,255,.07);box-shadow:0 0 0 2px var(--ink);border-color:transparent}
 :is(.shopview,#lookCard) .skin .rt{display:none}:is(.shopview,#lookCard) .skin::before{content:"";position:absolute;top:7px;left:7px;width:7px;height:7px;border-radius:50%;background:#8fd8c6;opacity:.8}
 :is(.shopview,#lookCard) .skin.rare::before{background:var(--violet)}:is(.shopview,#lookCard) .skin.epic::before{background:var(--amber)}:is(.shopview,#lookCard) .skin.legendary::before{background:#ff7a59;box-shadow:0 0 8px #ff7a59}
+:is(.shopview,#lookCard) .skin.seasonal{border-color:rgba(255,138,42,.55);background:linear-gradient(180deg,rgba(255,120,30,.1),rgba(2,8,9,.55))}:is(.shopview,#lookCard) .skin.seasonal::before{background:#ff8a2a;box-shadow:0 0 8px #ff8a2a}
+.sv-season{grid-column:1/-1;display:flex;align-items:baseline;gap:10px;padding:2px 2px 0;font:600 11px var(--mono);color:var(--muted)}.sv-season b{font:800 15px var(--display);color:#ff9a45;letter-spacing:-.01em}.sv-season.all{margin-top:6px}.sv-season.all b{color:var(--ink)}
 .sv-atp{grid-column:1/-1;grid-row:2;min-height:0;overflow:auto;display:grid;align-content:center;justify-items:center;gap:16px;padding:4px 0 8px}
 .sv-atp .packs{grid-template-columns:repeat(5,minmax(0,164px));gap:12px;width:100%;justify-content:center}
 .sv-atp .pack{padding:20px 10px 14px;background:linear-gradient(180deg,rgba(242,177,52,.12),rgba(2,8,9,.6))}
@@ -579,6 +586,7 @@ body:not(.playing) #tip{display:none}
     <header class="lb-top">
       <button class="lb-me" id="profBtn" type="button" aria-label="Profile"><canvas id="meCv" width="96" height="96"></canvas><span class="lb-me-txt"><b id="meName">Unnamed cell</b><span class="lb-me-sub"><span class="tier" id="rankTier">Silver</span><span id="rankVal">1000</span></span></span></button>
       <h1 class="lb-brand">Mitosis</h1>
+      <button class="lb-event" id="eventPill" type="button" hidden><i aria-hidden="true"></i><span><b id="eventName"></b><small id="eventSub"></small></span></button>
       <div class="lb-right">
         <button class="lb-atp" id="atpChip" type="button" aria-label="ATP balance, open the shop"><i aria-hidden="true"></i><b id="lobbyAtp">0</b><span aria-hidden="true">+</span></button>
         <button class="lb-icon" id="setBtn" type="button" aria-label="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg></button>
@@ -891,6 +899,15 @@ const STAINS=[[340,100,68],[250,100,76],[174,62,54],[40,90,58],[18,100,64],[200,
 /* Premium skins, bought with ATP. Ids continue after the 5 free patterns. Prices here are only a
    fallback for display: the server (economy.js) is the source of truth and overrides them. Each draw()
    runs with the context clipped to the membrane; a base colour replaces the chosen stain. */
+// A bat silhouette for the Halloween skins; f in -1..1 flaps the wings.
+function witchBat(g,x,y,s,f){const u=-.55*f;g.beginPath();g.moveTo(x,y);
+  g.quadraticCurveTo(x-s*.5,y-s*(.35+u),x-s*1.15,y-s*(.15+u));g.quadraticCurveTo(x-s*.9,y+s*.08,x-s*.72,y+s*.28);g.quadraticCurveTo(x-s*.55,y+s*.08,x-s*.34,y+s*.26);g.quadraticCurveTo(x-s*.18,y+s*.06,x,y+s*.22);
+  g.quadraticCurveTo(x+s*.18,y+s*.06,x+s*.34,y+s*.26);g.quadraticCurveTo(x+s*.55,y+s*.08,x+s*.72,y+s*.28);g.quadraticCurveTo(x+s*.9,y+s*.08,x+s*1.15,y-s*(.15+u));g.quadraticCurveTo(x+s*.5,y-s*(.35+u),x,y);g.fill();
+  g.beginPath();g.ellipse(x,y+s*.1,s*.14,s*.22,0,0,TAU);g.fill();g.beginPath();g.moveTo(x-s*.12,y-s*.02);g.lineTo(x-s*.08,y-s*.22);g.lineTo(x-s*.02,y-s*.04);g.moveTo(x+s*.12,y-s*.02);g.lineTo(x+s*.08,y-s*.22);g.lineTo(x+s*.02,y-s*.04);g.fill();}
+// Seasonal skins are sold only during their holiday each year (the server enforces it) and kept for good once bought.
+const SEASONS={halloween:{name:'Halloween',from:[10,24],to:[11,3]}};
+function seasonState(key,d=new Date()){const S=SEASONS[key];if(!S)return{open:false};const y=d.getFullYear(),start=new Date(y,S.from[0]-1,S.from[1]),end=new Date(y,S.to[0]-1,S.to[1],23,59,59);
+  return d>=start&&d<=end?{open:true,ends:end.getTime(),name:S.name}:{open:false,name:S.name,next:(d<start?start:new Date(y+1,S.from[0]-1,S.from[1])).getTime()};}
 const PREMIUM=[
 {id:5,key:'nebula',name:'Nebula',price:400,base:[262,72,42],draw(g,c,r,k){
   const C=['rgba(255,120,220,.5)','rgba(90,200,255,.45)','rgba(255,200,120,.35)'];
@@ -1101,6 +1118,64 @@ const PREMIUM=[
   const jit=H(fr)<.18?(H(fr+1)-.5)*r*.12:0;
   for(const [dx,cl] of [[-r*.04,'rgba(255,40,130,.75)'],[r*.04,'rgba(40,220,255,.75)'],[0,'rgba(225,255,250,.95)']]){g.strokeStyle=cl;g.lineWidth=r*.035;g.beginPath();for(let i=0;i<=6;i++){const a=i*TAU/6+Math.PI/6+c.wob*.1,x=c.x+dx+jit+Math.cos(a)*r*.6,y=c.y+Math.sin(a)*r*.6;i?g.lineTo(x,y):g.moveTo(x,y);}g.stroke();}
   for(let i=0;i<5;i++){if(H(fr*13+i*7)>.5)continue;const y=c.y+(H(fr*5+i)-.5)*r*1.6,x=c.x+(H(fr*3+i*11)-.5)*r*1.3,w=r*(.2+H(fr+i)*.6),hh=r*(.04+H(fr*2+i)*.08);g.fillStyle=i%2?'rgba(255,40,140,.6)':'rgba(40,255,230,.6)';g.fillRect(x-w/2,y,w,hh);}}},
+{id:24,key:'ghost',name:'Ghost',price:1500,season:'halloween',base:[214,28,90],noGlint:true,
+  // a little ghost: misty inside, a soft cold glow and wisps trailing behind it, and eyes that blink
+  aura(g,c,r,k,sr,lead){
+    g.beginPath();g.arc(c.x,c.y,r*1.5,0,TAU);fillUnit(g,grad(g,'ghost_a',q=>{const u=q.createRadialGradient(0,0,.85,0,0,1.5);u.addColorStop(0,'rgba(200,225,255,.32)');u.addColorStop(1,'rgba(200,225,255,0)');return u;}),c.x,c.y,r);
+    const sp=Math.hypot(c.svx||0,c.svy||0),ux=sp>20?-c.svx/sp:0,uy=sp>20?-c.svy/sp:1,len=sp>20?Math.min(1,sp/260):.35;
+    for(let i=0;i<3;i++){const o=(i-1)*.5,ax=ux*Math.cos(o)-uy*Math.sin(o),ay=ux*Math.sin(o)+uy*Math.cos(o),w=Math.sin(T*2.4+i*2+c.wob)*r*.16,L=r*(1.05+.5*len),hw=r*.34;
+      g.beginPath();g.moveTo(c.x+ax*r*.6-ay*hw,c.y+ay*r*.6+ax*hw);g.bezierCurveTo(c.x+ax*L*.95-ay*hw*.7+ay*w,c.y+ay*L*.95+ax*hw*.7-ax*w,c.x+ax*L+ay*w,c.y+ay*L-ax*w,c.x+ax*(L+r*.1)+ay*w*1.4,c.y+ay*(L+r*.1)-ax*w*1.4);
+      g.bezierCurveTo(c.x+ax*L+ay*w,c.y+ay*L-ax*w,c.x+ax*L*.95+ay*hw*.7+ay*w,c.y+ay*L*.95-ax*hw*.7-ax*w,c.x+ax*r*.6+ay*hw,c.y+ay*r*.6-ax*hw);g.closePath();g.fillStyle='rgba(225,238,255,.28)';g.fill();}},
+  draw(g,c,r,k){
+    for(let i=0;i<4;i++){const a=T*.4+c.wob+i*1.6,x=c.x+Math.cos(a)*r*.35,y=c.y+Math.sin(a*1.3)*r*.35;g.beginPath();g.arc(x,y,r*.5,0,TAU);fillUnit(g,grad(g,'ghost_m',q=>{const u=q.createRadialGradient(0,0,0,0,0,.5);u.addColorStop(0,'rgba(255,255,255,.35)');u.addColorStop(1,'rgba(255,255,255,0)');return u;}),x,y,r);}
+    g.lineWidth=r*.05;g.strokeStyle='rgba(150,180,230,.35)';g.beginPath();g.arc(c.x,c.y,r*.9,0,TAU);g.stroke();},
+  eye(g,c,r,nx,ny,sick){
+    const bl=((T*.9+c.wob)%4.2)<.13?.12:1,ink=sick?col(INF_C,-30,.95):'rgba(22,24,40,.95)';g.fillStyle=ink;
+    for(const s of[-1,1]){g.beginPath();g.ellipse(nx+s*r*.21,ny-r*.12,r*.1,r*.16*bl,0,0,TAU);g.fill();}
+    g.beginPath();g.ellipse(nx,ny+r*.2,r*.08,r*.1+r*.02*Math.sin(T*2.4+c.wob),0,0,TAU);g.fill();
+    g.fillStyle='rgba(255,150,180,.35)';for(const s of[-1,1]){g.beginPath();g.ellipse(nx+s*r*.36,ny+r*.06,r*.08,r*.05,0,0,TAU);g.fill();}}},
+{id:25,key:'widow',name:'Widow',price:2000,season:'halloween',base:[275,22,9],noGlint:true,draw(g,c,r,k){
+  // a black cell strung with a silver web, dew catching the light, and a spider letting itself down on a thread
+  const sp=8,rot=c.wob*.3;g.strokeStyle='rgba(225,225,240,.36)';g.lineWidth=r*.018;g.beginPath();
+  for(let i=0;i<sp;i++){const a=rot+i*TAU/sp;g.moveTo(c.x,c.y);g.lineTo(c.x+Math.cos(a)*r*1.05,c.y+Math.sin(a)*r*1.05);}g.stroke();
+  g.beginPath();for(let q=1;q<=5;q++){const rr=r*q*.19;for(let i=0;i<=sp;i++){const a1=rot+i*TAU/sp,am=a1-Math.PI/sp,x1=c.x+Math.cos(a1)*rr,y1=c.y+Math.sin(a1)*rr;
+    if(!i){g.moveTo(x1,y1);continue;}g.quadraticCurveTo(c.x+Math.cos(am)*rr*.86,c.y+Math.sin(am)*rr*.86,x1,y1);}}g.stroke();
+  for(let i=0;i<6;i++){const a=rot+(i*3%sp)*TAU/sp,d=r*(.19*(1+i%5)),tw=.4+.6*Math.max(0,Math.sin(T*2+i*1.9));g.beginPath();g.arc(c.x+Math.cos(a)*d,c.y+Math.sin(a)*d,r*.025,0,TAU);g.fillStyle=`rgba(230,240,255,${tw})`;g.fill();}
+  const tx=c.x+r*.5,sx=tx+Math.sin(T*1.3+c.wob)*r*.05,sy=c.y-r*.5+r*.12*Math.sin(T*.9+c.wob); // the spider dangles in the upper corner, clear of the hourglass
+  g.strokeStyle='rgba(225,225,240,.5)';g.lineWidth=r*.012;g.beginPath();g.moveTo(tx,c.y-r);g.lineTo(sx,sy-r*.06);g.stroke();
+  g.strokeStyle='rgba(170,30,60,.95)';g.lineWidth=r*.022;g.lineCap='round';g.beginPath();
+  for(const s of[-1,1])for(let l=0;l<4;l++){const a=(l-1.5)*.42,kx=sx+s*r*.1,ky=sy+a*r*.1;g.moveTo(sx+s*r*.04,sy+a*r*.05);g.lineTo(kx+s*r*.05,ky-r*.04);g.lineTo(kx+s*r*.09,ky+r*.06);}g.stroke();g.lineCap='butt';
+  g.fillStyle='rgba(150,20,45,1)';g.beginPath();g.ellipse(sx,sy,r*.06,r*.075,0,0,TAU);g.fill();g.beginPath();g.arc(sx,sy-r*.08,r*.035,0,TAU);g.fill();},
+  eye(g,c,r,nx,ny,sick){const h=r*.16,w=r*.11,p=.7+.3*Math.sin(T*3+c.wob);
+    g.beginPath();g.arc(nx,ny,r*.3,0,TAU);fillUnit(g,grad(g,'widow_g',q=>{const u=q.createRadialGradient(0,0,0,0,0,.3);u.addColorStop(0,'rgba(255,40,70,.35)');u.addColorStop(1,'rgba(255,40,70,0)');return u;}),nx,ny,r);
+    g.fillStyle=sick?col(INF_C,0,.95):`rgba(${Math.round(220+35*p)},30,55,1)`;g.beginPath();g.moveTo(nx-w,ny-h);g.lineTo(nx+w,ny-h);g.lineTo(nx+w*.12,ny);g.lineTo(nx+w,ny+h);g.lineTo(nx-w,ny+h);g.lineTo(nx-w*.12,ny);g.closePath();g.fill();}},
+{id:26,key:'jackolantern',name:"Jack-o'-Lantern",price:3000,season:'halloween',base:[27,92,50],noGlint:true,draw(g,c,r,k){
+  // a ribbed pumpkin with a stem; the carved face is the nucleus, so it turns toward wherever you go
+  g.lineWidth=r*.045;g.strokeStyle='rgba(150,60,0,.35)';for(const w of[.3,.62,.9]){g.beginPath();g.ellipse(c.x,c.y,r*w,r*1.02,0,0,TAU);g.stroke();}
+  g.fillStyle='rgba(255,210,120,.18)';g.beginPath();g.ellipse(c.x-r*.42,c.y-r*.1,r*.12,r*.5,-.15,0,TAU);g.fill();
+  g.fillStyle='rgba(70,90,20,1)';g.beginPath();g.moveTo(c.x-r*.07,c.y-r*.8);g.quadraticCurveTo(c.x-r*.02,c.y-r*.98,c.x+r*.12,c.y-r*1.02);g.lineTo(c.x+r*.1,c.y-r*.8);g.closePath();g.fill();},
+  eye(g,c,r,nx,ny,sick){const fl=.75+.25*Math.sin(T*11+c.wob)*Math.sin(T*7.3),glow=sick?col(INF_C,10,.95):`rgba(255,${Math.round(190+50*fl)},${Math.round(60+60*fl)},1)`;
+    g.beginPath();g.arc(nx,ny,r*.62,0,TAU);fillUnit(g,grad(g,'jack_g',q=>{const u=q.createRadialGradient(0,0,0,0,0,.62);u.addColorStop(0,'rgba(255,220,120,.35)');u.addColorStop(1,'rgba(255,160,40,0)');return u;}),nx,ny,r*(.9+.1*fl));
+    g.fillStyle='rgba(60,20,0,.9)';const face=(dx,dy,s)=>{g.beginPath();for(const sd of[-1,1]){g.moveTo(nx+sd*r*.28-r*.11*s+dx,ny-r*.06+dy);g.lineTo(nx+sd*r*.28+r*.11*s+dx,ny-r*.06+dy);g.lineTo(nx+sd*r*.28+dx,ny-r*.27+dy);g.closePath();}
+      g.moveTo(nx-r*.05+dx,ny+r*.06+dy);g.lineTo(nx+r*.05+dx,ny+r*.06+dy);g.lineTo(nx+dx,ny-r*.03+dy);g.closePath();
+      g.moveTo(nx-r*.45+dx,ny+r*.16+dy);for(let i=0;i<=8;i++){const x=nx-r*.45+i*r*.1125+dx,y=ny+r*.16+dy+(i%2?r*.07:0)+Math.sin(i/8*Math.PI)*r*.08;g.lineTo(x,y);}
+      for(let i=8;i>=0;i--){const x=nx-r*.45+i*r*.1125+dx,y=ny+r*.3+dy+Math.sin(i/8*Math.PI)*r*.12-(i%2?0:r*.06);g.lineTo(x,y);}g.closePath();g.fill();};
+    face(0,r*.02,1);g.fillStyle=glow;face(0,0,1);}},
+{id:27,key:'witching',name:'Witching Hour',price:7500,season:'halloween',base:[264,55,15],noGlint:true,
+  // midnight in a graveyard: a full moon, stars, bats crossing the sky, and three more circling outside the membrane
+  aura(g,c,r,k,sr,lead){
+    g.beginPath();g.arc(c.x,c.y,r*1.55,0,TAU);fillUnit(g,grad(g,'witch_a',q=>{const u=q.createRadialGradient(0,0,.85,0,0,1.55);u.addColorStop(0,'rgba(150,80,255,.35)');u.addColorStop(1,'rgba(150,80,255,0)');return u;}),c.x,c.y,r);
+    if(sr>16&&lead){g.fillStyle='rgba(12,6,22,.95)';for(let i=0;i<3;i++){const a=T*(.7+i*.15)+i*2.1+c.wob,R2=r*(1.28+.08*i);witchBat(g,c.x+Math.cos(a)*R2,c.y+Math.sin(a)*R2*.8,r*.13,Math.sin(T*14+i*2));}}},
+  draw(g,c,r,k){
+    g.fillStyle='rgba(255,255,255,.8)';for(let i=0;i<12;i++){const a=i*2.399+c.wob,d=((i*.618)%1)*r*.9,tw=.3+.7*Math.abs(Math.sin(T*1.7+i));g.globalAlpha=tw;g.beginPath();g.arc(c.x+Math.cos(a)*d,c.y-r*.15+Math.sin(a)*d*.6,r*.014,0,TAU);g.fill();}g.globalAlpha=1;
+    const mx=c.x-r*.3,my=c.y-r*.35;g.beginPath();g.arc(mx,my,r*.42,0,TAU);fillUnit(g,grad(g,'witch_mg',q=>{const u=q.createRadialGradient(0,0,.2,0,0,.42);u.addColorStop(0,'rgba(255,240,190,.35)');u.addColorStop(1,'rgba(255,240,190,0)');return u;}),mx,my,r);
+    g.beginPath();g.arc(mx,my,r*.24,0,TAU);fillUnit(g,grad(g,'witch_m',q=>{const u=q.createRadialGradient(-.06,-.06,0,0,0,.24);u.addColorStop(0,'rgba(255,250,225,1)');u.addColorStop(1,'rgba(240,215,150,1)');return u;}),mx,my,r);
+    g.fillStyle='rgba(200,170,110,.45)';for(const [ox,oy,s] of[[.07,-.05,.05],[-.08,.06,.04],[.04,.1,.03]]){g.beginPath();g.arc(mx+ox*r,my+oy*r,s*r,0,TAU);g.fill();}
+    g.fillStyle='rgba(12,6,22,.95)';for(let i=0;i<3;i++){const ph=((T*(.12+i*.04)+i*.37+c.wob*.1)%1),x=c.x-r*1.1+ph*r*2.2,y=c.y-r*(.1+.18*i)+Math.sin(T*2+i)*r*.05;witchBat(g,x,y,r*.08,Math.sin(T*15+i*1.7));}
+    g.fillStyle='rgba(8,4,16,1)';g.beginPath();g.moveTo(c.x-r*1.05,c.y+r*.55);g.quadraticCurveTo(c.x-r*.4,c.y+r*.32,c.x+r*.15,c.y+r*.5);g.quadraticCurveTo(c.x+r*.6,c.y+r*.62,c.x+r*1.05,c.y+r*.45);g.lineTo(c.x+r*1.05,c.y+r*1.1);g.lineTo(c.x-r*1.05,c.y+r*1.1);g.closePath();g.fill();
+    for(const [ox,h,w] of[[-.55,.2,.1],[-.3,.16,.08],[.42,.22,.1]]){const x=c.x+ox*r,y=c.y+r*.48;g.beginPath();g.moveTo(x-w*r,y+r*.08);g.lineTo(x-w*r,y-h*r+w*r);g.arc(x,y-h*r+w*r,w*r,Math.PI,0);g.lineTo(x+w*r,y+r*.08);g.closePath();g.fill();}
+    g.fillRect(c.x+r*.06,c.y+r*.18,r*.035,r*.3);g.fillRect(c.x-r*.01,c.y+r*.25,r*.18,r*.035);},
+  eye(g,c,r,nx,ny,sick){if(sick){g.beginPath();g.arc(nx,ny,r*.14,0,TAU);g.fillStyle=col(INF_C,-30,.9);g.fill();}}},
 ];
 const SKIN_COUNT=SKIN_FREE+PREMIUM.length,SKIN_V22=17; // 2.2.0 and older clamp any skin id they do not know to their last one (One Cell)
 const wireSkin=k=>k<SKIN_V22?k:0; // so newer skins go out as the plain cell in k, and in full in ks
@@ -1314,15 +1389,22 @@ const SKIN_DESC={5:'Gas clouds and newborn stars drifting through the membrane.'
   9:'Rosettes on warm gold.',10:'Ice facets with a cold glint.',11:'Bubbles rising through radioactive slime.',12:'An eye that looks wherever you go.',13:'A spiral galaxy turning slowly inside you.',
   14:'Solid gold, with a shine sweeping across it.',15:'Light spirals in and never comes out.',16:'Obsidian, molten gold and an eye of flame, with runes, lightning and fire beyond the membrane.',
   17:'Curtains of northern light rippling over a night sky.',18:'Two koi circling a quiet pond.',19:'Arcs of plasma reaching from the core to the membrane.',20:'Cracked open to show the amethyst inside.',
-  21:'A cherry branch in bloom, with petals on the breeze.',22:'A star in its final blaze, with a corona that burns past the membrane.',23:'A hologram that cannot quite hold itself together.'};
+  21:'A cherry branch in bloom, with petals on the breeze.',
+  24:'A little ghost with blinking eyes and wisps trailing behind it. Halloween only.',25:'A black cell strung with a silver web, and a spider letting itself down on a thread. Halloween only.',
+  26:'A carved pumpkin whose candlelit face turns toward wherever you go. Halloween only.',27:'Midnight in a graveyard: a full moon, and bats crossing the sky and circling your cell. Halloween only.',22:'A star in its final blaze, with a corona that burns past the membrane.',23:'A hologram that cannot quite hold itself together.'};
 let shopSel=0; // the skin shown large in the shop
+const rarOf=S=>S.season?'seasonal':RARITY[S.id]||'common';
+const fmtLeft=ms=>{const m=Math.max(0,Math.round(ms/60000)),d=Math.floor(m/1440),h=Math.floor(m%1440/60);return d?`${d}d ${h}h`:h?`${h}h ${m%60}m`:`${m%60}m`;};
 const fmtAtp=n=>n>=1e6?(n/1e6).toLocaleString(undefined,{maximumFractionDigits:1})+'M':n.toLocaleString();
 function renderSkins(){
   const el=$('skins');if(!el)return;const ab=$('atpBal');if(ab)ab.textContent=wallet.balance;$('storeBal').textContent=wallet.balance.toLocaleString(); // #atpBal only exists while no premium skin is owned
   $('skinHint').textContent=wallet.online?'Tap a skin to see it up close. You earn ATP by placing well in ranked rounds.':'Offline: skins you own still work, and buying needs a connection.';
   const card=(S,shop)=>{const own=ownsSkin(S.id),eq=settings.skin===S.id,sel=shop&&S.id===shopSel;
-    const rar=RARITY[S.id]||'common';return `<button type="button" class="skin ${rar}${own?' own':''}${sel?' sel':''}" data-id="${S.id}" aria-pressed="${eq}" aria-label="${escH(S.name)} skin, ${rar}${own?', owned':', '+S.price+' ATP'}"><canvas width="144" height="144" data-skin="${S.id}"></canvas><span class="sn">${escH(S.name)}</span>${rar!=='common'?`<span class="rt">${rar}</span>`:''}<span class="sp">${own?(eq?'✓ Wearing':'Owned'):fmtAtp(S.price)+' ATP'}</span></button>`;};
-  el.innerHTML=[...PREMIUM].sort((a,b)=>a.price-b.price||a.id-b.id).map(S=>card(S,true)).join('');renderFeat(); // cheapest first, the legendary last
+    const rar=rarOf(S);return `<button type="button" class="skin ${rar}${own?' own':''}${sel?' sel':''}" data-id="${S.id}" aria-pressed="${eq}" aria-label="${escH(S.name)} skin, ${rar}${own?', owned':', '+S.price+' ATP'}"><canvas width="144" height="144" data-skin="${S.id}"></canvas><span class="sn">${escH(S.name)}</span>${rar!=='common'?`<span class="rt">${S.season?SEASONS[S.season].name:rar}</span>`:''}<span class="sp">${own?(eq?'✓ Wearing':'Owned'):fmtAtp(S.price)+' ATP'}</span></button>`;};
+  // seasonal skins lead the shop while their holiday is on (with a countdown) and are hidden out of season unless owned; the rest run cheapest first
+  const byPrice=(a,b)=>a.price-b.price||a.id-b.id,seasonal=PREMIUM.filter(S=>S.season&&seasonState(S.season).open).sort(byPrice),rest=PREMIUM.filter(S=>!S.season||(!seasonState(S.season).open&&ownsSkin(S.id))).sort(byPrice);
+  const head=key=>{const st=seasonState(key);return `<div class="sv-season"><b>${escH(st.name)}</b><span>Limited skins · leave the shop in ${fmtLeft(st.ends-Date.now())}</span></div>`;};
+  el.innerHTML=(seasonal.length?head(seasonal[0].season)+seasonal.map(S=>card(S,true)).join('')+'<div class="sv-season all"><b>All skins</b></div>':'')+rest.map(S=>card(S,true)).join('');renderFeat();
   const mine=PREMIUM.filter(S=>ownsSkin(S.id)),oe=$('ownedSkins');if(oe){oe.innerHTML=mine.map(S=>card(S,false)).join('');$('ownedHint').innerHTML=mine.length?'Tap a skin to wear it; the free patterns above always work too.':'No premium skins yet. The Shop has them, and you have <b id="atpBal">'+wallet.balance+'</b> ATP.';}
   renderPreviews();
 }
@@ -1350,12 +1432,13 @@ $('ownedSkins').addEventListener('click',e=>{const b=e.target.closest('.skin');i
 // The shop: tap a skin to show it large, then buy (tap twice to confirm) or wear it from the big button
 function renderFeat(){
   const S=PREMIUM.find(x=>x.id===shopSel)||PREMIUM[0],b=$('featBuy');if(!S||!b)return;shopSel=S.id;
-  const rar=RARITY[S.id]||'common',own=ownsSkin(S.id),eq=settings.skin===S.id,cf=confirmSkin===S.id&&performance.now()-confirmT<4000,need=S.price-wallet.balance,
+  const rar=rarOf(S),own=ownsSkin(S.id),eq=settings.skin===S.id,cf=confirmSkin===S.id&&performance.now()-confirmT<4000,need=S.price-wallet.balance,
     st=eq?'wearing':own?'own':!wallet.online?'off':need>0?'short':cf?'confirm':'buy';
-  $('storeCard').dataset.r=rar;$('featRar').className='sv-rar '+rar;$('featRar').textContent=rar;$('featName').textContent=S.name;$('featDesc').textContent=SKIN_DESC[S.id]||'';
+  $('storeCard').dataset.r=rar;$('featRar').className='sv-rar '+rar;$('featRar').textContent=S.season?SEASONS[S.season].name+' · limited':rar;$('featName').textContent=S.name;$('featDesc').textContent=SKIN_DESC[S.id]||'';
   b.className='primary sv-buy '+st;b.disabled=eq;
   b.innerHTML=eq?'✓ Wearing':own?'Wear this skin':st==='off'?'Connect to buy':st==='short'?`Get ${fmtAtp(need)} more ATP`:cf?`Tap to confirm · <i></i>${S.price.toLocaleString()}`:`Buy · <i></i>${S.price.toLocaleString()}`;
   $('featNote').textContent=own?(eq?'Equipped — it shows in every game':'Yours to wear any time'):st==='off'?'Buying needs a connection':`${S.price.toLocaleString()} ATP · you have ${wallet.balance.toLocaleString()}`;
+  if(S.season&&!own){const st=seasonState(S.season);if(st.open)$('featNote').textContent+=' · '+fmtLeft(st.ends-Date.now())+' left';}
   drawFeat();
 }
 function drawFeat(){const cv=$('featCv'),S=PREMIUM.find(x=>x.id===shopSel);if(!cv||!S||$('storeCard').hidden)return;
@@ -2950,6 +3033,11 @@ function syncNearby(){
   $('modeLbl').textContent=on?'Nearby · Bluetooth & Wi-Fi':'Ranked · live arena';$('modeSub').textContent=on?'Phones around you · unranked':'10-minute rounds · two lives';netUI();
 }
 $('netSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(b)setNearby(b.dataset.n==='nearby');});
+// Lobby event pill: while a season is on, it replaces the title and opens the shop on its limited skins
+function syncEvent(){const key=Object.keys(SEASONS).find(k=>seasonState(k).open),pill=$('eventPill');pill.hidden=!key;$('startCard').classList.toggle('event',!!key);if(!key)return;
+  const st=seasonState(key),n=PREMIUM.filter(S=>S.season===key).length;$('eventName').textContent=st.name+' event';$('eventSub').textContent=`${n} limited skins · ${fmtLeft(st.ends-Date.now())} left`;}
+$('eventPill').addEventListener('click',()=>{const key=Object.keys(SEASONS).find(k=>seasonState(k).open),S=PREMIUM.find(x=>x.season===key&&!ownsSkin(x.id))||PREMIUM.find(x=>x.season===key);if(S)shopSel=S.id;openStore();});
+syncEvent();setInterval(syncEvent,60000);
 syncNearby();
 if(/[?&]nearby=1/.test(location.search))setTimeout(()=>setNearby(true),1500); // debug builds: -nearby 1 (testing with two simulators)
 const syncSkill=()=>{const k=SKILL[settings.botSkill]?settings.botSkill:'normal';const b=$('skillBtn');b.textContent=SKILL[k].label;b.dataset.k=k;[...$('skillSeg').children].forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.k===k)));};

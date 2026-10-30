@@ -27,6 +27,11 @@ const SKINS = [
   { id: 21, key: 'sakura', name: 'Sakura', price: 450 },
   { id: 22, key: 'supernova', name: 'Supernova', price: 6000 },
   { id: 23, key: 'glitch', name: 'Glitch', price: 1500 },
+  // seasonal: on sale only during their holiday each year (SEASONS), kept for good once bought
+  { id: 24, key: 'ghost', name: 'Ghost', price: 1500, season: 'halloween' },
+  { id: 25, key: 'widow', name: 'Widow', price: 2000, season: 'halloween' },
+  { id: 26, key: 'jackolantern', name: "Jack-o'-Lantern", price: 3000, season: 'halloween' },
+  { id: 27, key: 'witching', name: 'Witching Hour', price: 7500, season: 'halloween' },
 ];
 const PACKS = [
   { id: 'atp_500', atp: 500 },
@@ -76,8 +81,17 @@ function nameBlocked(s) {
 const cleanName = s => { const n = String(s || '').replace(/[^\p{L}\p{N} _.\-'!?]/gu, '').trim().slice(0, 16); return n && !nameBlocked(n) ? n : null; };
 
 const skinById = id => SKINS.find(s => s.id === id);
+// Seasons repeat every year: [month, day] to [month, day], the same dates the game shows. The server allows a day either
+// side so every time zone gets the whole holiday. MITOSIS_DATE pins "now" for tests.
+const SEASONS = { halloween: { name: 'Halloween', from: [10, 24], to: [11, 3] } };
+const now = () => (process.env.MITOSIS_DATE ? Date.parse(process.env.MITOSIS_DATE) : Date.now());
+function seasonOpen(key, t = now()) {
+  const s = SEASONS[key]; if (!s) return false;
+  const y = new Date(t).getUTCFullYear(), day = 864e5;
+  return [y - 1, y].some(yy => { const a = Date.UTC(yy, s.from[0] - 1, s.from[1]) - day, b = Date.UTC(yy, s.to[0] - 1, s.to[1]) + 2 * day; return t >= a && t < b; });
+}
 const packById = id => PACKS.find(p => p.id === id);
-const catalog = () => ({ skins: SKINS, packs: PACKS, rules: RULES, rating: RATING, tiers: TIERS.map(t => t[1]), tierAt: TIERS.map(t => t[0]), iap: iap.status(), auth: signin.status() });
+const catalog = () => ({ skins: SKINS, seasons: Object.fromEntries(Object.entries(SEASONS).map(([k, s]) => [k, { ...s, open: seasonOpen(k) }])), packs: PACKS, rules: RULES, rating: RATING, tiers: TIERS.map(t => t[1]), tierAt: TIERS.map(t => t[0]), iap: iap.status(), auth: signin.status() });
 
 function payoutFor({ survived, bestRank, place }) {
   const sec = Math.max(0, Math.min(RULES.maxRunSec, +survived || 0));
@@ -173,6 +187,7 @@ function runEnd(store, body, p) {
 function buySkin(store, body, p) {
   const skin = skinById(body.skinId | 0);
   if (!skin) throw new ApiError(404, 'no such skin');
+  if (skin.season && !seasonOpen(skin.season) && !store.skins(p.id).includes(skin.id)) throw new ApiError(403, `${skin.name} is only in the shop during ${SEASONS[skin.season].name}`);
   if (store.skins(p.id).includes(skin.id)) return { ...wallet(store, p), already: true };
   if (Number(p.balance) < skin.price) throw new ApiError(402, `need ${skin.price - Number(p.balance)} more ATP`);
   const w = { balance: Number(p.balance) - skin.price, earned: Number(p.earned), hour_at: Number(p.hour_at), hour_sum: Number(p.hour_sum) };
@@ -202,4 +217,4 @@ async function iapGoogle(store, body, p) {
 
 function leaderboard(store) { return { top: store.top(10).map((r, i) => ({ rank: i + 1, name: (r.name && !nameBlocked(r.name) && r.name) || 'Unnamed cell', rating: r.rating, tier: tierOf(r.rating), runs: r.runs })) }; }
 
-module.exports = { SKINS, PACKS, RULES, RATING, catalog, payoutFor, ratingDelta, tierOf, nameBlocked, ApiError, auth, handlers: { deleteAccount, session, runStart, runEnd, buySkin, iapApple, iapGoogle, leaderboard, signInApple, signInGoogle, signOut } };
+module.exports = { SKINS, PACKS, RULES, RATING, SEASONS, seasonOpen, catalog, payoutFor, ratingDelta, tierOf, nameBlocked, ApiError, auth, handlers: { deleteAccount, session, runStart, runEnd, buySkin, iapApple, iapGoogle, leaderboard, signInApple, signInGoogle, signOut } };

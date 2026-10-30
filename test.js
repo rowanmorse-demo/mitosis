@@ -35,8 +35,14 @@ async function post(url, body, secret) {
   let r = await post('/api/session', { secret });
   assert.equal(r.status, 200); assert.equal(r.body.balance, 0); assert.ok(r.body.catalog.skins.length >= 10, 'catalog has skins');
   assert.equal(r.body.catalog.skins.find(s => s.id === 16).price, 12000000, 'One Cell to Rule Them All costs 12,000,000 ATP');
-  const premium = [...fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8').matchAll(/\{id:(\d+),key:'(\w+)',name:'([^']+)',price:(\d+)/g)].map(m => ({ id: +m[1], key: m[2], name: m[3], price: +m[4] }));
+  const premium = [...fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8').matchAll(/\{id:(\d+),key:'(\w+)',name:(?:'([^']+)'|"([^"]+)"),price:(\d+)/g)].map(m => ({ id: +m[1], key: m[2], name: m[3] || m[4], price: +m[5] }));
   assert.deepEqual(r.body.catalog.skins.map(s => ({ id: s.id, key: s.key, name: s.name, price: s.price })), premium, 'the server sells exactly the skins the game draws');
+  { // seasonal skins: on sale only in their window (with a day's margin for time zones), every year
+    const { seasonOpen } = require('./economy'), at = s => Date.parse(s);
+    for (const [d, open] of [['2026-10-30T12:00Z', true], ['2027-10-23T06:00Z', true], ['2026-11-04T20:00Z', true], ['2026-11-06T00:00Z', false], ['2026-07-04T12:00Z', false], ['2026-10-22T00:00Z', false]])
+      assert.equal(seasonOpen('halloween', at(d)), open, 'Halloween on ' + d);
+    assert.ok(r.body.catalog.seasons.halloween, 'the catalogue lists the seasons');
+  }
   { // the name filter in the game and on the server refuse the same names
     const page = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8'), src = page.slice(page.indexOf('const NAME_BAD_ANY'), page.indexOf('const cleanName=s=>{'));
     const inGame = new Function(src + '\nreturn nameBlocked;')(), onServer = require('./economy').nameBlocked;

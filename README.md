@@ -87,6 +87,8 @@ Tiers: Bronze (under 900), Silver (900+), Gold (1100+), Platinum (1400+), Diamon
 | 21st–30th | 1 |
 | Lower, or a run under 20 seconds | 0 |
 
+**Seasonal skins** go on sale only during their holiday each year and are kept for good once bought: Halloween (Oct 24 – Nov 3) brings Ghost, Widow, Jack-o'-Lantern and Witching Hour. In season they lead the shop with a countdown and the lobby shows an event banner; out of season they leave the shop. The server enforces the window (`SEASONS` in economy.js, with a day's margin for time zones); the game draws the skins, so a new season needs an app update before it starts.
+
 Practice and Nearby games pay nothing. There is no hourly cap, but the amounts are deliberately small: winning every ten-minute round is 150 ATP an hour. Most skins cost 300–2,500 ATP, Supernova 6,000, the Black Hole 10,000 and the One Cell to Rule Them All 12,000,000 (eighty $99.99 Biosphere packs), a very long grind, so the packs are the realistic way to get it:
 
 | Pack | ATP |
