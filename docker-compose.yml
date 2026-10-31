@@ -15,6 +15,7 @@ services:
     environment:
       PORT: "3000"
       DATA_DIR: /data
+      MAX_ROOMS: ${MAX_ROOMS:-}             # arena rooms of 16 games the relay may open; empty: 8
       APPLE_ISSUER_ID: ${APPLE_ISSUER_ID:-}
       APPLE_KEY_ID: ${APPLE_KEY_ID:-}
       APPLE_PRIVATE_KEY: ${APPLE_PRIVATE_KEY:-}
