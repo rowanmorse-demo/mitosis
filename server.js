@@ -91,28 +91,40 @@ function netReport(req, res) {
   if (q.get('format') === 'json') { res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify({ days, ...sum })); return; }
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }); res.end(netstats.page(sum, days));
 }
-// The battle pass switch: GET shows it (&format=json for numbers), POST on=1 / on=0 flips it. It is kept in the store, so it survives deploys.
+// The battle pass switch: GET shows it (&format=json for numbers), POST on=1 / on=0 flips it, and POST tester=<player id>&add=1 / add=0
+// adds or removes a tester (who sees the pass before it is launched). Both are kept in the store, so they survive deploys.
 async function passPage(req, res) {
   if (!adminOk(req, res)) return;
   const q = new URL(req.url, 'http://x').searchParams;
   if (req.method === 'POST') {
     let body = ''; for await (const d of req) { body += d; if (body.length > 1024) break; }
-    economy.passAdmin(store, new URLSearchParams(body).get('on') === '1');
+    const f = new URLSearchParams(body);
+    if (f.has('tester')) { try { economy.passAdmin(store, null, { id: f.get('tester'), on: f.get('add') === '1' }); } catch (e) {} } // a player who is gone, or too many testers: nothing changes
+    else economy.passAdmin(store, f.get('on') === '1');
     res.writeHead(303, { Location: '/admin/pass?token=' + encodeURIComponent(q.get('token')) }); return res.end();
   }
   const a = economy.passAdmin(store);
   if (q.get('format') === 'json') { res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); return res.end(JSON.stringify(a)); }
-  const day = t => new Date(t).toISOString().slice(0, 10), s = a.season, st = a.stats;
+  const day = t => new Date(t).toISOString().slice(0, 10), s = a.season, st = a.stats, esc = v => String(v).replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';');
+  const ago = t => { const m = Math.round((Date.now() - t) / 60000); return m < 1 ? 'just now' : m + ' min ago'; }, isTester = new Set(a.testers.map(r => r.id));
+  const row = (r, add) => `<li><span><b>${esc(r.name)}</b><small>${esc(r.id.slice(0, 8))} · level ${r.level} · ${r.runs} lives${r.account ? ' · ' + esc(r.account) : ''}${add ? ' · ' + ago(r.seen) : ''}</small></span>`
+    + `<form method="post"><input type="hidden" name="tester" value="${esc(r.id)}"><input type="hidden" name="add" value="${add ? 1 : 0}"><button class="${add ? 'add' : 'rm'}">${add ? 'Make tester' : 'Remove'}</button></form></li>`;
+  const recent = a.recent.filter(r => !isTester.has(r.id));
   const where = s ? `Season ${s.n}: ${s.name}, ${day(s.starts)} to ${day(s.ends)} (${Math.max(0, Math.ceil((s.ends - Date.now()) / 864e5))} days left)` : `No season runs today.${a.next ? ` Next: ${a.next.name}, from ${day(a.next.starts)}.` : ' Add one to PASS_SEASONS in economy.js.'}`;
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
   res.end(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mitosis battle pass</title>
 <style>body{margin:0;padding:24px 16px;background:#020809;color:#dcefe9;font:16px/1.5 system-ui,sans-serif}main{max-width:520px;margin:auto}h1{font-size:24px;margin:0 0 16px}
 .st{display:inline-block;padding:4px 12px;border-radius:99px;font-weight:700;background:${a.live ? '#1f6f4f' : '#5b2330'}}p{color:#8aaea9}dl{display:grid;grid-template-columns:auto 1fr;gap:6px 16px}dt{color:#8aaea9}dd{margin:0;font-weight:600}
-button{font:700 16px system-ui;padding:12px 22px;border-radius:99px;border:0;cursor:pointer;background:${a.on ? '#e5484d' : '#ff5c8a'};color:#fff}</style>
-<main><h1>Battle pass</h1><p><span class="st">${a.live ? 'Live' : a.on ? 'On, but no season today' : 'Off (hidden)'}</span></p><p>${where}</p>
+button{font:700 16px system-ui;padding:12px 22px;border-radius:99px;border:0;cursor:pointer;background:${a.on ? '#e5484d' : '#ff5c8a'};color:#fff}
+h2{font-size:19px;margin:32px 0 4px}h3{font-size:15px;margin:20px 0 8px;color:#dcefe9}ul.pl{list-style:none;margin:0;padding:0;display:grid;gap:8px}.pl li{display:flex;align-items:center;gap:12px;padding:10px 10px 10px 14px;border-radius:14px;background:#0b1a1c}
+.pl span{flex:1;display:grid;gap:2px;min-width:0}.pl small{color:#8aaea9;font-size:13px}.pl form{margin:0}.pl button{font-size:14px;padding:9px 16px}.pl .add{background:#1f6f4f}.pl .rm{background:#2a3a3c}</style>
+<main><h1>Battle pass</h1><p><span class="st">${a.live ? 'Live' : a.on ? 'On, but no season today' : 'Off (hidden)'}</span>${!a.live && a.testers.length ? ` · ${a.testers.length} tester${a.testers.length > 1 ? 's' : ''} can see it` : ''}</p><p>${where}</p>
 ${st ? `<dl><dt>Players with progress</dt><dd>${st.players}</dd><dt>Bought the Battle Pass</dt><dd>${st.premium}</dd><dt>Rewards claimed</dt><dd>${st.claims}</dd><dt>XP earned</dt><dd>${st.xp.toLocaleString()}</dd><dt>Quests done today</dt><dd>${st.quests.today}</dd><dt>Quests done this week</dt><dd>${st.quests.week}</dd></dl>` : ''}
 <form method="post"><input type="hidden" name="on" value="${a.on ? 0 : 1}"><button>${a.on ? 'Turn off (hide it)' : 'Turn on'}</button></form>
-<p>Players see the pass only while it is on and a season is running. Turning it off hides it; progress and rewards stay.</p></main>`);
+<p>Players see the pass only while it is on and a season is running. Turning it off hides it; progress and rewards stay.</p>
+<h2>Testers</h2><p>Testers see the pass now: while it is off, and before its season starts. What they earn and claim is real and carries into the season. To add a phone, open the game on it, reload this page and press Make tester beside it.</p>
+${a.testers.length ? `<ul class="pl">${a.testers.map(r => row(r, false)).join('')}</ul>` : '<p>No testers yet.</p>'}
+<h3>Opened the game in the last 30 minutes</h3>${recent.length ? `<ul class="pl">${recent.map(r => row(r, true)).join('')}</ul>` : '<p>Nobody else.</p>'}</main>`);
 }
 const crashDir = path.join(DATA_DIR, 'crashes');
 function crashReport(store, body) {

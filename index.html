@@ -4064,7 +4064,7 @@ function openPass(){if(!bpOn())return;bpSel='';const P=wallet.pass,ready=bpRewar
   showCard('passCard');renderPass();api('pass').then(applyWallet).catch(()=>{});Native.haptic('light');}
 function renderPass(){
   if(!bpOn())return;const C=wallet.catalog.pass,P=wallet.pass,pages=C.pages;
-  $('bpSeason').textContent=`Season ${C.n} · ${C.name}`;$('bpClock').dataset.ends=C.ends;bpTick();
+  $('bpSeason').textContent=`Season ${C.n} · ${C.name}`;$('bpClock').dataset.ends=C.ends;$('bpClock').dataset.starts=C.starts||0;bpTick();
   $('passAtp').textContent=wallet.balance.toLocaleString();
   const into=P.xp%C.levelXp;$('bpLevel').textContent=P.level;$('bpFill').style.width=(into/C.levelXp*100).toFixed(1)+'%';$('bpXp').textContent=`${into} / ${C.levelXp} XP`;$('bpStars').textContent=P.stars;
   const qOn=bqOn();$('bpMode').hidden=!qOn;if(!qOn)bpMode='rewards';const qm=bpMode==='quests';$('passCard').dataset.mode=bpMode;
@@ -4110,7 +4110,8 @@ function drawBpFeat(){const cv=$('bpCv'),S=bpSkin(bpReward(bpSel));if(!S||cv.hid
 function drawBpTiles(){for(const cv of document.querySelectorAll('#bpGrid canvas')){const S=PREMIUM[+cv.dataset.skin-SKIN_FREE];if(S)drawPreview(cv,S);}}
 let bpDrawn=0,bpAsked=0;
 (function passLoop(now){if(!$('passCard').hidden&&!document.hidden&&!RM){drawBpFeat();if(now-bpDrawn>100){bpDrawn=now;drawBpTiles();}}requestAnimationFrame(passLoop);})(0); // the tiles at 10 fps, like the shop's
-function bpTick(){const el=$('bpClock'),ms=+el.dataset.ends-Date.now();el.querySelector('span').textContent=ms>864e5?fmtLeft(ms)+' left':svClock(ms);}
+function bpTick(){const el=$('bpClock'),now=Date.now(),st=+el.dataset.starts||0,ms=+el.dataset.ends-now,pre=now<st; // testers see a season before it starts
+  el.querySelector('span').textContent=pre?'Starts in '+fmtLeft(st-now):ms>864e5?fmtLeft(ms)+' left':svClock(ms);el.title=pre?'Season starts in':'Season ends in';}
 setInterval(()=>{if($('passCard').hidden||document.hidden)return;bpTick();bqTick();const Q=bqOn()?wallet.quests:null;
   if((+$('bpClock').dataset.ends<=Date.now()||(Q&&Math.min(Q.daily.ends,Q.weekly.ends)<=Date.now()))&&Date.now()-bpAsked>30000){bpAsked=Date.now();api('pass').then(applyWallet).catch(()=>{});}},1000); // the season is over (the server hides it) or new quests are due
 async function bpClaim(){

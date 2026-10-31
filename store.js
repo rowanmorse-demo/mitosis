@@ -69,6 +69,7 @@ class SqliteStore {
       setRating: p('UPDATE players SET rating = ?, name = ?, runs = runs + 1 WHERE id = ?'),
       addXp: p('UPDATE players SET xp = xp + ? WHERE id = ?'),
       top: p('SELECT name, rating, runs FROM players WHERE runs > 0 ORDER BY rating DESC, runs DESC LIMIT ?'),
+      recent: p('SELECT id, name, seen, runs, xp FROM players WHERE seen > ? ORDER BY seen DESC LIMIT ?'),
       device: p('SELECT player FROM devices WHERE secret = ?'),
       insDevice: p('INSERT OR REPLACE INTO devices(secret, player, created, seen) VALUES(?, ?, ?, ?)'),
       delDevice: p('DELETE FROM devices WHERE secret = ?'),
@@ -160,6 +161,8 @@ class SqliteStore {
   setRating(id, rating, name) { this.q.setRating.run(rating, name, id); }
   addXp(id, n) { this.q.addXp.run(n, id); }
   top(n) { return this.q.top.all(n).map(r => ({ name: r.name, rating: Number(r.rating), runs: Number(r.runs) })); }
+  /** Players who opened the game since `since`, latest first (for picking battle pass testers). */
+  recentPlayers(since, n) { return this.q.recent.all(since, n).map(r => ({ id: r.id, name: r.name, seen: Number(r.seen), runs: Number(r.runs), xp: Number(r.xp || 0) })); }
   passRow(player, season) { return this.q.passRow.get(player, season) || null; }
   passAddXp(player, season, n, now) { this.q.passXp.run(player, season, n, now); }
   passSetPremium(player, season, now) { this.q.passPremium.run(player, season, now); }
@@ -246,6 +249,7 @@ class JsonStore {
   playerCount() { return Object.keys(this.d.players).length; }
   setRating(id, rating, name) { const p = this.d.players[id]; if (p) { p.rating = rating; p.name = name; p.runs = (p.runs || 0) + 1; this.save(); } }
   addXp(id, n) { const p = this.d.players[id]; if (p) { p.xp = (p.xp || 0) + n; this.save(); } }
+  recentPlayers(since, n) { return Object.values(this.d.players).filter(p => p.seen > since).sort((a, b) => b.seen - a.seen).slice(0, n).map(p => ({ id: p.id, name: p.name, seen: p.seen, runs: p.runs || 0, xp: p.xp || 0 })); }
   top(n) { return Object.values(this.d.players).filter(p => p.runs > 0).sort((a, b) => (b.rating - a.rating) || (b.runs - a.runs)).slice(0, n).map(p => ({ name: p.name, rating: p.rating, runs: p.runs })); }
   passEntry(player, season, now) { const m = this.d.pass[player] || (this.d.pass[player] = {}); return m[season] || (m[season] = { xp: 0, premium: 0, at: now, claims: [] }); }
   passRow(player, season) { const r = (this.d.pass[player] || {})[season]; return r ? { xp: r.xp, premium: r.premium } : null; }

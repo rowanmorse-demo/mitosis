@@ -541,6 +541,38 @@ async function post(url, body, secret) {
     for (const sec of [sx, sy]) await post('/api/account/delete', { confirm: 'DELETE' }, sec);
     assert.equal(await flip(false), 303);
   }
+  { // Testers (picked on /admin/pass) see the pass while it is off; nobody else does; a merge carries the tester, deletion drops it
+    const token = fs.readFileSync(path.join(dataDir, 'admin-token'), 'utf8').trim(), page = async () => (await fetch(base + '/admin/pass?token=' + token)).text();
+    const admin = async () => (await fetch(base + '/admin/pass?format=json&token=' + token)).json();
+    const tester = async (id, add) => (await fetch(base + '/admin/pass?token=' + token, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'tester=' + encodeURIComponent(id) + '&add=' + (add ? 1 : 0), redirect: 'manual' })).status;
+    const post = async (url, body, secret) => { const headers = { 'Content-Type': 'application/json', 'X-Forwarded-For': '10.9.9.7' }; if (secret) headers.Authorization = 'Bearer ' + secret;
+      const res = await fetch(base + url, { method: 'POST', headers, body: JSON.stringify(body || {}) }); return { status: res.status, body: await res.json() }; };
+    const st = 'testersecret' + 't'.repeat(20), so = 'testersecret' + 'o'.repeat(20);
+    r = await post('/api/session', { secret: st }); const tid = r.body.playerId; assert.equal(r.body.pass, null, 'off: no pass');
+    const oid = (await post('/api/session', { secret: so })).body.playerId;
+    let a = await admin(); assert.deepEqual([a.on, a.testers], [false, []], 'no testers at first');
+    assert.ok(a.recent.some(x => x.id === tid) && a.recent.some(x => x.id === oid), 'the switch page lists who opened the game lately');
+    assert.equal((await fetch(base + '/admin/pass?token=wrong', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'tester=' + tid + '&add=1' })).status, 403, 'picking testers needs the token');
+    assert.match(await page(), /Testers[\s\S]*No testers yet[\s\S]*Make tester/);
+    assert.equal(await tester(tid, true), 303); a = await admin(); assert.deepEqual([a.testers.map(x => x.id), a.on, a.live], [[tid], false, false], 'a tester, and the pass still off for everyone');
+    assert.match(await page(), /Off \(hidden\)<\/span> · 1 tester can see it[\s\S]*Remove/);
+    r = await post('/api/session', { secret: st }); assert.deepEqual([r.body.pass && r.body.pass.season, r.body.catalog.pass && r.body.catalog.pass.key, !!(r.body.quests && r.body.quests.daily)], ['s1', 's1', true], 'the tester sees the pass and its quests');
+    r = await post('/api/session', { secret: so }); assert.deepEqual([r.body.pass, r.body.catalog.pass, r.body.quests], [null, null, null], 'nobody else does');
+    assert.equal((await (await fetch(base + '/api/catalog')).json()).pass, null, 'nor the public catalogue');
+    r = await post('/api/run/end', { runId: (await post('/api/run/start', {}, st)).body.runId, survived: 9999 }, st); assert.equal(r.body.pass.xp, r.body.xpGained, 'a tester\'s lives fill the pass');
+    r = await post('/api/pass', {}, st); assert.ok(r.body.catalog.pass, 'the pass page opens for the tester');
+    r = await post('/api/pass/claim', { reward: '1b' }, st); assert.equal(r.body.claimed.reward, '1b', 'and claims');
+    assert.equal((await post('/api/pass/claim', { reward: '1f' }, so)).status, 404, 'others cannot');
+    assert.equal(await tester('nobody', true), 303); assert.deepEqual((await admin()).testers.map(x => x.id), [tid], 'an unknown player is not added');
+    // the tester's device signs in to an account someone else made: the account becomes the tester
+    await post('/api/auth/apple', { identityToken: apple({ sub: 'apple-tester' }), nonce: 'n1' }, so);
+    r = await post('/api/auth/apple', { identityToken: apple({ sub: 'apple-tester' }), nonce: 'n1' }, st); assert.equal(r.body.merged, true);
+    assert.deepEqual((await admin()).testers.map(x => x.id), [oid], 'the tester moved to the account it joined');
+    r = await post('/api/session', { secret: so }); assert.deepEqual([r.body.pass && r.body.pass.claimed], [['1b']], 'which sees the pass, with the claim');
+    assert.equal(await tester(oid, false), 303); r = await post('/api/session', { secret: so }); assert.equal(r.body.pass, null, 'removed: hidden again');
+    assert.equal(await tester(oid, true), 303); r = await post('/api/account/delete', { confirm: 'DELETE' }, so); assert.equal(r.body.deleted, true);
+    assert.deepEqual((await admin()).testers, [], 'deleting the account removes the tester');
+  }
   { // both stores keep the pass: XP adds up per season, premium, each claim once; merges join it, deletion drops it; the switch is kept
     const { SqliteStore, JsonStore } = require('./store'), dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mitosis-pass-'));
     let sqlite = null; try { sqlite = require('node:sqlite'); } catch (e) {}
@@ -637,6 +669,15 @@ async function post(url, body, secret) {
       assert.equal(passXp('c'), xb + xc + settled.xp, k('to the pass, on top of both'));
       assert.deepEqual(questsTick(st, st.player('c'), null, tue), { xp: 0, done: [] }, k('once'));
       assert.deepEqual(st.questRows('b', T.period), [], k('nothing left under the merged player'));
+      // testers: they see the pass while it is off and, before a season starts, the next one; nobody else does
+      const { passLive } = require('./economy'), pre = at('2026-11-01T12:00:00Z'), A = { id: 'a' }, B = { id: 'b' };
+      st.setFlag('pass', 'off'); st.setFlag('passTesters', JSON.stringify(['a']));
+      assert.deepEqual([passLive(st, pre, A)?.key, passLive(st, pre, B), passLive(st, pre), passLive(st, fri, A)?.key, passLive(st, fri, B)], ['s1', null, null, 's1', null], k('off: only the tester, who gets the next season before it starts'));
+      st.setFlag('pass', 'on');
+      assert.deepEqual([passLive(st, pre, A)?.key, passLive(st, pre, B), passLive(st, fri, B)?.key], ['s1', null, 's1'], k('on: everyone in the season, only the tester before it'));
+      assert.equal(passLive(st, at('2027-06-01T00:00:00Z'), A), null, k('no season left, nothing to test'));
+      v = questsOf(st, a, pre); assert.ok(v && v.daily.quests.length === 4 && v.weekly.ends <= at(s1.to), k('a tester has quests before the season'));
+      st.setFlag('passTesters', 'not json'); assert.equal(passLive(st, pre, A), null, k('a broken list is no testers'));
       // deletion
       st.deletePlayer('c'); assert.deepEqual(st.questRows('c', T.period), [], k('deleting the player deletes its quests')); assert.equal(st.questStats(T.period), 0);
       await reopen(); assert.deepEqual(st.questRows('c', T.period), [], k('and stays deleted'));
