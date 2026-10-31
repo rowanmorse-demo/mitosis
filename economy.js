@@ -169,6 +169,83 @@ function passAddXp(store, p, n) {
   store.passAddXp(p.id, s.key, n, Date.now());
   return passLevelAt(before + n) - passLevelAt(before);
 }
+// Quests, Fortnite style: daily and weekly goals that pay bonus pass XP (not profile XP). Everyone gets the same ones:
+// each slot picks one of its variants from the day (UTC) or the ISO week (from Monday 00:00 UTC), so a new set
+// arrives at midnight and on Mondays. They count only in runEnd, from the same server-capped survival and placing as
+// XP, and only while the pass is live. A finished quest pays its XP to the pass at once (no claim, so apps from
+// before quests earn it too), once. Like ATP, a life counts (as a life, for its time or its placing) only from minSec,
+// so an instant start and end adds nothing; placings also need XP.minOf in the round, like XP's.
+// Quests are kept by id ('top-10-2'), so a variant's id must not change in a period that has started.
+const QUESTS = { xp: { day: 100, week: 300 }, minSec: RULES.minSec };
+const QL = goal => ({ kind: 'lives', goal }), QT = min => ({ kind: 'time', goal: min * 60 }), QS = sec => ({ kind: 'life', sec, goal: 1 }),
+  QO = (sec, goal) => ({ kind: 'lasts', sec, goal }), QP = (top, goal) => ({ kind: 'top', top, goal }), QW = goal => ({ kind: 'win', goal });
+const QUEST_SLOTS = {
+  day: [[QL(3), QL(4), QL(5)], [QT(5), QT(8), QT(10)], [QS(120), QS(180), QS(240)], [QP(10, 2), QP(5, 1), QP(3, 1)]],
+  week: [[QL(20), QL(25), QL(30)], [QT(45), QT(60), QT(75)], [QS(300), QS(360), QS(420)], [QO(120, 8), QO(120, 10), QO(120, 12)],
+    [QP(10, 8), QP(10, 10), QP(10, 12)], [QP(3, 3), QP(3, 4), QP(3, 5)], [QW(1), QW(2), QW(3)]],
+};
+const times = n => (n === 1 ? '' : n === 2 ? ' twice' : ` in ${n} lives`);
+function questText(q) {
+  const m = q.sec / 60;
+  if (q.kind === 'lives') return `Play ${q.goal} ranked lives`;
+  if (q.kind === 'time') return `Stay alive ${q.goal / 60} minutes in total`;
+  if (q.kind === 'life') return `Survive ${m} minutes in one life`;
+  if (q.kind === 'lasts') return `Last ${m} minutes in ${q.goal} lives`;
+  if (q.kind === 'win') return q.goal === 1 ? 'Win a round' : `Win ${q.goal} rounds`;
+  return `Finish in the top ${q.top}${times(q.goal)}`;
+}
+const DAY = 864e5;
+const dayOf = t => { const a = Math.floor(t / DAY) * DAY; return { key: new Date(a).toISOString().slice(0, 10), starts: a, ends: a + DAY }; };
+function isoWeekOf(t) { // ISO 8601: weeks start on Monday, and week 1 is the one with the year's first Thursday
+  const a = Math.floor(t / DAY) * DAY, mon = a - ((new Date(a).getUTCDay() + 6) % 7) * DAY, y = new Date(mon + 3 * DAY).getUTCFullYear();
+  const jan4 = Date.UTC(y, 0, 4), w1 = jan4 - ((new Date(jan4).getUTCDay() + 6) % 7) * DAY;
+  return { key: `${y}-W${String(1 + Math.round((mon - w1) / (7 * DAY))).padStart(2, '0')}`, starts: mon, ends: mon + 7 * DAY };
+}
+// The quests of the day or week holding t: one per slot, picked by a hash of the period, so everyone has the same set.
+function questsAt(kind, t = now()) {
+  const per = kind === 'day' ? dayOf(t) : isoWeekOf(t);
+  const list = QUEST_SLOTS[kind].map((vs, i) => {
+    const q = vs[parseInt(hash(`${kind}:${per.key}:${i}`).slice(0, 8), 16) % vs.length];
+    return { ...q, id: [q.kind, q.top || q.sec, q.goal].filter(x => x != null).join('-'), xp: QUESTS.xp[kind], text: questText(q) };
+  });
+  return { ...per, period: kind[0] + per.key, list };
+}
+// What one life adds to a quest. `life` has the server-capped seconds and the placing.
+function questStep(q, life) {
+  const sec = Math.max(0, Math.min(XP.timeCapSec, +life.survived || 0)), counts = sec >= QUESTS.minSec;
+  const n = Math.floor(+life.of || 0), pl = Math.floor(+life.place || 0), placed = counts && n >= XP.minOf && pl >= 1 && pl <= n;
+  if (q.kind === 'lives') return counts ? 1 : 0;
+  if (q.kind === 'time') return counts ? Math.floor(sec) : 0;
+  if (q.kind === 'life' || q.kind === 'lasts') return sec >= q.sec ? 1 : 0;
+  return placed && pl <= (q.kind === 'win' ? 1 : q.top) ? 1 : 0;
+}
+// A player's quests today and this week, or null while the pass is not live. Daily ones end at midnight UTC, weekly
+// ones on Monday, and neither outlasts the season.
+function questsOf(store, p, t = now(), s = passLive(store, t)) {
+  if (!s) return null;
+  const view = kind => {
+    const Q = questsAt(kind, t), rows = new Map(store.questRows(p.id, Q.period).map(r => [r.quest, r]));
+    return { key: Q.key, ends: Math.min(Q.ends, Date.parse(s.to)), quests: Q.list.map(q => { const r = rows.get(q.id);
+      return { id: q.id, kind: q.kind, text: q.text, goal: q.goal, progress: Math.min(q.goal, Number(r && r.progress) || 0), xp: q.xp, done: !!(r && r.done != null) }; }) };
+  };
+  return { daily: view('day'), weekly: view('week') };
+}
+// runEnd (with the life) and after a merge (without one): moves the quests on and pays the pass for each one finished
+// now. Returns the XP paid and the quests it was for.
+function questsTick(store, p, life, t = now()) {
+  const s = passLive(store, t), out = { xp: 0, done: [] }; if (!s) return out;
+  const at = Date.now();
+  for (const kind of ['day', 'week']) {
+    const Q = questsAt(kind, t), rows = new Map(store.questRows(p.id, Q.period).map(r => [r.quest, r]));
+    for (const q of Q.list) {
+      const r = rows.get(q.id); if (r && r.done != null) continue;
+      const had = Number(r && r.progress) || 0, step = life ? questStep(q, life) : 0, prog = Math.min(q.goal, had + step);
+      if (step > 0) store.questSave(p.id, Q.period, q.id, prog, at);
+      if (prog >= q.goal && store.questDone(p.id, Q.period, q.id, at)) { store.passAddXp(p.id, s.key, q.xp, at); out.xp += q.xp; out.done.push({ id: q.id, text: q.text, xp: q.xp, kind }); }
+    }
+  }
+  return out;
+}
 const packById = id => PACKS.find(p => p.id === id);
 const catalog = store => ({ skins: SKINS, seasons: Object.fromEntries(Object.entries(SEASONS).map(([k, s]) => [k, { ...s, open: seasonOpen(k) }])), pass: passCatalog(passLive(store)), packs: PACKS, rules: RULES, rating: RATING, xp: XP, tiers: TIERS.map(t => t[1]), tierAt: TIERS.map(t => t[0]), iap: iap.status(), auth: signin.status() });
 
@@ -184,7 +261,7 @@ class ApiError extends Error { constructor(status, msg) { super(msg); this.statu
 const hash = s => crypto.createHash('sha256').update(String(s)).digest('hex');
 // The sign-in a wallet belongs to (Apple or Google), or null for a device-only wallet.
 const accountOf = (store, p) => { const i = store.identities(p.id)[0]; return i ? { provider: i.provider, email: i.email || null, since: Number(i.at) } : null; };
-const wallet = (store, p) => ({ playerId: p.id, balance: Number(p.balance), earned: Number(p.earned), skins: store.skins(p.id), rating: Number(p.rating ?? RATING.base), tier: tierOf(Number(p.rating ?? RATING.base)), runs: Number(p.runs || 0), ...levelOf(p.xp), pass: passOf(store, p), account: accountOf(store, p) });
+const wallet = (store, p) => ({ playerId: p.id, balance: Number(p.balance), earned: Number(p.earned), skins: store.skins(p.id), rating: Number(p.rating ?? RATING.base), tier: tierOf(Number(p.rating ?? RATING.base)), runs: Number(p.runs || 0), ...levelOf(p.xp), pass: passOf(store, p), quests: questsOf(store, p), account: accountOf(store, p) });
 
 /* ---------- handlers: each gets (store, body, player?) and returns a JSON-able object ---------- */
 function session(store, body) {
@@ -216,6 +293,7 @@ async function signInWith(verify, store, body, p) {
   let player = p, merged = false;
   if (existing && existing.player !== p.id && store.player(existing.player)) {
     store.mergePlayers(p.id, existing.player); player = store.player(existing.player); merged = true;
+    questsTick(store, player, null);   // progress from both devices may finish a quest together
   } else if (!existing) {
     store.linkIdentity(ident.provider, ident.subject, p.id, ident.email, now);
   }
@@ -257,15 +335,18 @@ function runEnd(store, body, p) {
   const xp = xpFor({ survived, place: body.place, of: body.of }), level = levelOf(p.xp).level;
   const w = { balance: Number(p.balance) + payout, earned: Number(p.earned) + payout, hour_at: Number(p.hour_at), hour_sum: Number(p.hour_sum) };
   store.setWallet(p.id, w); store.addXp(p.id, xp.total); store.endRun(run.id, now, payout, xp.total);
-  const passUp = passAddXp(store, p, xp.total);   // the same XP fills the battle pass while a season is on
+  // the same XP fills the battle pass while a season is on, and the life moves the quests on, which pay the pass only
+  const passUp = passAddXp(store, p, xp.total), passMid = passOf(store, p), q = questsTick(store, p, { survived, place: body.place, of: body.of });
   Object.assign(p, w); p.xp = Number(p.xp || 0) + xp.total;
   // rating
   const before = Number(p.rating ?? RATING.base), delta = ratingDelta(before, survived, body.eaten, body.place, body.of, body.life), rating = Math.max(0, before + delta);
   const name = cleanName(body.name) || p.name || null;
   store.setRating(p.id, rating, name); p.rating = rating; p.name = name; p.runs = Number(p.runs || 0) + 1;
-  // xpParts: where the XP came from (time alive, placing, the win); levelUp: how many levels this life gained
+  // xpParts: where the XP came from (time alive, placing, the win); levelUp: how many levels this life gained;
+  // passUp: pass levels from the life and its quests; questXp and questsDone: the quests it finished
   const out = wallet(store, p);
-  return { payout, ratingDelta: delta, xpGained: xp.total, xpParts: { time: xp.time, place: xp.place, win: xp.win }, levelUp: out.level - level, passUp, ...out };
+  return { payout, ratingDelta: delta, xpGained: xp.total, xpParts: { time: xp.time, place: xp.place, win: xp.win }, levelUp: out.level - level,
+    passUp: passUp + (passMid && out.pass ? out.pass.level - passMid.level : 0), questXp: q.xp, questsDone: q.done, ...out };
 }
 function buySkin(store, body, p) {
   const skin = skinById(body.skinId | 0);
@@ -334,9 +415,10 @@ function passClaim(store, body, p) {
 function passAdmin(store, on) {
   if (on != null) { store.setFlag('pass', on ? 'on' : 'off'); console.log(`battle pass switched ${on ? 'on' : 'off'}`); }
   const s = passSeason(), next = PASS_SEASONS.find(x => Date.parse(x.from) > now());
-  return { on: store.flag('pass') === 'on', live: !!passLive(store), season: passCatalog(s), next: next ? { key: next.key, name: next.name, starts: Date.parse(next.from) } : null, stats: s ? store.passStats(s.key) : null };
+  const quests = s && { today: store.questStats(questsAt('day').period), week: store.questStats(questsAt('week').period) };
+  return { on: store.flag('pass') === 'on', live: !!passLive(store), season: passCatalog(s), next: next ? { key: next.key, name: next.name, starts: Date.parse(next.from) } : null, stats: s ? { ...store.passStats(s.key), quests } : null };
 }
 
 function leaderboard(store) { return { top: store.top(10).map((r, i) => ({ rank: i + 1, name: (r.name && !nameBlocked(r.name) && r.name) || 'Unnamed cell', rating: r.rating, tier: tierOf(r.rating), runs: r.runs })) }; }
 
-module.exports = { SKINS, PACKS, RULES, RATING, XP, SEASONS, seasonOpen, PASS, PASS_SEASONS, passSeason, passAdmin, catalog, payoutFor, ratingDelta, xpFor, levelOf, xpAtLevel, xpToNext, tierOf, nameBlocked, ApiError, auth, handlers: { deleteAccount, session, runStart, runEnd, buySkin, iapApple, iapGoogle, leaderboard, signInApple, signInGoogle, signOut, passView, passPremium, passClaim } };
+module.exports = { SKINS, PACKS, RULES, RATING, XP, SEASONS, seasonOpen, PASS, PASS_SEASONS, passSeason, passAdmin, QUESTS, QUEST_SLOTS, questsAt, questsOf, questsTick, isoWeekOf, catalog, payoutFor, ratingDelta, xpFor, levelOf, xpAtLevel, xpToNext, tierOf, nameBlocked, ApiError, auth, handlers: { deleteAccount, session, runStart, runEnd, buySkin, iapApple, iapGoogle, leaderboard, signInApple, signInGoogle, signOut, passView, passPremium, passClaim } };

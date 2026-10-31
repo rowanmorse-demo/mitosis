@@ -91,7 +91,7 @@ async function passPage(req, res) {
 .st{display:inline-block;padding:4px 12px;border-radius:99px;font-weight:700;background:${a.live ? '#1f6f4f' : '#5b2330'}}p{color:#8aaea9}dl{display:grid;grid-template-columns:auto 1fr;gap:6px 16px}dt{color:#8aaea9}dd{margin:0;font-weight:600}
 button{font:700 16px system-ui;padding:12px 22px;border-radius:99px;border:0;cursor:pointer;background:${a.on ? '#e5484d' : '#ff5c8a'};color:#fff}</style>
 <main><h1>Battle pass</h1><p><span class="st">${a.live ? 'Live' : a.on ? 'On, but no season today' : 'Off (hidden)'}</span></p><p>${where}</p>
-${st ? `<dl><dt>Players with progress</dt><dd>${st.players}</dd><dt>Bought the Battle Pass</dt><dd>${st.premium}</dd><dt>Rewards claimed</dt><dd>${st.claims}</dd><dt>XP earned</dt><dd>${st.xp.toLocaleString()}</dd></dl>` : ''}
+${st ? `<dl><dt>Players with progress</dt><dd>${st.players}</dd><dt>Bought the Battle Pass</dt><dd>${st.premium}</dd><dt>Rewards claimed</dt><dd>${st.claims}</dd><dt>XP earned</dt><dd>${st.xp.toLocaleString()}</dd><dt>Quests done today</dt><dd>${st.quests.today}</dd><dt>Quests done this week</dt><dd>${st.quests.week}</dd></dl>` : ''}
 <form method="post"><input type="hidden" name="on" value="${a.on ? 0 : 1}"><button>${a.on ? 'Turn off (hide it)' : 'Turn on'}</button></form>
 <p>Players see the pass only while it is on and a season is running. Turning it off hides it; progress and rewards stay.</p></main>`);
 }

@@ -6,6 +6,7 @@
 const fs = require('fs'), path = require('path');
 
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
+const QUEST_KEEP = 15 * 864e5;   // quest progress is kept this long after its last change (a week's quests last 7 days)
 
 function openStore() {
   try { fs.mkdirSync(DATA_DIR, { recursive: true }); } catch (e) {}
@@ -42,7 +43,10 @@ class SqliteStore {
       -- battle pass (economy.js PASS): each player's XP and premium per season, the rewards they claimed, and the on/off switch
       CREATE TABLE IF NOT EXISTS pass(player TEXT, season TEXT, xp INTEGER NOT NULL DEFAULT 0, premium INTEGER NOT NULL DEFAULT 0, at INTEGER, PRIMARY KEY(player, season));
       CREATE TABLE IF NOT EXISTS pass_claims(player TEXT, season TEXT, reward TEXT, at INTEGER, PRIMARY KEY(player, season, reward));
-      CREATE TABLE IF NOT EXISTS flags(name TEXT PRIMARY KEY, value TEXT);`);
+      CREATE TABLE IF NOT EXISTS flags(name TEXT PRIMARY KEY, value TEXT);
+      -- quests (economy.js QUESTS): progress per player, period ('d2026-11-20' or 'w2026-W47') and quest; done is when it paid
+      CREATE TABLE IF NOT EXISTS quests(player TEXT, period TEXT, quest TEXT, progress INTEGER NOT NULL DEFAULT 0, done INTEGER, at INTEGER, PRIMARY KEY(player, period, quest));
+      CREATE INDEX IF NOT EXISTS quests_at ON quests(at);`);
     for (const sql of ['ALTER TABLE players ADD COLUMN rating INTEGER NOT NULL DEFAULT 1000', 'ALTER TABLE players ADD COLUMN name TEXT', 'ALTER TABLE players ADD COLUMN runs INTEGER NOT NULL DEFAULT 0',
       'ALTER TABLE players ADD COLUMN xp INTEGER NOT NULL DEFAULT 0', 'ALTER TABLE runs ADD COLUMN xp INTEGER'])
       try { this.db.exec(sql); } catch (e) {} // already migrated
@@ -96,6 +100,14 @@ class SqliteStore {
       delPass: p('DELETE FROM pass WHERE player = ?'),
       movePassClaims: p('INSERT OR IGNORE INTO pass_claims(player, season, reward, at) SELECT ?, season, reward, at FROM pass_claims WHERE player = ?'),
       delPassClaims: p('DELETE FROM pass_claims WHERE player = ?'),
+      questRows: p('SELECT quest, progress, done FROM quests WHERE player = ? AND period = ?'),
+      questSave: p('INSERT INTO quests(player, period, quest, progress, at) VALUES(?, ?, ?, ?, ?) ON CONFLICT(player, period, quest) DO UPDATE SET progress = excluded.progress, at = excluded.at'),
+      questDone: p('INSERT INTO quests(player, period, quest, progress, done, at) VALUES(?, ?, ?, 0, ?, ?) ON CONFLICT(player, period, quest) DO UPDATE SET done = excluded.done, at = excluded.at WHERE done IS NULL'),
+      questStats: p('SELECT COUNT(*) AS n FROM quests WHERE period = ? AND done IS NOT NULL'),
+      pruneQuests: p('DELETE FROM quests WHERE at < ?'),
+      // a merge adds the progress up and keeps the quest done if either side finished it (the earlier time)
+      moveQuests: p('INSERT INTO quests(player, period, quest, progress, done, at) SELECT ?, period, quest, progress, done, at FROM quests WHERE player = ? ON CONFLICT(player, period, quest) DO UPDATE SET progress = progress + excluded.progress, done = COALESCE(MIN(done, excluded.done), done, excluded.done), at = MAX(at, excluded.at)'),
+      delQuests: p('DELETE FROM quests WHERE player = ?'),
       flag: p('SELECT value FROM flags WHERE name = ?'),
       setFlag: p('INSERT OR REPLACE INTO flags(name, value) VALUES(?, ?)'),
       insNet: p('INSERT INTO netstats(at, platform, app, tz, conn, n, lost, min, med, p90, jit, fps, slow) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'),
@@ -109,7 +121,7 @@ class SqliteStore {
   linkIdentity(provider, subject, player, email, now) { this.q.insIdentity.run(provider, subject, player, email, now); }
   addDevice(h, player, now) { this.q.insDevice.run(h, player, now, now); }
   forgetDevice(h) { this.q.delDevice.run(h); }
-  /** Folds player `from` into `to`: wallet, XP, skins, battle pass (XP adds up, claims join), history, sign-ins and device secrets all move; `from` is deleted. */
+  /** Folds player `from` into `to`: wallet, XP, skins, battle pass (XP adds up, claims join), quests (progress adds up), history, sign-ins and device secrets all move; `from` is deleted. */
   mergePlayers(from, to) {
     const a = this.player(from), b = this.player(to); if (!a || !b || from === to) return;
     this.db.exec('BEGIN');
@@ -120,15 +132,16 @@ class SqliteStore {
       this.q.moveIdentities.run(to, from); this.q.delIdentities.run(from);
       this.q.moveDevices.run(to, from);
       this.q.movePass.run(to, from); this.q.delPass.run(from); this.q.movePassClaims.run(to, from); this.q.delPassClaims.run(from);
+      this.q.moveQuests.run(to, from); this.q.delQuests.run(from);
       this.q.delPlayer.run(from);                       // frees a.secret, which becomes a device of `to`
       this.q.insDevice.run(a.secret, to, Number(a.created) || Date.now(), Date.now());
       this.db.exec('COMMIT');
     } catch (e) { this.db.exec('ROLLBACK'); throw e; }
   }
-  /** Deletes a player and everything linked to them (skins, runs, battle pass, sign-ins, devices); purchase receipts are kept without the player. */
+  /** Deletes a player and everything linked to them (skins, runs, battle pass, quests, sign-ins, devices); purchase receipts are kept without the player. */
   deletePlayer(id) {
     this.db.exec('BEGIN');
-    try { this.q.delSkins.run(id); this.q.delRuns.run(id); this.q.delIdentities.run(id); this.q.delDevicesOf.run(id); this.q.anonPurchases.run(id); this.q.delPass.run(id); this.q.delPassClaims.run(id); this.q.delPlayer.run(id); this.db.exec('COMMIT'); }
+    try { this.q.delSkins.run(id); this.q.delRuns.run(id); this.q.delIdentities.run(id); this.q.delDevicesOf.run(id); this.q.anonPurchases.run(id); this.q.delPass.run(id); this.q.delPassClaims.run(id); this.q.delQuests.run(id); this.q.delPlayer.run(id); this.db.exec('COMMIT'); }
     catch (e) { this.db.exec('ROLLBACK'); throw e; }
   }
   player(id) { return this.q.byId.get(id) || null; }
@@ -154,6 +167,12 @@ class SqliteStore {
   /** Records a claimed reward; false if it was claimed already, so each reward is paid once. */
   passClaim(player, season, reward, now) { return Number(this.q.passClaim.run(player, season, reward, now).changes) > 0; }
   passStats(season) { const r = this.q.passStats.get(season); return { players: Number(r.players), premium: Number(r.premium), xp: Number(r.xp), claims: Number(this.q.passClaimCount.get(season).n) }; }
+  questRows(player, period) { return this.q.questRows.all(player, period).map(r => ({ quest: r.quest, progress: Number(r.progress), done: r.done == null ? null : Number(r.done) })); }
+  /** Keeps a quest's progress; now and then drops quests from periods long over. */
+  questSave(player, period, quest, progress, now) { this.q.questSave.run(player, period, quest, progress, now); if (Math.random() < .01) this.q.pruneQuests.run(now - QUEST_KEEP); }
+  /** Marks a quest done; false if it was done already, so each quest pays once. */
+  questDone(player, period, quest, now) { return Number(this.q.questDone.run(player, period, quest, now, now).changes) > 0; }
+  questStats(period) { return Number(this.q.questStats.get(period).n); }
   flag(name) { const r = this.q.flag.get(name); return r ? r.value : null; }
   setFlag(name, value) { this.q.setFlag.run(name, value); }
   addNet(r) { this.q.insNet.run(r.at, r.platform, r.app, r.tz, r.conn, r.n, r.lost, r.min, r.med, r.p90, r.jit, r.fps, r.slow); if (Math.random() < .01) this.q.pruneNet.run(r.at - 90 * 864e5); }
@@ -164,7 +183,7 @@ class SqliteStore {
 class JsonStore {
   constructor(file) {
     this.kind = 'json'; this.file = file; this.timer = null;
-    this.d = { players: {}, secrets: {}, skins: {}, runs: {}, purchases: {}, identities: {}, devices: {}, net: [], pass: {}, flags: {} };
+    this.d = { players: {}, secrets: {}, skins: {}, runs: {}, purchases: {}, identities: {}, devices: {}, net: [], pass: {}, flags: {}, quests: {} };
     try { const raw = JSON.parse(fs.readFileSync(file, 'utf8')); if (raw && raw.players) this.d = Object.assign(this.d, raw); } catch (e) {}
   }
   save() {
@@ -193,13 +212,17 @@ class JsonStore {
     const ps = this.d.pass[to] || (this.d.pass[to] = {});
     for (const [season, r] of Object.entries(this.d.pass[from] || {})) { const t = ps[season]; if (!t) { ps[season] = r; continue; } t.xp += r.xp; t.premium = t.premium || r.premium; for (const c of r.claims) if (!t.claims.includes(c)) t.claims.push(c); }
     delete this.d.pass[from];
+    const qs = this.d.quests[to] || (this.d.quests[to] = {});
+    for (const [period, m] of Object.entries(this.d.quests[from] || {})) { const t = qs[period] || (qs[period] = {});
+      for (const [quest, r] of Object.entries(m)) { const o = t[quest]; if (!o) { t[quest] = r; continue; } o.progress += r.progress; o.done = o.done == null ? r.done : r.done == null ? o.done : Math.min(o.done, r.done); o.at = Math.max(o.at, r.at); } }
+    delete this.d.quests[from];
     delete this.d.secrets[a.secret]; delete this.d.players[from];
     this.d.devices[a.secret] = { player: to, created: a.created, seen: Date.now() };
     this.save();
   }
   deletePlayer(id) {
     const a = this.d.players[id]; if (!a) return;
-    delete this.d.skins[id]; delete this.d.pass[id]; delete this.d.secrets[a.secret]; delete this.d.players[id];
+    delete this.d.skins[id]; delete this.d.pass[id]; delete this.d.quests[id]; delete this.d.secrets[a.secret]; delete this.d.players[id];
     for (const [k, r] of Object.entries(this.d.runs)) if (r.player === id) delete this.d.runs[k];
     for (const [k, i] of Object.entries(this.d.identities)) if (i.player === id) delete this.d.identities[k];
     for (const [k, d] of Object.entries(this.d.devices)) if (d.player === id) delete this.d.devices[k];
@@ -231,6 +254,15 @@ class JsonStore {
   passClaims(player, season) { const r = (this.d.pass[player] || {})[season]; return r ? r.claims.slice() : []; }
   passClaim(player, season, reward, now) { const r = this.passEntry(player, season, now); if (r.claims.includes(reward)) return false; r.claims.push(reward); this.save(); return true; }
   passStats(season) { const o = { players: 0, premium: 0, xp: 0, claims: 0 }; for (const m of Object.values(this.d.pass)) { const r = m[season]; if (r) { o.players++; o.premium += r.premium ? 1 : 0; o.xp += r.xp; o.claims += r.claims.length; } } return o; }
+  questRows(player, period) { return Object.entries(((this.d.quests[player] || {})[period]) || {}).map(([quest, r]) => ({ quest, progress: r.progress, done: r.done ?? null })); }
+  questEntry(player, period, quest, now) { const m = this.d.quests[player] || (this.d.quests[player] = {}), pm = m[period] || (m[period] = {}); return pm[quest] || (pm[quest] = { progress: 0, done: null, at: now }); }
+  questSave(player, period, quest, progress, now) {
+    const r = this.questEntry(player, period, quest, now); r.progress = progress; r.at = now;
+    const m = this.d.quests[player]; for (const [k, pm] of Object.entries(m)) if (Object.values(pm).every(x => x.at < now - QUEST_KEEP)) delete m[k]; // periods long over
+    this.save();
+  }
+  questDone(player, period, quest, now) { const r = this.questEntry(player, period, quest, now); if (r.done != null) return false; r.done = now; r.at = now; this.save(); return true; }
+  questStats(period) { let n = 0; for (const m of Object.values(this.d.quests)) for (const r of Object.values(m[period] || {})) if (r.done != null) n++; return n; }
   flag(name) { return this.d.flags[name] ?? null; }
   setFlag(name, value) { this.d.flags[name] = value; this.save(); }
   addNet(r) { const a = this.d.net || (this.d.net = []); a.push(r); if (a.length > 20000) a.splice(0, a.length - 20000); this.save(); }
