@@ -18,6 +18,8 @@ Mitosis: Cell Arena ("Mitosis", "the game") is made by Catapult Consulting, LLC.
 
 **Connection quality.** While you play online, the game measures how long messages take to reach the server and back, how many never come back, and how smoothly it draws. Every few minutes it sends those numbers, the app version and your device's time zone (for example "Europe/London") so we can see where a closer server would help. These reports carry no player identifier, and the server does not store IP addresses with them.
 
+**Player counts.** The server counts how many games are connected to it at a time, whether each came from the website or the iPhone or Android app (from the browser details every connection sends), and whether it is in a game or the menus. It keeps only these totals, minute by minute for 24 hours; nothing that identifies a player or a device is stored.
+
 **Diagnostics.** If the app crashes or stalls, a technical report (device model, OS version, app version and a stack trace) is sent to the server so the problem can be fixed. Reports contain no personal information.
 
 ## What the game does not do

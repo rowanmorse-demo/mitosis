@@ -6,6 +6,7 @@ const http = require('http'), fs = require('fs'), path = require('path'), crypto
 const { openStore, DATA_DIR } = require('./store');
 const economy = require('./economy');
 const netstats = require('./netstats');
+const live = require('./live');
 
 const PORT = Number(process.env.PORT) || 3000;
 const MAX_PLAYERS = 16;
@@ -28,8 +29,8 @@ function lanUrls() {
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Authorization', 'Access-Control-Max-Age': '86400' };
 const ROUTES = {
   'POST /api/session': { fn: economy.handlers.session, auth: false },
-  'POST /api/run/start': { fn: economy.handlers.runStart, auth: true },
-  'POST /api/run/end': { fn: economy.handlers.runEnd, auth: true },
+  'POST /api/run/start': { fn: (store, body, p) => { const r = economy.handlers.runStart(store, body, p); players.runStarted(r.runId); return r; }, auth: true },
+  'POST /api/run/end': { fn: (store, body, p) => { const r = economy.handlers.runEnd(store, body, p); players.runEnded(body.runId); return r; }, auth: true },
   'POST /api/skins/buy': { fn: economy.handlers.buySkin, auth: true },
   'POST /api/iap/apple': { fn: economy.handlers.iapApple, auth: true },
   'POST /api/iap/google': { fn: economy.handlers.iapGoogle, auth: true },
@@ -46,7 +47,8 @@ const ROUTES = {
   // connection quality from the games (ping, lost pings, frame rate, time-zone region); read it at /admin/net
   'POST /api/net': { fn: (store, body) => { const r = netstats.clean(body, Date.now()); if (r) store.addNet(r); return { ok: true }; }, auth: false },
 };
-// The connection report is for the operator: /admin/net?token=… The token is ADMIN_TOKEN, or one made on first start and kept in the data dir.
+// The admin pages are for the operator: /admin/net?token=… (connection report) and /admin/live?token=… (live players).
+// The token is ADMIN_TOKEN, or one made on first start and kept in the data dir.
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || (() => {
   const f = path.join(DATA_DIR, 'admin-token');
   try { return fs.readFileSync(f, 'utf8').trim(); } catch (e) {}
@@ -54,10 +56,15 @@ const ADMIN_TOKEN = process.env.ADMIN_TOKEN || (() => {
   try { fs.mkdirSync(DATA_DIR, { recursive: true }); fs.writeFileSync(f, t + '\n', { mode: 0o600 }); } catch (e) {}
   return t;
 })();
-function netReport(req, res) {
-  const q = new URL(req.url, 'http://x').searchParams, t = q.get('token') || '';
+function adminOk(req, res) {
+  const t = new URL(req.url, 'http://x').searchParams.get('token') || '';
   const ok = t.length === ADMIN_TOKEN.length && crypto.timingSafeEqual(Buffer.from(t), Buffer.from(ADMIN_TOKEN));
-  if (!ok) { res.writeHead(403, { 'Content-Type': 'text/plain' }); res.end('Forbidden'); return; }
+  if (!ok) { res.writeHead(403, { 'Content-Type': 'text/plain' }); res.end('Forbidden'); }
+  return ok;
+}
+function netReport(req, res) {
+  if (!adminOk(req, res)) return;
+  const q = new URL(req.url, 'http://x').searchParams;
   const days = Math.min(90, Math.max(1, Number(q.get('days')) || 7)), sum = netstats.summary(store.netSince(Date.now() - days * 864e5));
   if (q.get('format') === 'json') { res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify({ days, ...sum })); return; }
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }); res.end(netstats.page(sum, days));
@@ -116,6 +123,12 @@ const server = http.createServer((req, res) => {
     res.end(page);
   } else if (url === '/admin/net') {
     netReport(req, res);
+  } else if (url === '/admin/live') {
+    if (!adminOk(req, res)) return;
+    if (new URL(req.url, 'http://x').searchParams.get('format') === 'json') { res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(players.json())); return; }
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }); res.end(players.page());
+  } else if (url === '/admin/live/stream') {
+    if (adminOk(req, res)) players.stream(req, res);
   } else if (url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ players: clients.size, accounts: store.playerCount(), store: store.kind, iap: economy.catalog().iap }));
@@ -127,6 +140,8 @@ const server = http.createServer((req, res) => {
 
 /* ---------- minimal WebSocket (RFC 6455) ---------- */
 const clients = new Set();
+// who is online and what they are doing, for /admin/live
+const players = live.create({ file: path.join(DATA_DIR, 'live-history.json'), conns: () => clients, cap: MAX_PLAYERS });
 const GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 
 server.on('upgrade', (req, sock) => {
@@ -135,7 +150,7 @@ server.on('upgrade', (req, sock) => {
   const accept = crypto.createHash('sha1').update(key + GUID).digest('base64');
   sock.write('HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ' + accept + '\r\n\r\n');
   sock.setNoDelay(true);
-  const c = { sock, id: null, p: null, buf: Buffer.alloc(0), frag: [], alive: true, count: 0, window: Date.now(), dead: false };
+  const c = { sock, id: null, p: null, pAt: 0, pingAt: 0, ...live.platformOf(req.headers), buf: Buffer.alloc(0), frag: [], alive: true, count: 0, window: Date.now(), dead: false };
   sock.on('data', d => { try { onData(c, d); } catch (e) { kill(c); } });
   sock.on('close', () => kill(c));
   sock.on('error', () => kill(c));
@@ -190,23 +205,23 @@ function onMessage(c, text) {
   if (++c.count > MAX_RATE) return;
   let m; try { m = JSON.parse(text); } catch (e) { return; }
   if (!m || typeof m !== 'object') return;
-  if (m.t === 'ping') { send(c, { t: 'pong', c: typeof m.c === 'number' ? m.c : 0 }); return; } // the game measures its round trip with these
+  if (m.t === 'ping') { c.pingAt = now; send(c, { t: 'pong', c: typeof m.c === 'number' ? m.c : 0 }); return; } // the game measures its round trip with these
   if (m.t === 'hello' && !c.id) {
-    if (clients.size >= MAX_PLAYERS) { send(c, { t: 'full' }); setTimeout(() => kill(c), 200); return; }
+    if (clients.size >= MAX_PLAYERS) { players.turnedAway(); send(c, { t: 'full' }); setTimeout(() => kill(c), 200); return; }
     let id = typeof m.id === 'string' && /^[a-z0-9]{6,20}$/.test(m.id) ? m.id : crypto.randomBytes(6).toString('hex');
     while ([...clients].some(o => o.id === id)) id += Math.floor(Math.random() * 10);
-    c.id = id; clients.add(c);
+    c.id = id; c.pAt = c.pingAt = now; clients.add(c); players.tick();
     send(c, { t: 'welcome', id, peers: [...clients].filter(o => o !== c && o.p).map(o => ({ id: o.id, p: o.p })), lan: lanUrls() });
     log(`+ player joined (${clients.size} in the well)`);
   } else if (m.t === 'p' && c.id && m.p && typeof m.p === 'object' && !Array.isArray(m.p)) {
-    c.p = m.p;
+    c.p = m.p; c.pAt = now;
     broadcast(c, { t: 'p', id: c.id, p: m.p });
   }
 }
 function kill(c) {
   if (c.dead) return; c.dead = true;
   try { c.sock.destroy(); } catch (e) {}
-  if (clients.delete(c)) { broadcast(c, { t: 'bye', id: c.id }); log(`- player left (${clients.size} in the well)`); }
+  if (clients.delete(c)) { players.tick(); broadcast(c, { t: 'bye', id: c.id }); log(`- player left (${clients.size} in the well)`); }
 }
 setInterval(() => {
   for (const c of clients) {
@@ -229,6 +244,7 @@ server.listen(PORT, '0.0.0.0', () => {
   if (lan.length) console.log(`  Send to friends on your Wi-Fi / network:\n` + lan.map(u => '      ' + u).join('\n'));
   console.log(`\n  Wallets and skins:  ${store.kind} store in ${DATA_DIR}`);
   console.log(`  Connection report:  http://localhost:${PORT}/admin/net?token=${ADMIN_TOKEN}`);
+  console.log(`  Live players:       http://localhost:${PORT}/admin/live?token=${ADMIN_TOKEN}`);
   console.log(`  Purchases:          Apple ${iap.apple ? 'verified' : 'not configured'} · Google Play ${iap.google ? 'verified' : 'not configured'}${iap.unverified ? '  (IAP_UNVERIFIED=1: trusting clients — dev only!)' : ''}`);
   const auth = economy.catalog().auth;
   console.log(`  Sign-in:            Apple ready for the app${auth.apple.web ? ' and the website' : ''} · Google ${auth.google.configured ? 'ready' : 'not configured (set GOOGLE_CLIENT_IDS)'}`);

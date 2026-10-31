@@ -235,4 +235,5 @@ All endpoints take and return JSON. Authenticated ones need `Authorization: Bear
 | `POST /api/log` `{who, text}` | Client diagnostics: frame stalls, page errors, autopilot events; printed in the server log |
 | `POST /api/net` | Connection quality from the game: ping samples, lost pings, frame rate, time zone (anonymous) |
 | `GET /admin/net?token=…` | The connection report: ping and frame rate by area, time zone, platform and connection, and what most likely needs fixing. The token is `ADMIN_TOKEN`, or the one the server makes on first start in `data/admin-token` (also printed at start-up). `&days=30`, `&format=json` |
+| `GET /admin/live?token=…` | Live players: who is online right now (website, iPhone app, Android app), what they are doing (live arena, searching, solo game, menus, away), rooms in use, peak today and a 24-hour chart. Updates live over `GET /admin/live/stream?token=…` (server-sent events); `&format=json` for the numbers. Same token as the connection report. Counts only; the 24-hour history is kept in `DATA_DIR/live-history.json` |
 | `GET /api/catalog` | Skins, packs, payout rules and which stores are verified |
