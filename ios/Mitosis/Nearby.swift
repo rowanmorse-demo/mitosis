@@ -43,6 +43,8 @@ final class Nearby: NSObject, MCSessionDelegate, MCNearbyServiceAdvertiserDelega
     }
 
     func stop() {
+        // the old session's events are ignored from here on, so say goodbye for its phones now (they rejoin after resume())
+        for p in session?.connectedPeers ?? [] { onEvent?(["ev": "bye", "id": p.displayName]) }
         advertiser?.stopAdvertisingPeer()
         browser?.stopBrowsingForPeers()
         session?.disconnect()

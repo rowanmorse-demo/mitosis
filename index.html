@@ -699,6 +699,21 @@ body:not(.playing) #tip{display:none}
 .lb-bots button{appearance:none;border:0;background:none;min-width:0;height:38px;padding:0 2px;border-radius:11px;color:var(--muted);font:700 12px/1 var(--display);cursor:pointer;transition:background .2s,color .2s,box-shadow .2s}
 .lb-bots button[aria-checked=true]{color:var(--k);background:linear-gradient(180deg,rgba(255,255,255,.15),rgba(255,255,255,.05));box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 3px 10px -3px rgba(0,0,0,.5)}
 .lb-bots [data-k=easy]{--k:var(--lb-mint)}.lb-bots [data-k=normal]{--k:var(--ink)}.lb-bots [data-k=hard]{--k:#ffc04d}.lb-bots [data-k=expert]{--k:#ff7aa0}.lb-bots [data-k=master]{--k:#c9a4ff}
+/* Nearby lobby: who is here, the match settings, and the host who picks them */
+.lb-near{display:none;gap:4px;margin:0 0 8px;padding:9px 10px 9px 13px;border-radius:16px;background:rgba(108,184,255,.08);box-shadow:inset 0 0 0 1px rgba(108,184,255,.22)}
+.lb-play[data-mode=nearby] .lb-near{display:grid}
+.lobby #go.lb-wait{filter:saturate(.3) brightness(.72)}
+.lb-near-top{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
+.lb-near-who{min-width:0;font:700 14px/1.2 var(--display);color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-near-sum{margin:0;font-size:12px;line-height:1.3;color:var(--muted)}
+.lb-near-set{appearance:none;border:0;flex:none;height:30px;padding:0 12px;border-radius:10px;font:700 12px/1 var(--display);color:var(--lb-blue);background:rgba(108,184,255,.15);cursor:pointer}
+.lb-near-note{margin:0;font-size:13px;line-height:1.35;color:var(--muted)}
+.lb-near-rows{display:grid;gap:12px}
+.lb-near-row{display:grid;gap:6px}.lb-near-row>span{font:700 11px/1 var(--display);color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.lb-near-row .lb-bots{--k:var(--ink)}.lb-near-row .lb-bots.c3{grid-template-columns:repeat(3,minmax(0,1fr))}.lb-near-row .lb-bots.c4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.lb-near-row .lb-bots button:disabled{cursor:default;opacity:.5}.lb-near-row .lb-bots button[aria-checked=true]:disabled{opacity:1}
+.lb-near-list{list-style:none;margin:0;padding:0;display:grid;gap:6px}.lb-near-list li{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:14px;color:var(--ink)}
+.lb-near-list small{font:700 11px/1 var(--display);letter-spacing:.06em;text-transform:uppercase;color:var(--lb-blue)}
 /* landscape phones (the iPhone app) */
 @media (orientation:landscape) and (max-height:520px){
   .lobby{grid-template-columns:minmax(168px,196px) minmax(0,1fr) minmax(214px,240px);gap:8px 16px;padding:max(10px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
@@ -2126,6 +2141,7 @@ body:not(.playing) #toasts .toast .tt{display:contents}body:not(.playing) #toast
         <button type="button" class="lb-modebtn" id="modeBtn" aria-haspopup="dialog" aria-controls="modeSheet"><span class="ic"><svg class="m-ranked"><use href="#lbi-ranked"/></svg><svg class="m-casual"><use href="#lbi-casual"/></svg><svg class="m-nearby"><use href="#lbi-nearby"/></svg><i class="lb-netdot"></i></span><b id="modeName">Ranked</b><span class="lb-pips" aria-hidden="true"><i></i><i></i><i></i><i></i></span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 15l5-5 5 5"/></svg></button>
         <button type="button" class="lb-switch" id="lbToCasual" aria-label="Switch to Casual" title="Casual"><svg aria-hidden="true"><use href="#lbi-casual"/></svg><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
       </div>
+      <div class="lb-near" id="lbNear"><div class="lb-near-top"><b class="lb-near-who" id="nearWho">Looking for phones…</b><button type="button" class="lb-near-set" id="nearSetBtn" aria-haspopup="dialog" aria-controls="nearSheet">Settings</button></div><p class="lb-near-sum" id="nearSum"></p></div>
       <button id="go" class="lb-go" type="button">Play</button>
       <button id="practiceBtn" class="lb-go" type="button">Play</button>
       <button id="lbWait" class="lb-go lb-off" type="button" disabled>Connecting…</button>
@@ -2141,6 +2157,19 @@ body:not(.playing) #toasts .toast .tt{display:contents}body:not(.playing) #toast
           <div class="lb-bots" id="lbSkill" role="radiogroup" aria-label="Bot difficulty"><button type="button" role="radio" data-k="easy">Easy</button><button type="button" role="radio" data-k="normal">Normal</button><button type="button" role="radio" data-k="hard">Hard</button><button type="button" role="radio" data-k="expert">Expert</button><button type="button" role="radio" data-k="master">Master</button></div></div>
         <div class="lb-mcard" data-m="nearby" hidden><button type="button" class="lb-mpick" role="radio" data-m="nearby" aria-checked="false"><span class="lb-mart"><svg viewBox="0 0 200 120" aria-hidden="true"><g fill="none" stroke="#6cb8ff" stroke-width="3" stroke-linecap="round"><path d="M80 47a19 19 0 0 1 0 26M120 47a19 19 0 0 0 0 26" opacity=".95"/><path d="M88 38a32 32 0 0 1 0 44M112 38a32 32 0 0 0 0 44" opacity=".55"/></g><circle cx="100" cy="60" r="6" fill="url(#lbgBlue)"/><rect x="28" y="26" width="40" height="70" rx="10" fill="#0a1a2c" stroke="url(#lbgBlue)" stroke-width="3"/><rect x="35" y="35" width="26" height="44" rx="4" fill="#163a63"/><circle cx="48" cy="57" r="7" fill="#ff5c8a"/><rect x="132" y="26" width="40" height="70" rx="10" fill="#0a1a2c" stroke="url(#lbgBlue)" stroke-width="3"/><rect x="139" y="35" width="26" height="44" rx="4" fill="#163a63"/><circle cx="152" cy="57" r="7" fill="#5fe0a8"/><circle cx="48" cy="88" r="2.5" fill="#6cb8ff"/><circle cx="152" cy="88" r="2.5" fill="#6cb8ff"/></svg></span><b>Nearby</b><small>Phones around you</small></button>
           <div class="lb-mstat" id="lbNearStat"></div></div>
+      </div>
+    </div>
+    <div class="lb-sheet" id="nearSheet" role="dialog" aria-modal="true" aria-labelledby="nearTitle" hidden>
+      <div class="lb-sheet-box">
+        <header class="lb-sheet-top"><h2 id="nearTitle">Nearby match</h2><button type="button" class="lb-icon" id="nearClose" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
+        <p class="lb-near-note" id="nearNote"></p>
+        <div class="lb-near-rows">
+          <div class="lb-near-row"><span id="nearKL">Bot difficulty</span><div class="lb-bots" data-set="k" role="radiogroup" aria-labelledby="nearKL"><button type="button" role="radio" data-v="easy" data-k="easy">Easy</button><button type="button" role="radio" data-v="normal" data-k="normal">Normal</button><button type="button" role="radio" data-v="hard" data-k="hard">Hard</button><button type="button" role="radio" data-v="expert" data-k="expert">Expert</button><button type="button" role="radio" data-v="master" data-k="master">Master</button></div></div>
+          <div class="lb-near-row"><span id="nearBL">Bots</span><div class="lb-bots c4" data-set="b" role="radiogroup" aria-labelledby="nearBL"><button type="button" role="radio" data-v="none">None</button><button type="button" role="radio" data-v="few">Few</button><button type="button" role="radio" data-v="normal">Normal</button><button type="button" role="radio" data-v="lots">Lots</button></div></div>
+          <div class="lb-near-row"><span id="nearLL">Round</span><div class="lb-bots c3" data-set="len" role="radiogroup" aria-labelledby="nearLL"><button type="button" role="radio" data-v="180">3 min</button><button type="button" role="radio" data-v="300">5 min</button><button type="button" role="radio" data-v="600">10 min</button></div></div>
+          <div class="lb-near-row"><span id="nearVL">Lives</span><div class="lb-bots c3" data-set="lives" role="radiogroup" aria-labelledby="nearVL"><button type="button" role="radio" data-v="1">1</button><button type="button" role="radio" data-v="3">3</button><button type="button" role="radio" data-v="5">5</button></div></div>
+          <div class="lb-near-row"><span>Players</span><ul class="lb-near-list" id="nearList"></ul></div>
+        </div>
       </div>
     </div>
   </div>
@@ -2445,9 +2474,12 @@ body:not(.playing) #toasts .toast .tt{display:contents}body:not(.playing) #toast
     if(nearby){N.mode='nearby';N.state='live';const w=ws;ws=null;try{if(w)w.close();}catch(e){}setConn(true);flush();}
     else{N.mode='server';N.state='connecting';setConn(false);retry=0;connect();}
   };
+  // a phone that went quiet without a goodbye (its app was closed, or iOS ended the session in the background) drops out after 8 s
+  const nearSeen=new Map();
+  setInterval(()=>{if(!nearby)return;const now=performance.now();let gone=false;for(const [id,t] of nearSeen)if(now-t>8000){nearSeen.delete(id);gone=others.delete(id)||gone;}if(gone)rebuild();},2000);
   N.onNearby=m=>{if(!nearby||!m||typeof m.id!=='string')return;
-    if(m.ev==='p'&&typeof m.data==='string'){let p;try{p=JSON.parse(m.data);}catch(e){return;}if(p&&typeof p==='object'){others.set(m.id,Object.freeze(p));rebuild();}}
-    else if(m.ev==='bye'){others.delete(m.id);rebuild();}
+    if(m.ev==='p'&&typeof m.data==='string'){let p;try{p=JSON.parse(m.data);}catch(e){return;}if(p&&typeof p==='object'){others.set(m.id,Object.freeze(p));nearSeen.set(m.id,performance.now());rebuild();}}
+    else if(m.ev==='bye'){others.delete(m.id);nearSeen.delete(m.id);rebuild();}
     else if(m.ev==='join')flush();};
   // Ping: a small message every 4 s that the server echoes back. N.rtt is the smoothed round trip; NS collects samples
   // and lost pings (no echo within 5 s) for the connection report. Servers too old to echo leave N.rtt null.
@@ -2483,7 +2515,7 @@ const MAX_HUNTERS=6,HUNTER_R=42,INF_MIN=8,INF_MAX=10,PROTO=6,SEED=90210; // PROT
 // Rounds: the well is full size for the first 10%, then the arena closes in to 3% of the dish by 95% of the round
 // and the wall burns fast for the rest, so one cell is normally left before ROUND_SEC; anyone still alive then is
 // ranked by mass. ?round=60 shortens it for tests.
-const ROUND_SEC=+((location.search.match(/[?&]round=(\d+)/)||[])[1])||600,ROUND_GRACE=Math.round(ROUND_SEC*.1),ROUND_HOLD=Math.round(ROUND_SEC*.05),R_MIN=R*.03,ROUND_GAP=6,BOT_CUTOFF=Math.round(ROUND_SEC*.7); // arena full for the first minute, closed to 3% by 9:30; bots stop respawning at 7:00
+let ROUND_SEC=+((location.search.match(/[?&]round=(\d+)/)||[])[1])||600,ROUND_GRACE=Math.round(ROUND_SEC*.1),ROUND_HOLD=Math.round(ROUND_SEC*.05),BOT_CUTOFF=Math.round(ROUND_SEC*.7);const R_MIN=R*.03,ROUND_GAP=6; // arena full for the first minute, closed to 3% by 9:30; bots stop respawning at 7:00
 let round={id:1,start:0,n:0,synced:false,over:false};
 // Balance: a cell is absorbed once EAT_COVER of its diameter is inside a cell at least 10% heavier (see need()).
 // Ejecting costs EJECT_COST and makes a blob of EJECT_MASS, at most once every EJECT_GAP seconds.
@@ -2533,7 +2565,10 @@ const DIFF={calm:{bots:40,aggr:.35,think:.36},standard:{bots:60,aggr:.65,think:.
 // Bot difficulty (practice and offline games; ranked games always use Normal so everyone faces the same bots)
 const SKILL={easy:{label:'Easy',aggr:.3,think:.44,caution:.55},normal:{label:'Normal',aggr:.65,think:.26,caution:1},hard:{label:'Hard',aggr:.92,think:.17,caution:1.15},expert:{label:'Expert',aggr:1.1,think:.11,caution:1.3},
   master:{label:'Master',aggr:1.15,think:.12,caution:1.45,smart:true}},SKILL_LIST=['easy','normal','hard','expert','master']; // Master thinks no faster than Expert, it thinks better (see think)
-const skillNow=()=>SKILL[local==='practice'?(settings.botSkill||'normal'):'normal']||SKILL.normal;
+// Nearby match settings: the host phone picks them in the lobby and the others follow (see nearIngest)
+const NEAR_BOTS={none:0,few:25,normal:60,lots:80},NEAR_LEN=[180,300,600],NEAR_LIVES=[1,3,5],near={k:'normal',b:'normal',len:300,lives:3,m:0,heard:false};
+const nearMode=()=>{const N=window.__mitosisNet;return !local&&!!N&&N.mode==='nearby';};
+const skillNow=()=>SKILL[local==='practice'?(settings.botSkill||'normal'):nearMode()?near.k:'normal']||SKILL.normal;
 const STAINS=[[340,100,68],[250,100,76],[174,62,54],[40,90,58],[18,100,64],[200,25,88]];
 /* ================= skin art ================= */
 // Skins are drawn in layers. Detail that never changes is painted once into a sprite at about the size it shows
@@ -3937,7 +3972,8 @@ const roundT=()=>T-round.start;
 // Spawning: every player gets MAX_RESPAWNS respawns per round, and nobody spawns in the last SPAWN_CUTOFF seconds.
 // When you can't join, Play searches for a game for up to SEARCH_MAX seconds (the round may open, or a life come back
 // with the next round); after that you're put into a game on this device where bots fill every slot.
-const SPAWN_CUTOFF=Math.min(300,Math.round(ROUND_SEC*.5)),MAX_RESPAWNS=2,SEARCH_MAX=30;
+let SPAWN_CUTOFF=Math.min(300,Math.round(ROUND_SEC*.5)),MAX_RESPAWNS=2;const SEARCH_MAX=30;
+function setRoundLen(s){ROUND_SEC=s;ROUND_GRACE=Math.round(s*.1);ROUND_HOLD=Math.round(s*.05);BOT_CUTOFF=Math.round(s*.7);SPAWN_CUTOFF=Math.min(300,Math.round(s*.5));} // a Nearby match can be shorter
 function livesUsed(){if(lives.round!==round.id){lives.round=round.id;lives.used=0;}return lives.used;}
 function roundOpen(){if(multi()&&!isHost&&!round.synced)return true;return round.over||roundT()<ROUND_SEC-SPAWN_CUTOFF;}
 function spawnOpen(){if(local==='practice')return true;return roundOpen()&&livesUsed()<=MAX_RESPAWNS;}
@@ -3954,6 +3990,8 @@ function updateSpawnLock(){
   if(queued){const left=Math.max(0,Math.ceil((searchUntil-performance.now())/1000));goT=agT=`Searching… 0:${String(left).padStart(2,'0')}${queuedPeers?' · '+(queuedPeers+1)+' waiting':''}`;}
   else if(!open){const why=spawnBlockReason();goT=agT=(why==='lives'?'No lives left · ':'Round closed · ')+'find a game';}
   else{const left=MAX_RESPAWNS+1-livesUsed();if(!local&&left<=MAX_RESPAWNS)agT=`Re-inoculate · ${left} ${left===1?'life':'lives'} left`;}
+  if(nearMode()&&!queued)goT=nearLabel();
+  go.classList.toggle('lb-wait',nearMode()&&!near.m&&!nearHost()); // a guest waits for the host to start
   if(go.textContent!==goT)go.textContent=goT;if(ag.textContent!==agT)ag.textContent=agT;
   go.classList.toggle('queued',queued);ag.classList.toggle('queued',queued);ag.classList.add('sm');
   if(queued){const sp=clamp((searchUntil-performance.now())/(SEARCH_MAX*1000),0,1)*100+'%';go.style.setProperty('--sp',sp);ag.style.setProperty('--sp',sp);}
@@ -4997,7 +5035,7 @@ function ingest(peer,P,fromHost){
     for(const r of P.r.slice(-24)){if(!Array.isArray(r)||r.length<2)continue;const s=r[0]|0;if(s<=last)continue;if(s>mx)mx=s;try{applyRec(r);}catch(e){}}
     lastSeq.set(peer,mx);}
   if(typeof P.pe==='string')for(let o=0;o+6<=P.pe.length;o+=6){const i=dec(P.pe,o,3),g=dec(P.pe,o+3,3);if(Number.isNaN(i+g)||i<0||i>=PELLETS)continue;const p2=pellets[i];if(p2.g<=g){p2.g=(g+1)%262143;placePellet(p2);}}
-  if(fromHost&&!isHost)ingestWorld(P);
+  if(fromHost&&!isHost){ingestWorld(P);nearIngest(P.lb);}
 }
 function ingestWorld(P){
   const t=now();
@@ -5063,7 +5101,8 @@ function send(){
   peLog=peLog.filter(p=>T-p.t<.7);
   const peStr=n=>peLog.slice(-n).map(p=>enc(p.i,3)+enc(p.g,3)).join('');
   P.pe=peLog.length?peStr(120):null;
-  if(local){P.h=0;P.a=0;P.cl=null;P.ej=null;P.r=null;P.pe=null;}   // a local game is invisible to the room
+  if(local){P.h=0;P.a=0;P.cl=null;P.ej=null;P.r=null;P.pe=null;}
+  P.lb=nearMode()&&isHost?nearWire():null;   // Nearby: the match settings and whether a match is on   // a local game is invisible to the room
   const host=P.h===1;
   const bots=perCell=>{let s='';for(const b of players){if(!b.bot||b.remote||!b.alive||!b.cells.length)continue;
       const cs=b.cells.slice().sort((a,c)=>c.mass-a.mass).slice(0,perCell);s+=enc(b.bid,2)+enc(fxBits(b),3)+enc(cs.length,1)+cs.map(encCell).join('');}return s;};
@@ -5124,7 +5163,7 @@ function onRoomErr(){
 /* ================= flow ================= */
 const botSkin=b=>b===BOSS_BID?4:h32(b*53+3)<.45?0:1+Math.floor(h32(b*59+1)*4);
 // Every real player who joins replaces BOTS_PER_PLAYER microbes, down to 30% of the chosen density.
-function botTarget(){const n=DIFF[settings.diff].bots;return Math.max(Math.round(n*.3),n-Math.max(0,peerCount-1)*BOTS_PER_PLAYER);}
+function botTarget(){const n=nearMode()?NEAR_BOTS[near.b]:DIFF[settings.diff].bots;return Math.max(Math.round(n*.3),n-Math.max(0,peerCount-1)*BOTS_PER_PLAYER);}
 function syncBots(){
   if(!isHost)return;
   const cfg=DIFF[settings.diff];let want=botTarget(),bots=players.filter(p=>p.bot&&!p.remote&&!p.boss);
@@ -5153,6 +5192,7 @@ function showCard(id){
   for(const c of['startCard','pauseCard','deathCard','storeCard','lookCard','rankCard','settingsCard','friendsCard','profileCard','introCard','deleteCard'])$(c).hidden=c!==id;$('overlay').hidden=!id;}
 const isOffline=()=>{const N=window.__mitosisNet;return !N||N.state==='offline';};
 function startGame(){
+  if(nearMode()&&!nearGate())return; // Nearby: the host starts the match from the lobby, the others join it
   if(!local&&isOffline()){startLocal('practice');return;} // no connection: play the bots right away, unranked
   if(!spawnOpen()){
     if(queued){queued=false;updateSpawnLock();toast('Search','Search cancelled','Tap again to look for a game');return;}
@@ -5478,6 +5518,7 @@ function setNearby(on){
   if(on){Native.send({type:'nearby',cmd:'start',id:N.id});N.useNearby(s=>Native.send({type:'nearby',cmd:'send',data:s}));
     toast('Nearby','Looking for phones nearby','Open Nearby on the other phones too. These games are unranked.');}
   else{Native.send({type:'nearby',cmd:'stop'});N.useNearby(null);}
+  near.m=0;near.heard=false;nearApply(); // a fresh lobby, and the usual rules again when leaving
   claimReady=false;yielded=false;roomAt=T;lastPeerCount=-1;syncNearby(); // elect a host again among whoever is reachable now
 }
 function syncNearby(){ // Nearby is one of the lobby's play modes: it follows the app turning nearby play on or off
@@ -5491,6 +5532,63 @@ $('eventPill').addEventListener('click',()=>{const key=Object.keys(SEASONS).find
 syncEvent();setInterval(syncEvent,60000);
 syncNearby();
 if(/[?&]nearby=1/.test(location.search))setTimeout(()=>setNearby(true),1500); // debug builds: -nearby 1 (testing with two simulators)
+/* Nearby lobby. The host phone (the one the others follow, see netTick) picks the match: bot difficulty, how many bots,
+   round length and lives, then starts it. The others see the settings and are pulled into the match if they are on the
+   home screen. The settings travel in the host's presence as lb:'skill,bots,seconds,lives,match' (match 0: in the lobby).
+   When the match round ends everyone is back in the lobby until the host starts the next one. */
+const ROUND_SEC0=ROUND_SEC;
+{const s=settings.nearby||{};near.k=SKILL[s.k]?s.k:SKILL[settings.botSkill]?settings.botSkill:'normal';if(Object.hasOwn(NEAR_BOTS,s.b))near.b=s.b;if(NEAR_LEN.includes(s.len))near.len=s.len;if(NEAR_LIVES.includes(s.lives))near.lives=s.lives;}
+const nearWire=()=>[near.k,near.b,near.len,near.lives,near.m].join(',');
+const nearHost=()=>claimReady&&!!myPeer&&hostPeer===myPeer; // settled: for 1.5 s after joining every phone thinks it hosts
+function nearApply(){const on=isNearby();setRoundLen(on?near.len:ROUND_SEC0);MAX_RESPAWNS=on?near.lives-1:2;} // the match rules on every phone
+function nearName(peer){if(!peer)return'The host';if(peer===myPeer)return'You';const N=window.__mitosisNet,p=N&&N.peers().find(q=>q.peer===peer);return(p&&p.presence&&cleanName(p.presence.n))||'Another phone';}
+function nearSummary(){return[near.b==='none'?'No bots':SKILL[near.k].label+' bots ('+near.b+')',near.len/60+' min',near.lives+(near.lives===1?' life':' lives')].join(' · ');}
+function nearIngest(s){ // the host's lobby, on the other phones
+  if(typeof s!=='string')return;const [k,b,len,lv,m]=s.split(','),L=+len,V=+lv,M=+m;
+  if(!SKILL[k]||!Object.hasOwn(NEAR_BOTS,b)||!NEAR_LEN.includes(L)||!NEAR_LIVES.includes(V)||!(M>=0&&M<=4095))return;
+  const was=near.m,heard=near.heard;
+  if(k!==near.k||b!==near.b||L!==near.len||V!==near.lives){Object.assign(near,{k,b,len:L,lives:V});nearApply();}
+  near.m=M;near.heard=true;
+  if(!heard||M===was)return;
+  if(M&&mode!=='play'&&!$('startCard').hidden){toast('Nearby','Match started',nearName(hostPeer)+' started it · '+nearSummary());startGame();}
+  else if(!M)toast('Nearby','Match over',nearName(hostPeer)+' starts the next one from the lobby');
+}
+function nearStart(){ // the host starts a match: a fresh round with the lobby's rules, on every phone
+  for(const p of players.filter(p=>p.bot&&!p.remote))removePlayer(p);cells=cells.filter(c=>!c.dead);
+  round={id:(round.id%4095)+1,start:T,n:0,synced:true,over:false};near.m=round.id;nearApply();syncBots();
+  toast('Nearby','Match started',nearSummary());startGame();
+}
+function nearGate(){ // Play in a Nearby lobby: the host starts the match, the others join the one that is on
+  if(!near.m){if(nearHost())nearStart();else toast('Nearby','Waiting for the host',nearName(hostPeer)+' starts the match');return false;}
+  if(!spawnOpen()){toast('Nearby',spawnBlockReason()==='lives'?'No lives left':'Too late to join','The next match starts from the lobby');return false;}
+  return true;
+}
+function nearLabel(){if(!near.m)return nearHost()?'Start match':'Waiting…';return spawnOpen()?'Join match':'Match on';} // short: the lobby strip names the host
+function nearSheetSync(){
+  const host=nearHost(),lock=!host||!!near.m;
+  for(const g of $('nearSheet').querySelectorAll('[data-set]'))for(const b of g.children){b.disabled=lock;b.setAttribute('aria-checked',String(b.dataset.v===String(near[g.dataset.set])));}
+  setTxt($('nearNote'),!host?nearName(hostPeer)+' picks the match settings.':near.m?'A match is on. Change the settings when it ends.':'You host: these settings apply to every phone in the match.');
+  const N=window.__mitosisNet,list=$('nearList'),ps=(N?N.peers():[]).filter(p=>p.isMe||(p.presence&&p.presence.v===PROTO)),k=ps.map(p=>p.peer+(p.presence&&p.presence.n)).join()+hostPeer;
+  if(list._k===k)return;list._k=k;list.textContent='';
+  for(const p of ps){const li=document.createElement('li'),n=document.createElement('span');n.textContent=p.isMe?(cleanName($('nameIn').value)||'Unnamed cell')+' (you)':cleanName(p.presence.n)||'Guest cell';li.append(n);
+    if(p.peer===hostPeer){const h=document.createElement('small');h.textContent='Host';li.append(h);}list.append(li);}
+}
+function nearSync(){
+  if(!isNearby()){if(!$('nearSheet').hidden)$('nearSheet').hidden=true;return;}
+  const host=nearHost();
+  if(host&&near.m&&(round.over||round.id!==near.m)){near.m=0;toast('Nearby','Match over','Start the next one from the lobby');} // the match round ended
+  setTxt($('nearWho'),peerCount<=1?(host?'No phones yet · you can start alone':'Looking for phones…'):peerCount+' phones · '+(host?'you host':!claimReady||hostPeer===myPeer?'choosing a host…':nearName(hostPeer)+' hosts'));
+  setTxt($('nearSum'),(near.m?'Match on · ':'')+nearSummary());setTxt($('nearSetBtn'),host&&!near.m?'Settings':'View');
+  if($('startCard').hidden)$('nearSheet').hidden=true;else if(!$('nearSheet').hidden)nearSheetSync();
+}
+setInterval(nearSync,250);
+$('nearSetBtn').addEventListener('click',()=>{$('nearSheet').hidden=false;nearSheetSync();Native.haptic('light');});
+$('nearClose').addEventListener('click',()=>{$('nearSheet').hidden=true;});
+$('nearSheet').addEventListener('click',e=>{if(e.target===e.currentTarget){e.currentTarget.hidden=true;return;}
+  const b=e.target.closest('[data-set] button');if(!b||b.disabled||!nearHost()||near.m)return;
+  const key=b.parentElement.dataset.set;near[key]=key==='len'||key==='lives'?+b.dataset.v:b.dataset.v;nearApply();
+  settings.nearby={k:near.k,b:near.b,len:near.len,lives:near.lives};saveSettings();nearSheetSync();nearSync();Native.haptic('light');});
+addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('nearSheet').hidden){e.preventDefault();e.stopImmediatePropagation();$('nearSheet').hidden=true;}},true);
 const syncSkill=()=>{const k=SKILL[settings.botSkill]?settings.botSkill:'normal';const b=$('skillBtn');b.textContent=SKILL[k].label;b.dataset.k=k;[...$('skillSeg').children].forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.k===k)));};
 $('skillBtn').addEventListener('click',()=>{const i=SKILL_LIST.indexOf(settings.botSkill||'normal');settings.botSkill=SKILL_LIST[(i+1)%SKILL_LIST.length];saveSettings();syncSkill();toast('Bots',`${SKILL[settings.botSkill].label} bots`,'Used in practice and offline games');});
 $('skillSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.botSkill=b.dataset.k;saveSettings();syncSkill();});syncSkill();
