@@ -121,6 +121,7 @@ On Windows, double-click `start.bat`. On macOS, double-click `start.command`.
 - **Same Wi-Fi:** send friends the `http://192.168.x.x:3000` link shown in the game's *Play together* box.
 - **Anywhere, from your PC:** keep `start.bat` running and double-click `share-online.bat`. It prints a temporary `https://….trycloudflare.com` link.
 - **Tests:** `npm test` runs the economy API end to end against a throwaway server.
+- **Stress test:** `node tools/stress.js` starts a throwaway copy of the server on a spare port and fills it with simulated games (presence 15 times a second, a hosting game's bigger presence, pings), then reports the server's CPU, memory, relay delay and bandwidth at 4, 8, 12 and 16 players. `--cap=128 --steps=16,32,64,128` lifts the player limit in the copy to see how far one arena goes. It never touches a running server, but run it on the production box only when it is quiet: the simulated games share its CPU.
 
 ### Server settings (environment variables)
 
@@ -209,6 +210,7 @@ Regenerate the icon with `swift ios/tools/make-icon.swift ios/Mitosis/Assets.xca
 | `auth.js` | Sign in with Apple / Google: verifies identity tokens (RS256 JWTs) against the providers' published keys, no SDK |
 | `store.js` | Storage: SQLite built into Node, or a JSON file on older Node. Players, skins, runs, purchases, sign-in identities and device secrets |
 | `test.js` | End-to-end test of the API (`npm test`) |
+| `tools/stress.js` | Load test for the relay: how many players one server can carry |
 | `ios/` | iOS app (Swift, WKWebView, StoreKit 2). `project.yml` describes the Xcode project |
 | `android/` | Android app (Kotlin, WebView, Play Billing) |
 | `render.yaml` | Render deployment settings |
