@@ -2809,7 +2809,7 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
   const nearSeen=new Map();
   setInterval(()=>{if(!nearby)return;const now=performance.now();let gone=false;for(const [id,t] of nearSeen)if(now-t>8000){nearSeen.delete(id);gone=others.delete(id)||gone;}if(gone)rebuild();},2000);
   N.onNearby=m=>{if(!nearby||!m||typeof m.id!=='string')return;
-    if(m.ev==='p'&&typeof m.data==='string'){let p;try{p=JSON.parse(m.data);}catch(e){return;}if(p&&typeof p==='object'){others.set(m.id,Object.freeze(p));nearSeen.set(m.id,performance.now());rebuild();}}
+    if(m.ev==='p'&&typeof m.data==='string'){let p;try{p=JSON.parse(m.data);}catch(e){return;}if(p&&typeof p==='object'){others.set(m.id,Object.freeze(p));nearSeen.set(m.id,performance.now());N.rx=(N.rx||0)+1;N.rxB=(N.rxB||0)+m.data.length;rebuild();}}
     else if(m.ev==='bye'){others.delete(m.id);nearSeen.delete(m.id);rebuild();}
     else if(m.ev==='join')flush();};
   // Ping: a small message every 4 s that the server echoes back. N.rtt is the smoothed round trip; NS collects samples
@@ -2898,7 +2898,7 @@ const DIFF={calm:{bots:40,aggr:.35,think:.36},standard:{bots:60,aggr:.65,think:.
 const SKILL={easy:{label:'Easy',aggr:.3,think:.44,caution:.55},normal:{label:'Normal',aggr:.65,think:.26,caution:1},hard:{label:'Hard',aggr:.92,think:.17,caution:1.15},expert:{label:'Expert',aggr:1.1,think:.11,caution:1.3},
   master:{label:'Master',aggr:1.15,think:.12,caution:1.45,smart:true}},SKILL_LIST=['easy','normal','hard','expert','master']; // Master thinks no faster than Expert, it thinks better (see think)
 // Nearby match settings: the host phone picks them in the lobby and the others follow (see nearIngest)
-const NEAR_BOTS={none:0,few:25,normal:60,lots:80},NEAR_LEN=[180,300,600],NEAR_LIVES=[1,3,5],near={k:'normal',b:'normal',len:300,lives:3,m:0,heard:false};
+const NEAR_BOTS={none:0,few:20,normal:40,lots:60},NEAR_LEN=[180,300,600],NEAR_LIVES=[1,3,5],near={k:'normal',b:'normal',len:300,lives:3,m:0,heard:false,tx:0,txn:0,txb:0,rx:0,rxb:0,logAt:0,was:null,wasName:''};
 const nearMode=()=>{const N=window.__mitosisNet;return !local&&!!N&&N.mode==='nearby';};
 const skillNow=()=>SKILL[local==='practice'?(settings.botSkill||'normal'):nearMode()?near.k:'normal']||SKILL.normal;
 const STAINS=[[340,100,68],[250,100,76],[174,62,54],[40,90,58],[18,100,64],[200,25,88]];
@@ -3615,7 +3615,9 @@ const Native=(()=>{
     if(m.type==='purchase'&&m.purchase)redeem(m.purchase).catch(()=>{});
     if(m.type==='app')reportHitch('app '+m.text);
     if(m.type==='power'&&window.__onPower)window.__onPower(m);
-    if(m.type==='nearby'){const N=window.__mitosisNet;if(m.ev==='error'){toast('Nearby','Nearby play stopped',m.text||'');setNearby(false);}else if(N&&N.onNearby)N.onNearby(m);}}};
+    if(m.type==='nearby'){const N=window.__mitosisNet;if(m.ev==='join'||m.ev==='bye')nearLog(m.ev+' '+m.id);
+      if(m.ev==='error'){nearLog('error '+m.text);if(peerCount>1||near.m)toast('Nearby','Nearby connection hiccup',m.text||'');else{toast('Nearby','Nearby play stopped',m.text||'');setNearby(false);}}
+      else if(N&&N.onNearby)N.onNearby(m);}}};
   // taps closer than 120 ms are dropped; the strong ones (death, a win, a burst, an infection) always play, but the
   // same one at most every 300 ms (several achievements can unlock in one frame)
   let lastHap=0,lastStyle='';const LOUD=new Set(['heavy','success','warning','error']);
@@ -4613,7 +4615,8 @@ const ordinal=n=>{const t=n%10,h=n%100;return n+(t===1&&h!==11?'st':t===2&&h!==1
 function placeOf(){const alive=players.filter(p=>p.alive&&p!==human&&p.cells.length).length;return{place:alive+1,of:Math.max(round.n,alive+1)};}
 function survivors(){return players.filter(p=>p.alive&&!p.boss&&p.cells.some(c=>!c.dead));}
 function roundTick(){ // host (or solo) clock: ends the round at 10:00, or as soon as one cell owner is left after the bots stop respawning
-  const lastOne=!round.over&&roundT()>=BOT_CUTOFF&&survivors().length<=1&&(!human||!human.alive||local==='practice'||!spawnOpen());
+  const lastOne=!round.over&&roundT()>=BOT_CUTOFF&&survivors().length<=1&&(!human||!human.alive||local==='practice'||!spawnOpen())
+    &&!(nearMode()&&peerCount<=1&&!NEAR_BOTS[near.b]); // a Nearby player left alone without bots (the others closed the app) plays on to the clock
   if(!round.over&&(roundT()>=ROUND_SEC||lastOne)){if(lastOne){const w=survivors()[0];if(w&&w!==human)pushFeed(`<b>${esc(w.name)}</b> is the last cell standing`,false);}round.over=true;round.id=(round.id%4095)+1;round.start=T+ROUND_GAP;finishHumanRound();
     for(const p of players.filter(p=>p.bot&&!p.remote))removePlayer(p);cells=cells.filter(c=>!c.dead);pushFeed('<b>Round over</b> — a fresh well opens in a moment',false);}
   else if(round.over&&T>=round.start){round.over=false;round.n=0;syncBots();pushFeed('<b>New round</b> — the arena starts closing in '+fmtT(ROUND_GRACE),false);}
@@ -5691,16 +5694,16 @@ function send(){
   if(human&&human.alive)P.cl=human.cells.slice(0,MAX_CELLS).map(encCell).join('');
   if(ejected.length)P.ej=ejected.slice(-16).map(e=>enc(e.x+OFF,3)+enc(e.y+OFF,3)).join('');
   recs=recs.filter(r=>T-r.t<3).slice(-20);if(recs.length)P.r=recs.map(r=>r.d);
-  peLog=peLog.filter(p=>T-p.t<.7);
+  peLog=peLog.filter(p=>T-p.t<(nearMode()?.25:.7)); // each eaten pellet is repeated for a while in case a message is lost; Nearby repeats it less
   const peStr=n=>peLog.slice(-n).map(p=>enc(p.i,3)+enc(p.g,3)).join('');
   P.pe=peLog.length?peStr(120):null;
-  if(local){P.h=0;P.a=0;P.cl=null;P.ej=null;P.r=null;P.pe=null;}
-  P.lb=nearMode()&&isHost?nearWire():null;   // Nearby: the match settings and whether a match is on   // a local game is invisible to the room
+  if(local){P.h=0;P.a=0;P.cl=null;P.ej=null;P.r=null;P.pe=null;}   // a local game is invisible to the room
+  P.lb=nearMode()&&isHost?nearWire():null;   // Nearby: the match settings and whether a match is on
   const host=P.h===1;
   const bots=perCell=>{let s='';for(const b of players){if(!b.bot||b.remote||!b.alive||!b.cells.length)continue;
       const cs=b.cells.slice().sort((a,c)=>c.mass-a.mass).slice(0,perCell);s+=enc(b.bid,2)+enc(fxBits(b),3)+enc(cs.length,1)+cs.map(encCell).join('');}return s;};
   if(host){
-    P.b=bots(4);
+    P.b=bots(nearMode()?2:4);
     P.vs=vslots.map(v=>enc(v.g*16+Math.min(5,v.feed)*2+(v.alive?1:0),2)).join('');
     P.vw=freeV.map(v=>enc(v.id,2)+enc(v.x+OFF,3)+enc(v.y+OFF,3)).join('');
     P.pu=powerups.map(u=>enc(u.id,2)+enc(u.x+OFF,3)+enc(u.y+OFF,3)+enc(PUK.indexOf(u.type),1)).join('');
@@ -5708,12 +5711,14 @@ function send(){
     P.rd=enc(round.id,2)+enc(Math.max(0,Math.min(262143,Math.round(roundT()*10))),3);
     P.hv=hunters.map(h=>enc(h.id,2)+enc(h.x+OFF,3)+enc(h.y+OFF,3)+enc(h.kind,1)+enc(Math.max(0,h.hp),1)).join('');
   }
+  if(host&&nearMode()&&++near.tx%4){P.vs=null;P.pu=null;} // Nearby: virus slots and power-ups change slowly, so they go in every 4th message
   let js=JSON.stringify(P),budget=3900;
   if(js.length>budget){P.pe=peLog.length?peStr(40):null;js=JSON.stringify(P);}
   if(js.length>budget&&host){P.b=bots(2);js=JSON.stringify(P);}
   if(js.length>budget&&host){P.b=bots(1);js=JSON.stringify(P);}
   if(js.length>budget){P.r=recs.slice(-6).map(r=>r.d);js=JSON.stringify(P);}
   if(js.length>budget){P.pe=null;P.ej=null;}
+  if(nearMode()){near.txn++;near.txb+=js.length;}
   room.presence(P).catch(()=>{});
 }
 function netTick(dt){
@@ -6144,6 +6149,7 @@ const ROUND_SEC0=ROUND_SEC;
 {const s=settings.nearby||{};near.k=SKILL[s.k]?s.k:SKILL[settings.botSkill]?settings.botSkill:'normal';if(Object.hasOwn(NEAR_BOTS,s.b))near.b=s.b;if(NEAR_LEN.includes(s.len))near.len=s.len;if(NEAR_LIVES.includes(s.lives))near.lives=s.lives;}
 const nearWire=()=>[near.k,near.b,near.len,near.lives,near.m].join(',');
 const nearHost=()=>claimReady&&!!myPeer&&hostPeer===myPeer; // settled: for 1.5 s after joining every phone thinks it hosts
+function nearLog(t){Native.send({type:'log',text:'nearby '+t});} // to the app's log (Xcode console), for testing on phones
 function nearApply(){const on=isNearby();setRoundLen(on?near.len:ROUND_SEC0);MAX_RESPAWNS=on?near.lives-1:2;} // the match rules on every phone
 function nearName(peer){if(!peer)return'The host';if(peer===myPeer)return'You';const N=window.__mitosisNet,p=N&&N.peers().find(q=>q.peer===peer);return(p&&p.presence&&cleanName(p.presence.n))||'Another phone';}
 function nearSummary(){return[near.b==='none'?'No bots':SKILL[near.k].label+' bots ('+near.b+')',near.len/60+' min',near.lives+(near.lives===1?' life':' lives')].join(' · ');}
@@ -6180,8 +6186,12 @@ function nearSheetSync(){
 function nearSync(){
   if(!isNearby()){if(!$('nearSheet').hidden)$('nearSheet').hidden=true;return;}
   const host=nearHost();
-  if(host&&near.m&&(round.over||round.id!==near.m)){near.m=0;toast('Nearby','Match over','Start the next one from the lobby');} // the match round ended
-  setTxt($('nearWho'),peerCount<=1?(host?'No phones yet · you can start alone':'Looking for phones…'):peerCount+' phones · '+(host?'you host':!claimReady||hostPeer===myPeer?'choosing a host…':nearName(hostPeer)+' hosts'));
+  if(host&&near.m&&(round.over||round.id!==near.m)){near.m=0;nearLog('match over');toast('Nearby','Match over','Start the next one from the lobby');} // the match round ended
+  if(near.m&&host&&near.was&&near.was!==myPeer){nearLog('took over hosting from '+near.was);toast('Nearby','You host the match now',(near.wasName||'The host')+' left. The match goes on');}
+  if(claimReady&&hostPeer){near.was=hostPeer;if(hostPeer!==myPeer)near.wasName=nearName(hostPeer);}
+  if(performance.now()-near.logAt>10000){near.logAt=performance.now();const N=window.__mitosisNet,rx=(N&&N.rx)||0,rxb=(N&&N.rxB)||0; // traffic, for the device log
+    nearLog(`peers=${peerCount} host=${host?1:0} match=${near.m} sent ${(near.txn/10).toFixed(1)}/s ${(near.txb/10240).toFixed(1)} KB/s, got ${((rx-near.rx)/10).toFixed(1)}/s ${((rxb-near.rxb)/10240).toFixed(1)} KB/s`);near.txn=near.txb=0;near.rx=rx;near.rxb=rxb;}
+  setTxt($('nearWho'),peerCount<=1?(host?(near.m?'You host · the others left':'No phones yet · you can start alone'):'Looking for phones…'):peerCount+' phones · '+(host?'you host':!claimReady||hostPeer===myPeer?'choosing a host…':nearName(hostPeer)+' hosts'));
   setTxt($('nearSum'),(near.m?'Match on · ':'')+nearSummary());setTxt($('nearSetBtn'),host&&!near.m?'Settings':'View');
   if($('startCard').hidden)$('nearSheet').hidden=true;else if(!$('nearSheet').hidden)nearSheetSync();
 }

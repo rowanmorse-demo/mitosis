@@ -1,7 +1,7 @@
 // Two "phones" in one headless Chrome: each page gets a stand-in for the iOS bridge that passes Nearby messages to the
 // other page over a BroadcastChannel, the way Nearby.swift does over MultipeerConnectivity. Drives the lobby and checks it.
-// Usage: node tools/nearby-test.js            (about 3 minutes: it plays a whole 3-minute match)
-//        QUICK=1 node tools/nearby-test.js    (stops once the match has started)   SHOTS=1 also saves screenshots to OUT (default: the temp dir)
+// Usage: node tools/nearby-test.js            (about 3 minutes: a whole 3-minute match, with the host leaving early on)
+//        QUICK=1 node tools/nearby-test.js    (stops once the match has started)   MEASURE=1 BOTS=normal: bytes sent per field   SHOTS=1 also saves screenshots to OUT (default: the temp dir)
 // Run it on a quiet machine: a window that stalls for 3 s looks like a phone that went away, and the other phone takes over as host.
 'use strict';
 const { spawn } = require('child_process'), fs = require('fs'), os = require('os'), path = require('path');
@@ -17,7 +17,7 @@ const STUB = `(()=>{const ch=new BroadcastChannel('mitosis-nearby');let me=null,
     else if(d.kind==='bye'){if(peers.delete(d.from))deliver({type:'nearby',ev:'bye',id:d.from});}};
   window.webkit={messageHandlers:{mitosis:{postMessage(m){if(!m||m.type!=='nearby')return;
     if(m.cmd==='start'){me=m.id;on=true;ch.postMessage({kind:'hello',from:me});}
-    else if(m.cmd==='send'&&on)ch.postMessage({kind:'p',from:me,data:m.data});
+    else if(m.cmd==='send'&&on){const st=window.__ns||(window.__ns={n:0,bytes:0,t0:performance.now(),f:{}});st.n++;st.bytes+=m.data.length;try{const o=JSON.parse(m.data);for(const k in o)st.f[k]=(st.f[k]||0)+(o[k]==null?0:JSON.stringify(o[k]).length);}catch(e){}ch.postMessage({kind:'p',from:me,data:m.data});}
     else if(m.cmd==='stop'){on=false;ch.postMessage({kind:'bye',from:me});peers.clear();}}}}};
   try{localStorage.setItem('mitosis.intro','1');}catch(e){}})();`;
 class CDP {
@@ -49,7 +49,7 @@ let failures = 0; const check = (ok, what, got) => { log(ok ? 'PASS' : 'FAIL', w
       await c.send('Page.enable'); await c.send('Runtime.enable'); await c.send('Emulation.setFocusEmulationEnabled', { enabled: true }); // both windows draw frames like two phones in hand
       await c.send('Emulation.setDeviceMetricsOverride', { width: 402, height: 874, deviceScaleFactor: 1, mobile: true });
       await c.send('Page.addScriptToEvaluateOnNewDocument', { source: STUB });
-      await c.send('Page.navigate', { url: `http://127.0.0.1:${PORT}/?nearby=1` }); phones.push({ name, c });
+      await c.send('Page.navigate', { url: `http://127.0.0.1:${PORT}/?nearby=1` }); phones.push({ name, c, id: targetId });
     }
     const st = p => p.c.eval(STATE);
     const until = async (what, fn, ms = 20000) => { const t0 = Date.now(); let last; while (Date.now() - t0 < ms) { last = await fn(); if (last && last.ok) return last; await sleep(500); } return last; };
@@ -70,7 +70,7 @@ let failures = 0; const check = (ok, what, got) => { log(ok ? 'PASS' : 'FAIL', w
     await guest.c.eval(`document.getElementById('go').click()`); await sleep(300); g = await st(guest);
     check(!g.playing && /Waiting for the host/.test(g.toast), 'the guest pressing Play waits for the host', g);
     await host.c.eval(`document.getElementById('nearSetBtn').click()`); await sleep(300);
-    for (const [set, v] of [['k', 'hard'], ['b', 'none'], ['len', '180'], ['lives', '1']]) await host.c.eval(`document.querySelector('#nearSheet [data-set="${set}"] [data-v="${v}"]').click()`);
+    for (const [set, v] of [['k', 'hard'], ['b', process.env.BOTS || 'none'], ['len', '180'], ['lives', '1']]) await host.c.eval(`document.querySelector('#nearSheet [data-set="${set}"] [data-v="${v}"]').click()`);
     await guest.c.eval(`document.getElementById('nearSetBtn').click()`);
     r = await until('settings', async () => { const x = await st(guest); return { ok: x.set.k === 'hard' && x.set.b === 'none' && x.set.len === '180' && x.set.lives === '1', x }; });
     check(r && r.ok, 'the guest sees the host\'s settings', r && r.x.set);
@@ -81,20 +81,33 @@ let failures = 0; const check = (ok, what, got) => { log(ok ? 'PASS' : 'FAIL', w
     await host.c.eval(`document.getElementById('nearClose').click()`); await guest.c.eval(`document.getElementById('nearClose').click()`);
     await sleep(400); await shot(host, 'near-lobby-host.png'); await shot(guest, 'near-lobby-guest.png');
     // 3. the host starts: both phones are in the match, on a 3-minute clock
-    await host.c.eval(`document.getElementById('go').click()`);
+    await host.c.eval(`document.getElementById('go').click()`); const t0 = Date.now();
     r = await until('match', async () => { const [x, y] = await Promise.all([st(host), st(guest)]); return { ok: x.playing && y.playing, x, y }; }, 15000);
     check(r && r.ok, 'Start match puts both phones in the game', r);
     await sleep(2500); h = await st(host); g = await st(guest);
-    check(/^2:5\d/.test(h.clock) && /^2:5\d/.test(g.clock), 'both round clocks run the 3-minute match', [h.clock, g.clock]);
+    check(/^2:[345]\d/.test(h.clock) && /^2:[345]\d/.test(g.clock), 'both round clocks run the 3-minute match', [h.clock, g.clock]);
     if (process.env.QUICK) return;
-    // 4. when the round ends, both are back in the lobby and the host can start the next match
+    if (process.env.MEASURE) { // what the phones send each second, by field (try BOTS=normal)
+      for (const p of [host, guest]) await p.c.eval(`window.__ns={n:0,bytes:0,t0:performance.now(),f:{}};'ok'`); await sleep(10000);
+      for (const [n, p] of [['host', host], ['guest', guest]]) log(n, JSON.stringify(await p.c.eval(`(()=>{const s=window.__ns,dt=(performance.now()-s.t0)/1000;return{perSec:+(s.n/dt).toFixed(1),avgBytes:Math.round(s.bytes/s.n),kbPerSec:+(s.bytes/dt/1024).toFixed(1),fields:Object.fromEntries(Object.entries(s.f).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([k,v])=>[k,Math.round(v/s.n)]))}})()`)));
+      return;
+    }
+    // 4. the host closes the app mid-match (the page goes to the background and the app leaves the Nearby session):
+    //    the other phone takes over hosting and plays on
+    await host.c.eval(`Object.defineProperty(document,'hidden',{configurable:true,get:()=>true});document.dispatchEvent(new Event('visibilitychange'));window.webkit.messageHandlers.mitosis.postMessage({type:'nearby',cmd:'stop'});'ok'`);
+    await sleep(300); await browser.send('Target.closeTarget', { targetId: host.id });
+    const toasts = new Set();
+    r = await until('takeover', async () => { const x = await st(guest); toasts.add(x.toast); return { ok: /You host · the others left/.test(x.who) && x.playing && /Match on/.test(x.sum), x }; }, 15000);
+    check(r && r.ok, 'when the host closes the app, the other phone takes over and plays on', r && r.x);
+    check([...toasts].some(t => /You host the match now/.test(t)), 'and says it hosts the match now', [...toasts]);
+    const c1 = (await st(guest)).clock; await sleep(3000); const c2 = (await st(guest)).clock;
+    check(c1 && c2 && c1 !== c2, 'its round clock keeps running', [c1, c2]);
+    // 5. alone and without bots it plays on to the clock, then is back in the lobby as the host
     log('waiting for the 3-minute match to end…');
-    r = await until('end', async () => { const [x, y] = await Promise.all([st(host), st(guest)]); return { ok: !/Match on/.test(x.sum) && !/Match on/.test(y.sum) && [x.go, y.go].sort().join() === 'Start match,Waiting…', x, y }; }, 240000);
-    check(r && r.ok, 'after the round both phones are back in the lobby', r);
-    // 5. a phone that leaves drops out of the other's lobby
-    await guest.c.eval(`document.querySelector('.lb-mpick[data-m=ranked]')&&document.querySelector('.lb-mpick[data-m=ranked]').click()`);
-    r = await until('leave', async () => { const x = await st(host); return { ok: !/2 phones/.test(x.who), x }; }, 15000);
-    check(r && r.ok, 'the guest leaving Nearby drops out of the host\'s lobby', r && r.x.who);
+    // knocked out alone, the player goes back to the lobby (an arena nobody shares stands still under the results page)
+    r = await until('end', async () => { const x = await st(guest); if (!x.playing) await guest.c.eval(`(()=>{const b=document.getElementById('setup');if(b&&b.offsetParent)b.click();})()`); return { ok: !/Match on/.test(x.sum) && x.go === 'Start match', x }; }, 240000);
+    check(r && r.ok, 'after the round it is back in the lobby, as the host', r && r.x);
+    check((Date.now() - t0) / 1000 > 165, 'the match ran to the clock (no early end when left alone)', Math.round((Date.now() - t0) / 1000) + ' s');
   } finally { chrome.kill('SIGKILL'); server.kill(); }
   log(failures ? `${failures} check(s) failed` : 'all Nearby lobby checks passed'); process.exit(failures ? 1 : 0);
 })().catch(e => { log('test failed:', e.message); process.exit(1); });

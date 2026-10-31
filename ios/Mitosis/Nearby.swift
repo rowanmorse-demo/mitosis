@@ -17,6 +17,7 @@ final class Nearby: NSObject, MCSessionDelegate, MCNearbyServiceAdvertiserDelega
     var onEvent: (([String: Any]) -> Void)?
 
     private var me: MCPeerID?
+    private var lastId: String?                   // the page's id, kept across pause() so resume() rejoins as the same phone
     private var session: MCSession?
     private var advertiser: MCNearbyServiceAdvertiser?
     private var browser: MCNearbyServiceBrowser?
@@ -28,6 +29,7 @@ final class Nearby: NSObject, MCSessionDelegate, MCNearbyServiceAdvertiserDelega
         stop()
         let clean = String(id.filter { $0.isLetter || $0.isNumber }.prefix(32))
         let peer = MCPeerID(displayName: clean.isEmpty ? UUID().uuidString.prefix(12).lowercased() : clean)
+        lastId = peer.displayName
         let s = MCSession(peer: peer, securityIdentity: nil, encryptionPreference: .optional)
         s.delegate = self
         me = peer
@@ -54,9 +56,13 @@ final class Nearby: NSObject, MCSessionDelegate, MCNearbyServiceAdvertiserDelega
         me = nil
     }
 
-    /// iOS drops the session when the app leaves the foreground; look for the others again on return.
+    /// The app went to the background: leave now, so the other phones get a goodbye at once and one of them takes over
+    /// hosting the match, instead of waiting for iOS to drop the connection.
+    func pause() { stop() }
+
+    /// Back in the foreground: look for the others again, as the same phone.
     func resume() {
-        guard let id = me?.displayName else { return }
+        guard let id = lastId else { return }
         start(id: id)
     }
 

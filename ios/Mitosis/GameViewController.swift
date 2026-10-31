@@ -55,8 +55,8 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
         for (name, label) in [(UIApplication.willResignActiveNotification, "resignActive"), (UIApplication.didBecomeActiveNotification, "becomeActive"), (UIApplication.didEnterBackgroundNotification, "background")] {
             NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
                 self?.reply(["type": "app", "text": label])
-                // iOS ends a nearby session in the background; find the other phones again on return
-                if label == "background", Nearby.shared.isActive { self?.nearbyResume = true }
+                // leave a nearby session in the background, so another phone takes over the match at once; find the phones again on return
+                if label == "background", Nearby.shared.isActive { self?.nearbyResume = true; Nearby.shared.pause() }
                 if label == "becomeActive", self?.nearbyResume == true { self?.nearbyResume = false; Nearby.shared.resume() }
                 // iOS can't keep recording in the background, so keep the game so far
                 if label == "background", Recorder.shared.isRecording { Recorder.shared.stop { _ in } }
