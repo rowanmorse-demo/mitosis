@@ -684,7 +684,160 @@ body:not(.playing) #tip{display:none}
 /* @ui:skins end */
 
 /* @ui:profile */
-
+/* Profile: a hero card tinted by your tier (avatar, crest, progress), stat tiles, the skins you own, badges, runs, account */
+#profileCard,#profileCard .pf-mc[data-tier=Silver]{--tc:#c4d0da;--tc1:#f2f7fb;--tc2:#6f7f8c;--tg:rgba(185,198,210,.2)}
+#profileCard[data-tier=Bronze],#profileCard .pf-mc[data-tier=Bronze]{--tc:#e6ab7c;--tc1:#f8cba3;--tc2:#8a4f27;--tg:rgba(212,154,106,.24)}
+#profileCard[data-tier=Gold],#profileCard .pf-mc[data-tier=Gold]{--tc:#f6c04e;--tc1:#ffe58f;--tc2:#a86c0c;--tg:rgba(242,177,52,.26)}
+#profileCard[data-tier=Platinum],#profileCard .pf-mc[data-tier=Platinum]{--tc:#8fe3e0;--tc1:#d2fffc;--tc2:#2a8a87;--tg:rgba(143,227,224,.22)}
+#profileCard[data-tier=Diamond],#profileCard .pf-mc[data-tier=Diamond]{--tc:#9ac4ff;--tc1:#e0edff;--tc2:#3f6fd0;--tg:rgba(154,196,255,.26)}
+#profileCard[data-tier=Legend],#profileCard .pf-mc[data-tier=Legend]{--tc:#ff86aa;--tc1:#ffc6d6;--tc2:#c42c5f;--tg:rgba(255,92,138,.28)}
+#overlay>#profileCard.page{grid-template-columns:minmax(0,1fr);gap:12px 20px;align-items:start;
+  background:radial-gradient(80% 42% at 50% 0%,var(--tg),transparent 70%),linear-gradient(180deg,rgba(2,8,9,.92),rgba(2,8,9,.85))}
+#profileCard .pf-shop{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 18px 0 14px;border-radius:999px;border:1px solid rgba(242,177,52,.36);color:var(--ink);font:700 14px var(--display);
+  background:linear-gradient(180deg,rgba(242,177,52,.17),rgba(242,177,52,.05));box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 6px 16px rgba(0,0,0,.28);transition:transform .12s,filter .15s}
+#profileCard .pf-shop svg{width:18px;height:18px;fill:none;stroke:var(--amber);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+#profileCard .pf-shop:hover{filter:brightness(1.12);color:var(--ink)}#profileCard .pf-shop:active{transform:scale(.95)}
+/* hero */
+#profileCard .pf-hero{--ava:128px;--ry:calc(22px + var(--ava)/2);position:relative;isolation:isolate;display:grid;justify-items:center;gap:10px;padding:22px 18px 18px;border-radius:24px;border:1px solid var(--line);text-align:center;
+  background:radial-gradient(90% 62% at 50% 0%,var(--tg),transparent 72%),linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.015));box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 18px 40px rgba(0,0,0,.35)}
+#profileCard .pf-hero::before{content:"";position:absolute;z-index:-1;inset:0;border-radius:inherit;pointer-events:none;
+  background:repeating-radial-gradient(circle at 50% var(--ry),rgba(220,239,233,.06) 0 1px,transparent 1.5px 22px);
+  -webkit-mask-image:radial-gradient(circle at 50% var(--ry),#000 40px,transparent 190px);mask-image:radial-gradient(circle at 50% var(--ry),#000 40px,transparent 190px)}
+#profileCard .pf-ava{position:relative;width:var(--ava);aspect-ratio:1;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,var(--tg),transparent 70%)}
+#profileCard .pf-ava::after{content:"";position:absolute;inset:-7px;border-radius:50%;border:1.5px solid var(--tc);opacity:.35;-webkit-mask-image:linear-gradient(180deg,#000,transparent 85%);mask-image:linear-gradient(180deg,#000,transparent 85%)}
+#profileCard .pf-ava canvas{width:100%;height:100%;display:block;filter:drop-shadow(0 12px 18px rgba(0,0,0,.5));animation:pfbob 4.5s ease-in-out infinite}
+@keyframes pfbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+#profileCard .pf-name{margin:2px 0 0;max-width:100%;font:800 30px/1.02 var(--display);letter-spacing:-.04em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#profileCard .pf-rank{display:flex;align-items:center;gap:10px;text-align:left}
+#profileCard .pf-crest{width:42px;height:46px;flex:none;filter:drop-shadow(0 4px 10px var(--tg)) drop-shadow(0 2px 3px rgba(0,0,0,.4))}
+#profileCard .pf-crest .s1{stop-color:var(--tc1)}#profileCard .pf-crest .s2{stop-color:var(--tc2)}
+#profileCard .pf-crest .o{fill:url(#pfCrestG)}#profileCard .pf-crest .i{fill:rgba(3,12,14,.6);stroke:rgba(255,255,255,.22);stroke-width:.8}
+#profileCard .pf-crest .g{fill:none;stroke:var(--tc1);stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round}
+#profileCard .pf-rk{display:grid;gap:4px}
+#profileCard .pf-rk .tier{font:600 10.5px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--tc)}
+#profileCard .pf-rk b{font:800 25px/1 var(--display);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+#profileCard .pf-prog{width:100%;display:grid;gap:7px;margin-top:2px}
+#profileCard .pf-track{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px}
+#profileCard .pf-mcw{display:grid;width:22px;height:24px}#profileCard .pf-mcw:empty{display:none}
+#profileCard .pf-mc{width:100%;height:100%;filter:drop-shadow(0 2px 6px var(--tg))}#profileCard .pf-mc .o{fill:var(--tc)}
+#profileCard .pf-mc .g{fill:none;stroke:rgba(4,14,16,.78);stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
+#profileCard .pf-mcw.nx{opacity:.5;filter:saturate(.6)}
+#profileCard .pf-bar{height:8px;border-radius:99px;background:rgba(255,255,255,.07);box-shadow:inset 0 1px 2px rgba(0,0,0,.55);overflow:hidden}
+#profileCard .pf-bar i{display:block;height:100%;width:0;border-radius:inherit;background:linear-gradient(180deg,rgba(255,255,255,.38),rgba(255,255,255,0) 60%),linear-gradient(90deg,var(--tc2),var(--tc1));box-shadow:0 0 12px var(--tg);transition:width .7s cubic-bezier(.2,.8,.2,1)}
+#profileCard #pNext{font:600 11px/1 var(--mono);color:var(--muted)}
+/* right side */
+#profileCard .pf-side{display:grid;gap:12px;min-width:0}
+#profileCard .pf-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+#profileCard .pf-stat{--c:var(--ink);--g:rgba(255,255,255,.06);position:relative;overflow:hidden;display:grid;justify-items:start;gap:4px;min-width:0;padding:12px 12px 11px;border-radius:18px;border:1px solid var(--line);
+  background:radial-gradient(70px 70px at 100% 0%,var(--g),transparent 70%),linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.015));box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 8px 20px rgba(0,0,0,.22)}
+#profileCard .pf-stat i{width:26px;height:26px;border-radius:9px;display:grid;place-items:center;margin-bottom:5px;background:var(--g);color:var(--c)}
+#profileCard .pf-stat i svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#profileCard .pf-stat i.pf-coin::before{content:"";width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffe08a,#f2b134 55%,#a8700f);box-shadow:0 0 8px rgba(242,177,52,.55)}
+#profileCard .pf-stat b{max-width:100%;overflow:hidden;text-overflow:ellipsis;font:800 21px/1 var(--display);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+#profileCard .pf-stat span{font:600 9.5px/1.2 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+#profileCard .pf-stat.s-atp{--c:var(--amber);--g:rgba(242,177,52,.15)}#profileCard .pf-stat.s-earn{--c:#5fe0a8;--g:rgba(95,224,168,.13)}
+#profileCard .pf-stat.s-runs{--c:var(--violet);--g:rgba(154,140,255,.16)}#profileCard .pf-stat.s-best{--c:var(--accent);--g:rgba(255,92,138,.15)}
+#profileCard .pf-sec{display:grid;gap:12px;min-width:0;padding:14px 16px 16px;border-radius:20px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.012));box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+#profileCard .pf-head{display:flex;align-items:center;gap:8px;min-height:24px}
+#profileCard .pf-head b{font:800 17px/1.1 var(--display);letter-spacing:-.02em}
+#profileCard .pf-cnt{font:600 11px/1 var(--mono);color:var(--muted);background:rgba(255,255,255,.07);border-radius:999px;padding:4px 8px;font-variant-numeric:tabular-nums}
+#profileCard .pf-cnt:empty{display:none}
+#profileCard .pf-link{appearance:none;width:100%;min-height:44px;margin:-8px 0 -6px;padding:0;border:0;background:none;color:var(--ink);cursor:pointer;text-align:left}
+#profileCard .pf-link svg{margin-left:auto;width:18px;height:18px;fill:none;stroke:var(--muted);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s}
+#profileCard .pf-link:hover svg{stroke:var(--ink);transform:translateX(2px)}
+/* skins you own */
+#profileCard .pf-inv{display:flex;gap:12px;margin:-10px -16px -6px;padding:12px 16px 6px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scrollbar-width:none;touch-action:pan-x pan-y;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 8px,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,transparent,#000 8px,#000 calc(100% - 28px),transparent)}
+#profileCard .pf-inv::-webkit-scrollbar{display:none}
+#profileCard .pf-it{--rc:rgba(140,210,200,.24);appearance:none;position:relative;flex:none;width:66px;display:grid;justify-items:center;gap:7px;padding:0;border:0;background:none;color:var(--muted);cursor:pointer;scroll-snap-align:start}
+#profileCard .pf-it canvas{width:58px;height:58px;border-radius:50%;background:radial-gradient(circle at 50% 38%,rgba(255,255,255,.08),rgba(0,0,0,.4) 72%);box-shadow:0 0 0 1.5px var(--rc),0 8px 16px rgba(0,0,0,.35);transition:transform .12s}
+#profileCard .pf-it span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:600 11px/1.1 var(--display)}
+#profileCard .pf-it.r-rare{--rc:rgba(154,140,255,.75)}#profileCard .pf-it.r-epic{--rc:rgba(242,177,52,.8)}#profileCard .pf-it.r-legendary{--rc:#ff7a59}#profileCard .pf-it.r-seasonal{--rc:#ff8a2a}
+#profileCard .pf-it.on canvas{box-shadow:0 0 0 2px #061113,0 0 0 4px var(--accent),0 0 22px rgba(255,92,138,.45)}
+#profileCard .pf-it.on span{color:var(--ink)}
+#profileCard .pf-it.on::after{content:"✓";position:absolute;top:-4px;right:0;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:var(--accent-ink);font:800 11px/1 var(--display);box-shadow:0 0 0 2px #061113}
+#profileCard .pf-it:active canvas,#profileCard .pf-it:active i{transform:scale(.92)}
+#profileCard .pf-get i{width:58px;height:58px;box-sizing:border-box;border-radius:50%;display:grid;place-items:center;border:1.5px dashed rgba(255,92,138,.55);background:rgba(255,92,138,.06);color:var(--accent);font:300 30px/1 var(--display);font-style:normal;transition:transform .12s}
+/* badges */
+#profileCard .pf-achs{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px 6px;margin:0 -4px}
+#profileCard .pf-ach{appearance:none;display:grid;justify-items:center;gap:6px;padding:6px 0 0;border:0;border-radius:14px;background:none;cursor:pointer}
+#profileCard .pf-ach::after{content:"";width:14px;height:3px;border-radius:2px;background:var(--ink);opacity:0;transform:scaleX(.4);transition:opacity .15s,transform .2s}
+#profileCard .pf-ach i{position:relative;width:min(100%,50px);aspect-ratio:1/1.1;display:grid;place-items:center;clip-path:polygon(50% 0,95% 25%,95% 75%,50% 100%,5% 75%,5% 25%);
+  background:linear-gradient(165deg,rgba(220,239,233,.22),rgba(220,239,233,.05) 55%,rgba(220,239,233,.12));transition:transform .12s}
+#profileCard .pf-ach i::before{content:"";position:absolute;inset:2.5px;clip-path:polygon(50% 0,95% 25%,95% 75%,50% 100%,5% 75%,5% 25%);background:radial-gradient(120% 90% at 50% 12%,#13262a,#061012 75%)}
+#profileCard .pf-ach svg{position:relative;width:46%;height:auto;fill:none;stroke:var(--dim);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;opacity:.75}
+#profileCard .pf-ach.got{filter:drop-shadow(0 5px 10px rgba(242,177,52,.3))}
+#profileCard .pf-ach.got i{background:linear-gradient(165deg,#fff3c4,#f6c04e 32%,#a96c0e 68%,#ffd56e)}
+#profileCard .pf-ach.got i::before{background:radial-gradient(120% 90% at 50% 10%,#5c4214,#221604 72%)}
+#profileCard .pf-ach.got svg{stroke:#ffd877;opacity:1;filter:drop-shadow(0 0 4px rgba(255,196,80,.7))}
+#profileCard .pf-ach[aria-pressed=true]::after{opacity:.85;transform:none}#profileCard .pf-ach.got[aria-pressed=true]::after{background:var(--amber)}
+#profileCard .pf-ach[aria-pressed=true] i{transform:scale(1.06)}
+#profileCard .pf-ach:active i{transform:scale(.9)}
+#profileCard .pf-achinfo{margin:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:3px 10px;padding:11px 13px;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.24)}
+#profileCard .pf-achinfo:empty{display:none}
+#profileCard .pf-achinfo b{font:700 14px/1.2 var(--display)}
+#profileCard .pf-achinfo span{flex:1;min-width:0;font:500 13px/1.3 var(--display);color:var(--muted)}
+#profileCard .pf-achinfo em{align-self:center;font:600 9.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;font-style:normal;color:var(--dim)}
+#profileCard .pf-achinfo.got em{color:var(--amber)}
+/* recent runs */
+#profileCard .pf-runs{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+#profileCard .pf-runs li{display:grid;grid-template-columns:46px 84px 70px 52px 1fr;align-items:center;gap:10px;padding:5px 7px 5px 5px;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.22)}
+#profileCard .pf-pl{height:40px;border-radius:10px;display:grid;place-content:center;justify-items:center;gap:3px;background:rgba(220,239,233,.07);color:var(--ink)}
+#profileCard .pf-pl b{font:800 14px/1 var(--display);letter-spacing:-.02em}
+#profileCard .pf-pl small{font:500 9px/1 var(--mono);opacity:.65}
+#profileCard .pf-pl.p1{background:linear-gradient(160deg,#ffe58f,#d18f15);color:#2a1a00;box-shadow:0 4px 12px rgba(242,177,52,.25)}
+#profileCard .pf-pl.p2{background:linear-gradient(160deg,#f2f7fb,#8a98a4);color:#11191f}
+#profileCard .pf-pl.p3{background:linear-gradient(160deg,#f8cba3,#a1603a);color:#2a1406}
+#profileCard .pf-m{display:flex;align-items:center;gap:5px;min-width:0;color:var(--dim)}
+#profileCard .pf-m svg{width:15px;height:15px;flex:none;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+#profileCard .pf-m b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:600 13px/1 var(--mono);color:var(--ink);font-variant-numeric:tabular-nums}
+#profileCard .pf-runs em{justify-self:end;padding:6px 9px;border-radius:999px;background:rgba(220,239,233,.07);color:var(--muted);font:700 12px/1 var(--mono);font-style:normal;font-variant-numeric:tabular-nums;white-space:nowrap}
+#profileCard .pf-runs em.up{color:#5fe0a8;background:rgba(95,224,168,.13)}#profileCard .pf-runs em.dn{color:#ff7a95;background:rgba(255,92,138,.13)}
+#profileCard .pf-runs em.pr{font:600 8.5px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;padding:7px 7px}#profileCard .pf-runs em.nil{background:none;padding:0}
+/* account: quiet, at the bottom */
+#profileCard .pf-acct{gap:0;padding-top:12px;padding-bottom:12px}
+#profileCard .pf-who{display:flex;align-items:center;gap:12px;min-width:0;min-height:44px;list-style:none;cursor:pointer;border-radius:12px;-webkit-user-select:none;user-select:none}
+#profileCard .pf-who::-webkit-details-marker{display:none}#profileCard .pf-who::marker{content:""}
+#profileCard .pf-chev{width:18px;height:18px;flex:none;fill:none;stroke:var(--muted);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s}
+#profileCard .pf-acct[open] .pf-chev{transform:rotate(180deg)}#profileCard .pf-who:hover .pf-chev{stroke:var(--ink)}
+#profileCard .pf-acbody{display:grid;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+#profileCard .pf-acrow{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+#profileCard .pf-acic{width:42px;height:42px;flex:none;border-radius:13px;display:grid;place-items:center;background:rgba(220,239,233,.06);color:var(--muted);box-shadow:inset 0 0 0 1px var(--line)}
+#profileCard .pf-acic svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+#profileCard .pf-acic .ok{display:none}
+#profileCard .pf-acct.in .pf-acic{color:#5fe0a8;background:rgba(95,224,168,.1);box-shadow:inset 0 0 0 1px rgba(95,224,168,.32)}#profileCard .pf-acct.in .pf-acic .ok{display:inline}
+#profileCard #acctWho{flex:1;min-width:0;margin:0;display:grid;gap:4px}
+#profileCard #acctWho b{font:700 15px/1.15 var(--display)}
+#profileCard #acctWho span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:500 12.5px/1.2 var(--display);color:var(--muted)}
+#profileCard .pf-out{appearance:none;flex:none;min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--line-strong);background:rgba(220,239,233,.04);color:var(--ink);font:600 13px var(--display);cursor:pointer;transition:transform .12s,background .15s}
+#profileCard .pf-out:hover{background:rgba(220,239,233,.09)}#profileCard .pf-out:active{transform:scale(.95)}
+#profileCard .pf-sbtns{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}
+#profileCard .pf-sbtns:not(:has(.sbtn:not([hidden]))){display:none}
+#profileCard .pf-sbtns .sbtn{min-height:46px;border-radius:12px;font:600 15px/1 var(--display);box-shadow:0 6px 16px rgba(0,0,0,.3);transition:transform .12s,filter .15s}
+#profileCard .pf-sbtns .sbtn:active{transform:scale(.97)}
+#profileCard .pf-hint{margin:0;font:500 12.5px/1.3 var(--display);color:var(--muted)}
+#profileCard .pf-del{appearance:none;display:inline-flex;align-items:center;gap:8px;min-height:44px;margin:0 0 0 -6px;padding:0 6px;border:0;background:none;color:#ff7a85;font:600 13px var(--display);cursor:pointer;opacity:.85;transition:opacity .15s,transform .12s}
+#profileCard .pf-del svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#profileCard .pf-del:hover{opacity:1}#profileCard .pf-del:active{transform:scale(.97)}
+#profileCard .pf-hero,#profileCard .pf-side>*{animation:pfin .5s cubic-bezier(.2,.8,.2,1) both}
+#profileCard .pf-side>:nth-child(1){animation-delay:.06s}#profileCard .pf-side>:nth-child(2){animation-delay:.12s}#profileCard .pf-side>:nth-child(3){animation-delay:.18s}#profileCard .pf-side>:nth-child(n+4){animation-delay:.24s}
+@keyframes pfin{from{opacity:0;transform:translateY(12px)}}
+/* wide screens: the hero stays put on the left while the rest scrolls */
+@media (orientation:landscape){
+  #overlay>#profileCard.page{grid-template-columns:minmax(236px,.8fr) minmax(0,1.38fr);background:radial-gradient(40% 70% at 22% 34%,var(--tg),transparent 72%),linear-gradient(180deg,rgba(2,8,9,.92),rgba(2,8,9,.85))}
+  #profileCard .pf-hero{position:sticky;top:68px}
+}
+@media (orientation:landscape) and (max-height:520px){
+  #profileCard .pf-hero{--ava:100px;top:62px;gap:8px;padding:16px 14px 14px;border-radius:20px}
+  #profileCard .pf-hero{--ry:calc(16px + var(--ava)/2)}
+  #profileCard .pf-name{font-size:24px}#profileCard .pf-rk b{font-size:21px}#profileCard .pf-crest{width:37px;height:40px}
+  #profileCard .pf-side{gap:10px}
+  #profileCard .pf-stat{padding:10px 10px 9px;border-radius:16px}#profileCard .pf-stat i{width:24px;height:24px;margin-bottom:3px}#profileCard .pf-stat b{font-size:18px}
+  #profileCard .pf-sec{padding:12px 14px 14px;border-radius:18px;gap:10px}#profileCard .pf-inv{margin:-10px -14px -6px;padding:12px 14px 6px}
+}
+@media (max-width:460px){#profileCard .pf-runs li{grid-template-columns:46px minmax(0,1.3fr) minmax(0,1.1fr) minmax(0,.8fr) auto;gap:7px}}
+@media (min-width:1000px) and (min-height:640px){#profileCard .pf-hero{--ava:150px}}
+@media (max-width:370px){#profileCard .pf-stats{grid-template-columns:repeat(2,minmax(0,1fr))}#profileCard .pf-eat{display:none}#profileCard .pf-runs li{grid-template-columns:46px minmax(0,1.2fr) minmax(0,1fr) auto}}
 /* @ui:profile end */
 
 /* @ui:ranks-settings */
@@ -948,20 +1101,47 @@ body:not(.playing) #toasts .toast:has(>span:last-child:empty){grid-template-area
   </div>
 
   <div class="card panel page" id="profileCard" hidden>
-    <header class="pg-top"><button class="lb-icon back" type="button" aria-label="Back to the lobby"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><h2>Profile</h2><button class="ghost" id="profShop" type="button">Shop</button></header>
-    <div class="phead"><canvas id="profCv" class="pavatar" width="144" height="144" aria-hidden="true"></canvas><div class="pmain"><h2 id="profName">Unnamed cell</h2><div class="rankline"><span class="tier" id="pTierTxt">Silver</span><span class="next" id="pNext"></span></div><div class="tierbar" aria-hidden="true"><i id="pFill"></i></div></div></div>
-    <div class="pstats"><div class="pstat"><b id="pRating">1000</b><span id="pTier">Silver</span></div><div class="pstat"><b id="pAtp">0</b><span>ATP</span></div><div class="pstat"><b id="pEarned">0</b><span>earned</span></div><div class="pstat"><b id="pRuns">0</b><span>runs</span></div><div class="pstat"><b id="pSkins">0</b><span>skins</span></div></div>
-    <div class="field" id="runsField" hidden><span class="label">Recent runs</span><ol class="runs" id="runList"></ol></div>
-    <div class="field" id="achField"><span class="label">Achievements <span class="hintx" id="achCount"></span></span><div class="achs" id="achGrid"></div></div>
-    <div class="field acct" id="acctField"><span class="label">Account</span>
-      <p class="who" id="acctWho">Not signed in. Sign in so your ATP, skins and rating follow you to any phone.</p>
-      <div class="sbtns" id="acctBtns">
+    <header class="pg-top"><button class="lb-icon back" type="button" aria-label="Back to the lobby"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><h2>Profile</h2><button class="ghost pf-shop" id="profShop" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>Shop</button></header>
+    <section class="pf-hero" aria-label="Your rank">
+      <div class="pf-ava"><canvas id="profCv" width="320" height="320" aria-hidden="true"></canvas></div>
+      <h2 class="pf-name" id="profName">Unnamed cell</h2>
+      <div class="pf-rank">
+        <svg class="pf-crest" viewBox="0 0 40 44" aria-hidden="true"><defs><linearGradient id="pfCrestG" x1="0" y1="0" x2=".35" y2="1"><stop offset="0" class="s1"/><stop offset="1" class="s2"/></linearGradient></defs><path class="o" d="M20 2.5 35.5 8v13.5c0 9.6-6.6 16.4-15.5 20-8.9-3.6-15.5-10.4-15.5-20V8z"/><path class="i" d="M20 7 31 11v10.7c0 7.1-4.8 12.2-11 14.9-6.2-2.7-11-7.8-11-14.9V11z"/><g class="g" id="pCrest"></g></svg>
+        <span class="pf-rk"><span class="tier" id="pTierTxt">Silver</span><b id="pRating">1000</b></span>
+      </div>
+      <div class="pf-prog" id="pProg"><div class="pf-track" aria-hidden="true"><span class="pf-mcw" id="pCurMc"></span><div class="pf-bar"><i id="pFill"></i></div><span class="pf-mcw nx" id="pNextMc"></span></div><span id="pNext"></span></div>
+    </section>
+    <div class="pf-side">
+      <div class="pf-stats">
+        <div class="pf-stat s-atp"><i class="pf-coin" aria-hidden="true"></i><b id="pAtp">0</b><span>ATP</span></div>
+        <div class="pf-stat s-earn"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 16.5l5-5 4 4 7-7"/><path d="M15 8.5h5v5"/></svg></i><b id="pEarned">0</b><span>Earned</span></div>
+        <div class="pf-stat s-runs"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5.5 21V4"/><path d="M5.5 4.5h11.5l-2.4 4.2 2.4 4.3H5.5"/></svg></i><b id="pRuns">0</b><span>Runs</span></div>
+        <div class="pf-stat s-best"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 19.5l6.2-10 4.3 5.6 3-4.1 4.5 8.5z"/></svg></i><b id="pBest">0</b><span>Best</span></div>
+      </div>
+      <section class="pf-sec" id="invField">
+        <button type="button" class="pf-head pf-link" id="invOpen" aria-label="Open your skins"><b>Skins</b><span class="pf-cnt" id="pSkins">0</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+        <div class="pf-inv" id="invStrip"></div>
+      </section>
+      <section class="pf-sec" id="achField">
+        <div class="pf-head"><b>Achievements</b><span class="pf-cnt" id="achCount"></span></div>
+        <div class="pf-achs" id="achGrid"></div>
+        <p class="pf-achinfo" id="achInfo" aria-live="polite"></p>
+      </section>
+      <section class="pf-sec" id="runsField" hidden>
+        <div class="pf-head"><b>Recent runs</b></div>
+        <ol class="pf-runs" id="runList"></ol>
+      </section>
+      <details class="pf-sec pf-acct" id="acctField">
+        <summary class="pf-who"><span class="pf-acic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 18.5h10.5a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.5 9.6 4.5 4.5 0 0 0 7 18.5z"/><path class="ok" d="M9.5 13.6l2 2 3.8-4"/></svg></span><span class="pf-whotxt" id="acctWho"><b>Guest</b><span>Sync across devices</span></span><svg class="pf-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9.5l6 6 6-6"/></svg></summary>
+        <div class="pf-acbody">
+        <div class="sbtns pf-sbtns" id="acctBtns">
         <button type="button" class="sbtn apple" id="appleBtn" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.37 12.7c-.03-2.6 2.12-3.85 2.22-3.91-1.21-1.77-3.09-2.01-3.76-2.04-1.6-.16-3.12.94-3.93.94-.81 0-2.06-.92-3.39-.9-1.74.03-3.35 1.01-4.25 2.57-1.81 3.14-.46 7.79 1.3 10.33.86 1.24 1.89 2.64 3.23 2.59 1.3-.05 1.79-.84 3.36-.84 1.57 0 2.01.84 3.39.81 1.4-.02 2.28-1.26 3.14-2.51.99-1.44 1.4-2.84 1.42-2.91-.03-.01-2.72-1.04-2.73-4.13zM13.78 5.06c.72-.87 1.2-2.08 1.07-3.28-1.03.04-2.28.69-3.02 1.55-.66.77-1.24 1.99-1.09 3.17 1.15.09 2.32-.58 3.04-1.44z"/></svg>Sign in with Apple</button>
         <button type="button" class="sbtn google" id="googleBtn" hidden><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Sign in with Google</button>
-        <button type="button" class="ghost" id="signOutBtn" hidden>Sign out</button>
-      </div>
-      <p class="hint" id="acctHint" hidden></p>
-      <button type="button" class="danger-link" id="deleteAcctBtn">Delete account…</button>
+        </div>
+        <p class="pf-hint" id="acctHint" hidden></p>
+        <div class="pf-acrow"><button type="button" class="pf-out" id="signOutBtn" hidden>Sign out</button><button type="button" class="pf-del" id="deleteAcctBtn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 7h15M10 7V4.5h4V7M6.5 7l1 13h9l1-13M10 11v5.5M14 11v5.5"/></svg>Delete account</button></div>
+        </div>
+      </details>
     </div>
   </div>
 
@@ -1644,13 +1824,46 @@ $('deleteDone').addEventListener('click',()=>location.reload());
 function loadHistory(){try{const a=JSON.parse(localStorage.getItem('mitosis.history')||'[]');return Array.isArray(a)?a:[];}catch(e){return[];}}
 function recordRun(e){const h=loadHistory();h.push(e);try{localStorage.setItem('mitosis.history',JSON.stringify(h.slice(-12)));}catch(err){}}
 function updateRunDelta(delta,rating){const h=loadHistory();const last=h[h.length-1];if(!last||last.delta!=null||Date.now()-last.t>60000)return;last.delta=delta;last.rating=rating;try{localStorage.setItem('mitosis.history',JSON.stringify(h));}catch(err){}}
-function renderRuns(){const el=$('runList'),f=$('runsField');if(!el||!f)return;const h=loadHistory().slice(-6).reverse();f.hidden=!h.length;
-  el.innerHTML=h.map(r=>{const d=typeof r.delta==='number'?`<span class="dl ${r.delta>0?'up':r.delta<0?'dn':''}">${r.delta>0?'+':''}${r.delta}</span>`:r.practice?'<span class="dl">practice</span>':'<span class="dl"></span>';
-    return `<li><b>${r.place?ordinal(r.place)+' of '+r.of:'—'}</b><span>${fmtT(r.sec|0)} · ${(r.peak|0).toLocaleString()} peak · ${r.eaten|0} eaten</span>${d}</li>`;}).join('');}
-function renderProfile(){if(!$('profName'))return;renderRuns();renderAch();$('profName').textContent=cleanName($('nameIn').value)||settings.name||'Unnamed cell';$('pRating').textContent=wallet.rating;$('pTier').textContent=wallet.tier;$('pAtp').textContent=wallet.balance.toLocaleString();$('pEarned').textContent=(wallet.earned|0).toLocaleString();$('pRuns').textContent=wallet.runs|0;$('pSkins').textContent=wallet.skins.filter(id=>id>=SKIN_FREE).length;
-  const p=tierProgress();$('pTierTxt').textContent=wallet.tier;$('pTierTxt').dataset.tier=wallet.tier;$('pTier').dataset.tier=wallet.tier;$('pNext').textContent=p.text;$('pFill').style.width=p.pct+'%';drawAvatar($('profCv'));}
-$('profBtn').addEventListener('click',()=>{renderProfile();renderAccount();showCard('profileCard');});
+/* Profile page: a hero with the rank crest, stat tiles, the skins you own, achievement badges, recent runs and the account */
+const PF_IC={peak:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19.5l6.2-10 4.3 5.6 3-4.1 4.5 8.5z"/></svg>',time:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
+  eat:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.9 4A8.5 8.5 0 1 0 20 9.1 3.9 3.9 0 0 1 14.9 4z"/></svg>'};
+const TIER_GLYPH={Bronze:'<path d="M13 19.5l7 5 7-5"/>',Silver:'<path d="M13 16.5l7 5 7-5M13 22.5l7 5 7-5"/>',Gold:'<path d="M13 13.5l7 4.5 7-4.5M13 19l7 4.5 7-4.5M13 24.5l7 4.5 7-4.5"/>',
+  Platinum:'<path d="M14 17.5l3-4.5h6l3 4.5-6 9z"/><path d="M14 17.5h12"/>',Diamond:'<path d="M20 11.5l7 9.5-7 9.5-7-9.5z"/><path d="M13 21h14"/>',Legend:'<path d="M12.5 27l-1.5-10.5 5 4 4-7.5 4 7.5 5-4-1.5 10.5z"/>'};
+const fmtStat=n=>{n=Math.max(0,Math.round(+n||0));return n>=1e6?(n/1e6).toFixed(n<1e7?1:0).replace(/\.0$/,'')+'M':n>=1e5?Math.round(n/1e3)+'K':n.toLocaleString();};
+const bestMass=()=>{try{return Math.round(+localStorage.getItem('mitosis.best')||0);}catch(e){return 0;}};
+function renderRuns(){const el=$('runList'),f=$('runsField');if(!el||!f)return;const h=loadHistory().slice(-5).reverse();f.hidden=!h.length;
+  el.innerHTML=h.map(r=>{const pl=r.place|0,dl=typeof r.delta==='number'?r.delta:null,
+    d=dl!=null?`<em class="${dl>0?'up':dl<0?'dn':''}">${dl>0?'+':dl<0?'−':'±'}${Math.abs(dl)}</em>`:r.practice?'<em class="pr">Practice</em>':'<em class="nil"></em>',
+    lbl=`${pl?ordinal(pl)+' of '+r.of:'Unplaced'}, peak ${r.peak|0}, survived ${fmtT(r.sec|0)}, ate ${r.eaten|0}${dl!=null?', rating '+(dl>0?'+':'')+dl:r.practice?', practice':''}`;
+    return `<li aria-label="${escH(lbl)}"><span class="pf-pl${pl&&pl<4?' p'+pl:''}"><b>${pl?ordinal(pl):'—'}</b>${pl&&r.of?`<small>of ${r.of|0}</small>`:''}</span><span class="pf-m">${PF_IC.peak}<b>${(r.peak|0).toLocaleString()}</b></span><span class="pf-m">${PF_IC.time}<b>${fmtT(r.sec|0)}</b></span><span class="pf-m pf-eat">${PF_IC.eat}<b>${r.eaten|0}</b></span>${d}</li>`;}).join('');}
+function renderInv(){ // the skins you own, worn one first; tapping any opens the Skins page
+  const el=$('invStrip');if(!el)return;const sk=settings.skin|0,mine=PREMIUM.filter(S=>ownsSkin(S.id)),worn=mine.find(S=>S.id===sk);
+  $('pSkins').textContent=`${mine.length}/${PREMIUM.length}`;
+  const it=(k,name,cls,on)=>`<button type="button" class="pf-it${cls}${on?' on':''}" data-k="${k}" aria-label="${escH(name)}${on?', wearing':''}"><canvas width="144" height="144"></canvas><span>${escH(name)}</span></button>`;
+  const def=it('def','Default','',sk<SKIN_FREE);
+  el.innerHTML=(worn?it(worn.id,worn.name,' r-'+rarOf(worn),true)+def:def)+mine.filter(S=>S!==worn).map(S=>it(S.id,S.name,' r-'+rarOf(S),false)).join('')
+    +(mine.length?'':'<button type="button" class="pf-it pf-get" data-k="shop" aria-label="Get skins in the shop"><i aria-hidden="true">+</i><span>Get skins</span></button>');
+  drawInv();}
+function drawInv(){const el=$('invStrip');if(!el)return;for(const cv of el.querySelectorAll('canvas')){const k=cv.parentNode.dataset.k;if(k==='def')drawAvatar(cv,settings.pat|0);else{const S=PREMIUM[+k-SKIN_FREE];if(S)drawPreview(cv,S);}}}
+const miniCrest=t=>`<svg class="pf-mc" data-tier="${escH(t)}" viewBox="0 0 40 44"><path class="o" d="M20 2.5 35.5 8v13.5c0 9.6-6.6 16.4-15.5 20-8.9-3.6-15.5-10.4-15.5-20V8z"/><g class="g">${TIER_GLYPH[t]||''}</g></svg>`;
+let pfQueued=false,pfIntro=false,pfCount=0; // render after the caller finishes, so a wallet that brings the tier table shows its progress at once
+function renderProfile(){if(pfQueued||!$('profName'))return;pfQueued=true;Promise.resolve().then(()=>{pfQueued=false;renderProfileNow();});}
+function renderProfileNow(){renderRuns();renderAch();renderInv();
+  $('profName').textContent=cleanName($('nameIn').value)||settings.name||'Unnamed cell';
+  const t=wallet.tier,p=tierProgress(),names=(wallet.catalog&&wallet.catalog.tiers)||[],nx=names[names.indexOf(t)+1]||'';
+  $('profileCard').dataset.tier=t;$('pTierTxt').textContent=t;$('pTierTxt').dataset.tier=t;$('pCrest').innerHTML=TIER_GLYPH[t]||TIER_GLYPH.Silver;$('pRating').textContent=wallet.rating;
+  $('pCurMc').innerHTML=miniCrest(t);$('pNextMc').innerHTML=nx?miniCrest(nx):'';
+  const nums=[[$('pAtp'),wallet.balance],[$('pEarned'),wallet.earned],[$('pRuns'),wallet.runs],[$('pBest'),bestMass()]],fill=$('pFill'),intro=pfIntro&&!RM;pfIntro=false;cancelAnimationFrame(pfCount);
+  for(const[el,v]of nums)el.textContent=fmtStat(intro?0:v);
+  $('pProg').hidden=!p.text;$('pNext').textContent=p.text;
+  if(intro){fill.style.transition='none';fill.style.width='0%';void fill.offsetWidth;fill.style.transition='';} // opening the page: the bar fills and the numbers count up
+  fill.style.width=p.pct+'%';drawAvatar($('profCv'));
+  if(intro){const t0=performance.now(),tick=now=>{const k=clamp((now-t0)/700,0,1),e=1-Math.pow(1-k,3);for(const[el,v]of nums)el.textContent=fmtStat(Math.round((+v||0)*e));if(k<1)pfCount=requestAnimationFrame(tick);};pfCount=requestAnimationFrame(tick);}}
+$('profBtn').addEventListener('click',()=>{pfIntro=true;renderProfile();renderAccount();showCard('profileCard');});
 $('profShop').addEventListener('click',()=>openStore());
+$('invOpen').addEventListener('click',()=>$('lookBtn').click());
+$('invStrip').addEventListener('click',e=>{const b=e.target.closest('.pf-it');if(!b)return;if(b.dataset.k==='shop')openStore();else $('lookBtn').click();});
+setInterval(()=>{if(!document.hidden&&!RM&&!$('profileCard').hidden)drawInv();},100); // premium skins are animated
 $('lookShop').addEventListener('click',()=>openStore());
 for(const b of document.querySelectorAll('.card .back'))b.addEventListener('click',()=>showCard('startCard'));
 // ending a run on purpose shows the same results screen as dying
@@ -1829,13 +2042,13 @@ $('storeBack').addEventListener('click',()=>{showCard('startCard');renderSkins()
 /* ---------- Account: Sign in with Apple / Google, so the wallet follows the player across devices ---------- */
 let authProviders=null,webAuthConfig=null,signingIn=false; // which sign-in buttons this build can offer
 function renderAccount(){
-  const a=wallet.account||null,who=$('acctWho');if(!who)return;
-  if(a)who.innerHTML=`Signed in with <b>${a.provider==='apple'?'Apple':'Google'}</b>${a.email?' · <b>'+escH(a.email)+'</b>':''}. Your ATP, skins and rating follow you.`;
-  else who.textContent=wallet.online?'Not signed in. Sign in so your ATP, skins and rating follow you to any phone.':'Not signed in. Signing in needs a connection.';
+  const a=wallet.account||null,who=$('acctWho');if(!who)return;$('acctField').classList.toggle('in',!!a);
+  if(a)who.innerHTML=`<b>Signed in</b><span>${a.provider==='apple'?'Apple':'Google'}${a.email?' · '+escH(a.email):''}</span>`;
+  else who.innerHTML=`<b>Guest</b><span>${wallet.online?'Sync across devices':'Offline'}</span>`;
   const p=authProviders||[];
   $('appleBtn').hidden=!!a||!p.includes('apple');$('googleBtn').hidden=!!a||!p.includes('google');$('signOutBtn').hidden=!a;
   const none=!a&&authProviders&&!p.length;$('acctHint').hidden=!none;
-  if(none)$('acctHint').textContent=Native.platform?'Sign-in is not set up in this build yet.':'Sign in from the Mitosis app for iPhone or Android.';
+  if(none)$('acctHint').textContent=Native.platform?'Sign-in isn’t available in this build':'Sign in from the Mitosis app';
 }
 async function loadAuthProviders(cat){
   try{
@@ -3342,11 +3555,31 @@ $('lookCard').addEventListener('touchstart',()=>{},{passive:true}); // lets iOS 
     if(cv.width!==w){cv.width=cv.height=w;drawAvatar(cv);}else if(!RM)drawAvatar(cv);}
   requestAnimationFrame(lookLoop);})();
 const achLine=()=>{$('achLine').textContent=`Achievements ${ACH.filter(a=>achGot.has(a.id)).length} of ${ACH.length}`+(achGot.size?' — '+ACH.filter(a=>achGot.has(a.id)).map(a=>a.name).join(', '):'');renderAch();};
-function renderAch(){ // the Profile's achievement grid: earned ones lit, the rest show what to aim for
-  const g=$('achGrid');if(!g)return;const LOCK='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
-  $('achCount').textContent=`${ACH.filter(a=>achGot.has(a.id)).length} of ${ACH.length}`;
-  g.innerHTML=ACH.map(a=>{const got=achGot.has(a.id);return `<div class="ach ${got?'got':'locked'}"><i>${got?'★':LOCK}</i><b>${escH(a.name)}</b><span>${escH(a.desc)}</span></div>`;}).join('');
+const ACH_IC={ // one badge glyph per achievement
+  first:'<path d="M14.9 4A8.5 8.5 0 1 0 20 9.1 3.9 3.9 0 0 1 14.9 4z"/>',
+  m500:'<circle cx="12" cy="12.5" r="8"/><circle cx="14.2" cy="10.2" r="2.6"/>',
+  m2000:'<circle cx="13.5" cy="13.5" r="7.5"/><circle cx="4.6" cy="6" r="1.6"/><circle cx="9" cy="3.4" r="1"/>',
+  rank1:'<path d="M3.5 8.5l4.3 4L12 5.5l4.2 7 4.3-4-1.8 10H5.3z"/>',
+  surv5:'<circle cx="12" cy="13.5" r="7.5"/><path d="M12 9.5v4l2.6 1.6M9.5 2.8h5M12 2.8V6"/>',
+  frenzy5:'<path d="M13.5 2.5L5 13.5h6.5l-1 8 8.5-11h-6.5z"/>',
+  hunter:'<path d="M12 3l7.5 3v6c0 4.5-3.2 7.7-7.5 9-4.3-1.3-7.5-4.5-7.5-9V6z"/><path d="M8.8 12.2l2.3 2.3 4.2-4.6"/>',
+  lysis:'<path d="M12 20s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.3 4.3 4.3 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10z"/>',
+  bounty:'<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.2"/><path d="M12 2.5v4M12 17.5v4M2.5 12h4M17.5 12h4"/>',
+  levi:'<path d="M12 3.5a7.3 7.3 0 0 0-4.5 13.1v3.4h9v-3.4A7.3 7.3 0 0 0 12 3.5z"/><circle cx="9.4" cy="11.2" r="1.5"/><circle cx="14.6" cy="11.2" r="1.5"/><path d="M10.6 20v-2.2M13.4 20v-2.2"/>',
+  evolve:'<path d="M7.5 3c0 4.5 9 4.5 9 9s-9 4.5-9 9M16.5 3c0 4.5-9 4.5-9 9s9 4.5 9 9M9 6.2h6M9 17.8h6"/>',
+  bloom:'<circle cx="12" cy="12" r="2.3"/><path d="M12 3.5c2 2.2 2 4.3 0 6-2-1.7-2-3.8 0-6zM12 14.5c2 1.7 2 3.8 0 6-2-2.2-2-4.3 0-6zM3.5 12c2.2-2 4.3-2 6 0-1.7 2-3.8 2-6 0zM14.5 12c1.7-2 3.8-2 6 0-2.2 2-4.3 2-6 0z"/>'};
+let achSel=-1; // the badge whose name and goal show under the grid
+function renderAch(){ // the Profile's badges: earned ones lit gold; tap one to read it
+  const g=$('achGrid');if(!g)return;
+  $('achCount').textContent=`${ACH.filter(a=>achGot.has(a.id)).length}/${ACH.length}`;
+  if(!ACH[achSel])achSel=Math.max(0,ACH.findIndex(a=>!achGot.has(a.id)));
+  g.innerHTML=ACH.map((a,i)=>{const got=achGot.has(a.id);return `<button type="button" class="pf-ach ${got?'got':'locked'}" data-i="${i}" aria-pressed="false" aria-label="${escH(a.name)}, ${got?'earned':'locked'}"><i><svg viewBox="0 0 24 24" aria-hidden="true">${ACH_IC[a.id]||''}</svg></i></button>`;}).join('');
+  achInfo();
 }
+function achInfo(){const a=ACH[achSel],el=$('achInfo');if(!a||!el)return;const got=achGot.has(a.id);el.classList.toggle('got',got);
+  el.innerHTML=`<b>${escH(a.name)}</b><span>${escH(a.desc)}</span><em>${got?'Earned':'Locked'}</em>`;
+  for(const b of $('achGrid').children)b.setAttribute('aria-pressed',String(+b.dataset.i===achSel));}
+$('achGrid').addEventListener('click',e=>{const b=e.target.closest('.pf-ach');if(!b)return;achSel=+b.dataset.i;achInfo();});
 achLine();
 const diffEl=$('diff');const syncDiff=()=>{[...diffEl.children].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.d===settings.diff)));};
 diffEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.diff=b.dataset.d;syncDiff();});syncDiff();
