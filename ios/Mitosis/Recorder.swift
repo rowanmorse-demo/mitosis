@@ -34,6 +34,10 @@ final class Recorder {
         try? FileManager.default.removeItem(at: url)
         screen.stopRecording(withOutput: url) { error in
             if let error { DispatchQueue.main.async { done(Self.reason(error)) }; return }
+            let size = (try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int) ?? -1
+            NSLog("[Mitosis recorder] wrote %@ (%d bytes)", url.lastPathComponent, size)
+            // the Simulator reports success without writing a file; say so instead of a Photos error
+            guard size > 0 else { DispatchQueue.main.async { done("Couldn't record on this device") }; return }
             PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
                 guard status == .authorized || status == .limited else {
                     try? FileManager.default.removeItem(at: url)

@@ -28,3 +28,7 @@ android/.kotlin/
 ios/store-art/raw/
 ios/store-art/final/
 ios/store-art/chrome-*/
+
+# promo video: rendered output and working files (re-render with node promo/render.js)
+promo/out/
+promo/.work/

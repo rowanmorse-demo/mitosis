@@ -38,7 +38,7 @@ function tally(conns, now) {
 }
 
 const dec = s => { let n = 0; for (const ch of s) { const i = B64.indexOf(ch); if (i < 0) return null; n = n * 64 + i; } return n; };
-/** Seconds into the shared arena's round, from the host's presence (rd: round id, then tenths of a second). */
+/** Seconds into an arena room's round, from its host's presence (rd: round id, then tenths of a second). */
 function roundClock(conns, now) {
   for (const c of conns) if (c.p && c.p.h === 1 && typeof c.p.rd === 'string' && c.p.rd.length === 5 && now - c.pAt < PRESENCE_FRESH) {
     const t = dec(c.p.rd.slice(2)); if (t != null) return t / 10;
@@ -46,8 +46,9 @@ function roundClock(conns, now) {
   return null;
 }
 
-/** The tracker for one server. conns() lists the relay connections that have joined. */
-function create({ file, conns, cap }) {
+/** The tracker for one server. conns() lists the relay connections that have joined, rooms() the arena rooms they
+ *  are in (each a set of connections, up to roomSize), and cap is how many games the server takes in all. */
+function create({ file, conns, rooms = () => [], roomSize, cap }) {
   const runs = new Map(), streams = new Set();
   let rows = [], best = null, last = '', wrote = 0;
   try {
@@ -69,8 +70,11 @@ function create({ file, conns, cap }) {
   function runsOpen(now) { for (const [id, at] of runs) if (now - at > RUN_MAX) runs.delete(id); return runs.size; }
   function snapshot(now = Date.now()) {
     const list = [...conns()], s = tally(list, now);
+    // each arena room in order: its games, how many play in it, and its own round clock
+    const rs = [...rooms()].map(r => { const l = [...r], t = tally(l, now); return { games: l.length, arena: t.arena, searching: t.searching, round: roundClock(l, now) }; });
+    const busy = rs.filter(r => r.round != null).sort((a, b) => b.arena + b.searching - a.arena - a.searching || b.games - a.games)[0];
     // a ranked life needs a game still connected and playing; this drops lives whose app was closed mid-game at once
-    return { at: now, ...s, ranked: Math.min(runsOpen(now), s.arena + s.solo + s.away), cap, round: roundClock(list, now), best };
+    return { at: now, ...s, ranked: Math.min(runsOpen(now), s.arena + s.solo + s.away), cap, roomSize, rooms: rs, round: busy ? busy.round : null, best };
   }
   function send(text) {
     wrote = Date.now();
@@ -169,14 +173,15 @@ function render(){
     {v:s.ios,l:'iPhone & iPad app',d:pct(s.ios,on)+' of online'},
     {v:s.android,l:'Android app',d:pct(s.android,on)+' of online'},
     {v:s.other,l:'Other',d:'a copy of the game opened from a file, test tools'}]);
-  const fullToday=today.reduce((n,r)=>n+r[col('full')],0),rc=s.round==null?null:Math.floor(s.round/60)+':'+String(Math.floor(s.round%60)).padStart(2,'0');
-  const arenaUsed=s.arena+s.searching>0?1:0;
+  const clock=t=>t==null?null:Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0');
+  const fullToday=today.reduce((n,r)=>n+r[col('full')],0),rc=clock(s.round),rs=s.rooms||[],plural=(n,w)=>n+' '+w+(n===1?'':'s');
+  const arenaUsed=rs.filter(r=>r.arena+r.searching>0).length;
   tiles('rooms',[
-    {v:arenaUsed+s.solo,l:'Rooms in use',d:(arenaUsed?'the shared arena':'arena empty')+' + '+s.solo+' solo game'+(s.solo===1?'':'s')+' (each runs on its own device)'},
-    {v:on+' / '+s.cap,l:'Shared arena slots',d:'one arena for the whole server; every connected game holds a slot, menus included',m:on/s.cap},
-    {v:rc||'–',l:'Round clock',d:rc?'into the 10-minute round (from the host game)':'no game is hosting a round'},
+    {v:arenaUsed+s.solo,l:'Rooms in use',d:(arenaUsed?plural(arenaUsed,'arena room'):'arena empty')+' + '+plural(s.solo,'solo game')+' (each runs on its own device)'},
+    {v:on+' / '+s.cap,l:'Arena slots',d:(rs.length>1?plural(rs.length,'room')+' open ('+rs.map(r=>r.games).join(' · ')+' games)':'one room open')+', up to '+s.roomSize+' games each; every connected game holds a slot, menus included',m:on/s.cap},
+    {v:rc||'–',l:'Round clock',d:rs.length>1?'busiest room; each room has its own round: '+rs.map(r=>clock(r.round)||'–').join(' · '):rc?'into the 10-minute round (from the host game)':'no game is hosting a round'},
     {v:s.ranked,l:'Ranked lives in progress',d:'arena and bot games that pay ATP; practice is not ranked'},
-    {v:fullToday,l:'Turned away today',d:'arena full: those players can only practise offline'}]);
+    {v:fullToday,l:'Turned away today',d:'every arena room full: those players can only practise offline'}]);
   chart();table();
 }
 const svgNS='http://www.w3.org/2000/svg',el=(n,a,p)=>{const e=document.createElementNS(svgNS,n);for(const k in a)e.setAttribute(k,a[k]);if(p)p.append(e);return e;};

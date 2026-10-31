@@ -7,7 +7,7 @@ A multiplayer cell-eating arena set in a giant petri well. Absorb anything small
 ## Features
 
 - **Soft-body cells** that squash against each other and the dish wall, with shadows, organelles and a nucleus that trails motion
-- **Live multiplayer** for up to 16 players. AI microbes fill the well, and every real player who joins replaces five of them
+- **Live multiplayer** in arenas of up to 16 players; when one is full the server opens another, each with its own round. AI microbes fill the well, and every real player who joins replaces five of them
 - **Smarter bots** with personalities (hunters, farmers, opportunists, snipers) that steer around threats, predict prey, split-kill, shoot hunter phages and fire viruses at big targets
 - **Mutation**: at mass milestones a random permanent trait is applied, six times a life; every cell shows badges for the traits it carries
 - **World events**: Nutrient Bloom, Antibiotic Tide, Phage Swarm and the Leviathan boss
@@ -15,10 +15,13 @@ A multiplayer cell-eating arena set in a giant petri well. Absorb anything small
 - **ATP and skins**: earn ATP by placing well (or buy it in the apps) and spend it in a full-screen shop on nineteen premium skins, up to the 12,000,000 ATP One Cell to Rule Them All
 - **Levels**: every ranked life earns XP for how long you stay alive and where you place, and XP adds up into a profile level. The lobby and the Profile show your level with a bar toward the next one; the results screen counts the XP in, shows where it came from and celebrates a level-up
 - **A lobby that knows you**: a live portrait of your cell, your level and your rating with progress to the next tier, who is in the room and the round clock. First launch shows a three-step welcome card (Settings can bring it back). The Profile keeps your last runs with placement, time, peak mass and rating change
+- **Background** in Settings: a black dish (the default) or a white one
 - **Effects toggle** in Settings (Full or Reduced) for older phones; the game also drops to reduced effects on its own when frames run long
 - **Rounds of ten minutes**: the arena is full size for the first minute, then closes in to 3% of the dish by 9:30. Anything caught outside dissolves. Bots stop respawning at 7:00, and the round ends as soon as one player's cells are all that is left: the last cell standing wins
 - **Practice and offline play** against bots at four difficulties (Easy, Normal, Hard, Expert). With no connection, Play starts a bot game straight away
-- **Nearby play** (iPhone app): phones in the same room play each other over Bluetooth and peer-to-peer Wi-Fi, no internet needed
+- **Nearby play** (iPhone app): phones in the same room play each other over Bluetooth and peer-to-peer Wi-Fi, no internet needed, in a lobby where the host sets bot difficulty, bots, round length and lives
+- **Friends and parties**: add friends by their 6-character friend code (Friends in the lobby) and see who's online. Invite one into a party: when either of you presses Play, the other joins the same arena. Allies get a dashed cyan ring and an arrow at the screen edge, can't eat each other, and whoever runs out of lives watches their ally
+- **High ping plays bots**: with a ping over your *Max ping* (Settings: 100 ms by default, or 150, 250 ms or Any), Play in Ranked starts a bot game instead, unless you're in a party. It goes by the median of the last few pings
 - **Mutations** (Magnet, Phase, Surge), dash, frenzy streaks, a leader bounty, stain patterns and 12 achievements. There is no chat
 
 ## Controls
@@ -44,7 +47,7 @@ On phones, drag to steer and use the on-screen buttons. In the Android app the b
 - **Bots stop respawning at 7:00.** From then on, as soon as only one player's cells are left the round ends and that player wins. If more than one is still alive at 10:00 (rare, given the final arena), they are ranked by mass.
 - **Lives and the spawn window.** Everyone gets two respawns per round, and nobody spawns in the last 5 minutes. When you can't join, Play **searches for a game** for up to 30 seconds (the round may open or a new one start); after that you're put into a game on your device where **bots fill every slot people didn't**. Those games are ranked like any other.
 - **Practice** (the button under Play) is the same bot-filled game but unranked: no ATP, no rating change, and no connection needed. The pill beside it (and Settings) sets the bots to Easy, Normal, Hard or Expert. When the app has no connection, Play starts a practice game at once instead of searching.
-- **Nearby** (the Online / Nearby switch in the iPhone app's lobby) connects phones around you with MultipeerConnectivity, over Bluetooth and peer-to-peer Wi-Fi. The phones relay the game to each other the way the server does online, so rounds, bots and hosting work the same. Nearby games are unranked.
+- **Nearby** (a play mode in the iPhone app's lobby) connects phones around you with MultipeerConnectivity, over Bluetooth and peer-to-peer Wi-Fi. The phones relay the game to each other the way the server does online, so rounds, bots and hosting work the same. Nearby games are unranked. The phones form a lobby: the host phone picks the match (bot difficulty Easy to Master; no, few, normal or lots of bots; a 3, 5 or 10-minute round; 1, 3 or 5 lives) and taps Start match, which pulls every phone on the home screen into it; when the round ends everyone is back in the lobby. The settings travel in the host's presence (`lb`). `node tools/nearby-test.js` plays a match between two headless Chrome pages with a stand-in for the app's Nearby bridge.
 - **Merging**: split pieces can fuse again after 15 s plus a little more for bigger cells (about 20–30 s at everyday sizes). Until then pieces that touch slide around each other; when it is time they glide together and fuse once they overlap.
 - **Rating** rewards dying less and winning: finishing 1st of 4+ adds a win bonus, and a run on your second or third life of the round earns 75% or 50% of the gain.
 - There is **no cap on a single cell's mass** (the packet format tops out at 8,388,607, far beyond play), and **nothing is immune to phages**: the Phase power-up still stops you being eaten, but phages burst and hunters infect anyone.
@@ -145,6 +148,7 @@ On Windows, double-click `start.bat`. On macOS, double-click `start.command`.
 | --- | --- |
 | `PORT` | Port to listen on (default 3000) |
 | `DATA_DIR` | Folder for wallets, skins, runs and purchases (default `./data`). Uses SQLite on Node 22.13+, a JSON file on older Node |
+| `MAX_ROOMS` | Arena rooms the relay may open (default 8). Each holds 16 games with its own host and round; past 16 × `MAX_ROOMS` connected games, new ones are told the server is full |
 | `APPLE_BUNDLE_ID` | Bundle id purchases must belong to (default `com.mitosisgame.app`). Apple purchases need nothing else: StoreKit 2 hands the app a transaction signed by Apple, and the server checks the certificate chain (to Apple Root CA G3, embedded in `iap.js`), the signature and the payload itself |
 | `APPLE_ISSUER_ID`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY` | Optional App Store Server API key (App Store Connect → Users and Access → Integrations → In-App Purchase). When set, the server also looks every transaction up at Apple. `APPLE_PRIVATE_KEY` is the `.p8` contents; `\n` may stand in for newlines |
 | `GOOGLE_PACKAGE_NAME`, `GOOGLE_SERVICE_ACCOUNT` | Play Console service account with *View financial data* on the app. The variable holds the JSON key, raw or base64 |
@@ -251,10 +255,13 @@ All endpoints take and return JSON. Authenticated ones need `Authorization: Bear
 | `POST /api/auth/google` `{idToken, nonce}` | Sign in with Google, same behaviour |
 | `POST /api/auth/signout` | Detach this device from the account (the page then starts a fresh secret) |
 | `POST /api/account/delete` | `{confirm:'DELETE'}`: delete the player and everything linked (skins, runs, battle pass and quests, sign-ins, devices); purchase receipts stay as anonymous ids so they cannot be replayed. In the game: Profile › Account › Delete account, or Settings › Account & data |
+| `POST /api/social/me` `{name, status}` | Friends: your friend code, friends with online status (`menu`, `arena`, `practice`, `nearby`, `spectating`, `offline`), friend requests, your party and party invites. The games call it every few seconds in the menus and every 30 s in a game, which is what makes them show as online |
+| `POST /api/social/add` · `accept` · `remove` `{code}` | Send a friend request by friend code (or accept theirs if they already asked); accept one; unfriend, decline or cancel |
+| `POST /api/social/party/invite` `{code}` · `join` · `decline` `{party}` · `leave` · `go` | Parties of two friends: invite, join (invites last 5 minutes), leave (ends the party), and `go` when one presses Play so the other follows. Parties live in memory; friend lists in `DATA_DIR/social.json` |
 | `POST /api/crash` `{platform, kind, app, os, device, report}` | Crash and hang reports from the apps; logged (`!!` lines) and kept in `DATA_DIR/crashes/` |
 | `POST /api/log` `{who, text}` | Client diagnostics: frame stalls, page errors, autopilot events; printed in the server log |
 | `POST /api/net` | Connection quality from the game: ping samples, lost pings, frame rate, time zone (anonymous) |
 | `GET /admin/net?token=…` | The connection report: ping and frame rate by area, time zone, platform and connection, and what most likely needs fixing. The token is `ADMIN_TOKEN`, or the one the server makes on first start in `data/admin-token` (also printed at start-up). `&days=30`, `&format=json` |
-| `GET /admin/live?token=…` | Live players: who is online right now (website, iPhone app, Android app), what they are doing (live arena, searching, solo game, menus, away), rooms in use, peak today and a 24-hour chart. Updates live over `GET /admin/live/stream?token=…` (server-sent events); `&format=json` for the numbers. Same token as the connection report. Counts only; the 24-hour history is kept in `DATA_DIR/live-history.json` |
+| `GET /admin/live?token=…` | Live players: who is online right now (website, iPhone app, Android app), what they are doing (live arena, searching, solo game, menus, away), arena rooms and their round clocks, peak today and a 24-hour chart. Updates live over `GET /admin/live/stream?token=…` (server-sent events); `&format=json` for the numbers. Same token as the connection report. Counts only; the 24-hour history is kept in `DATA_DIR/live-history.json` |
 | `GET /admin/pass?token=…` | The battle pass switch (same token): whether it is on, the season and its dates, and how many players have progress, bought the Battle Pass, claimed rewards and finished quests today and this week. The pass is off until you press Turn on; it is shown only while it is on and a season in `PASS_SEASONS` (economy.js) is running. The switch is kept in the database, so it survives deploys |
 | `GET /api/catalog` | Skins, packs, payout rules, the battle pass season (while it is on) and which stores are verified |
