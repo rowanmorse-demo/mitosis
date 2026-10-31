@@ -19,7 +19,7 @@ const sha256 = s => crypto.createHash('sha256').update(s).digest('hex');
 const minuteNow = Math.floor(Date.now() / 60e3);
 fs.writeFileSync(path.join(dataDir, 'live-history.json'), JSON.stringify({ rows: [[minuteNow - 25 * 60, 9, 9, 9, 0, 9, 0, 0, 0, 0], [minuteNow - 30, 5, 4, 3, 1, 2, 2, 1, 0, 0]], best: { n: 40, at: Date.now() - 864e5 * 9 } }));
 const child = spawn(process.execPath, [path.join(__dirname, 'server.js')],
-  { env: { ...process.env, PORT, DATA_DIR: dataDir, IAP_UNVERIFIED: '1', AUTH_APPLE_JWKS: `http://127.0.0.1:${KEY_PORT}/apple`, AUTH_GOOGLE_JWKS: `http://127.0.0.1:${KEY_PORT}/google`, GOOGLE_CLIENT_IDS: 'test-google-client' }, stdio: ['ignore', 'ignore', 'inherit'] });
+  { env: { ...process.env, PORT, DATA_DIR: dataDir, MAX_ROOMS: '3', IAP_UNVERIFIED: '1', AUTH_APPLE_JWKS: `http://127.0.0.1:${KEY_PORT}/apple`, AUTH_GOOGLE_JWKS: `http://127.0.0.1:${KEY_PORT}/google`, GOOGLE_CLIENT_IDS: 'test-google-client' }, stdio: ['ignore', 'ignore', 'inherit'] });
 const base = `http://127.0.0.1:${PORT}`;
 
 async function waitUp() { // up to 15 s: start-up is slow while the Mac is busy building
@@ -137,7 +137,7 @@ async function post(url, body, secret) {
     // the website player is alive in the arena and hosts the round (90.5 s in); the iPhone is searching; the Android phone is in the menus
     const pres = () => { web.send(JSON.stringify({ t: 'p', p: { v: 6, a: 1, h: 1, q: 0, rd: 'ABAOJ' } })); ios.send(JSON.stringify({ t: 'p', p: { v: 6, a: 0, h: 0, q: 1 } })); };
     pres(); android.send(JSON.stringify({ t: 'p', p: { v: 6, a: 0, h: 0, q: 0 } }));
-    let s = await expect('three players, and the round clock from the host', { online: 3, web: 1, ios: 1, android: 1, other: 0, arena: 1, searching: 1, menus: 1, solo: 0, playing: 1, cap: 16, round: 90.5 });
+    let s = await expect('three players, and the round clock from the host', { online: 3, web: 1, ios: 1, android: 1, other: 0, arena: 1, searching: 1, menus: 1, solo: 0, playing: 1, cap: 48, roomSize: 16, round: 90.5 });
     assert.equal(s.best.n, 40, 'the most at once survives a restart');
     assert.ok(!s.rows.some(r => r[0] <= minuteNow - 24 * 60), 'history older than 24 hours is dropped');
     assert.deepEqual(s.rows.find(r => r[0] === minuteNow - 30), [minuteNow - 30, 5, 4, 3, 1, 2, 2, 1, 0, 0], 'history from before the restart is kept');
@@ -148,22 +148,66 @@ async function post(url, body, secret) {
     const more = [], inMenus = w => w !== 'full' && w.readyState === 1 && w.send(JSON.stringify({ t: 'p', p: { v: 6, a: 0, h: 0, q: 0 } }));
     const keep = setInterval(() => { pres(); android.send(JSON.stringify({ t: 'ping', c: 1 })); more.forEach(inMenus); }, 400);
     await expect('a solo game', { online: 3, arena: 1, searching: 1, solo: 1, menus: 0, playing: 2 }, 5000);
-    // the arena holds 16 games (these wait in the menus, sending presence like a real game); the 17th is turned away and counted
+    // an arena room holds 16 games (these wait in the menus, sending presence like a real game); the 17th is not turned away but opens a second room
     for (let i = 0; i < 14; i++) { const w = await join({ Origin: base }); inMenus(w); more.push(w); }
-    assert.equal(more.filter(w => w === 'full').length, 1, 'the 17th game is turned away');
-    s = await expect('a full arena', { online: 16 });
+    assert.ok(!more.includes('full'), 'the 17th game gets in');
+    s = await expect('two arena rooms', { online: 17 });
+    assert.deepEqual(s.rooms.map(r => r.games), [16, 1], 'the first room is full and the 17th game has a room of its own');
+    assert.equal(s.rooms[0].round, 90.5, 'the first room keeps its round'); assert.equal(s.rooms[1].round, null, 'the new room has no host yet');
     // the history rows since this test began (a minute may have turned meanwhile): each keeps its busiest second
     const peak = (j, k) => Math.max(...j.rows.filter(r => r[0] >= minuteNow).map(r => r[j.cols.indexOf(k) + 1]));
-    assert.equal(s.rows.filter(r => r[0] >= minuteNow).reduce((n, r) => n + r[s.cols.indexOf('full') + 1], 0), 1, 'the turned-away game is in the history');
-    for (const w of more) if (w !== 'full') w.close();
+    assert.equal(s.rows.filter(r => r[0] >= minuteNow).reduce((n, r) => n + r[s.cols.indexOf('full') + 1], 0), 0, 'nobody was turned away');
+    for (const w of more) w.close();
     web.close();
     s = await expect('the website player left and took the round clock along', { online: 2, web: 0, arena: 0, round: null });
-    assert.deepEqual(['online', 'playing', 'arena', 'solo', 'web', 'ios', 'android'].map(k => peak(s, k)), [16, 2, 1, 1, 14, 1, 1], 'the history keeps the busiest moment');
+    assert.deepEqual(['online', 'playing', 'arena', 'solo', 'web', 'ios', 'android'].map(k => peak(s, k)), [17, 2, 1, 1, 15, 1, 1], 'the history keeps the busiest moment');
     // the stream sent the whole picture first, then the changes as they happened
     await until('stream updates', () => events.some(e => e.ev === 'now' && e.d.online === 2));
     assert.equal(events[0].ev, 'all'); assert.ok(Array.isArray(events[0].d.rows) && events[0].d.cols.includes('online'));
     assert.ok(events.some(e => e.ev === 'now' && e.d.online === 3 && e.d.solo === 1), 'the stream saw the solo game');
-    clearInterval(keep); ios.close(); android.close(); ctl.abort();
+    clearInterval(keep); ios.close(); android.close();
+    await expect('everyone left', { online: 0, rooms: [] });
+
+    // More games than one arena holds: nobody is locked out. Every game that opens gets a room of up to 16, and a room
+    // is a world of its own: its games only hear each other, so each room has its own host and round. The server turns
+    // games away only when all MAX_ROOMS rooms (3 here) are full.
+    const open = () => new Promise((res, rej) => { const ws = new WebSocket(base.replace(/^http/, 'ws') + '/ws', { headers: { Origin: base } }), g = { ws, heard: new Set() };
+      ws.onopen = () => ws.send(JSON.stringify({ t: 'hello' }));
+      ws.onmessage = e => { const m = JSON.parse(e.data); if (m.t === 'welcome') { g.id = m.id; g.peers = m.peers.map(q => q.id); res(g); } else if (m.t === 'full') res('full'); else if (m.t === 'p') g.heard.add(m.id); };
+      ws.onerror = rej; });
+    const games = []; for (let i = 0; i < 40; i++) games.push(await open());
+    assert.ok(!games.includes('full'), 'none of 40 games is turned away');
+    s = await expect('40 games in three rooms', { online: 40 }); assert.deepEqual(s.rooms.map(r => r.games), [16, 16, 8], 'games fill one room before the next opens');
+    const roomOf = i => games.slice(Math.floor(i / 16) * 16, Math.floor(i / 16) * 16 + 16), ids = list => list.map(g => g.id).sort();
+    // each game is in the menus; one game in each of the first two rooms hosts a round (room 1 at 90.5 s, room 2 at 4 s)
+    const hosts = { 0: 'ABAOJ', 16: 'ACAAo' }, inArena = new Set();
+    const say = () => games.forEach((g, i) => g.ws.readyState === 1 && g.ws.send(JSON.stringify({ t: 'p', p: hosts[i] ? { v: 6, a: 0, h: 1, q: 0, rd: hosts[i] } : { v: 6, a: inArena.has(i) ? 1 : 0, h: 0, q: 0 } })));
+    say(); const talk = setInterval(say, 400); await until('every game hears its room', () => games.every((g, i) => g.heard.size === roomOf(i).length - 1));
+    games.forEach((g, i) => assert.deepEqual([...g.heard, g.id].sort(), ids(roomOf(i)), 'game ' + i + ' hears exactly its own room'));
+    s = await expect('a round clock in each hosted room', { online: 40, round: 90.5 });
+    assert.deepEqual(s.rooms.map(r => r.round), [90.5, 4, null], 'each room follows its own host');
+    // a game leaves the first room: the next one to open takes its place there (the fullest room with space)
+    const gone = games[5]; gone.ws.close(); await expect('a place free in room 1', { online: 39 });
+    const late = await open(); assert.notEqual(late, 'full');
+    assert.deepEqual(late.peers.sort(), ids(roomOf(0).filter(g => g !== gone)), 'the newcomer joins room 1 and is told about the games already there');
+    // two leave room 2, and in room 3 a player is alive in the arena: newcomers go where someone is playing
+    games[20].ws.close(); games[21].ws.close(); await expect('two places free in room 2', { online: 38 });
+    inArena.add(33);
+    await until('the player in room 3 is counted', async () => (await now()).rooms[2].arena === 1);
+    const late2 = await open(); assert.ok(late2.peers.includes(games[33].id) && late2.peers.length === 8, 'the newcomer joins room 3, where a player is in the arena');
+    // fill every room: 48 games are in, and only the 49th is turned away (and counted)
+    const fill = []; for (let i = 0; i < 9; i++) fill.push(await open());
+    assert.ok(!fill.includes('full'), 'the server takes games until every room is full');
+    s = await expect('three full rooms', { online: 48 }); assert.deepEqual(s.rooms.map(r => r.games), [16, 16, 16]);
+    assert.equal(await open(), 'full', 'the 49th game is turned away');
+    s = await now(); assert.equal(s.rows.filter(r => r[0] >= minuteNow).reduce((n, r) => n + r[s.cols.indexOf('full') + 1], 0), 1, 'the turned-away game is in the history');
+    // a room that empties closes, and the rooms after it move up
+    for (const g of [...games.slice(0, 16), late]) g.ws.close();
+    s = await expect('room 1 closed', { online: 32 }); assert.deepEqual(s.rooms.map(r => r.games), [16, 16]);
+    clearInterval(talk); for (const g of [...games, late2, ...fill]) g.ws.close();
+    await expect('everyone left', { online: 0, rooms: [] });
+    assert.equal((await (await fetch(base + '/health')).json()).rooms, 0);
+    ctl.abort();
     const html = await (await fetch(base + '/admin/live' + tq)).text(); assert.match(html, /<title>Mitosis live players<\/title>/); assert.match(html, /EventSource/);
   }
   // a refused name never reaches the leaderboard: the player keeps their last good one

@@ -9,7 +9,8 @@ const netstats = require('./netstats');
 const live = require('./live');
 
 const PORT = Number(process.env.PORT) || 3000;
-const MAX_PLAYERS = 16;
+const ROOM_SIZE = 16;                // games per arena room: each room has its own host, bots and round
+const MAX_ROOMS = Math.max(1, Number(process.env.MAX_ROOMS) || 8); // past ROOM_SIZE × MAX_ROOMS games, new ones are turned away
 const MAX_MSG = 16 * 1024;          // bytes per message
 const MAX_RATE = 90;                // messages per second per player
 const MAX_BODY = 64 * 1024;         // bytes per API request
@@ -131,7 +132,7 @@ const server = http.createServer((req, res) => {
     if (adminOk(req, res)) players.stream(req, res);
   } else if (url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ players: clients.size, accounts: store.playerCount(), store: store.kind, iap: economy.catalog().iap }));
+    res.end(JSON.stringify({ players: clients.size, rooms: rooms.length, accounts: store.playerCount(), store: store.kind, iap: economy.catalog().iap }));
   } else {
     res.writeHead(404, { 'Content-Type': 'text/plain' });
     res.end('Not found');
@@ -139,9 +140,9 @@ const server = http.createServer((req, res) => {
 });
 
 /* ---------- minimal WebSocket (RFC 6455) ---------- */
-const clients = new Set();
+const clients = new Set(), rooms = []; // every game that said hello; the arena rooms they are in (see the relay below)
 // who is online and what they are doing, for /admin/live
-const players = live.create({ file: path.join(DATA_DIR, 'live-history.json'), conns: () => clients, cap: MAX_PLAYERS });
+const players = live.create({ file: path.join(DATA_DIR, 'live-history.json'), conns: () => clients, rooms: () => rooms, roomSize: ROOM_SIZE, cap: ROOM_SIZE * MAX_ROOMS });
 const GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 
 server.on('upgrade', (req, sock) => {
@@ -195,9 +196,26 @@ function onData(c, d) {
 }
 
 /* ---------- relay ---------- */
+// Games are relayed in arena rooms of up to ROOM_SIZE. A room is a world of its own: its games only hear each other,
+// so they pick their host (the lowest id that claims it) and follow that host's round as if they were alone on the
+// server. That needs nothing from the game, so app versions already on phones work as they are. A new game joins the
+// room with the most players in the arena (or searching for a round), then the fullest, so newcomers find company and
+// overflow rooms empty out as their players leave. A room opens when every other is full and closes when it empties.
+function roomFor(now) {
+  let best = null, score = -1;
+  for (const r of rooms) {
+    if (r.size >= ROOM_SIZE) continue;
+    let active = 0; for (const o of r) { const a = live.activityOf(o, now); if (a === 'arena' || a === 'searching') active++; }
+    const sc = active * (ROOM_SIZE + 1) + r.size; // most in the arena first, then the fullest; ties go to the oldest room
+    if (sc > score) { best = r; score = sc; }
+  }
+  if (!best && rooms.length < MAX_ROOMS) { best = new Set(); rooms.push(best); }
+  return best;
+}
+const roomNo = c => rooms.indexOf(c.room) + 1;
 function broadcast(from, obj) {
   const buf = frame(1, Buffer.from(JSON.stringify(obj)));
-  for (const o of clients) if (o !== from && o.id) sendRaw(o, buf);
+  for (const o of from.room) if (o !== from && o.id) sendRaw(o, buf);
 }
 function onMessage(c, text) {
   const now = Date.now();
@@ -207,12 +225,13 @@ function onMessage(c, text) {
   if (!m || typeof m !== 'object') return;
   if (m.t === 'ping') { c.pingAt = now; send(c, { t: 'pong', c: typeof m.c === 'number' ? m.c : 0 }); return; } // the game measures its round trip with these
   if (m.t === 'hello' && !c.id) {
-    if (clients.size >= MAX_PLAYERS) { players.turnedAway(); send(c, { t: 'full' }); setTimeout(() => kill(c), 200); return; }
+    const room = roomFor(now);
+    if (!room) { players.turnedAway(); send(c, { t: 'full' }); setTimeout(() => kill(c), 200); return; }
     let id = typeof m.id === 'string' && /^[a-z0-9]{6,20}$/.test(m.id) ? m.id : crypto.randomBytes(6).toString('hex');
     while ([...clients].some(o => o.id === id)) id += Math.floor(Math.random() * 10);
-    c.id = id; c.pAt = c.pingAt = now; clients.add(c); players.tick();
-    send(c, { t: 'welcome', id, peers: [...clients].filter(o => o !== c && o.p).map(o => ({ id: o.id, p: o.p })), lan: lanUrls() });
-    log(`+ player joined (${clients.size} in the well)`);
+    c.id = id; c.pAt = c.pingAt = now; c.room = room; room.add(c); clients.add(c); players.tick();
+    send(c, { t: 'welcome', id, peers: [...room].filter(o => o !== c && o.p).map(o => ({ id: o.id, p: o.p })), lan: lanUrls() });
+    log(`+ player joined room ${roomNo(c)} (${room.size} there, ${clients.size} online in ${rooms.length} room${rooms.length === 1 ? '' : 's'})`);
   } else if (m.t === 'p' && c.id && m.p && typeof m.p === 'object' && !Array.isArray(m.p)) {
     c.p = m.p; c.pAt = now;
     broadcast(c, { t: 'p', id: c.id, p: m.p });
@@ -221,7 +240,9 @@ function onMessage(c, text) {
 function kill(c) {
   if (c.dead) return; c.dead = true;
   try { c.sock.destroy(); } catch (e) {}
-  if (clients.delete(c)) { players.tick(); broadcast(c, { t: 'bye', id: c.id }); log(`- player left (${clients.size} in the well)`); }
+  if (!clients.delete(c)) return;
+  const n = roomNo(c); c.room.delete(c); if (!c.room.size) rooms.splice(n - 1, 1);
+  players.tick(); broadcast(c, { t: 'bye', id: c.id }); log(`- player left room ${n} (${c.room.size} there, ${clients.size} online)`);
 }
 setInterval(() => {
   for (const c of clients) {

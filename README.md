@@ -7,7 +7,7 @@ A multiplayer cell-eating arena set in a giant petri well. Absorb anything small
 ## Features
 
 - **Soft-body cells** that squash against each other and the dish wall, with shadows, organelles and a nucleus that trails motion
-- **Live multiplayer** for up to 16 players. AI microbes fill the well, and every real player who joins replaces five of them
+- **Live multiplayer** in arenas of up to 16 players; when one is full the server opens another, each with its own round. AI microbes fill the well, and every real player who joins replaces five of them
 - **Smarter bots** with personalities (hunters, farmers, opportunists, snipers) that steer around threats, predict prey, split-kill, shoot hunter phages and fire viruses at big targets
 - **Mutation**: at mass milestones a random permanent trait is applied, six times a life; every cell shows badges for the traits it carries
 - **World events**: Nutrient Bloom, Antibiotic Tide, Phage Swarm and the Leviathan boss
@@ -128,6 +128,7 @@ On Windows, double-click `start.bat`. On macOS, double-click `start.command`.
 | --- | --- |
 | `PORT` | Port to listen on (default 3000) |
 | `DATA_DIR` | Folder for wallets, skins, runs and purchases (default `./data`). Uses SQLite on Node 22.13+, a JSON file on older Node |
+| `MAX_ROOMS` | Arena rooms the relay may open (default 8). Each holds 16 games with its own host and round; past 16 × `MAX_ROOMS` connected games, new ones are told the server is full |
 | `APPLE_BUNDLE_ID` | Bundle id purchases must belong to (default `com.mitosisgame.app`). Apple purchases need nothing else: StoreKit 2 hands the app a transaction signed by Apple, and the server checks the certificate chain (to Apple Root CA G3, embedded in `iap.js`), the signature and the payload itself |
 | `APPLE_ISSUER_ID`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY` | Optional App Store Server API key (App Store Connect → Users and Access → Integrations → In-App Purchase). When set, the server also looks every transaction up at Apple. `APPLE_PRIVATE_KEY` is the `.p8` contents; `\n` may stand in for newlines |
 | `GOOGLE_PACKAGE_NAME`, `GOOGLE_SERVICE_ACCOUNT` | Play Console service account with *View financial data* on the app. The variable holds the JSON key, raw or base64 |
@@ -235,5 +236,5 @@ All endpoints take and return JSON. Authenticated ones need `Authorization: Bear
 | `POST /api/log` `{who, text}` | Client diagnostics: frame stalls, page errors, autopilot events; printed in the server log |
 | `POST /api/net` | Connection quality from the game: ping samples, lost pings, frame rate, time zone (anonymous) |
 | `GET /admin/net?token=…` | The connection report: ping and frame rate by area, time zone, platform and connection, and what most likely needs fixing. The token is `ADMIN_TOKEN`, or the one the server makes on first start in `data/admin-token` (also printed at start-up). `&days=30`, `&format=json` |
-| `GET /admin/live?token=…` | Live players: who is online right now (website, iPhone app, Android app), what they are doing (live arena, searching, solo game, menus, away), rooms in use, peak today and a 24-hour chart. Updates live over `GET /admin/live/stream?token=…` (server-sent events); `&format=json` for the numbers. Same token as the connection report. Counts only; the 24-hour history is kept in `DATA_DIR/live-history.json` |
+| `GET /admin/live?token=…` | Live players: who is online right now (website, iPhone app, Android app), what they are doing (live arena, searching, solo game, menus, away), arena rooms and their round clocks, peak today and a 24-hour chart. Updates live over `GET /admin/live/stream?token=…` (server-sent events); `&format=json` for the numbers. Same token as the connection report. Counts only; the 24-hour history is kept in `DATA_DIR/live-history.json` |
 | `GET /api/catalog` | Skins, packs, payout rules and which stores are verified |
