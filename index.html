@@ -3149,7 +3149,7 @@ const NAMES=['Volvox','Euglena','Paramecium','Stentor','Amoeba','Vorticella','Di
 const botName=b=>{if(b===BOSS_BID)return'Leviathan';const n=NAMES[b%NAMES.length],k=Math.floor(b/NAMES.length);return k?n+' '+(k+1):n;};
 const botColor=b=>b===BOSS_BID?[275,62,50]:[Math.floor(h32(b*977+11)*360),55+Math.floor(h32(b*977+12)*23),56+Math.floor(h32(b*977+13)*10)];
 
-let settings={name:'',stain:0,diff:'standard',skin:0,lowFx:false};
+let settings={name:'',stain:0,diff:'standard',skin:0,lowFx:false,haptics:true}; // haptics was off by default until the iOS app moved it off the main thread; anyone who chose Off keeps it
 try{const s=JSON.parse(localStorage.getItem('mitosis.settings')||'null');if(s&&typeof s==='object')settings=Object.assign(settings,s);}catch(e){}
 if(!DIFF[settings.diff])settings.diff='standard';settings.stain=clamp(settings.stain|0,0,STAINS.length-1);settings.skin=clamp(settings.skin|0,0,SKIN_COUNT-1);
 const saveSettings=()=>{try{localStorage.setItem('mitosis.settings',JSON.stringify(settings));}catch(e){}};
@@ -3179,7 +3179,11 @@ const Native=(()=>{
     if(m.type==='purchase'&&m.purchase)redeem(m.purchase).catch(()=>{});
     if(m.type==='app')reportHitch('app '+m.text);
     if(m.type==='nearby'){const N=window.__mitosisNet;if(m.ev==='error'){toast('Nearby','Nearby play stopped',m.text||'');setNearby(false);}else if(N&&N.onNearby)N.onNearby(m);}}};
-  let lastHap=0;return{platform,send,call,haptic(style){if(!platform||!settings.haptics)return;const n=performance.now();if(n-lastHap<120)return;lastHap=n;send({type:'haptic',style});}};
+  // taps closer than 120 ms are dropped; the strong ones (death, a win, a burst, an infection) always play, but the
+  // same one at most every 300 ms (several achievements can unlock in one frame)
+  let lastHap=0,lastStyle='';const LOUD=new Set(['heavy','success','warning','error']);
+  return{platform,send,call,haptic(style){if(!platform||!settings.haptics)return;const n=performance.now(),gap=n-lastHap;
+    if(LOUD.has(style)?style===lastStyle&&gap<300:gap<120)return;lastHap=n;lastStyle=style;send({type:'haptic',style});}};
 })();
 
 async function api(path,body,auth=true){
@@ -3759,7 +3763,18 @@ function eatPellet(pl){peLog.push({i:pl.i,g:pl.g,t:T});pl.g=(pl.g+1)%262143;plac
 // phage slots: deterministic positions from (slot, generation)
 function placeSlot(v){const k=(v.slot*15485863+v.g*32452843+SEED*7)|0,s=hpos(k,300);v.x=v.tx=s.x;v.y=v.ty=s.y;}
 function setVM(v){v.mass=VIRUS_M+v.feed*4;v.r=radius(v.mass);}
-function makeSlot(i){const v={kind:'s',slot:i,g:0,feed:0,alive:true,respawnAt:0,x:0,y:0,tx:0,ty:0,vx:0,vy:0,mass:VIRUS_M,r:radius(VIRUS_M),spin:h32(i*31+5)*TAU,dead:false};placeSlot(v);return v;}
+// Viruses replicate on their own: the ring inside one closes a sixth at a time, as if fed (feedVirus), and when it
+// closes the virus splits off a copy. A full ring takes VREP_T s, and every copy makes that virus and its offspring
+// VREP_SLOW× slower. Host only: other players see the ring in whole sixths through the synced feed count.
+const VREP_T=45,VREP_SLOW=1.15,VREP_WAIT=30; // a new virus first waits up to VREP_WAIT s, so the 140 slots don't all split at once
+const vStep=v=>VREP_T*VREP_SLOW**(v.gen||0)/6;
+const vFill=v=>(v.feed+clamp((v.ft||0)/vStep(v),0,1))/6; // how far the ring has closed, 0..1
+function growVirus(v,dt){
+  v.ft=(v.ft||0)+dt;const step=vStep(v);
+  if(v.feed>=5&&freeV.length>=MAX_FREEV){v.ft=Math.min(v.ft,step*.97);return;} // no room for a copy: hold just short of closing
+  if(v.ft>=step){v.ft-=step;const a=rand(0,TAU);feedVirus(v,Math.cos(a),Math.sin(a),null);}
+}
+function makeSlot(i){const v={kind:'s',slot:i,g:0,feed:0,gen:0,ft:-rand(0,VREP_WAIT),alive:true,respawnAt:0,x:0,y:0,tx:0,ty:0,vx:0,vy:0,mass:VIRUS_M,r:radius(VIRUS_M),spin:h32(i*31+5)*TAU,dead:false};placeSlot(v);return v;}
 function addPU(){const s=randInDish(200);powerups.push({id:(puC++%4095)+1,x:s.x,y:s.y,type:PUK[Math.floor(Math.random()*PUK.length)],r:22,t:Math.random()*TAU,born:T,dead:false});}
 
 /* ================= pellet grid (incremental) ================= */
@@ -3806,7 +3821,7 @@ function dash(p){
   if(!p||!p.alive||p.dashCd>0)return;p.dashCd=has(p,'cilia')?2.2:4;
   for(const c of p.cells){if(c.dead)continue;const[nx,ny]=aim(p,c);c.vx+=nx*560;c.vy+=ny*560;c.mass=Math.max(10,c.mass*.96);c.r=radius(c.mass);kick(c,1.2);
     for(let k=0;k<6&&parts.length<600;k++){const a=Math.atan2(-ny,-nx)+rand(-.5,.5),s=rand(80,220);parts.push({x:c.x-nx*c.r,y:c.y-ny*c.r,vx:Math.cos(a)*s,vy:Math.sin(a)*s,t:0,life:rand(.3,.6),color:col(p.color,10),r:rand(2,5)});}}
-  if(p===human){sfx('dash');flash('dashBtn');}
+  if(p===human){sfx('dash');flash('dashBtn');Native.haptic('light');}
 }
 function pop(c){ // burst on a phage: half the mass sprays out
   const p=c.owner;const slots=MAX_CELLS-p.cells.filter(x=>!x.dead).length;if(slots<=0)return;
@@ -3814,14 +3829,14 @@ function pop(c){ // burst on a phage: half the mass sprays out
   const each=give/n;c.mass-=give;c.r=radius(c.mass);const md=T+mdel(p,c.mass+give);c.mergeAt=md;kick(c,3);
   for(let i=0;i<n;i++){const a=i/n*TAU+Math.random()*.4,sp=rand(420,640);
     const k=addCell(p,c.x+Math.cos(a)*c.r*.4,c.y+Math.sin(a)*c.r*.4,each,Math.cos(a)*sp,Math.sin(a)*sp);k.mergeAt=md;k.dr=k.r*.5;k.inf=c.inf;kick(k,2);}
-  if(p===human){sfx('pop');cam.shake=Math.max(cam.shake,16);floatText(c.x,c.y-c.r,'Burst',PU.surge.c,22);}
+  if(p===human){sfx('pop');Native.haptic('heavy');cam.shake=Math.max(cam.shake,16);floatText(c.x,c.y-c.r,'Burst',PU.surge.c,22);}
 }
 function lyse(c){ // the infection's payoff: the whole cell ruptures into up to 16 pieces
   const p=c.owner;c.inf=0;if(p===human)lysedAt=T;
   const others=p.cells.filter(x=>!x.dead&&x!==c).length;
   const n=Math.max(1,Math.min(16,MAX_CELLS-others,Math.floor(c.mass/9)));
   burst(c.x,c.y,col(INF_C,6),Math.min(40,12+c.r/6|0),520);
-  if(p===human){sfx('lysis');cam.shake=Math.max(cam.shake,24);floatText(c.x,c.y-c.r-10,'Lysis',INF_C,28);}
+  if(p===human){sfx('lysis');Native.haptic('heavy');cam.shake=Math.max(cam.shake,24);floatText(c.x,c.y-c.r-10,'Lysis',INF_C,28);}
   else if(Math.hypot(c.x-cam.x,c.y-cam.y)<W/cam.z)sfx('lysisFar');
   if(n<2){kick(c,4);return;}
   const each=c.mass/n,md=T+mdel(p,c.mass);c.mass=each;c.r=radius(each);c.mergeAt=md;kick(c,4);
@@ -3831,7 +3846,7 @@ function lyse(c){ // the infection's payoff: the whole cell ruptures into up to 
 function infect(c,delay){
   if(c.owner.fx.shield>0)return false;
   if(has(c.owner,'lysozyme'))delay*=2;const at=T+delay;if(!c.inf||at<c.inf)c.infLen=delay;if(!c.inf||at<c.inf)c.inf=at;kick(c,2.5);
-  if(c.owner===human){sfx('infect');floatText(c.x,c.y-c.r,'Infected',INF_C,24);cam.shake=Math.max(cam.shake,8);}
+  if(c.owner===human){sfx('infect');Native.haptic('warning');floatText(c.x,c.y-c.r,'Infected',INF_C,24);cam.shake=Math.max(cam.shake,8);}
   return true;
 }
 
@@ -3854,7 +3869,7 @@ function creditCell(c,mass,x,y,vcolor,vr,infRem=0,counts=true,bounty=false,boss=
   if(T-bp.comboT<3)bp.combo++;else bp.combo=1;bp.comboT=T;
   if(bp.combo>=3)bp.fx.surge=Math.max(bp.fx.surge,3);
   if(bp===human){
-    floatText(x,y,'+'+Math.round(mass),bp.color,18);sfx('eat',vr);unlock('first');
+    floatText(x,y,'+'+Math.round(mass),bp.color,18);sfx('eat',vr);Native.haptic('light');unlock('first');
     cam.shake=Math.max(cam.shake,Math.min(9,2+vr*.05));
     if(bounty){floatText(x,y-40,'Bounty ×1.5',[45,95,60],24);unlock('bounty');}
     if(boss)unlock('levi');
@@ -3881,7 +3896,7 @@ function killed(v,k){
 function unlock(id){
   if(achGot.has(id)||!human||!human.alive)return;const a=ACH.find(a=>a.id===id);if(!a)return;
   achGot.add(id);runAch.push(a.name);try{localStorage.setItem('mitosis.ach',JSON.stringify([...achGot]));}catch(e){}
-  toast('Achievement',a.name,a.desc);sfx('ach');
+  toast('Achievement',a.name,a.desc);sfx('ach');Native.haptic('success');
 }
 function toast(kind,title,desc){
   const el=document.createElement('div');el.className='toast';el.dataset.k=/^Mutation/.test(kind)?'mut':/^Achievement/.test(kind)?'ach':'info';el.dataset.kind=String(kind).split(' ')[0].toLowerCase();
@@ -3912,7 +3927,7 @@ function renderEvo(){
 function takeEvo(i){
   if(!evoOffer||!evoOffer[i]||!human||!human.alive)return;const x=evoOffer[i];
   human.pk|=PBIT[x.id];human.evo++;evoOffer=null;renderEvo();for(const c of human.cells)kick(c,2.4);
-  sfx('power');toast('Mutation '+human.evo+' of '+EVO.length,x.name,x.desc);
+  sfx('power');Native.haptic('success');toast('Mutation '+human.evo+' of '+EVO.length,x.name,x.desc);
   if(human.evo>=EVO.length)unlock('evolve');
 }
 /* ---- world events (the host runs them; everyone renders them) ---- */
@@ -3977,7 +3992,7 @@ function finishHumanRound(){ // the arena closed: whoever is still alive is rank
   paused=false;econRunEnd();recStop(1500);
   showResults(place===1?'win':'round',place>1?"Time's up":ranked.filter(r=>!r.p.boss).length<=1?'Last cell standing':'Biggest cell');
   if(BISECT.auto)reportHitch(`autopilot round over place=${place} of=${of} round=${round.id}`);
-  removeHuman();mode='dead';document.body.classList.remove('playing');sfx(place===1?'ach':'die');
+  removeHuman();mode='dead';document.body.classList.remove('playing');sfx(place===1?'ach':'die');if(place===1)Native.haptic('success');
 }
 function dissolve(c){ // a cell caught outside the closing arena breaks down completely
   const p=c.owner;if(c.dead)return;c.dead=true;c.mass=0;burst(c.x,c.y,'rgba(255,120,130,.9)',14,420);
@@ -4015,7 +4030,7 @@ function endEvent(){
 }
 function eventTick(){
   if(ev.type){if(T>=ev.end||(ev.type===4&&!players.some(p=>p.boss&&p.alive&&!p.remote)))endEvent();}
-  else if(T>=evNext){let t=[1,1,2,2,3,4][Math.floor(Math.random()*6)];if(t===4&&players.some(p=>p.boss))t=1;startEvent(t);}
+  else if(T>=evNext){let t=[1,1,2,2,3,4][Math.floor(Math.random()*6)];if(t===4&&(players.some(p=>p.boss)||roundT()>=BOT_CUTOFF||round.over))t=1;startEvent(t);} // no Leviathan once bots stop joining at 7:00
 }
 /* ================= hunter phages ================= */
 function spawnHunter(){
@@ -4146,9 +4161,9 @@ function think(p){
 /* ================= simulation ================= */
 function feedVirus(v,dx,dy,owner){
   v.feed++;
-  if(v.feed>=6){v.feed=0;if(freeV.length>=MAX_FREEV)freeV.shift(); // the new phage flies off along the last shot (range ~ speed / drag of 5)
-    const nv={kind:'f',id:(vidC++%4095)+1,x:v.x+dx*v.r*2,y:v.y+dy*v.r*2,vx:dx*1140,vy:dy*1140,feed:0,spin:rand(0,TAU),dead:false,alive:true};nv.tx=nv.x;nv.ty=nv.y;setVM(nv);freeV.push(nv);
-    burst(v.x,v.y,'hsl(40,90%,62%)',10);if(owner===human)sfx('power');}
+  if(v.feed>=6){v.feed=0;v.ft=0;v.gen=(v.gen||0)+1;if(freeV.length>=MAX_FREEV)freeV.shift(); // the new phage flies off along the last shot (range ~ speed / drag of 5)
+    const nv={kind:'f',id:(vidC++%4095)+1,x:v.x+dx*v.r*2,y:v.y+dy*v.r*2,vx:dx*1140,vy:dy*1140,feed:0,gen:v.gen,ft:0,spin:rand(0,TAU),dead:false,alive:true};nv.tx=nv.x;nv.ty=nv.y;setVM(nv);freeV.push(nv);
+    burst(v.x,v.y,'hsl(40,90%,62%)',10);if(owner===human){sfx('power');Native.haptic('light');}}
   setVM(v);
 }
 function popVirus(v){
@@ -4200,7 +4215,7 @@ function step(dt){
         if(T>a.mergeAt&&T>b.mergeAt){
           if(d<Math.max(a.r,b.r)-Math.min(a.r,b.r)*.45){const big=a.mass>=b.mass?a:b,sm=big===a?b:a;big.mass+=sm.mass;big.r=radius(big.mass);sm.dead=true;
             if(sm.inf&&(!big.inf||sm.inf<big.inf))big.inf=sm.inf;
-            ghosts.push({x:sm.x,y:sm.y,r:sm.dr,color:p.color,to:big,t:0,life:.16});kick(big,1.4);if(p===human)sfx('merge');}
+            ghosts.push({x:sm.x,y:sm.y,r:sm.dr,color:p.color,to:big,t:0,life:.16});kick(big,1.4);if(p===human){sfx('merge');Native.haptic('soft');}}
           else{ // both ready: slide together at the smaller piece's own speed (faster once touching), the way agar.io pieces slurp back in
             const sm=a.mass<b.mass?a:b,touch=d<a.r+b.r,s=Math.min(d*.5,speedOf(sm.r)*(touch?1.1:.55)*dt),tot=a.mass+b.mass;
             a.x+=dx*s*2*(b.mass/tot);a.y+=dy*s*2*(b.mass/tot);b.x-=dx*s*2*(a.mass/tot);b.y-=dy*s*2*(a.mass/tot);}
@@ -4217,14 +4232,16 @@ function step(dt){
     const vm=has(c.owner,'vacuole')?1.4:1;
     for(const pl of EAT){let m=pl.m*vm;if(ev.type===1&&(pl.x-ev.x)**2+(pl.y-ev.y)**2<BLOOM_R2){m*=3;if(c.owner===human&&++human.bloomEats>=60)unlock('bloom');}c.mass+=m;eatPellet(pl);}
   }
-  // ejected mass (ours)
-  const ke=Math.exp(-5*dt);
+  // ejected mass (ours). A Magnet pulls in other players' blobs as it does food: whoever shot a blob moves it, toward
+  // local or remote magnets alike (remote players' fx bits carry the magnet), and the eat check below credits the catcher.
+  const ke=Math.exp(-5*dt),mags=cells.filter(c=>!c.dead&&c.owner.fx.magnet>0);
   for(const e of ejected){
     e.x+=e.vx*dt;e.y+=e.vy*dt;e.vx*=ke;e.vy*=ke;
+    for(const c of mags){if(c.owner===e.owner)continue;const dx=c.x-e.x,dy=c.y-e.y,d=Math.hypot(dx,dy);if(d<c.r+300&&d>1){const m=Math.min(d,560*dt);e.x+=dx/d*m;e.y+=dy/d*m;break;}}
     const dc=Math.hypot(e.x,e.y);if(dc>R-e.r){e.x*=(R-e.r)/dc;e.y*=(R-e.r)/dc;}
     for(const h of hunters){if(h.dead)continue;if(Math.hypot(h.x-e.x,h.y-e.y)<HUNTER_R+e.r){e.dead=true;
         if(isHost){h.hp--;if(h.hp<=0){lyseHunter(h);if(e.owner===human)unlock('hunter');}else burst(h.x,h.y,col(INF_C),5,160);}else{rec(['h',h.id]);if(h.hp<=1&&e.owner===human)unlock('hunter');h.hp--;burst(h.x,h.y,col(INF_C),5,160);}
-        if(e.owner===human)sfx('hit');break;}}
+        if(e.owner===human){sfx('hit');Native.haptic('light');}break;}}
     if(e.dead)continue;
     for(const v of viruses){if(Math.abs(v.x-e.x)>v.r||Math.abs(v.y-e.y)>v.r)continue;if(Math.hypot(v.x-e.x,v.y-e.y)<v.r){e.dead=true;
         if(isHost)feedVirus(v,e.dx,e.dy,e.owner);
@@ -4239,9 +4256,11 @@ function step(dt){
   ejected=ejected.filter(e=>!e.dead&&T-e.born<40);
   // phages
   if(isHost){
-    for(const v of vslots)if(!v.alive&&T>=v.respawnAt){v.g=(v.g+1)%256;v.feed=0;setVM(v);placeSlot(v);v.alive=true;}
+    for(const v of vslots)if(!v.alive&&T>=v.respawnAt){v.g=(v.g+1)%256;v.feed=0;v.gen=0;v.ft=-rand(0,VREP_WAIT);setVM(v);placeSlot(v);v.alive=true;}
     for(const v of freeV){v.x+=v.vx*dt;v.y+=v.vy*dt;v.vx*=ke;v.vy*=ke;
       const dc=Math.hypot(v.x,v.y);if(dc>R-v.r){v.x*=(R-v.r)/dc;v.y*=(R-v.r)/dc;v.vx*=-.5;v.vy*=-.5;}}
+    for(const v of vslots)if(v.alive)growVirus(v,dt);
+    for(const v of freeV.slice())if(!v.dead)growVirus(v,dt);
   }
   rebuildViruses();
   for(const v of viruses){v.spin+=dt*.25;if(v.dead)continue;
@@ -4280,7 +4299,7 @@ function step(dt){
     for(const c of cells){if(c.dead||c.owner.remote)continue;if(Math.abs(c.x-u.x)>c.r+u.r||Math.abs(c.y-u.y)>c.r+u.r)continue;
       if(Math.hypot(c.x-u.x,c.y-u.y)<c.r+u.r){const p=c.owner,def=PU[u.type];p.fx[u.type]=def.dur;u.dead=true;
         if(!isHost){rec(['u',u.id]);puSup.set(u.id,T);}
-        burst(u.x,u.y,col(def.c,10),12,200);if(p===human){sfx('power');floatText(u.x,u.y,def.label,def.c,22);}break;}}}
+        burst(u.x,u.y,col(def.c,10),12,200);if(p===human){sfx('power');Native.haptic('light');floatText(u.x,u.y,def.label,def.c,22);}break;}}}
   powerups=powerups.filter(u=>!u.dead);
   if(isHost&&powerups.length<MAX_PU&&Math.random()<dt*.9)addPU();
   // decay, infection clocks, radii, cleanup
@@ -4523,7 +4542,7 @@ function drawVirus(v){
   if(!lowFx)ctx.drawImage(G_VIRUS,v.x-v.r*2,v.y-v.r*2,v.r*4,v.r*4);
   ctx.save();ctx.translate(v.x,v.y);ctx.rotate(v.spin);ctx.drawImage(VIRUS_SPR,-s,-s,s*2,s*2);ctx.restore();
   ctx.drawImage(VIRUS_LIT,v.x-s,v.y-s,s*2,s*2);
-  if(v.feed>0){ctx.beginPath();ctx.arc(v.x,v.y,v.r*.72,-Math.PI/2,-Math.PI/2+v.feed/6*TAU);ctx.lineWidth=Math.max(1.5/z,5);ctx.lineCap='round';ctx.strokeStyle='rgba(235,255,190,.9)';ctx.stroke();ctx.lineCap='butt';}
+  const fill=vFill(v);if(fill>0){ctx.beginPath();ctx.arc(v.x,v.y,v.r*.72,-Math.PI/2,-Math.PI/2+fill*TAU);ctx.lineWidth=Math.max(1.5/z,5);ctx.lineCap='round';ctx.strokeStyle='rgba(235,255,190,.9)';ctx.stroke();ctx.lineCap='butt';}
 }
 function drawHunter(h){ // T4-style phage: capsid head, collar, tail sheath, splayed fibres leading
   const z=cam.z,s=HUNTER_R;
@@ -5080,7 +5099,7 @@ const botSkin=b=>b===BOSS_BID?4:h32(b*53+3)<.45?0:1+Math.floor(h32(b*59+1)*4);
 function botTarget(){const n=DIFF[settings.diff].bots;return Math.max(Math.round(n*.3),n-Math.max(0,peerCount-1)*BOTS_PER_PLAYER);}
 function syncBots(){
   if(!isHost)return;
-  const cfg=DIFF[settings.diff],want=botTarget();let bots=players.filter(p=>p.bot&&!p.remote&&!p.boss);
+  const cfg=DIFF[settings.diff];let want=botTarget(),bots=players.filter(p=>p.bot&&!p.remote&&!p.boss);
   const massOf=p=>p.cells.reduce((s,c)=>s+(c.dead?0:c.mass),0);bots.sort((a,b)=>massOf(b)-massOf(a));
   while(bots.length>want)removePlayer(bots.pop()); // the smallest microbes leave first
   cells=cells.filter(c=>!c.dead);
@@ -5139,7 +5158,7 @@ addEventListener('keydown',e=>{if(e.code==='KeyM')setTimeout(syncPause,0);});
 $('pauseSet').addEventListener('click',()=>showCard('settingsCard'));
 $('settingsCard').addEventListener('click',e=>{if(mode==='play'&&paused&&e.target.closest('.back')){e.stopPropagation();showCard('pauseCard');syncPause();}},true);
 function die(){
-  mode='dead';if(!multi())slow=.22;sfx('die');Native.haptic('heavy');const s=human.stats;human.hist.push(0);paused=false;
+  mode='dead';if(!multi())slow=.22;sfx('die');Native.haptic('error');const s=human.stats;human.hist.push(0);paused=false;
   const pb=notePeak(s.peak);
   const pl=placeOf();s.place=pl.place;s.of=pl.of;if(BISECT.auto)reportHitch(`autopilot died place=${pl.place} of=${pl.of} by=${s.killer} t=${fmtT(T-s.born)} roundT=${roundT().toFixed(0)}`);recordRun({t:Date.now(),place:s.place,of:s.of,peak:Math.round(s.peak),eaten:s.eaten,sec:Math.round(T-s.born),practice:local==='practice'});
   evoOffer=null;renderEvo();lysedAt=0;
@@ -5237,6 +5256,8 @@ function recStart(){
     else toast('Recording','Not recording',e.message);});
 }
 function recStop(delay=0){if(recOn&&!recStopT)recStopT=setTimeout(()=>{recStopT=0;recFinish();},delay);}
+// a light tick on menu taps (runs after the button's own handler, so turning Vibration on answers with one); split and dash have their own
+document.addEventListener('click',e=>{if(e.target.closest('.card button,.seg button,.lobby button,.res button'))Native.haptic('selection');});
 const perfSegEl=$('perfSeg'),syncPerf=()=>{[...perfSegEl.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.p==='1')===!!settings.perfHud)));$('perfHud').hidden=!settings.perfHud;};
 perfSegEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.perfHud=b.dataset.p==='1';saveSettings();syncPerf();});syncPerf();
 const pingSegEl=$('pingSeg'),syncPingSeg=()=>[...pingSegEl.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.hp==='1')===!!settings.highPing)));
