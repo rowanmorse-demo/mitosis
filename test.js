@@ -171,8 +171,8 @@ async function post(url, body, secret) {
     // More games than one arena holds: nobody is locked out. Every game that opens gets a room of up to 16, and a room
     // is a world of its own: its games only hear each other, so each room has its own host and round. The server turns
     // games away only when all MAX_ROOMS rooms (3 here) are full.
-    const open = () => new Promise((res, rej) => { const ws = new WebSocket(base.replace(/^http/, 'ws') + '/ws', { headers: { Origin: base } }), g = { ws, heard: new Set() };
-      ws.onopen = () => ws.send(JSON.stringify({ t: 'hello' }));
+    const open = party => new Promise((res, rej) => { const ws = new WebSocket(base.replace(/^http/, 'ws') + '/ws', { headers: { Origin: base } }), g = { ws, heard: new Set() };
+      ws.onopen = () => ws.send(JSON.stringify(party ? { t: 'hello', party } : { t: 'hello' }));
       ws.onmessage = e => { const m = JSON.parse(e.data); if (m.t === 'welcome') { g.id = m.id; g.peers = m.peers.map(q => q.id); res(g); } else if (m.t === 'full') res('full'); else if (m.t === 'p') g.heard.add(m.id); };
       ws.onerror = rej; });
     const games = []; for (let i = 0; i < 40; i++) games.push(await open());
@@ -192,11 +192,18 @@ async function post(url, body, secret) {
     assert.deepEqual(late.peers.sort(), ids(roomOf(0).filter(g => g !== gone)), 'the newcomer joins room 1 and is told about the games already there');
     // two leave room 2, and in room 3 a player is alive in the arena: newcomers go where someone is playing
     games[20].ws.close(); games[21].ws.close(); await expect('two places free in room 2', { online: 38 });
+    // the first of two friends in a party joins by the usual choice (room 2, the fullest with space) and says where it is
+    const duo1 = await open('duo123'); duo1.ws.send(JSON.stringify({ t: 'p', p: { v: 6, a: 0, h: 0, q: 0 } }));
+    await until('room 2 hears the first friend', () => games[16].heard.has(duo1.id));
     inArena.add(33);
     await until('the player in room 3 is counted', async () => (await now()).rooms[2].arena === 1);
     const late2 = await open(); assert.ok(late2.peers.includes(games[33].id) && late2.peers.length === 8, 'the newcomer joins room 3, where a player is in the arena');
+    // the second friend follows its party into room 2, where a newcomer would not go now; once that room is full, a
+    // third game with the same party gets the usual choice
+    const duo2 = await open('duo123'); assert.ok(duo2.peers.includes(duo1.id) && duo2.peers.length === 15, 'a party member joins the room its party is in');
+    const duo3 = await open('duo123'); assert.ok(!duo3.peers.includes(duo1.id) && duo3.peers.includes(games[33].id), 'a full party room falls back to the usual choice');
     // fill every room: 48 games are in, and only the 49th is turned away (and counted)
-    const fill = []; for (let i = 0; i < 9; i++) fill.push(await open());
+    const fill = []; for (let i = 0; i < 6; i++) fill.push(await open());
     assert.ok(!fill.includes('full'), 'the server takes games until every room is full');
     s = await expect('three full rooms', { online: 48 }); assert.deepEqual(s.rooms.map(r => r.games), [16, 16, 16]);
     assert.equal(await open(), 'full', 'the 49th game is turned away');
@@ -204,7 +211,7 @@ async function post(url, body, secret) {
     // a room that empties closes, and the rooms after it move up
     for (const g of [...games.slice(0, 16), late]) g.ws.close();
     s = await expect('room 1 closed', { online: 32 }); assert.deepEqual(s.rooms.map(r => r.games), [16, 16]);
-    clearInterval(talk); for (const g of [...games, late2, ...fill]) g.ws.close();
+    clearInterval(talk); for (const g of [...games, late2, duo1, duo2, duo3, ...fill]) g.ws.close();
     await expect('everyone left', { online: 0, rooms: [] });
     assert.equal((await (await fetch(base + '/health')).json()).rooms, 0);
     ctl.abort();

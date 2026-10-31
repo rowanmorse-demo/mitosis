@@ -201,7 +201,9 @@ function onData(c, d) {
 // server. That needs nothing from the game, so app versions already on phones work as they are. A new game joins the
 // room with the most players in the arena (or searching for a round), then the fullest, so newcomers find company and
 // overflow rooms empty out as their players leave. A room opens when every other is full and closes when it empties.
-function roomFor(now) {
+// A game in a party (hello.party, see social.js) joins the room its party already plays in, while that room has space.
+function roomFor(now, party) {
+  if (party) for (const r of rooms) if (r.size < ROOM_SIZE && [...r].some(o => o.party === party)) return r;
   let best = null, score = -1;
   for (const r of rooms) {
     if (r.size >= ROOM_SIZE) continue;
@@ -225,7 +227,8 @@ function onMessage(c, text) {
   if (!m || typeof m !== 'object') return;
   if (m.t === 'ping') { c.pingAt = now; send(c, { t: 'pong', c: typeof m.c === 'number' ? m.c : 0 }); return; } // the game measures its round trip with these
   if (m.t === 'hello' && !c.id) {
-    const room = roomFor(now);
+    c.party = typeof m.party === 'string' && /^[a-z0-9]{6,16}$/.test(m.party) ? m.party : null;
+    const room = roomFor(now, c.party);
     if (!room) { players.turnedAway(); send(c, { t: 'full' }); setTimeout(() => kill(c), 200); return; }
     let id = typeof m.id === 'string' && /^[a-z0-9]{6,20}$/.test(m.id) ? m.id : crypto.randomBytes(6).toString('hex');
     while ([...clients].some(o => o.id === id)) id += Math.floor(Math.random() * 10);
