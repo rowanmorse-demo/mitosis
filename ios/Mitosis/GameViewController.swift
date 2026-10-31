@@ -62,6 +62,9 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
                 if label == "background", Recorder.shared.isRecording { Recorder.shared.stop { _ in } }
             }
         }
+        for name in [Notification.Name.NSProcessInfoPowerStateDidChange, ProcessInfo.thermalStateDidChangeNotification] {
+            NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in self?.sendPower() }
+        }
         loadGame()
     }
 
@@ -126,6 +129,14 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
         tameGestures()
         gestureTimer?.invalidate()
         gestureTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in self?.tameGestures() }
+        sendPower()
+    }
+
+    /// Low Power Mode and how hot the phone is (thermal state 0 nominal … 3 critical): the page turns on its battery
+    /// saver (30 fps, lighter effects) when either says the phone is struggling.
+    private func sendPower() {
+        let info = ProcessInfo.processInfo
+        reply(["type": "power", "low": info.isLowPowerModeEnabled, "thermal": info.thermalState.rawValue])
     }
 
     /// WebKit's own long-press, double-tap and pinch recognizers cancel the page's touches mid-hold,
