@@ -1797,54 +1797,14 @@ body:not(.playing) #tip{display:none}
 #scale{left:var(--hud-l);bottom:var(--hud-b);gap:10px;font:500 10.5px/1 var(--mono);color:var(--dim)}
 #scaleBar{height:5px;border:1.5px solid rgba(220,239,233,.5);border-top:0;opacity:1}
 
-/* action buttons: round, glossy, Split is the big pink one */
-#actions .act{appearance:none;border:0;margin:0;padding:0;border-radius:50%;display:grid;place-items:center;overflow:visible;cursor:pointer;color:var(--ink);font:inherit;
-  background:radial-gradient(120% 120% at 50% 0%,rgba(52,96,100,.8),rgba(8,25,27,.88) 62%);
-  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.18),inset 0 0 0 1px rgba(170,235,225,.22),inset 0 -8px 14px rgba(0,0,0,.38),0 10px 22px -8px rgba(0,0,0,.7);
-  -webkit-backdrop-filter:blur(10px) saturate(1.3);backdrop-filter:blur(10px) saturate(1.3);
-  transition:transform .18s cubic-bezier(.3,.7,.4,1.6),filter .2s,opacity .25s,box-shadow .25s;touch-action:none;-webkit-tap-highlight-color:transparent}
-#actions .act .aico{width:28px;height:28px;display:block;pointer-events:none;filter:drop-shadow(0 1px 1px rgba(0,0,0,.4))}
-#actions .act::before{content:"";position:absolute;inset:-4px;border-radius:50%;box-shadow:0 0 0 2.5px rgba(255,255,255,.85),0 0 20px rgba(255,92,138,.6);opacity:0;transform:scale(1.2);transition:opacity .5s ease-out,transform .5s ease-out;pointer-events:none}
-#actions .act.flash::before{opacity:1;transform:scale(1);transition:none}
-#actions .act.down{transform:scale(.88);filter:brightness(1.18)}
-#actions .act.off .aico{opacity:.4}
-#actions #splitBtn.off{color:#ff8fb0;background:radial-gradient(120% 120% at 50% 0%,rgba(80,40,58,.8),rgba(14,18,22,.88) 62%);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.14),inset 0 0 0 1.5px rgba(255,92,138,.45),inset 0 -8px 14px rgba(0,0,0,.38),0 10px 22px -8px rgba(0,0,0,.7)}
-#actions #splitBtn.off .aico{opacity:.55;filter:none}
-#actions #splitBtn{color:#fff;background:radial-gradient(110% 110% at 50% 6%,#ffa4c1 0%,#ff5c8a 46%,#c92c5d 100%);
-  box-shadow:inset 0 2px 0 rgba(255,255,255,.45),inset 0 0 0 1px rgba(255,255,255,.22),inset 0 -10px 16px rgba(110,0,40,.45),0 0 0 5px rgba(255,92,138,.14),0 12px 26px -8px rgba(255,50,110,.7)}
-#actions #splitBtn .aico{width:42px;height:42px;filter:drop-shadow(0 1.5px 1px rgba(120,0,40,.5))}
-#actions #dashBtn::after{content:"";position:absolute;inset:0;border-radius:50%;transform:none;background:conic-gradient(rgba(2,8,9,.7) calc(var(--cd,0)*360deg),transparent 0);pointer-events:none}
-#actions #dashBtn:not(.ready) .aico{opacity:.6}
-#actions #dashBtn.ready{color:#ff9bbb;box-shadow:inset 0 1.5px 0 rgba(255,255,255,.18),inset 0 0 0 1.5px rgba(255,92,138,.75),inset 0 -8px 14px rgba(0,0,0,.38),0 0 18px rgba(255,92,138,.3),0 10px 22px -8px rgba(0,0,0,.7)}
-#actions #dashBtn.ready::before{animation:hudReady .6s ease-out}
-@keyframes hudReady{0%{opacity:1;transform:scale(.96)}100%{opacity:0;transform:scale(1.3)}}
-
-/* touch: a quarter-arc around the big Split button in the thumb's corner */
+/* touch: no scale bar, smaller pop-ups */
 @media (pointer:coarse){
-  #actions{left:auto;right:var(--hud-r);bottom:var(--hud-b);transform:none;display:block;width:170px;height:170px}
-  #actions .act{position:absolute;width:64px;height:64px}
-  #actions #splitBtn{right:0;bottom:0;width:92px;height:92px}
-  #actions #ejectBtn{right:106px;bottom:20px}
-  #actions #dashBtn{right:20px;bottom:106px}
-  body.lefty #actions{right:auto;left:var(--hud-l)}
-  body.lefty #actions #splitBtn{right:auto;left:0}body.lefty #actions #ejectBtn{right:auto;left:106px}body.lefty #actions #dashBtn{right:auto;left:20px}
   #scale,#roundClock .rcp{display:none}
   #toasts .toast{padding:5px 18px 5px 5px!important}#toasts .toast .ti{width:28px;height:28px}
   #toasts .toast .label,#toasts .toast .td{display:none!important}
 }
-/* tablets: bigger thumbs */
-@media (pointer:coarse) and (min-width:900px) and (min-height:700px){
-  #actions{width:200px;height:200px}#actions .act{width:76px;height:76px}#actions #splitBtn{width:108px;height:108px}
-  #actions #ejectBtn{right:124px;bottom:24px}#actions #dashBtn{right:24px;bottom:124px}
-  body.lefty #actions #ejectBtn{left:124px}body.lefty #actions #dashBtn{left:24px}
-}
-/* mouse and keyboard: a centred bar, Split in the middle, key caps under each */
+/* mouse and keyboard: tips sit above the action buttons */
 @media (pointer:fine){
-  #actions{left:50%;right:auto;transform:translateX(-50%);bottom:calc(var(--hud-b) + 10px);display:flex;flex-direction:row;align-items:center;gap:16px;width:auto;height:auto}
-  #actions .act{position:relative;width:54px;height:54px}
-  #actions #splitBtn{order:2;width:68px;height:68px}#actions #ejectBtn{order:1}#actions #dashBtn{order:3}
-  #actions .act kbd{position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);padding:3px 6px;border-radius:6px;border:1px solid rgba(170,235,225,.25);background:rgba(4,14,16,.94);box-shadow:0 2px 6px rgba(0,0,0,.5);font:700 9.5px/1 var(--mono);letter-spacing:.04em;color:var(--ink);white-space:nowrap}
-  #actions .act:hover{filter:brightness(1.12)}
   #tip{bottom:calc(var(--hud-b) + 100px)}
 }
 
@@ -2086,9 +2046,9 @@ body:not(.playing) #toasts .toast .tt{display:contents}body:not(.playing) #toast
 <div id="tip" role="status" aria-live="polite"></div>
 <div id="evolve" hidden><div class="evhead"><span class="label">Evolve</span><span id="evTier" class="evsub">Stage 1 of 6</span><span class="evsub kbd-only">Keys 1 · 2 · 3</span></div><div class="evopts" id="evOpts"></div></div>
 <div id="actions">
-  <button class="act" id="splitBtn" type="button" aria-label="Split" title="Split · Space"><svg class="aico" viewBox="0 0 32 32" aria-hidden="true"><circle cx="11.2" cy="16" r="8.2" fill="currentColor"/><circle cx="24.4" cy="16" r="5" fill="currentColor"/></svg><kbd>Space</kbd></button>
-  <button class="act" id="ejectBtn" type="button" aria-label="Shoot" title="Shoot · W"><svg class="aico" viewBox="0 0 32 32" aria-hidden="true"><circle cx="21.5" cy="16" r="6.5" fill="currentColor"/><path d="M4.5 10.5h7M2.5 16h9M4.5 21.5h7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg><kbd>W</kbd></button>
-  <button class="act" id="dashBtn" type="button" aria-label="Boost" title="Boost · Shift"><svg class="aico" viewBox="0 0 32 32" aria-hidden="true"><path d="M7.5 8.5l7.5 7.5-7.5 7.5M17 8.5l7.5 7.5-7.5 7.5" fill="none" stroke="currentColor" stroke-width="3.3" stroke-linecap="round" stroke-linejoin="round"/></svg><kbd>Shift</kbd></button>
+  <button class="act" id="splitBtn" type="button"><svg class="touch-only ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8.5" cy="12" r="5.5"/><circle cx="18.5" cy="12" r="3.5"/></svg><span class="kbd-only">Divide</span><span class="touch-only">Split</span> <kbd>Space</kbd></button>
+  <button class="act" id="ejectBtn" type="button"><svg class="touch-only ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="12" r="5.5"/><path d="M14.5 12h2"/><circle cx="20" cy="12" r="1.8"/></svg><span class="kbd-only">Eject</span><span class="touch-only">Shoot</span> <kbd>W</kbd></button>
+  <button class="act" id="dashBtn" type="button"><svg class="touch-only ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5l5.5 5.5L5 17.5M12.5 6.5l5.5 5.5-5.5 5.5"/></svg><span class="kbd-only">Dash</span><span class="touch-only">Boost</span> <kbd>Shift</kbd></button>
 </div>
 <div id="joyZone" aria-hidden="true"></div>
 <div id="joy" aria-hidden="true"><div class="base"></div><div class="knob"></div></div>
