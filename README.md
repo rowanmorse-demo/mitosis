@@ -240,8 +240,8 @@ All endpoints take and return JSON. Authenticated ones need `Authorization: Bear
 | `POST /api/run/start` | Begin a run (server timestamps it) |
 | `POST /api/run/end` `{runId, survived, eaten, peak, place, of, bestRank, name}` | Pay out the run by placement and adjust the rating; idempotent |
 | `POST /api/skins/buy` `{skinId}` | Spend ATP on a skin (battle pass skins are not for sale) |
-| `POST /api/pass` | The battle pass: your level, Battle Stars, Battle Pass (premium) and claims, plus the season's pages (`pass` and `catalog.pass` are `null` while it is off) |
-| `POST /api/pass/premium` `{bundle}` | Buy the Battle Pass for this season with ATP, or the Battle Bundle (the pass plus 10 levels); once a season |
+| `POST /api/pass` | The battle pass: your tier (`pass.level`; the game says Tier so it is not mixed up with the profile level), Battle Stars, Battle Pass (premium) and claims, plus the season's pages (`pass` and `catalog.pass` are `null` while it is off) |
+| `POST /api/pass/premium` `{bundle}` | Buy the Battle Pass for this season with ATP, or the Battle Bundle (the pass plus 10 tiers); once a season |
 | `POST /api/pass/claim` `{reward}` | Spend Battle Stars on a reward (`'2c'`: page 2, third reward): it must be on an open page, free or covered by the Battle Pass, and not claimed yet |
 | `POST /api/iap/apple` `{transactionId, jws}` | Verify a StoreKit 2 transaction and credit ATP |
 | `POST /api/iap/google` `{purchaseToken, productId, orderId}` | Verify a Play purchase and credit ATP |

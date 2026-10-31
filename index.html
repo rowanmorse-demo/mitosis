@@ -958,7 +958,7 @@ body:not(.playing) #tip{display:none}
 /* @ui:shop end */
 
 /* @ui:pass */
-/* Battle Pass: the season and its clock on top; your level, XP and Battle Stars; the chosen reward on a lit stage (left, or
+/* Battle Pass: the season and its clock on top; your tier, XP and Battle Stars; the chosen reward on a lit stage (left, or
    on top in portrait) with its Claim button; the pages of rewards as tabs over a grid. Free is aqua (--bp), the Battle Pass
    magenta (--bp2); --rc is the chosen reward's colour. All as r,g,b. */
 .lobby #passBtn{position:relative;border-color:rgba(79,240,216,.4);background:radial-gradient(80% 80% at 50% 30%,rgba(79,240,216,.2),transparent 70%),var(--lb-glass)}
@@ -2544,7 +2544,7 @@ body:not(.playing) #toasts .toast .tt{display:contents}body:not(.playing) #toast
     </section>
   </div>
 
-  <!-- Battle Pass (economy.js PASS): free for everyone, the Battle Pass (premium) bought with ATP; ranked levels give Battle Stars to spend on rewards -->
+  <!-- Battle Pass (economy.js PASS): free for everyone, the Battle Pass (premium) bought with ATP; ranked tiers give Battle Stars to spend on rewards -->
   <div class="passview" id="passCard" data-r="atp" hidden>
     <svg class="lb-sprite" aria-hidden="true" focusable="false"><defs><linearGradient id="bpStarG" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="#f4fffd"/><stop offset=".5" stop-color="#7ff3e2"/><stop offset="1" stop-color="#19b3a0"/></linearGradient></defs>
       <symbol id="bpi-star" viewBox="0 0 24 24"><path d="M12 1.8l3 6.3 6.9.9-5 4.8 1.3 6.8L12 17.3l-6.2 3.3 1.3-6.8-5-4.8 6.9-.9z" fill="url(#bpStarG)" stroke="#0d5c53" stroke-width=".9" stroke-linejoin="round"/></symbol>
@@ -2556,8 +2556,8 @@ body:not(.playing) #toasts .toast .tt{display:contents}body:not(.playing) #toast
       <span class="bp-clock" id="bpClock" data-ends="0" title="Season ends in"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span></span></span>
       <button class="sv-bal" id="passBal" type="button" aria-label="Your ATP, get more"><i class="sv-coin" aria-hidden="true"></i><b id="passAtp">0</b><span class="sv-plus" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg></span></button>
     </header>
-    <section class="bp-lvl" aria-label="Your level">
-      <div class="bp-lvnum"><small>Level</small><b id="bpLevel">1</b></div>
+    <section class="bp-lvl" aria-label="Your tier">
+      <div class="bp-lvnum"><small>Tier</small><b id="bpLevel">1</b></div>
       <div class="bp-lvbar"><div class="bp-bar" aria-hidden="true"><i id="bpFill"></i></div><span id="bpXp"></span></div>
       <div class="bp-stars" title="Battle Stars to spend"><svg aria-hidden="true"><use href="#bpi-star"/></svg><b id="bpStars">0</b><span class="bp-sl">Battle Stars</span></div>
       <button class="bp-get" id="bpGet" type="button">Get the Battle Pass</button>
@@ -3504,7 +3504,7 @@ async function flushRuns(){ // report finished runs; keep them queued while the 
   if(flushing)return;flushing=true;
   try{let a=loadPending();while(a.length){const rep=a[0];
     try{const w=await api('run/end',rep);applyWallet(w);if(rep.show){const R=(wallet.catalog&&wallet.catalog.rules)||{};showEarn(w.payout?{k:'atp',n:w.payout}:{k:'none',why:rep.survived<(R.minSec||20)?`Survive ${R.minSec||20}s`:`Top ${(R.byRank||[[30]]).slice(-1)[0][0]} only`});showRank(w);showXp(w);
-      if(w.passUp>0&&bpOn())toast('Battle Pass',`Level ${w.pass.level}`,`+${w.passUp*wallet.catalog.pass.stars} Battle Stars to spend`);}}
+      if(w.passUp>0&&bpOn())toast('Battle Pass',`Tier ${w.pass.level}`,`+${w.passUp*wallet.catalog.pass.stars} Battle Stars to spend`);}}
     catch(e){if(!e.status||e.status>=500){if(rep.show){showEarn({k:'later'});showXp({later:1});}break;}}
     a.shift();savePending(a);}}
   finally{flushing=false;}
@@ -3614,7 +3614,8 @@ $('featBuy').addEventListener('click',async()=>{
   finally{renderSkins();}
 });
 /* ---- Battle Pass (economy.js PASS): everyone has the free pass; the Battle Pass (premium) is bought once a season with ATP.
-   Ranked lives earn XP on the server, each level gives Battle Stars, and stars claim rewards on open pages in any order.
+   Ranked lives earn XP on the server, each tier gives Battle Stars, and stars claim rewards on open pages in any order. The game calls
+   the pass's levels tiers (the server's pass.level and page.level), so they are not mixed up with the profile's levels.
    The page only shows what the server sends: wallet.pass (your progress) and wallet.catalog.pass (the season's pages). ---- */
 const bpOn=()=>!!(wallet.pass&&wallet.catalog&&wallet.catalog.pass&&wallet.catalog.pass.key===wallet.pass.season);
 const bpUse=(id,cls='')=>`<svg class="${cls}" aria-hidden="true"><use href="#bpi-${id}"/></svg>`;
@@ -3626,7 +3627,7 @@ const bpName=r=>{const S=bpSkin(r);return S?S.name:`${fmtAtp(r.atp|0)} ATP`;};
 function bpState(r){const P=wallet.pass;if(P.claimed.includes(r.id))return'got';if(r.page>=P.pages)return'shut';if(!r.free&&!P.premium)return'lock';return r.stars<=P.stars?'ready':'short';}
 function bpOpensNote(i){const C=wallet.catalog.pass,P=wallet.pass,pg=C.pages[i],prev=C.pages[i-1];if(!pg||!prev)return'';
   const left=Math.max(1,pg.need-prev.rewards.filter(r=>P.claimed.includes(r.id)).length);
-  return `${pg.bonus?'The Bonus page':'Page '+(i+1)} opens at level ${pg.level}, or claim ${left} more on page ${i}`;}
+  return `${pg.bonus?'The Bonus page':'Page '+(i+1)} opens at tier ${pg.level}, or claim ${left} more on page ${i}`;}
 function syncPass(){ // the lobby button and its badge; the page hides itself if the season ends or the pass is switched off
   const on=bpOn(),n=on?wallet.pass.claimable|0:0,d=$('passBadge');$('passBtn').hidden=!on;d.hidden=!n;d.textContent=n>9?'9+':String(n);
   $('passBtn').setAttribute('aria-label',n?`Battle Pass, ${n} reward${n>1?'s':''} to claim`:'Battle Pass');
@@ -3668,7 +3669,7 @@ function renderBpFeat(){
   else if(!wallet.online){k='off';html='<span>Connect to claim</span>';}
   else if(st==='shut'){k='shut';html=bpUse('lock')+`<span>${C.pages[r.page].bonus?'Bonus page':'Page '+(r.page+1)} locked</span>`;note=bpOpensNote(r.page);}
   else if(st==='lock'){k='lock';html='<span>Get the Battle Pass</span>';note='Everyone can claim the rewards marked Free.';}
-  else if(st==='short'){k='short';html=`<span>${r.stars-P.stars} more needed</span>`+cost;note=`Every level gives ${C.stars} Battle Stars. Play ranked to level up.`;}
+  else if(st==='short'){k='short';html=`<span>${r.stars-P.stars} more needed</span>`+cost;note=`Every tier gives ${C.stars} Battle Stars. Play ranked to reach the next one.`;}
   else{k='ready';html='<span>Claim</span>'+cost;}
   b.className='bp-claim '+k;b.disabled=['got','wearing','off','shut','short'].includes(k);b.innerHTML=html;$('bpNote').textContent=note;
   drawBpFeat();
@@ -3699,14 +3700,14 @@ function renderBpSheet(){if(!bpOn())return;const C=wallet.catalog.pass,pages=C.p
     'Stars you already have count, so you can claim right away'].map(t=>`<li>${bpUse('check')}<span>${t}</span></li>`).join('');
   const offer=(bundle,name,sub,price)=>{const cf=bpConfirm===bundle&&performance.now()-bpConfirmT<4000,short=wallet.balance<price,k=short?'short':cf?'confirm':'buy';
     return `<button type="button" class="bp-offer ${k}${bundle?' bundle':''}" data-b="${bundle}"><span class="bo-t"><b>${name}</b><small>${sub}</small></span><span class="pz"><i class="sv-coin"></i>${price.toLocaleString()}</span><span class="bo-go">${short?'Get ATP':cf?'Confirm':'Buy'}</span></button>`;};
-  $('bpOffers').innerHTML=offer(0,'Battle Pass','Every premium reward',C.premium)+offer(1,'Battle Bundle',`The Battle Pass + ${C.bundleLevels} levels now (+${C.bundleLevels*C.stars} stars)`,C.bundle);}
+  $('bpOffers').innerHTML=offer(0,'Battle Pass','Every premium reward',C.premium)+offer(1,'Battle Bundle',`The Battle Pass + ${C.bundleLevels} tiers now (+${C.bundleLevels*C.stars} stars)`,C.bundle);}
 async function bpBuy(bundle){
   const C=wallet.catalog.pass,price=bundle?C.bundle:C.premium,name=bundle?'Battle Bundle':'Battle Pass';
   if(!wallet.online){$('bpSheetMsg').textContent='Connect to buy the Battle Pass.';return;}
   if(wallet.balance<price){bpSheet(false);openStore(`${(price-wallet.balance).toLocaleString()} more for the ${name}`);return;}
   if(bpConfirm!==bundle||performance.now()-bpConfirmT>4000){bpConfirm=bundle;bpConfirmT=performance.now();renderBpSheet();setTimeout(()=>{if(bpConfirm===bundle)renderBpSheet();},4100);return;}
   bpConfirm=-1;for(const b of $('bpOffers').children)b.disabled=true;
-  try{const w=await api('pass/premium',{bundle:!!bundle});applyWallet(w);bpSheet(false);Native.haptic('success');toast('Battle Pass',`${name} unlocked`,bundle?`+${C.bundleLevels} levels. Every reward is yours to claim.`:'Every reward is yours to claim.');}
+  try{const w=await api('pass/premium',{bundle:!!bundle});applyWallet(w);bpSheet(false);Native.haptic('success');toast('Battle Pass',`${name} unlocked`,bundle?`+${C.bundleLevels} tiers. Every reward is yours to claim.`:'Every reward is yours to claim.');}
   catch(e){$('bpSheetMsg').textContent=e.message;renderBpSheet();}
   finally{renderPass();}
 }
