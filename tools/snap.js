@@ -20,6 +20,7 @@ class CDP {
 (async () => {
   const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'snap-'));
   const chrome = spawn(CHROME, ['--headless=new', '--no-sandbox', '--disable-gpu', '--hide-scrollbars', '--mute-audio', ...(opt.autoplay ? ['--autoplay-policy=no-user-gesture-required'] : []), `--remote-debugging-port=${PORT}`, `--user-data-dir=${profile}`, '--window-size=1400,1100'], { stdio: 'ignore' });
+  for (const sig of ['SIGTERM', 'SIGINT', 'SIGHUP']) process.on(sig, () => { chrome.kill('SIGKILL'); process.exit(1); }); // a killed snap must not leave Chrome running
   try {
     let v = null; for (let i = 0; i < 50 && !v; i++) { try { v = await json(`http://127.0.0.1:${PORT}/json/version`); } catch (e) { await sleep(200); } }
     if (!v) throw new Error('Chrome did not start');
