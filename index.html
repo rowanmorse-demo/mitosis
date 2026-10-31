@@ -585,7 +585,142 @@ body:not(.playing) #tip{display:none}
 /* @ui:hud end */
 
 /* @ui:overlays */
-
+/* backdrop: a deeper vignette behind every centred card; the modals (pause, intro, delete) dim a little more */
+#overlay{background:radial-gradient(ellipse 85% 75% at 50% 48%,rgba(2,8,9,.38),rgba(2,8,9,.84))}
+#overlay:has(>.modal:not([hidden])){background:radial-gradient(ellipse 80% 70% at 50% 48%,rgba(2,8,9,.5),rgba(1,5,6,.9))}
+/* modal card: glass slab with a lit top edge, one column, centred */
+#overlay>.card.modal{--ov-pad:24px;--ov-btn:56px;--ov-r:18px;
+  width:100%;max-width:372px;max-height:calc(100% - 4px);box-sizing:border-box;padding:var(--ov-pad);gap:16px;grid-template-columns:minmax(0,1fr);justify-items:stretch;align-content:center;text-align:center;
+  border-radius:30px;border:1px solid rgba(170,235,225,.13);
+  background:radial-gradient(120% 60% at 50% 0%,rgba(255,92,138,.13),rgba(255,92,138,0) 62%),linear-gradient(180deg,rgba(20,46,48,.95),rgba(6,18,20,.97));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.1),inset 0 0 0 1px rgba(255,255,255,.02),0 0 0 1px rgba(0,0,0,.45),0 28px 70px rgba(0,0,0,.6),0 10px 24px rgba(0,0,0,.35);
+  -webkit-backdrop-filter:blur(18px) saturate(1.3);backdrop-filter:blur(18px) saturate(1.3);
+  user-select:none;-webkit-user-select:none;animation:ov-pop .42s cubic-bezier(.18,.9,.28,1.12)}
+@keyframes ov-pop{from{opacity:0;transform:translateY(12px) scale(.94)}}
+#overlay>.modal>h2{margin:0;font:800 36px/1 var(--display);letter-spacing:-.045em;color:#f2fbf8;text-wrap:balance;text-shadow:0 2px 24px rgba(0,0,0,.4)}
+#overlay>.modal>*{grid-column:1/-1}
+/* buttons: tall, rounded, icon + word; colours come from .primary / .ghost / .danger */
+#overlay>.modal .ov-btn{min-height:var(--ov-btn);border-radius:var(--ov-r);display:flex;align-items:center;justify-content:center;gap:10px;padding:0 20px;margin:0;font-weight:800;font-size:18px;letter-spacing:-.01em;line-height:1;white-space:nowrap;transition:transform .12s cubic-bezier(.3,.7,.4,1.4),filter .15s,box-shadow .15s}
+#overlay>.modal .ov-btn svg{width:20px;height:20px;flex:none}
+#overlay>.modal .primary.ov-btn svg{fill:currentColor}
+#overlay>.modal .ghost.ov-btn{color:var(--ink);background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.025));border:1px solid rgba(170,235,225,.16);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 2px 0 rgba(0,0,0,.25)}
+#overlay>.modal .ghost.ov-btn svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#overlay>.modal button:active{transform:translateY(2px) scale(.97);filter:brightness(.92)}
+#overlay>.modal button:disabled{transform:none;filter:none}
+/* square icon buttons (sound, settings) */
+.ov-ico{appearance:none;flex:none;width:var(--ov-btn);height:var(--ov-btn);display:grid;place-items:center;padding:0;border-radius:var(--ov-r);cursor:pointer;color:var(--ink);background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.025));border:1px solid rgba(170,235,225,.16);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 2px 0 rgba(0,0,0,.25);transition:transform .12s cubic-bezier(.3,.7,.4,1.4),color .15s,background .15s}
+.ov-ico svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.ov-ico:hover,#overlay>.modal .ghost.ov-btn:hover{border-color:rgba(170,235,225,.3)}
+/* pause card */
+#overlay>#pauseCard.modal{max-width:340px;gap:14px}
+.ov-status{justify-self:center;display:inline-flex;align-items:center;gap:8px;margin:-4px 0 4px;padding:6px 12px 6px 10px;border-radius:999px;background:rgba(143,216,255,.08);border:1px solid rgba(143,216,255,.2);font:600 10.5px/1 var(--mono);letter-spacing:.13em;text-transform:uppercase;color:#a9dcf5}
+.ov-status i{width:7px;height:7px;border-radius:50%;background:#8fd8ff;box-shadow:0 0 8px rgba(143,216,255,.7)}
+.ov-status.live{background:rgba(255,92,138,.1);border-color:rgba(255,92,138,.32);color:#ff9ab5}
+.ov-status.live i{background:var(--accent);box-shadow:0 0 0 0 rgba(255,92,138,.6);animation:ov-ping 1.6s ease-out infinite}
+@keyframes ov-ping{0%{box-shadow:0 0 0 0 rgba(255,92,138,.6)}80%,100%{box-shadow:0 0 0 7px rgba(255,92,138,0)}}
+#pauseCard #resume{font-size:20px}
+.ov-row{display:flex;gap:10px}
+.ov-row .ov-leave{flex:1}
+#pauseSnd .off,#pauseSnd[aria-pressed=false] .on{display:none}
+#pauseSnd[aria-pressed=false] .off{display:inline}
+#pauseSnd[aria-pressed=false]{color:var(--muted)}
+/* first-launch welcome: three illustrated steps */
+#overlay>#introCard.modal{max-width:700px;padding:28px 28px 26px;gap:20px}
+#introCard>h2{font-size:40px}
+#introCard>h2 em{font-style:normal;background:linear-gradient(100deg,#ff7aa2,#ff5c8a 45%,#b79cff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.ov-steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;counter-reset:ovs}
+.ov-step{counter-increment:ovs;position:relative;display:grid;justify-items:center;align-content:start;gap:4px;padding:16px 10px 16px;border-radius:22px;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.015));border:1px solid rgba(255,255,255,.07);box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
+.ov-step::before{content:counter(ovs);position:absolute;top:10px;left:12px;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font:700 10.5px/1 var(--mono);color:rgb(var(--c));background:rgba(var(--c),.12)}
+.ov-art{width:100px;height:100px;margin:-4px 0 4px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 50% 50%,rgba(var(--c),.24),rgba(var(--c),.06) 55%,rgba(var(--c),0) 71%)}
+.ov-art svg{width:84px;height:84px;overflow:visible}
+.ov-art .shine{fill:none;stroke:rgba(255,255,255,.6);stroke-width:2.4;stroke-linecap:round}
+.ov-art .trail{fill:none;stroke:rgba(var(--c),.75);stroke-width:2.4;stroke-linecap:round}
+.ov-art .ring{fill:none;stroke:rgba(255,138,154,.55);stroke-width:2;stroke-dasharray:3 4.6;stroke-linecap:round}
+.ov-step b{font:800 18px/1.1 var(--display);letter-spacing:-.025em;color:#f2fbf8}
+.ov-step span{font:500 12.5px/1.3 var(--display);color:var(--muted)}
+#introCard #introGo{justify-self:center;min-width:260px;font-size:20px}
+/* delete account confirmation */
+#overlay>#deleteCard.modal{max-width:380px;gap:14px;background:radial-gradient(120% 60% at 50% 0%,rgba(229,72,77,.16),rgba(229,72,77,0) 62%),linear-gradient(180deg,rgba(20,46,48,.95),rgba(6,18,20,.97))}
+#deleteCard>h2{font-size:30px}
+.ov-badge{justify-self:center;width:60px;height:60px;border-radius:50%;display:grid;place-items:center;color:#ff8a94;background:radial-gradient(circle at 50% 30%,rgba(255,120,130,.3),rgba(229,72,77,.1) 70%);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 0 0 1px rgba(255,107,120,.35),0 10px 30px rgba(229,72,77,.25)}
+.ov-badge svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.ov-badge .tick,#deleteCard.done .ov-badge .trash{display:none}
+#deleteCard.done .ov-badge .tick{display:block}
+#deleteCard.done .ov-badge{color:#5fe0a8;background:radial-gradient(circle at 50% 30%,rgba(95,224,168,.3),rgba(95,224,168,.08) 70%);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 0 0 1px rgba(95,224,168,.35),0 10px 30px rgba(95,224,168,.2)}
+#deleteCard.done{background:radial-gradient(120% 60% at 50% 0%,rgba(95,224,168,.12),rgba(95,224,168,0) 62%),linear-gradient(180deg,rgba(20,46,48,.95),rgba(6,18,20,.97))}
+#deleteCard #delBody{margin:-4px 0 0;font:500 14.5px/1.45 var(--display);color:var(--muted);text-wrap:balance}
+#deleteCard #delApple{margin:0;font:12px/1.4 var(--display);color:var(--dim);text-wrap:balance}
+#deleteCard #deleteMsg{margin:0;font:600 13px/1.4 var(--display);color:#ff8a94}
+#deleteCard #delRow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+#deleteCard .danger.ov-btn{flex:none;color:#fff;background:linear-gradient(180deg,#f0585e,#d93a42);box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 2px 0 #8f1f25,0 8px 22px rgba(229,72,77,.3)}
+/* landscape phones: tighter, so every card fits in 390 px without scrolling */
+@media (orientation:landscape) and (max-height:520px){
+  #overlay>.card.modal{--ov-pad:20px;--ov-btn:50px;gap:12px;border-radius:26px}
+  #overlay>.modal>h2{font-size:30px}
+  #overlay>#pauseCard.modal{gap:12px}
+  #overlay>#introCard.modal{max-width:660px;padding:20px 22px;gap:14px}
+  #introCard>h2{font-size:32px}
+  .ov-step{padding:10px 8px 13px;gap:3px;border-radius:20px}.ov-art{width:84px;height:84px;margin:-2px 0 2px}.ov-art svg{width:72px;height:72px}
+  .ov-step b{font-size:16.5px}.ov-step span{font-size:12px}
+  #deleteCard>h2{font-size:26px}.ov-badge{width:50px;height:50px}.ov-badge svg{width:24px;height:24px}
+  #deleteCard #delBody{font-size:13.5px}#overlay>#deleteCard.modal{gap:10px}
+}
+/* narrow portrait: the steps become rows, the button spans the card */
+@media (max-width:560px){
+  #overlay>#introCard.modal{padding:26px 20px 20px;gap:18px}
+  #introCard>h2{font-size:40px;line-height:.98}
+  .ov-steps{grid-template-columns:minmax(0,1fr);gap:10px}
+  .ov-step{grid-template-columns:76px minmax(0,1fr);grid-template-rows:auto auto;justify-items:start;align-items:center;column-gap:14px;row-gap:2px;padding:12px 16px 12px 12px;text-align:left}
+  .ov-step::before{top:8px;left:auto;right:10px}
+  .ov-art{grid-row:1/3;width:76px;height:76px;margin:0}.ov-art svg{width:66px;height:66px}
+  .ov-step b{align-self:end}.ov-step span{align-self:start}
+  #introCard #introGo{justify-self:stretch;min-width:0}
+}
+/* toasts over the menus (the lobby, shop and pages hide the HUD, so they used to vanish there): a notification that drops from the top */
+body:not(.playing) #toasts{display:grid!important;z-index:8;top:calc(10px + env(safe-area-inset-top,0px))!important;left:50%;transform:translateX(-50%);gap:8px;justify-items:center;width:max-content;max-width:calc(100% - 32px)}
+body:not(.playing) #toasts .toast{display:grid!important;grid-template-columns:36px minmax(0,1fr);grid-template-areas:"i t" "i d";column-gap:12px;row-gap:2px;align-items:center;justify-items:start;text-align:left;box-sizing:border-box;min-width:min(260px,calc(100vw - 32px));max-width:min(420px,calc(100vw - 32px));padding:10px 18px 10px 10px!important;border-radius:20px!important;
+  background:linear-gradient(180deg,rgba(24,52,54,.97),rgba(8,22,24,.97));border:1px solid rgba(170,235,225,.15);box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 16px 40px rgba(0,0,0,.55),0 4px 12px rgba(0,0,0,.3);animation:ov-drop .4s cubic-bezier(.18,.9,.28,1.15)}
+@keyframes ov-drop{from{opacity:0;transform:translateY(-16px) scale(.95)}}
+body:not(.playing) #toasts .toast::before,body:not(.playing) #toasts .toast::after{content:"";grid-area:i;width:36px;height:36px;border-radius:50%}
+body:not(.playing) #toasts .toast::before{background:rgba(var(--tc),.16);box-shadow:inset 0 0 0 1px rgba(var(--tc),.35)}
+body:not(.playing) #toasts .toast::after{background:rgb(var(--tc));-webkit-mask:var(--ti) center/19px 19px no-repeat;mask:var(--ti) center/19px 19px no-repeat}
+body:not(.playing) #toasts .toast>.label{display:none}
+body:not(.playing) #toasts .toast>b{grid-area:t;font:800 15px/1.2 var(--display)!important;letter-spacing:-.01em;color:#f2fbf8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+body:not(.playing) #toasts .toast>span:last-child{grid-area:d;display:block;font:500 12.5px/1.3 var(--display)!important;color:var(--muted);overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+body:not(.playing) #toasts .toast>span:last-child:empty{display:none}
+body:not(.playing) #toasts .toast:has(>span:last-child:empty){grid-template-areas:"i t" "i t"}
+.toast{--tc:143,216,255;--ti:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 11v6M12 7.2v.1'/%3E%3C/svg%3E")}
+.toast[data-k=atp]{--tc:242,177,52;--ti:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Ccircle cx='12' cy='12' r='4.2'/%3E%3C/svg%3E")}
+.toast[data-k=account]{--tc:95,224,168;--ti:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='8.5' r='4'/%3E%3Cpath d='M4.5 20.5c1.2-4 4-5.8 7.5-5.8s6.3 1.8 7.5 5.8'/%3E%3C/svg%3E")}
+.toast[data-k=achievement]{--tc:242,193,78;--ti:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3-4.6-4.4 6.3-.9z'/%3E%3C/svg%3E")}
+.toast[data-k=mutation]{--tc:154,140,255;--ti:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M8 3c0 6 8 6 8 9s-8 3-8 9M16 3c0 6-8 6-8 9s8 3 8 9M9.5 7h5M9.5 17h5'/%3E%3C/svg%3E")}
+.toast:is([data-k=nearby],[data-k=search],[data-k=game]){--tc:108,184,255;--ti:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='2'/%3E%3Cpath d='M7.8 7.8a6 6 0 0 0 0 8.4M16.2 7.8a6 6 0 0 1 0 8.4M4.9 4.9a10 10 0 0 0 0 14.2M19.1 4.9a10 10 0 0 1 0 14.2'/%3E%3C/svg%3E")}
+.toast:is([data-k=practice],[data-k=bots]){--tc:154,140,255;--ti:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4.5' y='8' width='15' height='11' rx='4'/%3E%3Cpath d='M12 8V4.5M9.2 13h.1M14.8 13h.1'/%3E%3C/svg%3E")}
+.toast:is([data-k=offline],[data-k=name]){--tc:255,138,154;--ti:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3.5l9.5 16.5h-19z'/%3E%3Cpath d='M12 10v4.5M12 17.2v.1'/%3E%3C/svg%3E")}
+/* HUD connection chip (beside the power-up chips): signal bars and the ping, or Reconnecting */
+#fx .chip.netchip{display:inline-flex;align-items:center;align-self:flex-start;gap:6px;white-space:nowrap;padding:5px 10px 5px 8px;border-radius:999px;color:#ffc27a;border:1px solid rgba(255,184,107,.45);background:linear-gradient(180deg,rgba(60,34,8,.75),rgba(30,16,4,.75));box-shadow:inset 0 1px 0 rgba(255,255,255,.08);font:600 11px/1 var(--mono);font-variant-numeric:tabular-nums}
+#fx .chip.netchip svg{width:13px;height:13px;margin:0;vertical-align:0;fill:currentColor}
+#fx .chip.netchip .off{opacity:.25}
+#fx .chip.netchip.bad{color:#ff8a8a;border-color:rgba(255,107,107,.5);background:linear-gradient(180deg,rgba(64,12,14,.78),rgba(32,6,8,.78))}
+#fx .chip.netchip.lost{color:#ff8a8a;border-color:rgba(255,107,107,.5);background:linear-gradient(180deg,rgba(64,12,14,.78),rgba(32,6,8,.78));animation:ov-blink 1.2s ease-in-out infinite}
+@keyframes ov-blink{50%{opacity:.6}}
+/* phones: the chip stays a small one-line pill so it never covers the arena */
+@media (pointer:coarse){#fx .chip.netchip{gap:5px;padding:3px 8px 3px 6px;font-size:10.5px;line-height:1}#fx .chip.netchip svg{width:11px;height:11px}}
+/* How to play (Settings): controls as key caps, the rules as six small tiles */
+#helpSec #achLine{display:none}
+.hp-keys{display:flex;flex-wrap:wrap;gap:8px}
+.hp-keys>span{display:inline-flex;align-items:center;gap:8px;padding:5px 12px 5px 5px;border-radius:12px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07);font:600 13px/1 var(--display);color:var(--muted)}
+.hp-keys kbd{min-width:22px;padding:6px 8px;border-radius:8px;text-align:center;font:600 11px/1 var(--mono);color:var(--ink);background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.06));box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 2px 0 rgba(0,0,0,.4)}
+.hp-facts{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:8px}
+.hp-facts li{display:grid;grid-template-columns:36px minmax(0,1fr);grid-template-areas:"i b" "i s";column-gap:11px;row-gap:1px;align-items:center;padding:9px 12px 9px 9px;border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.015));border:1px solid rgba(255,255,255,.07)}
+.hp-facts i{grid-area:i;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;color:rgb(var(--c));background:rgba(var(--c),.13);box-shadow:inset 0 0 0 1px rgba(var(--c),.25)}
+.hp-facts svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.hp-facts b{grid-area:b;align-self:end;font:700 13.5px/1.2 var(--display);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hp-facts span{grid-area:s;align-self:start;font:500 11.5px/1.3 var(--display);color:var(--muted)}
+.hp-facts li.hot{border-color:rgba(255,107,107,.28);background:linear-gradient(180deg,rgba(255,107,107,.09),rgba(255,107,107,.02))}.hp-facts li.hot b{color:#ff9a9a}
+#helpSec #introAgain{justify-self:start;display:inline-flex;align-items:center;gap:8px;min-height:44px;border-radius:14px;padding:0 16px;color:var(--ink)}
+#helpSec #introAgain::before{content:"";width:14px;height:14px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 4.6v14.8c0 .9 1 1.4 1.7.9l11-7.4c.6-.4.6-1.3 0-1.7l-11-7.4C8 3.3 7 3.8 7 4.6z'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 4.6v14.8c0 .9 1 1.4 1.7.9l11-7.4c.6-.4.6-1.3 0-1.7l-11-7.4C8 3.3 7 3.8 7 4.6z'/%3E%3C/svg%3E") center/contain no-repeat}
+@media (prefers-reduced-motion:reduce){.ov-status.live i,#fx .chip.netchip.lost{animation:none!important}}
 /* @ui:overlays end */
 
 /* @ui:skin-art */
@@ -659,25 +794,24 @@ body:not(.playing) #tip{display:none}
     </section>
   </div>
 
-  <div class="card panel intro" id="introCard" hidden>
-    <p class="eyebrow">Welcome to the culture</p>
-    <h2>Eat. Divide.<br>Survive.</h2>
-    <ul class="steps">
-      <li><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="19" cy="24" r="13"/><circle cx="38" cy="18" r="4.5"/><path d="M33 20.5l-4 2"/></svg><div><b>Absorb anything smaller</b><span>Steer into food and cells below your size. Anything bigger absorbs you.</span></div></li>
-      <li><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="15" cy="24" r="9"/><circle cx="35" cy="24" r="7"/><path d="M26 24h3M31 20l4 4-4 4"/></svg><div><b>Divide to strike</b><span>Split launches half your mass forward. Eject mass to bait, or to feed phages so they multiply.</span></div></li>
-      <li><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="15"/><path d="M24 13v11l7 4"/><path d="M8 24a16 16 0 0 1 3-9" stroke-dasharray="2 3"/></svg><div><b>Ten minutes, two lives</b><span>The arena closes in. Place high to climb from Silver to Legend. Nobody spawns in the last five minutes.</span></div></li>
-    </ul>
-    <button class="primary" id="introGo" type="button">Into the arena</button>
+  <div class="card panel modal" id="introCard" hidden>
+    <h2>Eat. Divide. <em>Survive.</em></h2>
+    <ol class="ov-steps">
+      <li class="ov-step" style="--c:255,92,138"><span class="ov-art" aria-hidden="true"><svg viewBox="0 0 64 64"><defs><radialGradient id="ovB1" cx=".36" cy=".3" r=".8"><stop offset="0" stop-color="#ffc6d6"/><stop offset=".5" stop-color="#ff5c8a"/><stop offset="1" stop-color="#a81f50"/></radialGradient></defs><circle cx="25" cy="37" r="18" fill="url(#ovB1)" stroke="#ff9cba" stroke-width="1.4"/><circle cx="28" cy="40" r="5.5" fill="#c92c62" opacity=".6"/><path class="shine" d="M14 31a13 13 0 0 1 8-8"/><circle cx="48" cy="21" r="8.5" fill="#5fe0a8" opacity=".16"/><circle cx="48" cy="21" r="4.6" fill="#5fe0a8"/><circle cx="57" cy="9.5" r="2.7" fill="#ffd36b"/><circle cx="53.5" cy="35" r="2.3" fill="#7cc7ff"/></svg></span><b>Eat smaller</b><span>Dodge anything bigger</span></li>
+      <li class="ov-step" style="--c:154,140,255"><span class="ov-art" aria-hidden="true"><svg viewBox="0 0 64 64"><defs><radialGradient id="ovB2" cx=".36" cy=".3" r=".8"><stop offset="0" stop-color="#e6e0ff"/><stop offset=".5" stop-color="#9a8cff"/><stop offset="1" stop-color="#4f3fc0"/></radialGradient></defs><path class="trail" d="M27 33.5l6.5-3.6M25.5 41l9-4.8M31.5 26.5l3.5-1.9"/><circle cx="18" cy="42" r="13" fill="url(#ovB2)" stroke="#c9c0ff" stroke-width="1.4"/><circle cx="46" cy="22" r="10.5" fill="url(#ovB2)" stroke="#c9c0ff" stroke-width="1.4"/><circle cx="20" cy="44" r="4" fill="#5a49cf" opacity=".6"/><circle cx="47.5" cy="23.5" r="3.2" fill="#5a49cf" opacity=".6"/><path class="shine" d="M10 38a9 9 0 0 1 5-5.5M39.5 18.5a7 7 0 0 1 4-4"/></svg></span><b>Split to strike</b><span>Launch half your mass</span></li>
+      <li class="ov-step" style="--c:242,177,52"><span class="ov-art" aria-hidden="true"><svg viewBox="0 0 64 64"><defs><linearGradient id="ovC" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff2b8"/><stop offset=".5" stop-color="#ffcf5a"/><stop offset="1" stop-color="#d9900e"/></linearGradient></defs><circle class="ring" cx="32" cy="35" r="27"/><circle cx="32" cy="41" r="12.5" fill="url(#ovB1)" stroke="#ff9cba" stroke-width="1.4"/><circle cx="34" cy="43.5" r="3.8" fill="#c92c62" opacity=".6"/><path class="shine" d="M24.5 37a8.5 8.5 0 0 1 5-5"/><path d="M21.5 27.5l-2-11.5 7 5.2L32 12.5l5.5 8.7 7-5.2-2 11.5z" fill="url(#ovC)" stroke="#a86f00" stroke-width="1.2" stroke-linejoin="round"/><circle cx="32" cy="12.5" r="1.8" fill="#fff2b8"/></svg></span><b>Last one wins</b><span>10 min · 2 lives</span></li>
+    </ol>
+    <button class="primary ov-btn" id="introGo" type="button">Let's go</button>
   </div>
 
-  <div class="card panel" id="deleteCard" hidden>
-    <p class="eyebrow">Delete account</p>
-    <h2 id="delTitle">Delete everything?</h2>
-    <p class="hint" id="delBody">This permanently deletes your Mitosis account from our server: your rating, ATP, skins, run history, name, and any Sign in with Apple or Google link. It can't be undone, and ATP you bought can't be restored.</p>
-    <p class="hint" id="delApple">If you signed in with Apple, you can also stop using your Apple Account with Mitosis in iPhone Settings › your name › Sign in with Apple.</p>
-    <div class="row" id="delRow"><button class="danger" id="deleteGo" type="button">Delete permanently</button><button class="ghost" id="deleteCancel" type="button">Cancel</button></div>
-    <p class="hint" id="deleteMsg" hidden></p>
-    <button class="primary" id="deleteDone" type="button" hidden>Start fresh</button>
+  <div class="card panel modal" id="deleteCard" hidden>
+    <span class="ov-badge" aria-hidden="true"><svg class="trash" viewBox="0 0 24 24"><path d="M4.5 7h15M9.5 7V5.2c0-.7.5-1.2 1.2-1.2h2.6c.7 0 1.2.5 1.2 1.2V7M6.5 7l.8 11.6c.1 1 .9 1.9 2 1.9h5.4c1 0 1.9-.8 2-1.9L17.5 7M10.2 11v5.5M13.8 11v5.5"/></svg><svg class="tick" viewBox="0 0 24 24"><path d="M5.5 12.5l4.2 4.2 8.8-9.4"/></svg></span>
+    <h2 id="delTitle">Delete account?</h2>
+    <p class="hint" id="delBody">Your rating, ATP (bought ATP too), skins, runs and sign-in links are erased for good.</p>
+    <p class="hint" id="delApple">Used Sign in with Apple? Also unlink it in iPhone Settings › your name › Sign in with Apple.</p>
+    <div class="row" id="delRow"><button class="ghost ov-btn" id="deleteCancel" type="button">Cancel</button><button class="danger ov-btn" id="deleteGo" type="button">Delete forever</button></div>
+    <p class="hint" id="deleteMsg" role="alert" hidden></p>
+    <button class="primary ov-btn" id="deleteDone" type="button" hidden>Start fresh</button>
   </div>
 
   <div class="card panel page" id="lookCard" hidden>
@@ -736,25 +870,18 @@ body:not(.playing) #tip{display:none}
     <div class="field"><span class="label">Invite friends</span><div class="invite" id="inviteRow"><input id="inviteUrl" type="text" readonly aria-label="Invite link" value=""><button id="copyInvite" class="ghost" type="button">Invite friends</button></div><p id="inviteHelp">Send this link to a friend on the same Wi-Fi. For friends elsewhere, run <b>share-online.bat</b> and send the https link it prints.</p></div>
     <div class="field"><span class="label">Account &amp; data</span><button type="button" class="danger-link" id="deleteAcctBtn2">Delete account and all data…</button></div>
     <details class="sec" id="helpSec"><summary><span class="label">How to play</span></summary><div class="body">
-    <dl class="keys kbd-only">
-      <dt>Mouse</dt><dd>Steer toward the cursor</dd>
-      <dt>Space</dt><dd>Divide — launch half your mass forward</dd>
-      <dt>W</dt><dd>Eject mass (feed phages to make them replicate)</dd>
-      <dt>Shift</dt><dd>Dash — a burst of speed for 4% mass</dd>
-      <dt>Esc</dt><dd>Pause</dd>
-    </dl>
-    <dl class="keys touch-only">
-      <dt>Joystick</dt><dd>Bottom left — push it to steer, further for faster</dd>
-      <dt>Buttons</dt><dd>Split, Shoot and Boost sit on the right</dd>
-      <dt>Pause</dt><dd>Bottom centre, with a Return to lobby option</dd>
-    </dl>
-    <div class="new"><strong>Rounds</strong>
-      Ten minutes, two lives. The arena closes in from the one-minute mark and is down to its final size by 9:30; anything outside dissolves. Bots stop respawning at 7:00, and the round ends the moment one player is left. ATP pays for placing: 25 for a win, down to 1 for 30th.
-      <em>Mutate</em> at mass milestones — a random trait is applied, six times a life, and every cell wears badges for the traits it has. <em>World events</em>: nutrient blooms, antibiotic tides that close the well, phage swarms and the <em>Leviathan</em> — lure it onto phages to break it up. The leader wears a crown and pays a bounty.
-      <b class="hot">Hunter phages</b> break in through the rim and inject any cell they touch — it bursts into up to 16 pieces 8–10 s later. Nothing is immune to them; three ejected blobs kill one.
-      Practice plays the bots at the difficulty you pick, and on iPhone, Nearby plays the phones around you with no internet. Tap the mass readout or the clock in a game to shrink them, or the HUD button to hide the on-screen info.</div>
+    <div class="hp-keys kbd-only"><span><kbd>Mouse</kbd>Steer</span><span><kbd>Space</kbd>Split</span><span><kbd>W</kbd>Shoot</span><span><kbd>Shift</kbd>Boost</span><span><kbd>Esc</kbd>Pause</span></div>
+    <div class="hp-keys touch-only"><span><kbd>Stick</kbd>Steer</span><span><kbd>Split</kbd>Strike</span><span><kbd>Shoot</kbd>Eject</span><span><kbd>Boost</kbd>Dash</span><span><kbd>Mass</kbd>Pause</span></div>
+    <ul class="hp-facts">
+      <li style="--c:95,224,168"><i aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4.2l2.6 1.6M9.5 2.5h5"/></svg></i><b>10 min · 2 lives</b><span>Last cell wins</span></li>
+      <li style="--c:255,138,154"><i aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-dasharray="2.4 2.6"/><circle cx="12" cy="12" r="4.5"/></svg></i><b>Arena shrinks</b><span>Outside dissolves</span></li>
+      <li style="--c:154,140,255"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3c0 6 8 6 8 9s-8 3-8 9M16 3c0 6-8 6-8 9s8 3 8 9M9.5 7h5M9.5 17h5"/></svg></i><b>Mutations</b><span>Traits as you grow</span></li>
+      <li style="--c:242,177,52"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M13 2.5L5 13.5h6l-1 8 8-11h-6z"/></svg></i><b>World events</b><span>Blooms, tides, Leviathan</span></li>
+      <li class="hot" style="--c:255,107,107"><i aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 2.5v4M12 17.5v4M2.5 12h4M17.5 12h4M5.3 5.3l2.8 2.8M15.9 15.9l2.8 2.8M5.3 18.7l2.8-2.8M15.9 8.1l2.8-2.8"/></svg></i><b>Hunter phages</b><span>Burst you · 3 shots kill</span></li>
+      <li style="--c:242,177,52"><i aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/></svg></i><b>Earn ATP</b><span>Up to 25 a win</span></li>
+    </ul>
     <p class="achline" id="achLine"></p>
-      <button type="button" class="ghost" id="introAgain">Show the welcome tips again</button>
+      <button type="button" class="ghost" id="introAgain">Replay intro</button>
     </div></details>
   </div>
 
@@ -783,11 +910,15 @@ body:not(.playing) #tip{display:none}
     </section>
   </div>
 
-  <div class="card panel" id="pauseCard" hidden>
-    <p class="eyebrow">Culture on hold</p>
+  <div class="card panel modal" id="pauseCard" hidden>
     <h2>Paused</h2>
-    <p class="lede">Nothing moves until you resume. Return to the lobby to change your look or density.</p>
-    <div class="row"><button id="resume" class="primary" type="button">Resume</button><button id="quit" class="ghost" type="button">Return to lobby</button></div>
+    <p class="ov-status" id="pauseNote"><i aria-hidden="true"></i><span>Time frozen</span></p>
+    <button id="resume" class="primary ov-btn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.6v12.8c0 .8.9 1.3 1.6.9l10-6.4c.6-.4.6-1.4 0-1.8l-10-6.4C8.9 4.3 8 4.8 8 5.6z"/></svg>Resume</button>
+    <div class="ov-row">
+      <button id="pauseSnd" class="ov-ico" type="button" aria-pressed="true" aria-label="Sound on"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9.6h3.4L12 5.6v12.8l-4.6-4H4z"/><path class="on" d="M15.5 9.2a4 4 0 0 1 0 5.6M18.2 6.6a7.6 7.6 0 0 1 0 10.8"/><path class="off" d="M16 9.5l5 5M21 9.5l-5 5"/></svg></button>
+      <button id="pauseSet" class="ov-ico" type="button" aria-label="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg></button>
+      <button id="quit" class="ghost ov-btn ov-leave" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4.5h4a1.5 1.5 0 0 1 1.5 1.5v12a1.5 1.5 0 0 1-1.5 1.5h-4"/><path d="M10 8l-4 4 4 4M6 12h9.5"/></svg>Leave</button>
+    </div>
   </div>
 
   <div class="card panel" id="deathCard" hidden>
@@ -1382,16 +1513,16 @@ $('avatarBtn').addEventListener('click',()=>$('lookBtn').click());$('lookBtn').a
 $('setBtn').addEventListener('click',()=>showCard('settingsCard'));
 // account deletion (App Store guideline 5.1.1(v)): Profile › Account or Settings › Account & data
 let delFrom='profileCard';const DEL_BODY=$('delBody').textContent;
-function openDelete(from){delFrom=from;$('delTitle').textContent='Delete everything?';$('delBody').textContent=DEL_BODY;$('delBody').hidden=false;$('delApple').hidden=false;$('delRow').hidden=false;$('deleteDone').hidden=true;$('deleteMsg').hidden=true;$('deleteGo').disabled=false;$('deleteGo').textContent='Delete permanently';showCard('deleteCard');}
+function openDelete(from){delFrom=from;$('deleteCard').classList.remove('done');$('delTitle').textContent='Delete account?';$('delBody').textContent=DEL_BODY;$('delBody').hidden=false;$('delApple').hidden=false;$('delRow').hidden=false;$('deleteDone').hidden=true;$('deleteMsg').hidden=true;$('deleteGo').disabled=false;$('deleteGo').textContent='Delete forever';showCard('deleteCard');}
 $('deleteAcctBtn').addEventListener('click',()=>openDelete('profileCard'));
 $('deleteAcctBtn2').addEventListener('click',()=>openDelete('settingsCard'));
 $('deleteCancel').addEventListener('click',()=>showCard(delFrom));
 $('deleteGo').addEventListener('click',async()=>{
   const b=$('deleteGo'),m=$('deleteMsg');b.disabled=true;b.textContent='Deleting…';m.hidden=true;
   try{await api('account/delete',{confirm:'DELETE'});}
-  catch(e){b.disabled=false;b.textContent='Delete permanently';m.hidden=false;m.textContent=/fetch|network|load/i.test(e.message)?'Could not reach the server. Connect to the internet and try again.':'Could not delete: '+e.message;return;}
+  catch(e){b.disabled=false;b.textContent='Delete forever';m.hidden=false;m.textContent=/fetch|network|load/i.test(e.message)?'No connection. Try again online.':'Could not delete: '+e.message;return;}
   try{for(const k of Object.keys(localStorage))if(k.startsWith('mitosis.')&&k!=='mitosis.intro')localStorage.removeItem(k);}catch(e){}
-  $('delTitle').textContent='Account deleted';$('delBody').textContent='Your account and all of its data have been deleted from our server. Mitosis will start you fresh as a new, unnamed cell.';$('delApple').hidden=true;$('delRow').hidden=true;$('deleteDone').hidden=false;
+  $('deleteCard').classList.add('done');$('delTitle').textContent='Account deleted';$('delBody').textContent='All your data is gone. You start fresh as a new cell.';$('delApple').hidden=true;$('delRow').hidden=true;$('deleteDone').hidden=false;
 });
 $('deleteDone').addEventListener('click',()=>location.reload());
 function loadHistory(){try{const a=JSON.parse(localStorage.getItem('mitosis.history')||'[]');return Array.isArray(a)?a:[];}catch(e){return[];}}
@@ -1825,9 +1956,17 @@ function unlock(id){
   toast('Achievement',a.name,a.desc);sfx('ach');
 }
 function toast(kind,title,desc){
-  const el=document.createElement('div');el.className='toast';el.innerHTML=`<span class="label">${esc(kind)}</span><b>${esc(title)}</b><span>${esc(desc)}</span>`;
+  const el=document.createElement('div');el.className='toast';el.dataset.k=String(kind).split(' ')[0].toLowerCase();el.innerHTML=`<span class="label">${esc(kind)}</span><b>${esc(title)}</b><span>${esc(desc)}</span>`;
   const box=$('toasts');box.appendChild(el);while(box.children.length>(TOUCH_UI?1:3))box.firstChild.remove(); // phones: one at a time, briefer
   setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),500);},TOUCH_UI?2000:3800);
+}
+// HUD connection chip: signal bars and the ping while an online game runs slow, or "Reconnecting" once the server drops
+function netChip(){
+  const N=window.__mitosisNet;if(!N||local||N.mode==='nearby')return'';
+  const bars=n=>`<svg viewBox="0 0 16 16" aria-hidden="true">${[[1,10,5],[6.5,6,9],[12,2,13]].map(([x,y,h],i)=>`<rect x="${x}" y="${y}" width="3" height="${h}" rx="1"${i<n?'':' class="off"'}/>`).join('')}</svg>`;
+  if(N.state==='offline'||N.state==='connecting')return`<span class="chip netchip lost">${bars(0)}Reconnecting</span>`;
+  if(multi()&&N.rtt>220){const ms=Math.round(N.rtt);return`<span class="chip netchip${ms>400?' bad':''}">${bars(ms>400?1:2)}${ms} ms</span>`;}
+  return'';
 }
 /* ---- evolution ---- */
 function offerEvo(){
@@ -2660,7 +2799,7 @@ function hud(){
     let fx='';for(const k in PU){const t=human.fx[k];if(t>0)fx+=`<span class="chip" style="color:${col(PU[k].c)};--p:${(t/PU[k].dur).toFixed(3)}">${PU_ICON[k]}${PU[k].label} ${t.toFixed(1)}s<i></i></span>`;}
     let inf=0;for(const c of human.cells)if(c.inf&&(!inf||c.inf<inf))inf=c.inf;
     if(inf){const left=Math.max(0,inf-T),len=(human.cells.find(c=>c.inf===inf)||{}).infLen||INF_MAX;fx+=`<span class="chip" style="color:${col(INF_C,6)};--p:${(left/len).toFixed(3)}">Infected · lysis ${left.toFixed(1)}s<i></i></span>`;}
-    {const N=window.__mitosisNet;if(multi()&&N&&N.rtt>220)fx+=`<span class="chip" style="color:#ffb86b;--p:1">Slow connection · ${Math.round(N.rtt)} ms<i></i></span>`;}
+    fx+=netChip();
     if(human.cells.some(c=>T-(c.toxic||0)<.3))fx+=`<span class="chip" style="color:#ff8a9a;--p:1">Outside the arena · dissolving<i></i></span>`;
     if(human.combo>=2&&T-human.comboT<3)fx+=`<span class="chip" style="color:${col([340,100,72])};--p:${((3-(T-human.comboT))/3).toFixed(3)}">Streak ×${human.combo}<i></i></span>`;
     fxEl.innerHTML=fx;
@@ -3011,10 +3150,17 @@ function startGame(){
   setTimeout(()=>sfx('start'),30);
 }
 function setPaused(v){
-  if(mode!=='play'||!human||!human.alive)return;paused=v;showCard(v?'pauseCard':null);
-  const lede=$('pauseCard').querySelector('.lede');lede.textContent=multi()?'Others are in this well, so the culture keeps going — your cell holds still until you resume.':'Nothing moves until you resume.';
+  if(mode!=='play'||!human||!human.alive)return;paused=v;showCard(v?'pauseCard':null);syncPause();
   if(v)$('resume').focus();else cv.focus({preventScroll:true});
 }
+// pause card: online with others the arena keeps running (your cell holds still); alone or in practice time stops
+function syncPause(){const live=multi(),n=$('pauseNote'),s=$('pauseSnd');n.classList.toggle('live',live);n.lastChild.textContent=live?'Arena still live':'Time frozen';
+  s.setAttribute('aria-pressed',String(!muted));s.setAttribute('aria-label',muted?'Sound off':'Sound on');}
+$('pauseSnd').addEventListener('click',()=>{toggleSnd();syncPause();});
+addEventListener('keydown',e=>{if(e.code==='KeyM')setTimeout(syncPause,0);});
+// Settings from the pause card: its back button returns to the pause card instead of the lobby
+$('pauseSet').addEventListener('click',()=>showCard('settingsCard'));
+$('settingsCard').addEventListener('click',e=>{if(mode==='play'&&paused&&e.target.closest('.back')){e.stopPropagation();showCard('pauseCard');syncPause();}},true);
 function die(){
   mode='dead';if(!multi())slow=.22;sfx('die');Native.haptic('heavy');const s=human.stats;human.hist.push(0);paused=false;
   const pb=s.peak>best;if(pb){best=s.peak;try{localStorage.setItem('mitosis.best',String(Math.round(best)));}catch(e){}}
@@ -3192,7 +3338,7 @@ for(let i=0;i<90;i++)step(1/30);
 hud();if(leader&&leader.cells[0]){cam.x=leader.cells[0].x;cam.y=leader.cells[0].y;}
 let seenIntro=false;try{seenIntro=!!localStorage.getItem('mitosis.intro');}catch(e){}
 showCard(seenIntro?'startCard':'introCard');
-$('introGo').addEventListener('click',()=>{try{localStorage.setItem('mitosis.intro','1');}catch(e){}showCard('startCard');});
+$('introGo').addEventListener('click',()=>{try{localStorage.setItem('mitosis.intro','1');}catch(e){}if(mode==='play'&&paused){showCard('pauseCard');syncPause();}else showCard('startCard');}); // opened from Settings over a paused game: back to the pause card
 $('introAgain').addEventListener('click',()=>showCard('introCard'));
 const PF=window.__mt?{n:0,step:0,net:0,draw:0,gap:0,slow:0}:null;if(PF)window.__mt.pf=PF; // ?debug=1: frame-phase timing for profiling
 let last=performance.now(),hudT=0,ema=16,playT=0,lastHitchAt=0,hitchSent=0,wsMax=0,lastTouchAt=0;
