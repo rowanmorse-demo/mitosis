@@ -19,7 +19,7 @@ A multiplayer cell-eating arena set in a giant petri well. Absorb anything small
 - **Practice and offline play** against bots at four difficulties (Easy, Normal, Hard, Expert). With no connection, Play starts a bot game straight away
 - **Nearby play** (iPhone app): phones in the same room play each other over Bluetooth and peer-to-peer Wi-Fi, no internet needed
 - **Friends and parties**: add friends by their 6-character friend code (Friends in the lobby) and see who's online. Invite one into a party: when either of you presses Play, the other joins the same arena. Allies get a dashed cyan ring and an arrow at the screen edge, can't eat each other, and whoever runs out of lives watches their ally
-- **High ping plays bots**: with a ping over 100 ms, Play in Ranked starts a bot game instead, unless *Allow high ping* is on in Settings or you're in a party
+- **High ping plays bots**: with a ping over your *Max ping* (Settings: 100 ms by default, or 150, 250 ms or Any), Play in Ranked starts a bot game instead, unless you're in a party. It goes by the median of the last few pings
 - **Mutations** (Magnet, Phase, Surge), dash, frenzy streaks, a leader bounty, stain patterns and 12 achievements. There is no chat
 
 ## Controls
