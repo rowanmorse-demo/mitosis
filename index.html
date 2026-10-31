@@ -5192,8 +5192,7 @@ function fitName(){ // the name field is as wide as the name, so the pencil sits
   const inp=$('nameIn'),m=$('nameMeasure');if(!inp||!m||$('startCard').hidden)return;
   const k=inp.value+'|'+innerWidth+'|'+innerHeight+'|'+(document.fonts?document.fonts.status:'');if(k===lbFit)return;
   m.textContent=inp.value||inp.placeholder;const w=m.getBoundingClientRect().width;if(!w)return;lbFit=k;inp.style.width=Math.ceil(w)+3+'px';}
-function lbSharp(cv){ // canvases drawn at the screen's real resolution
-  if(!cv||!cv.clientWidth)return;const w=Math.min(720,Math.round(cv.clientWidth*(window.devicePixelRatio||1)));if(w>=48&&cv.width!==w){cv.width=cv.height=w;drawAvatar(cv);}}
+function lbSharp(cv){if(cv&&cv.clientWidth)drawAvatar(cv);} // the skin code (skinCanvas) sizes the backing store to CSS size x DPR; this just repaints
 function syncPlay(){
   const box=$('lbPlay');if(!box)return;const net=lbNet(),ios=Native.platform==='ios',home=!$('startCard').hidden,sheet=$('modeSheet');
   if(lbBoot){if(lbMode!=='ranked'||net==='live')lbBoot=false;else if(net==='off'||net==='full'||performance.now()-lbT0>6000){lbBoot=false;lbMode='casual';}} // no server at launch: Casual
@@ -5223,8 +5222,7 @@ function syncFeed(){
   const F=$('eventPill').hidden?lbFeatSkin():null,sc=$('lbSkinCard');sc.hidden=!F;
   if(F&&sc.dataset.id!==String(F.id)){sc.dataset.id=F.id;$('skName').textContent=F.name;$('skPrice').textContent=F.price.toLocaleString();sc.setAttribute('aria-label',`New skin: ${F.name}, ${F.price} ATP`);}
 }
-function lbDrawArt(){for(const [id,S] of [['evCv',lbEvSkin()],['skCv',lbFeatSkin()]]){const cv=$(id);if(!S||!cv||cv.parentElement.hidden||!cv.clientWidth)continue;
-  const w=Math.min(400,Math.round(cv.clientWidth*(window.devicePixelRatio||1)));if(w>=48&&cv.width!==w)cv.width=cv.height=w;drawPreview(cv,S);}}
+function lbDrawArt(){for(const [id,S] of [['evCv',lbEvSkin()],['skCv',lbFeatSkin()]]){const cv=$(id);if(S&&cv&&!cv.parentElement.hidden&&cv.clientWidth)drawPreview(cv,S);}} // drawPreview sizes the canvas itself
 let lbArtT=0;(function lbArtLoop(now){requestAnimationFrame(lbArtLoop);if(RM||document.hidden||$('startCard').hidden||now-lbArtT<40)return;lbArtT=now;lbDrawArt();})(0);
 function modeSheet(open){const sh=$('modeSheet');if(sh.hidden===!open)return;sh.hidden=!open;syncPlay();
   if(open){const b=sh.querySelector('.lb-mcard[data-on=true] .lb-mpick');if(b)b.focus({preventScroll:true});}else $('modeBtn').focus({preventScroll:true});}
