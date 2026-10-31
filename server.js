@@ -214,6 +214,7 @@ function onMessage(c, text) {
     send(c, { t: 'welcome', id, peers: [...clients].filter(o => o !== c && o.p).map(o => ({ id: o.id, p: o.p })), lan: lanUrls() });
     log(`+ player joined (${clients.size} in the well)`);
   } else if (m.t === 'p' && c.id && m.p && typeof m.p === 'object' && !Array.isArray(m.p)) {
+    players.presence(c, m.p);
     c.p = m.p; c.pAt = now;
     broadcast(c, { t: 'p', id: c.id, p: m.p });
   }

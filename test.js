@@ -137,7 +137,7 @@ async function post(url, body, secret) {
     let s = await expect('three players, and the round clock from the host', { online: 3, web: 1, ios: 1, android: 1, other: 0, arena: 1, searching: 1, menus: 1, solo: 0, playing: 1, cap: 16, round: 90.5 });
     assert.equal(s.best.n, 40, 'the most at once survives a restart');
     assert.ok(!s.rows.some(r => r[0] <= minuteNow - 24 * 60), 'history older than 24 hours is dropped');
-    assert.deepEqual(s.rows.find(r => r[0] === minuteNow - 30), [minuteNow - 30, 5, 4, 3, 1, 2, 2, 1, 0, 0], 'history from before the restart is kept');
+    assert.deepEqual(s.rows.find(r => r[0] === minuteNow - 30), [minuteNow - 30, 5, 4, 3, 1, 2, 2, 1, 0, 0, ...require('./live').ACTS.map(() => 0)], 'history from before the restart is kept, with the arena actions added at 0');
     // a ranked life is open from run/start until run/end
     r = await post('/api/run/start', {}, secret); await expect('a ranked life in progress', { ranked: 1 });
     await post('/api/run/end', { runId: r.body.runId, survived: 5, eaten: 0, peak: 25 }, secret); await expect('the life ended', { ranked: 0 });
@@ -161,6 +161,76 @@ async function post(url, body, secret) {
     assert.ok(events.some(e => e.ev === 'now' && e.d.online === 3 && e.d.solo === 1), 'the stream saw the solo game');
     clearInterval(keep); ios.close(); android.close(); ctl.abort();
     const html = await (await fetch(base + '/admin/live' + tq)).text(); assert.match(html, /<title>Mitosis live players<\/title>/); assert.match(html, /EventSource/);
+  }
+  { // live players, arena actions: read from the presence games already send (protocol 6), so every app version counts
+    const { observe, ACTS } = require('./live');
+    const B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_', OFF = 8800;
+    const enc = (n, w) => { n = Math.max(0, Math.round(n)); let s = ''; for (let i = 0; i < w; i++) { s = B64[n % 64] + s; n = Math.floor(n / 64); } return s; }; // enc() in index.html
+    const cl = cells => cells.map(([id, x, y, m, inf]) => enc(id, 2) + enc(x + OFF, 3) + enc(y + OFF, 3) + enc(m + (inf ? 8388608 : 0), 4)).join('');
+    const ej = blobs => blobs.map(([x, y]) => enc(x + OFF, 3) + enc(y + OFF, 3)).join('');
+    const game = {}, got = {}; let t = 1e6;
+    const see = (p, ms = 66) => { t += ms; observe(game, { v: 6, a: 0, q: 0, f: 0, ...p }, t, (k, n = 1) => { got[k] = (got[k] || 0) + n; }); return { ...got }; };
+    const at = (cells, more) => ({ a: 1, cl: cl(cells), ...more });
+    const step = (what, p, want, ms) => { const before = { ...got }, after = see(p, ms), diff = {};
+      for (const k of ACTS) if ((after[k] || 0) !== (before[k] || 0)) diff[k] = (after[k] || 0) - (before[k] || 0);
+      assert.deepEqual(diff, want, what); };
+    const edge = m => 4 + Math.sqrt(m) * 6 + 10; // where an ejected blob starts: just outside its cell
+    step('tapping Play while the arena is closed starts a search', { q: 1 }, { search: 1 });
+    step('the search goes on', { q: 1 }, {});
+    step('a life starts (its spawn shield is not a power-up)', at([[1, 0, 0, 200]], { f: 1 }), { spawn: 1 });
+    step('a split: the new cell has the same mass as the one it came from', at([[1, 0, 0, 100], [2, 300, 0, 100]], { f: 1 }), { split: 1 });
+    step('the shield wears off', at([[1, 0, 0, 100], [2, 300, 0, 100]]), {});
+    step('a double split in one moment is still a split, not a burst', at([[1, 0, 0, 50], [2, 300, 0, 50], [3, 0, 300, 50], [4, 300, 300, 50]]), { split: 1 });
+    step('the four pieces merge back', at([[1, 0, 0, 100], [2, 300, 0, 100]]), {});
+    step('a Magnet power-up', at([[1, 0, 0, 101], [2, 300, 0, 100]], { f: 2 }), { power: 1 });
+    step('a Surge', at([[1, 0, 0, 101], [2, 300, 0, 100]], { f: 6 }), { surge: 1 });
+    step('a mutation', at([[1, 0, 0, 101], [2, 300, 0, 100]], { f: 6 | 1 << 3 }), { mutate: 1 });
+    const fx = 6 | 1 << 3, blobs = [[edge(101) + 30, 0], [300 + edge(100) + 30, 0]], far = [9000 - OFF, 3000];
+    step('both cells eject: two blobs start beside them', at([[1, 0, 0, 85], [2, 300, 0, 84]], { f: fx, ej: ej(blobs) }), { eject: 2 });
+    step('the blobs glide on; a microbe\'s blob far away on the host is not the player\'s', at([[1, 0, 0, 85], [2, 300, 0, 84]], { f: fx, ej: ej([...blobs.map(([x, y]) => [x + 45, y]), far]) }), {});
+    const moved = [...blobs.map(([x, y]) => [x + 70, y]), far];
+    step('the presence was too big to send its blobs for a moment', at([[1, 0, 0, 85], [2, 300, 0, 84]], { f: fx }), {});
+    step('the blobs come back where they were', at([[1, 0, 0, 85], [2, 300, 0, 84]], { f: fx, ej: ej(moved) }), {});
+    step('a dash costs every cell 4%', at([[1, 0, 0, 81.6], [2, 300, 0, 80.6]], { f: fx, ej: ej(moved) }), { dash: 1 });
+    step('a cell losing mass outside the closing arena is not dashing', at([[1, 0, 0, 78.3], [2, 300, 0, 77.4]], { f: fx, ej: ej(moved) }), {}, 2000);
+    step('and still is not', at([[1, 0, 0, 75.2], [2, 300, 0, 74.3]], { f: fx, ej: ej(moved) }), {});
+    step('a burst on a phage: equal pieces spray out of a cell that keeps as much as all of them', at([[1, 0, 0, 60], [2, 300, 0, 74], [3, 50, 0, 20], [4, -50, 0, 20], [5, 0, 50, 20]], { f: fx, ej: ej(moved) }), { burst: 1 });
+    const five = [[1, 0, 0, 60], [2, 300, 0, 74, 1], [3, 50, 0, 20], [4, -50, 0, 20], [5, 0, 50, 20]];
+    step('a cell is infected', at(five, { f: fx, ej: ej(moved) }), {});
+    step('the infection ruptures it: not a split', at([...five.slice(0, 1), [2, 300, 0, 37], ...five.slice(2), [6, 330, 0, 37]], { f: fx, ej: ej(moved) }), {});
+    const me = 'abcdef123456', kills = [[1, 'k', me, 'Me', 'b7', 'Microbe'], [2, 'k', 'b3', 'Microbe', me, 'Me'], [3, 'k', me, 'Me', 'zz9988776655', 'Kim'], [4, 'k', 'b2', 'Microbe', 'b9', 'Microbe'], [5, 'k', 'qq1122334455', 'Ann', 'b4000', 'the Leviathan']];
+    const six = [...five.slice(0, 1), [2, 300, 0, 37], ...five.slice(2), [6, 330, 0, 37]];
+    step('kills: a microbe, by a microbe, a player, the Leviathan (microbes eating each other are not counted)', at(six, { f: fx, r: kills }), { pve: 1, bot: 1, pvp: 1, levi: 1 });
+    step('the records stay in the presence for 3 s but count once', at(six, { f: fx, r: kills }), {});
+    step('a burst reported by a game that is not hosting, even when it looks like a split', at([...six, [7, 0, -40, 60]], { f: fx, r: [...kills, [6, 'v', 12, 3]] }), { burst: 1 });
+    step('the player dies', { f: fx }, {});
+    step('and starts a new life, with no mutations yet', at([[9, 100, 100, 25]], { f: 1 }), { spawn: 1 });
+    { // the blob list holds only the newest 16: when blobs are seen leaving, the 16 mass each ejecting cell lost counts them
+      const g = {}, n = {}; let t2 = 2e6; const look = p => { t2 += 66; observe(g, { v: 6, q: 0, f: 0, ...p }, t2, (k, k2 = 1) => { n[k] = (n[k] || 0) + k2; }); };
+      const old = [[1000, 1000], [1100, 1000]];
+      look(at([[1, 0, 0, 100], [2, 300, 0, 100]])); look(at([[1, 0, 0, 100], [2, 300, 0, 100]], { ej: ej(old) }));
+      assert.equal(n.eject, undefined, 'blobs far from the player\'s cells are not theirs');
+      look(at([[1, 0, 0, 84], [2, 300, 0, 84]], { ej: ej([old[1], [edge(84) + 30, 0]]) }));
+      assert.equal(n.eject, 2, 'both cells ejected though only one new blob made the list');
+    }
+    step('another game version is not read', { v: 5, a: 1, q: 1, cl: cl([[1, 0, 0, 25], [2, 9, 9, 25]]) }, {});
+
+    // through the relay: a game's moves reach the dashboard's last minute, today's history and the live stream
+    const token = fs.readFileSync(path.join(dataDir, 'admin-token'), 'utf8').trim(), tq = '?token=' + token;
+    const now = async () => (await fetch(base + '/admin/live' + tq + '&format=json')).json();
+    const ctl = new AbortController(), sse = await fetch(base + '/admin/live/stream' + tq, { signal: ctl.signal }); let streamed = '';
+    (async () => { const td = new TextDecoder(); try { for await (const ch of sse.body) streamed += td.decode(ch, { stream: true }); } catch (e) {} })();
+    const ws = new WebSocket(base.replace(/^http/, 'ws') + '/ws'); await new Promise((res, rej) => { ws.onopen = () => ws.send(JSON.stringify({ t: 'hello', id: me })); ws.onmessage = e => { if (JSON.parse(e.data).t === 'welcome') res(); }; ws.onerror = rej; });
+    const send = async p => { ws.send(JSON.stringify({ t: 'p', p: { v: 6, h: 1, q: 0, f: 0, ...p } })); await new Promise(r => setTimeout(r, 70)); };
+    const before = await now(), total = (j, k) => j.rows.reduce((n, r) => n + r[j.cols.indexOf(k) + 1], 0);
+    await send(at([[1, 0, 0, 200]])); await send(at([[1, 0, 0, 100], [2, 300, 0, 100]])); await send(at([[1, 0, 0, 100], [2, 300, 0, 100]], { r: [[1, 'k', me, 'Me', 'b7', 'Microbe']] }));
+    let j; for (const t0 = Date.now(); Date.now() - t0 < 3000; await new Promise(r => setTimeout(r, 100))) { j = await now(); if (j.acts.pve === before.acts.pve + 1) break; }
+    assert.deepEqual(['spawn', 'split', 'pve'].map(k => j.acts[k] - before.acts[k]), [1, 1, 1], 'the last minute shows the life, the split and the kill');
+    assert.deepEqual(['spawn', 'split', 'pve'].map(k => total(j, k) - total(before, k)), [1, 1, 1], 'and so does the history');
+    for (const t0 = Date.now(); Date.now() - t0 < 3000 && !/"pve":1/.test(streamed); ) await new Promise(r => setTimeout(r, 100));
+    assert.match(streamed, /event: now\ndata: .*"acts":\{[^}]*"pve":1/, 'the live stream carries the last minute');
+    ws.close(); ctl.abort();
+    const html = await (await fetch(base + '/admin/live' + tq)).text(); assert.match(html, /Moves in the arena/); assert.match(html, /Absorptions/);
   }
   // a refused name never reaches the leaderboard: the player keeps their last good one
   r = await post('/api/run/start', {}, secret); r = await post('/api/run/end', { runId: r.body.runId, survived: 30, eaten: 0, peak: 25, name: 'sh1t head' }, secret); assert.equal(r.status, 200);
