@@ -13,7 +13,8 @@ A multiplayer cell-eating arena set in a giant petri well. Absorb anything small
 - **World events**: Nutrient Bloom, Antibiotic Tide, Phage Swarm and the Leviathan boss
 - **Hunter phages** that breach the rim and inject cells; the cell bursts into up to 16 pieces 8–10 s later
 - **ATP and skins**: earn ATP by placing well (or buy it in the apps) and spend it in a full-screen shop on nineteen premium skins, up to the 12,000,000 ATP One Cell to Rule Them All
-- **A lobby that knows you**: a live portrait of your cell, your rating with progress to the next tier, who is in the room and the round clock. First launch shows a three-step welcome card (Settings can bring it back). The Profile keeps your last runs with placement, time, peak mass and rating change
+- **Levels**: every ranked life earns XP for how long you stay alive and where you place, and XP adds up into a profile level. The lobby and the Profile show your level with a bar toward the next one; the results screen counts the XP in, shows where it came from and celebrates a level-up
+- **A lobby that knows you**: a live portrait of your cell, your level and your rating with progress to the next tier, who is in the room and the round clock. First launch shows a three-step welcome card (Settings can bring it back). The Profile keeps your last runs with placement, time, peak mass and rating change
 - **Effects toggle** in Settings (Full or Reduced) for older phones; the game also drops to reduced effects on its own when frames run long
 - **Rounds of ten minutes**: the arena is full size for the first minute, then closes in to 3% of the dish by 9:30. Anything caught outside dissolves. Bots stop respawning at 7:00, and the round ends as soon as one player's cells are all that is left: the last cell standing wins
 - **Practice and offline play** against bots at four difficulties (Easy, Normal, Hard, Expert). With no connection, Play starts a bot game straight away
@@ -70,6 +71,20 @@ Every player has an Elo-style rating, starting at 1000, adjusted by the server a
 | Rating above 1000 | gains shrink and losses grow (at 2000, gains ×0.5 and losses ×1.5), so ratings settle rather than inflate |
 
 Tiers: Bronze (under 900), Silver (900+), Gold (1100+), Platinum (1400+), Diamond (1800+), Legend (2300+). The lobby shows your rating and the top ten, and the results screen after every run (death or Return to lobby) shows the change. `GET /api/leaderboard` returns the top ten.
+
+## Levels and XP
+
+Every ranked life earns XP when it ends, worked out by the server:
+
+| Source | XP |
+| --- | --- |
+| Staying alive | 2 per 10 s, counting up to one whole round (120 XP for 10 minutes) |
+| Placing | up to 60 for 1st, scaling down to 0 for last (rounds with at least 4 players, lives of at least 20 s) |
+| Winning | +40 for 1st (same conditions) |
+
+So surviving a whole round and winning it is 220 XP, and a 7-minute life that places 2nd of 18 is 142. Survival is the same time the server caps for ATP and rating (what really passed on its clock since the run started), so a client can't claim more. Practice, Nearby and offline games earn no XP, just as they pay no ATP and leave the rating alone.
+
+XP only ever adds up, into a profile level. Going from level L to L+1 takes 100 + 50 × (L − 1) XP, so each level needs 50 more than the one before: level 2 at 100 XP, level 3 at 250, level 5 at 700, level 10 at 2,700, level 20 at 10,450 and level 50 at 63,700. Signing in on a second device adds that device's XP to the account's; deleting the account deletes its XP. The rules are `XP` in economy.js; the catalogue sends them to the game, which keeps a copy (`XP_FB`) for offline use.
 
 ## ATP, skins and purchases
 

@@ -11,7 +11,7 @@
 :root{
   color-scheme: dark;
   --void:#020809; --ink:#dcefe9; --muted:#8aaea9; --dim:#577873;
-  --accent:#ff5c8a; --accent-ink:#1a0610; --violet:#9a8cff; --amber:#f2b134;
+  --accent:#ff5c8a; --accent-ink:#1a0610; --violet:#9a8cff; --amber:#f2b134; --xp1:#4fcbea; --xp2:#6ff0c0;
   --panel:rgba(6,20,22,.82); --panel-solid:#071618; --line:rgba(140,210,200,.15); --line-strong:rgba(140,210,200,.28);
   --display:"Bricolage Grotesque","Avenir Next","Segoe UI",system-ui,sans-serif;
   --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
@@ -516,6 +516,11 @@ body:not(.playing) #tip{display:none}
 :where(#overlay *)::-webkit-scrollbar{width:10px;height:10px}
 :where(#overlay *)::-webkit-scrollbar-thumb{background:rgba(160,225,215,.18);border-radius:10px;border:3px solid transparent;background-clip:padding-box}
 :where(#overlay *)::-webkit-scrollbar-track,:where(#overlay *)::-webkit-scrollbar-corner{background:transparent}
+/* level badge (profile, results): the level number on a dark disc inside a cyan-to-mint ring */
+.lv-badge{position:relative;display:grid;place-items:center;width:44px;height:44px;flex:none;box-sizing:border-box;border-radius:50%;border:2.5px solid transparent;
+  background:radial-gradient(circle at 50% 22%,rgba(111,240,192,.3),transparent 62%) padding-box,linear-gradient(#082421,#04120f) padding-box,linear-gradient(150deg,#d6fff0,var(--xp2) 35%,var(--xp1) 75%,#1f7f99) border-box;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 0 0 3px rgba(95,224,200,.1),0 0 20px rgba(95,224,200,.3)}
+.lv-badge b{font:800 19px/1 var(--display);letter-spacing:-.04em;color:#d4fff1;font-variant-numeric:tabular-nums;text-shadow:0 0 12px rgba(111,240,192,.6)}
 /* @ui:base end */
 
 /* @ui:lobby */
@@ -721,6 +726,18 @@ body:not(.playing) #tip{display:none}
   .lobby .lb-go{height:84px;font-size:36px;border-radius:26px}.lobby .lb-go::before{width:46px;height:46px;background-size:19px}
   .lb-mcard{min-height:230px}
 }
+/* level chip beside the rank chip: the level and the XP toward the next one (opens the profile) */
+.lobby .hero-tags{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;max-width:100%}
+.lobby .hero-lv{appearance:none;display:grid;justify-items:center;align-content:center;gap:7px;min-width:108px;box-sizing:border-box;padding:8px 16px 9px;border-radius:999px;border:1px solid rgba(111,240,192,.26);background:var(--lb-glass);box-shadow:var(--lb-hi),var(--lb-drop);color:var(--ink);font:inherit;cursor:pointer;transition:transform .12s;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.lobby .hero-lv:active{transform:scale(.95)}
+.lobby .hero-lv .ht{display:flex;align-items:center;gap:9px;font:800 17px/1 var(--display);letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.lobby .hero-lv .lv-l{display:flex;align-items:center;gap:7px;font:700 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--xp2)}
+.lobby .hero-lv .lv-l::before{content:"";width:15px;height:15px;background:linear-gradient(160deg,#fff,var(--xp2) 55%,var(--xp1));clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%)}
+.lobby .xpbar{display:block;width:100%;height:4px;border-radius:2px;background:rgba(255,255,255,.09);overflow:hidden}
+.lobby .xpbar i{display:block;height:100%;width:0;border-radius:2px;background:linear-gradient(90deg,var(--xp1),var(--xp2));box-shadow:0 0 8px rgba(95,224,200,.6);transition:width .5s cubic-bezier(.2,.8,.2,1)}
+@media (hover:hover){.lobby .hero-lv:hover{border-color:rgba(111,240,192,.45)}}
+@media (orientation:landscape) and (max-height:520px){.lobby .hero-lv{padding:7px 14px 8px;gap:6px;min-width:96px}.lobby .hero-lv .ht{font-size:15px}}
+@media (min-width:1100px) and (min-height:700px){.lobby .hero-lv{padding:10px 20px 11px}.lobby .hero-lv .ht{font-size:19px}}
 /* @ui:lobby end */
 
 /* @ui:shop */
@@ -1236,6 +1253,15 @@ body:not(.playing) #tip{display:none}
 @media (max-width:460px){#profileCard .pf-runs li{grid-template-columns:46px minmax(0,1.3fr) minmax(0,1.1fr) minmax(0,.8fr) auto;gap:7px}}
 @media (min-width:1000px) and (min-height:640px){#profileCard .pf-hero{--ava:150px}}
 @media (max-width:370px){#profileCard .pf-stats{grid-template-columns:repeat(2,minmax(0,1fr))}#profileCard .pf-eat{display:none}#profileCard .pf-runs li{grid-template-columns:46px minmax(0,1.2fr) minmax(0,1fr) auto}}
+/* level: the badge, then the XP bar toward the next level */
+#profileCard .pf-lv{width:100%;box-sizing:border-box;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:12px;margin-top:4px;padding-top:14px;border-top:1px solid var(--line);text-align:left}
+#profileCard .pf-lvm{display:grid;gap:7px;min-width:0}
+#profileCard .pf-lvt{display:flex;align-items:baseline;justify-content:space-between;gap:10px;min-width:0}
+#profileCard .pf-lvt b{font:700 10.5px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--xp2);white-space:nowrap}
+#profileCard #pLvXp{font:700 11px/1 var(--mono);color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+#profileCard #pLvNext{font:600 11px/1 var(--mono);color:var(--muted)}
+#profileCard .pf-xpbar i{background:linear-gradient(180deg,rgba(255,255,255,.38),rgba(255,255,255,0) 60%),linear-gradient(90deg,var(--xp1),var(--xp2));box-shadow:0 0 12px rgba(95,224,200,.45)}
+@media (orientation:landscape) and (max-height:520px){#profileCard .pf-lv{padding-top:10px;gap:10px}#profileCard .pf-lv .lv-badge{width:38px;height:38px}#profileCard .pf-lv .lv-badge b{font-size:16px}}
 /* @ui:profile end */
 
 /* @ui:ranks-settings */
@@ -1515,6 +1541,40 @@ body:not(.playing) #tip{display:none}
 @keyframes res-twinkle{0%,100%{opacity:0;transform:scale(0) rotate(0)}12%{opacity:1;transform:scale(1) rotate(45deg)}26%{opacity:0;transform:scale(0) rotate(90deg)}}
 @keyframes res-coin{0%{transform:scale(.3) rotateY(0)}60%{transform:scale(1.25) rotateY(540deg)}100%{transform:scale(1) rotateY(720deg)}}
 @keyframes res-ring{0%{outline:2px solid rgba(255,220,120,.95);outline-offset:0}100%{outline:2px solid rgba(255,220,120,0);outline-offset:24px}}
+/* XP: the level badge, the gain counting in, the bar filling (wrapping at a level-up) and where the XP came from */
+#deathCard .res-xp{grid-column:1/-1;display:grid;gap:9px;padding:12px 16px 13px;border-color:rgba(111,240,192,.2);transition:border-color .4s,box-shadow .4s}
+#deathCard .rx-head{display:flex;align-items:center;gap:11px;min-width:0}
+#deathCard .rx-badge{width:40px;height:40px}#deathCard .rx-badge b{font-size:17px}
+#deathCard .rx-t{display:grid;gap:5px;min-width:0}
+#deathCard .rx-t b{font:700 11.5px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--xp2);white-space:nowrap}
+#deathCard .rx-of{font:600 11px/1 var(--mono);color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+#deathCard .rx-gain{margin-left:auto;min-height:26px;font:800 26px/1 var(--display);letter-spacing:-.03em;color:#9af7d6;font-variant-numeric:tabular-nums;text-shadow:0 0 18px rgba(95,224,200,.45);white-space:nowrap}
+#deathCard .res-xp.wait .rx-gain::before{content:"";display:inline-block;width:40px;height:8px;margin-top:9px;border-radius:99px;background:linear-gradient(90deg,rgba(111,240,192,.12),rgba(111,240,192,.55),rgba(111,240,192,.12));background-size:200% 100%;animation:res-shim 1s linear infinite}
+#deathCard .res-xp.later .rx-gain{align-self:center;min-height:0;font:700 10px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim);text-shadow:none}
+#deathCard .rx-bar{position:relative;height:10px;border-radius:99px;background:rgba(0,0,0,.5);box-shadow:inset 0 1px 3px rgba(0,0,0,.7),0 1px 0 rgba(255,255,255,.06);overflow:hidden}
+#deathCard .rx-bar i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:inherit;background:linear-gradient(90deg,#2f9fc4,var(--xp1) 30%,var(--xp2));box-shadow:0 0 14px rgba(95,224,200,.55)}
+#deathCard .rx-bar i::after{content:"";position:absolute;inset:0 0 45% 0;border-radius:inherit;background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,0))}
+#deathCard .rx-parts{display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0;list-style:none}
+#deathCard .rx-parts:empty{display:none}
+#deathCard .rx-parts li{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px 0 8px;border-radius:999px;font:600 11.5px/1 var(--display);color:var(--muted);background:rgba(255,255,255,.045);border:1px solid rgba(160,225,215,.12);white-space:nowrap;opacity:0;transform:translateY(5px)}
+#deathCard .rx-parts li b{font:700 11.5px/1 var(--mono);color:var(--ink);font-variant-numeric:tabular-nums}
+#deathCard .rx-parts svg{width:13px;height:13px;flex:none;fill:none;stroke:var(--xp2);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+#deathCard .rx-parts .rx-win{color:#ffd77a;border-color:rgba(242,193,78,.35);background:rgba(242,193,78,.08)}#deathCard .rx-parts .rx-win svg{stroke:#ffd36b}
+#deathCard .res-xp.go .rx-parts li{opacity:1;transform:none;transition:opacity .3s,transform .4s cubic-bezier(.2,1.4,.4,1);transition-delay:calc(var(--i) * .12s)}
+/* level up: the card lights gold, a tag pops on its edge, the badge bumps and throws a ring and sparks */
+#deathCard .rx-up{position:absolute;top:-8px;right:14px;display:none;align-items:center;gap:5px;padding:5px 10px;border-radius:999px;font:800 10px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:#2a1a00;background:linear-gradient(180deg,#fff0b8,#f2b134);box-shadow:0 0 18px rgba(242,177,52,.6),inset 0 1px 0 rgba(255,255,255,.6)}
+#deathCard .rx-up::before{content:"";width:9px;height:9px;background:currentColor;clip-path:polygon(50% 0,100% 55%,68% 55%,68% 100%,32% 100%,32% 55%,0 55%)}
+#deathCard .res-xp.lvup{border-color:rgba(255,215,120,.65);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 0 0 1px rgba(242,193,78,.22),0 0 34px rgba(242,177,52,.28),0 14px 34px rgba(0,0,0,.34)}
+#deathCard .res-xp.lvup .rx-up{display:inline-flex;animation:rx-pop .55s cubic-bezier(.2,1.8,.4,1)}
+#deathCard .res-xp.lvup .rx-badge{animation:res-bump .6s cubic-bezier(.2,1.6,.4,1)}
+#deathCard .res-xp.lvup .rx-badge::after{content:"";position:absolute;inset:-3px;border-radius:50%;border:2px solid rgba(255,224,140,.9);pointer-events:none;animation:rx-ring .8s ease-out both}
+#deathCard .res-xp.lvup .rx-t b,#deathCard .res-xp.lvup .rx-gain{color:#ffe08a;text-shadow:0 0 18px rgba(242,177,52,.5)}
+#deathCard .res-xp.lvup .rx-bar i{animation:rx-flash .7s ease-out}
+#deathCard .rx-spark{position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:#fff3c4;box-shadow:0 0 8px #ffd36b;pointer-events:none;animation:rx-spark var(--t) cubic-bezier(.15,.7,.3,1) both}
+@keyframes rx-pop{0%{opacity:0;transform:scale(.3)}100%{opacity:1;transform:none}}
+@keyframes rx-ring{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(2.1)}}
+@keyframes rx-flash{0%{filter:brightness(2.2) saturate(.3)}100%{filter:none}}
+@keyframes rx-spark{0%{opacity:1;transform:rotate(var(--a)) translateX(10px) scale(1)}100%{opacity:0;transform:rotate(var(--a)) translateX(var(--d)) scale(.3)}}
 /* mass chart (unranked runs, in place of rating and ATP) */
 #deathCard .res-chart{grid-column:1/-1;height:clamp(92px,24vh,150px);padding:11px 12px 6px;display:grid;grid-template-rows:auto minmax(0,1fr);gap:2px}
 #deathCard .res-lbl,#deathCard .rs>span{display:flex;align-items:center;gap:6px;font:700 10px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
@@ -1559,7 +1619,7 @@ body:not(.playing) #tip{display:none}
 #deathCard .res-tags,#deathCard #deathWhy,#deathCard #dAch,#deathCard .res-top>*,#deathCard .rs,#deathCard .res-actions{animation:res-up .5s cubic-bezier(.2,.9,.25,1) both}
 #deathCard .res-place{animation:res-pop .65s cubic-bezier(.2,1.35,.35,1) .06s both}
 #deathCard #deathWhy{animation-delay:.16s}#deathCard #dAch{animation-delay:.22s}
-#deathCard .res-top>*{animation-delay:.18s}#deathCard .res-top>#dEarn{animation-delay:.24s}
+#deathCard .res-top>*{animation-delay:.18s}#deathCard .res-top>#dEarn{animation-delay:.24s}#deathCard .res-top>#dXp{animation-delay:.3s}
 #deathCard .rs{animation-delay:.28s}#deathCard .rs+.rs{animation-delay:.33s}#deathCard .rs+.rs+.rs{animation-delay:.38s}
 #deathCard .res-actions{animation-delay:.42s}
 @keyframes res-up{from{opacity:0;transform:translateY(14px)}}
@@ -1579,6 +1639,7 @@ body:not(.playing) #tip{display:none}
   #deathCard .res-side{gap:8px}#deathCard .res-top,#deathCard .res-stats,#deathCard .res-actions{gap:8px}
   #deathCard #dRank{padding:10px 14px 12px;gap:7px}
   #deathCard .res-atp{padding:9px 6px}
+  #deathCard .res-xp{padding:8px 14px 9px;gap:7px}#deathCard .rx-badge{width:32px;height:32px;border-width:2px}#deathCard .rx-badge b{font-size:14px}#deathCard .rx-gain{font-size:21px;min-height:21px}#deathCard .rx-bar{height:8px}#deathCard .rx-parts li{height:22px}
   #deathCard .rs{padding:10px 12px 11px;gap:6px}
   #deathCard .res-lobby,#deathCard .res-play{height:54px}
   #deathCard .res-actions{margin-top:2px}
@@ -1606,6 +1667,8 @@ body:not(.playing) #tip{display:none}
   #deathCard .rr-delta{height:36px;font-size:19px;padding:0 15px}#deathCard .rr-bar{height:12px}
   #deathCard .res-atp{width:168px}#deathCard .coin{width:48px;height:48px}#deathCard .coin::after{inset:11px}#deathCard .ra-n{font-size:38px}#deathCard .ra-l{font-size:11.5px}
   #deathCard .res-chart{height:190px}
+  #deathCard .res-xp{padding:16px 22px 18px;gap:12px}#deathCard .rx-badge{width:50px;height:50px}#deathCard .rx-badge b{font-size:21px}#deathCard .rx-t b{font-size:13px}#deathCard .rx-of{font-size:12px}
+  #deathCard .rx-gain{font-size:34px}#deathCard .rx-bar{height:12px}#deathCard .rx-parts li{height:30px;font-size:13px;padding:0 12px 0 10px}#deathCard .rx-parts li b{font-size:13px}
   #deathCard .rs{padding:16px 18px 17px;gap:9px}#deathCard .rs b{font-size:38px}#deathCard .res-lbl,#deathCard .rs>span{font-size:11.5px}#deathCard .rs svg{width:16px;height:16px}
   #deathCard .res-lobby,#deathCard .res-play{height:66px;border-radius:20px}#deathCard .res-play{font-size:23px}#deathCard .res-lobby{font-size:18px;padding:0 28px 0 22px}
 }
@@ -2065,7 +2128,8 @@ body:not(.playing) #toasts .toast .tt{display:contents}body:not(.playing) #toast
       <button type="button" class="hero-cell" id="avatarBtn" aria-label="Change your skin"><canvas id="avatarCv" width="320" height="320" aria-hidden="true"></canvas><span class="hero-edit" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M19.5 3.5a2.1 2.1 0 0 1 3 3L12 17l-3-3z"/><path d="M9 14c-2.2 0-4 1.7-4 3.9 0 1.3-.8 2.2-2.5 2.6 1.2.9 2.8 1.5 4.5 1.5 3.3 0 5-2 5-5"/></svg></span></button>
       <div class="hero-id">
         <label class="lb-name"><input id="nameIn" type="text" maxlength="16" placeholder="Unnamed cell" autocomplete="off" spellcheck="false" enterkeyhint="go" aria-label="Your name"><span class="lb-measure" id="nameMeasure" aria-hidden="true"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg></label>
-        <button type="button" class="hero-rank" id="rankChip" aria-label="Your rank"><span class="ht"><b class="tier" id="heroTier">Silver</b><span id="heroRating">1000</span></span><span class="next" id="rankNext"></span><span class="tierbar" aria-hidden="true"><i id="tierFill"></i></span></button>
+        <div class="hero-tags"><button type="button" class="hero-lv" id="lvChip" aria-label="Your level" hidden><span class="ht"><b class="lv-l">Level</b><span id="heroLv">1</span></span><span class="xpbar" aria-hidden="true"><i id="heroXpFill"></i></span></button>
+        <button type="button" class="hero-rank" id="rankChip" aria-label="Your rank"><span class="ht"><b class="tier" id="heroTier">Silver</b><span id="heroRating">1000</span></span><span class="next" id="rankNext"></span><span class="tierbar" aria-hidden="true"><i id="tierFill"></i></span></button></div>
       </div>
     </section>
     <section class="lb-play" id="lbPlay" data-mode="ranked" data-net="wait" data-k="normal">
@@ -2154,6 +2218,7 @@ body:not(.playing) #toasts .toast .tt{display:contents}body:not(.playing) #toast
         <span class="pf-rk"><span class="tier" id="pTierTxt">Silver</span><b id="pRating">1000</b></span>
       </div>
       <div class="pf-prog" id="pProg"><div class="pf-track" aria-hidden="true"><span class="pf-mcw" id="pCurMc"></span><div class="pf-bar"><i id="pFill"></i></div><span class="pf-mcw nx" id="pNextMc"></span></div><span id="pNext"></span></div>
+      <div class="pf-lv" id="pLv" hidden><span class="lv-badge" aria-hidden="true"><b id="pLvN">1</b></span><div class="pf-lvm"><div class="pf-lvt"><b>Level <span id="pLvN2">1</span></b><span id="pLvXp"></span></div><div class="pf-bar pf-xpbar" aria-hidden="true"><i id="pLvFill"></i></div><span id="pLvNext"></span></div></div>
     </section>
     <div class="pf-side">
       <div class="pf-stats">
@@ -2245,6 +2310,7 @@ body:not(.playing) #toasts .toast .tt{display:contents}body:not(.playing) #toast
             <dt class="hot">Hunters</dt><dd>Burst any cell · 3 blobs kill one</dd>
             <dt>Crown</dt><dd>The leader pays a bounty</dd>
             <dt>ATP</dt><dd>25 for a win, down to 1 for 30th</dd>
+            <dt>XP</dt><dd>Time alive + placing · ranked only</dd>
           </dl>
           <p class="achline" id="achLine"></p>
         </div></details>
@@ -2309,6 +2375,11 @@ body:not(.playing) #toasts .toast .tt{display:contents}body:not(.playing) #toast
           <div class="rr-track"><div class="rr-bar"><i></i></div><i class="rr-emb rr-to tier" aria-hidden="true"></i></div>
         </div>
         <div class="res-card res-atp" id="dEarn" hidden><i class="coin" aria-hidden="true"></i><b class="ra-n"></b><span class="ra-l">ATP</span></div>
+        <div class="res-card res-xp" id="dXp" hidden>
+          <div class="rx-head"><span class="lv-badge rx-badge" aria-hidden="true"><b class="rx-n">1</b></span><span class="rx-t"><b>Level <span class="rx-ln">1</span></b><small class="rx-of"></small></span><span class="rx-up">Level up</span><b class="rx-gain"></b></div>
+          <div class="rx-bar" aria-hidden="true"><i></i></div>
+          <ul class="rx-parts"></ul>
+        </div>
         <div class="res-card res-chart" id="resChart" hidden><span class="res-lbl">Mass</span><canvas id="dChart" aria-hidden="true"></canvas></div>
       </div>
       <div class="res-stats">
@@ -2799,8 +2870,15 @@ const saveSettings=()=>{try{localStorage.setItem('mitosis.settings',JSON.stringi
    "credit this purchase". A device secret in localStorage identifies the player — no sign-up. */
 const ATP_PACKS=[{id:'atp_500',atp:500,label:'Pouch'},{id:'atp_1500',atp:1500,label:'Flask',tag:'Popular'},{id:'atp_5000',atp:5000,label:'Culture',tag:'Best value'},{id:'atp_12000',atp:12000,label:'Bioreactor'},{id:'atp_150000',atp:150000,label:'Biosphere',tag:'Most ATP'}];
 const escH=s=>String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[ch]);
-let wallet={balance:0,earned:0,skins:[],online:false,playerId:null,rating:1000,tier:'Silver'};
-try{const w=JSON.parse(localStorage.getItem('mitosis.wallet')||'null');if(w&&typeof w==='object'){wallet.balance=w.balance|0;wallet.skins=Array.isArray(w.skins)?w.skins:[];}}catch(e){}
+let wallet={balance:0,earned:0,skins:[],online:false,playerId:null,rating:1000,tier:'Silver',xp:0,level:null};
+// XP and profile levels: the server's rules (economy.js XP) or this copy while offline. Going from level L to L+1 takes first + step*(L-1) XP.
+const XP_FB={perTenSec:2,timeCapSec:600,place:60,win:40,minOf:4,minSec:20,first:100,step:50};
+const xpRules=()=>{const x=wallet.catalog&&wallet.catalog.xp;return x&&x.first>0&&x.step>=0?x:XP_FB;};
+function lvlOf(xp){const R=xpRules();xp=Math.max(0,Math.floor(+xp||0));let level=1,at=0;
+  for(;level<5000&&at+R.first+R.step*(level-1)<=xp;level++)at+=R.first+R.step*(level-1);
+  return{xp,level,levelXp:xp-at,levelNeed:R.first+R.step*(level-1)};}
+const xpPct=l=>l.levelNeed>0?Math.max(0,Math.min(1,l.levelXp/l.levelNeed))*100:0;
+try{const w=JSON.parse(localStorage.getItem('mitosis.wallet')||'null');if(w&&typeof w==='object'){wallet.balance=w.balance|0;wallet.skins=Array.isArray(w.skins)?w.skins:[];if(typeof w.xp==='number')Object.assign(wallet,lvlOf(w.xp));}}catch(e){}
 let secret='';try{secret=localStorage.getItem('mitosis.secret')||'';}catch(e){}
 if(!/^[a-z0-9]{24,64}$/.test(secret)){secret='';const a=new Uint8Array(32);crypto.getRandomValues(a);for(const b of a)secret+=(b%36).toString(36);try{localStorage.setItem('mitosis.secret',secret);}catch(e){}}
 const ownsSkin=id=>id<SKIN_FREE||wallet.skins.includes(id);
@@ -2830,9 +2908,11 @@ async function api(path,body,auth=true){
 }
 function applyWallet(w){
   if(!w)return;wallet.balance=w.balance|0;wallet.earned=w.earned|0;if(Array.isArray(w.skins))wallet.skins=w.skins;wallet.playerId=w.playerId||wallet.playerId;wallet.online=true;
-  if(typeof w.rating==='number'){wallet.rating=w.rating;wallet.tier=w.tier||wallet.tier;}wallet.runs=w.runs|0;renderRank();renderProfile();
+  if(typeof w.rating==='number'){wallet.rating=w.rating;wallet.tier=w.tier||wallet.tier;}wallet.runs=w.runs|0;
+  if(typeof w.level==='number')Object.assign(wallet,{xp:w.xp|0,level:w.level,levelXp:w.levelXp|0,levelNeed:w.levelNeed|0});else wallet.level=null; // a server from before levels: no level shown
+  renderRank();renderProfile();
   if('account' in w){wallet.account=w.account||null;renderAccount();}
-  try{localStorage.setItem('mitosis.wallet',JSON.stringify({balance:wallet.balance,skins:wallet.skins}));}catch(e){}
+  try{localStorage.setItem('mitosis.wallet',JSON.stringify({balance:wallet.balance,skins:wallet.skins,xp:wallet.level!=null?wallet.xp:undefined}));}catch(e){}
   if(w.catalog){wallet.catalog=w.catalog;for(const s of w.catalog.skins||[]){const P=PREMIUM.find(x=>x.id===s.id);if(P&&s.price>0)P.price=s.price;}for(const p of w.catalog.packs||[]){const K=ATP_PACKS.find(x=>x.id===p.id);if(K&&p.atp>0)K.atp=p.atp;}renderRank();}
   if(settings.skin>=SKIN_FREE&&!ownsSkin(settings.skin)){settings.skin=0;saveSettings();}
   drawAvatar();
@@ -2851,7 +2931,7 @@ async function econRunEnd(){
   if(!human)return;const unranked=local==='practice'?'practice':isNearby()?'nearby':'';resPrep(unranked);if(unranked)return;
   const s=human.stats,rep={survived:Math.max(0,T-s.born),eaten:s.eaten|0,peak:Math.round(s.peak),bestRank:s.bestRank||999,place:s.place|0,of:s.of|0,life:Math.max(0,livesUsed()-1),show:1};
   rep.name=human.name;const rid=runId||(runPromise?await runPromise:null);runId=null;runPromise=null;
-  if(!rid){showEarn(wallet.online?null:{k:'offline'});return;}
+  if(!rid){showEarn(wallet.online?null:{k:'offline'});showXp(null);return;}
   rep.runId=rid;const a=loadPending();a.push(rep);savePending(a);flushRuns();
 }
 /* ---- results screen (#deathCard): placement, rating count-up, ATP reward, run stats and the play-again button ---- */
@@ -2864,9 +2944,10 @@ const RES_ICO={
   play:'<path d="M8 5.6v12.8a1 1 0 0 0 1.52.85l10.3-6.4a1 1 0 0 0 0-1.7L9.52 4.75A1 1 0 0 0 8 5.6z" fill="currentColor" stroke="none"/>',
   respawn:'<path d="M4.6 12a7.4 7.4 0 1 0 2.2-5.25"/><path d="M4.6 4.2v3.9h3.9"/>',
   find:'<circle cx="11" cy="11" r="6.4"/><path d="M20 20l-4.4-4.4"/>'};
-let resS={mode:'',earn:null,rank:null,at:0,t:0,t2:0}; // at: when the screen appeared, so the count-ups start once it is in view
+let resS={mode:'',earn:null,rank:null,xp:null,at:0,t:0,t2:0,t3:0}; // at: when the screen appeared, so the count-ups start once it is in view
 function resPrep(unranked){ // a run just ended (econRunEnd): reset the rating and reward panels for it. unranked: '' | 'practice' | 'nearby'
-  clearTimeout(resS.t);clearTimeout(resS.t2);cancelAnimationFrame(rankAnim);resS={mode:unranked,earn:null,rank:null,at:0,t:0,t2:0};
+  clearTimeout(resS.t);clearTimeout(resS.t2);clearTimeout(resS.t3);cancelAnimationFrame(rankAnim);cancelAnimationFrame(xpAnim);resS={mode:unranked,earn:null,rank:null,xp:null,at:0,t:0,t2:0,t3:0};
+  xpPrep(!unranked);
   const el=$('dRank');el.hidden=!!unranked;el.classList.remove('promo','dn');const chip=el.querySelector('.rr-delta');chip.className='rr-delta';chip.textContent='';el.querySelector('.rr-next').textContent='';el.querySelector('.rr-num').classList.remove('bump','go');
   rrSet(wallet.rating,tierAtRating(wallet.rating));showEarn(unranked?null:{k:'wait'});
 }
@@ -2884,6 +2965,36 @@ function resPlayEarn(){const o=resS.earn;if(!o||o.k!=='atp')return;clearTimeout(
   resS.t2=setTimeout(()=>{const el=$('dEarn'),n=el.querySelector('.ra-n');if(resS.earn!==o)return;el.classList.add('got');if(RM){n.textContent='+'+o.n;return;}
     const t0=performance.now(),tick=now=>{const k=clamp((now-t0)/700,0,1);n.textContent='+'+Math.round(o.n*(1-Math.pow(1-k,3)));if(k<1&&resS.earn===o)requestAnimationFrame(tick);};requestAnimationFrame(tick);},
     Math.max(0,resS.at+520-performance.now()));}
+/* the XP card: level badge, XP counting in, the bar filling (and wrapping at each level-up), and where the XP came from.
+   Practice, Nearby and lives the server never heard of earn none, so the card stays hidden for them, as it does on a server without levels. */
+let xpAnim=0;
+const RX_ICO={time:'<circle cx="12" cy="13.5" r="7.5"/><path d="M12 10v3.5l2.3 1.6M9.5 3h5"/>',place:'<path d="M5 20V10h4v10M10 20V5h4v15M15 20v-7h4v7"/>',win:'<path d="M4.5 18L3 8.5l5 4L12 5.5l4 7 5-4L19.5 18z"/>'};
+function xpSet(l){const el=$('dXp');el.querySelector('.rx-n').textContent=el.querySelector('.rx-ln').textContent=l.level;
+  el.querySelector('.rx-of').textContent=`${l.levelXp.toLocaleString()} / ${l.levelNeed.toLocaleString()} XP`;el.querySelector('.rx-bar i').style.width=xpPct(l).toFixed(1)+'%';}
+function xpPrep(on){const el=$('dXp');el.hidden=!on||wallet.level==null;el.className='res-card res-xp wait';el.querySelector('.rx-gain').textContent='';el.querySelector('.rx-parts').innerHTML='';
+  for(const x of el.querySelectorAll('.rx-spark'))x.remove();if(!el.hidden)xpSet(wallet);}
+function showXp(w){ // w: the server's run/end answer | {later:1} (queued until the server is reachable) | null (no XP for this life)
+  const el=$('dXp');resS.xp=w||null;
+  if(w&&w.later){el.hidden=wallet.level==null;el.className='res-card res-xp later';el.querySelector('.rx-gain').textContent='Pending';return;}
+  if(!w||typeof w.xpGained!=='number'||typeof w.level!=='number'){el.hidden=true;return;}
+  el.hidden=false;el.className='res-card res-xp';el.querySelector('.rx-gain').textContent='+0 XP';
+  const P=w.xpParts,parts=P?[['time','Time',P.time|0],['place','Placing',P.place|0],['win','Win',P.win|0]].filter(p=>p[0]!=='win'||p[2]>0):[];
+  el.querySelector('.rx-parts').innerHTML=parts.map(([k,n,v],i)=>`<li class="rx-${k}" style="--i:${i}"><svg viewBox="0 0 24 24" aria-hidden="true">${RX_ICO[k]}</svg>${n}<b>+${v.toLocaleString()}</b></li>`).join('');
+  xpSet(lvlOf(Math.max(0,w.xp-w.xpGained)));if(resS.at)resPlayXp();}
+function xpLevelUp(el){ // celebrate: the card lights up, the badge pops with a ring and sparks, a tag says so
+  el.classList.remove('lvup');void el.offsetWidth;el.classList.add('lvup');sfx('ach');Native.haptic('success');if(RM)return;
+  const b=el.querySelector('.rx-badge');for(const x of b.querySelectorAll('.rx-spark'))x.remove();
+  for(let i=0;i<10;i++){const p=document.createElement('i');p.className='rx-spark';p.style.cssText=`--a:${i*36+rand(-10,10)}deg;--d:${Math.round(rand(30,46))}px;--t:${rand(.55,.85).toFixed(2)}s`;b.appendChild(p);}
+  setTimeout(()=>{for(const x of b.querySelectorAll('.rx-spark'))x.remove();},1000);}
+function resPlayXp(){const w=resS.xp,el=$('dXp');if(!w||w.later||el.hidden||typeof w.xpGained!=='number')return;clearTimeout(resS.t3);
+  resS.t3=setTimeout(()=>{if(resS.xp!==w)return;const gain=w.xpGained|0,from=Math.max(0,w.xp-gain),g=el.querySelector('.rx-gain');el.classList.add('go');
+    const done=()=>{xpSet(w);g.textContent='+'+gain.toLocaleString()+' XP';};
+    cancelAnimationFrame(xpAnim);if(RM||!gain){done();if(w.levelUp>0)xpLevelUp(el);return;}
+    const t0=performance.now(),dur=Math.min(2000,800+gain*7);let lv=lvlOf(from).level;
+    const tick=now=>{if(resS.xp!==w)return;const k=clamp((now-t0)/dur,0,1),e=1-Math.pow(1-k,3),l=lvlOf(from+Math.round(gain*e));
+      xpSet(l);g.textContent='+'+Math.round(gain*e).toLocaleString()+' XP';if(l.level>lv){lv=l.level;xpLevelUp(el);}
+      if(k<1)xpAnim=requestAnimationFrame(tick);else done();};
+    xpAnim=requestAnimationFrame(tick);},Math.max(0,resS.at+900-performance.now()));}
 function tierProgress(){ // where this rating sits inside its tier, for the progress bars
   const names=(wallet.catalog&&wallet.catalog.tiers)||[],at=(wallet.catalog&&wallet.catalog.tierAt)||[],i=names.indexOf(wallet.tier);
   if(i<0||at.length!==names.length)return{text:'',pct:0};
@@ -2918,7 +3029,11 @@ function renderTierLegend(){const el=$('tierLegend'),me=$('rkMe');if(!el||!me)re
   el.innerHTML=T.tiers.map((n,k)=>`<li class="${k<i?'done':k===i?'cur':'up'}" style="--tc:${tierCol(n)}">${tierEmblem(n)}<b>${escH(n)}</b><span>${k?T.tierAt[k-1]:'<'+T.tierAt[0]}</span></li>`).join('');}
 function renderMe(){const n=$('meName');if(n)n.textContent=cleanName($('nameIn').value)||settings.name||'Unnamed cell';const a=$('lobbyAtp');if(a)a.textContent=(wallet.balance|0).toLocaleString();
   if(!renderMe.raf)renderMe.raf=requestAnimationFrame(()=>{renderMe.raf=0;drawAvatar($('meCv'));});} // next frame: the wallet can arrive before the game clock exists, and animated skins read it
-function renderRank(){renderTierLegend();renderMe();$('rankVal').textContent=wallet.rating;{const ht=$('heroTier');if(ht){ht.textContent=wallet.tier;ht.dataset.tier=wallet.tier;$('heroRating').textContent=wallet.rating;}}$('rankTier').textContent=wallet.tier;$('rankTier').dataset.tier=wallet.tier;
+function renderLevel(){ // the lobby's level chip, beside the rank chip
+  const c=$('lvChip');if(!c)return;c.hidden=wallet.level==null;if(c.hidden)return;
+  $('heroLv').textContent=wallet.level;$('heroXpFill').style.width=xpPct(wallet).toFixed(1)+'%';
+  c.setAttribute('aria-label',`Level ${wallet.level}, ${wallet.levelXp} of ${wallet.levelNeed} XP to the next`);}
+function renderRank(){renderTierLegend();renderMe();renderLevel();$('rankVal').textContent=wallet.rating;{const ht=$('heroTier');if(ht){ht.textContent=wallet.tier;ht.dataset.tier=wallet.tier;$('heroRating').textContent=wallet.rating;}}$('rankTier').textContent=wallet.tier;$('rankTier').dataset.tier=wallet.tier;
   const p=tierProgress(),nx=$('rankNext'),fill=$('tierFill');if(nx)nx.textContent=p.text;if(fill)fill.style.width=p.pct+'%';
 }
 function tierAtRating(r){ // tier name and progress through it for any rating, from the server's tier table
@@ -3013,11 +3128,13 @@ function renderProfileNow(){renderRuns();renderAch();renderInv();
   const t=wallet.tier,p=tierProgress(),names=(wallet.catalog&&wallet.catalog.tiers)||[],nx=names[names.indexOf(t)+1]||'';
   $('profileCard').dataset.tier=t;$('pTierTxt').textContent=t;$('pTierTxt').dataset.tier=t;$('pCrest').innerHTML=PF_GLYPH[t]||PF_GLYPH.Silver;$('pRating').textContent=wallet.rating;
   $('pCurMc').innerHTML=miniCrest(t);$('pNextMc').innerHTML=nx?miniCrest(nx):'';
-  const nums=[[$('pAtp'),wallet.balance],[$('pEarned'),wallet.earned],[$('pRuns'),wallet.runs],[$('pBest'),bestMass()]],fill=$('pFill'),intro=pfIntro&&!RM;pfIntro=false;cancelAnimationFrame(pfCount);
+  const nums=[[$('pAtp'),wallet.balance],[$('pEarned'),wallet.earned],[$('pRuns'),wallet.runs],[$('pBest'),bestMass()]],fill=$('pFill'),xf=$('pLvFill'),intro=pfIntro&&!RM;pfIntro=false;cancelAnimationFrame(pfCount);
   for(const[el,v]of nums)el.textContent=fmtStat(intro?0:v);
   $('pProg').hidden=!p.text;$('pNext').textContent=p.text;
-  if(intro){fill.style.transition='none';fill.style.width='0%';void fill.offsetWidth;fill.style.transition='';} // opening the page: the bar fills and the numbers count up
-  fill.style.width=p.pct+'%';drawAvatar($('profCv'));
+  const lv=wallet.level!=null;$('pLv').hidden=!lv;
+  if(lv){$('pLvN').textContent=$('pLvN2').textContent=wallet.level;$('pLvXp').textContent=`${fmtStat(wallet.levelXp)} / ${fmtStat(wallet.levelNeed)} XP`;$('pLvNext').textContent=`${fmtStat(wallet.levelNeed-wallet.levelXp)} XP to level ${wallet.level+1}`;}
+  if(intro)for(const f of[fill,xf]){f.style.transition='none';f.style.width='0%';void f.offsetWidth;f.style.transition='';} // opening the page: the bars fill and the numbers count up
+  fill.style.width=p.pct+'%';xf.style.width=(lv?xpPct(wallet):0).toFixed(1)+'%';drawAvatar($('profCv'));
   if(intro){const t0=performance.now(),tick=now=>{const k=clamp((now-t0)/700,0,1),e=1-Math.pow(1-k,3);for(const[el,v]of nums)el.textContent=fmtStat(Math.round((+v||0)*e));if(k<1)pfCount=requestAnimationFrame(tick);};pfCount=requestAnimationFrame(tick);}}
 $('profBtn').addEventListener('click',()=>{pfIntro=true;renderProfile();renderAccount();showCard('profileCard');});
 $('profShop').addEventListener('click',()=>openStore());
@@ -3048,7 +3165,7 @@ function resFill(kind,pb,sub){ // kind: dead | arena (dissolved by the closing a
   $('dPeak').textContent=Math.round(s.peak).toLocaleString();$('dPeak').dataset.v=Math.round(s.peak);$('dBest').hidden=!pb;$('dEaten').textContent=s.eaten|0;$('dEaten').dataset.v=s.eaten|0;$('dTime').textContent=fmtT(T-s.born);
   $('resChart').hidden=!un;
 }
-function resShow(hist){showCard('deathCard');resS.at=performance.now();syncResPlay();if(!$('resChart').hidden)drawChart(hist);resPlayRank();resPlayEarn();
+function resShow(hist){showCard('deathCard');resS.at=performance.now();syncResPlay();if(!$('resChart').hidden)drawChart(hist);resPlayRank();resPlayEarn();resPlayXp();
   for(const x of $('deathCard').querySelectorAll('.res-fx'))x.remove();if(RM)return;
   for(const [el,d] of [[$('dPeak'),420],[$('dEaten'),500]]){const to=+el.dataset.v||0,t0=performance.now()+d;if(!to)continue; // stats count up as their tiles land
     const tick=now=>{const k=clamp((now-t0)/700,0,1);el.textContent=Math.round(to*(1-Math.pow(1-k,3))).toLocaleString();if(k<1&&!$('deathCard').hidden)requestAnimationFrame(tick);else el.textContent=to.toLocaleString();};requestAnimationFrame(tick);}
@@ -3083,8 +3200,8 @@ let flushing=false;
 async function flushRuns(){ // report finished runs; keep them queued while the server is unreachable
   if(flushing)return;flushing=true;
   try{let a=loadPending();while(a.length){const rep=a[0];
-    try{const w=await api('run/end',rep);applyWallet(w);if(rep.show){const R=(wallet.catalog&&wallet.catalog.rules)||{};showEarn(w.payout?{k:'atp',n:w.payout}:{k:'none',why:rep.survived<(R.minSec||20)?`Survive ${R.minSec||20}s`:`Top ${(R.byRank||[[30]]).slice(-1)[0][0]} only`});showRank(w);}}
-    catch(e){if(!e.status||e.status>=500){if(rep.show)showEarn({k:'later'});break;}}
+    try{const w=await api('run/end',rep);applyWallet(w);if(rep.show){const R=(wallet.catalog&&wallet.catalog.rules)||{};showEarn(w.payout?{k:'atp',n:w.payout}:{k:'none',why:rep.survived<(R.minSec||20)?`Survive ${R.minSec||20}s`:`Top ${(R.byRank||[[30]]).slice(-1)[0][0]} only`});showRank(w);showXp(w);}}
+    catch(e){if(!e.status||e.status>=500){if(rep.show){showEarn({k:'later'});showXp({later:1});}break;}}
     a.shift();savePending(a);}}
   finally{flushing=false;}
 }
@@ -3303,7 +3420,7 @@ async function signOut(){
   // forget this device's secret: the account keeps its wallet, this device starts a fresh one
   secret='';const a=new Uint8Array(32);crypto.getRandomValues(a);for(const b of a)secret+=(b%36).toString(36);
   try{localStorage.setItem('mitosis.secret',secret);localStorage.removeItem('mitosis.wallet');}catch(e){}
-  wallet={balance:0,earned:0,skins:[],online:false,playerId:null,rating:1000,tier:'Silver',account:null};
+  wallet={balance:0,earned:0,skins:[],online:false,playerId:null,rating:1000,tier:'Silver',xp:0,level:null,account:null};
   if(settings.skin>=SKIN_FREE){settings.skin=0;saveSettings();}
   renderSkins();renderRank();renderAccount();toast('Account','Signed out','This device now has a fresh wallet.');econInit();
 }
@@ -4906,6 +5023,7 @@ $('modeSeg').addEventListener('click',e=>{const b=e.target.closest('.lb-mpick');
 $('lbToCasual').addEventListener('click',()=>{setPlayMode('casual');Native.haptic('light');});
 $('lbSkill').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.botSkill=b.dataset.k;saveSettings();syncSkill();setPlayMode('casual');});
 $('rankChip').addEventListener('click',()=>$('rankBtn').click());
+$('lvChip').addEventListener('click',()=>$('profBtn').click());
 $('nameIn').addEventListener('input',fitName);
 // Enter on the lobby (or Go on the name keyboard) presses Play for the chosen mode; Escape closes the mode sheet
 addEventListener('keydown',e=>{if($('startCard').hidden||mode==='play')return;const t=e.target,tag=t&&t.tagName,sh=!$('modeSheet').hidden;
