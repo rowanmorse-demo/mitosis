@@ -231,6 +231,9 @@ All endpoints take and return JSON. Authenticated ones need `Authorization: Bear
 | `POST /api/auth/google` `{idToken, nonce}` | Sign in with Google, same behaviour |
 | `POST /api/auth/signout` | Detach this device from the account (the page then starts a fresh secret) |
 | `POST /api/account/delete` | `{confirm:'DELETE'}`: delete the player and everything linked (skins, runs, sign-ins, devices); purchase receipts stay as anonymous ids so they cannot be replayed. In the game: Profile › Account › Delete account, or Settings › Account & data |
+| `POST /api/social/me` `{name, status}` | Friends: your friend code, friends with online status (`menu`, `arena`, `practice`, `nearby`, `spectating`, `offline`), friend requests, your party and party invites. The games call it every few seconds in the menus and every 30 s in a game, which is what makes them show as online |
+| `POST /api/social/add` · `accept` · `remove` `{code}` | Send a friend request by friend code (or accept theirs if they already asked); accept one; unfriend, decline or cancel |
+| `POST /api/social/party/invite` `{code}` · `join` · `decline` `{party}` · `leave` · `go` | Parties of two friends: invite, join (invites last 5 minutes), leave (ends the party), and `go` when one presses Play so the other follows. Parties live in memory; friend lists in `DATA_DIR/social.json` |
 | `POST /api/crash` `{platform, kind, app, os, device, report}` | Crash and hang reports from the apps; logged (`!!` lines) and kept in `DATA_DIR/crashes/` |
 | `POST /api/log` `{who, text}` | Client diagnostics: frame stalls, page errors, autopilot events; printed in the server log |
 | `POST /api/net` | Connection quality from the game: ping samples, lost pings, frame rate, time zone (anonymous) |
