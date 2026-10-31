@@ -2238,9 +2238,9 @@ body:not(.playing) #toasts .toast .tt{display:contents}body:not(.playing) #toast
           <div class="seg" id="diff"><button type="button" data-d="calm">Calm</button><button type="button" data-d="standard">Normal</button><button type="button" data-d="hostile">Hostile</button></div></div>
         <div class="srow wide"><i class="si si-violet"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="8" width="15" height="11.5" rx="3.5"/><path d="M12 8V5"/><circle cx="12" cy="3.6" r="1.2"/><path d="M9.3 13.2v.6M14.7 13.2v.6"/></svg></i><span class="sl">Bots</span>
           <div class="seg five" id="skillSeg"><button type="button" data-k="easy">Easy</button><button type="button" data-k="normal">Normal</button><button type="button" data-k="hard">Hard</button><button type="button" data-k="expert">Expert</button><button type="button" data-k="master">Master</button></div></div>
-        <div class="srow tg" title="With a ping over 100 ms, Play in Ranked starts a bot game unless this is on"><i class="si si-amber"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 9a14 14 0 0 1 19 0M5.5 12.3a9.5 9.5 0 0 1 13 0M8.6 15.6a5 5 0 0 1 6.8 0"/><circle cx="12" cy="19" r="1.3" fill="currentColor" stroke="none"/></svg></i><span class="sl">Allow high ping</span>
-          <div class="seg two sw2" id="pingSeg"><button type="button" data-hp="0">Off</button><button type="button" data-hp="1">On</button></div></div>
-      </div><p class="sg-foot">With a ping over 100 ms, Ranked plays bots instead, unless <b>Allow high ping</b> is on or you're in a party.</p></section>
+        <div class="srow wide" title="With a ping over this, Play in Ranked starts a bot game"><i class="si si-amber"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 9a14 14 0 0 1 19 0M5.5 12.3a9.5 9.5 0 0 1 13 0M8.6 15.6a5 5 0 0 1 6.8 0"/><circle cx="12" cy="19" r="1.3" fill="currentColor" stroke="none"/></svg></i><span class="sl">Max ping</span>
+          <div class="seg four" id="pingSeg"><button type="button" data-ms="100">100 ms</button><button type="button" data-ms="150">150 ms</button><button type="button" data-ms="250">250 ms</button><button type="button" data-ms="0">Any</button></div></div>
+      </div><p class="sg-foot">With a ping over your <b>Max ping</b>, Ranked plays bots instead, unless you're in a party.</p></section>
       <section class="sg touch-only"><h3 class="sg-h">Controls</h3><div class="sg-list">
         <div class="srow"><i class="si si-blue"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7.5" r="3.5"/><path d="M12 11v4.5"/><rect x="4" y="15.5" width="16" height="5" rx="2"/></svg></i><span class="sl">Joystick</span>
           <div class="seg two" id="joySeg"><button type="button" data-j="fixed">Fixed</button><button type="button" data-j="float">Floating</button></div></div>
@@ -4854,7 +4854,7 @@ function netUI(){
   else if(N.state!=='live'||!myPeer)txt='Connecting…';
   else if(others<=0){txt='Online';live=true;}
   else{txt=`${others+1} online`;live=true;}
-  if(live&&N&&N.mode!=='nearby'&&N.rtt!=null)txt+=` · ${Math.round(N.rtt)} ms`;
+  if(live&&N&&N.mode!=='nearby'&&N.rtt!=null)txt+=` · ${Math.round(N.rtt)} ms`+(pingOver()?` · over your ${settings.maxPing|0} ms limit`:'');
   line.classList.toggle('live',live);const sp=line.querySelector('span');if(sp.textContent!==txt)sp.textContent=txt;
   const rl=$('roundLine');if(rl){let rt='';if(live&&!local&&(round.synced||isHost)&&!round.over&&roundT()>=0&&roundT()<ROUND_SEC){const left=ROUND_SEC-roundT();rt=`Round · ${Math.floor(left/60)}:${String(Math.floor(left%60)).padStart(2,'0')} left · ${roundOpen()?'spawns open':'spawns closed'}`;}rl.hidden=!rt;if(rl.textContent!==rt)rl.textContent=rt;}
   const row=$('inviteRow'),inp=$('inviteUrl'),help=$('inviteHelp');row.hidden=!N;
@@ -5153,6 +5153,10 @@ function showCard(id){
   shownCard=id;if(id)$('tip').classList.remove('show');if(id==='startCard')setTimeout(drawAvatar,0);if(id==='lookCard')setTimeout(()=>drawAvatar($('lookCv')),0);
   for(const c of['startCard','pauseCard','deathCard','storeCard','lookCard','rankCard','settingsCard','friendsCard','profileCard','introCard','deleteCard'])$(c).hidden=c!==id;$('overlay').hidden=!id;}
 const isOffline=()=>{const N=window.__mitosisNet;return !N||N.state==='offline';};
+// Settings › Max ping (100 ms unless changed; 0: any), used by pingTooHigh. It goes by the median of the last 5 pings once
+// there are 3 (the first one after loading runs long); an unknown ping never blocks.
+const pingNow=()=>{const N=window.__mitosisNet,r=N&&N.stats&&N.stats.rtts;return r&&r.length>=3?median(r.slice(-5)):null;};
+const pingOver=()=>{const N=window.__mitosisNet,L=settings.maxPing|0,p=pingNow();return L>0&&!!N&&N.mode!=='nearby'&&p!=null&&p>L;};
 function startGame(){
   if(nearMode()&&!nearGate())return; // Nearby: the host starts the match from the lobby, the others join it
   if(!local&&isOffline()){startLocal('practice');return;} // no connection: play the bots right away, unranked
@@ -5292,8 +5296,6 @@ function recStop(delay=0){if(recOn&&!recStopT)recStopT=setTimeout(()=>{recStopT=
 document.addEventListener('click',e=>{if(e.target.closest('.card button,.seg button,.lobby button,.res button'))Native.haptic('selection');});
 const perfSegEl=$('perfSeg'),syncPerf=()=>{[...perfSegEl.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.p==='1')===!!settings.perfHud)));$('perfHud').hidden=!settings.perfHud;};
 perfSegEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.perfHud=b.dataset.p==='1';saveSettings();syncPerf();});syncPerf();
-const pingSegEl=$('pingSeg'),syncPingSeg=()=>[...pingSegEl.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.hp==='1')===!!settings.highPing)));
-pingSegEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.highPing=b.dataset.hp==='1';saveSettings();syncPingSeg();});syncPingSeg();
 const joySegEl=$('joySeg'),handSegEl=$('handSeg'),syncControls=()=>{const fl=settings.joyMode==='float',lh=!!settings.lefty;document.body.classList.toggle('joy-float',fl);document.body.classList.toggle('lefty',lh);
   [...joySegEl.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.j==='float')===fl)));[...handSegEl.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.l==='1')===lh)));};
 joySegEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.joyMode=b.dataset.j==='float'?'float':'fixed';saveSettings();syncControls();});
@@ -5320,14 +5322,13 @@ function lobbyPlay(){
   if(lbMode==='casual'){startLocal('practice');return;}
   if(lbMode==='ranked'&&lbNet()!=='live'){syncPlay();return;} // ranked never starts without the server
   if(lbMode==='ranked'&&pingTooHigh()){
-    const ms=Math.round(window.__mitosisNet.rtt);startLocal('practice');
-    toast('Connection',`${ms} ms ping: playing bots`,'Online games need a ping under 100 ms. To play online anyway, turn on Allow high ping in Settings.');return;}
+    const ms=Math.round(pingNow());startLocal('practice');
+    toast('Connection',`${ms} ms ping: playing bots`,`Your max ping is ${settings.maxPing} ms. To play online anyway, raise Max ping in Settings.`);return;}
   if(local)leaveLocal();if(lbMode==='ranked')partyPlay();startGame();
 }
-// a laggy connection makes for a bad online game: over PING_MAX the lobby's Play starts bots instead, unless the player
-// allows high ping in Settings or is in a party (a party plays together whatever the ping)
-const PING_MAX=100;
-function pingTooHigh(){const N=window.__mitosisNet;return !settings.highPing&&!(soc&&soc.party)&&!!N&&N.rtt!=null&&N.rtt>PING_MAX;}
+// a laggy connection makes for a bad online game: over Settings › Max ping the lobby's Play starts bots instead, unless
+// the player is in a party (a party plays together whatever the ping)
+function pingTooHigh(){return pingOver()&&!(soc&&soc.party);}
 
 /* ---------- friends and parties (server: social.js) ----------
    The game checks in with /api/social/me every 4 s in the menus while in a party or on the Friends page, else every
@@ -5555,6 +5556,9 @@ $('nearSheet').addEventListener('click',e=>{if(e.target===e.currentTarget){e.cur
 addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('nearSheet').hidden){e.preventDefault();e.stopImmediatePropagation();$('nearSheet').hidden=true;}},true);
 const syncSkill=()=>{const k=SKILL[settings.botSkill]?settings.botSkill:'normal';const b=$('skillBtn');b.textContent=SKILL[k].label;b.dataset.k=k;[...$('skillSeg').children].forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.k===k)));};
 $('skillBtn').addEventListener('click',()=>{const i=SKILL_LIST.indexOf(settings.botSkill||'normal');settings.botSkill=SKILL_LIST[(i+1)%SKILL_LIST.length];saveSettings();syncSkill();toast('Bots',`${SKILL[settings.botSkill].label} bots`,'Used in practice and offline games');});
+if(settings.maxPing==null){settings.maxPing=settings.highPing?0:100;delete settings.highPing;saveSettings();} // was one Allow high ping switch
+{const seg=$('pingSeg'),sync=()=>[...seg.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.ms|0)===(settings.maxPing|0))));
+  seg.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.maxPing=b.dataset.ms|0;saveSettings();sync();});sync();}
 $('skillSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.botSkill=b.dataset.k;saveSettings();syncSkill();});syncSkill();
 $('resPlay').addEventListener('click',startGame);
 $('setup').addEventListener('click',()=>{leaveLocal();mode='attract';achLine();showCard('startCard');});
