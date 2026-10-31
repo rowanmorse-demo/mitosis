@@ -573,7 +573,173 @@ body:not(.playing) #tip{display:none}
 /* @ui:profile end */
 
 /* @ui:ranks-settings */
+/* both pages: one full-width column under the top bar (the shared landscape rule splits pages in two) */
+#overlay>#rankCard.page,#overlay>#settingsCard.page{grid-template-columns:minmax(0,1fr)}
+#rankCard .rk-wrap,#settingsCard .sg-wrap{grid-column:1/-1;min-width:0}
 
+/* ---------- Ranks: your tier card and the ladder on the left, the podium and the top 10 on the right ---------- */
+#rankCard .rk-wrap{display:grid;grid-template-columns:minmax(0,.84fr) minmax(0,1.16fr);gap:18px;align-items:start;padding-bottom:10px}
+#rankCard .rk-side{display:grid;gap:12px;position:sticky;top:62px;min-width:0}
+#rankCard .emb{display:block;overflow:visible}
+#rankCard .rk-me{--tc:#a9b8c7;position:relative;display:grid;grid-template-columns:64px minmax(0,1fr) auto;align-items:center;gap:10px 14px;padding:14px 16px 13px;border-radius:20px;overflow:hidden;
+  background:radial-gradient(90% 120% at 0% 0%,rgba(255,255,255,.07),transparent 60%),linear-gradient(180deg,rgba(22,46,48,.88),rgba(8,24,26,.92));border:1px solid rgba(140,210,200,.14);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 14px 34px -12px rgba(0,0,0,.65)}
+#rankCard .rk-me{background:radial-gradient(90% 130% at 0% 0%,color-mix(in srgb,var(--tc) 24%,transparent),transparent 62%),linear-gradient(180deg,rgba(22,46,48,.88),rgba(8,24,26,.92));border-color:color-mix(in srgb,var(--tc) 32%,rgba(140,210,200,.12))}
+#rankCard .rk-me-e{width:64px;height:64px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.5))}
+#rankCard .rk-me-e .emb{width:100%;height:100%}
+#rankCard .rk-me-t{display:grid;gap:3px;min-width:0}
+#rankCard .rk-me-t .tier{font:600 11px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase}
+#rankCard .rk-me-t b{font:800 38px/.95 var(--display);letter-spacing:-.04em;font-variant-numeric:tabular-nums;color:var(--ink);text-shadow:0 2px 14px rgba(0,0,0,.4)}
+#rankCard .rk-pos{align-self:start;justify-self:end;font:800 17px/1 var(--display);letter-spacing:-.02em;color:#2a1a00;padding:7px 10px 6px;border-radius:12px;background:linear-gradient(180deg,#ffe28a,#f2b134);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 4px 12px rgba(242,177,52,.3)}
+#rankCard .rk-bar{grid-column:1/3;height:8px;border-radius:5px;background:rgba(0,0,0,.42);box-shadow:inset 0 1px 2px rgba(0,0,0,.6),0 1px 0 rgba(255,255,255,.05);overflow:hidden}
+#rankCard .rk-bar i{display:block;height:100%;min-width:8px;border-radius:5px;background:linear-gradient(90deg,var(--violet),var(--tc));box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 0 10px var(--tc);transition:width .6s cubic-bezier(.2,.8,.2,1)}
+#rankCard .rk-next{font:500 11px/1 var(--mono);color:var(--muted);white-space:nowrap;justify-self:end}
+#rankCard .rk-next b{color:var(--ink);font-weight:700}
+/* the ladder: six emblems on a track that fills up to your tier */
+#rankCard .rk-ladder{--n:6;--prog:0;position:relative;list-style:none;margin:0;padding:12px 6px 11px;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);border-radius:18px;background:rgba(5,16,18,.66);border:1px solid rgba(140,210,200,.11);box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
+#rankCard .rk-ladder::before,#rankCard .rk-ladder::after{content:"";position:absolute;top:29px;left:calc(6px + (100% - 12px)/var(--n)/2);height:3px;border-radius:2px}
+#rankCard .rk-ladder::before{right:calc(6px + (100% - 12px)/var(--n)/2);background:rgba(255,255,255,.08)}
+#rankCard .rk-ladder::after{width:calc((100% - 12px)*(1 - 1/var(--n))*var(--prog));background:linear-gradient(90deg,#c9854f,#a9b8c7,#f2b134,#55d0c9,#76a6ff,#ff5c8a);background-size:calc((100% - 12px)*(1 - 1/var(--n))) 100%;opacity:.8}
+#rankCard .rk-ladder li{position:relative;z-index:1;display:grid;justify-items:center;gap:4px;min-width:0}
+#rankCard .rk-ladder .emb{width:36px;height:36px;filter:drop-shadow(0 3px 5px rgba(0,0,0,.55));transition:transform .2s}
+#rankCard .rk-ladder b{max-width:100%;font:700 10px/1.1 var(--display);letter-spacing:-.01em;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#rankCard .rk-ladder span{font:500 9.5px/1 var(--mono);color:var(--dim);font-variant-numeric:tabular-nums}
+#rankCard .rk-ladder li.done b{color:var(--ink)}
+#rankCard .rk-ladder li.up .emb{filter:grayscale(.9) brightness(.55) drop-shadow(0 3px 5px rgba(0,0,0,.55));opacity:.75}
+#rankCard .rk-ladder li.cur .emb{transform:scale(1.2) translateY(-1px);filter:drop-shadow(0 0 9px var(--tc)) drop-shadow(0 3px 5px rgba(0,0,0,.5))}
+#rankCard .rk-ladder li.cur b{color:var(--tc)}#rankCard .rk-ladder li.cur span{color:var(--muted)}
+/* how rating rises: three icon chips */
+#rankCard .rk-how{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+#rankCard .rk-how::before{content:"";width:22px;height:22px;flex:none;border-radius:50%;background:rgba(95,224,168,.14) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235fe0a8' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 19V6M6.5 11.5L12 6l5.5 5.5'/%3E%3C/svg%3E") center/13px no-repeat}
+#rankCard .rk-how li{display:flex;align-items:center;gap:5px;padding:6px 10px 6px 7px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid rgba(140,210,200,.12);font:600 12px/1 var(--display);color:var(--muted);white-space:nowrap}
+#rankCard .rk-how svg{width:15px;height:15px;flex:none;fill:none;stroke:var(--ink);opacity:.8;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+/* the board */
+#rankCard .rk-board{display:grid;gap:12px;min-width:0}
+#rankCard .rk-podium:empty,#rankCard .rk-list:empty{display:none}
+#rankCard .rk-podium{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.14fr) minmax(0,1fr);align-items:end;gap:8px;padding-top:12px}
+#rankCard .pd{--tc:#a9b8c7;--m:#d5dee7;--mA:#55606b;--mB:#262d34;position:relative;display:grid;justify-items:center;gap:3px;min-width:0;text-align:center}
+#rankCard .pd1{--m:#ffc94a;--mA:#8a6214;--mB:#3b2a09}#rankCard .pd3{--m:#e0a273;--mA:#74462a;--mB:#33201a}
+#rankCard .pd-av{position:relative;width:54px;height:54px}#rankCard .pd1 .pd-av{width:68px;height:68px}
+#rankCard .pd-av .emb{width:100%;height:100%;filter:drop-shadow(0 6px 10px rgba(0,0,0,.55))}
+#rankCard .pd1 .pd-av::before{content:"";position:absolute;inset:-14px;border-radius:50%;background:radial-gradient(closest-side,rgba(242,177,52,.32),transparent);z-index:-1}
+#rankCard .pd-crown{position:absolute;top:-21px;left:50%;width:26px;height:26px;transform:translateX(-50%);fill:#ffcf4a;stroke:#8a5a00;stroke-width:1.2;stroke-linejoin:round;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5));z-index:2}
+#rankCard .pd-n{max-width:100%;margin-top:4px;font:700 14px/1.15 var(--display);color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#rankCard .pd1 .pd-n{font-size:15.5px}
+#rankCard .pd-r{display:flex;align-items:center;gap:5px;min-height:14px;font:700 13px/1 var(--mono);color:var(--tc);font-variant-numeric:tabular-nums}
+#rankCard .pd-base{width:100%;height:40px;margin-top:6px;display:grid;place-items:center;border-radius:14px 14px 6px 6px;background:linear-gradient(180deg,var(--mA),var(--mB) 62%,rgba(6,16,18,.9));border-top:2px solid var(--m);box-shadow:inset 0 1px 0 rgba(255,255,255,.22),inset 0 14px 18px -12px rgba(255,255,255,.14),0 12px 24px -10px rgba(0,0,0,.6)}
+#rankCard .pd1 .pd-base{height:60px}#rankCard .pd3 .pd-base{height:32px}
+#rankCard .pd-base span{font:800 24px/1 var(--display);color:var(--m);text-shadow:0 2px 10px rgba(0,0,0,.5)}
+#rankCard .pd1 .pd-base span{font-size:30px}
+#rankCard .pd.me .pd-n{color:var(--accent)}
+#rankCard .pd.me .pd-av .emb{filter:drop-shadow(0 0 0 transparent) drop-shadow(0 0 10px rgba(255,92,138,.75))}
+#rankCard .pd.open .pd-av{border-radius:50%;border:1.5px dashed rgba(140,210,200,.2);box-sizing:border-box;transform:scale(.8)}
+#rankCard .pd.open .pd-n{color:var(--dim)}#rankCard .pd.open .pd-base{opacity:.55}
+#rankCard .rk-list{list-style:none;margin:0;padding:4px;display:grid;border-radius:18px;background:linear-gradient(180deg,rgba(20,44,46,.74),rgba(8,24,26,.82));border:1px solid rgba(140,210,200,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 14px 30px -12px rgba(0,0,0,.6)}
+#rankCard .rk-row{position:relative;display:grid;grid-template-columns:24px 32px minmax(0,1fr) auto auto;align-items:center;gap:0 10px;min-height:48px;padding:0 12px 0 8px;border-radius:14px}
+#rankCard .rk-row+.rk-row::before{content:"";position:absolute;top:0;left:50px;right:12px;height:1px;background:rgba(140,210,200,.08)}
+#rankCard .rk-row.me::before,#rankCard .rk-row.me+.rk-row::before{display:none}
+#rankCard .rk-k{font:700 13px/1 var(--mono);color:var(--dim);text-align:center;font-variant-numeric:tabular-nums}
+#rankCard .rk-row .emb{width:32px;height:32px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
+#rankCard .rk-n{display:grid;gap:3px;min-width:0}
+#rankCard .rk-n b{font:700 15px/1.1 var(--display);color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#rankCard .rk-n small{font:600 9.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase}
+#rankCard .rk-you{grid-column:4;font:800 9.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;font-style:normal;color:var(--accent-ink);background:linear-gradient(180deg,#ff8aac,var(--accent));border-radius:999px;padding:4px 7px 3px;box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
+#rankCard .pd-r .rk-you{padding:3px 6px 2px;font-size:8.5px}
+#rankCard .rk-r{grid-column:5;font:800 17px/1 var(--display);letter-spacing:-.02em;color:var(--ink);font-variant-numeric:tabular-nums}
+#rankCard .rk-row.me{background:linear-gradient(90deg,rgba(255,92,138,.24),rgba(255,92,138,.07));box-shadow:inset 0 0 0 1px rgba(255,92,138,.5),0 6px 18px -8px rgba(255,92,138,.45)}
+#rankCard .rk-row.me .rk-k{color:var(--accent)}
+#rankCard .rk-gap{display:flex;justify-content:center;gap:5px;padding:7px 0}#rankCard .rk-gap i{width:4px;height:4px;border-radius:50%;background:var(--dim)}
+/* loading, empty and offline */
+#rankCard .pd.sk .pd-av{border-radius:50%;background:rgba(255,255,255,.06)}
+#rankCard .pd.sk .pd-n{width:58%;height:12px;border-radius:6px;background:rgba(255,255,255,.06)}
+#rankCard .pd.sk .pd-r{width:34%;height:10px;border-radius:5px;background:rgba(255,255,255,.05)}
+#rankCard .pd.sk .pd-base{opacity:.5}
+#rankCard .rk-row.sk{background:linear-gradient(90deg,rgba(255,255,255,.025),rgba(255,255,255,.07),rgba(255,255,255,.025)) 0 0/200% 100%;margin:2px 0}
+#rankCard .rk-empty{display:grid;justify-items:center;gap:6px;padding:30px 18px 26px;border-radius:20px;text-align:center;background:linear-gradient(180deg,rgba(20,44,46,.6),rgba(8,24,26,.7));border:1px solid rgba(140,210,200,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+#rankCard .rk-empty i{width:58px;height:58px;margin-bottom:6px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 50% 30%,rgba(255,255,255,.1),rgba(255,255,255,.03));box-shadow:inset 0 0 0 1px rgba(140,210,200,.16),0 8px 20px rgba(0,0,0,.35)}
+#rankCard .rk-empty i svg{width:28px;height:28px;fill:none;stroke:var(--muted);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#rankCard .rk-board[data-state=empty] .rk-empty i svg{stroke:var(--amber)}
+#rankCard .rk-empty b{font:800 22px/1.1 var(--display);letter-spacing:-.03em;color:var(--ink)}
+#rankCard .rk-empty span{font:500 13px/1.3 var(--display);color:var(--muted)}
+#rankCard .rk-retry{appearance:none;margin-top:10px;min-height:44px;padding:0 26px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.05));color:var(--ink);font:700 14px/1 var(--display);cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 6px 16px -6px rgba(0,0,0,.5);transition:transform .12s,background .15s}
+#rankCard .rk-retry:active{transform:scale(.95);background:rgba(255,255,255,.08)}
+@media (prefers-reduced-motion:no-preference){
+  #rankCard .pd:not(.sk){animation:rkPop .5s cubic-bezier(.2,1.25,.4,1) both}#rankCard .pd1{animation-delay:.04s!important}#rankCard .pd2{animation-delay:.12s!important}#rankCard .pd3{animation-delay:.18s!important}
+  #rankCard .rk-row:not(.sk){animation:rkIn .35s ease-out both}#rankCard .rk-row:nth-child(2){animation-delay:.04s}#rankCard .rk-row:nth-child(3){animation-delay:.08s}#rankCard .rk-row:nth-child(4){animation-delay:.12s}#rankCard .rk-row:nth-child(5){animation-delay:.16s}#rankCard .rk-row:nth-child(n+6){animation-delay:.2s}
+  #rankCard .rk-row.sk{animation:rkSh 1.3s linear infinite}
+}
+@keyframes rkPop{from{opacity:0;transform:translateY(10px) scale(.92)}}
+@keyframes rkIn{from{opacity:0;transform:translateX(8px)}}
+@keyframes rkSh{from{background-position:100% 0}to{background-position:-100% 0}}
+@media (orientation:landscape) and (max-height:520px){#rankCard .rk-side{top:52px}#rankCard .rk-me-t b{font-size:34px}}
+@media (orientation:landscape) and (max-width:900px){#rankCard .rk-wrap{grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);gap:16px}}
+@media (orientation:portrait),(max-width:640px){
+  #rankCard .rk-wrap{grid-template-columns:minmax(0,1fr);gap:14px}
+  #rankCard .rk-side{position:static}
+}
+
+/* ---------- Settings: grouped lists like iOS, label on the left and the control on the right ---------- */
+#settingsCard .sg-wrap{columns:2 320px;column-gap:18px;padding-bottom:6px}
+#settingsCard .sg{display:grid;gap:7px;margin:0 0 16px;break-inside:avoid;-webkit-column-break-inside:avoid;page-break-inside:avoid}
+#settingsCard .sg-h{margin:0;padding:0 8px;font:600 10.5px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+#settingsCard .sg-list{display:grid;grid-template-columns:minmax(0,1fr);border-radius:18px;overflow:hidden;background:linear-gradient(180deg,rgba(22,46,48,.8),rgba(8,24,26,.86));border:1px solid rgba(140,210,200,.13);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 14px 30px -12px rgba(0,0,0,.6)}
+#settingsCard .srow{position:relative;box-sizing:border-box;width:100%;min-height:54px;margin:0;padding:7px 10px 7px 12px;display:flex;align-items:center;gap:12px;border:0;border-radius:0;background:none;color:var(--ink);font:600 15px/1.2 var(--display);letter-spacing:-.005em;text-align:left;cursor:default;-webkit-tap-highlight-color:transparent;transition:background .15s}
+#settingsCard .srow+.srow::before,#settingsCard .srow-d+.srow::before,#settingsCard .srow+.srow-d>.srow::before{content:"";position:absolute;top:0;left:54px;right:0;height:1px;background:rgba(140,210,200,.09)}
+#settingsCard .sl{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#settingsCard .si{flex:none;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;color:#fff;background:linear-gradient(160deg,var(--c1),var(--c2));box-shadow:inset 0 1px 0 rgba(255,255,255,.38),inset 0 -1px 0 rgba(0,0,0,.18),0 2px 6px rgba(0,0,0,.35)}
+#settingsCard .si svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 1px 1px rgba(0,0,0,.25))}
+#settingsCard .si-teal{--c1:#4fe3c2;--c2:#0e8a76}#settingsCard .si-violet{--c1:#b4a9ff;--c2:#6553de}#settingsCard .si-blue{--c1:#71b9ff;--c2:#2a5fd4}#settingsCard .si-sky{--c1:#7fd6ff;--c2:#1b86bd}
+#settingsCard .si-amber{--c1:#ffd36b;--c2:#df810c}#settingsCard .si-green{--c1:#83efab;--c2:#1a9e60}#settingsCard .si-pink{--c1:#ff92b2;--c2:#e2386c}#settingsCard .si-rose{--c1:#ffab8f;--c2:#e0544a}#settingsCard .si-red{--c1:#ff8a92;--c2:#cf2c43}
+/* segmented controls: a sunken track, the choice a raised pink pill */
+#settingsCard .seg{position:relative;flex:none;min-width:0;display:flex;gap:2px;padding:3px;border:0;border-radius:12px;overflow:visible;background:rgba(0,0,0,.4);box-shadow:inset 0 1px 3px rgba(0,0,0,.6),inset 0 0 0 1px rgba(255,255,255,.05),0 1px 0 rgba(255,255,255,.04)}
+#settingsCard .seg button{position:relative;flex:1 0 auto;min-width:44px;height:34px;padding:0 11px;display:flex;align-items:center;justify-content:center;border:0;border-radius:9px;background:transparent;color:var(--muted);font:700 13px/1 var(--display);letter-spacing:-.005em;white-space:nowrap;cursor:pointer;transition:color .2s,background-color .2s,transform .12s}
+#settingsCard .seg button::after{content:"";position:absolute;inset:-10px -1px}
+#settingsCard .seg.four button{padding:0 8px}
+#settingsCard .seg button[aria-pressed=true]{color:var(--accent-ink);background:linear-gradient(180deg,#ff8eae,#ff5c8a 55%,#ee437a);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(0,0,0,.14),0 3px 10px rgba(255,92,138,.32);animation:segOn .28s cubic-bezier(.3,1.5,.5,1)}
+#settingsCard .seg button:active{transform:scale(.93)}
+@keyframes segOn{from{transform:scale(.86);opacity:.6}}
+@media (hover:hover){#settingsCard .seg button:not([aria-pressed=true]):hover{color:var(--ink)}#settingsCard .srow.nav:hover,#settingsCard .srow.inv:hover{background:rgba(255,255,255,.03)}}
+/* on/off: a switch; the whole row flips it */
+#settingsCard .srow.tg{cursor:pointer}
+#settingsCard .srow.tg:active{background:rgba(255,255,255,.04)}
+#settingsCard .seg.sw2{display:block;width:52px;height:32px;padding:0;border-radius:999px;background:rgba(255,255,255,.13);box-shadow:inset 0 1px 3px rgba(0,0,0,.5),inset 0 0 0 1px rgba(255,255,255,.06);transition:background .25s,box-shadow .25s}
+#settingsCard .seg.sw2::before{content:"";position:absolute;pointer-events:none;z-index:2;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:linear-gradient(180deg,#fff,#dde8e5);box-shadow:0 2px 6px rgba(0,0,0,.45),inset 0 -1px 0 rgba(0,0,0,.08);transform:none;transition:transform .28s cubic-bezier(.3,1.35,.5,1),width .15s}
+#settingsCard .seg.sw2:has(>button:last-child[aria-pressed=true]){background:linear-gradient(180deg,#ff86a8,#ff5c8a 60%,#ec4478);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),inset 0 0 0 1px rgba(255,92,138,.5),0 3px 12px rgba(255,92,138,.3)}
+#settingsCard .seg.sw2:has(>button:last-child[aria-pressed=true])::before{transform:translateX(20px)}
+#settingsCard .seg.sw2 button{position:absolute;top:0;bottom:0;width:50%;min-width:0;height:auto;padding:0;font-size:0;color:transparent;background:none;box-shadow:none;animation:none}
+#settingsCard .seg.sw2 button:first-child{left:0}#settingsCard .seg.sw2 button:last-child{right:0}
+#settingsCard .seg.sw2 button::after{inset:-11px -4px}
+#settingsCard .seg.sw2 button:active{transform:none}
+/* rows that open something: a chevron */
+#settingsCard .srow.nav{cursor:pointer}
+#settingsCard .srow.nav::after{content:"";flex:none;width:7px;height:7px;margin:0 8px 0 4px;border-top:2px solid var(--dim);border-right:2px solid var(--dim);border-radius:1px;transform:rotate(45deg);transition:transform .2s}
+#settingsCard .srow.nav:active,#settingsCard .srow.inv:active{background:rgba(255,255,255,.05)}
+#settingsCard summary.srow{list-style:none}#settingsCard summary.srow::-webkit-details-marker{display:none}
+#settingsCard details[open]>summary.srow::after{transform:rotate(135deg)}
+#settingsCard .danger-row .sl{color:#ff7d88}
+/* invite */
+#settingsCard .srow.inv{cursor:pointer}
+#settingsCard .srow.inv .sl{display:grid;gap:3px}
+#settingsCard #inviteUrl{appearance:none;display:block;width:100%;box-sizing:border-box;margin:0;padding:0;border:0;border-radius:0;background:none;color:var(--dim);font:500 11px/1.25 var(--mono);text-overflow:ellipsis;cursor:text}
+#settingsCard #inviteUrl:focus{outline:none;color:var(--muted)}
+#settingsCard .s-act{position:relative;flex:none;appearance:none;min-height:34px;padding:0 16px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.06));color:var(--ink);font:700 13px/1 var(--display);cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 4px 12px -4px rgba(0,0,0,.5);transition:transform .12s,background .15s}
+#settingsCard .s-act::after{content:"";position:absolute;inset:-10px -6px}
+#settingsCard .s-act:active{transform:scale(.94);background:rgba(255,255,255,.1)}
+#settingsCard .sg-foot{margin:0;padding:0 8px;font:500 11.5px/1.4 var(--display);color:var(--dim)}
+#settingsCard .sg-foot b{color:var(--muted);font-weight:600}
+#settingsCard .sg-inv:has(#inviteRow[hidden]){display:none}
+@media (pointer:coarse){#settingsCard .sg-foot{display:none}}
+/* how to play */
+#settingsCard .srow-d{display:block}
+#settingsCard #helpSec .body{display:grid;gap:12px;max-height:none;overflow:visible;padding:2px 16px 16px 54px}
+#settingsCard #helpSec .keys{margin:0;display:grid;grid-template-columns:76px minmax(0,1fr);align-items:center;gap:8px 12px;font:500 13px/1.3 var(--display);color:var(--muted)}
+#settingsCard #helpSec .keys dt{justify-self:start;font:600 10px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink);padding:5px 7px 4px;border-radius:6px;background:rgba(255,255,255,.06);box-shadow:inset 0 -1px 0 rgba(0,0,0,.4),inset 0 0 0 1px rgba(255,255,255,.08)}
+#settingsCard #helpSec .keys dd{margin:0}
+#settingsCard #helpSec .facts{padding-top:12px;border-top:1px solid rgba(140,210,200,.09)}
+#settingsCard #helpSec .facts dt{padding:0;background:none;box-shadow:none;color:var(--violet);letter-spacing:.12em}
+#settingsCard #helpSec .facts dt.hot{color:#ff6b78}
+#settingsCard #achLine{display:none}
+@media (max-width:420px){#settingsCard .seg button{padding:0 9px;font-size:12.5px}#settingsCard .srow{gap:10px;padding-left:10px}#settingsCard .srow+.srow::before,#settingsCard .srow-d+.srow::before,#settingsCard .srow+.srow-d>.srow::before{left:50px}#settingsCard #helpSec .body{padding-left:50px}}
 /* @ui:ranks-settings end */
 
 /* @ui:results */
@@ -693,9 +859,22 @@ body:not(.playing) #tip{display:none}
 
   <div class="card panel page" id="rankCard" hidden>
     <header class="pg-top"><button class="lb-icon back" type="button" aria-label="Back to the lobby"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><h2>Ranks</h2></header>
-    <div class="tiers" id="tierLegend" hidden></div>
-    <p class="hint" id="rankHint">Rating rises with how long you survive, what you absorb and where you place, with a bonus for winning. Dying fast costs rating, and the higher you climb the harder it is to gain.</p>
-    <div class="field"><span class="label">Top players</span><ol class="top" id="topList"><li><span class="rk"></span><span>Loading…</span></li></ol></div>
+    <div class="rk-wrap">
+      <aside class="rk-side">
+        <div class="rk-me" id="rkMe"></div>
+        <ol class="rk-ladder" id="tierLegend" aria-label="Tiers"></ol>
+        <ul class="rk-how" id="rankHint" aria-label="Rating rises when you">
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9.5 2.5h5"/></svg>Survive</li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="12" r="6.5"/><circle cx="18.5" cy="7.5" r="2.5"/><circle cx="18" cy="17" r="1.6"/></svg>Absorb</li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3M12 14v4M8 20h8"/></svg>Place high</li>
+        </ul>
+      </aside>
+      <section class="rk-board" id="rkBoard" data-state="loading" aria-label="Top players">
+        <div class="rk-podium" id="rkPodium"></div>
+        <ol class="rk-list" id="topList"></ol>
+        <div class="rk-empty" id="rkEmpty" hidden><i id="rkEmptyIco"></i><b id="rkEmptyT"></b><span id="rkEmptyS"></span><button type="button" class="rk-retry" id="rkRetry">Retry</button></div>
+      </section>
+    </div>
   </div>
 
   <div class="card panel page" id="profileCard" hidden>
@@ -718,44 +897,67 @@ body:not(.playing) #tip{display:none}
 
   <div class="card panel page" id="settingsCard" hidden>
     <header class="pg-top"><button class="lb-icon back" type="button" aria-label="Back to the lobby"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><h2>Settings</h2></header>
-    <div class="field"><span class="label">Culture density</span>
-      <div class="seg" id="diff">
-        <button type="button" data-d="calm">Calm<small>40 cells</small></button>
-        <button type="button" data-d="standard">Standard<small>60 cells</small></button>
-        <button type="button" data-d="hostile">Hostile<small>80 cells</small></button>
-      </div>
+    <div class="sg-wrap">
+      <section class="sg"><h3 class="sg-h">Game</h3><div class="sg-list">
+        <div class="srow"><i class="si si-teal"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8.5" cy="9" r="4.5"/><circle cx="16.5" cy="16" r="4"/><circle cx="17.5" cy="5.5" r="1.8"/></svg></i><span class="sl">Density</span>
+          <div class="seg" id="diff"><button type="button" data-d="calm">Calm</button><button type="button" data-d="standard">Normal</button><button type="button" data-d="hostile">Hostile</button></div></div>
+        <div class="srow"><i class="si si-violet"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="8" width="15" height="11.5" rx="3.5"/><path d="M12 8V5"/><circle cx="12" cy="3.6" r="1.2"/><path d="M9.3 13.2v.6M14.7 13.2v.6"/></svg></i><span class="sl">Bots</span>
+          <div class="seg four" id="skillSeg"><button type="button" data-k="easy">Easy</button><button type="button" data-k="normal">Normal</button><button type="button" data-k="hard">Hard</button><button type="button" data-k="expert">Expert</button></div></div>
+      </div></section>
+      <section class="sg touch-only"><h3 class="sg-h">Controls</h3><div class="sg-list">
+        <div class="srow"><i class="si si-blue"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7.5" r="3.5"/><path d="M12 11v4.5"/><rect x="4" y="15.5" width="16" height="5" rx="2"/></svg></i><span class="sl">Joystick</span>
+          <div class="seg two" id="joySeg"><button type="button" data-j="fixed">Fixed</button><button type="button" data-j="float">Floating</button></div></div>
+        <div class="srow"><i class="si si-sky"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="3"/><circle cx="16" cy="12" r="2.4"/><circle cx="7.5" cy="12" r="1.2"/></svg></i><span class="sl">Buttons</span>
+          <div class="seg two" id="handSeg"><button type="button" data-l="1">Left</button><button type="button" data-l="0">Right</button></div></div>
+      </div></section>
+      <section class="sg"><h3 class="sg-h">Display</h3><div class="sg-list">
+        <div class="srow"><i class="si si-amber"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3.5l1.9 4.9 4.9 1.9-4.9 1.9L11 17.1l-1.9-4.9-4.9-1.9 4.9-1.9z"/><path d="M18.5 14.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg></i><span class="sl">Effects</span>
+          <div class="seg two" id="fxSeg"><button type="button" data-fx="0">Full</button><button type="button" data-fx="1">Lite</button></div></div>
+        <div class="srow"><i class="si si-teal"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M6.5 8.7h4.5M16 8.7h1.5M10 15.5h4"/></svg></i><span class="sl">HUD</span>
+          <div class="seg two" id="infoSeg"><button type="button" data-i="0">Full</button><button type="button" data-i="1">Compact</button></div></div>
+        <div class="srow tg"><i class="si si-green"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12.5h4l2.5-6 4.5 12 2.5-6H21"/></svg></i><span class="sl">FPS &amp; ping</span>
+          <div class="seg two sw2" id="perfSeg"><button type="button" data-p="0">Off</button><button type="button" data-p="1">On</button></div></div>
+      </div></section>
+      <section class="sg"><h3 class="sg-h">Sound</h3><div class="sg-list">
+        <div class="srow tg"><i class="si si-pink"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18.2 6.5a7.5 7.5 0 0 1 0 11"/></svg></i><span class="sl">Sound</span>
+          <div class="seg two sw2" id="sndSeg"><button type="button" data-s="0">Off</button><button type="button" data-s="1">On</button></div></div>
+        <div class="srow tg"><i class="si si-rose"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="4" width="8" height="16" rx="2.2"/><path d="M4.6 9v6M19.4 9v6M2 10.6v2.8M22 10.6v2.8"/></svg></i><span class="sl">Vibration</span>
+          <div class="seg two sw2" id="hapSeg"><button type="button" data-h="0">Off</button><button type="button" data-h="1">On</button></div></div>
+      </div></section>
+      <section class="sg sg-inv"><h3 class="sg-h">Friends</h3><div class="sg-list">
+        <div class="srow inv" id="inviteRow"><i class="si si-green"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9.5" cy="8.5" r="3.5"/><path d="M3 19.5a6.5 6.5 0 0 1 13 0M19 8v6M16 11h6"/></svg></i><span class="sl">Invite friends<input id="inviteUrl" type="text" readonly aria-label="Invite link" value=""></span><button id="copyInvite" class="s-act" type="button">Share</button></div>
+      </div><p class="sg-foot" id="inviteHelp">Send this link to a friend on the same Wi-Fi. For friends elsewhere, run <b>share-online.bat</b> and send the https link it prints.</p></section>
+      <section class="sg"><h3 class="sg-h">Help</h3><div class="sg-list">
+        <details class="srow-d" id="helpSec"><summary class="srow nav"><i class="si si-sky"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.6a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .9-1 1.6v.4"/><path d="M12 17.1v.1"/></svg></i><span class="sl">How to play</span></summary><div class="body">
+          <dl class="keys kbd-only">
+            <dt>Mouse</dt><dd>Steer</dd>
+            <dt>Space</dt><dd>Split</dd>
+            <dt>W</dt><dd>Eject mass</dd>
+            <dt>Shift</dt><dd>Dash · costs 4% mass</dd>
+            <dt>Esc</dt><dd>Pause</dd>
+          </dl>
+          <dl class="keys touch-only">
+            <dt>Stick</dt><dd>Steer · push further to go faster</dd>
+            <dt>Buttons</dt><dd>Split · Shoot · Boost</dd>
+            <dt>Mass</dt><dd>Tap to pause</dd>
+          </dl>
+          <dl class="keys facts">
+            <dt>Rounds</dt><dd>10 min · 2 lives · last cell wins</dd>
+            <dt>Arena</dt><dd>Shrinks from 1:00 · stay inside</dd>
+            <dt>Mutate</dt><dd>New trait at mass milestones</dd>
+            <dt>Events</dt><dd>Blooms, tides, swarms, Leviathan</dd>
+            <dt class="hot">Hunters</dt><dd>Burst any cell · 3 blobs kill one</dd>
+            <dt>Crown</dt><dd>The leader pays a bounty</dd>
+            <dt>ATP</dt><dd>25 for a win, down to 1 for 30th</dd>
+          </dl>
+          <p class="achline" id="achLine"></p>
+        </div></details>
+        <button type="button" class="srow nav" id="introAgain"><i class="si si-amber"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 18h5M10.5 21h3"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.1 1 1.8v.4h5.2v-.4c0-.7.4-1.3 1-1.8A6 6 0 0 0 12 3z"/></svg></i><span class="sl">Welcome tips</span></button>
+      </div></section>
+      <section class="sg"><h3 class="sg-h">Account</h3><div class="sg-list">
+        <button type="button" class="srow nav danger-row" id="deleteAcctBtn2"><i class="si si-red"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 7h15M10 4h4M6.5 7l1 13h9l1-13M10 11v5M14 11v5"/></svg></i><span class="sl">Delete account</span></button>
+      </div></section>
     </div>
-    <div class="field"><span class="label">Bot difficulty <span class="hintx">practice &amp; offline</span></span><div class="seg four" id="skillSeg"><button type="button" data-k="easy">Easy</button><button type="button" data-k="normal">Normal</button><button type="button" data-k="hard">Hard</button><button type="button" data-k="expert">Expert</button></div></div>
-    <div class="field"><span class="label">Effects</span><div class="seg two" id="fxSeg"><button type="button" data-fx="0">Full<small>auras, embers, glow</small></button><button type="button" data-fx="1">Reduced<small>smoother on older phones</small></button></div></div>
-    <div class="field"><span class="label">Vibration</span><div class="seg two" id="hapSeg"><button type="button" data-h="0">Off<small>recommended</small></button><button type="button" data-h="1">On<small>taps on split and kills</small></button></div></div>
-    <div class="field"><span class="label">Sound</span><div class="seg two" id="sndSeg"><button type="button" data-s="1">On</button><button type="button" data-s="0">Off</button></div></div>
-    <div class="field"><span class="label">In-game info</span><div class="seg two" id="infoSeg"><button type="button" data-i="0">Full<small>mass, cells, place, lives</small></button><button type="button" data-i="1">Compact<small>mass only</small></button></div></div>
-    <div class="field"><span class="label">Show FPS &amp; ping</span><div class="seg two" id="perfSeg"><button type="button" data-p="0">Off</button><button type="button" data-p="1">On<small>frame rate and server ping</small></button></div></div>
-    <div class="field touch-only"><span class="label">Joystick</span><div class="seg two" id="joySeg"><button type="button" data-j="fixed">Fixed<small>in the corner</small></button><button type="button" data-j="float">Floating<small>appears under your thumb</small></button></div></div>
-    <div class="field touch-only"><span class="label">Layout</span><div class="seg two" id="handSeg"><button type="button" data-l="0">Right-handed<small>buttons on the right</small></button><button type="button" data-l="1">Left-handed<small>buttons on the left</small></button></div></div>
-    <div class="field"><span class="label">Invite friends</span><div class="invite" id="inviteRow"><input id="inviteUrl" type="text" readonly aria-label="Invite link" value=""><button id="copyInvite" class="ghost" type="button">Invite friends</button></div><p id="inviteHelp">Send this link to a friend on the same Wi-Fi. For friends elsewhere, run <b>share-online.bat</b> and send the https link it prints.</p></div>
-    <div class="field"><span class="label">Account &amp; data</span><button type="button" class="danger-link" id="deleteAcctBtn2">Delete account and all data…</button></div>
-    <details class="sec" id="helpSec"><summary><span class="label">How to play</span></summary><div class="body">
-    <dl class="keys kbd-only">
-      <dt>Mouse</dt><dd>Steer toward the cursor</dd>
-      <dt>Space</dt><dd>Divide — launch half your mass forward</dd>
-      <dt>W</dt><dd>Eject mass (feed phages to make them replicate)</dd>
-      <dt>Shift</dt><dd>Dash — a burst of speed for 4% mass</dd>
-      <dt>Esc</dt><dd>Pause</dd>
-    </dl>
-    <dl class="keys touch-only">
-      <dt>Joystick</dt><dd>Bottom left — push it to steer, further for faster</dd>
-      <dt>Buttons</dt><dd>Split, Shoot and Boost sit on the right</dd>
-      <dt>Pause</dt><dd>Bottom centre, with a Return to lobby option</dd>
-    </dl>
-    <div class="new"><strong>Rounds</strong>
-      Ten minutes, two lives. The arena closes in from the one-minute mark and is down to its final size by 9:30; anything outside dissolves. Bots stop respawning at 7:00, and the round ends the moment one player is left. ATP pays for placing: 25 for a win, down to 1 for 30th.
-      <em>Mutate</em> at mass milestones — a random trait is applied, six times a life, and every cell wears badges for the traits it has. <em>World events</em>: nutrient blooms, antibiotic tides that close the well, phage swarms and the <em>Leviathan</em> — lure it onto phages to break it up. The leader wears a crown and pays a bounty.
-      <b class="hot">Hunter phages</b> break in through the rim and inject any cell they touch — it bursts into up to 16 pieces 8–10 s later. Nothing is immune to them; three ejected blobs kill one.
-      Practice plays the bots at the difficulty you pick, and on iPhone, Nearby plays the phones around you with no internet. Tap the mass readout or the clock in a game to shrink them, or the HUD button to hide the on-screen info.</div>
-    <p class="achline" id="achLine"></p>
-      <button type="button" class="ghost" id="introAgain">Show the welcome tips again</button>
-    </div></details>
   </div>
 
   <div class="shopview" id="storeCard" hidden>
@@ -1345,8 +1547,31 @@ function tierProgress(){ // where this rating sits inside its tier, for the prog
   if(!isFinite(hi))return{text:'top tier',pct:100};
   return{text:`${hi-wallet.rating} to ${names[i+1]}`,pct:Math.round(clamp((wallet.rating-lo)/(hi-lo),0,1)*100)};
 }
-function renderTierLegend(){const el=$('tierLegend');if(!el)return;const names=(wallet.catalog&&wallet.catalog.tiers)||[],at=(wallet.catalog&&wallet.catalog.tierAt)||[];if(!names.length||at.length!==names.length){el.hidden=true;return;}
-  el.hidden=false;el.innerHTML=names.map((n,i)=>`<span class="tier${n===wallet.tier?' cur':''}" data-tier="${escH(n)}">${escH(n)}${i>0?' <b>'+at[i-1]+'+</b>':''}</span>`).join('');}
+// Ranks page: tiers come from the server's table, or from this copy of economy.js TIERS while offline
+const TIER_FB={tiers:['Bronze','Silver','Gold','Platinum','Diamond','Legend'],tierAt:[900,1100,1400,1800,2300,null]};
+const TIER_PAL={Bronze:['#ffd9b5','#c9854f','#4f260c'],Silver:['#ffffff','#a9b8c7','#344150'],Gold:['#fff1b8','#f2b134','#6e3f02'],Platinum:['#e2fffb','#55d0c9','#0f4f50'],Diamond:['#e8f1ff','#76a6ff','#1c3787'],Legend:['#ffdbe7','#ff5c8a','#5e0a31']};
+const TIER_GLYPH=(()=>{let star='';for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,r=i%2?5.4:12.4;star+=(i?'L':'M')+(32+r*Math.cos(a)).toFixed(1)+' '+(33.2+r*Math.sin(a)).toFixed(1);}
+  return{Bronze:{d:'M22.5 37l9.5-7.5 9.5 7.5',w:5},Silver:{d:'M22.5 32l9.5-7.5 9.5 7.5M22.5 41l9.5-7.5 9.5 7.5',w:4.6},Gold:{d:'M23 28l9-7 9 7M23 35.5l9-7 9 7M23 43l9-7 9 7',w:3.8},
+    Platinum:{d:star+'Z',fill:1},Diamond:{d:'M25 23h14l5.5 6.5L32 44.5 19.5 29.5z',fill:1,facet:'M19.5 29.5h25M28.6 23L26 29.5l6 15 6-15-2.6-6.5'},Legend:{d:'M19.5 42.5l-2.6-16.5 8.6 6.8L32 21.5l6.5 11.3 8.6-6.8-2.6 16.5z',fill:1,facet:'M20.5 37.5h23'}};})();
+let tierEmN=0,rkPos=0,rkSeq=0;
+const tierCol=t=>(TIER_PAL[t]||TIER_PAL.Silver)[1];
+function tierTable(){const c=wallet.catalog;return c&&Array.isArray(c.tiers)&&c.tiers.length&&Array.isArray(c.tierAt)&&c.tierAt.length===c.tiers.length?c:TIER_FB;}
+function tierEmblem(t){ // a bevelled hexagon in the tier's metal, with chevrons, a star, a gem or a crown
+  const p=TIER_PAL[t]||TIER_PAL.Silver,g=TIER_GLYPH[t]||TIER_GLYPH.Silver,id='tem'+(++tierEmN);
+  const gl=c=>g.fill?`<path d="${g.d}" fill="${c}" stroke="${c}" stroke-width="1.6" stroke-linejoin="round"/>`:`<path d="${g.d}" fill="none" stroke="${c}" stroke-width="${g.w}" stroke-linecap="round" stroke-linejoin="round"/>`;
+  return `<svg class="emb" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="${id}a" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="${p[0]}"/><stop offset=".48" stop-color="${p[1]}"/><stop offset="1" stop-color="${p[2]}"/></linearGradient><linearGradient id="${id}b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${p[2]}"/><stop offset="1" stop-color="${p[1]}"/></linearGradient></defs>`
+    +`<path d="M32 4.5L55.5 18v28L32 59.5 8.5 46V18z" fill="url(#${id}a)" stroke="url(#${id}a)" stroke-width="4" stroke-linejoin="round"/>`
+    +`<path d="M32 11.5l17.5 10v21l-17.5 10-17.5-10v-21z" fill="url(#${id}b)" stroke="rgba(0,0,0,.3)" stroke-width="1"/>`
+    +`<path d="M32 11.5l17.5 10V30c-9-3-26-3-35 0v-8.5z" fill="#fff" opacity=".12"/>`
+    +`<g transform="translate(0 1.8)" opacity=".38">${gl('#000')}</g>${gl(p[0])}${g.facet?`<path d="${g.facet}" fill="none" stroke="${p[1]}" stroke-width="1.3" stroke-linejoin="round"/>`:''}</svg>`;}
+function renderTierLegend(){const el=$('tierLegend'),me=$('rkMe');if(!el||!me)return;const T=tierTable(),r=wallet.rating|0;
+  let i=T.tiers.indexOf(wallet.tier);if(i<0){i=T.tierAt.findIndex(v=>v!=null&&r<v);if(i<0)i=T.tiers.length-1;}
+  const name=T.tiers[i],hi=T.tierAt[i],lo=i>0?T.tierAt[i-1]:Math.min(T.tierAt[0]-300,r),top=hi==null,pct=top?100:Math.round(clamp((r-lo)/(hi-lo),0,1)*100);
+  me.style.setProperty('--tc',tierCol(name));
+  me.innerHTML=`<div class="rk-me-e">${tierEmblem(name)}</div><div class="rk-me-t"><span class="tier" data-tier="${escH(name)}">${escH(name)}</span><b>${r}</b></div>${rkPos?`<span class="rk-pos">#${rkPos}</span>`:''}`
+    +`<div class="rk-bar"><i style="width:${pct}%"></i></div><small class="rk-next">${top?'Top tier':`<b>${hi-r}</b> to ${escH(T.tiers[i+1])}`}</small>`;
+  el.style.setProperty('--prog',T.tiers.length>1?i/(T.tiers.length-1):1);
+  el.innerHTML=T.tiers.map((n,k)=>`<li class="${k<i?'done':k===i?'cur':'up'}" style="--tc:${tierCol(n)}">${tierEmblem(n)}<b>${escH(n)}</b><span>${k?T.tierAt[k-1]:'<'+T.tierAt[0]}</span></li>`).join('');}
 function renderMe(){const n=$('meName');if(n)n.textContent=cleanName($('nameIn').value)||settings.name||'Unnamed cell';const a=$('lobbyAtp');if(a)a.textContent=(wallet.balance|0).toLocaleString();
   if(!renderMe.raf)renderMe.raf=requestAnimationFrame(()=>{renderMe.raf=0;drawAvatar($('meCv'));});} // next frame: the wallet can arrive before the game clock exists, and animated skins read it
 function renderRank(){renderTierLegend();renderMe();$('rankVal').textContent=wallet.rating;{const ht=$('heroTier');if(ht){ht.textContent=wallet.tier;ht.dataset.tier=wallet.tier;$('heroRating').textContent=wallet.rating;}}$('rankTier').textContent=wallet.tier;$('rankTier').dataset.tier=wallet.tier;
@@ -1370,16 +1595,35 @@ function showRank(w){const el=$('dRank');if(typeof w.ratingDelta!=='number'){el.
     num.textContent=r;bar.style.width=Math.round(t.pct*100)+'%';if(tierEl.textContent!==t.name){tierEl.textContent=t.name;tierEl.dataset.tier=t.name;}
     if(k<1)rankAnim=requestAnimationFrame(tick);else finish();};
   rankAnim=requestAnimationFrame(tick);}
-async function loadTop(){try{const r=await fetch(window.MITOSIS_SERVER+'/api/leaderboard');const j=await r.json();const me=wallet.playerId;
-  const myName=cleanName($('nameIn').value)||settings.name||'Unnamed cell';let seen=false;
-  const row=(t,me)=>`<li${me?' class="me"':''}><span class="rk">${t.rank}</span><span class="n">${escH(t.name)}${me?' · you':''}</span><span class="tr" data-tier="${escH(t.tier)}">${escH(t.tier)}</span><span class="rt">${t.rating}</span></li>`;
-  let html=(j.top||[]).map(t=>{const me=!seen&&t.name===myName&&t.rating===wallet.rating;if(me)seen=true;return row(t,me);}).join('');
-  if(!seen&&wallet.online&&(wallet.runs|0)>0)html+=row({rank:'…',name:myName,tier:wallet.tier,rating:wallet.rating},true);
-  $('topList').innerHTML=html||'<li><span class="rk"></span><span>No runs yet — be the first.</span></li>';
-  }catch(e){$('topList').innerHTML='<li><span class="rk"></span><span>Not available offline.</span></li>';}}
+const RK_ICO={off:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M9 5.4A6.5 6.5 0 0 1 18.4 10a4.6 4.6 0 0 1 2.1 7.6M16.5 19H7.2a4.6 4.6 0 0 1-1.1-9.1"/></svg>',
+  cup:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3M12 14v4M8 20h8"/></svg>'};
+const rkYou='<em class="rk-you">You</em>';
+const rkRow=t=>`<li class="rk-row${t.me?' me':''}" style="--tc:${tierCol(t.tier)}"><span class="rk-k">${escH(t.rank)}</span>${tierEmblem(t.tier)}<span class="rk-n"><b>${escH(t.name)}</b><small class="tier" data-tier="${escH(t.tier)}">${escH(t.tier)}</small></span>${t.me?rkYou:''}<span class="rk-r">${t.rating|0}</span></li>`;
+const rkSlot=(t,pl)=>t?`<div class="pd pd${pl}${t.me?' me':''}" style="--tc:${tierCol(t.tier)}">${pl===1?'<svg class="pd-crown" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 18L3 8.5l5 4L12 5.5l4 7 5-4L19.5 18z"/></svg>':''}<div class="pd-av">${tierEmblem(t.tier)}</div><b class="pd-n">${escH(t.name)}</b><span class="pd-r">${t.me?rkYou:''}${t.rating|0}</span><div class="pd-base"><span>${pl}</span></div></div>`
+  :`<div class="pd pd${pl} open"><div class="pd-av"></div><b class="pd-n">—</b><span class="pd-r"></span><div class="pd-base"><span>${pl}</span></div></div>`;
+function rkState(s,title,sub,ico){$('rkBoard').dataset.state=s;const e=$('rkEmpty');e.hidden=!title;if(!title)return;$('rkEmptyIco').innerHTML=ico;$('rkEmptyT').textContent=title;$('rkEmptyS').textContent=sub;$('rkRetry').hidden=s!=='offline';}
+async function loadTop(){const seq=++rkSeq;rkState('loading');
+  $('rkPodium').innerHTML=[2,1,3].map(p=>`<div class="pd pd${p} sk"><div class="pd-av"></div><b class="pd-n"></b><span class="pd-r"></span><div class="pd-base"><span>${p}</span></div></div>`).join('');
+  $('topList').innerHTML='<li class="rk-row sk"></li>'.repeat(4);
+  let j;try{const ac=typeof AbortController==='function'?new AbortController():null,tm=ac?setTimeout(()=>ac.abort(),9000):0;
+    const r=await fetch(window.MITOSIS_SERVER+'/api/leaderboard',ac?{signal:ac.signal}:undefined);clearTimeout(tm);if(!r.ok)throw new Error('HTTP '+r.status);j=await r.json();}
+  catch(e){if(seq!==rkSeq)return;$('rkPodium').innerHTML=$('topList').innerHTML='';rkState('offline','Offline','Connect to see top players',RK_ICO.off);return;}
+  if(seq!==rkSeq)return;
+  const myName=cleanName($('nameIn').value)||settings.name||'Unnamed cell';let seen=false;rkPos=0;
+  const list=(Array.isArray(j.top)?j.top:[]).map(t=>{const me=!seen&&t.name===myName&&t.rating===wallet.rating;if(me){seen=true;rkPos=t.rank;}return Object.assign({},t,{me});});
+  renderTierLegend();
+  if(!list.length){$('rkPodium').innerHTML=$('topList').innerHTML='';rkState('empty','No ranks yet','Be the first',RK_ICO.cup);return;}
+  $('rkPodium').innerHTML=[list[1],list[0],list[2]].map((t,k)=>rkSlot(t,[2,1,3][k])).join('');
+  let html=list.slice(3).map(rkRow).join('');
+  if(!seen&&wallet.online&&(wallet.runs|0)>0)html+='<li class="rk-gap" aria-hidden="true"><i></i><i></i><i></i></li>'+rkRow({rank:'—',name:myName,tier:wallet.tier,rating:wallet.rating,me:true});
+  $('topList').innerHTML=html;rkState('ok');}
+$('rkRetry').addEventListener('click',loadTop);
 $('rankBtn').addEventListener('click',()=>{showCard('rankCard');loadTop();});
 $('avatarBtn').addEventListener('click',()=>$('lookBtn').click());$('lookBtn').addEventListener('click',()=>{showCard('lookCard');renderSkins();});
 $('setBtn').addEventListener('click',()=>showCard('settingsCard'));
+// Settings: an on/off row flips from a tap anywhere on it, the switch included; the invite row shares from anywhere but the link
+for(const r of document.querySelectorAll('#settingsCard .srow.tg'))r.addEventListener('click',e=>{const b=e.target.closest('.seg button');if(b&&b.getAttribute('aria-pressed')!=='true')return;e.stopPropagation();const o=r.querySelector('.seg button:not([aria-pressed="true"])');if(o)o.click();},true);
+$('inviteRow').addEventListener('click',e=>{if(!e.target.closest('input,button'))$('copyInvite').click();});
 // account deletion (App Store guideline 5.1.1(v)): Profile › Account or Settings › Account & data
 let delFrom='profileCard';const DEL_BODY=$('delBody').textContent;
 function openDelete(from){delFrom=from;$('delTitle').textContent='Delete everything?';$('delBody').textContent=DEL_BODY;$('delBody').hidden=false;$('delApple').hidden=false;$('delRow').hidden=false;$('deleteDone').hidden=true;$('deleteMsg').hidden=true;$('deleteGo').disabled=false;$('deleteGo').textContent='Delete permanently';showCard('deleteCard');}
@@ -3106,7 +3350,7 @@ $('again').addEventListener('click',startGame);
 $('setup').addEventListener('click',()=>{leaveLocal();mode='attract';achLine();showCard('startCard');});
 $('resume').addEventListener('click',()=>setPaused(false));
 $('quit').addEventListener('click',()=>{paused=false;$('dRank').hidden=true;econRunEnd();leaveLocal();showResults('Run over','Returned to the lobby',`You left the well after ${fmtT(T-human.stats.born)}.`);removeHuman();mode='attract';document.body.classList.remove('playing');});
-$('copyInvite').addEventListener('click',()=>{const b=$('copyInvite'),i=$('inviteUrl');const done=t=>{b.textContent=t;setTimeout(()=>{b.textContent='Invite friends';},1600);};
+$('copyInvite').addEventListener('click',()=>{const b=$('copyInvite'),i=$('inviteUrl');const done=t=>{b.textContent=t;setTimeout(()=>{b.textContent='Share';},1600);};
   if(navigator.share&&TOUCH_UI){navigator.share({title:'Mitosis',text:'Come play Mitosis with me',url:i.value}).catch(()=>{});return;}
   const pick=()=>{i.focus();i.select();done('Press Ctrl+C');};
   if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(i.value).then(()=>done('Copied'),pick);else pick();});
