@@ -7,6 +7,7 @@ const { openStore, DATA_DIR } = require('./store');
 const economy = require('./economy');
 const netstats = require('./netstats');
 const live = require('./live');
+const social = require('./social');
 
 const PORT = Number(process.env.PORT) || 3000;
 const ROOM_SIZE = 16;                // games per arena room: each room has its own host, bots and round
@@ -17,6 +18,13 @@ const MAX_BODY = 64 * 1024;         // bytes per API request
 const API_RATE = 120;               // API requests per minute per IP
 const page = fs.readFileSync(path.join(__dirname, 'index.html'));
 const store = openStore();
+const friends = social.create({ file: path.join(DATA_DIR, 'social.json'), nameBlocked: economy.nameBlocked });
+// signing in can fold this device's player into an existing account: its friends move along
+const signIn = fn => async (store, body, p) => {
+  const r = await fn(store, body, p);
+  if (r && r.merged) { const to = store.playerBySecret(p.deviceHash); if (to && to.id !== p.id) friends.merge(p.id, to.id); }
+  return r;
+};
 
 function lanUrls() {
   const out = [];
@@ -35,10 +43,20 @@ const ROUTES = {
   'POST /api/skins/buy': { fn: economy.handlers.buySkin, auth: true },
   'POST /api/iap/apple': { fn: economy.handlers.iapApple, auth: true },
   'POST /api/iap/google': { fn: economy.handlers.iapGoogle, auth: true },
-  'POST /api/auth/apple': { fn: economy.handlers.signInApple, auth: true },
-  'POST /api/auth/google': { fn: economy.handlers.signInGoogle, auth: true },
+  'POST /api/auth/apple': { fn: signIn(economy.handlers.signInApple), auth: true },
+  'POST /api/auth/google': { fn: signIn(economy.handlers.signInGoogle), auth: true },
   'POST /api/auth/signout': { fn: economy.handlers.signOut, auth: true },
-  'POST /api/account/delete': { fn: economy.handlers.deleteAccount, auth: true },
+  'POST /api/account/delete': { fn: (store, body, p) => { const r = economy.handlers.deleteAccount(store, body, p); friends.forget(p.id); return r; }, auth: true },
+  // friends and parties (social.js): each answers with the caller's friends, requests, party and invites
+  'POST /api/social/me': { fn: friends.handlers.me, auth: true },
+  'POST /api/social/add': { fn: friends.handlers.add, auth: true },
+  'POST /api/social/accept': { fn: friends.handlers.accept, auth: true },
+  'POST /api/social/remove': { fn: friends.handlers.remove, auth: true },
+  'POST /api/social/party/invite': { fn: friends.handlers.partyInvite, auth: true },
+  'POST /api/social/party/join': { fn: friends.handlers.partyJoin, auth: true },
+  'POST /api/social/party/decline': { fn: friends.handlers.partyDecline, auth: true },
+  'POST /api/social/party/leave': { fn: friends.handlers.partyLeave, auth: true },
+  'POST /api/social/party/go': { fn: friends.handlers.partyGo, auth: true },
   'GET /api/catalog': { fn: () => economy.catalog(), auth: false },
   'GET /api/leaderboard': { fn: store => economy.handlers.leaderboard(store), auth: false },
   // clients report long frames here so stalls on phones can be read from the server log

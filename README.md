@@ -18,6 +18,8 @@ A multiplayer cell-eating arena set in a giant petri well. Absorb anything small
 - **Rounds of ten minutes**: the arena is full size for the first minute, then closes in to 3% of the dish by 9:30. Anything caught outside dissolves. Bots stop respawning at 7:00, and the round ends as soon as one player's cells are all that is left: the last cell standing wins
 - **Practice and offline play** against bots at four difficulties (Easy, Normal, Hard, Expert). With no connection, Play starts a bot game straight away
 - **Nearby play** (iPhone app): phones in the same room play each other over Bluetooth and peer-to-peer Wi-Fi, no internet needed
+- **Friends and parties**: add friends by their 6-character friend code (Friends in the lobby) and see who's online. Invite one into a party: when either of you presses Play, the other joins the same arena. Allies get a dashed cyan ring and an arrow at the screen edge, can't eat each other, and whoever runs out of lives watches their ally
+- **High ping plays bots**: with a ping over 100 ms, Play in Ranked starts a bot game instead, unless *Allow high ping* is on in Settings or you're in a party
 - **Mutations** (Magnet, Phase, Surge), dash, frenzy streaks, a leader bounty, stain patterns and 12 achievements. There is no chat
 
 ## Controls
@@ -232,6 +234,9 @@ All endpoints take and return JSON. Authenticated ones need `Authorization: Bear
 | `POST /api/auth/google` `{idToken, nonce}` | Sign in with Google, same behaviour |
 | `POST /api/auth/signout` | Detach this device from the account (the page then starts a fresh secret) |
 | `POST /api/account/delete` | `{confirm:'DELETE'}`: delete the player and everything linked (skins, runs, sign-ins, devices); purchase receipts stay as anonymous ids so they cannot be replayed. In the game: Profile › Account › Delete account, or Settings › Account & data |
+| `POST /api/social/me` `{name, status}` | Friends: your friend code, friends with online status (`menu`, `arena`, `practice`, `nearby`, `spectating`, `offline`), friend requests, your party and party invites. The games call it every few seconds in the menus and every 30 s in a game, which is what makes them show as online |
+| `POST /api/social/add` · `accept` · `remove` `{code}` | Send a friend request by friend code (or accept theirs if they already asked); accept one; unfriend, decline or cancel |
+| `POST /api/social/party/invite` `{code}` · `join` · `decline` `{party}` · `leave` · `go` | Parties of two friends: invite, join (invites last 5 minutes), leave (ends the party), and `go` when one presses Play so the other follows. Parties live in memory; friend lists in `DATA_DIR/social.json` |
 | `POST /api/crash` `{platform, kind, app, os, device, report}` | Crash and hang reports from the apps; logged (`!!` lines) and kept in `DATA_DIR/crashes/` |
 | `POST /api/log` `{who, text}` | Client diagnostics: frame stalls, page errors, autopilot events; printed in the server log |
 | `POST /api/net` | Connection quality from the game: ping samples, lost pings, frame rate, time zone (anonymous) |
