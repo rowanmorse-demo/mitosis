@@ -463,38 +463,7 @@ body:not(.playing) #tip{display:none}
 #overlay>#settingsCard #helpSec,#overlay>#profileCard #achField{grid-column:1/-1}#overlay>#settingsCard #helpSec .body{max-height:none}
 @media (orientation:landscape){#overlay>#profileCard,#overlay>#settingsCard,#overlay>#lookCard,#overlay>#rankCard{grid-template-columns:1fr 1fr}#overlay>.page>.phead,#overlay>.page>.pstats,#overlay>#rankCard>*,#overlay>#lookCard .field:has(#ownedSkins){grid-column:1/-1}}
 @media (orientation:landscape) and (max-height:520px){.pg-top h2{font-size:22px!important}.pg-top{padding-bottom:8px}}
-/* shop: its own full-screen view over the culture, like the lobby */
-#overlay:has(#storeCard:not([hidden])){padding:0;place-items:stretch}
-.shopview{position:absolute;inset:0;display:grid;grid-template-columns:minmax(250px,.9fr) minmax(0,1.3fr);grid-template-rows:auto minmax(0,1fr);grid-template-areas:"top top" "feat list";gap:12px 24px;
-  padding:max(12px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));box-sizing:border-box;
-  background:radial-gradient(50% 70% at 24% 58%,var(--glow,rgba(154,140,255,.13)),transparent 70%),linear-gradient(90deg,rgba(2,8,9,.74),rgba(2,8,9,.6) 45%,rgba(2,8,9,.78));-webkit-backdrop-filter:blur(8px) saturate(1.1);backdrop-filter:blur(8px) saturate(1.1);animation:ov .3s ease-out;user-select:none;-webkit-user-select:none;}
-.shopview[data-r=seasonal]{--glow:rgba(255,120,30,.2)}.shopview[data-r=common]{--glow:rgba(120,220,200,.12)}.shopview[data-r=rare]{--glow:rgba(154,140,255,.18)}.shopview[data-r=epic]{--glow:rgba(242,177,52,.17)}.shopview[data-r=legendary]{--glow:rgba(255,92,60,.22)}
-.sv-top{grid-area:top;display:grid;grid-template-columns:auto auto 1fr auto;align-items:center;gap:12px}
-.sv-title{margin:0;font:800 26px/1 var(--display);letter-spacing:-.04em}
-.sv-tabs{justify-self:center;display:flex;padding:3px;border-radius:999px;border:1px solid var(--line);background:rgba(2,8,9,.6)}
-.sv-tabs button{appearance:none;border:0;background:none;color:var(--muted);font:700 13px var(--display);padding:8px 18px;border-radius:999px;cursor:pointer;transition:background .15s,color .15s}
-.sv-tabs button[aria-selected=true]{background:var(--ink);color:#041012}
-.sv-bal{display:flex;align-items:center;gap:7px;height:40px;padding:0 14px 0 11px;border-radius:999px;border:1px solid rgba(242,177,52,.35);background:rgba(2,8,9,.6);color:var(--amber);font:800 16px var(--display);font-variant-numeric:tabular-nums}
-.sv-bal i{width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffe08a,#f2b134 55%,#a8700f);box-shadow:0 0 10px rgba(242,177,52,.45)}
-.sv-bal span{font:600 10px var(--mono);letter-spacing:.1em;color:var(--muted)}
-.sv-feat{grid-area:feat;display:grid;grid-template-rows:minmax(0,1fr) auto;justify-items:center;align-content:center;gap:6px;min-height:0;text-align:center}
-.sv-stage{position:relative;height:100%;max-height:min(300px,42vh);aspect-ratio:1;min-height:0;display:grid;place-items:center}
-.sv-stage::after{content:"";position:absolute;left:22%;right:22%;bottom:3%;height:8%;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.5),transparent)}
-.sv-stage canvas{position:relative;z-index:1;width:100%;height:100%;animation:bob 4.5s ease-in-out infinite}
-.sv-info{display:grid;gap:6px;justify-items:center;width:100%;max-width:360px}
-.sv-rar{font:700 9.5px var(--mono);letter-spacing:.18em;text-transform:uppercase;padding:4px 10px;border-radius:999px;border:1px solid currentColor;color:#8fd8c6}
-.sv-rar.seasonal{color:#ff8a2a;background:rgba(255,120,30,.12)}.sv-rar.rare{color:var(--violet)}.sv-rar.epic{color:var(--amber)}.sv-rar.legendary{color:#ff7a59;background:rgba(255,92,60,.1)}
-.sv-info h3{margin:0;font:800 24px/1.1 var(--display);letter-spacing:-.025em}
-.sv-info>p#featDesc{margin:0;font:13px/1.4 var(--display);color:var(--muted);min-height:2.8em}
-.sv-buy{width:100%;max-width:300px;padding:13px 18px;font-size:17px;border-radius:14px;display:flex;align-items:center;justify-content:center;gap:8px;font-variant-numeric:tabular-nums}
-.sv-buy i{width:15px;height:15px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffe08a,#f2b134 55%,#a8700f);flex:none}
-.sv-buy.own{background:#5fe0a8;color:#04140d}.sv-buy.wearing{background:rgba(95,224,168,.12);color:#5fe0a8;box-shadow:inset 0 0 0 1px rgba(95,224,168,.45);opacity:1}
-.sv-buy.confirm{background:var(--amber);color:#1d1300;animation:pulse 1s ease-in-out infinite}.sv-buy.short{background:rgba(242,177,52,.12);color:var(--amber);box-shadow:inset 0 0 0 1px rgba(242,177,52,.45)}
-.sv-buy.short i{display:none}
-@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(242,177,52,.5)}50%{box-shadow:0 0 0 6px rgba(242,177,52,0)}}
-.sv-note{margin:0;min-height:1.3em;font:600 11px/1.3 var(--mono);color:var(--dim)}
-.sv-list{grid-area:list;min-height:0;overflow:auto;display:grid;align-content:start;gap:12px;padding:6px 4px 10px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;scrollbar-width:none}
-.sv-list::-webkit-scrollbar{display:none}
+/* skin tiles on the Skins page (the shop draws its own, in @ui:shop) */
 :is(.shopview,#lookCard) .skins{grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:9px}
 :is(.shopview,#lookCard) .skin{padding:9px 4px 8px;background:rgba(2,8,9,.55);border-radius:14px;position:relative}
 :is(.shopview,#lookCard) .skin canvas{width:58px;height:58px}
@@ -503,31 +472,12 @@ body:not(.playing) #tip{display:none}
 :is(.shopview,#lookCard) .skin .rt{display:none}:is(.shopview,#lookCard) .skin::before{content:"";position:absolute;top:7px;left:7px;width:7px;height:7px;border-radius:50%;background:#8fd8c6;opacity:.8}
 :is(.shopview,#lookCard) .skin.rare::before{background:var(--violet)}:is(.shopview,#lookCard) .skin.epic::before{background:var(--amber)}:is(.shopview,#lookCard) .skin.legendary::before{background:#ff7a59;box-shadow:0 0 8px #ff7a59}
 :is(.shopview,#lookCard) .skin.seasonal{border-color:rgba(255,138,42,.55);background:linear-gradient(180deg,rgba(255,120,30,.1),rgba(2,8,9,.55))}:is(.shopview,#lookCard) .skin.seasonal::before{background:#ff8a2a;box-shadow:0 0 8px #ff8a2a}
-.sv-season{grid-column:1/-1;display:flex;align-items:baseline;gap:10px;padding:2px 2px 0;font:600 11px var(--mono);color:var(--muted)}.sv-season b{font:800 15px var(--display);color:#ff9a45;letter-spacing:-.01em}.sv-season.all{margin-top:6px}.sv-season.all b{color:var(--ink)}
-.sv-atp{grid-column:1/-1;grid-row:2;min-height:0;overflow:auto;display:grid;align-content:center;justify-items:center;gap:16px;padding:4px 0 8px}
-.sv-atp .packs{grid-template-columns:repeat(5,minmax(0,164px));gap:12px;width:100%;justify-content:center}
-.sv-atp .pack{padding:20px 10px 14px;background:linear-gradient(180deg,rgba(242,177,52,.12),rgba(2,8,9,.6))}
-.sv-atp .pack b{font-size:28px}
-.sv-earn{display:grid;gap:8px;justify-items:center}.sv-earn ul{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
-.sv-earn li{font:600 11.5px var(--mono);color:var(--muted);padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:rgba(2,8,9,.55)}.sv-earn li b{color:var(--amber)}
-.sv-atp .hint{text-align:center;max-width:520px}
-/* landscape phones: tighter */
 @media (orientation:landscape) and (max-height:520px){
-  .shopview{gap:8px 18px}.sv-title{font-size:22px}.sv-bal,.shopview .lb-icon{height:36px}.shopview .lb-icon{width:36px}.sv-tabs button{padding:7px 14px;font-size:12px}
-  .sv-info h3{font-size:20px}.sv-info>p#featDesc{font-size:12px;min-height:0}.sv-buy{padding:10px 16px;font-size:15px}.sv-info{gap:4px}
   :is(.shopview,#lookCard) .skins{grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px}:is(.shopview,#lookCard) .skin canvas{width:50px;height:50px}
-  .sv-atp{gap:10px}.sv-atp .pack{padding:14px 8px 10px}.sv-atp .pack b{font-size:24px}
 }
-/* portrait: preview on top, the grid scrolls underneath */
 @media (orientation:portrait){
-  .shopview{grid-template-columns:1fr;grid-template-rows:auto auto minmax(0,1fr);grid-template-areas:"top" "feat" "list";gap:12px}
-  .sv-top{grid-template-columns:auto 1fr auto}.sv-title{display:none}
-  .sv-feat{grid-template-columns:auto minmax(0,1fr);grid-template-rows:none;justify-items:start;text-align:left;gap:14px;align-items:center}
-  .sv-stage{height:auto;width:min(36vw,170px)}.sv-info{justify-items:start}.sv-info h3{font-size:21px}.sv-info>p#featDesc{min-height:0;font-size:12.5px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}.sv-buy{max-width:none;font-size:16px;padding:12px 14px}
   :is(.shopview,#lookCard) .skins{grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:8px}:is(.shopview,#lookCard) .skin canvas{width:52px;height:52px}:is(.shopview,#lookCard) .skin .sp{font-size:9.5px;padding:3px 6px}
-  .sv-atp{grid-row:2/-1;align-content:start}.sv-atp .packs{grid-template-columns:repeat(2,minmax(0,1fr))}.sv-atp .pack:last-child{grid-column:1/-1}
 }
-@media (min-width:1100px){.shopview{padding-left:max(48px,calc(50vw - 620px));padding-right:max(48px,calc(50vw - 620px))}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 /* Skins page: a big live preview beside the default-cell customiser and the skins you own */
 #overlay>#lookCard.page{grid-template-columns:minmax(0,1fr);gap:14px 26px}
@@ -561,7 +511,220 @@ body:not(.playing) #tip{display:none}
 /* @ui:lobby end */
 
 /* @ui:shop */
-
+/* Shop: a full-screen store over the culture. Skins tab: a featured hero beside the grid. ATP tab: the packs. --rc is the rarity colour as r,g,b */
+#overlay:has(#storeCard:not([hidden])){padding:0;place-items:stretch}
+.shopview{--rc:143,216,198;position:absolute;inset:0;display:grid;grid-template-columns:minmax(260px,.82fr) minmax(0,1.5fr);grid-template-rows:auto minmax(0,1fr);grid-template-areas:"top top" "feat list";gap:12px 20px;
+  padding:max(12px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));box-sizing:border-box;
+  background:radial-gradient(40% 62% at 22% 58%,rgba(var(--rc),.15),transparent 70%),radial-gradient(120% 80% at 50% 115%,rgba(0,0,0,.6),transparent 60%),linear-gradient(90deg,rgba(2,8,9,.86),rgba(2,8,9,.72) 45%,rgba(2,8,9,.88));
+  -webkit-backdrop-filter:blur(10px) saturate(1.1);backdrop-filter:blur(10px) saturate(1.1);animation:ov .3s ease-out;user-select:none;-webkit-user-select:none}
+.shopview[data-r=rare]{--rc:154,140,255}.shopview[data-r=epic]{--rc:242,177,52}.shopview[data-r=legendary]{--rc:255,110,70}.shopview[data-r=seasonal]{--rc:255,138,42}
+.shopview[data-tab=atp]{background:radial-gradient(55% 60% at 50% 45%,rgba(242,177,52,.11),transparent 70%),radial-gradient(120% 80% at 50% 115%,rgba(0,0,0,.6),transparent 60%),linear-gradient(90deg,rgba(2,8,9,.86),rgba(2,8,9,.74) 50%,rgba(2,8,9,.86))}
+/* the ATP coin: an amber orb with a bolt, sized by font-size */
+.sv-coin{position:relative;display:inline-block;flex:none;width:1em;height:1em;border-radius:50%;font-style:normal;vertical-align:-.14em;background:radial-gradient(circle at 34% 28%,#fff6d0 0 7%,#ffd765 24%,#f29a1c 64%,#9a5408);box-shadow:inset 0 -.06em .08em rgba(90,40,0,.45),0 0 .45em rgba(242,177,52,.35)}
+.sv-coin::after{content:"";position:absolute;inset:19%;background:rgba(110,50,0,.6);clip-path:polygon(56% 0,18% 56%,44% 56%,36% 100%,82% 40%,56% 40%,68% 0)}
+/* top bar */
+#storeCard .sv-top{grid-area:top;display:grid;grid-template-columns:auto auto 1fr auto;align-items:center;gap:12px;min-width:0}
+#storeCard #storeBack{width:44px;height:44px;border-color:var(--line-strong);background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.02)),rgba(2,8,9,.6);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 4px 14px rgba(0,0,0,.3);transition:transform .1s}
+#storeCard #storeBack:active{transform:scale(.92)}
+#storeCard .sv-title{margin:0;font:800 26px/1 var(--display);letter-spacing:-.045em;background:linear-gradient(180deg,#f6fcf9,#a9d9ca);-webkit-background-clip:text;background-clip:text;color:transparent}
+#storeCard .sv-tabs{justify-self:center;display:flex;gap:4px;padding:4px;border-radius:999px;border:1px solid var(--line);background:rgba(1,6,7,.72);box-shadow:inset 0 2px 6px rgba(0,0,0,.45),0 1px 0 rgba(255,255,255,.04)}
+#storeCard .sv-tabs button{appearance:none;border:0;display:flex;align-items:center;justify-content:center;gap:8px;min-width:108px;height:38px;padding:0 18px 0 14px;border-radius:999px;background:none;color:var(--muted);font:700 14px/1 var(--display);letter-spacing:-.01em;cursor:pointer;transition:background .2s,color .2s,transform .1s}
+#storeCard .sv-tabs button svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9}
+#storeCard .sv-tabs .sv-coin{font-size:17px}
+#storeCard .sv-tabs button:active{transform:scale(.95)}
+#storeCard .sv-tabs button:not([aria-selected=true]):hover{color:var(--ink)}
+#storeCard .sv-tabs button[aria-selected=true]{background:linear-gradient(180deg,#f7fcfa,#cde8df);color:#06181a;box-shadow:inset 0 1px 0 #fff,inset 0 -2px 0 rgba(0,40,40,.12),0 4px 12px rgba(0,0,0,.4)}
+#storeCard .sv-bal{appearance:none;display:flex;align-items:center;gap:8px;height:44px;padding:0 5px 0 11px;border-radius:999px;cursor:pointer;border:1px solid rgba(242,177,52,.42);background:linear-gradient(180deg,rgba(60,40,6,.55),rgba(8,10,8,.75));color:#ffe3a0;font:800 17px/1 var(--display);letter-spacing:-.01em;font-variant-numeric:tabular-nums;box-shadow:inset 0 1px 0 rgba(255,220,140,.14),0 4px 14px rgba(0,0,0,.35);transition:transform .1s}
+#storeCard .sv-bal:active{transform:scale(.95)}
+#storeCard .sv-bal .sv-coin{width:1em;height:1em;font-size:22px}
+#storeCard .sv-plus{display:grid;place-items:center;width:32px;height:32px;margin-left:2px;border-radius:50%;background:linear-gradient(180deg,#ffe28a,#f2a524 60%,#d98510);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 -2px 0 rgba(110,50,0,.28),0 2px 6px rgba(0,0,0,.35)}
+#storeCard .sv-plus svg{width:16px;height:16px;fill:none;stroke:#2a1600;stroke-width:3.2;stroke-linecap:round}
+/* featured skin: a lit stage, a rarity badge, the name and one big button */
+#storeCard .sv-feat{grid-area:feat;position:relative;isolation:isolate;overflow:hidden;display:grid;grid-template-rows:minmax(0,1fr) auto;justify-items:center;align-content:stretch;gap:8px;min-height:0;padding:12px 16px 16px;text-align:center;border-radius:26px;
+  border:1px solid rgba(var(--rc),.26);background:radial-gradient(75% 55% at 50% 34%,rgba(var(--rc),.24),transparent 72%),linear-gradient(180deg,rgba(var(--rc),.08),rgba(3,12,14,.82) 55%,rgba(2,8,9,.92));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 24px 60px rgba(0,0,0,.45)}
+#storeCard .sv-stage{position:relative;height:100%;width:auto;max-width:100%;max-height:340px;aspect-ratio:1;min-height:0;display:grid;place-items:center}
+#storeCard .sv-stage::before{content:"";position:absolute;inset:-22%;z-index:0;border-radius:50%;background:repeating-conic-gradient(from 0deg,rgba(var(--rc),.22) 0 5deg,transparent 5deg 20deg);-webkit-mask:radial-gradient(closest-side,#000 22%,transparent 100%);mask:radial-gradient(closest-side,#000 22%,transparent 100%);animation:svspin 60s linear infinite}
+#storeCard .sv-stage::after{content:"";position:absolute;left:12%;right:12%;bottom:0;height:14%;z-index:0;border-radius:50%;background:radial-gradient(closest-side,rgba(var(--rc),.45),rgba(var(--rc),.1) 55%,transparent),radial-gradient(closest-side,rgba(0,0,0,.6),transparent)}
+#storeCard .sv-stage canvas{position:relative;z-index:1;width:100%;height:100%;animation:bob 4.5s ease-in-out infinite}
+@keyframes svspin{to{transform:rotate(1turn)}}
+#storeCard .sv-info{display:grid;gap:8px;justify-items:center;width:100%;max-width:340px;min-width:0}
+#storeCard .sv-badges{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px}
+#storeCard .sv-rar{display:inline-flex;align-items:center;gap:7px;height:24px;box-sizing:border-box;padding:0 11px 0 9px;border-radius:999px;font:700 10px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:rgb(var(--rc));background:rgba(var(--rc),.13);border:1px solid rgba(var(--rc),.45);box-shadow:0 0 16px rgba(var(--rc),.15)}
+#storeCard .sv-rar::before{content:"";width:7px;height:7px;border-radius:1.5px;transform:rotate(45deg);background:currentColor;box-shadow:0 0 8px currentColor}
+#storeCard .sv-left{display:inline-flex;align-items:center;gap:5px;height:24px;box-sizing:border-box;padding:0 10px 0 8px;border-radius:999px;font:700 11px/1 var(--mono);color:#ffd2a6;font-variant-numeric:tabular-nums;background:rgba(255,120,30,.14);border:1px solid rgba(255,138,42,.4)}
+#storeCard .sv-left svg,#storeCard .sv-clock svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+#storeCard .sv-info h3{margin:0;font:800 28px/1.02 var(--display);letter-spacing:-.035em;text-wrap:balance;text-shadow:0 2px 24px rgba(0,0,0,.6)}
+#storeCard #featDesc{margin:-2px 0 2px;font:500 13px/1.4 var(--display);color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-wrap:balance}
+#storeCard #featDesc:empty{display:none}
+#storeCard .sv-buy{position:relative;width:100%;max-width:320px;height:54px;margin-top:2px;padding:0 7px 0 20px;border:0;border-radius:17px;display:flex;align-items:center;justify-content:space-between;gap:10px;font:800 19px/1 var(--display);letter-spacing:-.015em;font-variant-numeric:tabular-nums;color:#2b0715;cursor:pointer;
+  background:linear-gradient(180deg,#ff9bb7,#ff6993 42%,#f04477);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.5),inset 0 -3px 0 rgba(130,10,50,.4),0 10px 26px rgba(255,92,138,.32),0 2px 0 rgba(0,0,0,.25);transition:transform .1s,box-shadow .12s,filter .15s}
+#storeCard .sv-buy:not(:disabled):active{transform:translateY(2px);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),inset 0 -1px 0 rgba(130,10,50,.4),0 4px 12px rgba(255,92,138,.25)}
+#storeCard .sv-buy,#storeCard .sv-pack .pr{position:relative;isolation:isolate}
+#storeCard .sv-buy::before,#storeCard .sv-pack .pr::before{content:"";position:absolute;z-index:-1;left:3px;right:3px;top:2px;height:46%;border-radius:inherit;background:linear-gradient(180deg,rgba(255,255,255,.34),rgba(255,255,255,.04));pointer-events:none}
+#storeCard .sv-buy:is(.off,.short,.wearing)::before,#storeCard .sv-pack:disabled .pr::before{display:none}
+#storeCard .sv-buy:not(:has(.pz)){justify-content:center;gap:8px;padding:0 18px}
+#storeCard .sv-buy svg{width:21px;height:21px;flex:none;fill:none;stroke:currentColor;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round}
+#storeCard .sv-buy .pz{display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 13px 0 10px;border-radius:12px;background:rgba(40,4,18,.42);color:#fff;font:800 17px/1 var(--display);box-shadow:inset 0 1px 3px rgba(0,0,0,.3),0 1px 0 rgba(255,255,255,.18)}
+#storeCard .sv-buy .pz .sv-coin{font-size:19px}
+#storeCard .sv-buy.confirm{color:#2a1600;background:linear-gradient(180deg,#ffeaa0,#f7bb3a 48%,#e0920f);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.6),inset 0 -3px 0 rgba(120,60,0,.38),0 10px 26px rgba(242,177,52,.35);animation:svpulse 1s ease-in-out infinite}
+#storeCard .sv-buy.confirm .pz{background:rgba(60,30,0,.32)}
+@keyframes svpulse{50%{filter:brightness(1.13)}}
+#storeCard .sv-buy.own{color:#04170e;background:linear-gradient(180deg,#9df5cc,#5fe0a8 48%,#33c285);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.55),inset 0 -3px 0 rgba(0,80,45,.35),0 10px 26px rgba(95,224,168,.28)}
+#storeCard .sv-buy.wearing{opacity:1;cursor:default;filter:none;transform:none;color:#7af0bd;background:rgba(95,224,168,.1);box-shadow:inset 0 0 0 1.5px rgba(95,224,168,.5)}
+#storeCard .sv-buy.short{color:#ffd36b;background:linear-gradient(180deg,rgba(242,177,52,.22),rgba(242,177,52,.08));box-shadow:inset 0 0 0 1.5px rgba(242,177,52,.6),0 8px 22px rgba(0,0,0,.3)}
+#storeCard .sv-buy.off{color:var(--muted);background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.04));box-shadow:inset 0 0 0 1px var(--line-strong)}
+#storeCard .sv-buy.off .pz{background:rgba(0,0,0,.3);color:var(--muted)}
+#storeCard .sv-buy.off .sv-coin{filter:saturate(.4) brightness(.8)}
+#storeCard .sv-note{display:flex;align-items:center;gap:10px;width:100%;max-width:320px;min-height:0;margin:0;font:700 11.5px/1 var(--mono);color:#ffd36b;font-variant-numeric:tabular-nums}
+#storeCard .sv-note:empty{display:none}
+#storeCard .sv-prog{flex:1;height:7px;border-radius:999px;background:rgba(255,255,255,.08);box-shadow:inset 0 1px 2px rgba(0,0,0,.5);overflow:hidden}
+#storeCard .sv-prog i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#e8960f,#ffe08a);box-shadow:0 0 10px rgba(242,177,52,.6)}
+#storeCard .sv-of{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+/* the grid */
+#storeCard .sv-list{grid-area:list;min-height:0;overflow:auto;display:block;margin:-6px -6px 0;padding:6px 6px 22px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;scrollbar-width:none;-webkit-mask-image:linear-gradient(180deg,#000 calc(100% - 26px),transparent);mask-image:linear-gradient(180deg,#000 calc(100% - 26px),transparent)}
+#storeCard .sv-list::-webkit-scrollbar{display:none}
+#storeCard #skins,#storeCard .sv-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px}
+#storeCard #skinHint{display:none}
+#storeCard .svc{--rc:143,216,198;appearance:none;position:relative;display:grid;justify-items:center;align-content:start;gap:5px;min-width:0;padding:12px 6px 10px;border-radius:18px;cursor:pointer;color:var(--ink);font:inherit;text-align:center;overflow:hidden;
+  border:1px solid rgba(var(--rc),.24);background:radial-gradient(90% 62% at 50% 34%,rgba(var(--rc),.2),transparent 72%),linear-gradient(180deg,rgba(16,34,38,.92),rgba(5,14,16,.94));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 6px 16px rgba(0,0,0,.32);transition:transform .12s,box-shadow .15s,border-color .15s}
+#storeCard .svc.rare{--rc:154,140,255}#storeCard .svc.epic{--rc:242,177,52}#storeCard .svc.legendary{--rc:255,110,70}#storeCard .svc.seasonal{--rc:255,138,42}
+#storeCard .svc::after{content:"";position:absolute;left:20%;right:20%;bottom:0;height:2px;border-radius:2px 2px 0 0;background:rgb(var(--rc));box-shadow:0 0 10px rgba(var(--rc),.9);opacity:.85}
+#storeCard .svc canvas{width:66px;height:66px;filter:drop-shadow(0 6px 8px rgba(0,0,0,.5))}
+#storeCard .svc .sn{max-width:100%;box-sizing:border-box;padding:0 4px;font:700 12.5px/1.15 var(--display);letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#storeCard .svc .sp{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:22px;padding:0 9px 0 6px;border-radius:999px;background:rgba(0,0,0,.4);box-shadow:inset 0 1px 2px rgba(0,0,0,.35);color:#ffd77a;font:800 12px/1 var(--display);font-variant-numeric:tabular-nums}
+#storeCard .svc .sp .sv-coin{font-size:13px}
+#storeCard .svc.own .sp{padding:0 6px;background:none;box-shadow:none;color:var(--muted);font:700 9.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase}
+#storeCard .svc.eq .sp{color:#7af0bd}
+#storeCard .sv-gem{position:absolute;top:9px;left:9px;width:7px;height:7px;border-radius:1.5px;transform:rotate(45deg);background:rgb(var(--rc));box-shadow:0 0 8px rgba(var(--rc),.9)}
+#storeCard .sv-own{position:absolute;top:6px;right:6px;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(180deg,#8ff2c6,#3fcf8e);box-shadow:0 2px 6px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.5)}
+#storeCard .sv-own svg{width:12px;height:12px;fill:none;stroke:#05301c;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}
+#storeCard .svc.legendary{border-color:rgba(255,120,70,.55);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 22px rgba(255,100,50,.22),0 6px 16px rgba(0,0,0,.32)}
+#storeCard .svc.eq{border-color:rgba(95,224,168,.6);box-shadow:inset 0 0 0 1px rgba(95,224,168,.25),0 0 18px rgba(95,224,168,.16),0 6px 16px rgba(0,0,0,.32)}
+#storeCard .svc:hover{border-color:rgba(var(--rc),.55)}
+#storeCard .svc:active{transform:scale(.95)}
+/* the limited seasonal row: its own glowing panel with a live countdown */
+#storeCard .sv-ltd{grid-column:1/-1;position:relative;overflow:hidden;display:grid;gap:10px;padding:11px 11px 12px;border-radius:22px;border:1px solid rgba(255,138,42,.42);
+  background:radial-gradient(100% 120% at 0% 0%,rgba(255,120,30,.26),transparent 55%),radial-gradient(100% 120% at 100% 100%,rgba(140,60,230,.26),transparent 60%),linear-gradient(180deg,rgba(26,14,20,.86),rgba(10,8,16,.92));
+  box-shadow:inset 0 1px 0 rgba(255,200,150,.14),0 12px 30px rgba(0,0,0,.4),0 0 32px rgba(255,120,30,.1)}
+#storeCard .sv-ltd::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(105deg,transparent 38%,rgba(255,220,180,.08) 50%,transparent 62%);transform:translateX(-100%);animation:svsheen 6s ease-in-out infinite}
+@keyframes svsheen{0%,50%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+#storeCard .sv-season{display:flex;align-items:center;gap:9px;min-width:0;padding:0 2px}#storeCard .sv-season>*{flex:none}
+#storeCard .sv-pump{flex:none;width:30px;height:30px;margin:-2px 0;filter:drop-shadow(0 0 8px rgba(255,130,30,.55))}
+#storeCard .sv-season b{font:800 19px/1 var(--display);letter-spacing:-.03em;background:linear-gradient(180deg,#ffe0b0,#ff8a2a);-webkit-background-clip:text;background-clip:text;color:transparent}
+#storeCard .sv-tag{padding:4px 7px 4px 8px;border-radius:6px;font:700 9.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:#240c00;background:linear-gradient(180deg,#ffc07a,#ff7a1a);box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
+#storeCard .sv-clock{margin-left:auto;display:inline-flex;align-items:center;gap:6px;height:30px;box-sizing:border-box;padding:0 12px 0 10px;border-radius:999px;background:rgba(0,0,0,.45);border:1px solid rgba(255,138,42,.4);color:#ffd2a6;font:700 13px/1 var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+#storeCard .sv-ltd .sv-row{grid-template-columns:repeat(var(--n,4),minmax(0,1fr));max-width:calc(var(--n,4)*150px)}
+#storeCard .sv-ltd .svc:not(.sel){background:radial-gradient(90% 62% at 50% 34%,rgba(255,138,42,.26),transparent 72%),linear-gradient(180deg,rgba(40,20,30,.92),rgba(14,8,18,.95))}
+#storeCard .sv-season.all{grid-column:1/-1;margin-top:10px;gap:8px}
+#storeCard .sv-season.all b{font:800 17px/1 var(--display);letter-spacing:-.02em;background:none;color:var(--ink)}
+#storeCard .sv-season.all span{font:700 11px/1 var(--mono);color:var(--dim)}
+#storeCard .svc.sel{border-color:transparent;transform:translateY(-2px);background:radial-gradient(90% 62% at 50% 34%,rgba(var(--rc),.34),transparent 72%),linear-gradient(180deg,rgba(28,50,54,.96),rgba(8,20,22,.96));box-shadow:0 0 0 2px #f2fbf8,0 0 0 6px rgba(var(--rc),.28),0 12px 26px rgba(0,0,0,.45)}
+#storeCard .svc.sel:active{transform:scale(.95)}
+/* ATP packs */
+#storeCard .sv-atp{grid-column:1/-1;grid-row:2;min-height:0;overflow:auto;display:flex;flex-direction:column;align-items:center;gap:16px;padding:8px 2px;scrollbar-width:none;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+#storeCard .sv-atp>*{flex:none}#storeCard .sv-atp::before,#storeCard .sv-atp::after{content:"";flex:1 1 0}
+#storeCard .sv-atp::-webkit-scrollbar{display:none}
+#storeCard .sv-atp .packs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) minmax(0,1.3fr);gap:12px;width:100%;max-width:1000px}
+#storeCard .sv-pack{--pg:.2;appearance:none;position:relative;overflow:hidden;display:grid;grid-template-rows:minmax(0,1fr) auto auto;justify-items:center;gap:6px;min-width:0;padding:26px 10px 10px;border-radius:22px;cursor:pointer;color:var(--ink);text-align:center;
+  border:1px solid rgba(242,177,52,.3);background:radial-gradient(90% 60% at 50% 34%,rgba(255,180,60,var(--pg)),transparent 72%),linear-gradient(180deg,rgba(38,30,12,.88),rgba(8,14,14,.94));
+  box-shadow:inset 0 1px 0 rgba(255,230,170,.14),0 12px 28px rgba(0,0,0,.42);transition:transform .12s,box-shadow .15s,border-color .15s}
+#storeCard .sv-pack.t2{--pg:.24}#storeCard .sv-pack.t3{--pg:.28}#storeCard .sv-pack.t4{--pg:.32}
+#storeCard .sv-pack:disabled{opacity:1;cursor:default}
+#storeCard .sv-pack:not(:disabled):hover{border-color:rgba(242,177,52,.6)}
+#storeCard .sv-pack:not(:disabled):active{transform:scale(.96)}
+#storeCard .pk-art{display:grid;place-items:center;width:100%;min-height:0}
+#storeCard .pk-art svg{display:block;width:100%;max-width:150px;height:auto;max-height:112px;overflow:visible}
+#storeCard .pk-amt{display:grid;gap:5px;justify-items:center}
+#storeCard .pk-amt b{font:800 26px/1 var(--display);letter-spacing:-.035em;font-variant-numeric:tabular-nums;background:linear-gradient(180deg,#fff8de 25%,#ffc53d);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 8px rgba(0,0,0,.5))}
+#storeCard .pk-amt small{font:700 9.5px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+#storeCard .sv-pack .pr{width:100%;height:42px;box-sizing:border-box;margin-top:4px;padding:0 6px;display:grid;place-items:center;border-radius:13px;font:800 17px/1 var(--display);letter-spacing:-.01em;color:#2a1600;background:linear-gradient(180deg,#ffeaa0,#f7bb3a 50%,#e0920f);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.6),inset 0 -3px 0 rgba(120,60,0,.35),0 4px 12px rgba(0,0,0,.3)}
+#storeCard .sv-pack:disabled .pr{background:rgba(255,255,255,.06);color:var(--muted);font:700 11px/1 var(--mono);letter-spacing:.06em;box-shadow:inset 0 0 0 1px var(--line)}
+#storeCard .sv-dots::before{content:"•••";letter-spacing:.2em;animation:svblink 1s ease-in-out infinite}
+@keyframes svblink{50%{opacity:.35}}
+#storeCard .sv-pack .tag{position:absolute;top:0;left:50%;transform:translateX(-50%);z-index:2;height:21px;display:flex;align-items:center;padding:0 11px;border-radius:0 0 11px 11px;font:800 9.5px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;color:#fff;background:linear-gradient(180deg,#a99cff,#7464ea);box-shadow:0 3px 10px rgba(0,0,0,.4),inset 0 -1px 0 rgba(0,0,0,.15)}
+#storeCard .sv-pack.tg-best-value{border-color:rgba(255,92,138,.6);box-shadow:inset 0 1px 0 rgba(255,230,170,.14),0 0 26px rgba(255,92,138,.2),0 12px 28px rgba(0,0,0,.42)}
+#storeCard .sv-pack.tg-best-value .tag{color:#2b0715;background:linear-gradient(180deg,#ff9bb7,#f04477)}
+#storeCard .sv-pack.t5{--pg:.42;border-color:rgba(255,200,90,.72);background:radial-gradient(80% 62% at 50% 34%,rgba(255,190,70,var(--pg)),transparent 72%),radial-gradient(120% 70% at 50% 120%,rgba(140,60,230,.34),transparent 62%),linear-gradient(180deg,rgba(56,40,12,.9),rgba(14,10,20,.95));box-shadow:inset 0 1px 0 rgba(255,240,190,.28),0 0 36px rgba(255,180,60,.26),0 12px 28px rgba(0,0,0,.45)}
+#storeCard .sv-pack.t5 .tag{color:#2a1600;background:linear-gradient(180deg,#fff0b0,#f2b134)}
+#storeCard .sv-pack.t5 .pk-amt b{font-size:31px}
+#storeCard .sv-pack.t5::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(105deg,transparent 38%,rgba(255,240,200,.15) 50%,transparent 62%);transform:translateX(-100%);animation:svsheen 4.5s ease-in-out infinite}
+#storeCard .sv-need{display:flex;align-items:center;gap:8px;height:36px;box-sizing:border-box;margin:0;padding:0 16px 0 11px;border-radius:999px;background:linear-gradient(180deg,rgba(242,177,52,.22),rgba(242,177,52,.08));border:1px solid rgba(242,177,52,.5);color:#ffe3a0;font:700 14px/1 var(--display);box-shadow:0 6px 18px rgba(0,0,0,.3)}
+#storeCard .sv-need .sv-coin{font-size:18px}
+#storeCard .sv-earn{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 12px}
+#storeCard .sv-earn-h{font:700 10.5px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+#storeCard .sv-earn ul{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
+#storeCard .sv-earn li{display:inline-flex;align-items:center;gap:6px;height:32px;box-sizing:border-box;padding:0 10px 0 5px;border-radius:999px;background:rgba(2,8,9,.65);border:1px solid var(--line);font:800 13px/1 var(--display);color:#ffd36b}
+#storeCard .sv-earn li.top{padding-left:11px}
+#storeCard .sv-earn li span{font:600 11.5px/1 var(--mono);color:var(--muted)}
+#storeCard .sv-earn .md{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font:800 11px/1 var(--display);font-style:normal;color:#2a1600;background:radial-gradient(circle at 35% 30%,#fff3c0,#f2b134 60%,#a8700f);box-shadow:inset 0 -1px 2px rgba(0,0,0,.3)}
+#storeCard .sv-earn .m2 .md{color:#1a2229;background:radial-gradient(circle at 35% 30%,#fff,#c4d0da 60%,#7d8a96)}
+#storeCard .sv-earn .m3 .md{color:#2a1406;background:radial-gradient(circle at 35% 30%,#ffe2c4,#d4925a 60%,#8a5228)}
+#storeCard .sv-earn li b{font-weight:800}
+#storeCard .sv-earn li .sv-coin{font-size:14px}
+#storeCard #storeHint{margin:0;text-align:center;font:600 11px/1.3 var(--mono);color:var(--dim)}
+#storeCard #storeHint:empty{display:none}
+/* landscape phones: everything on one screen */
+@media (orientation:landscape) and (max-height:520px){
+  .shopview{grid-template-columns:minmax(230px,.78fr) minmax(0,1.5fr);gap:8px 14px}
+  #storeCard .sv-title{font-size:22px}
+  #storeCard .sv-feat{padding:4px 12px 12px;gap:4px;border-radius:22px}
+  #storeCard .sv-info{gap:6px}
+  #storeCard .sv-info h3{font-size:22px}
+  #storeCard #featDesc{display:none}
+  #storeCard .sv-buy{height:48px;font-size:17px;border-radius:15px}
+  #storeCard .sv-buy .pz{height:36px;font-size:16px;border-radius:11px}
+  #storeCard #skins,#storeCard .sv-row{grid-template-columns:repeat(auto-fill,minmax(94px,1fr));gap:8px}
+  #storeCard .svc{padding:10px 5px 8px;gap:4px;border-radius:16px}
+  #storeCard .svc canvas{width:58px;height:58px}
+  #storeCard .sv-ltd{padding:9px 9px 10px;gap:8px;border-radius:20px}
+  #storeCard .sv-atp{gap:10px;padding-top:6px}
+  #storeCard .sv-atp:has(#storeNeed:not([hidden])) .pk-art svg{max-height:62px}#storeCard .sv-atp:has(#storeNeed:not([hidden])) #storeHint{display:none}
+  #storeCard .sv-pack{padding:24px 8px 8px;gap:4px;border-radius:18px}
+  #storeCard .pk-art svg{max-height:80px}
+  #storeCard .pk-amt b{font-size:22px}#storeCard .sv-pack.t5 .pk-amt b{font-size:26px}
+  #storeCard .sv-pack .pr{height:38px;font-size:15px;border-radius:12px}
+}
+/* portrait: the hero becomes a banner over the grid */
+@media (orientation:portrait){
+  .shopview{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr);grid-template-areas:"top" "feat" "list";gap:12px}
+  #storeCard .sv-top{grid-template-columns:auto minmax(0,1fr) auto;gap:10px 12px}
+  #storeCard .sv-tabs{grid-row:2;grid-column:1/-1;justify-self:stretch}
+  #storeCard .sv-tabs button{flex:1;min-width:0}
+  #storeCard .sv-feat{grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);grid-template-rows:auto auto minmax(0,1fr) auto auto;align-items:start;justify-items:start;gap:6px 12px;padding:12px 14px 14px 8px;text-align:left}
+  #storeCard .sv-info{display:contents}
+  #storeCard .sv-stage{grid-column:1;grid-row:1/4;align-self:center;width:100%;height:auto;max-height:none}
+  #storeCard .sv-badges{grid-column:2;grid-row:1;align-self:end;justify-content:flex-start;margin-top:4px}#storeCard .sv-info h3{grid-column:2;grid-row:2}#storeCard #featDesc{grid-column:2;grid-row:3;margin:0}
+  #storeCard .sv-buy{grid-column:1/-1;grid-row:4;max-width:none;margin-top:4px}#storeCard .sv-note{grid-column:1/-1;grid-row:5;max-width:none}
+  #storeCard .sv-info h3{font-size:24px}
+  #storeCard #featDesc{font-size:12.5px;-webkit-line-clamp:3}
+  #storeCard .sv-buy{height:50px;font-size:17px}
+  #storeCard #skins,#storeCard .sv-row{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+  #storeCard .sv-ltd{padding:9px 8px 10px;gap:9px}
+  #storeCard .sv-ltd .sv-season{gap:7px}#storeCard .sv-ltd .sv-season b{font-size:17px}#storeCard .sv-clock{height:28px;padding:0 9px 0 8px;gap:5px;font-size:12px}
+  #storeCard .svc{padding:10px 3px 8px;gap:4px;border-radius:16px}
+  #storeCard .svc canvas{width:54px;height:54px}
+  #storeCard .svc .sn{font-size:11.5px;padding:0 2px}
+  #storeCard .svc .sp{font-size:11px;padding:0 7px 0 5px}
+  #storeCard .sv-atp{grid-row:2/-1;padding-top:14px}#storeCard .sv-atp::before{display:none}
+  #storeCard .sv-atp .packs{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  #storeCard .sv-pack{padding:24px 8px 8px;gap:4px;border-radius:20px}#storeCard .pk-art svg{max-height:86px}#storeCard .pk-amt b{font-size:24px}#storeCard .sv-pack .pr{height:40px}
+  #storeCard .sv-pack.t5{grid-column:1/-1;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:1fr auto;align-items:center;column-gap:12px;padding:24px 12px 12px}#storeCard .sv-pack.t5 .pk-art svg{max-height:100px}
+  #storeCard .sv-pack.t5 .pk-art{grid-row:1/3}
+  #storeCard .sv-pack.t5 .pk-amt{align-self:end}
+  #storeCard .sv-pack.t5 .pr{align-self:start}
+}
+/* tall screens: the stage keeps its size and the hero centres */
+@media (min-height:560px) and (orientation:landscape){
+  #storeCard .sv-feat{grid-template-rows:auto auto;align-content:center;gap:14px;padding:20px 20px 22px}
+  #storeCard .sv-stage{width:min(100%,340px);height:auto;max-height:none}
+}
+@media (min-width:1100px){
+  .shopview{padding-left:max(48px,calc(50vw - 620px));padding-right:max(48px,calc(50vw - 620px));gap:20px 28px}
+  #storeCard #skins,#storeCard .sv-row{grid-template-columns:repeat(auto-fill,minmax(116px,1fr));gap:12px}
+  #storeCard .svc canvas{width:74px;height:74px}
+}
 /* @ui:shop end */
 
 /* @ui:skins */
@@ -762,13 +925,13 @@ body:not(.playing) #tip{display:none}
     <header class="sv-top">
       <button class="lb-icon" id="storeBack" type="button" aria-label="Back to the lobby"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
       <h2 class="sv-title">Shop</h2>
-      <div class="sv-tabs" role="tablist" aria-label="Shop sections"><button type="button" role="tab" id="tabSkins" aria-controls="skinSec" aria-selected="true">Skins</button><button type="button" role="tab" id="tabAtp" aria-controls="packSec" aria-selected="false">Get ATP</button></div>
-      <div class="sv-bal" title="Your ATP"><i aria-hidden="true"></i><b id="storeBal">0</b><span>ATP</span></div>
+      <div class="sv-tabs" role="tablist" aria-label="Shop sections"><button type="button" role="tab" id="tabSkins" aria-controls="skinSec" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="10.5" cy="11" r="2.6"/><circle cx="15.5" cy="15.2" r="1"/></svg>Skins</button><button type="button" role="tab" id="tabAtp" aria-controls="packSec" aria-selected="false"><i class="sv-coin" aria-hidden="true"></i>ATP</button></div>
+      <button class="sv-bal" id="storeBalBtn" type="button" aria-label="Your ATP, get more"><i class="sv-coin" aria-hidden="true"></i><b id="storeBal">0</b><span class="sv-plus" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg></span></button>
     </header>
     <section class="sv-feat" id="skinFeat" aria-live="polite">
-      <div class="sv-stage"><canvas id="featCv" width="288" height="288" aria-hidden="true"></canvas></div>
+      <div class="sv-stage"><canvas id="featCv" width="320" height="320" aria-hidden="true"></canvas></div>
       <div class="sv-info">
-        <span class="sv-rar" id="featRar"></span>
+        <div class="sv-badges"><span class="sv-rar" id="featRar"></span><span class="sv-left" id="featLeft" hidden></span></div>
         <h3 id="featName"></h3>
         <p id="featDesc"></p>
         <button class="primary sv-buy" id="featBuy" type="button"></button>
@@ -777,8 +940,9 @@ body:not(.playing) #tip{display:none}
     </section>
     <section class="sv-list" id="skinSec" role="tabpanel" aria-labelledby="tabSkins"><div class="skins" id="skins"></div><p class="hint" id="skinHint"></p></section>
     <section class="sv-atp" id="packSec" role="tabpanel" aria-labelledby="tabAtp" hidden>
+      <p class="sv-need" id="storeNeed" hidden></p>
       <div class="packs" id="packs"></div>
-      <div class="sv-earn"><span class="label">Or earn it by placing in ranked rounds</span><ul id="earnList"></ul></div>
+      <div class="sv-earn"><span class="sv-earn-h">Earn in ranked</span><ul id="earnList"></ul></div>
       <p class="hint" id="storeHint"></p>
     </section>
   </div>
@@ -1451,10 +1615,7 @@ function renderSkins(){
   $('skinHint').textContent=wallet.online?'Tap a skin to see it up close. You earn ATP by placing well in ranked rounds.':'Offline: skins you own still work, and buying needs a connection.';
   const card=(S,shop)=>{const own=ownsSkin(S.id),eq=settings.skin===S.id,sel=shop&&S.id===shopSel;
     const rar=rarOf(S);return `<button type="button" class="skin ${rar}${own?' own':''}${sel?' sel':''}" data-id="${S.id}" aria-pressed="${eq}" aria-label="${escH(S.name)} skin, ${rar}${own?', owned':', '+S.price+' ATP'}"><canvas width="144" height="144" data-skin="${S.id}"></canvas><span class="sn">${escH(S.name)}</span>${rar!=='common'?`<span class="rt">${S.season?SEASONS[S.season].name:rar}</span>`:''}<span class="sp">${own?(eq?'✓ Wearing':'Owned'):fmtAtp(S.price)+' ATP'}</span></button>`;};
-  // seasonal skins lead the shop while their holiday is on (with a countdown) and are hidden out of season unless owned; the rest run cheapest first
-  const byPrice=(a,b)=>a.price-b.price||a.id-b.id,seasonal=PREMIUM.filter(S=>S.season&&seasonState(S.season).open).sort(byPrice),rest=PREMIUM.filter(S=>!S.season||(!seasonState(S.season).open&&ownsSkin(S.id))).sort(byPrice);
-  const head=key=>{const st=seasonState(key);return `<div class="sv-season"><b>${escH(st.name)}</b><span>Limited skins · leave the shop in ${fmtLeft(st.ends-Date.now())}</span></div>`;};
-  el.innerHTML=(seasonal.length?head(seasonal[0].season)+seasonal.map(S=>card(S,true)).join('')+'<div class="sv-season all"><b>All skins</b></div>':'')+rest.map(S=>card(S,true)).join('');renderFeat();
+  renderShopGrid(el);
   const mine=PREMIUM.filter(S=>ownsSkin(S.id)),oe=$('ownedSkins');if(oe){const def=(settings.skin|0)<SKIN_FREE;
     oe.innerHTML=`<button type="button" class="skin def" data-id="def" aria-pressed="${def}" aria-label="Default cell"><canvas width="144" height="144" data-def="1"></canvas><span class="sn">Default</span><span class="sp">${def?'✓ Wearing':'Free'}</span></button>`
       +mine.map(S=>card(S,false)).join('')+(mine.length?'':'<button type="button" class="skin lk-get" data-id="shop"><i>+</i><span class="sn">Get skins</span><span class="sp">Shop</span></button>');
@@ -1485,54 +1646,76 @@ $('ownedSkins').addEventListener('click',e=>{const b=e.target.closest('.skin');i
   if(b.dataset.id==='shop'){$('lookShop').click();return;}
   const id=b.dataset.id==='def'?settings.pat|0:+b.dataset.id;if(id<SKIN_FREE||ownsSkin(id)){settings.skin=id;saveSettings();syncPats();}});
 // The shop: tap a skin to show it large, then buy (tap twice to confirm) or wear it from the big button
+function svIcon(n){return '<svg viewBox="0 0 24 24" aria-hidden="true">'+({check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',plus:'<path d="M12 5.5v13M5.5 12h13"/>'})[n]+'</svg>';}
+function svClock(ms){const s=Math.max(0,Math.floor(ms/1000)),d=Math.floor(s/86400),p=n=>String(n).padStart(2,'0'),hms=`${p(Math.floor(s%86400/3600))}:${p(Math.floor(s%3600/60))}:${p(s%60)}`;return d?`${d}d ${hms}`:hms;}
+function shopCard(S){const own=ownsSkin(S.id),eq=settings.skin===S.id,rar=rarOf(S),px=Math.min(208,Math.max(144,Math.round(70*(window.devicePixelRatio||1))));
+  return `<button type="button" class="svc ${rar}${own?' own':''}${eq?' eq':''}${S.id===shopSel?' sel':''}" data-id="${S.id}" aria-pressed="${S.id===shopSel}" aria-label="${escH(S.name)}, ${rar}${eq?', wearing':own?', owned':', '+S.price+' ATP'}"><span class="sv-gem" aria-hidden="true"></span>${own?'<span class="sv-own" aria-hidden="true">'+svIcon('check')+'</span>':''}<canvas width="${px}" height="${px}" data-skin="${S.id}"></canvas><span class="sn">${escH(S.name)}</span><span class="sp">${eq?'Wearing':own?'Owned':'<i class="sv-coin"></i>'+fmtAtp(S.price)}</span></button>`;}
+function renderShopGrid(el){ // limited seasonal skins lead in their own banner with a live countdown (and are hidden out of season unless owned); the rest run cheapest first
+  const byPrice=(a,b)=>a.price-b.price||a.id-b.id,seasonal=PREMIUM.filter(S=>S.season&&seasonState(S.season).open).sort(byPrice),rest=PREMIUM.filter(S=>!S.season||(!seasonState(S.season).open&&ownsSkin(S.id))).sort(byPrice);
+  let html='';if(seasonal.length){const st=seasonState(seasonal[0].season);
+    html=`<section class="sv-ltd" aria-label="${escH(st.name)}, limited time"><div class="sv-season"><svg class="sv-pump" viewBox="0 0 32 32" aria-hidden="true"><defs><radialGradient id="svPumpG" cx=".38" cy=".34" r=".8"><stop offset="0" stop-color="#ffc878"/><stop offset=".55" stop-color="#ff7d1e"/><stop offset="1" stop-color="#a63a00"/></radialGradient></defs><path d="M16 9.5c-.6-3 .4-5.2 2.8-6.3" fill="none" stroke="#6c9a2e" stroke-width="2.6" stroke-linecap="round"/><ellipse cx="10.4" cy="18.5" rx="7.6" ry="9.6" fill="url(#svPumpG)"/><ellipse cx="21.6" cy="18.5" rx="7.6" ry="9.6" fill="url(#svPumpG)"/><ellipse cx="16" cy="18.5" rx="7" ry="10.2" fill="url(#svPumpG)"/><path d="M9.6 16.2l2.6-3.4 2.6 3.4zM17.2 16.2l2.6-3.4 2.6 3.4zM9 20.6q7 5.4 14 0l-1.9 2.6-1.7-1.3-1.6 1.9-1.8-1.6-1.8 1.6-1.6-1.9-1.7 1.3z" fill="#3b1300"/></svg><b>${escH(st.name)}</b><span class="sv-tag">Limited</span><span class="sv-clock" data-ends="${st.ends}">${svIcon('clock')}<span>${svClock(st.ends-Date.now())}</span></span></div><div class="sv-row" style="--n:${seasonal.length}">${seasonal.map(S=>shopCard(S)).join('')}</div></section><div class="sv-season all"><b>All skins</b><span>${rest.length}</span></div>`;}
+  el.innerHTML=html+rest.map(S=>shopCard(S)).join('');renderFeat();
+}
 function renderFeat(){
   const S=PREMIUM.find(x=>x.id===shopSel)||PREMIUM[0],b=$('featBuy');if(!S||!b)return;shopSel=S.id;
   const rar=rarOf(S),own=ownsSkin(S.id),eq=settings.skin===S.id,cf=confirmSkin===S.id&&performance.now()-confirmT<4000,need=S.price-wallet.balance,
-    st=eq?'wearing':own?'own':!wallet.online?'off':need>0?'short':cf?'confirm':'buy';
-  $('storeCard').dataset.r=rar;$('featRar').className='sv-rar '+rar;$('featRar').textContent=S.season?SEASONS[S.season].name+' · limited':rar;$('featName').textContent=S.name;$('featDesc').textContent=SKIN_DESC[S.id]||'';
+    st=eq?'wearing':own?'own':!wallet.online?'off':need>0?'short':cf?'confirm':'buy',price=`<span class="pz"><i class="sv-coin"></i>${S.price.toLocaleString()}</span>`;
+  $('storeCard').dataset.r=rar;$('featRar').className='sv-rar '+rar;$('featRar').textContent=S.season?SEASONS[S.season].name:rar;$('featName').textContent=S.name;$('featDesc').textContent=SKIN_DESC[S.id]||'';
+  const ss=S.season&&!own?seasonState(S.season):null,fl=$('featLeft');fl.hidden=!(ss&&ss.open);if(ss&&ss.open){fl.dataset.ends=ss.ends;fl.innerHTML=svIcon('clock')+'<span>'+svClock(ss.ends-Date.now())+'</span>';}
   b.className='primary sv-buy '+st;b.disabled=eq;
-  b.innerHTML=eq?'✓ Wearing':own?'Wear this skin':st==='off'?'Connect to buy':st==='short'?`Get ${fmtAtp(need)} more ATP`:cf?`Tap to confirm · <i></i>${S.price.toLocaleString()}`:`Buy · <i></i>${S.price.toLocaleString()}`;
-  $('featNote').textContent=own?(eq?'Equipped — it shows in every game':'Yours to wear any time'):st==='off'?'Buying needs a connection':`${S.price.toLocaleString()} ATP · you have ${wallet.balance.toLocaleString()}`;
-  if(S.season&&!own){const st=seasonState(S.season);if(st.open)$('featNote').textContent+=' · '+fmtLeft(st.ends-Date.now())+' left';}
+  b.innerHTML=eq?svIcon('check')+'<span>Wearing</span>':own?'<span>Wear</span>':st==='off'?'<span>Connect to buy</span>'+price:st==='short'?svIcon('plus')+'<span>Get ATP</span>':cf?'<span>Confirm</span>'+price:'<span>Buy</span>'+price;
+  $('featNote').innerHTML=st==='short'?`<span class="sv-prog"><i style="width:${Math.max(3,Math.min(100,wallet.balance/S.price*100)).toFixed(1)}%"></i></span><span class="sv-of"><i class="sv-coin"></i>${fmtAtp(wallet.balance)} / ${fmtAtp(S.price)}</span>`:'';
   drawFeat();
 }
 function drawFeat(){const cv=$('featCv'),S=PREMIUM.find(x=>x.id===shopSel);if(!cv||!S||$('storeCard').hidden)return;
   const w=Math.min(640,Math.round(cv.clientWidth*(window.devicePixelRatio||1)))||288;if(cv.width!==w)cv.width=cv.height=w;drawPreview(cv,S);}
 (function shopLoop(){if(!$('storeCard').hidden&&!document.hidden&&!RM)drawFeat();requestAnimationFrame(shopLoop);})();
-function shopTab(t){const atp=t==='atp';$('tabSkins').setAttribute('aria-selected',String(!atp));$('tabAtp').setAttribute('aria-selected',String(atp));$('skinFeat').hidden=$('skinSec').hidden=atp;$('packSec').hidden=!atp;if(!atp)renderFeat();}
-$('tabSkins').addEventListener('click',()=>shopTab('skins'));$('tabAtp').addEventListener('click',()=>shopTab('atp'));
-$('skins').addEventListener('click',e=>{const b=e.target.closest('.skin');if(!b)return;const id=+b.dataset.id;if(id===shopSel||!PREMIUM.some(x=>x.id===id))return;shopSel=id;confirmSkin=0;renderSkins();});
+setInterval(()=>{if($('storeCard').hidden||document.hidden)return; // tick the limited-time countdowns
+  for(const c of document.querySelectorAll('#storeCard [data-ends]')){if(c.hidden)continue;const ms=+c.dataset.ends-Date.now();if(ms<=0){renderSkins();return;}const s=c.querySelector('span');if(s)s.textContent=svClock(ms);}},1000);
+function shopTab(t){const atp=t==='atp';$('tabSkins').setAttribute('aria-selected',String(!atp));$('tabAtp').setAttribute('aria-selected',String(atp));$('skinFeat').hidden=$('skinSec').hidden=atp;$('packSec').hidden=!atp;$('storeCard').dataset.tab=atp?'atp':'skins';if(!atp)renderFeat();}
+$('tabSkins').addEventListener('click',()=>shopTab('skins'));$('tabAtp').addEventListener('click',()=>shopTab('atp'));$('storeBalBtn').addEventListener('click',()=>shopTab('atp'));
+$('skins').addEventListener('click',e=>{const b=e.target.closest('.svc');if(!b)return;const id=+b.dataset.id;if(id===shopSel||!PREMIUM.some(x=>x.id===id))return;shopSel=id;confirmSkin=0;renderSkins();Native.haptic('light');});
 $('featBuy').addEventListener('click',async()=>{
   const id=shopSel,S=PREMIUM.find(x=>x.id===id),b=$('featBuy');if(!S)return;
   if(ownsSkin(id)){settings.skin=id;saveSettings();syncPats();Native.haptic('medium');return;}
   if(!wallet.online){toast('ATP','Not connected','Skins can be bought once the server is reachable.');return;}
-  if(wallet.balance<S.price){storeNote=`${S.name} costs ${S.price.toLocaleString()} ATP — you need ${(S.price-wallet.balance).toLocaleString()} more.`;showStoreHint();shopTab('atp');return;}
+  if(wallet.balance<S.price){storeNote=`${(S.price-wallet.balance).toLocaleString()} more for ${S.name}`;showStoreHint();shopTab('atp');return;}
   if(confirmSkin!==id||performance.now()-confirmT>4000){confirmSkin=id;confirmT=performance.now();renderFeat();setTimeout(()=>{if(confirmSkin===id)renderFeat();},4100);return;}
   confirmSkin=0;b.disabled=true;
   try{const w=await api('skins/buy',{skinId:id});applyWallet(w);settings.skin=id;saveSettings();syncPats();toast('ATP','Skin unlocked',S.name+' is yours');Native.haptic('success');}
   catch(err){toast('ATP','Could not buy',err.message);}
   finally{renderSkins();}
 });
-function renderEarn(){ // the placement payouts, from the server's rules when we have them
+function renderEarn(){ // the placement payouts, from the server's rules when we have them: medals for the podium, then the top-N brackets
   const br=(wallet.catalog&&wallet.catalog.rules&&wallet.catalog.rules.byRank)||[[1,25],[2,20],[3,16],[10,5],[30,1]],at=n=>(br.find(([r])=>n<=r)||[0,0])[1],last=br[br.length-1][0];
-  $('earnList').innerHTML=[1,2,3,10,last].map(n=>`<li>${ordinal(n)} place <b>+${at(n)}</b></li>`).join('');
+  $('earnList').innerHTML=[1,2,3,10,last].map(n=>`<li class="${n<=3?'m'+n:'top'}" aria-label="${ordinal(n)} place, ${at(n)} ATP">${n<=3?`<i class="md" aria-hidden="true">${n}</i>`:`<span aria-hidden="true">Top ${n}</span>`}<b aria-hidden="true">+${at(n)}</b><i class="sv-coin" aria-hidden="true"></i></li>`).join('');
 }
 // ATP store (packs are sold through the App Store / Google Play from inside the apps)
 let storeNote='',storeMsg='';
-const showStoreHint=()=>{$('storeHint').textContent=(storeNote?storeNote+' ':'')+storeMsg;};
+const showStoreHint=()=>{const nd=$('storeNeed');nd.hidden=!storeNote;nd.innerHTML=storeNote?'<i class="sv-coin"></i>'+escH(storeNote):'';$('storeHint').textContent=storeMsg;};
 async function openStore(note){
   storeNote=note||'';if(!PREMIUM.some(x=>x.id===shopSel))shopSel=settings.skin>=SKIN_FREE?settings.skin:PREMIUM[0].id;confirmSkin=0;
-  showCard('storeCard');shopTab(note?'atp':'skins');renderSkins();renderEarn();renderPacks([]);
-  if(!Native.platform){renderPacks(null);storeMsg='ATP packs are sold in the Mitosis app for iPhone and Android.';showStoreHint();return;}
-  storeMsg='Loading prices…';showStoreHint();
+  showCard('storeCard');shopTab(note?'atp':'skins');renderSkins();renderEarn();renderPacks([],true);
+  if(!Native.platform){renderPacks(null);storeMsg='Packs are sold in the iPhone and Android app';showStoreHint();return;}
+  storeMsg='';showStoreHint();
   try{const r=await Native.call('products',{ids:ATP_PACKS.map(p=>p.id)});const ps=r.products||[];renderPacks(ps);
-    storeMsg=ps.length?'Purchases go through '+(Native.platform==='ios'?'the App Store':'Google Play')+'.':'The store is not available right now.';showStoreHint();}
-  catch(e){renderPacks([]);storeMsg='Store unavailable: '+e.message;showStoreHint();}
+    storeMsg=ps.length?'':'Store unavailable right now';showStoreHint();}
+  catch(e){renderPacks([]);storeMsg='Store unavailable · '+e.message;showStoreHint();}
 }
-function renderPacks(products){
+function packArt(i){ // ATP orbs: more of them, and a bigger glow, the bigger the pack; the top pack is a whole radiant sphere
+  const f=n=>+n.toFixed(1),orb=(x,y,r)=>`<g transform="translate(${x} ${y})"><circle r="${r}" fill="url(#pk${i}o)"/>${r>=12?`<path transform="scale(${f(r*.85)})" d="M.02-.6L-.3.06H-.04L-.14.6L.3-.08H.04L.2-.6Z" fill="#8a4600" opacity=".42"/>`:''}<ellipse cx="${f(-.32*r)}" cy="${f(-.4*r)}" rx="${f(.34*r)}" ry="${f(.19*r)}" transform="rotate(-30 ${f(-.32*r)} ${f(-.4*r)})" fill="#fff" opacity=".62"/></g>`,
+    spark=(x,y,s)=>`<path transform="translate(${x} ${y}) scale(${s})" d="M0-1C.12-.12.12-.12 1 0C.12.12.12.12 0 1C-.12.12-.12.12-1 0C-.12-.12-.12-.12 0-1Z" fill="#fff8dc"/>`,
+    piles=[[[60,50,22]],[[60,38,16],[46,61,16],[74,61,16]],[[60,27,14],[47,48,14],[73,48,14],[35,69,14],[60,70,15],[85,69,14]],[[60,19,12],[49,36,12],[71,36,12],[38,54,12],[60,54,13],[82,54,12],[27,73,12],[49,74,13],[71,74,13],[93,73,12]]],
+    glow=[32,40,46,52,58][i]||58,defs=`<defs><radialGradient id="pk${i}o" cx=".36" cy=".3" r=".78"><stop offset="0" stop-color="#fff7d6"/><stop offset=".3" stop-color="#ffd768"/><stop offset=".72" stop-color="#f29a1c"/><stop offset="1" stop-color="#93500a"/></radialGradient><radialGradient id="pk${i}g"><stop offset="0" stop-color="#ffc24a" stop-opacity=".55"/><stop offset=".5" stop-color="#ff9a2a" stop-opacity=".16"/><stop offset="1" stop-color="#ff9a2a" stop-opacity="0"/></radialGradient></defs>`;
+  let g=`<circle cx="60" cy="52" r="${glow}" fill="url(#pk${i}g)"/><ellipse cx="60" cy="${i<2?78:88}" rx="${[18,28,40,48][i]||50}" ry="${i<2?4:6}" fill="#000" opacity=".35"/>`;
+  if(i<4)g+=piles[i].map(p=>orb(...p)).join('')+(i>=2?spark(20,24,5)+spark(102,30,4):'')+(i>=3?spark(98,8,3)+spark(14,52,3):'');
+  else g+=`<g transform="rotate(-14 60 52)"><ellipse cx="60" cy="52" rx="52" ry="13" fill="none" stroke="#ffe7a0" stroke-width="2" opacity=".45"/></g>`+orb(60,50,31)+`<g transform="rotate(-14 60 52)"><path d="M8 52A52 13 0 0 0 112 52" fill="none" stroke="#fff1c2" stroke-width="2.6" opacity=".9"/></g>`+orb(17,62,6)+orb(103,50,5)+spark(18,20,6)+spark(104,16,4.5)+spark(98,86,3.5)+spark(24,90,3);
+  return `<svg viewBox="0 0 120 96">${defs}${g}</svg>`;
+}
+function renderPacks(products,loading){
   const el=$('packs');let html='';
-  for(const P of ATP_PACKS){const pr=products&&products.find(x=>x.id===P.id);
-    html+=`<button type="button" class="pack" data-id="${P.id}"${pr?'':' disabled'}>${P.tag?'<span class="tag">'+P.tag+'</span>':''}<b>${P.atp.toLocaleString()}</b><small>ATP · ${escH(P.label)}</small><span class="pr">${pr?escH(pr.price):'In the app'}</span></button>`;}
+  ATP_PACKS.forEach((P,i)=>{const pr=products&&products.find(x=>x.id===P.id),tg=P.tag?' tg-'+P.tag.toLowerCase().replace(/\W+/g,'-'):'';
+    html+=`<button type="button" class="pack sv-pack t${i+1}${tg}" data-id="${P.id}"${pr?'':' disabled'} aria-label="${P.atp.toLocaleString()} ATP, ${escH(P.label)}${pr?', '+escH(pr.price):''}">${P.tag?'<span class="tag">'+escH(P.tag)+'</span>':''}<span class="pk-art" aria-hidden="true">${packArt(i)}</span><span class="pk-amt"><b>${P.atp.toLocaleString()}</b><small>${escH(P.label)}</small></span><span class="pr">${pr?escH(pr.price):loading?'<i class="sv-dots"></i>':products?'—':'In the app'}</span></button>`;});
   el.innerHTML=html;
 }
 let buying=false;
