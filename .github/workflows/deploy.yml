@@ -1,0 +1,36 @@
+# Deploy the game server from GitHub, for networks that can't reach it directly (ship or school Wi-Fi).
+# Runs only when started by hand: Actions › Deploy › Run workflow, or `gh workflow run deploy.yml`.
+# Needs the repository secret DEPLOY_SSH_KEY: the private key that logs in as ubuntu@51.81.81.166.
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+concurrency: deploy
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Pull main and restart the container
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy
+          chmod 600 ~/.ssh/deploy
+          echo '51.81.81.166 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBYWTgJ31gp1V88ymqZ31K+NM8O+/8gPgwM6KoAP5Sux' > ~/.ssh/known_hosts
+          ssh -i ~/.ssh/deploy -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=20 \
+            ubuntu@51.81.81.166 'cd /opt/mitosis && sudo ./deploy.sh'
+          rm -f ~/.ssh/deploy
+
+      - name: Check the server is serving this commit
+        run: |
+          sleep 3
+          curl -fsS --max-time 15 http://51.81.81.166:3000/ -o served.html
+          if cmp -s served.html index.html; then echo "Live: index.html matches ${GITHUB_SHA::7}"
+          else echo "::error::The server's index.html differs from ${GITHUB_SHA::7}"; exit 1; fi
+          curl -fsS --max-time 15 http://51.81.81.166:3000/health; echo

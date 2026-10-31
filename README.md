@@ -150,6 +150,8 @@ docker compose up -d            # serves http://<server>:3000, data in the mitos
 ./deploy.sh                     # later: pull the latest main and restart
 ```
 
+From a network that can't reach the server (some ship, school and office Wi-Fi), deploy through GitHub instead: add the server's SSH private key as the repository secret `DEPLOY_SSH_KEY`, then run Actions › Deploy › Run workflow (or `gh workflow run deploy.yml`). The workflow runs `deploy.sh` on the server and checks the server is serving that commit's `index.html`.
+
 Put the `APPLE_*` and `GOOGLE_*` variables in `/opt/mitosis/.env`; compose passes them to the container. For HTTPS put a reverse proxy in front. With Caddy, a site block like this is all it takes (Caddy fetches and renews the certificate itself):
 
 ```
