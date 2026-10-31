@@ -2079,8 +2079,8 @@ function think(p){
 /* ================= simulation ================= */
 function feedVirus(v,dx,dy,owner){
   v.feed++;
-  if(v.feed>=6){v.feed=0;if(freeV.length>=MAX_FREEV)freeV.shift();
-    const nv={kind:'f',id:(vidC++%4095)+1,x:v.x+dx*v.r*2,y:v.y+dy*v.r*2,vx:dx*760,vy:dy*760,feed:0,spin:rand(0,TAU),dead:false,alive:true};nv.tx=nv.x;nv.ty=nv.y;setVM(nv);freeV.push(nv);
+  if(v.feed>=6){v.feed=0;if(freeV.length>=MAX_FREEV)freeV.shift(); // the new phage flies off along the last shot (range ~ speed / drag of 5)
+    const nv={kind:'f',id:(vidC++%4095)+1,x:v.x+dx*v.r*2,y:v.y+dy*v.r*2,vx:dx*1140,vy:dy*1140,feed:0,spin:rand(0,TAU),dead:false,alive:true};nv.tx=nv.x;nv.ty=nv.y;setVM(nv);freeV.push(nv);
     burst(v.x,v.y,'hsl(40,90%,62%)',10);if(owner===human)sfx('power');}
   setVM(v);
 }
