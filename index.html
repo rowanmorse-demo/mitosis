@@ -1043,7 +1043,7 @@ body:not(.playing) #tip{display:none}
 #passCard .bp-note{margin:0;max-width:320px;font:600 11.5px/1.35 var(--mono);color:var(--muted);text-wrap:balance}
 #passCard .bp-note:empty{display:none}
 /* the pages */
-#passCard .bp-book{grid-area:book;min-height:0;display:grid;grid-template-rows:auto max-content auto;gap:10px;align-content:start;overflow:hidden auto;overscroll-behavior:contain;scrollbar-width:none;margin:0 -6px;padding:0 6px 6px}
+#passCard .bp-book{grid-area:book;min-height:0;display:grid;grid-template-rows:repeat(3,max-content);gap:10px;align-content:start;overflow:hidden auto;overscroll-behavior:contain;scrollbar-width:none;margin:0 -6px;padding:0 6px 6px}
 #passCard .bp-book::-webkit-scrollbar{display:none}
 #passCard .bp-tabs{display:flex;gap:6px;padding:4px;border-radius:999px;border:1px solid var(--line);background:rgba(1,6,7,.72);box-shadow:inset 0 2px 6px rgba(0,0,0,.45),0 1px 0 rgba(255,255,255,.04);overflow-x:auto;scrollbar-width:none}
 #passCard .bp-tabs::-webkit-scrollbar{display:none}
@@ -1116,7 +1116,7 @@ body:not(.playing) #tip{display:none}
   #passCard .bp-info{gap:5px}#passCard .bp-info h3{font-size:21px}#passCard #bpRDesc{display:none}#passCard .bp-note{font-size:10.5px}
   #passCard .bp-claim{height:46px;font-size:17px;border-radius:15px}#passCard .bp-claim .pz{height:34px;font-size:15px;border-radius:11px}
   #passCard .bp-book{gap:6px}#passCard .bp-tabs button{height:30px;font-size:13.5px}
-  #passCard .bp-grid{gap:7px}#passCard .bpr{padding:7px 4px 6px;gap:3px;border-radius:16px}#passCard .bpr-art{width:40px;height:40px}#passCard .bpr-art .sv-coin{font-size:30px}
+  #passCard .bp-grid{gap:7px}#passCard .bpr{padding:6px 4px 5px;gap:2px;border-radius:16px}#passCard .bpr-art{width:40px;height:40px}#passCard .bpr-art .sv-coin{font-size:30px}
   #passCard .bpr-n{font-size:12px}#passCard .bpr-c{height:20px;font-size:11.5px}#passCard .bpr-free{top:5px;left:5px;padding:3px 5px;font-size:8px}#passCard .bpr-lk{top:4px;right:4px;width:20px;height:20px}
   #passCard .bp-pnote{font-size:10.5px}
 }
@@ -1146,6 +1146,9 @@ body:not(.playing) #tip{display:none}
 @media (min-width:1100px){
   .passview{padding-left:max(48px,calc(50vw - 620px));padding-right:max(48px,calc(50vw - 620px));gap:16px 28px}
   #passCard .bpr-art{width:84px;height:84px}#passCard .bpr-art .sv-coin{font-size:58px}#passCard .bpr{padding:18px 8px 12px}
+}
+@media (min-width:1100px) and (min-height:760px){ /* tall desktops: bigger tiles, so the pages fill the column */
+  #passCard .bpr{padding:28px 8px 20px;gap:9px;border-radius:24px}#passCard .bpr-art{width:112px;height:112px}#passCard .bpr-art .sv-coin{font-size:76px}#passCard .bpr-n{font-size:16px}#passCard .bpr-c{height:28px;font-size:14px}
 }
 /* @ui:pass end */
 
