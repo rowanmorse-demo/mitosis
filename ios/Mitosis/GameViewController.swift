@@ -1,3 +1,4 @@
+import CoreHaptics
 import StoreKit
 import UIKit
 import WebKit
@@ -8,7 +9,6 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
     static let voidColor = UIColor(red: 2 / 255, green: 8 / 255, blue: 9 / 255, alpha: 1)
 
     private var webView: WKWebView!
-    private let impact = UIImpactFeedbackGenerator(style: .medium)
     private var nearbyResume = false
 
     override var prefersStatusBarHidden: Bool { true }
@@ -51,7 +51,6 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
         view.addSubview(webView)
 
         UIApplication.shared.isIdleTimerDisabled = true
-        impact.prepare()
         // tell the page when iOS takes the app out of the foreground (Reachability, app switcher, Control Centre)
         for (name, label) in [(UIApplication.willResignActiveNotification, "resignActive"), (UIApplication.didBecomeActiveNotification, "becomeActive"), (UIApplication.didEnterBackgroundNotification, "background")] {
             NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
@@ -212,20 +211,11 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
             // the page asks after a strong finish; iOS decides whether to show the prompt (at most 3 times a year)
             if let scene = view.window?.windowScene { AppStore.requestReview(in: scene) }
         case "haptic":
-            haptic(msg["style"] as? String ?? "medium")
+            Haptics.shared.play(msg["style"] as? String ?? "medium")
         case "log":
             NSLog("[Mitosis page] %@", msg["text"] as? String ?? "")
         default:
             break
-        }
-    }
-
-    private func haptic(_ style: String) {
-        switch style {
-        case "light": UIImpactFeedbackGenerator(style: .light).impactOccurred()
-        case "heavy": UINotificationFeedbackGenerator().notificationOccurred(.error)
-        case "success": UINotificationFeedbackGenerator().notificationOccurred(.success)
-        default: impact.impactOccurred()
         }
     }
 
@@ -247,5 +237,67 @@ private final class BridgeProxy: NSObject, WKScriptMessageHandler {
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         guard message.name == "mitosis", let body = message.body as? [String: Any] else { return }
         target?.handle(body)
+    }
+}
+
+/// Plays the page's haptics with Core Haptics on a background queue. UIKit's feedback generators fire on the main
+/// thread, and when the Taptic Engine was slow to wake they froze the game for seconds after a run of kills, which
+/// is why vibration was switched off by default in October.
+final class Haptics {
+    static let shared = Haptics()
+
+    /// Each style is one or more taps: (intensity, sharpness, start time in seconds).
+    private static let styles: [String: [(Float, Float, TimeInterval)]] = [
+        "selection": [(0.35, 0.9, 0)],
+        "light": [(0.45, 0.6, 0)],
+        "soft": [(0.55, 0.15, 0)],
+        "medium": [(0.7, 0.5, 0)],
+        "rigid": [(0.8, 1, 0)],
+        "heavy": [(1, 0.35, 0)],
+        "success": [(0.6, 0.7, 0), (0.9, 0.85, 0.1)],
+        "warning": [(0.85, 0.5, 0), (0.6, 0.4, 0.14)],
+        "error": [(1, 0.3, 0), (0.75, 0.5, 0.09), (1, 0.25, 0.19)],
+    ]
+
+    private let queue = DispatchQueue(label: "com.mitosisgame.haptics", qos: .userInitiated)
+    private let supported = CHHapticEngine.capabilitiesForHardware().supportsHaptics
+    private var engine: CHHapticEngine? // only touched on `queue`
+    private var running = false
+
+    func play(_ style: String) {
+        guard supported else { return }
+        queue.async {
+            let taps = Self.styles[style] ?? Self.styles["medium"]!
+            let events = taps.map { tap in
+                CHHapticEvent(eventType: .hapticTransient, parameters: [
+                    CHHapticEventParameter(parameterID: .hapticIntensity, value: tap.0),
+                    CHHapticEventParameter(parameterID: .hapticSharpness, value: tap.1),
+                ], relativeTime: tap.2)
+            }
+            do {
+                let pattern = try CHHapticPattern(events: events, parameters: [])
+                try self.startedEngine().makePlayer(with: pattern).start(atTime: CHHapticTimeImmediate)
+            } catch {
+                self.running = false // start the engine afresh on the next tap
+            }
+        }
+    }
+
+    /// The engine stops when the app leaves the foreground, when audio is interrupted and when it idles,
+    /// so it is started again on demand.
+    private func startedEngine() throws -> CHHapticEngine {
+        if let engine, running { return engine }
+        let e: CHHapticEngine
+        if let engine { e = engine } else {
+            e = try CHHapticEngine()
+            e.playsHapticsOnly = true
+            e.isAutoShutdownEnabled = true
+            e.stoppedHandler = { [weak self] _ in self?.queue.async { self?.running = false } }
+            e.resetHandler = { [weak self] in self?.queue.async { self?.running = false } }
+        }
+        try e.start()
+        engine = e
+        running = true
+        return e
     }
 }

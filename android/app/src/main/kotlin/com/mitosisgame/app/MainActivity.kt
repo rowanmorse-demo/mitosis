@@ -130,9 +130,13 @@ class MainActivity : AppCompatActivity() {
             (getSystemService(VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator
         else @Suppress("DEPRECATION") getSystemService(VIBRATOR_SERVICE) as Vibrator
         val effect = when (style) {
-            "light" -> VibrationEffect.createOneShot(12, 80)
-            "heavy" -> VibrationEffect.createOneShot(60, 255)
+            "selection" -> VibrationEffect.createOneShot(8, 60)
+            "light", "soft" -> VibrationEffect.createOneShot(12, 80)
+            "rigid" -> VibrationEffect.createOneShot(15, 220)
+            "heavy" -> VibrationEffect.createOneShot(45, 255)
             "success" -> VibrationEffect.createWaveform(longArrayOf(0, 20, 60, 20), -1)
+            "warning" -> VibrationEffect.createWaveform(longArrayOf(0, 30, 80, 20), -1)
+            "error" -> VibrationEffect.createWaveform(longArrayOf(0, 50, 50, 30, 50, 60), -1)
             else -> VibrationEffect.createOneShot(25, 160)
         }
         runCatching { v.vibrate(effect) }
