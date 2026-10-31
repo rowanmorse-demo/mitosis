@@ -39,7 +39,8 @@ class SqliteStore {
       -- connection quality reports (netstats.js): anonymous, no player id
       CREATE TABLE IF NOT EXISTS netstats(at INTEGER, platform TEXT, app TEXT, tz TEXT, conn TEXT, n INTEGER, lost INTEGER, min INTEGER, med INTEGER, p90 INTEGER, jit INTEGER, fps INTEGER, slow INTEGER);
       CREATE INDEX IF NOT EXISTS netstats_at ON netstats(at);`);
-    for (const sql of ['ALTER TABLE players ADD COLUMN rating INTEGER NOT NULL DEFAULT 1000', 'ALTER TABLE players ADD COLUMN name TEXT', 'ALTER TABLE players ADD COLUMN runs INTEGER NOT NULL DEFAULT 0'])
+    for (const sql of ['ALTER TABLE players ADD COLUMN rating INTEGER NOT NULL DEFAULT 1000', 'ALTER TABLE players ADD COLUMN name TEXT', 'ALTER TABLE players ADD COLUMN runs INTEGER NOT NULL DEFAULT 0',
+      'ALTER TABLE players ADD COLUMN xp INTEGER NOT NULL DEFAULT 0', 'ALTER TABLE runs ADD COLUMN xp INTEGER'])
       try { this.db.exec(sql); } catch (e) {} // already migrated
     const p = s => this.db.prepare(s);
     this.q = {
@@ -52,12 +53,13 @@ class SqliteStore {
       addSkin: p('INSERT OR IGNORE INTO skins(player, skin, at) VALUES(?, ?, ?)'),
       insRun: p('INSERT INTO runs(id, player, started) VALUES(?, ?, ?)'),
       run: p('SELECT * FROM runs WHERE id = ? AND player = ?'),
-      endRun: p('UPDATE runs SET ended = ?, payout = ? WHERE id = ?'),
+      endRun: p('UPDATE runs SET ended = ?, payout = ?, xp = ? WHERE id = ?'),
       openRuns: p('SELECT COUNT(*) AS n FROM runs WHERE player = ? AND ended IS NULL AND started > ?'),
       purchase: p('SELECT * FROM purchases WHERE id = ?'),
       insPurchase: p('INSERT INTO purchases(id, player, product, amount, platform, at) VALUES(?, ?, ?, ?, ?, ?)'),
       count: p('SELECT COUNT(*) AS n FROM players'),
       setRating: p('UPDATE players SET rating = ?, name = ?, runs = runs + 1 WHERE id = ?'),
+      addXp: p('UPDATE players SET xp = xp + ? WHERE id = ?'),
       top: p('SELECT name, rating, runs FROM players WHERE runs > 0 ORDER BY rating DESC, runs DESC LIMIT ?'),
       device: p('SELECT player FROM devices WHERE secret = ?'),
       insDevice: p('INSERT OR REPLACE INTO devices(secret, player, created, seen) VALUES(?, ?, ?, ?)'),
@@ -66,7 +68,7 @@ class SqliteStore {
       identities: p('SELECT provider, subject, email, at FROM identities WHERE player = ? ORDER BY at'),
       insIdentity: p('INSERT OR IGNORE INTO identities(provider, subject, player, email, at) VALUES(?, ?, ?, ?, ?)'),
       // merging one player into another (a device signing in to an account it did not create)
-      mergeWallet: p('UPDATE players SET balance = balance + ?, earned = earned + ?, runs = runs + ?, rating = MAX(rating, ?), name = COALESCE(name, ?) WHERE id = ?'),
+      mergeWallet: p('UPDATE players SET balance = balance + ?, earned = earned + ?, runs = runs + ?, xp = xp + ?, rating = MAX(rating, ?), name = COALESCE(name, ?) WHERE id = ?'),
       moveSkins: p('INSERT OR IGNORE INTO skins(player, skin, at) SELECT ?, skin, at FROM skins WHERE player = ?'),
       delSkins: p('DELETE FROM skins WHERE player = ?'),
       moveRuns: p('UPDATE runs SET player = ? WHERE player = ?'),
@@ -90,12 +92,12 @@ class SqliteStore {
   linkIdentity(provider, subject, player, email, now) { this.q.insIdentity.run(provider, subject, player, email, now); }
   addDevice(h, player, now) { this.q.insDevice.run(h, player, now, now); }
   forgetDevice(h) { this.q.delDevice.run(h); }
-  /** Folds player `from` into `to`: wallet, skins, history, sign-ins and device secrets all move; `from` is deleted. */
+  /** Folds player `from` into `to`: wallet, XP, skins, history, sign-ins and device secrets all move; `from` is deleted. */
   mergePlayers(from, to) {
     const a = this.player(from), b = this.player(to); if (!a || !b || from === to) return;
     this.db.exec('BEGIN');
     try {
-      this.q.mergeWallet.run(Number(a.balance), Number(a.earned), Number(a.runs || 0), Number(a.rating ?? 1000), a.name || null, to);
+      this.q.mergeWallet.run(Number(a.balance), Number(a.earned), Number(a.runs || 0), Number(a.xp || 0), Number(a.rating ?? 1000), a.name || null, to);
       this.q.moveSkins.run(to, from); this.q.delSkins.run(from);
       this.q.moveRuns.run(to, from); this.q.movePurchases.run(to, from);
       this.q.moveIdentities.run(to, from); this.q.delIdentities.run(from);
@@ -119,12 +121,13 @@ class SqliteStore {
   addSkin(id, skin, now) { this.q.addSkin.run(id, skin, now); }
   createRun(id, player, now) { this.q.insRun.run(id, player, now); }
   run(id, player) { return this.q.run.get(id, player) || null; }
-  endRun(id, now, payout) { this.q.endRun.run(now, payout, id); }
+  endRun(id, now, payout, xp = 0) { this.q.endRun.run(now, payout, xp, id); }
   openRuns(player, since) { return Number(this.q.openRuns.get(player, since).n); }
   purchase(id) { return this.q.purchase.get(id) || null; }
   addPurchase(id, player, product, amount, platform, now) { this.q.insPurchase.run(id, player, product, amount, platform, now); }
   playerCount() { return Number(this.q.count.get().n); }
   setRating(id, rating, name) { this.q.setRating.run(rating, name, id); }
+  addXp(id, n) { this.q.addXp.run(n, id); }
   top(n) { return this.q.top.all(n).map(r => ({ name: r.name, rating: Number(r.rating), runs: Number(r.runs) })); }
   addNet(r) { this.q.insNet.run(r.at, r.platform, r.app, r.tz, r.conn, r.n, r.lost, r.min, r.med, r.p90, r.jit, r.fps, r.slow); if (Math.random() < .01) this.q.pruneNet.run(r.at - 90 * 864e5); }
   netSince(t) { return this.q.netSince.all(t).map(r => ({ ...r, fps: r.fps == null ? null : Number(r.fps) })); }
@@ -154,7 +157,7 @@ class JsonStore {
   forgetDevice(h) { delete this.d.devices[h]; this.save(); }
   mergePlayers(from, to) {
     const a = this.d.players[from], b = this.d.players[to]; if (!a || !b || from === to) return;
-    b.balance += a.balance; b.earned += a.earned; b.runs = (b.runs || 0) + (a.runs || 0); b.rating = Math.max(b.rating ?? 1000, a.rating ?? 1000); b.name = b.name || a.name || null;
+    b.balance += a.balance; b.earned += a.earned; b.runs = (b.runs || 0) + (a.runs || 0); b.xp = (b.xp || 0) + (a.xp || 0); b.rating = Math.max(b.rating ?? 1000, a.rating ?? 1000); b.name = b.name || a.name || null;
     const s = this.d.skins[to] || (this.d.skins[to] = []); for (const k of this.d.skins[from] || []) if (!s.includes(k)) s.push(k); delete this.d.skins[from];
     for (const r of Object.values(this.d.runs)) if (r.player === from) r.player = to;
     for (const p of Object.values(this.d.purchases)) if (p.player === from) p.player = to;
@@ -174,21 +177,22 @@ class JsonStore {
     this.save();
   }
   createPlayer(id, h, now) {
-    this.d.players[id] = { id, secret: h, created: now, seen: now, balance: 0, earned: 0, hour_at: 0, hour_sum: 0, rating: 1000, name: null, runs: 0 };
+    this.d.players[id] = { id, secret: h, created: now, seen: now, balance: 0, earned: 0, hour_at: 0, hour_sum: 0, rating: 1000, name: null, runs: 0, xp: 0 };
     this.d.secrets[h] = id; this.save(); return this.player(id);
   }
   touch(id, now) { const p = this.d.players[id]; if (p) { p.seen = now; this.save(); } }
   setWallet(id, w) { const p = this.d.players[id]; if (p) { Object.assign(p, { balance: w.balance, earned: w.earned, hour_at: w.hour_at, hour_sum: w.hour_sum }); this.save(); } }
   skins(id) { return (this.d.skins[id] || []).slice().sort((a, b) => a - b); }
   addSkin(id, skin, now) { const s = this.d.skins[id] || (this.d.skins[id] = []); if (!s.includes(skin)) { s.push(skin); this.save(); } }
-  createRun(id, player, now) { this.d.runs[id] = { id, player, started: now, ended: null, payout: null }; this.prune(); this.save(); }
+  createRun(id, player, now) { this.d.runs[id] = { id, player, started: now, ended: null, payout: null, xp: null }; this.prune(); this.save(); }
   run(id, player) { const r = this.d.runs[id]; return r && r.player === player ? { ...r } : null; }
-  endRun(id, now, payout) { const r = this.d.runs[id]; if (r) { r.ended = now; r.payout = payout; this.save(); } }
+  endRun(id, now, payout, xp = 0) { const r = this.d.runs[id]; if (r) { r.ended = now; r.payout = payout; r.xp = xp; this.save(); } }
   openRuns(player, since) { let n = 0; for (const r of Object.values(this.d.runs)) if (r.player === player && r.ended == null && r.started > since) n++; return n; }
   purchase(id) { const p = this.d.purchases[id]; return p ? { ...p } : null; }
   addPurchase(id, player, product, amount, platform, now) { this.d.purchases[id] = { id, player, product, amount, platform, at: now }; this.save(); }
   playerCount() { return Object.keys(this.d.players).length; }
   setRating(id, rating, name) { const p = this.d.players[id]; if (p) { p.rating = rating; p.name = name; p.runs = (p.runs || 0) + 1; this.save(); } }
+  addXp(id, n) { const p = this.d.players[id]; if (p) { p.xp = (p.xp || 0) + n; this.save(); } }
   top(n) { return Object.values(this.d.players).filter(p => p.runs > 0).sort((a, b) => (b.rating - a.rating) || (b.runs - a.runs)).slice(0, n).map(p => ({ name: p.name, rating: p.rating, runs: p.runs })); }
   addNet(r) { const a = this.d.net || (this.d.net = []); a.push(r); if (a.length > 20000) a.splice(0, a.length - 20000); this.save(); }
   netSince(t) { return (this.d.net || []).filter(r => r.at > t); }
@@ -199,4 +203,4 @@ class JsonStore {
   }
 }
 
-module.exports = { openStore, DATA_DIR };
+module.exports = { openStore, DATA_DIR, SqliteStore, JsonStore };

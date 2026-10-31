@@ -73,10 +73,38 @@ async function post(url, body, secret) {
   assert.equal(ratingDelta(1000, 300, 5, 5, 20, 2), Math.round((15 + 10 + 8 * 15 / 19) * .5), 'the third life gains half');
   assert.equal(ratingDelta(1000, 300, 0, 20, 20), ratingDelta(1000, 300, 0), 'last place adds nothing');
   assert.equal(ratingDelta(1000, 300, 0, 1, 3), ratingDelta(1000, 300, 0), 'placing needs at least 4 in the round');
+  { // XP: time alive plus a placing bonus; levels need more XP each time
+    const { xpFor, levelOf, xpAtLevel, xpToNext, XP } = require('./economy');
+    assert.deepEqual(xpFor({ survived: 300, place: 1, of: 20 }), { time: 60, place: 60, win: 40, total: 160 }, '5 min and a win of 20');
+    assert.deepEqual(xpFor({ survived: 300, place: 20, of: 20 }), { time: 60, place: 0, win: 0, total: 60 }, 'last place earns only its time');
+    assert.equal(xpFor({ survived: 300, place: 6, of: 11 }).place, 30, '6th of 11 is halfway');
+    { let last = -1; for (const sec of [0, 9, 10, 30, 60, 120, 300, 599, 600]) { const v = xpFor({ survived: sec, place: 5, of: 20 }).total; assert.ok(v >= last, 'more time never earns less'); last = v; } }
+    assert.ok(xpFor({ survived: 400, place: 5, of: 20 }).total > xpFor({ survived: 200, place: 5, of: 20 }).total, 'surviving longer earns more');
+    assert.equal(xpFor({ survived: 9999 }).time, xpFor({ survived: XP.timeCapSec }).time, 'time counts up to one round'); assert.equal(xpFor({ survived: XP.timeCapSec }).time, 120);
+    { let last = Infinity; for (let p = 1; p <= 20; p++) { const v = xpFor({ survived: 300, place: p, of: 20 }).total; assert.ok(v < last, 'each better place earns more'); last = v; } }
+    assert.equal(xpFor({ survived: 300, place: 1, of: 3 }).total, 60, 'placing needs at least 4 in the round');
+    assert.equal(xpFor({ survived: 15, place: 1, of: 20 }).total, 2, 'a life under 20 s places for nothing');
+    for (const [place, of] of [[0, 20], [21, 20], [-3, 20], ['x', 20], [1, 'x']]) assert.equal(xpFor({ survived: 300, place, of }).total, 60, `place ${place} of ${of} is not a placing`);
+    assert.equal(xpFor({ survived: -50, place: 1, of: 20 }).total, 0); assert.equal(xpFor({}).total, 0);
+    assert.deepEqual(levelOf(0), { xp: 0, level: 1, levelXp: 0, levelNeed: 100 }, 'everyone starts at level 1');
+    assert.deepEqual(levelOf(99), { xp: 99, level: 1, levelXp: 99, levelNeed: 100 });
+    assert.deepEqual(levelOf(100), { xp: 100, level: 2, levelXp: 0, levelNeed: 150 }, 'level 2 at 100 XP');
+    assert.deepEqual(levelOf(250), { xp: 250, level: 3, levelXp: 0, levelNeed: 200 }, 'level 3 at 250 XP');
+    assert.deepEqual(levelOf(449), { xp: 449, level: 3, levelXp: 199, levelNeed: 200 });
+    assert.equal(levelOf(undefined).level, 1, 'players stored before XP existed are level 1'); assert.equal(levelOf(-5).xp, 0);
+    for (let L = 1; L < 500; L++) {
+      assert.ok(xpToNext(L + 1) > xpToNext(L), 'each level needs more XP than the last');
+      assert.equal(xpAtLevel(L + 1) - xpAtLevel(L), xpToNext(L));
+      assert.equal(levelOf(xpAtLevel(L)).level, L, 'level ' + L + ' starts at ' + xpAtLevel(L)); assert.equal(levelOf(xpAtLevel(L + 1) - 1).level, L);
+    }
+    const big = levelOf(1e12); assert.ok(big.levelXp >= 0 && big.levelXp < big.levelNeed && xpAtLevel(big.level) + big.levelXp === 1e12, 'huge XP still lands inside a level');
+  }
   // rating: that run (15 s on the server clock, 10 kills) is a quick death: +0.5 survival +20 kills -7.5 penalty = +13
   assert.equal(r.body.ratingDelta, 13); assert.equal(r.body.rating, 1013); assert.equal(r.body.tier, 'Silver');
+  // XP is capped the same way: ~15 s of time, so 2 XP however long the client says it lived
+  assert.equal(r.body.xpGained, 2); assert.deepEqual(r.body.xpParts, { time: 2, place: 0, win: 0 }); assert.equal(r.body.xp, 2); assert.equal(r.body.level, 1); assert.equal(r.body.levelXp, 2); assert.equal(r.body.levelNeed, 100); assert.equal(r.body.levelUp, 0);
   r = await post('/api/run/end', { runId, survived: 9999, eaten: 10, peak: 800 }, secret);
-  assert.equal(r.body.duplicate, true); assert.equal(r.body.balance, 0, 'ending a run twice pays once');
+  assert.equal(r.body.duplicate, true); assert.equal(r.body.balance, 0, 'ending a run twice pays once'); assert.equal(r.body.xp, 2, 'and gives XP once'); assert.equal(r.body.xpGained, 2, 'a repeat still says what the run earned');
   r = await post('/api/run/end', { runId: 'nope' }, secret); assert.equal(r.status, 404);
   // an instant death with no kills loses rating
   r = await post('/api/run/start', {}, secret); const run2 = r.body.runId;
@@ -165,6 +193,29 @@ async function post(url, body, secret) {
   // a refused name never reaches the leaderboard: the player keeps their last good one
   r = await post('/api/run/start', {}, secret); r = await post('/api/run/end', { runId: r.body.runId, survived: 30, eaten: 0, peak: 25, name: 'sh1t head' }, secret); assert.equal(r.status, 200);
   { const lb2 = await (await fetch(base + '/api/leaderboard')).json(); assert.equal(lb2.top[0].name, 'Tester', 'blocked names are not stored'); }
+  { // XP over real server time: lives are backdated in the database, as if the time had passed
+    const sec4 = 'xpsecret' + 'd'.repeat(24), store = (await (await fetch(base + '/health')).json()).store;
+    r = await post('/api/session', { secret: sec4 }); assert.deepEqual([r.body.xp, r.body.level, r.body.levelXp, r.body.levelNeed], [0, 1, 0, 100], 'a new player is level 1 with no XP');
+    assert.deepEqual(r.body.catalog.xp, require('./economy').XP, 'the catalogue carries the XP rules');
+    r = await post('/api/run/start', {}, sec4); r = await post('/api/run/end', { runId: r.body.runId, survived: 9999, place: 1, of: 20, bestRank: 999 }, sec4);
+    assert.equal(r.body.xpGained, 2, 'claiming a long winning life right after starting it earns only the time that passed');
+    if (store === 'sqlite') {
+      const db = new (require('node:sqlite').DatabaseSync)(path.join(dataDir, 'mitosis.sqlite')), backdate = (id, s) => db.prepare('UPDATE runs SET started = started - ? WHERE id = ?').run(s * 1000, id);
+      r = await post('/api/run/start', {}, sec4); backdate(r.body.runId, 400);
+      r = await post('/api/run/end', { runId: r.body.runId, survived: 9999, place: 1, of: 20, bestRank: 999 }, sec4);
+      assert.deepEqual(r.body.xpParts, { time: 82, place: 60, win: 40 }, '415 s on the server clock (with the grace) and a win of 20');
+      assert.deepEqual([r.body.xpGained, r.body.xp, r.body.level, r.body.levelXp, r.body.levelNeed, r.body.levelUp], [182, 184, 2, 84, 150, 1], 'level 2');
+      r = await post('/api/run/start', {}, sec4); backdate(r.body.runId, 2000);
+      r = await post('/api/run/end', { runId: r.body.runId, survived: 9999, place: 20, of: 20, bestRank: 999 }, sec4);
+      assert.deepEqual([r.body.xpGained, r.body.xp, r.body.level, r.body.levelXp, r.body.levelNeed, r.body.levelUp], [120, 304, 3, 54, 200, 1], 'a whole round in last place: 120 XP, level 3');
+      r = await post('/api/run/start', {}, sec4); backdate(r.body.runId, 250);
+      r = await post('/api/run/end', { runId: r.body.runId, survived: 200, place: 4, of: 7, bestRank: 999 }, sec4);
+      assert.deepEqual([r.body.xpGained, r.body.levelUp], [40 + 30, 0], 'the client may claim less than the server saw');
+      db.close();
+      r = await post('/api/session', { secret: sec4 }); assert.deepEqual([r.body.xp, r.body.level, r.body.levelXp], [374, 3, 124], 'XP is stored');
+    } else console.log('(JSON store: skipping the backdated XP lives)');
+    r = await post('/api/account/delete', { confirm: 'DELETE' }, sec4); assert.equal(r.body.deleted, true);
+  }
 
   r = await post('/api/skins/buy', { skinId: 9 }, secret); assert.equal(r.status, 402, 'cannot afford yet');
 
@@ -195,13 +246,15 @@ async function post(url, body, secret) {
   r = await post('/api/auth/apple', { identityToken: apple().slice(0, -6) + 'AAAAAA', nonce: 'n1' }, secret); assert.equal(r.status, 401, 'tampered signature rejected');
   r = await post('/api/auth/apple', { identityToken: 'not.a.token', nonce: 'n1' }, secret); assert.equal(r.status, 401);
   r = await post('/api/session', { secret }); assert.equal(r.body.account.provider, 'apple', 'the account shows on every session');
+  const acctXp = r.body.xp; assert.ok(acctXp > 0, 'the account has XP from its runs');
 
   // A second device signs in with the same Apple account: it joins the account and brings its own ATP along
   const secret2 = 'secondsecret' + 'b'.repeat(20);
   r = await post('/api/session', { secret: secret2 }); assert.equal(r.body.balance, 0); assert.equal(r.body.account, null);
   r = await post('/api/iap/google', { purchaseToken: 'tok3', productId: 'atp_500', orderId: 'GPA.3' }, secret2); assert.equal(r.body.balance, 500);
+  r = await post('/api/run/start', {}, secret2); r = await post('/api/run/end', { runId: r.body.runId, survived: 9999, eaten: 0, peak: 25, bestRank: 999 }, secret2); assert.equal(r.body.xp, 2);
   r = await post('/api/auth/apple', { identityToken: apple(), nonce: 'n1' }, secret2);
-  assert.equal(r.status, 200); assert.equal(r.body.merged, true); assert.equal(r.body.balance, 2200, 'the two wallets merge'); assert.deepEqual(r.body.skins, [9]); assert.equal(r.body.account.provider, 'apple');
+  assert.equal(r.status, 200); assert.equal(r.body.merged, true); assert.equal(r.body.balance, 2200, 'the two wallets merge'); assert.equal(r.body.xp, acctXp + 2, 'and so does their XP'); assert.deepEqual(r.body.skins, [9]); assert.equal(r.body.account.provider, 'apple');
   r = await post('/api/session', { secret: secret2 }); assert.equal(r.body.balance, 2200, 'the second device now opens the account');
   r = await post('/api/session', { secret }); assert.equal(r.body.balance, 2200, 'and so does the first');
   r = await post('/api/skins/buy', { skinId: 10 }, secret2); assert.equal(r.status, 200); assert.equal(r.body.balance, 1850, 'the joined device can spend');
@@ -233,9 +286,42 @@ async function post(url, body, secret) {
   r = await post('/api/account/delete', { confirm: 'DELETE' }); assert.equal(r.status, 401, 'deletion needs the player');
   r = await post('/api/account/delete', { confirm: 'DELETE' }, secret); assert.equal(r.status, 200); assert.equal(r.body.deleted, true);
   r = await post('/api/session', { secret: secret3 }); assert.equal(r.body.balance, 0, 'a device that had joined the account starts fresh'); assert.equal(r.body.account, null); assert.deepEqual(r.body.skins, []);
+  assert.deepEqual([r.body.xp, r.body.level], [0, 1], 'the XP went with the account');
   r = await post('/api/iap/apple', { transactionId: 't1', jws }, secret3); assert.equal(r.body.duplicate, true, 'an old receipt cannot be credited again after deletion'); assert.equal(r.body.balance, 0);
   r = await post('/api/auth/apple', { identityToken: apple(), nonce: 'n1' }, secret3); assert.equal(r.status, 200); assert.equal(r.body.merged, false, 'the Apple ID no longer leads to the deleted account'); assert.equal(r.body.balance, 0);
   { const lb = await (await fetch(base + '/api/leaderboard')).json(); assert.ok(Array.isArray(lb.top) && lb.top.every(t => t.runs !== undefined), 'leaderboard still answers'); assert.equal(lb.top.length, 0, 'the deleted player is gone from the leaderboard'); }
+
+  { // both stores keep XP, add it up, carry it through a merge and drop it with the player; old databases gain the column
+    const { SqliteStore, JsonStore } = require('./store'), dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mitosis-xp-'));
+    let sqlite = null; try { sqlite = require('node:sqlite'); } catch (e) {}
+    const open = kind => kind === 'json' ? new JsonStore(path.join(dir, 'm.json')) : new SqliteStore(sqlite, path.join(dir, 'm.sqlite'));
+    if (sqlite) { // a database from before XP: the players and runs tables without the column
+      const old = new sqlite.DatabaseSync(path.join(dir, 'm.sqlite'));
+      old.exec(`CREATE TABLE players(id TEXT PRIMARY KEY, secret TEXT UNIQUE NOT NULL, created INTEGER, seen INTEGER, balance INTEGER NOT NULL DEFAULT 0, earned INTEGER NOT NULL DEFAULT 0, hour_at INTEGER NOT NULL DEFAULT 0, hour_sum INTEGER NOT NULL DEFAULT 0, rating INTEGER NOT NULL DEFAULT 1000, name TEXT, runs INTEGER NOT NULL DEFAULT 0);
+        CREATE TABLE runs(id TEXT PRIMARY KEY, player TEXT, started INTEGER, ended INTEGER, payout INTEGER);
+        INSERT INTO players(id, secret, created, seen, balance, runs) VALUES('old', 'hold', 1, 1, 70, 12); INSERT INTO runs(id, player, started, ended, payout) VALUES('r0', 'old', 1, 2, 5);`);
+      old.close();
+    }
+    fs.writeFileSync(path.join(dir, 'm.json'), JSON.stringify({ players: { old: { id: 'old', secret: 'hold', created: 1, seen: 1, balance: 70, earned: 0, hour_at: 0, hour_sum: 0, rating: 1000, name: null, runs: 12 } }, secrets: { hold: 'old' }, runs: { r0: { id: 'r0', player: 'old', started: 1, ended: 2, payout: 5 } } }));
+    for (const kind of sqlite ? ['sqlite', 'json'] : ['json']) {
+      let st = open(kind);
+      const reopen = async () => { if (kind === 'json') await new Promise(res => setTimeout(res, 400)); else st.db.close(); st = open(kind); }; // what was saved
+      assert.equal(Number(st.player('old').xp || 0), 0, kind + ': a player from before XP has none'); assert.equal(Number(st.run('r0', 'old').xp || 0), 0);
+      st.createPlayer('a', 'ha', 1); st.createPlayer('b', 'hb', 1);
+      st.addXp('old', 40); st.addXp('a', 120); st.addXp('a', 30); st.addXp('b', 500);
+      st.createRun('r1', 'a', 1); st.endRun('r1', 2, 5, 42);
+      await reopen();
+      assert.deepEqual(['old', 'a', 'b'].map(id => Number(st.player(id).xp)), [40, 150, 500], kind + ': XP adds up and is kept');
+      assert.equal(Number(st.run('r1', 'a').xp), 42, kind + ': a run keeps the XP it earned');
+      st.mergePlayers('a', 'b'); assert.equal(st.player('a'), null); assert.equal(Number(st.player('b').xp), 650, kind + ': merging adds the XP together');
+      assert.equal(Number(st.playerBySecret('ha').xp), 650, kind + ': the merged device opens the summed XP');
+      st.deletePlayer('b'); assert.equal(st.player('b'), null, kind + ': deleting removes the player and its XP'); assert.equal(st.playerBySecret('ha'), null);
+      st.createPlayer('b2', 'hb', 3); assert.equal(Number(st.player('b2').xp), 0, kind + ': a new wallet on the same device starts from 0');
+      await reopen(); st.addXp('b2', 7); await reopen(); // the only change in its save, so it must save itself
+      assert.equal(Number(st.player('b2').xp), 7, kind + ': adding XP saves it');
+      if (kind === 'sqlite') st.db.close();
+    }
+  }
 
   const h = await (await fetch(base + '/health')).json(); assert.equal(h.accounts, 2, 'the signed-out device and the fresh one that signed in after the deletion');
   console.log(`all economy API tests passed (${h.store} store)`);

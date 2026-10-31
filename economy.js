@@ -52,6 +52,30 @@ const HOUR = 3600 * 1000;
 // Everyone starts at 1000.
 // winBonus: finishing 1st of 4+; lifePenalty: each respawn already used this round trims the gain (dying less pays more).
 const RATING = { base: 1000, perTenSec: .5, survCap: 25, perKill: 2, killCap: 30, placeBonus: 8, winBonus: 10, lifePenalty: .25, quickDeathSec: 60, quickPenalty: 10, scale: 2000 };
+// XP and profile levels: every ranked life earns XP for the time it lasted plus a bonus for where it placed, and XP
+// only ever adds up. Time uses the same server-capped survival as ATP and rating, and counts up to one round (10 min).
+// Placing: 1st of N earns the full bonus, last earns none, and winning adds more; like the rating it needs 4+ in the
+// round, and like ATP a life shorter than minSec places for nothing. Levels: going from level L to L+1 takes
+// first + step * (L - 1) XP (100, 150, 200, ...), so each level needs more than the last.
+const XP = { perTenSec: 2, timeCapSec: 600, place: 60, win: 40, minOf: 4, minSec: RULES.minSec, first: 100, step: 50 };
+function xpFor({ survived, place, of }) {
+  const sec = Math.max(0, Math.min(XP.timeCapSec, +survived || 0));
+  const n = Math.floor(+of || 0), pl = Math.floor(+place || 0), placed = sec >= XP.minSec && n >= XP.minOf && pl >= 1 && pl <= n;
+  const time = Math.floor(sec / 10) * XP.perTenSec;
+  const placing = placed ? Math.round(XP.place * (n - pl) / (n - 1)) : 0, won = placed && pl === 1 ? XP.win : 0;
+  return { time, place: placing, win: won, total: time + placing + won };
+}
+const xpToNext = level => XP.first + XP.step * (Math.max(1, level) - 1);   // XP from `level` to the next
+const xpAtLevel = level => { const k = Math.max(1, level) - 1; return k * XP.first + XP.step * k * (k - 1) / 2; }; // total XP that reaches `level`
+function levelOf(xp) {
+  xp = Math.max(0, Math.floor(+xp || 0));
+  // invert xpAtLevel (a quadratic in the level), then step past any rounding at the edges
+  const a = XP.step / 2, b = XP.first - XP.step / 2;
+  let level = 1 + Math.max(0, Math.floor((-b + Math.sqrt(b * b + 4 * a * xp)) / (2 * a)));
+  while (level > 1 && xpAtLevel(level) > xp) level--;
+  while (xpAtLevel(level + 1) <= xp) level++;
+  return { xp, level, levelXp: xp - xpAtLevel(level), levelNeed: xpToNext(level) };
+}
 const TIERS = [[900, 'Bronze'], [1100, 'Silver'], [1400, 'Gold'], [1800, 'Platinum'], [2300, 'Diamond'], [Infinity, 'Legend']];
 const tierOf = r => TIERS.find(t => r < t[0])[1];
 function ratingDelta(rating, survived, eaten, place, of, life = 0) {
@@ -91,7 +115,7 @@ function seasonOpen(key, t = now()) {
   return [y - 1, y].some(yy => { const a = Date.UTC(yy, s.from[0] - 1, s.from[1]) - day, b = Date.UTC(yy, s.to[0] - 1, s.to[1]) + 2 * day; return t >= a && t < b; });
 }
 const packById = id => PACKS.find(p => p.id === id);
-const catalog = () => ({ skins: SKINS, seasons: Object.fromEntries(Object.entries(SEASONS).map(([k, s]) => [k, { ...s, open: seasonOpen(k) }])), packs: PACKS, rules: RULES, rating: RATING, tiers: TIERS.map(t => t[1]), tierAt: TIERS.map(t => t[0]), iap: iap.status(), auth: signin.status() });
+const catalog = () => ({ skins: SKINS, seasons: Object.fromEntries(Object.entries(SEASONS).map(([k, s]) => [k, { ...s, open: seasonOpen(k) }])), packs: PACKS, rules: RULES, rating: RATING, xp: XP, tiers: TIERS.map(t => t[1]), tierAt: TIERS.map(t => t[0]), iap: iap.status(), auth: signin.status() });
 
 function payoutFor({ survived, bestRank, place }) {
   const sec = Math.max(0, Math.min(RULES.maxRunSec, +survived || 0));
@@ -105,7 +129,7 @@ class ApiError extends Error { constructor(status, msg) { super(msg); this.statu
 const hash = s => crypto.createHash('sha256').update(String(s)).digest('hex');
 // The sign-in a wallet belongs to (Apple or Google), or null for a device-only wallet.
 const accountOf = (store, p) => { const i = store.identities(p.id)[0]; return i ? { provider: i.provider, email: i.email || null, since: Number(i.at) } : null; };
-const wallet = (store, p) => ({ playerId: p.id, balance: Number(p.balance), earned: Number(p.earned), skins: store.skins(p.id), rating: Number(p.rating ?? RATING.base), tier: tierOf(Number(p.rating ?? RATING.base)), runs: Number(p.runs || 0), account: accountOf(store, p) });
+const wallet = (store, p) => ({ playerId: p.id, balance: Number(p.balance), earned: Number(p.earned), skins: store.skins(p.id), rating: Number(p.rating ?? RATING.base), tier: tierOf(Number(p.rating ?? RATING.base)), runs: Number(p.runs || 0), ...levelOf(p.xp), account: accountOf(store, p) });
 
 /* ---------- handlers: each gets (store, body, player?) and returns a JSON-able object ---------- */
 function session(store, body) {
@@ -170,19 +194,22 @@ function runEnd(store, body, p) {
   const now = Date.now();
   const run = store.run(String(body.runId || ''), p.id);
   if (!run) throw new ApiError(404, 'unknown run');
-  if (run.ended) return { payout: Number(run.payout) || 0, ...wallet(store, p), duplicate: true };
+  if (run.ended) return { payout: Number(run.payout) || 0, xpGained: Number(run.xp) || 0, ...wallet(store, p), duplicate: true };
   // The client can't claim more survival time than actually elapsed on the server.
   const elapsed = (now - Number(run.started)) / 1000 + 15;
   const survived = Math.min(+body.survived || 0, elapsed);
   const payout = payoutFor({ survived, bestRank: body.bestRank, place: body.place });
+  const xp = xpFor({ survived, place: body.place, of: body.of }), level = levelOf(p.xp).level;
   const w = { balance: Number(p.balance) + payout, earned: Number(p.earned) + payout, hour_at: Number(p.hour_at), hour_sum: Number(p.hour_sum) };
-  store.setWallet(p.id, w); store.endRun(run.id, now, payout);
-  Object.assign(p, w);
+  store.setWallet(p.id, w); store.addXp(p.id, xp.total); store.endRun(run.id, now, payout, xp.total);
+  Object.assign(p, w); p.xp = Number(p.xp || 0) + xp.total;
   // rating
   const before = Number(p.rating ?? RATING.base), delta = ratingDelta(before, survived, body.eaten, body.place, body.of, body.life), rating = Math.max(0, before + delta);
   const name = cleanName(body.name) || p.name || null;
   store.setRating(p.id, rating, name); p.rating = rating; p.name = name; p.runs = Number(p.runs || 0) + 1;
-  return { payout, ratingDelta: delta, ...wallet(store, p) };
+  // xpParts: where the XP came from (time alive, placing, the win); levelUp: how many levels this life gained
+  const out = wallet(store, p);
+  return { payout, ratingDelta: delta, xpGained: xp.total, xpParts: { time: xp.time, place: xp.place, win: xp.win }, levelUp: out.level - level, ...out };
 }
 function buySkin(store, body, p) {
   const skin = skinById(body.skinId | 0);
@@ -217,4 +244,4 @@ async function iapGoogle(store, body, p) {
 
 function leaderboard(store) { return { top: store.top(10).map((r, i) => ({ rank: i + 1, name: (r.name && !nameBlocked(r.name) && r.name) || 'Unnamed cell', rating: r.rating, tier: tierOf(r.rating), runs: r.runs })) }; }
 
-module.exports = { SKINS, PACKS, RULES, RATING, SEASONS, seasonOpen, catalog, payoutFor, ratingDelta, tierOf, nameBlocked, ApiError, auth, handlers: { deleteAccount, session, runStart, runEnd, buySkin, iapApple, iapGoogle, leaderboard, signInApple, signInGoogle, signOut } };
+module.exports = { SKINS, PACKS, RULES, RATING, XP, SEASONS, seasonOpen, catalog, payoutFor, ratingDelta, xpFor, levelOf, xpAtLevel, xpToNext, tierOf, nameBlocked, ApiError, auth, handlers: { deleteAccount, session, runStart, runEnd, buySkin, iapApple, iapGoogle, leaderboard, signInApple, signInGoogle, signOut } };
