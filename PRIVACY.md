@@ -16,6 +16,8 @@ Mitosis: Cell Arena ("Mitosis", "the game") is made by Catapult Consulting, LLC.
 
 **Nearby play (iPhone app).** If you switch the lobby to Nearby, the app uses Bluetooth and peer-to-peer Wi-Fi (Apple's local network permission) to find other phones running Mitosis close by. While you play, your display name, chosen look and the positions of your cells go directly to those phones and nowhere else; nothing from a nearby game is sent to the server or stored, and nearby games do not pay ATP or change your rating. Turning Nearby off disconnects at once.
 
+**Game recording (iPhone app, off unless you turn it on).** With Settings › Record games on, the app records each of your games with iOS screen recording (iOS asks you first) and adds the video to your Photos library (iOS asks for permission to add photos). Recordings stay on your phone; the app never uploads them or reads anything else in Photos.
+
 **Connection quality.** While you play online, the game measures how long messages take to reach the server and back, how many never come back, and how smoothly it draws. Every few minutes it sends those numbers, the app version and your device's time zone (for example "Europe/London") so we can see where a closer server would help. These reports carry no player identifier, and the server does not store IP addresses with them.
 
 **Diagnostics.** If the app crashes or stalls, a technical report (device model, OS version, app version and a stack trace) is sent to the server so the problem can be fixed. Reports contain no personal information.
@@ -25,7 +27,7 @@ Mitosis: Cell Arena ("Mitosis", "the game") is made by Catapult Consulting, LLC.
 - No advertising, no ad identifiers, no advertising networks.
 - No tracking across apps or websites, and no sale of data.
 - No analytics SDKs; the only server the apps talk to is the Mitosis game server, plus Apple's and Google's services for purchases and sign-in.
-- No access to contacts, photos, location, camera or microphone. The local network is used only for Nearby play, and only after you choose it.
+- No access to contacts, location, camera or microphone, and no reading of your photos (the app only adds the games you choose to record). The local network is used only for Nearby play, and only after you choose it.
 
 ## Where data is kept
 

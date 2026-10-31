@@ -728,6 +728,7 @@ body:not(.playing) #tip{display:none}
     <div class="field"><span class="label">Bot difficulty <span class="hintx">practice &amp; offline</span></span><div class="seg four" id="skillSeg"><button type="button" data-k="easy">Easy</button><button type="button" data-k="normal">Normal</button><button type="button" data-k="hard">Hard</button><button type="button" data-k="expert">Expert</button></div></div>
     <div class="field"><span class="label">Effects</span><div class="seg two" id="fxSeg"><button type="button" data-fx="0">Full<small>auras, embers, glow</small></button><button type="button" data-fx="1">Reduced<small>smoother on older phones</small></button></div></div>
     <div class="field"><span class="label">Vibration</span><div class="seg two" id="hapSeg"><button type="button" data-h="0">Off<small>recommended</small></button><button type="button" data-h="1">On<small>taps on split and kills</small></button></div></div>
+    <div class="field" id="recField" hidden><span class="label">Record games</span><div class="seg two" id="recSeg"><button type="button" data-rec="0">Off</button><button type="button" data-rec="1">On<small>each game saved to Photos</small></button></div></div>
     <div class="field"><span class="label">Sound</span><div class="seg two" id="sndSeg"><button type="button" data-s="1">On</button><button type="button" data-s="0">Off</button></div></div>
     <div class="field"><span class="label">In-game info</span><div class="seg two" id="infoSeg"><button type="button" data-i="0">Full<small>mass, cells, place, lives</small></button><button type="button" data-i="1">Compact<small>mass only</small></button></div></div>
     <div class="field"><span class="label">Show FPS &amp; ping</span><div class="seg two" id="perfSeg"><button type="button" data-p="0">Off</button><button type="button" data-p="1">On<small>frame rate and server ping</small></button></div></div>
@@ -1296,7 +1297,7 @@ const Native=(()=>{
   function send(m){try{if(ios)window.webkit.messageHandlers.mitosis.postMessage(m);else if(android)MitosisAndroid.post(JSON.stringify(m));}catch(e){}}
   function call(type,payload){if(!platform)return Promise.reject(new Error('Only available in the app'));
     return new Promise((res,rej)=>{const id=++seq;waits.set(id,{res,rej});send({id,type,...payload});
-      setTimeout(()=>{if(waits.delete(id))rej(new Error('No reply from the app'));},type==='buy'||type==='signin'?600000:20000);});}
+      setTimeout(()=>{if(waits.delete(id))rej(new Error('No reply from the app'));},type==='buy'||type==='signin'||type==='record'?600000:20000);});}
   window.MitosisBridge={onNative(m){if(!m||typeof m!=='object')return;
     if(m.id&&waits.has(m.id)){const w=waits.get(m.id);waits.delete(m.id);if(m.ok===false)w.rej(new Error(m.error||'Failed'));else w.res(m);return;}
     if(m.type==='purchase'&&m.purchase)redeem(m.purchase).catch(()=>{});
@@ -1906,7 +1907,7 @@ function finishHumanRound(){ // the arena closed: whoever is still alive is rank
   if(!human||!human.alive||mode!=='play')return;
   const ranked=players.filter(p=>p.alive&&p.cells.length).map(p=>({p,m:p.cells.reduce((s,c)=>s+(c.dead?0:c.mass),0)})).sort((a,b)=>b.m-a.m);
   const place=Math.max(1,ranked.findIndex(r=>r.p===human)+1),of=Math.max(round.n,ranked.length);human.stats.place=place;human.stats.of=of;
-  paused=false;$('dRank').hidden=true;econRunEnd();
+  paused=false;$('dRank').hidden=true;econRunEnd();recStop(1500);
   const early=roundT()<ROUND_SEC-1;
   showResults(place===1?'You won the round':'Round over',place===1?'Victory':'Time is up',`${place===1?'Last cell standing':ordinal(place)+' of '+of}${early?'':' when the arena closed'}, after ${fmtT(T-human.stats.born)}.`);
   if(BISECT.auto)reportHitch(`autopilot round over place=${place} of=${of} round=${round.id}`);
@@ -3007,7 +3008,7 @@ function startGame(){
   const m0=/[?&]autopilot=1/.test(location.search)&&/[?&]big=1/.test(location.search)?2500:25;
   spawn(human,m0);cam.x=human.cells[0].x;cam.y=human.cells[0].y;dispMass=m0;shownMass=-1;histT=0;
   pointer.x=W/2;pointer.y=H/2;mode='play';paused=false;slow=1;feed.length=0;renderFeed();
-  showCard(null);document.body.classList.add('playing');cv.focus({preventScroll:true});
+  showCard(null);document.body.classList.add('playing');cv.focus({preventScroll:true});recStart();
   setTimeout(()=>sfx('start'),30);
 }
 function setPaused(v){
@@ -3023,7 +3024,7 @@ function die(){
   $('deathWhy').textContent=(s.killer==='the collapse'?'Dissolved outside the closing arena':`Absorbed by ${s.killer}`)+` after ${fmtT(T-s.born)}.`;
   $('dPeak').textContent=Math.round(s.peak);$('dPeak').classList.toggle('pb',pb);$('dEaten').textContent=s.eaten;$('dTime').textContent=fmtT(T-s.born);$('dBest').textContent=Math.round(best);
   const dA=$('dAch');dA.hidden=!runAch.length;dA.textContent=runAch.length?'Unlocked: '+runAch.join(', '):'';evoOffer=null;renderEvo();lysedAt=0;
-  econRunEnd();
+  econRunEnd();recStop(1500);
   const hist=human.hist.slice();
   setTimeout(()=>{if(mode!=='dead')return;document.body.classList.remove('playing');showCard('deathCard');drawChart(hist);$('again').focus();},1200);
 }
@@ -3067,6 +3068,20 @@ const fxSegEl=$('fxSeg'),syncFxSeg=()=>[...fxSegEl.children].forEach(b=>b.setAtt
 fxSegEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.lowFx=b.dataset.fx==='1';lowFx=settings.lowFx;saveSettings();syncFxSeg();});syncFxSeg();
 const hapEl=$('hapSeg'),syncHap=()=>[...hapEl.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.h==='1')===!!settings.haptics)));
 hapEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.haptics=b.dataset.h==='1';saveSettings();syncHap();});syncHap();
+/* game recording (iOS app, off by default): each run is recorded with ReplayKit and saved to Photos as its own video */
+const recEl=$('recSeg');let recOn=false,recStopT=0,recQ=Promise.resolve();
+const syncRec=()=>{$('recField').hidden=Native.platform!=='ios';[...recEl.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.rec==='1')===!!settings.recordGames)));};
+recEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.recordGames=b.dataset.rec==='1';saveSettings();syncRec();});syncRec();
+const recCmd=cmd=>recQ=recQ.then(()=>Native.call('record',{cmd})).then(()=>null,e=>e); // one at a time: a stop finishes saving before the next start
+function recFinish(){recOn=false;recCmd('stop').then(e=>toast('Recording',e?'Recording not saved':'Game saved to Photos',e?e.message:''));}
+function recStart(){
+  if(Native.platform!=='ios'||!settings.recordGames)return;
+  if(recStopT){clearTimeout(recStopT);recStopT=0;}if(recOn)recFinish(); // the last game ends its own file first
+  recOn=true;recCmd('start').then(e=>{if(!e)return;recOn=false;
+    if(e.message==='declined'){settings.recordGames=false;saveSettings();syncRec();toast('Recording','Recording turned off','Screen recording was not allowed');}
+    else toast('Recording','Not recording',e.message);});
+}
+function recStop(delay=0){if(recOn&&!recStopT)recStopT=setTimeout(()=>{recStopT=0;recFinish();},delay);}
 const perfSegEl=$('perfSeg'),syncPerf=()=>{[...perfSegEl.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.p==='1')===!!settings.perfHud)));$('perfHud').hidden=!settings.perfHud;};
 perfSegEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.perfHud=b.dataset.p==='1';saveSettings();syncPerf();});syncPerf();
 const joySegEl=$('joySeg'),handSegEl=$('handSeg'),syncControls=()=>{const fl=settings.joyMode==='float',lh=!!settings.lefty;document.body.classList.toggle('joy-float',fl);document.body.classList.toggle('lefty',lh);
@@ -3105,7 +3120,7 @@ $('skillSeg').addEventListener('click',e=>{const b=e.target.closest('button');if
 $('again').addEventListener('click',startGame);
 $('setup').addEventListener('click',()=>{leaveLocal();mode='attract';achLine();showCard('startCard');});
 $('resume').addEventListener('click',()=>setPaused(false));
-$('quit').addEventListener('click',()=>{paused=false;$('dRank').hidden=true;econRunEnd();leaveLocal();showResults('Run over','Returned to the lobby',`You left the well after ${fmtT(T-human.stats.born)}.`);removeHuman();mode='attract';document.body.classList.remove('playing');});
+$('quit').addEventListener('click',()=>{paused=false;$('dRank').hidden=true;econRunEnd();recStop();leaveLocal();showResults('Run over','Returned to the lobby',`You left the well after ${fmtT(T-human.stats.born)}.`);removeHuman();mode='attract';document.body.classList.remove('playing');});
 $('copyInvite').addEventListener('click',()=>{const b=$('copyInvite'),i=$('inviteUrl');const done=t=>{b.textContent=t;setTimeout(()=>{b.textContent='Invite friends';},1600);};
   if(navigator.share&&TOUCH_UI){navigator.share({title:'Mitosis',text:'Come play Mitosis with me',url:i.value}).catch(()=>{});return;}
   const pick=()=>{i.focus();i.select();done('Press Ctrl+C');};

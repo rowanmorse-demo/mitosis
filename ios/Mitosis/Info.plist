@@ -52,6 +52,8 @@
 	</array>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Mitosis looks for phones near you so you can play together without the internet.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Mitosis saves the games you record to Photos.</string>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>

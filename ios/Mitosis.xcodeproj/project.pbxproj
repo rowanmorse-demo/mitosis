@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		21AD5C52C1E458E6BBA27D00 /* Recorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E21F94BA3D6992C3A52C086 /* Recorder.swift */; };
 		2B4B79A44744FFFECEFEAA39 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9530BC88744AE81130065B91 /* Assets.xcassets */; };
 		2F61960C85A3C3A2778616A3 /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = D22E25D1E8F242C73B91AC1C /* Store.swift */; };
 		3A661457A5E8B40927BA4F6A /* Products.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 288647F01627982FF8E5C854 /* Products.storekit */; };
@@ -36,6 +37,7 @@
 		1E7F54B87615C3BEB3EDA007 /* Mitosis.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Mitosis.entitlements; sourceTree = "<group>"; };
 		21F43300ED7D9FACC9F97FFB /* PurchaseFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseFlowTests.swift; sourceTree = "<group>"; };
 		288647F01627982FF8E5C854 /* Products.storekit */ = {isa = PBXFileReference; path = Products.storekit; sourceTree = "<group>"; };
+		2E21F94BA3D6992C3A52C086 /* Recorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Recorder.swift; sourceTree = "<group>"; };
 		418F5E7346F45CBFB7231490 /* Nearby.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nearby.swift; sourceTree = "<group>"; };
 		4E0A34706C21BCEBC879982D /* MitosisTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = MitosisTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		6C87C55256CBCC6CD8A2BD3C /* GameViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameViewController.swift; sourceTree = "<group>"; };
@@ -93,6 +95,7 @@
 				1E7F54B87615C3BEB3EDA007 /* Mitosis.entitlements */,
 				418F5E7346F45CBFB7231490 /* Nearby.swift */,
 				288647F01627982FF8E5C854 /* Products.storekit */,
+				2E21F94BA3D6992C3A52C086 /* Recorder.swift */,
 				F40391A8EC0E4ED8BE6CA2B7 /* SignIn.swift */,
 				D22E25D1E8F242C73B91AC1C /* Store.swift */,
 			);
@@ -208,6 +211,7 @@
 				67CB41589261C98FF5DEF42A /* CrashReporter.swift in Sources */,
 				D7AF4C1BE590B4EE61B9643F /* GameViewController.swift in Sources */,
 				FC858C209911773134917AC3 /* Nearby.swift in Sources */,
+				21AD5C52C1E458E6BBA27D00 /* Recorder.swift in Sources */,
 				D18435CC2C316056C895EF16 /* SignIn.swift in Sources */,
 				2F61960C85A3C3A2778616A3 /* Store.swift in Sources */,
 			);

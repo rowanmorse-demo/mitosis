@@ -54,6 +54,7 @@ targets:
               NSExceptionAllowsInsecureHTTPLoads: true
         NSLocalNetworkUsageDescription: Mitosis looks for phones near you so you can play together without the internet.
         NSBonjourServices: [_mitosis-play._tcp, _mitosis-play._udp]     # Nearby play (MultipeerConnectivity, see Nearby.swift)
+        NSPhotoLibraryAddUsageDescription: Mitosis saves the games you record to Photos.     # Settings › Record games (see Recorder.swift)
         MitosisServerURL: $(MITOSIS_SERVER)
         GoogleClientID: $(GOOGLE_IOS_CLIENT_ID)
     entitlements:

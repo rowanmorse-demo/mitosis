@@ -59,6 +59,8 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
                 // iOS ends a nearby session in the background; find the other phones again on return
                 if label == "background", Nearby.shared.isActive { self?.nearbyResume = true }
                 if label == "becomeActive", self?.nearbyResume == true { self?.nearbyResume = false; Nearby.shared.resume() }
+                // iOS can't keep recording in the background, so keep the game so far
+                if label == "background", Recorder.shared.isRecording { Recorder.shared.stop { _ in } }
             }
         }
         loadGame()
@@ -208,6 +210,11 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
             case "stop": Nearby.shared.stop()
             default: break
             }
+        case "record":
+            let done: (String?) -> Void = { [weak self] error in
+                self?.reply(error.map { ["id": id as Any, "ok": false, "error": $0] } ?? ["id": id as Any, "ok": true])
+            }
+            if msg["cmd"] as? String == "start" { Recorder.shared.start(done) } else { Recorder.shared.stop(done) }
         case "review":
             // the page asks after a strong finish; iOS decides whether to show the prompt (at most 3 times a year)
             if let scene = view.window?.windowScene { AppStore.requestReview(in: scene) }
