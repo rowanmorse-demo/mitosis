@@ -1,6 +1,6 @@
 // Headless screenshot of a page in Chrome, for checking UI changes without a phone.
-// node tools/snap.js URL OUT.png [--w=430 --h=860 --dpr=2 --mobile --wait=3000 --until='js expr' --untilMax=ms --js='js before capture' --after=ms --intro --ls=json]
-// --mobile emulates a touch phone; --intro keeps the first-launch welcome card; --autoplay lets audio start without a tap; --ls='{"key":"value"}' presets localStorage. Page exceptions are printed.
+// node tools/snap.js URL OUT.png [--w=430 --h=860 --dpr=2 --mobile --wait=3000 --until='js expr' --untilMax=ms --js='js before capture' --after=ms --intro --ls=json --cpu=4]
+// --mobile emulates a touch phone; --intro keeps the first-launch welcome card; --autoplay lets audio start without a tap; --ls='{"key":"value"}' presets localStorage; --cpu=N slows the CPU N times (phone-like timing). Page exceptions are printed.
 'use strict';
 const { spawn } = require('child_process'), fs = require('fs'), os = require('os'), path = require('path');
 const [url, out, ...rest] = process.argv.slice(2);
@@ -28,6 +28,7 @@ class CDP {
     const ws = new WebSocket(t.webSocketDebuggerUrl); await new Promise((res, rej) => { ws.onopen = res; ws.onerror = rej; });
     const cdp = new CDP(ws); await cdp.send('Page.enable'); await cdp.send('Runtime.enable');
     await cdp.send('Emulation.setDeviceMetricsOverride', { width: W, height: H, deviceScaleFactor: DPR, mobile: !!opt.mobile });
+    if (opt.cpu) await cdp.send('Emulation.setCPUThrottlingRate', { rate: +opt.cpu }); // e.g. --cpu=4 to run roughly like a phone
     if (opt.mobile) { await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 }); await cdp.send('Emulation.setEmulatedMedia', { features: [{ name: 'pointer', value: 'coarse' }, { name: 'hover', value: 'none' }] }); }
     if (!opt.intro) await cdp.send('Page.addScriptToEvaluateOnNewDocument', { source: "try{localStorage.setItem('mitosis.intro','1')}catch(e){}" });
     if (opt.ls) await cdp.send('Page.addScriptToEvaluateOnNewDocument', { source: `try{const o=${opt.ls};for(const k in o)localStorage.setItem(k,o[k])}catch(e){}` });
