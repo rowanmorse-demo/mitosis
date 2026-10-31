@@ -739,7 +739,7 @@ body:not(.playing) #tip{display:none}
     <dl class="keys kbd-only">
       <dt>Mouse</dt><dd>Steer toward the cursor</dd>
       <dt>Space</dt><dd>Divide — launch half your mass forward</dd>
-      <dt>W</dt><dd>Eject mass (feed phages to make them replicate)</dd>
+      <dt>W</dt><dd>Eject mass (a phage copies itself when the ring inside it closes; feeding it closes the ring faster)</dd>
       <dt>Shift</dt><dd>Dash — a burst of speed for 4% mass</dd>
       <dt>Esc</dt><dd>Pause</dd>
     </dl>
@@ -1704,7 +1704,18 @@ function eatPellet(pl){peLog.push({i:pl.i,g:pl.g,t:T});pl.g=(pl.g+1)%262143;plac
 // phage slots: deterministic positions from (slot, generation)
 function placeSlot(v){const k=(v.slot*15485863+v.g*32452843+SEED*7)|0,s=hpos(k,300);v.x=v.tx=s.x;v.y=v.ty=s.y;}
 function setVM(v){v.mass=VIRUS_M+v.feed*4;v.r=radius(v.mass);}
-function makeSlot(i){const v={kind:'s',slot:i,g:0,feed:0,alive:true,respawnAt:0,x:0,y:0,tx:0,ty:0,vx:0,vy:0,mass:VIRUS_M,r:radius(VIRUS_M),spin:h32(i*31+5)*TAU,dead:false};placeSlot(v);return v;}
+// Viruses replicate on their own: the ring inside one closes a sixth at a time, as if fed (feedVirus), and when it
+// closes the virus splits off a copy. A full ring takes VREP_T s, and every copy makes that virus and its offspring
+// VREP_SLOW× slower. Host only: other players see the ring in whole sixths through the synced feed count.
+const VREP_T=45,VREP_SLOW=1.15,VREP_WAIT=30; // a new virus first waits up to VREP_WAIT s, so the 140 slots don't all split at once
+const vStep=v=>VREP_T*VREP_SLOW**(v.gen||0)/6;
+const vFill=v=>(v.feed+clamp((v.ft||0)/vStep(v),0,1))/6; // how far the ring has closed, 0..1
+function growVirus(v,dt){
+  v.ft=(v.ft||0)+dt;const step=vStep(v);
+  if(v.feed>=5&&freeV.length>=MAX_FREEV){v.ft=Math.min(v.ft,step*.97);return;} // no room for a copy: hold just short of closing
+  if(v.ft>=step){v.ft-=step;const a=rand(0,TAU);feedVirus(v,Math.cos(a),Math.sin(a),null);}
+}
+function makeSlot(i){const v={kind:'s',slot:i,g:0,feed:0,gen:0,ft:-rand(0,VREP_WAIT),alive:true,respawnAt:0,x:0,y:0,tx:0,ty:0,vx:0,vy:0,mass:VIRUS_M,r:radius(VIRUS_M),spin:h32(i*31+5)*TAU,dead:false};placeSlot(v);return v;}
 function addPU(){const s=randInDish(200);powerups.push({id:(puC++%4095)+1,x:s.x,y:s.y,type:PUK[Math.floor(Math.random()*PUK.length)],r:22,t:Math.random()*TAU,born:T,dead:false});}
 
 /* ================= pellet grid (incremental) ================= */
@@ -2083,8 +2094,8 @@ function think(p){
 /* ================= simulation ================= */
 function feedVirus(v,dx,dy,owner){
   v.feed++;
-  if(v.feed>=6){v.feed=0;if(freeV.length>=MAX_FREEV)freeV.shift();
-    const nv={kind:'f',id:(vidC++%4095)+1,x:v.x+dx*v.r*2,y:v.y+dy*v.r*2,vx:dx*760,vy:dy*760,feed:0,spin:rand(0,TAU),dead:false,alive:true};nv.tx=nv.x;nv.ty=nv.y;setVM(nv);freeV.push(nv);
+  if(v.feed>=6){v.feed=0;v.ft=0;v.gen=(v.gen||0)+1;if(freeV.length>=MAX_FREEV)freeV.shift();
+    const nv={kind:'f',id:(vidC++%4095)+1,x:v.x+dx*v.r*2,y:v.y+dy*v.r*2,vx:dx*760,vy:dy*760,feed:0,gen:v.gen,ft:0,spin:rand(0,TAU),dead:false,alive:true};nv.tx=nv.x;nv.ty=nv.y;setVM(nv);freeV.push(nv);
     burst(v.x,v.y,'hsl(40,90%,62%)',10);if(owner===human){sfx('power');Native.haptic('light');}}
   setVM(v);
 }
@@ -2178,9 +2189,11 @@ function step(dt){
   ejected=ejected.filter(e=>!e.dead&&T-e.born<40);
   // phages
   if(isHost){
-    for(const v of vslots)if(!v.alive&&T>=v.respawnAt){v.g=(v.g+1)%256;v.feed=0;setVM(v);placeSlot(v);v.alive=true;}
+    for(const v of vslots)if(!v.alive&&T>=v.respawnAt){v.g=(v.g+1)%256;v.feed=0;v.gen=0;v.ft=-rand(0,VREP_WAIT);setVM(v);placeSlot(v);v.alive=true;}
     for(const v of freeV){v.x+=v.vx*dt;v.y+=v.vy*dt;v.vx*=ke;v.vy*=ke;
       const dc=Math.hypot(v.x,v.y);if(dc>R-v.r){v.x*=(R-v.r)/dc;v.y*=(R-v.r)/dc;v.vx*=-.5;v.vy*=-.5;}}
+    for(const v of vslots)if(v.alive)growVirus(v,dt);
+    for(const v of freeV.slice())if(!v.dead)growVirus(v,dt);
   }
   rebuildViruses();
   for(const v of viruses){v.spin+=dt*.25;if(v.dead)continue;
@@ -2456,7 +2469,7 @@ function drawVirus(v){
   if(!lowFx)ctx.drawImage(G_VIRUS,v.x-v.r*2,v.y-v.r*2,v.r*4,v.r*4);
   ctx.save();ctx.translate(v.x,v.y);ctx.rotate(v.spin);ctx.drawImage(VIRUS_SPR,-s,-s,s*2,s*2);ctx.restore();
   ctx.drawImage(VIRUS_LIT,v.x-s,v.y-s,s*2,s*2);
-  if(v.feed>0){ctx.beginPath();ctx.arc(v.x,v.y,v.r*.72,-Math.PI/2,-Math.PI/2+v.feed/6*TAU);ctx.lineWidth=Math.max(1.5/z,5);ctx.lineCap='round';ctx.strokeStyle='rgba(235,255,190,.9)';ctx.stroke();ctx.lineCap='butt';}
+  const fill=vFill(v);if(fill>0){ctx.beginPath();ctx.arc(v.x,v.y,v.r*.72,-Math.PI/2,-Math.PI/2+fill*TAU);ctx.lineWidth=Math.max(1.5/z,5);ctx.lineCap='round';ctx.strokeStyle='rgba(235,255,190,.9)';ctx.stroke();ctx.lineCap='butt';}
 }
 function drawHunter(h){ // T4-style phage: capsid head, collar, tail sheath, splayed fibres leading
   const z=cam.z,s=HUNTER_R;
