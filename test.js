@@ -22,8 +22,11 @@ const child = spawn(process.execPath, [path.join(__dirname, 'server.js')],
   { env: { ...process.env, PORT, DATA_DIR: dataDir, IAP_UNVERIFIED: '1', AUTH_APPLE_JWKS: `http://127.0.0.1:${KEY_PORT}/apple`, AUTH_GOOGLE_JWKS: `http://127.0.0.1:${KEY_PORT}/google`, GOOGLE_CLIENT_IDS: 'test-google-client' }, stdio: ['ignore', 'ignore', 'inherit'] });
 const base = `http://127.0.0.1:${PORT}`;
 
-async function waitUp() {
-  for (let i = 0; i < 50; i++) { try { if ((await fetch(base + '/health')).ok) return; } catch (e) {} await new Promise(r => setTimeout(r, 100)); }
+async function waitUp() { // up to 15 s: start-up is slow while the Mac is busy building
+  for (let i = 0; i < 150; i++) {
+    if (child.exitCode != null) throw new Error('server exited at start-up (port ' + PORT + ' in use?)');
+    try { if ((await fetch(base + '/health')).ok) return; } catch (e) {} await new Promise(r => setTimeout(r, 100));
+  }
   throw new Error('server did not start');
 }
 async function post(url, body, secret) {
@@ -142,10 +145,11 @@ async function post(url, body, secret) {
     r = await post('/api/run/start', {}, secret); await expect('a ranked life in progress', { ranked: 1 });
     await post('/api/run/end', { runId: r.body.runId, survived: 5, eaten: 0, peak: 25 }, secret); await expect('the life ended', { ranked: 0 });
     // the Android player starts a solo game: no presence for 3 s, but its pings go on
-    const keep = setInterval(() => { pres(); android.send(JSON.stringify({ t: 'ping', c: 1 })); }, 400);
+    const more = [], inMenus = w => w !== 'full' && w.readyState === 1 && w.send(JSON.stringify({ t: 'p', p: { v: 6, a: 0, h: 0, q: 0 } }));
+    const keep = setInterval(() => { pres(); android.send(JSON.stringify({ t: 'ping', c: 1 })); more.forEach(inMenus); }, 400);
     await expect('a solo game', { online: 3, arena: 1, searching: 1, solo: 1, menus: 0, playing: 2 }, 5000);
-    // the arena holds 16 games; the 17th is turned away and counted
-    const more = []; for (let i = 0; i < 14; i++) more.push(await join({ Origin: base }));
+    // the arena holds 16 games (these wait in the menus, sending presence like a real game); the 17th is turned away and counted
+    for (let i = 0; i < 14; i++) { const w = await join({ Origin: base }); inMenus(w); more.push(w); }
     assert.equal(more.filter(w => w === 'full').length, 1, 'the 17th game is turned away');
     s = await expect('a full arena', { online: 16 });
     // the history rows since this test began (a minute may have turned meanwhile): each keeps its busiest second
