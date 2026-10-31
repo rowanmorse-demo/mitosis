@@ -1948,7 +1948,7 @@ function endEvent(){
 }
 function eventTick(){
   if(ev.type){if(T>=ev.end||(ev.type===4&&!players.some(p=>p.boss&&p.alive&&!p.remote)))endEvent();}
-  else if(T>=evNext){let t=[1,1,2,2,3,4][Math.floor(Math.random()*6)];if(t===4&&players.some(p=>p.boss))t=1;startEvent(t);}
+  else if(T>=evNext){let t=[1,1,2,2,3,4][Math.floor(Math.random()*6)];if(t===4&&(players.some(p=>p.boss)||roundT()>=BOT_CUTOFF||round.over))t=1;startEvent(t);} // no Leviathan once bots stop joining at 7:00
 }
 /* ================= hunter phages ================= */
 function spawnHunter(){
@@ -2964,7 +2964,7 @@ const botSkin=b=>b===BOSS_BID?4:h32(b*53+3)<.45?0:1+Math.floor(h32(b*59+1)*4);
 function botTarget(){const n=DIFF[settings.diff].bots;return Math.max(Math.round(n*.3),n-Math.max(0,peerCount-1)*BOTS_PER_PLAYER);}
 function syncBots(){
   if(!isHost)return;
-  const cfg=DIFF[settings.diff],want=botTarget();let bots=players.filter(p=>p.bot&&!p.remote&&!p.boss);
+  const cfg=DIFF[settings.diff];let want=botTarget(),bots=players.filter(p=>p.bot&&!p.remote&&!p.boss);
   const massOf=p=>p.cells.reduce((s,c)=>s+(c.dead?0:c.mass),0);bots.sort((a,b)=>massOf(b)-massOf(a));
   while(bots.length>want)removePlayer(bots.pop()); // the smallest microbes leave first
   cells=cells.filter(c=>!c.dead);
