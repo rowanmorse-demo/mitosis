@@ -2150,10 +2150,12 @@ function step(dt){
     const vm=has(c.owner,'vacuole')?1.4:1;
     for(const pl of EAT){let m=pl.m*vm;if(ev.type===1&&(pl.x-ev.x)**2+(pl.y-ev.y)**2<BLOOM_R2){m*=3;if(c.owner===human&&++human.bloomEats>=60)unlock('bloom');}c.mass+=m;eatPellet(pl);}
   }
-  // ejected mass (ours)
-  const ke=Math.exp(-5*dt);
+  // ejected mass (ours). A Magnet pulls in other players' blobs as it does food: whoever shot a blob moves it, toward
+  // local or remote magnets alike (remote players' fx bits carry the magnet), and the eat check below credits the catcher.
+  const ke=Math.exp(-5*dt),mags=cells.filter(c=>!c.dead&&c.owner.fx.magnet>0);
   for(const e of ejected){
     e.x+=e.vx*dt;e.y+=e.vy*dt;e.vx*=ke;e.vy*=ke;
+    for(const c of mags){if(c.owner===e.owner)continue;const dx=c.x-e.x,dy=c.y-e.y,d=Math.hypot(dx,dy);if(d<c.r+300&&d>1){const m=Math.min(d,560*dt);e.x+=dx/d*m;e.y+=dy/d*m;break;}}
     const dc=Math.hypot(e.x,e.y);if(dc>R-e.r){e.x*=(R-e.r)/dc;e.y*=(R-e.r)/dc;}
     for(const h of hunters){if(h.dead)continue;if(Math.hypot(h.x-e.x,h.y-e.y)<HUNTER_R+e.r){e.dead=true;
         if(isHost){h.hp--;if(h.hp<=0){lyseHunter(h);if(e.owner===human)unlock('hunter');}else burst(h.x,h.y,col(INF_C),5,160);}else{rec(['h',h.id]);if(h.hp<=1&&e.owner===human)unlock('hunter');h.hp--;burst(h.x,h.y,col(INF_C),5,160);}
