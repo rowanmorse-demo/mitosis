@@ -581,7 +581,258 @@ body:not(.playing) #tip{display:none}
 /* @ui:results end */
 
 /* @ui:hud */
+/* In-game HUD: glass pills along the top edge, round thumb buttons in the corner, the middle of the arena left clear */
+:root{
+  --hud-t:max(12px,env(safe-area-inset-top,0px));--hud-l:max(12px,env(safe-area-inset-left,0px));
+  --hud-r:max(12px,env(safe-area-inset-right,0px));--hud-b:max(10px,env(safe-area-inset-bottom,0px));
+  --hud-h:40px;--hud-row:calc(var(--hud-t) + var(--hud-h) + 8px);--board-w:208px;
+  --hud-glass:linear-gradient(180deg,rgba(26,56,59,.66),rgba(5,17,19,.78));--hud-line:rgba(170,235,225,.17);
+  --hud-shade:inset 0 1px 0 rgba(255,255,255,.1),inset 0 -1px 0 rgba(0,0,0,.3),0 8px 22px -8px rgba(0,0,0,.65);
+  --hud-blur:blur(12px) saturate(1.35);
+  --hud-heart:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 22'%3E%3Cpath d='M12 21S1.5 14.4 1.5 7.3A5.6 5.6 0 0 1 12 4.6a5.6 5.6 0 0 1 10.5 2.7C22.5 14.4 12 21 12 21z'/%3E%3C/svg%3E");
+  --hud-arena:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.7'%3E%3Ccircle cx='8' cy='8' r='6.3' stroke-dasharray='2.6 2.1'/%3E%3Ccircle cx='8' cy='8' r='2.3' fill='black' stroke='none'/%3E%3C/svg%3E");
+  --hud-star:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2.2l2.95 6.1 6.7.9-4.9 4.65 1.25 6.65L12 17.3l-6 3.2 1.25-6.65L2.35 9.2l6.7-.9z'/%3E%3C/svg%3E");
+  --hud-dna:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M7 2.5c0 5 10 5.5 10 9.5s-10 4.5-10 9.5M17 2.5c0 5-10 5.5-10 9.5s10 4.5 10 9.5M9 6.5h6M9 17.5h6'/%3E%3C/svg%3E");
+  --hud-info:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='6' r='2.3'/%3E%3Crect x='9.9' y='10' width='4.2' height='10' rx='1.6'/%3E%3C/svg%3E");
+  --hud-bulb:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2.3a6.6 6.6 0 0 0-3.9 11.9c.65.48.95 1.15.95 1.9v.7h5.9v-.7c0-.75.3-1.42.95-1.9A6.6 6.6 0 0 0 12 2.3z'/%3E%3Crect x='9.1' y='18.2' width='5.8' height='2.6' rx='1.3'/%3E%3C/svg%3E");
+  --hud-user:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='7.5' r='4.2'/%3E%3Cpath d='M3.8 21a8.2 8.2 0 0 1 16.4 0z'/%3E%3C/svg%3E");
+}
+@media (min-width:1000px) and (min-height:640px){:root{--hud-t:max(18px,env(safe-area-inset-top,0px));--hud-l:max(20px,env(safe-area-inset-left,0px));--hud-r:max(20px,env(safe-area-inset-right,0px));--hud-b:max(18px,env(safe-area-inset-bottom,0px));--hud-h:42px;--board-w:236px}}
 
+/* one glass for every pill and card */
+#stats,#roundClock,#boardToggle,#board ol,#perfHud,#banner,#toasts .toast,#tip,#fx .hchip,#feed div{
+  background:var(--hud-glass);border:1px solid var(--hud-line);box-shadow:var(--hud-shade);color:var(--ink);box-sizing:border-box;
+  -webkit-backdrop-filter:var(--hud-blur);backdrop-filter:var(--hud-blur)}
+#stats::before,#roundClock::before,#boardToggle::after{content:"";position:absolute;inset:-6px -4px} /* 52px touch targets around 40px pills */
+#stats.down,#boardToggle.down{transform:scale(.95)}#roundClock.down{transform:translateX(-50%) scale(.95)}
+
+/* mass pill (tap to pause): pause disc, mass, lives */
+#stats{top:var(--hud-t);left:var(--hud-l);height:var(--hud-h);max-width:none;display:flex;flex-wrap:nowrap;align-items:center;gap:0;padding:0 14px 0 5px;border-radius:999px;transition:transform .16s cubic-bezier(.3,.7,.4,1.5),border-color .2s}
+#stats.mini{padding:0 15px 0 5px}
+#stats .pz{position:relative;flex:none;width:30px;height:30px;margin-right:9px;border-radius:50%;background:radial-gradient(circle at 50% 25%,rgba(255,255,255,.2),rgba(255,255,255,.05) 70%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)}
+#stats .pz::before,#stats .pz::after{content:"";position:absolute;top:10px;width:3px;height:10px;border-radius:2px;background:var(--ink)}
+#stats .pz::before{left:11px}#stats .pz::after{right:11px}
+#massVal{font:800 21px/1 var(--display);letter-spacing:-.035em;min-width:2ch;text-shadow:none;font-variant-numeric:tabular-nums}
+#stats .livesrow{display:flex;align-items:center;height:18px;margin-left:11px;padding-left:11px;border-left:1px solid rgba(255,255,255,.12)}
+#lives{display:flex;gap:3px}
+#lives i{width:13px;height:12px;border:0;border-radius:0;box-shadow:none;background:rgba(220,239,233,.2);-webkit-mask:var(--hud-heart) center/contain no-repeat;mask:var(--hud-heart) center/contain no-repeat;transition:background .3s}
+#lives i.on,.livesrow.inf #lives i{background:linear-gradient(180deg,#ffa3c0,#ff4d7f);border:0;box-shadow:none}
+.livesrow.inf #lives i+i{display:none}
+.livesrow.inf::after{content:"∞";margin-left:4px;font:800 17px/1 var(--display);color:var(--muted)}
+
+/* effect chips under the mass pill */
+#fx{position:fixed;top:var(--hud-row);left:var(--hud-l);display:flex;flex-direction:column;align-items:flex-start;flex-wrap:nowrap;gap:6px;margin:0;width:max-content;max-width:none;min-height:0}
+#fx:empty{display:none}
+#perfHud:not([hidden]) ~ #fx{top:calc(var(--hud-row) + 34px)}
+#fx .hchip{position:relative;overflow:hidden;display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px 0 8px;border-radius:999px;font:700 12.5px/1 var(--display)}
+#fx .hchip svg{width:15px;height:15px;flex:none;margin:0;vertical-align:0}
+#fx .hchip span{color:var(--ink);font-variant-numeric:tabular-nums}
+#fx .hchip i{position:absolute;left:0;bottom:0;height:2px;width:calc(var(--p)*100%);background:currentColor;border-radius:0 2px 2px 0}
+
+/* FPS / ping readout (Settings), under the mass pill */
+#perfHud{top:var(--hud-row);left:var(--hud-l);right:auto;z-index:2;height:26px;display:flex;align-items:center;gap:4px;padding:0 11px;border-radius:999px;font:600 10.5px/1 var(--mono);color:var(--muted)}
+#perfHud b{font:700 11.5px/1 var(--mono)}
+
+/* round clock: emptying ring, time left, then when the arena closes */
+#roundClock{top:var(--hud-t);left:50%;transform:translateX(-50%);height:var(--hud-h);display:flex;align-items:center;gap:8px;padding:0 15px 0 11px;border-radius:999px;font:600 12px/1 var(--mono);color:var(--muted);white-space:nowrap;transition:transform .16s cubic-bezier(.3,.7,.4,1.5),background .4s,border-color .4s}
+#roundClock .rcr{flex:none;width:18px;height:18px;border-radius:50%;background:conic-gradient(var(--ink) calc(var(--rp,1)*360deg),rgba(255,255,255,.15) 0);-webkit-mask:radial-gradient(circle,transparent 4.6px,#000 5.2px);mask:radial-gradient(circle,transparent 4.6px,#000 5.2px)}
+#roundClock .rct{font:800 16px/1 var(--display);letter-spacing:-.01em;color:var(--ink);font-variant-numeric:tabular-nums}
+#roundClock .rcx{display:flex;align-items:center;gap:6px;height:18px;padding-left:10px;border-left:1px solid rgba(255,255,255,.12);font:600 12px/1 var(--mono);font-variant-numeric:tabular-nums}
+#roundClock .rcx::before{content:"";flex:none;width:13px;height:13px;background:currentColor;-webkit-mask:var(--hud-arena) center/contain no-repeat;mask:var(--hud-arena) center/contain no-repeat}
+#roundClock .rcp{font:700 9.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--violet);padding:5px 8px;margin-right:-5px;border-radius:999px;background:rgba(154,140,255,.14)}
+#roundClock.hot{background:linear-gradient(180deg,rgba(92,26,40,.72),rgba(32,6,13,.8));border-color:rgba(255,110,135,.45)}
+#roundClock.hot .rcr{background:conic-gradient(#ff8ea3 calc(var(--rp,1)*360deg),rgba(255,255,255,.15) 0)}
+#roundClock.hot .rcx{color:#ffb7c3;font-family:var(--display);font-weight:700}
+#roundClock.hot .rcx::before{width:7px;height:7px;border-radius:50%;background:#ff6b82;box-shadow:0 0 8px #ff6b82;-webkit-mask:none;mask:none;animation:hudBlink 1.1s ease-in-out infinite}
+#roundClock.over .rcr{opacity:.35}
+@keyframes hudBlink{50%{opacity:.25}}
+
+/* ranking: a chip with your place, the list drops down under it */
+#board{top:var(--hud-t);right:var(--hud-r);width:auto!important;padding:0!important;border:0;border-radius:0;background:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+#board .bhead::before,#board.collapsed .bhead::before{display:none}
+#boardToggle{position:relative;height:var(--hud-h);width:auto;margin:0;padding:0 12px 0 11px;border-radius:999px;display:flex;align-items:center;gap:8px;font:inherit;color:var(--ink);white-space:nowrap;transition:transform .16s cubic-bezier(.3,.7,.4,1.5)}
+#boardToggle .bico{flex:none;width:19px;height:19px;color:var(--amber);filter:drop-shadow(0 0 6px rgba(242,177,52,.35))}
+#boardMe{font:800 15.5px/1 var(--display);letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+#boardMe small{margin-left:1px;font:600 11px/1 var(--mono);letter-spacing:0;color:var(--dim)}
+#netPill{display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px 0 7px;border-radius:999px;background:rgba(95,224,168,.13);color:#86f2c2;font:700 11px/1 var(--mono)}
+#netPill::before{content:"";width:6px;height:6px;border-radius:50%;background:#5fe0a8;box-shadow:0 0 6px #5fe0a8}
+#board .chev{flex:none;width:12px;height:12px;margin:0 0 0 -1px;font-size:inherit;color:var(--muted);transform:rotate(180deg);transition:transform .2s}
+#board.collapsed .chev{transform:none}
+#board ol{position:absolute;top:calc(100% + 8px);right:0;width:var(--board-w);margin:0;padding:6px;display:grid;gap:2px;border-radius:18px;list-style:none;animation:hudDrop .22s cubic-bezier(.2,.8,.2,1)}
+#board li{display:flex;align-items:center;gap:8px;height:24px;padding:0 9px 0 5px;border-radius:10px;font:600 12.5px/1 var(--display);color:var(--ink)}
+#board .rk{flex:none;width:17px;display:grid;place-items:center;font:700 10.5px/1 var(--mono);color:var(--dim);text-align:center}
+#board .rk svg{width:14px;height:14px;color:var(--amber);filter:drop-shadow(0 0 4px rgba(242,177,52,.5))}
+#board li:nth-child(2) .rk{color:#cfdae3}#board li:nth-child(3) .rk{color:#dba67e}
+#board .dot{flex:none;width:9px;height:9px;border-radius:50%;box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.28),inset 0 1px 1px rgba(255,255,255,.45)}
+#board .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#board .ms{font:600 11px/1 var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+#board li.me{background:linear-gradient(90deg,rgba(255,92,138,.3),rgba(255,92,138,.1));box-shadow:inset 0 0 0 1px rgba(255,92,138,.4)}
+#board li.me .nm{color:#fff;font-weight:700}#board li.me .ms,#board li.me .rk{color:#ffc6d6}
+#board li.gap{height:8px;padding:0;margin:0 12px;background:radial-gradient(circle,rgba(220,239,233,.35) 1px,transparent 1.6px) center/7px 7px repeat-x}
+#board .tag{flex:none;width:11px;height:11px;padding:0;border:0;border-radius:0;background:var(--violet);-webkit-mask:var(--hud-user) center/contain no-repeat;mask:var(--hud-user) center/contain no-repeat}
+#board .tag.boss{width:auto;height:auto;padding:3px 5px;border-radius:5px;background:rgba(201,162,255,.16);-webkit-mask:none;mask:none;font:700 8.5px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:#d4b6ff}
+@keyframes hudDrop{from{opacity:0;transform:translateY(-6px) scale(.98)}}
+
+/* world event: a card for a moment, then a slim pill */
+#banner{top:var(--hud-row);left:50%;right:auto;transform:translateX(-50%);width:min(340px,calc(100% - 2*var(--hud-l) - 2*var(--board-w) - 24px));min-width:0;max-width:none;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;column-gap:9px;row-gap:5px;padding:10px 14px 11px 12px;border-radius:18px;opacity:1;animation:hudPop .4s cubic-bezier(.2,.9,.25,1.2)}
+#banner::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--ec);box-shadow:0 0 0 3px rgba(255,255,255,.07),0 0 12px var(--ec)}
+#banner .bnrow{display:contents}
+#banner #bnTitle{font:800 15px/1.15 var(--display);letter-spacing:-.015em;color:var(--ec);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#banner #bnTime{font:700 12px/1 var(--mono);color:var(--ink);font-variant-numeric:tabular-nums}
+#banner #bnDesc{grid-column:1/-1;font:500 12.5px/1.35 var(--display);color:var(--muted)}
+#banner .bnbar{grid-column:1/-1;height:3px;margin:1px 0 0;border-radius:2px;background:rgba(255,255,255,.08)}
+#banner.mini{left:50%;transform:translateX(-50%);width:auto;max-width:300px;height:32px;padding:0 14px 0 11px;row-gap:0;border-radius:999px;animation:none;opacity:1}
+#banner.mini::before{width:8px;height:8px}
+#banner.mini #bnTitle{font-size:12.5px}#banner.mini #bnTime{font-size:11.5px;color:var(--muted)}
+#banner.mini .bnbar{position:absolute;left:16px;right:16px;bottom:3px;height:2px;margin:0}
+@keyframes hudPop{from{opacity:0;transform:translateX(-50%) translateY(-8px) scale(.96)}}
+
+/* achievements and mutations: an icon badge and one line (two on desktop) */
+#toasts{top:var(--hud-row)!important;left:50%;transform:translateX(-50%);display:grid;gap:6px;justify-items:center;width:max-content;max-width:calc(100% - 2*var(--hud-l) - 2*var(--board-w) - 24px)}
+#banner:not([hidden]) ~ #toasts{top:calc(var(--hud-row) + 86px)!important}
+#banner.mini:not([hidden]) ~ #toasts{top:calc(var(--hud-row) + 40px)!important}
+#toasts .toast{display:flex!important;align-items:center;gap:10px;max-width:100%;padding:6px 18px 6px 6px!important;border-radius:999px!important;text-align:left;justify-items:start;border-color:rgba(242,193,78,.38);animation:hudToast .45s cubic-bezier(.2,.9,.25,1.25)}
+#toasts .toast[data-k=mut]{border-color:rgba(154,140,255,.45)}#toasts .toast[data-k=info]{border-color:var(--hud-line)}
+#toasts .toast .ti{position:relative;flex:none;width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 35% 28%,#ffefb8,#f2b134 55%,#a5690a);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 0 14px rgba(242,177,52,.45)}
+#toasts .toast .ti::after{content:"";position:absolute;inset:7px;background:#3d2400;-webkit-mask:var(--hud-star) center/contain no-repeat;mask:var(--hud-star) center/contain no-repeat}
+#toasts .toast[data-k=mut] .ti{background:radial-gradient(circle at 35% 28%,#e6e1ff,#9a8cff 55%,#5340c7);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 0 14px rgba(154,140,255,.5)}
+#toasts .toast[data-k=mut] .ti::after{background:#170d44;-webkit-mask-image:var(--hud-dna);mask-image:var(--hud-dna)}
+#toasts .toast[data-k=info] .ti{background:radial-gradient(circle at 35% 28%,#d8fff0,#5fe0a8 55%,#1f8f62);box-shadow:inset 0 1px 0 rgba(255,255,255,.55)}
+#toasts .toast[data-k=info] .ti::after{background:#04241a;-webkit-mask-image:var(--hud-info);mask-image:var(--hud-info)}
+#toasts .toast .tt{display:grid!important;gap:3px;min-width:0;font:inherit;color:var(--ink)}
+#toasts .toast .label{font:700 9px/1 var(--mono)!important;letter-spacing:.14em;text-transform:uppercase;color:#f2c14e}
+#toasts .toast[data-k=mut] .label{color:#bcb3ff}#toasts .toast[data-k=info] .label{color:#86f2c2}
+#toasts .toast b{font:800 14.5px/1.15 var(--display)!important;letter-spacing:-.01em;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#toasts .toast .td{font:500 12px/1.3 var(--display);color:var(--muted)}
+@keyframes hudToast{from{opacity:0;transform:translateY(-8px) scale(.94)}}
+
+/* first-game tips: a short line with a bulb, low and centred, clear of both thumbs */
+#tip{left:50%;top:auto;bottom:calc(var(--hud-b) + 8px);transform:translate(-50%,10px) scale(.96);width:max-content;max-width:min(400px,calc(100% - 2*var(--hud-l) - 360px));display:flex;align-items:center;gap:10px;padding:5px 16px 5px 5px;border-radius:999px;font:600 13px/1.3 var(--display);text-align:left;transition:opacity .3s,transform .35s cubic-bezier(.2,.9,.25,1.2)}
+#tip.show{transform:translate(-50%,0) scale(1)}
+#tip::before{content:"";flex:none;width:28px;height:28px;margin:0;border-radius:50%;background:radial-gradient(circle at 35% 28%,#d6ecff,#6cb8ff 55%,#2b6fc0);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 0 14px rgba(108,184,255,.45)}
+#tip::after{content:"";position:absolute;left:12px;top:50%;width:14px;height:14px;margin-top:-7px;background:#06223f;-webkit-mask:var(--hud-bulb) center/contain no-repeat;mask:var(--hud-bulb) center/contain no-repeat}
+
+/* desktop extras: kill feed and the microscope scale, bottom left */
+#feed{left:var(--hud-l);bottom:calc(var(--hud-b) + 34px);justify-items:start;gap:5px;max-width:340px;font:500 12px/1.2 var(--display);color:var(--muted)}
+#feed div{padding:6px 12px;border-radius:999px;box-shadow:none}
+#feed b{font-weight:700;color:var(--ink)}#feed .you{border-color:rgba(255,92,138,.35)}#feed .you b{color:#ff8fb0}
+#scale{left:var(--hud-l);bottom:var(--hud-b);gap:10px;font:500 10.5px/1 var(--mono);color:var(--dim)}
+#scaleBar{height:5px;border:1.5px solid rgba(220,239,233,.5);border-top:0;opacity:1}
+
+/* action buttons: round, glossy, Split is the big pink one */
+#actions .act{appearance:none;border:0;margin:0;padding:0;border-radius:50%;display:grid;place-items:center;overflow:visible;cursor:pointer;color:var(--ink);font:inherit;
+  background:radial-gradient(120% 120% at 50% 0%,rgba(52,96,100,.8),rgba(8,25,27,.88) 62%);
+  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.18),inset 0 0 0 1px rgba(170,235,225,.22),inset 0 -8px 14px rgba(0,0,0,.38),0 10px 22px -8px rgba(0,0,0,.7);
+  -webkit-backdrop-filter:blur(10px) saturate(1.3);backdrop-filter:blur(10px) saturate(1.3);
+  transition:transform .18s cubic-bezier(.3,.7,.4,1.6),filter .2s,opacity .25s,box-shadow .25s;touch-action:none;-webkit-tap-highlight-color:transparent}
+#actions .act .aico{width:28px;height:28px;display:block;pointer-events:none;filter:drop-shadow(0 1px 1px rgba(0,0,0,.4))}
+#actions .act::before{content:"";position:absolute;inset:-4px;border-radius:50%;box-shadow:0 0 0 2.5px rgba(255,255,255,.85),0 0 20px rgba(255,92,138,.6);opacity:0;transform:scale(1.2);transition:opacity .5s ease-out,transform .5s ease-out;pointer-events:none}
+#actions .act.flash::before{opacity:1;transform:scale(1);transition:none}
+#actions .act.down{transform:scale(.88);filter:brightness(1.18)}
+#actions .act.off .aico{opacity:.4}
+#actions #splitBtn.off{color:#ff8fb0;background:radial-gradient(120% 120% at 50% 0%,rgba(80,40,58,.8),rgba(14,18,22,.88) 62%);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.14),inset 0 0 0 1.5px rgba(255,92,138,.45),inset 0 -8px 14px rgba(0,0,0,.38),0 10px 22px -8px rgba(0,0,0,.7)}
+#actions #splitBtn.off .aico{opacity:.55;filter:none}
+#actions #splitBtn{color:#fff;background:radial-gradient(110% 110% at 50% 6%,#ffa4c1 0%,#ff5c8a 46%,#c92c5d 100%);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.45),inset 0 0 0 1px rgba(255,255,255,.22),inset 0 -10px 16px rgba(110,0,40,.45),0 0 0 5px rgba(255,92,138,.14),0 12px 26px -8px rgba(255,50,110,.7)}
+#actions #splitBtn .aico{width:42px;height:42px;filter:drop-shadow(0 1.5px 1px rgba(120,0,40,.5))}
+#actions #dashBtn::after{content:"";position:absolute;inset:0;border-radius:50%;transform:none;background:conic-gradient(rgba(2,8,9,.7) calc(var(--cd,0)*360deg),transparent 0);pointer-events:none}
+#actions #dashBtn:not(.ready) .aico{opacity:.6}
+#actions #dashBtn.ready{color:#ff9bbb;box-shadow:inset 0 1.5px 0 rgba(255,255,255,.18),inset 0 0 0 1.5px rgba(255,92,138,.75),inset 0 -8px 14px rgba(0,0,0,.38),0 0 18px rgba(255,92,138,.3),0 10px 22px -8px rgba(0,0,0,.7)}
+#actions #dashBtn.ready::before{animation:hudReady .6s ease-out}
+@keyframes hudReady{0%{opacity:1;transform:scale(.96)}100%{opacity:0;transform:scale(1.3)}}
+
+/* touch: a quarter-arc around the big Split button in the thumb's corner */
+@media (pointer:coarse){
+  #actions{left:auto;right:var(--hud-r);bottom:var(--hud-b);transform:none;display:block;width:170px;height:170px}
+  #actions .act{position:absolute;width:64px;height:64px}
+  #actions #splitBtn{right:0;bottom:0;width:92px;height:92px}
+  #actions #ejectBtn{right:106px;bottom:20px}
+  #actions #dashBtn{right:20px;bottom:106px}
+  body.lefty #actions{right:auto;left:var(--hud-l)}
+  body.lefty #actions #splitBtn{right:auto;left:0}body.lefty #actions #ejectBtn{right:auto;left:106px}body.lefty #actions #dashBtn{right:auto;left:20px}
+  #scale,#roundClock .rcp{display:none}
+  #toasts .toast{padding:5px 18px 5px 5px!important}#toasts .toast .ti{width:28px;height:28px}
+  #toasts .toast .label,#toasts .toast .td{display:none!important}
+}
+/* tablets: bigger thumbs */
+@media (pointer:coarse) and (min-width:900px) and (min-height:700px){
+  #actions{width:200px;height:200px}#actions .act{width:76px;height:76px}#actions #splitBtn{width:108px;height:108px}
+  #actions #ejectBtn{right:124px;bottom:24px}#actions #dashBtn{right:24px;bottom:124px}
+  body.lefty #actions #ejectBtn{left:124px}body.lefty #actions #dashBtn{left:24px}
+}
+/* mouse and keyboard: a centred bar, Split in the middle, key caps under each */
+@media (pointer:fine){
+  #actions{left:50%;right:auto;transform:translateX(-50%);bottom:calc(var(--hud-b) + 10px);display:flex;flex-direction:row;align-items:center;gap:16px;width:auto;height:auto}
+  #actions .act{position:relative;width:54px;height:54px}
+  #actions #splitBtn{order:2;width:68px;height:68px}#actions #ejectBtn{order:1}#actions #dashBtn{order:3}
+  #actions .act kbd{position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);padding:3px 6px;border-radius:6px;border:1px solid rgba(170,235,225,.25);background:rgba(4,14,16,.94);box-shadow:0 2px 6px rgba(0,0,0,.5);font:700 9.5px/1 var(--mono);letter-spacing:.04em;color:var(--ink);white-space:nowrap}
+  #actions .act:hover{filter:brightness(1.12)}
+  #tip{bottom:calc(var(--hud-b) + 100px)}
+}
+
+/* joystick: a glass ring with direction ticks; the rim lights up the way you push */
+#joy{left:var(--hud-l);bottom:calc(var(--hud-b) + 4px)}
+body.lefty #joy{left:auto;right:var(--hud-r)}
+#joy .base{left:13px;top:13px;width:124px;height:124px;border:0;background:radial-gradient(circle,rgba(4,14,16,.1) 0 38%,rgba(4,14,16,.36) 68%,rgba(20,46,49,.55) 100%);box-shadow:inset 0 0 0 1.5px rgba(170,235,225,.2),inset 0 0 22px rgba(0,0,0,.35),0 10px 26px -10px rgba(0,0,0,.6);transition:box-shadow .2s,background .2s}
+#joy.active .base{background:radial-gradient(circle,rgba(4,14,16,.18) 0 38%,rgba(4,14,16,.48) 68%,rgba(26,58,61,.62) 100%);border:0;box-shadow:inset 0 0 0 1.5px rgba(170,235,225,.32),inset 0 0 22px rgba(0,0,0,.35),0 10px 26px -10px rgba(0,0,0,.6)}
+#joy .base::after{inset:0;border:0;border-radius:50%;opacity:.5;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 124 124' fill='none' stroke='%23dcefe9' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M56.5 19l5.5-5.5 5.5 5.5M105 56.5l5.5 5.5-5.5 5.5M56.5 105l5.5 5.5 5.5-5.5M19 56.5L13.5 62l5.5 5.5'/%3E%3C/svg%3E") center/100% 100% no-repeat}
+#joy .base::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from calc(var(--ja,0rad) + 10deg),rgba(255,92,138,0) 0deg,rgba(255,130,168,1) 80deg,rgba(255,92,138,0) 160deg);-webkit-mask:radial-gradient(closest-side,transparent 87%,#000 90%);mask:radial-gradient(closest-side,transparent 87%,#000 90%);opacity:var(--jm,0);transition:opacity .15s}
+#joy .knob{left:47px;top:47px;width:56px;height:56px;background:radial-gradient(circle at 40% 28%,rgba(255,255,255,.62),rgba(205,240,232,.26) 38%,rgba(110,170,162,.2) 72%,rgba(60,110,105,.28));box-shadow:inset 0 1px 1px rgba(255,255,255,.55),inset 0 -6px 12px rgba(0,30,30,.3),0 0 0 1px rgba(200,245,235,.28),0 8px 18px rgba(0,0,0,.45);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+#joy.active .knob{background:radial-gradient(circle at 38% 30%,#ffd3e0,#ff74a0 42%,#d63a6b 86%);box-shadow:inset 0 1px 1px rgba(255,255,255,.7),inset 0 -5px 10px rgba(120,0,40,.3),0 0 0 1px rgba(255,255,255,.25),0 0 26px rgba(255,92,138,.5),0 8px 18px rgba(0,0,0,.45)}
+body.joy-float #joy{opacity:.4}body.joy-float #joy.active{opacity:1}
+
+/* landscape phones: tighter cards */
+@media (orientation:landscape) and (max-height:520px){
+  :root{--board-w:200px}
+  #banner{padding:8px 13px 9px 11px;row-gap:4px}#banner #bnDesc{font-size:11.5px}
+  #banner:not([hidden]) ~ #toasts{top:calc(var(--hud-row) + 76px)!important}
+}
+/* phones: pop-ups are small one-line pills (11-12px type) near the top or bottom edge, never over the cell or the thumbs */
+@media (pointer:coarse) and (max-height:520px),(pointer:coarse) and (max-width:640px){
+  #toasts{gap:4px}
+  #toasts .toast{height:26px;gap:6px;padding:0 11px 0 4px!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 4px 12px -4px rgba(0,0,0,.55);animation-duration:.28s;transition-duration:.35s}
+  #toasts .toast .ti{width:18px;height:18px;box-shadow:inset 0 1px 0 rgba(255,255,255,.5)}
+  #toasts .toast .ti::after{inset:4px}
+  #toasts .toast b{font:700 11.5px/1 var(--display)!important;letter-spacing:0}
+  #banner.mini{height:26px;padding:0 11px 0 9px;column-gap:7px;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 4px 12px -4px rgba(0,0,0,.55)}
+  #banner.mini::before{width:7px;height:7px;box-shadow:0 0 8px var(--ec)}
+  #banner.mini #bnTitle{font-size:11.5px;font-weight:700;letter-spacing:0}#banner.mini #bnTime{font-size:10.5px}
+  #banner.mini .bnbar{left:12px;right:12px;bottom:2px;height:1.5px}
+  #banner.mini:not([hidden]) ~ #toasts{top:calc(var(--hud-row) + 32px)!important}
+  #tip{height:26px;gap:7px;padding:0 12px 0 4px;font:600 11.5px/1 var(--display);white-space:nowrap;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 4px 12px -4px rgba(0,0,0,.55);transition-duration:.25s}
+  #tip::before{width:18px;height:18px;box-shadow:inset 0 1px 0 rgba(255,255,255,.5)}
+  #tip::after{left:8px;width:10px;height:10px;margin-top:-5px}
+  #fx{gap:4px}#fx .hchip{height:22px;gap:5px;padding:0 9px 0 6px;font-size:11px}#fx .hchip svg{width:12px;height:12px}
+  #perfHud{height:22px;padding:0 9px;font-size:10px}#perfHud b{font-size:10.5px}
+  #perfHud:not([hidden]) ~ #fx{top:calc(var(--hud-row) + 28px)}
+}
+/* landscape phones: the event pill joins the status column on the left, so only a brief toast sits top-centre */
+@media (pointer:coarse) and (max-height:520px) and (orientation:landscape){
+  #banner,#banner.mini{top:var(--hud-row);left:var(--hud-l);right:auto;transform:none;max-width:240px}
+  #perfHud:not([hidden]) ~ #banner{top:calc(var(--hud-row) + 28px)}
+  #banner:not([hidden]) ~ #fx{top:calc(var(--hud-row) + 32px)}
+  #perfHud:not([hidden]) ~ #banner:not([hidden]) ~ #fx{top:calc(var(--hud-row) + 60px)}
+  #banner.mini:not([hidden]) ~ #toasts{top:var(--hud-row)!important}
+}
+/* portrait phones: the clock tucks under the mass pill; pop-ups sit below where the ranking drops down */
+@media (orientation:portrait) and (max-width:700px){
+  :root{--board-w:196px}
+  #roundClock{top:var(--hud-row);left:var(--hud-l);transform:none;height:34px;padding:0 13px 0 9px;gap:7px}
+  #roundClock.down{transform:scale(.95)}
+  #roundClock .rct{font-size:15px}#roundClock .rcr{width:16px;height:16px}
+  #perfHud,#fx{top:calc(var(--hud-row) + 42px)}
+  #perfHud:not([hidden]) ~ #fx{top:calc(var(--hud-row) + 70px)}
+  #banner,#banner.mini{top:calc(var(--hud-row) + 180px)}
+  #banner{width:calc(100% - 2*var(--hud-l));max-width:380px}#banner.mini{width:auto;max-width:calc(100% - 2*var(--hud-l))}
+  #toasts{top:calc(var(--hud-row) + 180px)!important;max-width:calc(100% - 2*var(--hud-l))}
+  #banner:not([hidden]) ~ #toasts{top:calc(var(--hud-row) + 180px + 86px)!important}
+  #banner.mini:not([hidden]) ~ #toasts{top:calc(var(--hud-row) + 180px + 40px)!important}
+  #tip{bottom:calc(var(--hud-b) + 186px);max-width:calc(100% - 2*var(--hud-l))}
+  /* ranking folded (the phone default): pop-ups tuck under its chip in the top-right corner instead */
+  #board.collapsed ~ #banner,#board.collapsed ~ #banner.mini{top:var(--hud-row);left:auto;right:var(--hud-r);transform:none;max-width:calc(100% - 2*var(--hud-l) - 160px)}
+  #board.collapsed ~ #toasts{top:var(--hud-row)!important;left:auto;right:var(--hud-r);transform:none;justify-items:end;max-width:calc(100% - 2*var(--hud-l) - 160px)}
+  #board.collapsed ~ #banner:not([hidden]) ~ #toasts{top:calc(var(--hud-row) + 32px)!important}
+}
 /* @ui:hud end */
 
 /* @ui:overlays */
@@ -598,14 +849,14 @@ body:not(.playing) #tip{display:none}
 
 <canvas id="game" aria-label="Game field" tabindex="-1"></canvas>
 
-<div id="stats" class="hud">
+<div id="stats" class="hud" role="button" title="Pause · Esc">
+  <span class="pz" aria-hidden="true"></span>
   <div class="label">Mass</div>
   <div id="massVal">0</div>
-  <div id="metaVal">1 cell · rank –</div>
   <div class="livesrow" id="livesRow"><span class="label">Lives</span><div id="lives"><i></i><i></i><i></i></div></div>
-  <div id="fx"></div>
 </div>
-<div id="board" class="hud panel"><button class="bhead" id="boardToggle" type="button" aria-expanded="true"><span class="label">Culture ranking</span><span id="netPill" class="pill" hidden>Live</span><span class="chev">▾</span></button><ol id="boardList"></ol></div>
+<div id="perfHud" aria-hidden="true" hidden></div>
+<div id="board" class="hud"><button class="bhead" id="boardToggle" type="button" aria-expanded="true" aria-label="Ranking"><svg class="bico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h10V8a5 5 0 0 1-10 0z" fill="currentColor"/><path d="M7 5.5H4.5V7a3 3 0 0 0 3 3M17 5.5h2.5V7a3 3 0 0 1-3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M10.6 12.5h2.8v4h-2.8z" fill="currentColor"/><rect x="7.5" y="16.5" width="9" height="3.6" rx="1.3" fill="currentColor"/></svg><span id="boardMe" class="bme">–</span><span id="netPill" hidden></span><svg class="chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><ol id="boardList"></ol></div>
 <div id="feed" class="hud" aria-live="polite"></div>
 <div id="roundClock" class="hud" hidden></div>
 <div id="scale" class="hud">
@@ -614,14 +865,14 @@ body:not(.playing) #tip{display:none}
 </div>
 <canvas id="mini" class="hud" aria-hidden="true"></canvas>
 <div id="banner" class="hud" hidden><div class="bnrow"><b id="bnTitle"></b><span id="bnTime"></span></div><span id="bnDesc"></span><div class="bnbar"><i id="bnBar"></i></div></div>
+<div id="fx" class="hud"></div>
 <div id="toasts" class="hud" aria-live="polite"></div>
 <div id="tip" role="status" aria-live="polite"></div>
-<div id="perfHud" aria-hidden="true" hidden></div>
 <div id="evolve" hidden><div class="evhead"><span class="label">Evolve</span><span id="evTier" class="evsub">Stage 1 of 6</span><span class="evsub kbd-only">Keys 1 · 2 · 3</span></div><div class="evopts" id="evOpts"></div></div>
 <div id="actions">
-  <button class="act" id="splitBtn" type="button"><svg class="touch-only ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8.5" cy="12" r="5.5"/><circle cx="18.5" cy="12" r="3.5"/></svg><span class="kbd-only">Divide</span><span class="touch-only">Split</span> <kbd>Space</kbd></button>
-  <button class="act" id="ejectBtn" type="button"><svg class="touch-only ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="12" r="5.5"/><path d="M14.5 12h2"/><circle cx="20" cy="12" r="1.8"/></svg><span class="kbd-only">Eject</span><span class="touch-only">Shoot</span> <kbd>W</kbd></button>
-  <button class="act" id="dashBtn" type="button"><svg class="touch-only ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5l5.5 5.5L5 17.5M12.5 6.5l5.5 5.5-5.5 5.5"/></svg><span class="kbd-only">Dash</span><span class="touch-only">Boost</span> <kbd>Shift</kbd></button>
+  <button class="act" id="splitBtn" type="button" aria-label="Split" title="Split · Space"><svg class="aico" viewBox="0 0 32 32" aria-hidden="true"><circle cx="11.2" cy="16" r="8.2" fill="currentColor"/><circle cx="24.4" cy="16" r="5" fill="currentColor"/></svg><kbd>Space</kbd></button>
+  <button class="act" id="ejectBtn" type="button" aria-label="Shoot" title="Shoot · W"><svg class="aico" viewBox="0 0 32 32" aria-hidden="true"><circle cx="21.5" cy="16" r="6.5" fill="currentColor"/><path d="M4.5 10.5h7M2.5 16h9M4.5 21.5h7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg><kbd>W</kbd></button>
+  <button class="act" id="dashBtn" type="button" aria-label="Boost" title="Boost · Shift"><svg class="aico" viewBox="0 0 32 32" aria-hidden="true"><path d="M7.5 8.5l7.5 7.5-7.5 7.5M17 8.5l7.5 7.5-7.5 7.5" fill="none" stroke="currentColor" stroke-width="3.3" stroke-linecap="round" stroke-linejoin="round"/></svg><kbd>Shift</kbd></button>
 </div>
 <div id="joyZone" aria-hidden="true"></div>
 <div id="joy" aria-hidden="true"><div class="base"></div><div class="knob"></div></div>
@@ -1825,9 +2076,10 @@ function unlock(id){
   toast('Achievement',a.name,a.desc);sfx('ach');
 }
 function toast(kind,title,desc){
-  const el=document.createElement('div');el.className='toast';el.innerHTML=`<span class="label">${esc(kind)}</span><b>${esc(title)}</b><span>${esc(desc)}</span>`;
+  const el=document.createElement('div');el.className='toast';el.dataset.k=/^Mutation/.test(kind)?'mut':/^Achievement/.test(kind)?'ach':'info';
+  el.innerHTML=`<i class="ti" aria-hidden="true"></i><span class="tt"><span class="label">${esc(kind)}</span><b>${esc(title)}</b><span class="td">${esc(desc)}</span></span>`;
   const box=$('toasts');box.appendChild(el);while(box.children.length>(TOUCH_UI?1:3))box.firstChild.remove(); // phones: one at a time, briefer
-  setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),500);},TOUCH_UI?2000:3800);
+  setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),400);},TOUCH_UI?1600:3800); // phones: a quick one-line pill
 }
 /* ---- evolution ---- */
 function offerEvo(){
@@ -2620,71 +2872,99 @@ function drawMini(){
 }
 
 /* ================= HUD ================= */
-const boardEl=$('boardList'),massEl=$('massVal'),metaEl=$('metaVal'),fxEl=$('fx'),feedEl=$('feed'),dashBtn=$('dashBtn');
+const boardEl=$('boardList'),massEl=$('massVal'),fxEl=$('fx'),feedEl=$('feed'),dashBtn=$('dashBtn'),splitBtnEl=$('splitBtn'),ejectBtnEl=$('ejectBtn'),boardMeEl=$('boardMe');
 const phone=matchMedia('(max-width:640px)'),shortScreen=matchMedia('(max-height:520px)');
 let dispMass=0,shownMass=-1,glowPrey=false,glowMass=0;
+// HUD writes only touch the DOM when something changed (hud() runs ~8×/s)
+const setTxt=(el,t)=>{if(el.textContent!==t)el.textContent=t;},setHTML=(el,h)=>{if(el._h!==h){el._h=h;el.innerHTML=h;}};
+const HICO={ // small status icons for the chips under the mass pill
+  inf:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5.5" fill="currentColor"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
+  net:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.5a12 12 0 0 1 17 0M7 13a7 7 0 0 1 10 0" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="17.5" r="2.2" fill="currentColor"/></svg>',
+  out:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9.5 17h-19z" fill="currentColor"/><path d="M12 9.5v5M12 17.2v.3" stroke="#1a0610" stroke-width="2.2" stroke-linecap="round"/></svg>',
+  streak:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.5 2c.6 3.6 5.5 6 5.5 11.2A6 6 0 0 1 6 13.4c0-2.3 1-4 2.6-5.3.1 2 .9 3.3 2.2 3.8C10 8.4 10.8 4.8 12.5 2z" fill="currentColor"/></svg>',
+};
+const CROWN='<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 5.2l3.2 2.6L8 3l2.8 4.8L14 5.2l-1.3 7.3H3.3z" fill="currentColor"/></svg>';
+const hchip=(c,p,ico,txt)=>`<span class="hchip" style="color:${c};--p:${p}">${ico}<span>${txt}</span><i></i></span>`;
+const kfmt=m=>m>=1e4?(m/1e3).toFixed(1)+'k':String(Math.round(m));
 function renderFeed(){feedEl.innerHTML=feed.map(f=>`<div class="${f.you?'you':''}" style="opacity:${T-f.t>6?0:1}">${f.html}</div>`).join('');}
 // First games: one short tip at a time, each shown once, at the moment it matters. Players with a long history skip them.
 let tipSeen=new Set(),tipAt=-99,tipRuns=0;try{tipSeen=new Set(JSON.parse(localStorage.getItem('mitosis.tips')||'[]'));tipRuns=+localStorage.getItem('mitosis.tipRuns')||0;}catch(e){}
 const TIPS=[
-  {id:'move',when:()=>T-human.stats.born>2,text:()=>TOUCH_UI?'Push the stick to move, or touch the arena and your cells follow':'Move the mouse and your cell follows it'},
-  {id:'split',when:()=>T-human.stats.born>15&&human.cells.some(c=>c.mass>=70),text:()=>TOUCH_UI?'Tap Split to launch half your mass at a smaller cell':'Press Space to launch half your mass at a smaller cell'},
-  {id:'merge',when:()=>human.cells.length>1,text:()=>'Split pieces merge back together after about 20 seconds'},
-  {id:'virus',when:()=>human.cells.some(c=>c.mass>150&&viruses.some(v=>Math.hypot(v.x-c.x,v.y-c.y)<c.r+500)),text:()=>'Big cells burst on green phages: steer around them'},
-  {id:'arena',when:()=>arenaR()<R-1,text:()=>'The arena is closing: stay inside the ring'},
-  {id:'pause',when:()=>T-human.stats.born>45,text:()=>TOUCH_UI?'Tap your mass, top left, to pause or leave the round':'Press Esc to pause or leave the round'},
+  {id:'move',when:()=>T-human.stats.born>2,text:()=>TOUCH_UI?'Stick to move':'Steer with the mouse'},
+  {id:'split',when:()=>T-human.stats.born>15&&human.cells.some(c=>c.mass>=70),text:()=>TOUCH_UI?'Split: launch half your mass':'Space: launch half your mass'},
+  {id:'merge',when:()=>human.cells.length>1,text:()=>'Pieces merge back in 20 s'},
+  {id:'virus',when:()=>human.cells.some(c=>c.mass>150&&viruses.some(v=>Math.hypot(v.x-c.x,v.y-c.y)<c.r+500)),text:()=>'Big cells pop on phages'},
+  {id:'arena',when:()=>arenaR()<R-1,text:()=>'Arena shrinking: stay inside'},
+  {id:'pause',when:()=>T-human.stats.born>45,text:()=>TOUCH_UI?'Tap your mass to pause':'Esc to pause'},
 ];
 function tipTick(){
   if(T-(tipTick.t||0)<.5)return;tipTick.t=T;
   if(!human||!human.alive||tipRuns>6||(wallet.runs|0)>10||T-tipAt<10)return;
   for(const t of TIPS){if(tipSeen.has(t.id)||!t.when())continue;tipSeen.add(t.id);tipAt=T;try{localStorage.setItem('mitosis.tips',JSON.stringify([...tipSeen]));}catch(e){}
-    const el=$('tip');el.textContent=t.text();el.classList.remove('show');void el.offsetWidth;el.classList.add('show');clearTimeout(tipTick.h);tipTick.h=setTimeout(()=>el.classList.remove('show'),4500);break;}
+    const el=$('tip');el.textContent=t.text();el.classList.remove('show');void el.offsetWidth;el.classList.add('show');clearTimeout(tipTick.h);tipTick.h=setTimeout(()=>el.classList.remove('show'),TOUCH_UI?3000:4500);break;}
+}
+// round clock: a ring that empties with the round, the time left, then when the arena starts to close
+function clockUI(){
+  const rc=$('roundClock');if(!rc)return;const t=roundT(),a=arenaR();rc.hidden=mode!=='play'||(multi()&&!isHost&&!round.synced);if(rc.hidden)return;
+  if(!rc._b){rc._b=1;rc.innerHTML='<i class="rcr" aria-hidden="true"></i><b class="rct"></b><span class="rcx"></span><span class="rcp">Practice</span>';}
+  const [ring,tt,x,pr]=rc.children,left=Math.max(0,ROUND_SEC-t),closing=a<R-1;
+  rc.classList.toggle('hot',closing);rc.classList.toggle('over',!!round.over);
+  ring.style.setProperty('--rp',round.over?'0':clamp(left/ROUND_SEC,0,1).toFixed(3));
+  setTxt(tt,round.over?'Round over':fmtT(left));
+  setTxt(x,round.over?'':closing?(a<=R_MIN+1?'Final':'Closing'):fmtT(ROUND_GRACE-t));x.hidden=!!round.over;
+  pr.hidden=local!=='practice';
 }
 function hud(){
   tipTick();perfHudTick();
   const ranked=players.filter(p=>p.alive&&p.cells.length).map(p=>({p,m:p.cells.reduce((s,c)=>s+c.mass,0)})).sort((a,b)=>b.m-a.m);
   leader=ranked.length?ranked[0].p:null;round.n=Math.max(round.n,ranked.length);
-  const rc=$('roundClock');if(rc){const t=roundT(),a=arenaR();rc.hidden=mode!=='play'||(multi()&&!isHost&&!round.synced);rc.classList.toggle('hot',a<R-1);
-    rc.innerHTML=(local==='practice'?'<b>Practice</b> · ':'')+(round.over?'<b>Round over</b>':`<b>${fmtT(Math.max(0,ROUND_SEC-t))}</b><span class="rcx"> ${a<R-1?(a<=R_MIN+1?'· final arena':'· arena closing'):'· closes in '+fmtT(ROUND_GRACE-t)}</span>`);}
-  const small=phone.matches||shortScreen.matches,N=small?5:8;let html='';
-  const row=(r,i)=>{const hu=r.p.remote&&!r.p.bot;return`<li class="${r.p===human?'me':''}"><span class="rk">${i===0?'♛':i+1}</span><span class="dot" style="background:${col(r.p.color)}"></span><span class="nm">${esc(r.p===human?r.p.name+' (you)':r.p.name)}</span>${r.p.boss?'<span class="tag boss">boss</span>':hu?'<span class="tag">player</span>':''}<span class="ms">${Math.round(r.m)}</span></li>`;};
-  ranked.slice(0,N).forEach((r,i)=>{html+=row(r,i);});
+  clockUI();
+  // ranking: a chip with your place; the list drops down under it (short phones 5 rows, portrait 6, desktop 10)
+  const small=phone.matches||shortScreen.matches,cap=shortScreen.matches?5:phone.matches?6:10;let html='';
+  const row=(r,i)=>{const hu=r.p.remote&&!r.p.bot;return`<li class="${r.p===human?'me':''}"><span class="rk">${i===0?CROWN:i+1}</span><span class="dot" style="background:${col(r.p.color)}"></span><span class="nm">${esc(r.p.name)}</span>${r.p.boss?'<span class="tag boss">Boss</span>':hu?'<span class="tag" title="Player"></span>':''}<span class="ms">${kfmt(r.m)}</span></li>`;};
   const hi=ranked.findIndex(r=>r.p===human);if(human&&human.alive&&hi>=0){const rk=hi+1;if(!human.stats.bestRank||rk<human.stats.bestRank)human.stats.bestRank=rk;}
-  if(hi>=N)html+=`<li class="gap">⋯</li>`+row(ranked[hi],hi);
+  const N=hi>=cap?cap-2:cap;ranked.slice(0,N).forEach((r,i)=>{html+=row(r,i);});
+  if(hi>=N)html+=`<li class="gap" aria-hidden="true"></li>`+row(ranked[hi],hi);
   for(const [,pl] of proxies){const ri=ranked.findIndex(r=>r.p===pl);if(ri>=N&&pl!==human&&!small)html+=row(ranked[ri],ri);}
-  boardEl.innerHTML=html;
+  setHTML(boardEl,html);
+  setHTML(boardMeEl,human&&human.alive&&hi>=0?`#${hi+1}<small>/${ranked.length}</small>`:'–');
   if(human&&human.alive){
-    const n=human.cells.length;metaEl.textContent=`${n} cell${n>1?'s':''} · #${hi+1} of ${ranked.length}`;
     const LV=$('lives');if(LV){const prac=local==='practice',left=prac?MAX_RESPAWNS+1:clamp(MAX_RESPAWNS+2-livesUsed(),0,MAX_RESPAWNS+1);[...LV.children].forEach((d,i)=>d.classList.toggle('on',i<left));LV.parentElement.classList.toggle('inf',prac);}
     if(hi===0&&ranked.length>5)unlock('rank1');
-    let fx='';for(const k in PU){const t=human.fx[k];if(t>0)fx+=`<span class="chip" style="color:${col(PU[k].c)};--p:${(t/PU[k].dur).toFixed(3)}">${PU_ICON[k]}${PU[k].label} ${t.toFixed(1)}s<i></i></span>`;}
+    let fx='';for(const k in PU){const t=human.fx[k];if(t>0)fx+=hchip(col(PU[k].c),(t/PU[k].dur).toFixed(3),PU_ICON[k],Math.ceil(t)+'s');}
     let inf=0;for(const c of human.cells)if(c.inf&&(!inf||c.inf<inf))inf=c.inf;
-    if(inf){const left=Math.max(0,inf-T),len=(human.cells.find(c=>c.inf===inf)||{}).infLen||INF_MAX;fx+=`<span class="chip" style="color:${col(INF_C,6)};--p:${(left/len).toFixed(3)}">Infected · lysis ${left.toFixed(1)}s<i></i></span>`;}
-    {const N=window.__mitosisNet;if(multi()&&N&&N.rtt>220)fx+=`<span class="chip" style="color:#ffb86b;--p:1">Slow connection · ${Math.round(N.rtt)} ms<i></i></span>`;}
-    if(human.cells.some(c=>T-(c.toxic||0)<.3))fx+=`<span class="chip" style="color:#ff8a9a;--p:1">Outside the arena · dissolving<i></i></span>`;
-    if(human.combo>=2&&T-human.comboT<3)fx+=`<span class="chip" style="color:${col([340,100,72])};--p:${((3-(T-human.comboT))/3).toFixed(3)}">Streak ×${human.combo}<i></i></span>`;
-    fxEl.innerHTML=fx;
-    dashBtn.style.setProperty('--cd',(human.dashCd/(has(human,'cilia')?2.2:4)).toFixed(3));dashBtn.classList.toggle('ready',human.dashCd<=0);
+    if(inf){const left=Math.max(0,inf-T),len=(human.cells.find(c=>c.inf===inf)||{}).infLen||INF_MAX;fx+=hchip(col(INF_C,6),(left/len).toFixed(3),HICO.inf,'Lysis '+Math.ceil(left)+'s');}
+    {const N=window.__mitosisNet;if(multi()&&N&&N.rtt>220)fx+=hchip('#ffb86b',1,HICO.net,Math.round(N.rtt)+' ms');}
+    if(human.cells.some(c=>T-(c.toxic||0)<.3))fx+=hchip('#ff8a9a',1,HICO.out,'Dissolving');
+    if(human.combo>=2&&T-human.comboT<3)fx+=hchip(col([340,100,72]),((3-(T-human.comboT))/3).toFixed(3),HICO.streak,'×'+human.combo);
+    setHTML(fxEl,fx);
+    dashBtn.style.setProperty('--cd',clamp(human.dashCd/(has(human,'cilia')?2.2:4),0,1).toFixed(3));dashBtn.classList.toggle('ready',human.dashCd<=0);
+    // dim Split / Shoot while no cell is big enough for them (split needs 36 mass and a free slot, shooting 35)
+    let n=0,big=0,shoot=0;for(const c of human.cells){if(c.dead)continue;n++;if(c.mass>=36)big=1;if(c.mass>=35)shoot=1;}
+    splitBtnEl.classList.toggle('off',!(big&&n<MAX_CELLS));ejectBtnEl.classList.toggle('off',!shoot);
   }
   if(feed.length&&T-feed[feed.length-1].t>7){feed.pop();renderFeed();}else if(feed.some(f=>T-f.t>6))renderFeed();
   const opts=[10,20,50,100,200,250,500,1000];let L=opts[opts.length-1];for(const o of opts){if(o*cam.z>=60){L=o;break;}}
-  $('scaleBar').style.width=(L*cam.z).toFixed(1)+'px';$('scaleLbl').textContent=L+' µm';$('magLbl').textContent='×'+Math.round(cam.z*400);
+  $('scaleBar').style.width=(L*cam.z).toFixed(1)+'px';setTxt($('scaleLbl'),L+' µm');setTxt($('magLbl'),'×'+Math.round(cam.z*400));
   netUI();
   const bn=$('banner');
   if(ev.type&&EVT[ev.type]){const E=EVT[ev.type],left=Math.max(0,ev.end-T);bn.hidden=false;bn.style.setProperty('--ec',E.c);
-    if(bn._evId!==ev.id){bn._evId=ev.id;bn._shownAt=T;}bn.classList.toggle('mini',T-bn._shownAt>2); // full banner for 2 s, then a corner pill
+    if(bn._evId!==ev.id){bn._evId=ev.id;bn._shownAt=T;}bn.classList.toggle('mini',small||T-bn._shownAt>2.5); // phones: straight to a slim pill; larger screens show the card for a moment first
     if($('bnTitle').textContent!==E.name){$('bnTitle').textContent=E.name;$('bnDesc').textContent=E.desc;}
-    $('bnTime').textContent=ev.type===3?'':fmtT(left);$('bnBar').style.width=(left/E.dur*100).toFixed(1)+'%';}
+    setTxt($('bnTime'),ev.type===3?'':fmtT(left));$('bnBar').style.width=(left/E.dur*100).toFixed(1)+'%';}
   else bn.hidden=true;
   renderEvo();
 }
+// HUD buttons: a pressed state that follows the finger (iOS does not apply :active to these)
+for(const b of document.querySelectorAll('#actions .act,#stats,#boardToggle,#roundClock')){const up=()=>b.classList.remove('down');
+  b.addEventListener('pointerdown',()=>b.classList.add('down'));for(const e of ['pointerup','pointercancel','pointerleave','lostpointercapture'])b.addEventListener(e,up);}
 const APP_STORE_URL='https://apps.apple.com/app/id6818890370';
 function inviteLinks(){const N=window.__mitosisNet;if(!N)return[];const h=location.hostname;
   if(!/^https?:$/.test(location.protocol))return[Native.platform==='ios'?APP_STORE_URL:window.MITOSIS_SERVER]; // in the app: the App Store page, or the public site
   if(h==='localhost'||h==='127.0.0.1'||h==='[::1]'||h==='::1')return N.lan||[];return[location.origin];}
 function netUI(){
   const pill=$('netPill'),line=$('netLine'),others=peerCount-1,N=window.__mitosisNet;
-  pill.hidden=!(room&&myPeer&&others>0);pill.textContent=`${others+1} live`;
+  pill.hidden=!(room&&myPeer&&others>0);setTxt(pill,String(others+1));pill.title=`${others+1} players live`;
   let txt,live=false;
   if(!N)txt='Solo — double-click start.bat, then play at http://localhost:3000 to invite others.';
   else if(N.state==='full')txt='This well is full — 16 players max.';
@@ -3133,11 +3413,12 @@ bindAct('splitBtn',split);bindAct('dashBtn',dash);
 // virtual joystick
 const joyEl=$('joy'),joyKnob=joyEl.querySelector('.knob');
 function joySet(ex,ey){const r=joyEl.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let dx=ex-cx,dy=ey-cy;const d=Math.hypot(dx,dy)||0;
-  const R=joy.R,k=d>R?R/d:1;dx*=k;dy*=k;joy.m=d<R*.12?0:Math.min(1,d/R);joy.ux=d?(ex-cx)/d:0;joy.uy=d?(ey-cy)/d:0;if(joy.m>0){joy.lx=joy.ux;joy.ly=joy.uy;}joyKnob.style.transform=`translate(${dx.toFixed(1)}px,${dy.toFixed(1)}px)`;}
+  const R=joy.R,k=d>R?R/d:1;dx*=k;dy*=k;joy.m=d<R*.12?0:Math.min(1,d/R);joy.ux=d?(ex-cx)/d:0;joy.uy=d?(ey-cy)/d:0;if(joy.m>0){joy.lx=joy.ux;joy.ly=joy.uy;}joyKnob.style.transform=`translate(${dx.toFixed(1)}px,${dy.toFixed(1)}px)`;
+  joyEl.style.setProperty('--ja',Math.atan2(dy,dx).toFixed(3)+'rad');joyEl.style.setProperty('--jm',joy.m.toFixed(2));}
 let joyDownAt=0;
 joyEl.addEventListener('pointerdown',e=>{if(joy.id!==null)return;joy.id=e.pointerId;joyDownAt=performance.now();joyEl.classList.add('active');try{joyEl.setPointerCapture(e.pointerId);}catch(_){}joySet(e.clientX,e.clientY);e.preventDefault();});
 joyEl.addEventListener('pointermove',e=>{if(e.pointerId!==joy.id)return;joySet(e.clientX,e.clientY);});
-const joyEnd=e=>{if(e.pointerId!==joy.id)return;if(e.type!=='pointerup')reportHitch('joystick '+e.type+' after '+Math.round(performance.now()-joyDownAt)+'ms hold');joy.id=null;joy.m=0;joy.ux=joy.uy=0;joyEl.classList.remove('active');joyKnob.style.transform='';};
+const joyEnd=e=>{if(e.pointerId!==joy.id)return;if(e.type!=='pointerup')reportHitch('joystick '+e.type+' after '+Math.round(performance.now()-joyDownAt)+'ms hold');joy.id=null;joy.m=0;joy.ux=joy.uy=0;joyEl.classList.remove('active');joyKnob.style.transform='';joyEl.style.setProperty('--jm','0');};
 joyEl.addEventListener('pointerup',joyEnd);joyEl.addEventListener('pointercancel',joyEnd);joyEl.addEventListener('lostpointercapture',joyEnd);
 // Floating stick (Settings): it jumps to wherever the thumb lands on its side of the screen, and goes home on release
 const zoneEl=$('joyZone');
