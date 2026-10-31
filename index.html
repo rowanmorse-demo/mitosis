@@ -377,8 +377,8 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
 .lb-net button svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .lb-net button[aria-pressed=true]{background:var(--ink);color:#041012}
 .lb-play.nearby .lb-mode .label{color:#6cb8ff}.lb-play.nearby{border-color:rgba(108,184,255,.35)}.skillbtn{font:700 12px var(--mono)!important;letter-spacing:.06em;text-transform:uppercase;padding:0 14px!important;border-radius:12px!important}
-.skillbtn[data-k=easy]{color:#5fe0a8!important;border-color:rgba(95,224,168,.4)!important}.skillbtn[data-k=normal]{color:#cfe8e2!important}.skillbtn[data-k=hard]{color:var(--amber)!important;border-color:rgba(242,177,52,.45)!important}.skillbtn[data-k=expert]{color:var(--accent)!important;border-color:rgba(255,92,138,.5)!important}
-.seg.four{grid-template-columns:repeat(4,1fr)}.hintx{text-transform:none;letter-spacing:0;color:var(--dim);margin-left:6px}
+.skillbtn[data-k=easy]{color:#5fe0a8!important;border-color:rgba(95,224,168,.4)!important}.skillbtn[data-k=normal]{color:#cfe8e2!important}.skillbtn[data-k=hard]{color:var(--amber)!important;border-color:rgba(242,177,52,.45)!important}.skillbtn[data-k=expert]{color:var(--accent)!important;border-color:rgba(255,92,138,.5)!important}.skillbtn[data-k=master]{color:#c9a4ff!important;border-color:rgba(201,164,255,.5)!important}
+.seg.four{grid-template-columns:repeat(4,1fr)}.seg.five{grid-template-columns:repeat(5,1fr)}.hintx{text-transform:none;letter-spacing:0;color:var(--dim);margin-left:6px}
 /* landscape phones: tighter */
 @media (orientation:landscape) and (max-height:520px){
   .lobby{gap:6px 16px;grid-template-columns:auto minmax(0,1.15fr) minmax(250px,.85fr)}
@@ -636,8 +636,8 @@ body:not(.playing) #tip{display:none}
 .lb-pips{display:none;align-items:flex-end;gap:3px;height:15px;flex:none}
 .lb-play[data-mode=casual] .lb-pips{display:flex}
 .lb-pips i{width:4px;border-radius:2px;background:rgba(255,255,255,.14)}.lb-pips i:nth-child(1){height:6px}.lb-pips i:nth-child(2){height:9px}.lb-pips i:nth-child(3){height:12px}.lb-pips i:nth-child(4){height:15px}
-.lb-play[data-k=easy] .lb-pips i:nth-child(-n+1),.lb-play[data-k=normal] .lb-pips i:nth-child(-n+2),.lb-play[data-k=hard] .lb-pips i:nth-child(-n+3),.lb-play[data-k=expert] .lb-pips i{background:var(--pk)}
-.lb-play[data-k=easy]{--pk:var(--lb-mint)}.lb-play[data-k=normal]{--pk:#dcefe9}.lb-play[data-k=hard]{--pk:#ffc04d}.lb-play[data-k=expert]{--pk:#ff7aa0}
+.lb-play[data-k=easy] .lb-pips i:nth-child(-n+1),.lb-play[data-k=normal] .lb-pips i:nth-child(-n+2),.lb-play[data-k=hard] .lb-pips i:nth-child(-n+3),.lb-play[data-k=expert] .lb-pips i,.lb-play[data-k=master] .lb-pips i{background:var(--pk)}
+.lb-play[data-k=easy]{--pk:var(--lb-mint)}.lb-play[data-k=normal]{--pk:#dcefe9}.lb-play[data-k=hard]{--pk:#ffc04d}.lb-play[data-k=expert]{--pk:#ff7aa0}.lb-play[data-k=master]{--pk:#c9a4ff}
 .lb-switch{appearance:none;flex:none;display:none;align-items:center;justify-content:center;gap:0;width:60px;height:48px;box-sizing:border-box;padding:0 2px 0 6px;border-radius:16px;border:1px solid rgba(95,224,168,.5);background:linear-gradient(180deg,rgba(95,224,168,.24),rgba(95,224,168,.08)),rgba(6,19,21,.76);box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 0 20px -6px rgba(95,224,168,.5);color:#8cf3c8;cursor:pointer}
 .lb-play[data-mode=ranked]:is([data-net=off],[data-net=full],[data-slow="1"]) .lb-switch{display:flex}
 .lb-switch svg{width:22px;height:22px;flex:none;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
@@ -695,10 +695,10 @@ body:not(.playing) #tip{display:none}
 .lb-need{display:none;align-items:center;gap:7px;font:600 12px/1.25 var(--display)!important;color:#ff9aa3}
 .lb-need::before{content:"";flex:none;width:16px;height:16px;background:currentColor;-webkit-mask:var(--lb-nowifi) center/contain no-repeat;mask:var(--lb-nowifi) center/contain no-repeat}
 .lb-msel:is([data-net=off],[data-net=full]) .lb-need{display:flex}
-.lb-bots{position:relative;z-index:2;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px;padding:3px;border-radius:14px;background:rgba(0,0,0,.4);box-shadow:inset 0 1px 2px rgba(0,0,0,.5)}
+.lb-bots{position:relative;z-index:2;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:3px;padding:3px;border-radius:14px;background:rgba(0,0,0,.4);box-shadow:inset 0 1px 2px rgba(0,0,0,.5)}
 .lb-bots button{appearance:none;border:0;background:none;min-width:0;height:38px;padding:0 2px;border-radius:11px;color:var(--muted);font:700 12px/1 var(--display);cursor:pointer;transition:background .2s,color .2s,box-shadow .2s}
 .lb-bots button[aria-checked=true]{color:var(--k);background:linear-gradient(180deg,rgba(255,255,255,.15),rgba(255,255,255,.05));box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 3px 10px -3px rgba(0,0,0,.5)}
-.lb-bots [data-k=easy]{--k:var(--lb-mint)}.lb-bots [data-k=normal]{--k:var(--ink)}.lb-bots [data-k=hard]{--k:#ffc04d}.lb-bots [data-k=expert]{--k:#ff7aa0}
+.lb-bots [data-k=easy]{--k:var(--lb-mint)}.lb-bots [data-k=normal]{--k:var(--ink)}.lb-bots [data-k=hard]{--k:#ffc04d}.lb-bots [data-k=expert]{--k:#ff7aa0}.lb-bots [data-k=master]{--k:#c9a4ff}
 /* landscape phones (the iPhone app) */
 @media (orientation:landscape) and (max-height:520px){
   .lobby{grid-template-columns:minmax(168px,196px) minmax(0,1fr) minmax(214px,240px);gap:8px 16px;padding:max(10px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
@@ -1379,7 +1379,7 @@ body:not(.playing) #tip{display:none}
 :is(#settingsCard,#friendsCard) .seg{position:relative;flex:none;min-width:0;display:flex;gap:2px;padding:3px;border:0;border-radius:12px;overflow:visible;background:rgba(0,0,0,.4);box-shadow:inset 0 1px 3px rgba(0,0,0,.6),inset 0 0 0 1px rgba(255,255,255,.05),0 1px 0 rgba(255,255,255,.04)}
 :is(#settingsCard,#friendsCard) .seg button{position:relative;flex:1 0 auto;min-width:44px;height:34px;padding:0 11px;display:flex;align-items:center;justify-content:center;border:0;border-radius:9px;background:transparent;color:var(--muted);font:700 13px/1 var(--display);letter-spacing:-.005em;white-space:nowrap;cursor:pointer;transition:color .2s,background-color .2s,transform .12s}
 :is(#settingsCard,#friendsCard) .seg button::after{content:"";position:absolute;inset:-10px -1px}
-:is(#settingsCard,#friendsCard) .seg.four button{padding:0 8px}
+:is(#settingsCard,#friendsCard) .seg.four button{padding:0 8px}:is(#settingsCard,#friendsCard) .srow.wide{flex-wrap:wrap;row-gap:8px}:is(#settingsCard,#friendsCard) .srow.wide .seg{flex:1 1 calc(100% - 42px);margin-left:42px}:is(#settingsCard,#friendsCard) .srow.wide .seg button{flex:1 1 0;min-width:0;padding:0 4px}
 :is(#settingsCard,#friendsCard) .seg button[aria-pressed=true]{color:var(--accent-ink);background:linear-gradient(180deg,#ff8eae,#ff5c8a 55%,#ee437a);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(0,0,0,.14),0 3px 10px rgba(255,92,138,.32);animation:segOn .28s cubic-bezier(.3,1.5,.5,1)}
 :is(#settingsCard,#friendsCard) .seg button:active{transform:scale(.93)}
 @keyframes segOn{from{transform:scale(.86);opacity:.6}}
@@ -2138,7 +2138,7 @@ body:not(.playing) #toasts .toast .tt{display:contents}body:not(.playing) #toast
         <div class="lb-mcard" data-m="ranked"><button type="button" class="lb-mpick" role="radio" data-m="ranked" aria-checked="true"><span class="lb-mart"><svg viewBox="0 0 200 120" aria-hidden="true"><g stroke="#ffcf5c" stroke-width="2" stroke-linecap="round" stroke-dasharray="2 6" opacity=".45"><path d="M100 64L34 18M100 64L166 18M100 64L18 64M100 64L182 64M100 64L66 4M100 64L134 4"/></g><circle cx="38" cy="90" r="10" fill="#ff5c8a" opacity=".55"/><circle cx="164" cy="34" r="6" fill="#9a8cff" opacity=".7"/><circle cx="160" cy="96" r="13" fill="#5fe0a8" opacity=".3"/><circle cx="46" cy="30" r="4" fill="#ffcf5c" opacity=".8"/><path d="M63 50l17 16 20-29 20 29 17-16-6 42H69z" fill="url(#lbgGold)" stroke="#6e4304" stroke-width="2.5" stroke-linejoin="round"/><rect x="67" y="96" width="66" height="10" rx="4" fill="url(#lbgGold)" stroke="#6e4304" stroke-width="2.5"/><circle cx="100" cy="34" r="5.5" fill="#fff6d6" stroke="#6e4304" stroke-width="2"/><circle cx="61" cy="47" r="4.5" fill="#fff6d6" stroke="#6e4304" stroke-width="2"/><circle cx="139" cy="47" r="4.5" fill="#fff6d6" stroke="#6e4304" stroke-width="2"/><circle cx="100" cy="78" r="7" fill="#ff5c8a" stroke="#6e4304" stroke-width="2"/></svg></span><b>Ranked</b><small>Online · rated</small></button>
           <div class="lb-mstat" id="lbRankStat"><p id="netLine" class="lb-netline"><i></i><span>Connecting…</span></p><p id="roundLine" hidden></p><p class="lb-need" id="lbNeed">Needs Wi-Fi or cellular</p></div></div>
         <div class="lb-mcard" data-m="casual"><button type="button" class="lb-mpick" role="radio" data-m="casual" aria-checked="false"><span class="lb-mart"><svg viewBox="0 0 200 120" aria-hidden="true"><circle cx="36" cy="42" r="12" fill="#ff8a5c" opacity=".65"/><circle cx="166" cy="80" r="14" fill="#9a8cff" opacity=".55"/><circle cx="46" cy="96" r="7" fill="#ffcf5c" opacity=".6"/><circle cx="158" cy="30" r="6" fill="#ff5c8a" opacity=".75"/><circle cx="24" cy="70" r="4" fill="#6cb8ff" opacity=".7"/><path d="M100 40V24" stroke="#0b4d33" stroke-width="3.5" stroke-linecap="round"/><circle cx="100" cy="19" r="7" fill="url(#lbgMint)" stroke="#0b4d33" stroke-width="2.5"/><rect x="57" y="58" width="10" height="22" rx="5" fill="#1b8d61" stroke="#0b4d33" stroke-width="2.5"/><rect x="133" y="58" width="10" height="22" rx="5" fill="#1b8d61" stroke="#0b4d33" stroke-width="2.5"/><rect x="65" y="38" width="70" height="60" rx="20" fill="url(#lbgMint)" stroke="#0b4d33" stroke-width="2.5"/><rect x="77" y="54" width="46" height="26" rx="13" fill="#062018"/><circle cx="90" cy="67" r="5.5" fill="#8cf3c8"/><circle cx="110" cy="67" r="5.5" fill="#8cf3c8"/></svg></span><b>Casual</b><small>Bots · offline</small></button>
-          <div class="lb-bots" id="lbSkill" role="radiogroup" aria-label="Bot difficulty"><button type="button" role="radio" data-k="easy">Easy</button><button type="button" role="radio" data-k="normal">Normal</button><button type="button" role="radio" data-k="hard">Hard</button><button type="button" role="radio" data-k="expert">Expert</button></div></div>
+          <div class="lb-bots" id="lbSkill" role="radiogroup" aria-label="Bot difficulty"><button type="button" role="radio" data-k="easy">Easy</button><button type="button" role="radio" data-k="normal">Normal</button><button type="button" role="radio" data-k="hard">Hard</button><button type="button" role="radio" data-k="expert">Expert</button><button type="button" role="radio" data-k="master">Master</button></div></div>
         <div class="lb-mcard" data-m="nearby" hidden><button type="button" class="lb-mpick" role="radio" data-m="nearby" aria-checked="false"><span class="lb-mart"><svg viewBox="0 0 200 120" aria-hidden="true"><g fill="none" stroke="#6cb8ff" stroke-width="3" stroke-linecap="round"><path d="M80 47a19 19 0 0 1 0 26M120 47a19 19 0 0 0 0 26" opacity=".95"/><path d="M88 38a32 32 0 0 1 0 44M112 38a32 32 0 0 0 0 44" opacity=".55"/></g><circle cx="100" cy="60" r="6" fill="url(#lbgBlue)"/><rect x="28" y="26" width="40" height="70" rx="10" fill="#0a1a2c" stroke="url(#lbgBlue)" stroke-width="3"/><rect x="35" y="35" width="26" height="44" rx="4" fill="#163a63"/><circle cx="48" cy="57" r="7" fill="#ff5c8a"/><rect x="132" y="26" width="40" height="70" rx="10" fill="#0a1a2c" stroke="url(#lbgBlue)" stroke-width="3"/><rect x="139" y="35" width="26" height="44" rx="4" fill="#163a63"/><circle cx="152" cy="57" r="7" fill="#5fe0a8"/><circle cx="48" cy="88" r="2.5" fill="#6cb8ff"/><circle cx="152" cy="88" r="2.5" fill="#6cb8ff"/></svg></span><b>Nearby</b><small>Phones around you</small></button>
           <div class="lb-mstat" id="lbNearStat"></div></div>
       </div>
@@ -2247,8 +2247,8 @@ body:not(.playing) #toasts .toast .tt{display:contents}body:not(.playing) #toast
       <section class="sg"><h3 class="sg-h">Game</h3><div class="sg-list">
         <div class="srow"><i class="si si-teal"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8.5" cy="9" r="4.5"/><circle cx="16.5" cy="16" r="4"/><circle cx="17.5" cy="5.5" r="1.8"/></svg></i><span class="sl">Density</span>
           <div class="seg" id="diff"><button type="button" data-d="calm">Calm</button><button type="button" data-d="standard">Normal</button><button type="button" data-d="hostile">Hostile</button></div></div>
-        <div class="srow"><i class="si si-violet"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="8" width="15" height="11.5" rx="3.5"/><path d="M12 8V5"/><circle cx="12" cy="3.6" r="1.2"/><path d="M9.3 13.2v.6M14.7 13.2v.6"/></svg></i><span class="sl">Bots</span>
-          <div class="seg four" id="skillSeg"><button type="button" data-k="easy">Easy</button><button type="button" data-k="normal">Normal</button><button type="button" data-k="hard">Hard</button><button type="button" data-k="expert">Expert</button></div></div>
+        <div class="srow wide"><i class="si si-violet"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="8" width="15" height="11.5" rx="3.5"/><path d="M12 8V5"/><circle cx="12" cy="3.6" r="1.2"/><path d="M9.3 13.2v.6M14.7 13.2v.6"/></svg></i><span class="sl">Bots</span>
+          <div class="seg five" id="skillSeg"><button type="button" data-k="easy">Easy</button><button type="button" data-k="normal">Normal</button><button type="button" data-k="hard">Hard</button><button type="button" data-k="expert">Expert</button><button type="button" data-k="master">Master</button></div></div>
         <div class="srow tg" title="With a ping over 100 ms, Play in Ranked starts a bot game unless this is on"><i class="si si-amber"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 9a14 14 0 0 1 19 0M5.5 12.3a9.5 9.5 0 0 1 13 0M8.6 15.6a5 5 0 0 1 6.8 0"/><circle cx="12" cy="19" r="1.3" fill="currentColor" stroke="none"/></svg></i><span class="sl">Allow high ping</span>
           <div class="seg two sw2" id="pingSeg"><button type="button" data-hp="0">Off</button><button type="button" data-hp="1">On</button></div></div>
       </div><p class="sg-foot">With a ping over 100 ms, Ranked plays bots instead, unless <b>Allow high ping</b> is on or you're in a party.</p></section>
@@ -2531,7 +2531,8 @@ function dec(s,o,w){let n=0;for(let i=0;i<w;i++){const c=s.charCodeAt(o+i);const
 
 const DIFF={calm:{bots:40,aggr:.35,think:.36},standard:{bots:60,aggr:.65,think:.26},hostile:{bots:80,aggr:.95,think:.18}};
 // Bot difficulty (practice and offline games; ranked games always use Normal so everyone faces the same bots)
-const SKILL={easy:{label:'Easy',aggr:.3,think:.44,caution:.55},normal:{label:'Normal',aggr:.65,think:.26,caution:1},hard:{label:'Hard',aggr:.92,think:.17,caution:1.15},expert:{label:'Expert',aggr:1.1,think:.11,caution:1.3}},SKILL_LIST=['easy','normal','hard','expert'];
+const SKILL={easy:{label:'Easy',aggr:.3,think:.44,caution:.55},normal:{label:'Normal',aggr:.65,think:.26,caution:1},hard:{label:'Hard',aggr:.92,think:.17,caution:1.15},expert:{label:'Expert',aggr:1.1,think:.11,caution:1.3},
+  master:{label:'Master',aggr:1.15,think:.12,caution:1.45,smart:true}},SKILL_LIST=['easy','normal','hard','expert','master']; // Master thinks no faster than Expert, it thinks better (see think)
 const skillNow=()=>SKILL[local==='practice'?(settings.botSkill||'normal'):'normal']||SKILL.normal;
 const STAINS=[[340,100,68],[250,100,76],[174,62,54],[40,90,58],[18,100,64],[200,25,88]];
 /* ================= skin art ================= */
@@ -4068,21 +4069,34 @@ function breach(x,y){
 function lyseHunter(h){h.dead=true;burst(h.x,h.y,col(INF_C,8),16,300);if(Math.hypot(h.x-cam.x,h.y-cam.y)<W/cam.z)sfx('pop');}
 
 /* ================= bot brain ================= */
-function bestFood(me){ // densest nearby patch of food, weighted by distance
+function bestFood(me,safe){ // densest nearby patch of food, weighted by distance
   const cx=gi(me.x),cy=gi(me.y);let best=null,bs=0;
   for(let y=cy-4;y<=cy+4;y++)for(let x=cx-4;x<=cx+4;x++){
     if(x<0||y<0||x>=GN||y>=GN)continue;const b=grid[y*GN+x];if(!b.length)continue;
     const wx=(x+.5)*GS-R,wy=(y+.5)*GS-R,d=Math.hypot(wx-me.x,wy-me.y);if(d<me.r*.4)continue;
     let s=b.length/(1+d/350)*rand(.8,1.2);if(ev.type===1&&(wx-ev.x)**2+(wy-ev.y)**2<BLOOM_R2)s*=3;
-    if(Math.hypot(wx,wy)>safeR()-me.r)s*=.05;
+    if(Math.hypot(wx,wy)>safe-me.r)s*=.05;
     if(s>bs){bs=s;best={x:wx,y:wy};}
   }
   return best;
 }
+// Bot decisions are the AI's cost on the device that runs the round, so they are rationed. A bot re-plans at its skill's
+// pace while a player can see it and something is going on around it, 1.6x slower when nothing threatens it and 3x
+// slower out of every player's sight (never slower than AI_SLOWEST), and the whole arena makes at most AI_RATE decisions
+// a second, the bots that have waited longest first. Between decisions every bot keeps steering for the target it chose.
+const AI_RATE=300,AI_SLOWEST=.9,HX=new Float64Array(16),HY=new Float64Array(16);for(let k=0;k<16;k++){HX[k]=Math.cos(k/16*TAU);HY[k]=Math.sin(k/16*TAU);}
+let aiTok=0;const aiDue=[],aiEyes=[];
+function aiLook(){ // where players can see: this screen, and every other player's cells (their screens, when this device hosts)
+  aiEyes.length=0;aiEyes.push({x:cam.x,y:cam.y,e:Math.max(W,H)/2/cam.z+900});
+  for(const q of players)if(!q.bot&&q.alive&&q!==human)for(const c of q.cells)if(!c.dead){aiEyes.push({x:c.x,y:c.y,e:1200+110*Math.sqrt(c.r)});break;}
+}
+const aiSeen=(x,y)=>aiEyes.some(v=>Math.abs(x-v.x)<v.e&&Math.abs(y-v.y)<v.e);
 function think(p){
-  const cfg=skillNow(),P=p.ai.pers||PERS.opportunist;p.ai.t=T+cfg.think*rand(.8,1.25)*(p.boss?.7:1);
+  const cfg=skillNow(),P=p.ai.pers||PERS.opportunist,M=!!cfg.smart;p.ai.t=T+cfg.think*rand(.8,1.25)*(p.boss?.7:1);
   let me=null;for(const c of p.cells)if(!c.dead&&(!me||c.mass>me.mass))me=c;if(!me)return;
-  const aggr=p.ai.aggr*P.aggr,caution=P.caution*cfg.caution,boss=p.boss,view=me.r*3+(boss?1600:800);
+  const sp2=p.ai.split2;if(sp2){p.ai.split2=null; // Master's second split, a moment after the first: the quarters fly on from where the halves got to
+    const c=sp2.prey;if(T-sp2.t<.5&&!c.dead&&p.cells.length===2){p.target={x:c.x+c.svx*.2,y:c.y+c.svy*.2};split(p);return;}}
+  const aggr=p.ai.aggr*P.aggr,caution=P.caution*cfg.caution,boss=p.boss,view=me.r*3+(boss?1600:800),lead=M?.45:.3;
   const threats=[];let prey=null,preyScore=0,minGap=1e9;
   for(const c of cells){
     if(c.dead||c.owner===p)continue;const dx=c.x-me.x,dy=c.y-me.y;
@@ -4091,20 +4105,23 @@ function think(p){
     if(!boss&&p.fx.shield<=0&&c.mass>me.mass*need(c.owner,p)){
       const canSplitKill=c.mass/2>me.mass*need(c.owner,p);
       const reach=c.r+(canSplitKill?194+.75*radius(c.mass/2):50)+(c.owner.fx.surge>0?90:0)+(c.owner.dashCd<=0?60:0);
-      threats.push({x:c.x+c.svx*.3,y:c.y+c.svy*.3,reach,w:Math.min(4,c.mass/me.mass),m:c.mass});
+      threats.push({x:c.x+c.svx*lead,y:c.y+c.svy*lead,reach,w:Math.min(4,c.mass/me.mass),m:c.mass});
       if(gap-reach+c.r<minGap)minGap=gap-reach+c.r;
     }else if(me.mass>c.mass*need(p,c.owner)&&c.owner.fx.shield<=0&&!((c.inf||c.infVis)&&!has(p,'lysozyme'))){
       const edge=R-Math.hypot(c.x,c.y)-c.r;
-      let s=c.mass/(Math.max(gap,0)+160)*(edge<350?1.7:1)*(c.owner===leader?1.5:1)*(c.owner.bot?1:1.15);
+      let s=c.mass/(Math.max(gap,0)+160)*(edge<350?1.7:1)*(c.owner===leader?1.5:1)*(c.owner.bot?1:M?1.4:1.15);
       if(speedOf(c.r)>speedOf(me.r)*1.15&&gap>me.r*1.5&&edge>350)s*=.35; // it would just outrun me
       if(s>preyScore){preyScore=s;prey=c;}
     }
   }
   if(!boss)for(const h of hunters){const d=Math.hypot(h.x-me.x,h.y-me.y);
     if(d<me.r+900){threats.push({x:h.x+h.vx*.5,y:h.y+h.vy*.5,reach:HUNTER_R+70,w:2.4,m:0,hunter:h});if(d-me.r-HUNTER_R-70<minGap)minGap=d-me.r-HUNTER_R-70;}}
-  const hz=[];
+  const hz=[],cover=[];
   if(!boss&&me.mass>VIRUS_M*1.3) // nothing is immune to phages: every big cell steers clear
     for(const v of viruses)if(Math.abs(v.x-me.x)<me.r+600&&Math.abs(v.y-me.y)<me.r+600)hz.push(v);
+  // Master, small and chased by something a phage would burst: hide among the phages, which it can touch and the chaser can't
+  if(M&&!boss&&me.mass<=VIRUS_M*1.3&&minGap<450&&threats.some(t=>t.m>VIRUS_M*1.5))
+    for(const v of viruses)if(Math.abs(v.x-me.x)<me.r+700&&Math.abs(v.y-me.y)<me.r+700)cover.push(v);
   const safe=safeR();
   // ---- goal
   let gx=0,gy=0,goalW,mode='food',exact=null;
@@ -4116,20 +4133,23 @@ function think(p){
     const bd=ev.type===1?Math.hypot(ev.x-me.x,ev.y-me.y):1e9;
     if(pu){gx=pu.x-me.x;gy=pu.y-me.y;mode='pu';exact=pu;}
     else if(bd<3600&&bd>BLOOM_R*.55){gx=ev.x-me.x;gy=ev.y-me.y;mode='bloom';}
-    else{const f=bestFood(me);if(f){gx=f.x-me.x;gy=f.y-me.y;}else{gx=p.target.x-me.x;gy=p.target.y-me.y;if(Math.hypot(gx,gy)<150){const s=randInDish(600);gx=s.x-me.x;gy=s.y-me.y;}}}
+    else{const f=bestFood(me,safe);if(f){gx=f.x-me.x;gy=f.y-me.y;}else{gx=p.target.x-me.x;gy=p.target.y-me.y;if(Math.hypot(gx,gy)<150){const s=randInDish(600);gx=s.x-me.x;gy=s.y-me.y;}}}
     goalW=.8*P.greed;
   }
+  {let k=1;if(minGap>900&&mode!=='hunt')k*=1.6;if(!aiSeen(me.x,me.y))k*=3;if(k>1)p.ai.t=T+Math.min(AI_SLOWEST,(p.ai.t-T)*k);} // pace: see AI_RATE
   const gl=Math.hypot(gx,gy)||1;gx/=gl;gy/=gl;
   // ---- context steering: score 16 headings against threats, hazards, walls and the tide
-  let bestA=Math.atan2(gy,gx),bestS=-1e9;const D1=me.r*.5+120,D2=me.r*.5+400,lim=safe-me.r*.8;
+  let bestA=Math.atan2(gy,gx),bestS=-1e9;const D1=me.r*.5+120,D2=me.r*.5+400,lim=safe-me.r*.8,mr6=me.r*.6,mr8=me.r*.8;
+  for(const t of threats)t.far=(520+t.reach+mr6)**2; // a probe this far from a threat (squared) scores nothing for it
   for(let k=0;k<16;k++){
-    const a=k/16*TAU,dx=Math.cos(a),dy=Math.sin(a);let s=goalW*(dx*gx+dy*gy);
+    const dx=HX[k],dy=HY[k];let s=goalW*(dx*gx+dy*gy);
     for(let q=0;q<2;q++){const D=q?D2:D1,px=me.x+dx*D,py=me.y+dy*D,wq=q?.8:1.2;
-      for(const t of threats){const d=Math.hypot(px-t.x,py-t.y)-t.reach-me.r*.6;if(d<520){const f=1-Math.max(0,d)/520;s-=t.w*f*f*2.2*caution*wq;}}
-      for(const v of hz){const d=Math.hypot(px-v.x,py-v.y)-v.r-me.r*.8;if(d<90)s-=1.8*(1-Math.max(0,d)/90)*wq;}
-      const pr=Math.hypot(px,py);if(pr>lim)s-=(pr-lim)/110*(ev.type===2?2.4:1.3)*wq;
+      for(const t of threats){const ex=px-t.x,ey=py-t.y,e2=ex*ex+ey*ey;if(e2>=t.far)continue;const d=Math.sqrt(e2)-t.reach-mr6;if(d<520){const f=1-Math.max(0,d)/520;s-=t.w*f*f*2.2*caution*wq;}}
+      for(const v of hz){const ex=px-v.x,ey=py-v.y,e2=ex*ex+ey*ey,o=90+v.r+mr8;if(e2>=o*o)continue;const d=Math.sqrt(e2)-v.r-mr8;s-=1.8*(1-Math.max(0,d)/90)*wq;}
+      for(const v of cover){const ex=px-v.x,ey=py-v.y,e2=ex*ex+ey*ey;if(e2<67600)s+=.9*(1-Math.sqrt(e2)/260)*wq;}
+      const pr=Math.sqrt(px*px+py*py);if(pr>lim)s-=(pr-lim)/110*(ev.type===2?2.4:1.3)*wq;
     }
-    if(s>bestS){bestS=s;bestA=a;}
+    if(s>bestS){bestS=s;bestA=k/16*TAU;}
   }
   const dxb=Math.cos(bestA),dyb=Math.sin(bestA),aligned=dxb*gx+dyb*gy>.9&&minGap>250;
   p.target=exact&&aligned?{x:exact.x,y:exact.y}:{x:me.x+dxb*(me.r+420),y:me.y+dyb*(me.r+420)};
@@ -4139,9 +4159,14 @@ function think(p){
     const d=Math.hypot(exact.x-me.x,exact.y-me.y),gap=d-me.r,half=me.mass/2,reach=194+.75*radius(half);
     let safeHalves=true;for(const t of threats)if(t.m>half*1.25&&Math.hypot(t.x-exact.x,t.y-exact.y)<t.reach+600){safeHalves=false;break;}
     let blocked=false;
-    if(me.mass>VIRUS_M*1.3)for(const v of viruses){const t=((v.x-me.x)*(exact.x-me.x)+(v.y-me.y)*(exact.y-me.y))/(d*d||1);
-      if(t>0&&t<1.2&&Math.hypot(v.x-(me.x+(exact.x-me.x)*t),v.y-(me.y+(exact.y-me.y)*t))<v.r+radius(half)*.6){blocked=true;break;}}
+    if(me.mass>VIRUS_M*1.3){const ux=exact.x-me.x,uy=exact.y-me.y,dd=d*d||1,hr=radius(half)*.6;
+      for(const v of viruses){const t=((v.x-me.x)*ux+(v.y-me.y)*uy)/dd;if(t<=0||t>=1.2)continue;
+        const ex=v.x-(me.x+ux*t),ey=v.y-(me.y+uy*t),o=v.r+hr;if(ex*ex+ey*ey<o*o){blocked=true;break;}}}
     if(half>prey.mass*need(p,prey.owner)&&gap<reach+me.r*.15&&safeHalves&&!blocked&&p.cells.length<=Math.ceil(2+4*aggr)&&Math.random()<.35+aggr*.35){p.target=exact;split(p);return;}
+    // Master: too far for one split but not for two (the halves have flown ~230 units when the second one goes)
+    if(M&&p.cells.length===1&&safeHalves&&!blocked&&me.mass/4>prey.mass*need(p,prey.owner)&&gap>=reach+me.r*.15&&gap<reach+210&&Math.random()<.5){
+      let safeQ=true;for(const t of threats)if(t.m>me.mass/4*1.25&&Math.hypot(t.x-exact.x,t.y-exact.y)<t.reach+600){safeQ=false;break;}
+      if(safeQ){p.target=exact;split(p);p.ai.split2={prey,t:T};p.ai.t=T+.12;return;}}
     if(gap<280&&p.dashCd<=0&&speedOf(prey.r)>=speedOf(me.r)*.95&&Math.random()<aggr*.3){p.target=exact;dash(p);return;}
   }
   if(boss)return;
@@ -4151,7 +4176,8 @@ function think(p){
       if(d<me.r+560&&(h.vx*(me.x-h.x)+h.vy*(me.y-h.y))>0){const keep=p.target;p.target={x:h.x+h.vx*.25,y:h.y+h.vy*.25};eject(p);p.target=keep;p.ai.shotT=T+.22;return;}}
   }
   // snipe: feed a phage so it fires into a big enemy lined up behind it
-  if(P.shoot>0&&me.mass>220&&minGap>300&&T>p.ai.shotT&&Math.random()<P.shoot*.7){
+  const shoot=M?Math.max(P.shoot,.35):P.shoot; // every Master bot uses phages as guns
+  if(shoot>0&&me.mass>220&&minGap>300&&T>p.ai.shotT&&Math.random()<shoot*.7){
     for(const v of viruses){const vd=Math.hypot(v.x-me.x,v.y-me.y);if(vd>me.r+460||vd<me.r+v.r)continue;
       const ux=(v.x-me.x)/vd,uy=(v.y-me.y)/vd;
       for(const c of cells){if(c.dead||c.owner===p||c.mass<Math.max(350,me.mass*.6))continue;const ed=Math.hypot(c.x-v.x,c.y-v.y);if(ed>1000)continue;
@@ -4186,12 +4212,14 @@ function step(dt){
     }
     else human.target={x:cam.x+(pointer.x-W/2)/cam.z,y:cam.y+(pointer.y-H/2)/cam.z};
   }
+  aiTok=Math.min(AI_RATE*.1,aiTok+AI_RATE*dt);aiDue.length=0;
   for(const p of players){
     if(p.remote)continue;
     for(const k in p.fx)if(p.fx[k]>0)p.fx[k]=Math.max(0,p.fx[k]-dt);
     if(p.dashCd>0)p.dashCd=Math.max(0,p.dashCd-dt);
-    if(p.bot&&isHost){if(p.alive&&T>=p.ai.t)think(p);else if(!p.alive&&!p.boss&&T>=p.respawnAt&&roundT()<BOT_CUTOFF&&!round.over)spawn(p,rand(20,45));}
+    if(p.bot&&isHost){if(p.alive&&T>=p.ai.t)aiDue.push(p);else if(!p.alive&&!p.boss&&T>=p.respawnAt&&roundT()<BOT_CUTOFF&&!round.over)spawn(p,rand(20,45));}
   }
+  if(aiDue.length){aiLook();aiDue.sort((a,b)=>a.ai.t-b.ai.t);for(const p of aiDue){if(aiTok<1)break;aiTok--;think(p);}} // longest waiting first
   if(isHost){for(const p of players.filter(p=>p.boss&&!p.remote&&!p.alive))removePlayer(p);eventTick();}
   if(isHost||!multi())roundTick();
   for(const c of cells){c.px=c.x;c.py=c.y;}
