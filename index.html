@@ -2248,6 +2248,8 @@ body:not(.playing) #toasts .toast .tt{display:contents}body:not(.playing) #toast
           <div class="seg two" id="handSeg"><button type="button" data-l="1">Left</button><button type="button" data-l="0">Right</button></div></div>
       </div></section>
       <section class="sg"><h3 class="sg-h">Display</h3><div class="sg-list">
+        <div class="srow"><i class="si si-sky"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 0 0 16z" fill="currentColor" stroke="none"/></svg></i><span class="sl">Background</span>
+          <div class="seg two" id="bgSeg"><button type="button" data-bg="black">Black</button><button type="button" data-bg="white">White</button></div></div>
         <div class="srow"><i class="si si-amber"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3.5l1.9 4.9 4.9 1.9-4.9 1.9L11 17.1l-1.9-4.9-4.9-1.9 4.9-1.9z"/><path d="M18.5 14.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg></i><span class="sl">Effects</span>
           <div class="seg two" id="fxSeg"><button type="button" data-fx="0">Full</button><button type="button" data-fx="1">Lite</button></div></div>
         <div class="srow"><i class="si si-teal"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M6.5 8.7h4.5M16 8.7h1.5M10 15.5h4"/></svg></i><span class="sl">HUD</span>
@@ -3698,10 +3700,11 @@ const G_GOLD=glow(45,95,60,.7),G_VIRUS=glow(100,85,52,.34),G_SOFT=glow(175,45,82
 // flat colour of each pellet sprite (its centre pixel) and per-colour buckets for the zoomed-out fast path
 const PCOL=PSPR.map(c=>{const d=c.getContext('2d').getImageData(c.width>>1,c.height>>1,1,1).data;return `rgb(${d[0]},${d[1]},${d[2]})`;}),PBUCK=PSPR.map(()=>[]);
 const G_PU={};for(const k in PU)G_PU[k]=glow(PU[k].c[0],PU[k].c[1],PU[k].c[2],.55);
-const AGAR=mk(512,(g,s)=>{for(let i=0;i<80;i++){const x=Math.random()*s,y=Math.random()*s,r=rand(24,110),a=rand(.012,.04);
-  for(const ox of[-s,0,s])for(const oy of[-s,0,s]){const cx=x+ox,cy=y+oy;if(cx+r<0||cx-r>s||cy+r<0||cy-r>s)continue;
-    const gr=g.createRadialGradient(cx,cy,0,cx,cy,r);gr.addColorStop(0,`rgba(130,215,205,${a})`);gr.addColorStop(1,'rgba(130,215,205,0)');g.fillStyle=gr;g.fillRect(cx-r,cy-r,2*r,2*r);}}});
-let agarPat=null;try{agarPat=ctx.createPattern(AGAR,'repeat');}catch(e){}
+// The dish background (Settings › Display): black by default, or white. The game's glows and labels were made for a dark
+// dish, so white drops the background glow specks and draws the grid and rim in grey.
+const BGS={black:{page:'#000',dish:['#090b0b','#050606','#020303'],grid:['rgba(255,255,255,.045)','rgba(255,255,255,.1)'],halo:'rgba(255,255,255,.035)',rim:['rgba(255,255,255,.5)','rgba(255,255,255,.08)','rgba(255,255,255,.28)'],bokeh:true},
+  white:{page:'#d5dbda',dish:['#ffffff','#f5f7f7','#edf1f0'],grid:['rgba(0,40,40,.07)','rgba(0,40,40,.15)'],halo:'rgba(0,0,0,.05)',rim:['rgba(0,0,0,.32)','rgba(0,0,0,.07)','rgba(0,0,0,.22)'],bokeh:false}};
+let BG=BGS[settings.bg]||BGS.black;
 const BOK_BACK=Array.from({length:28},()=>({x:Math.random(),y:Math.random(),r:rand(18,70),d:rand(.12,.4),a:rand(.025,.06)}));
 const BOK_FRONT=Array.from({length:7},()=>({x:Math.random(),y:Math.random(),r:rand(90,190),d:rand(1.25,1.6),a:rand(.018,.035)}));
 
@@ -4444,11 +4447,11 @@ function drawGrid(x0,y0,x1,y1){
   if(50*z>=7){ctx.beginPath();
     for(let x=Math.floor(x0/50)*50;x<=x1;x+=50){if(x%250===0)continue;ctx.moveTo(x,y0);ctx.lineTo(x,y1);}
     for(let y=Math.floor(y0/50)*50;y<=y1;y+=50){if(y%250===0)continue;ctx.moveTo(x0,y);ctx.lineTo(x1,y);}
-    ctx.lineWidth=1/z;ctx.strokeStyle='rgba(120,200,190,.06)';ctx.stroke();}
+    ctx.lineWidth=1/z;ctx.strokeStyle=BG.grid[0];ctx.stroke();}
   const triple=250*z>=90;ctx.beginPath();
   for(let x=Math.floor(x0/250)*250;x<=x1;x+=250){for(const o of triple?[-5,0,5]:[0]){ctx.moveTo(x+o,y0);ctx.lineTo(x+o,y1);}}
   for(let y=Math.floor(y0/250)*250;y<=y1;y+=250){for(const o of triple?[-5,0,5]:[0]){ctx.moveTo(x0,y+o);ctx.lineTo(x1,y+o);}}
-  ctx.lineWidth=1/z;ctx.strokeStyle='rgba(120,200,190,.14)';ctx.stroke();
+  ctx.lineWidth=1/z;ctx.strokeStyle=BG.grid[1];ctx.stroke();
 }
 const LABELS=new Map(),LABEL_MAX=160,FONTS=new Map();
 function fontStr(k,px){let f=FONTS.get(k+px);if(!f){f=k==='m'?`500 ${px}px "IBM Plex Mono",monospace`:k==='p'?`600 ${px}px "IBM Plex Mono",monospace`:`800 ${px}px "Bricolage Grotesque",system-ui,sans-serif`;FONTS.set(k+px,f);}return f;}
@@ -4631,19 +4634,18 @@ function drawEj(x,y,r,color,vx=0,vy=0){
 }
 function draw(){
   const z=cam.z;let shx=0,shy=0;if(cam.shake>.3){shx=(Math.random()-.5)*cam.shake;shy=(Math.random()-.5)*cam.shake;}
-  ctx.setTransform(DPR,0,0,DPR,0,0);ctx.fillStyle='#020809';ctx.fillRect(0,0,W,H);
-  if(!lowFx&&!SKIP.has('bokeh'))drawBokeh(BOK_BACK);
+  ctx.setTransform(DPR,0,0,DPR,0,0);ctx.fillStyle=BG.page;ctx.fillRect(0,0,W,H);
+  if(!lowFx&&BG.bokeh&&!SKIP.has('bokeh'))drawBokeh(BOK_BACK);
   ctx.setTransform(DPR*z,0,0,DPR*z,DPR*(W/2-cam.x*z+shx),DPR*(H/2-cam.y*z+shy));
   const hw=W/2/z,hh=H/2/z,x0=cam.x-hw-20,x1=cam.x+hw+20,y0=cam.y-hh-20,y1=cam.y+hh+20;
-  const g=ctx.createRadialGradient(0,0,0,0,0,R);g.addColorStop(0,'#0c2123');g.addColorStop(.85,'#081719');g.addColorStop(1,'#051113');
+  const g=ctx.createRadialGradient(0,0,0,0,0,R);g.addColorStop(0,BG.dish[0]);g.addColorStop(.85,BG.dish[1]);g.addColorStop(1,BG.dish[2]);
   ctx.beginPath();ctx.arc(0,0,R,0,TAU);ctx.fillStyle=g;ctx.fill();
   ctx.save();ctx.clip();
   const cx0=Math.max(x0,-R),cy0=Math.max(y0,-R),cx1=Math.min(x1,R),cy1=Math.min(y1,R);
-  if(agarPat&&!lowFx&&!SKIP.has('bg')&&cx1>cx0&&cy1>cy0){ctx.fillStyle=agarPat;ctx.fillRect(cx0,cy0,cx1-cx0,cy1-cy0);}
   if(cx1>cx0&&cy1>cy0&&!SKIP.has('grid'))drawGrid(cx0,cy0,cx1,cy1);
   ctx.restore();
-  ctx.beginPath();ctx.arc(0,0,R+18,0,TAU);ctx.lineWidth=36;ctx.strokeStyle='rgba(150,220,210,.05)';ctx.stroke();
-  const lg=ctx.createLinearGradient(-R,-R,R,R);lg.addColorStop(0,'rgba(210,250,242,.6)');lg.addColorStop(.5,'rgba(150,220,210,.1)');lg.addColorStop(1,'rgba(210,250,242,.35)');
+  ctx.beginPath();ctx.arc(0,0,R+18,0,TAU);ctx.lineWidth=36;ctx.strokeStyle=BG.halo;ctx.stroke();
+  const lg=ctx.createLinearGradient(-R,-R,R,R);lg.addColorStop(0,BG.rim[0]);lg.addColorStop(.5,BG.rim[1]);lg.addColorStop(1,BG.rim[2]);
   ctx.beginPath();ctx.arc(0,0,R,0,TAU);ctx.lineWidth=Math.max(2/z,4);ctx.strokeStyle=lg;ctx.stroke();
   drawBreaches();
   if(ev.type===1){const g2=ctx.createRadialGradient(ev.x,ev.y,0,ev.x,ev.y,BLOOM_R);g2.addColorStop(0,'rgba(242,193,78,.16)');g2.addColorStop(.75,'rgba(242,193,78,.06)');g2.addColorStop(1,'rgba(242,193,78,0)');
@@ -5268,6 +5270,8 @@ const diffEl=$('diff');const syncDiff=()=>{[...diffEl.children].forEach(b=>b.set
 diffEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.diff=b.dataset.d;syncDiff();});syncDiff();
 const fxSegEl=$('fxSeg'),syncFxSeg=()=>[...fxSegEl.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.fx==='1')===!!settings.lowFx)));
 fxSegEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.lowFx=b.dataset.fx==='1';lowFx=settings.lowFx;saveSettings();syncFxSeg();});syncFxSeg();
+const bgSegEl=$('bgSeg'),syncBgSeg=()=>{BG=BGS[settings.bg]||BGS.black;document.body.dataset.bg=BG===BGS.white?'white':'black';[...bgSegEl.children].forEach(b=>b.setAttribute('aria-pressed',String(BGS[b.dataset.bg]===BG)));};
+bgSegEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.bg=b.dataset.bg;saveSettings();syncBgSeg();});syncBgSeg();
 const hapEl=$('hapSeg'),syncHap=()=>[...hapEl.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.h==='1')===!!settings.haptics)));
 hapEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.haptics=b.dataset.h==='1';saveSettings();syncHap();});syncHap();
 /* game recording (iOS app, off by default): each run is recorded with ReplayKit and saved to Photos as its own video */
