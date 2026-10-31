@@ -15,6 +15,9 @@ const b64u = o => Buffer.from(typeof o === 'string' ? o : JSON.stringify(o)).toS
 function signToken(claims) { const data = b64u({ alg: 'RS256', kid: 'test-key', typ: 'JWT' }) + '.' + b64u(claims); return data + '.' + crypto.sign('sha256', Buffer.from(data), jwkPriv).toString('base64url'); }
 const sha256 = s => crypto.createHash('sha256').update(s).digest('hex');
 
+// live players: history from before a restart is kept, except what is older than 24 hours
+const minuteNow = Math.floor(Date.now() / 60e3);
+fs.writeFileSync(path.join(dataDir, 'live-history.json'), JSON.stringify({ rows: [[minuteNow - 25 * 60, 9, 9, 9, 0, 9, 0, 0, 0, 0], [minuteNow - 30, 5, 4, 3, 1, 2, 2, 1, 0, 0]], best: { n: 40, at: Date.now() - 864e5 * 9 } }));
 const child = spawn(process.execPath, [path.join(__dirname, 'server.js')],
   { env: { ...process.env, PORT, DATA_DIR: dataDir, IAP_UNVERIFIED: '1', AUTH_APPLE_JWKS: `http://127.0.0.1:${KEY_PORT}/apple`, AUTH_GOOGLE_JWKS: `http://127.0.0.1:${KEY_PORT}/google`, GOOGLE_CLIENT_IDS: 'test-google-client' }, stdio: ['ignore', 'ignore', 'inherit'] });
 const base = `http://127.0.0.1:${PORT}`;
@@ -97,6 +100,67 @@ async function post(url, body, secret) {
     const eu = rep.areas.find(a => a.name === 'Europe'); assert.equal(eu.reports, 3); assert.equal(eu.ping, 170); assert.match(eu.verdict, /closer to this area/);
     assert.match(rep.areas.find(a => a.name === 'US & Canada Central').verdict, /Not enough reports/);
     const html = await (await fetch(base + '/admin/net?token=' + token)).text(); assert.match(html, /Connection report/); assert.match(html, /Europe/);
+  }
+  { // live players: each relay connection counts by what it is doing and where it comes from; only the token opens the page
+    const { platformOf } = require('./live');
+    for (const [origin, ua, plat, mob] of [
+      [base, 'Mozilla/5.0 (iPhone; CPU iPhone OS 26_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 Safari/604.1', 'web', true],
+      [base, 'Mozilla/5.0 (Linux; Android 15; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0 Mobile Safari/537.36', 'web', true],
+      ['https://abc.trycloudflare.com', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0 Safari/537.36', 'web', false],
+      ['null', 'Mozilla/5.0 (iPhone; CPU iPhone OS 26_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148', 'ios', true],
+      ['file://', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko)', 'ios', true],          // iPad app (desktop-class agent)
+      [undefined, 'Mozilla/5.0 (Linux; Android 15; Pixel 8; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/141.0 Mobile Safari/537.36', 'android', true],
+      ['null', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0 Safari/537.36', 'other', false], // tools/snap.js on a file
+      [undefined, undefined, 'other', false],
+    ]) assert.deepEqual(platformOf({ origin, 'user-agent': ua }), { plat, mob }, `${origin} ${ua}`);
+
+    const token = fs.readFileSync(path.join(dataDir, 'admin-token'), 'utf8').trim(), tq = '?token=' + token;
+    assert.equal((await fetch(base + '/admin/live')).status, 403, 'the live page needs the token');
+    assert.equal((await fetch(base + '/admin/live/stream?token=wrong')).status, 403, 'and so does its stream');
+    const now = async () => (await fetch(base + '/admin/live' + tq + '&format=json')).json();
+    const ctl = new AbortController(), events = [], sse = await fetch(base + '/admin/live/stream' + tq, { signal: ctl.signal });
+    assert.match(sse.headers.get('content-type'), /text\/event-stream/);
+    (async () => { const td = new TextDecoder(); let buf = ''; try { for await (const ch of sse.body) { buf += td.decode(ch, { stream: true }); let i;
+      while ((i = buf.indexOf('\n\n')) >= 0) { const b = buf.slice(0, i), ev = /^event: (\w+)$/m.exec(b), d = /^data: (.*)$/m.exec(b); buf = buf.slice(i + 2); if (ev && d) events.push({ ev: ev[1], d: JSON.parse(d[1]) }); } } } catch (e) {} })();
+    const expect = async (what, want, ms = 3000) => { // waits for the dashboard to show `want`, then checks it
+      for (const t0 = Date.now(); ;) { const j = await now(), got = Object.fromEntries(Object.keys(want).map(k => [k, j[k]]));
+        if (JSON.stringify(got) === JSON.stringify(want) || Date.now() - t0 > ms) { assert.deepEqual(got, want, what); return j; } await new Promise(r => setTimeout(r, 100)); } };
+    const until = async (what, ok, ms = 3000) => { const t0 = Date.now(); for (;;) { const v = await ok(); if (v) return v; if (Date.now() - t0 > ms) assert.fail('timed out waiting for ' + what); await new Promise(r => setTimeout(r, 100)); } };
+    const join = headers => new Promise((res, rej) => { const ws = new WebSocket(base.replace(/^http/, 'ws') + '/ws', { headers });
+      ws.onopen = () => ws.send(JSON.stringify({ t: 'hello' })); ws.onmessage = e => { const m = JSON.parse(e.data); if (m.t === 'welcome') res(ws); if (m.t === 'full') res('full'); }; ws.onerror = rej; });
+    const web = await join({ Origin: base, 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0 Safari/537.36' });
+    const ios = await join({ Origin: 'null', 'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 26_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148' });
+    const android = await join({ Origin: 'file://', 'User-Agent': 'Mozilla/5.0 (Linux; Android 15; Pixel 8; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/141.0 Mobile Safari/537.36' });
+    // the website player is alive in the arena and hosts the round (90.5 s in); the iPhone is searching; the Android phone is in the menus
+    const pres = () => { web.send(JSON.stringify({ t: 'p', p: { v: 6, a: 1, h: 1, q: 0, rd: 'ABAOJ' } })); ios.send(JSON.stringify({ t: 'p', p: { v: 6, a: 0, h: 0, q: 1 } })); };
+    pres(); android.send(JSON.stringify({ t: 'p', p: { v: 6, a: 0, h: 0, q: 0 } }));
+    let s = await expect('three players, and the round clock from the host', { online: 3, web: 1, ios: 1, android: 1, other: 0, arena: 1, searching: 1, menus: 1, solo: 0, playing: 1, cap: 16, round: 90.5 });
+    assert.equal(s.best.n, 40, 'the most at once survives a restart');
+    assert.ok(!s.rows.some(r => r[0] <= minuteNow - 24 * 60), 'history older than 24 hours is dropped');
+    assert.deepEqual(s.rows.find(r => r[0] === minuteNow - 30), [minuteNow - 30, 5, 4, 3, 1, 2, 2, 1, 0, 0], 'history from before the restart is kept');
+    // a ranked life is open from run/start until run/end
+    r = await post('/api/run/start', {}, secret); await expect('a ranked life in progress', { ranked: 1 });
+    await post('/api/run/end', { runId: r.body.runId, survived: 5, eaten: 0, peak: 25 }, secret); await expect('the life ended', { ranked: 0 });
+    // the Android player starts a solo game: no presence for 3 s, but its pings go on
+    const keep = setInterval(() => { pres(); android.send(JSON.stringify({ t: 'ping', c: 1 })); }, 400);
+    await expect('a solo game', { online: 3, arena: 1, searching: 1, solo: 1, menus: 0, playing: 2 }, 5000);
+    // the arena holds 16 games; the 17th is turned away and counted
+    const more = []; for (let i = 0; i < 14; i++) more.push(await join({ Origin: base }));
+    assert.equal(more.filter(w => w === 'full').length, 1, 'the 17th game is turned away');
+    s = await expect('a full arena', { online: 16 });
+    // the history rows since this test began (a minute may have turned meanwhile): each keeps its busiest second
+    const peak = (j, k) => Math.max(...j.rows.filter(r => r[0] >= minuteNow).map(r => r[j.cols.indexOf(k) + 1]));
+    assert.equal(s.rows.filter(r => r[0] >= minuteNow).reduce((n, r) => n + r[s.cols.indexOf('full') + 1], 0), 1, 'the turned-away game is in the history');
+    for (const w of more) if (w !== 'full') w.close();
+    web.close();
+    s = await expect('the website player left and took the round clock along', { online: 2, web: 0, arena: 0, round: null });
+    assert.deepEqual(['online', 'playing', 'arena', 'solo', 'web', 'ios', 'android'].map(k => peak(s, k)), [16, 2, 1, 1, 14, 1, 1], 'the history keeps the busiest moment');
+    // the stream sent the whole picture first, then the changes as they happened
+    await until('stream updates', () => events.some(e => e.ev === 'now' && e.d.online === 2));
+    assert.equal(events[0].ev, 'all'); assert.ok(Array.isArray(events[0].d.rows) && events[0].d.cols.includes('online'));
+    assert.ok(events.some(e => e.ev === 'now' && e.d.online === 3 && e.d.solo === 1), 'the stream saw the solo game');
+    clearInterval(keep); ios.close(); android.close(); ctl.abort();
+    const html = await (await fetch(base + '/admin/live' + tq)).text(); assert.match(html, /<title>Mitosis live players<\/title>/); assert.match(html, /EventSource/);
   }
   // a refused name never reaches the leaderboard: the player keeps their last good one
   r = await post('/api/run/start', {}, secret); r = await post('/api/run/end', { runId: r.body.runId, survived: 30, eaten: 0, peak: 25, name: 'sh1t head' }, secret); assert.equal(r.status, 200);
