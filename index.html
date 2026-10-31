@@ -529,28 +529,6 @@ body:not(.playing) #tip{display:none}
 }
 @media (min-width:1100px){.shopview{padding-left:max(48px,calc(50vw - 620px));padding-right:max(48px,calc(50vw - 620px))}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-/* Skins page: a big live preview beside the default-cell customiser and the skins you own */
-#overlay>#lookCard.page{grid-template-columns:minmax(0,1fr);gap:14px 26px}
-#lookCard .lk-stage{display:grid;justify-items:center;align-content:start;gap:3px;padding:4px 0;text-align:center}
-#lookCard .lk-stage canvas{width:min(46vw,190px);height:auto;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,rgba(255,92,138,.18),rgba(255,92,138,0) 66%);animation:bob 4.5s ease-in-out infinite}
-#lookCard .lk-stage b{font:800 24px/1.1 var(--display);letter-spacing:-.03em;margin-top:6px}
-#lookCard .lk-stage span{font:600 10.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}
-#lookCard .lk-side{display:grid;gap:14px;min-width:0}
-#lookCard .lk-sec{display:grid;gap:10px;padding:16px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.012))}
-#lookCard .lk-head{display:flex;align-items:baseline;justify-content:space-between;gap:4px 12px;flex-wrap:wrap}
-#lookCard .lk-head b{font:800 18px/1.1 var(--display);letter-spacing:-.02em}
-#lookCard .lk-head span{font-size:12.5px;color:var(--muted)}
-#lookCard .swatches{display:flex;flex-wrap:wrap;gap:12px}
-#lookCard .sw{width:40px;height:40px;border:0;box-shadow:inset 0 0 0 3px rgba(0,0,0,.25),inset -5px -7px 12px rgba(0,0,0,.2);transition:transform .15s,box-shadow .15s}
-#lookCard .sw[aria-pressed=true]{box-shadow:inset 0 0 0 3px rgba(0,0,0,.25),inset -5px -7px 12px rgba(0,0,0,.2),0 0 0 3px var(--void),0 0 0 5px var(--ink)}
-#lookCard .pats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
-.pat{appearance:none;cursor:pointer;display:grid;justify-items:center;gap:5px;padding:9px 2px 8px;border:1px solid var(--line);border-radius:14px;background:rgba(2,8,9,.55);color:var(--muted);font:600 11.5px var(--display);transition:border-color .15s,background .15s}
-.pat canvas{width:min(12vw,54px);height:auto;aspect-ratio:1;display:block}
-.pat:hover{border-color:var(--line-strong)}
-.pat[aria-pressed=true]{border-color:transparent;box-shadow:0 0 0 2px var(--ink);background:rgba(255,255,255,.07);color:var(--ink)}
-#lookCard .skin.lk-get{border-style:dashed;color:var(--muted)}#lookCard .skin.lk-get::before{display:none}
-#lookCard .skin.lk-get i{width:58px;height:58px;display:grid;place-items:center;font:300 34px/1 var(--display);color:var(--accent);font-style:normal}
-@media (orientation:landscape){#overlay>#lookCard.page{grid-template-columns:minmax(0,.8fr) minmax(0,1.3fr);align-items:start}#lookCard .lk-stage{position:sticky;top:64px;padding-top:12px}#lookCard .lk-stage canvas{width:min(28vw,40vh,230px)}}
 /* ==== per-screen styles: each screen keeps its rules between its own two markers ==== */
 /* @ui:base */
 
@@ -565,7 +543,144 @@ body:not(.playing) #tip{display:none}
 /* @ui:shop end */
 
 /* @ui:skins */
+/* Skins page: a lit showcase stage for the skin you wear, then your collection and the classic-cell picker.
+   --rc is the rarity colour (r g b), --sk the worn skin's own colour (h s l), both set per element */
+#overlay>#lookCard.page{grid-template-columns:minmax(0,1fr);grid-auto-rows:max-content;gap:14px 22px} /* max-content rows: the clipped stage must not shrink when the page overflows */
+#lookCard [data-r],#lookCard .lk-tile{--rc:196 214 210}
+#lookCard [data-r=common]{--rc:118 226 196}#lookCard [data-r=rare]{--rc:154 140 255}#lookCard [data-r=epic]{--rc:242 177 52}
+#lookCard [data-r=legendary]{--rc:255 108 92}#lookCard [data-r=seasonal]{--rc:255 138 42}
+#lookCard #lookShop{display:inline-flex;align-items:center;gap:7px;min-height:44px;box-sizing:border-box;padding:0 18px 0 14px;border-radius:999px;color:var(--ink);font:700 14px/1 var(--display);
+  border:1px solid rgba(255,92,138,.42);background:linear-gradient(180deg,rgba(255,92,138,.2),rgba(255,92,138,.06));box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 6px 18px rgba(255,92,138,.12);transition:transform .15s,filter .15s}
+#lookCard #lookShop svg{width:18px;height:18px;fill:none;stroke:var(--accent);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+#lookCard #lookShop:active{transform:scale(.95);filter:brightness(1.15)}
 
+/* the stage */
+#lookCard .lk-stage{--sk:340 100% 62%;position:relative;isolation:isolate;overflow:hidden;box-sizing:border-box;container-type:inline-size;display:grid;justify-items:center;align-content:center;gap:8px;
+  min-width:0;padding:12px 16px 20px;border-radius:26px;text-align:center;border:1px solid rgb(var(--rc)/.26);
+  background:radial-gradient(56% 44% at 50% 40%,hsl(var(--sk)/.32),hsl(var(--sk)/0) 72%),radial-gradient(90% 48% at 50% 108%,rgb(var(--rc)/.2),rgb(var(--rc)/0) 70%),linear-gradient(180deg,#0c1e21,#040d0f 80%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),inset 0 0 40px rgba(0,0,0,.35),0 22px 50px rgba(0,0,0,.45);transition:border-color .45s}
+#lookCard .lk-stage::before{content:"";position:absolute;z-index:-1;left:50%;top:-6%;width:84%;height:92%;transform:translateX(-50%);pointer-events:none;filter:blur(10px);
+  background:linear-gradient(180deg,rgba(255,255,255,.13),rgba(255,255,255,.035) 55%,rgba(255,255,255,0) 88%);clip-path:polygon(36% 0,64% 0,100% 100%,0 100%)}
+#lookCard .lk-stage::after{content:"";position:absolute;z-index:-1;inset:0;pointer-events:none;border-radius:inherit;background:radial-gradient(130% 90% at 50% 40%,transparent 55%,rgba(0,0,0,.4))}
+#lookCard .lk-show{position:relative;width:min(100cqw - 24px,260px);aspect-ratio:1;display:grid;justify-items:center;align-items:start;animation:lk-in .6s cubic-bezier(.2,.9,.25,1.12) both}
+#lookCard .lk-show canvas{position:relative;z-index:2;width:86%;height:86%;margin-top:2%;animation:lk-float 4.6s ease-in-out infinite}
+/* slow light rays in the rarity colour, brighter the rarer the skin */
+#lookCard .lk-rays{position:absolute;z-index:0;left:-20%;right:-20%;top:-26%;bottom:-6%;border-radius:50%;opacity:.3;pointer-events:none;
+  background:repeating-conic-gradient(from 0deg,rgb(var(--rc)/.5) 0deg 3deg,rgb(var(--rc)/0) 6deg 15deg);-webkit-mask:radial-gradient(closest-side,#000 16%,rgba(0,0,0,.45) 42%,transparent 74%);mask:radial-gradient(closest-side,#000 16%,rgba(0,0,0,.45) 42%,transparent 74%);
+  animation:lk-spin 70s linear infinite;transition:opacity .45s}
+#lookCard [data-r=common] .lk-rays{opacity:.34}#lookCard [data-r=rare] .lk-rays{opacity:.44}#lookCard [data-r=epic] .lk-rays{opacity:.52}#lookCard [data-r=seasonal] .lk-rays{opacity:.56}#lookCard [data-r=legendary] .lk-rays{opacity:.7;animation-duration:40s}
+/* a glowing dish the cell floats over, and its shadow breathing with the float */
+#lookCard .lk-ped{position:absolute;z-index:1;left:17%;right:17%;top:79%;height:15%;border-radius:50%;pointer-events:none;
+  background:radial-gradient(closest-side,rgb(var(--rc)/.42),rgb(var(--rc)/.12) 62%,rgb(var(--rc)/0));border:1.5px solid rgb(var(--rc)/.6);
+  box-shadow:0 0 26px rgb(var(--rc)/.36),inset 0 -3px 12px rgb(var(--rc)/.35),inset 0 2px 0 rgba(255,255,255,.12)}
+#lookCard .lk-ped::before{content:"";position:absolute;left:22%;right:22%;top:12%;height:52%;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.7),rgba(0,0,0,0));animation:lk-shadow 4.6s ease-in-out infinite}
+#lookCard .lk-ped::after{content:"";position:absolute;inset:-34% -16%;border-radius:50%;border:1px solid rgb(var(--rc)/.2)}
+#lookCard #lookName{max-width:100%;font:800 28px/1.05 var(--display);letter-spacing:-.035em;color:#fff;text-wrap:balance;text-shadow:0 2px 24px rgba(0,0,0,.7)}
+#lookCard #lookName.lk-long{font-size:23px}
+#lookCard .lk-rar{display:inline-flex;align-items:center;gap:7px;padding:6px 12px 6px 10px;border-radius:999px;font:700 10px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;
+  color:rgb(var(--rc));background:rgb(var(--rc)/.12);box-shadow:inset 0 0 0 1px rgb(var(--rc)/.42)}
+#lookCard .lk-rar::before{content:"";width:7px;height:7px;transform:rotate(45deg);border-radius:1.5px;background:currentColor;box-shadow:0 0 8px currentColor}
+#lookCard .lk-stage[data-r=legendary] .lk-rar{color:#1c0709;background:linear-gradient(90deg,#ff5c8a,#ff8a50 55%,#ffc45a);box-shadow:0 0 18px rgba(255,110,90,.45),inset 0 1px 0 rgba(255,255,255,.35)}
+#lookCard .lk-stage[data-r=legendary] .lk-rar::before{box-shadow:none}
+/* swapping skins: the cell pops in, the name rises, the dish flashes */
+#lookCard .lk-pop .lk-show{animation:lk-pop .55s cubic-bezier(.2,.9,.25,1.2) both}
+#lookCard .lk-pop #lookName,#lookCard .lk-pop .lk-rar{animation:lk-up .4s cubic-bezier(.2,.8,.2,1) both}#lookCard .lk-pop .lk-rar{animation-delay:.06s}
+#lookCard .lk-pop .lk-ped{animation:lk-flash .7s ease-out}
+
+/* sections */
+#lookCard .lk-side{display:grid;gap:12px;min-width:0;align-content:start}
+#lookCard .lk-sec{display:grid;gap:14px;padding:14px 14px 16px;border-radius:22px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.014));box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+#lookCard .lk-head{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:24px;padding:0 2px}
+#lookCard .lk-head b{font:800 17px/1 var(--display);letter-spacing:-.025em}
+#lookCard #ownedHint{font:600 11px/1 var(--mono);color:var(--muted);padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px var(--line);font-variant-numeric:tabular-nums}
+#lookCard #ownedHint:empty{display:none}
+/* the check badge every selected tile wears */
+#lookCard .lk-on{position:absolute;z-index:3;top:6px;right:6px;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:var(--accent);box-shadow:0 2px 8px rgba(255,92,138,.5),inset 0 1px 0 rgba(255,255,255,.35);transform:scale(0);transition:transform .2s}
+#lookCard .lk-on svg{width:13px;height:13px;fill:none;stroke:var(--accent-ink);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+#lookCard [aria-pressed=true]>.lk-on{transform:scale(1);animation:lk-check .38s cubic-bezier(.2,.9,.3,1.4)}
+
+/* collection tiles: lit in their rarity colour, the rarity underneath the name */
+#lookCard .lk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:10px}
+#lookCard .lk-tile{appearance:none;position:relative;min-width:0;display:grid;grid-template-rows:auto 1fr auto;justify-items:center;align-items:center;gap:3px;padding:12px 6px 11px;border-radius:18px;cursor:pointer;color:var(--ink);font:inherit;text-align:center;
+  border:1px solid rgb(var(--rc)/.3);background:radial-gradient(90% 62% at 50% 32%,rgb(var(--rc)/.22),rgb(var(--rc)/0) 72%),linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.01) 55%,rgba(0,0,0,.18)),#081719;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),inset 0 -3px 0 rgb(var(--rc)/.55),0 6px 16px rgba(0,0,0,.3);transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s,border-color .2s,background-color .2s}
+#lookCard .lk-tile canvas{width:64px;height:64px;display:block;margin-bottom:5px;filter:drop-shadow(0 6px 8px rgba(0,0,0,.5));transition:transform .25s cubic-bezier(.2,.9,.3,1.3)}
+#lookCard .lk-tile b{max-width:100%;font:700 12.5px/1.12 var(--display);letter-spacing:-.01em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+#lookCard .lk-tile span{font:700 8.5px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:rgb(var(--rc));margin-top:2px}
+#lookCard .lk-tile[data-r=legendary]{background:radial-gradient(90% 62% at 50% 32%,rgba(255,110,90,.3),rgba(255,92,138,0) 72%),linear-gradient(160deg,rgba(255,92,138,.16),rgba(255,180,80,.06) 60%,rgba(0,0,0,.18)),#120b10}
+#lookCard .lk-tile[data-r=legendary]::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(105deg,transparent 40%,rgba(255,220,190,.16) 50%,transparent 60%) no-repeat;background-size:250% 100%;animation:lk-sheen 3.8s ease-in-out infinite}
+#lookCard .lk-tile:active{transform:scale(.94)}
+#lookCard .lk-tile[aria-pressed=true]{border-color:rgba(255,92,138,.9);background-color:#1a0d14;box-shadow:0 0 0 1.5px var(--accent),0 0 24px rgba(255,92,138,.32),inset 0 1px 0 rgba(255,255,255,.12),inset 0 -3px 0 rgb(var(--rc)/.7)}
+#lookCard .lk-tile[aria-pressed=true] canvas{transform:scale(1.08)}
+/* nothing owned yet: a wide teaser of three shop skins that opens the Shop */
+#lookCard .lk-tile.lk-get{--rc:255 92 138;grid-column:2/-1;grid-template-rows:auto auto;align-content:center;gap:8px;border:1px solid rgba(255,92,138,.5);
+  background:radial-gradient(70% 80% at 50% 30%,rgba(255,92,138,.22),rgba(255,92,138,0) 72%),linear-gradient(180deg,rgba(255,255,255,.06),rgba(0,0,0,.18)),#140b12;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.1),inset 0 -3px 0 rgba(255,92,138,.6),0 8px 24px rgba(255,92,138,.14)}
+#lookCard .lk-tease{display:flex;justify-content:center;padding:0 10px}
+#lookCard .lk-tile.lk-get .lk-tease canvas{width:58px;height:58px;margin:0 -7px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.55))}
+#lookCard .lk-tile.lk-get .lk-tease canvas:nth-child(2){position:relative;z-index:1;width:68px;height:68px;margin-top:-4px}
+#lookCard .lk-tile.lk-get b{display:inline-flex;align-items:center;gap:3px;font-size:14px;color:#fff}
+#lookCard .lk-tile.lk-get b svg{width:15px;height:15px;fill:none;stroke:var(--accent);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+
+/* classic cell: glossy colour drops, then pattern tiles in that colour */
+#lookCard .swatches{display:grid;grid-template-columns:repeat(6,minmax(0,46px));justify-content:space-between;gap:8px;padding:0 2px}
+#lookCard .sw{position:relative;width:100%;height:auto;aspect-ratio:1;min-width:0;padding:0;border:0;border-radius:50%;cursor:pointer;transform:none;
+  box-shadow:inset 0 -4px 8px rgba(0,0,0,.25),inset 0 2px 1px rgba(255,255,255,.3),0 4px 12px rgba(0,0,0,.35);transition:transform .18s cubic-bezier(.2,.9,.3,1.3),box-shadow .2s}
+#lookCard .sw::after{content:"";position:absolute;left:50%;top:46%;width:12px;height:6px;border:solid rgba(6,14,16,.78);border-width:0 0 2.6px 2.6px;border-radius:1px;transform:translate(-50%,-50%) rotate(-45deg) scale(0);transition:transform .2s cubic-bezier(.2,.9,.3,1.4)}
+#lookCard .sw:active{transform:scale(.9)}
+#lookCard .sw[aria-pressed=true]{border:0;transform:scale(1.04);box-shadow:inset 0 -4px 8px rgba(0,0,0,.2),inset 0 2px 1px rgba(255,255,255,.35),0 0 0 3px #07171a,0 0 0 5px var(--ink),0 6px 20px var(--sc,rgba(0,0,0,.4))}
+#lookCard .sw[aria-pressed=true]::after{transform:translate(-50%,-50%) rotate(-45deg) scale(1)}
+#lookCard .pats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px}
+#lookCard .pat{appearance:none;position:relative;aspect-ratio:1;min-width:0;padding:0;display:grid;place-items:center;cursor:pointer;border-radius:18px;border:1px solid var(--line);
+  background:radial-gradient(80% 70% at 50% 38%,rgba(255,255,255,.07),transparent 70%),linear-gradient(180deg,rgba(255,255,255,.04),rgba(0,0,0,.16)),#081719;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 5px 14px rgba(0,0,0,.28);transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s,border-color .2s}
+#lookCard .pat canvas{width:74%;height:auto;aspect-ratio:1;display:block;filter:drop-shadow(0 5px 7px rgba(0,0,0,.45));transition:transform .25s cubic-bezier(.2,.9,.3,1.3)}
+@media (hover:hover){#lookCard .sw:not([aria-pressed=true]):not(:active):hover{transform:scale(1.06)}#lookCard .pat:not([aria-pressed=true]):hover{border-color:var(--line-strong)}
+  #lookCard .lk-tile:not([aria-pressed=true]):hover{border-color:rgb(var(--rc)/.6)}#lookCard .lk-tile:not(:active):hover{transform:translateY(-2px)}}
+#lookCard .pat:active{transform:scale(.93)}
+#lookCard .pat[aria-pressed=true]{border-color:rgba(255,92,138,.9);background-color:#1a0d14;box-shadow:0 0 0 1.5px var(--accent),0 0 22px rgba(255,92,138,.3),inset 0 1px 0 rgba(255,255,255,.12)}
+#lookCard .pat[aria-pressed=true] canvas{transform:scale(1.07)}
+#lookCard .pat .lk-on{top:5px;right:5px;width:18px;height:18px}#lookCard .pat .lk-on svg{width:12px;height:12px}
+
+/* opening the page: tiles rise in, one after another (backwards fill, so :active and hover still move them afterwards) */
+#lookCard :is(.lk-tile,.sw,.pat){animation:lk-rise .42s cubic-bezier(.2,.8,.2,1) backwards}
+#lookCard :is(.lk-tile,.sw,.pat):nth-child(2){animation-delay:.03s}#lookCard :is(.lk-tile,.sw,.pat):nth-child(3){animation-delay:.06s}#lookCard :is(.lk-tile,.sw,.pat):nth-child(4){animation-delay:.09s}
+#lookCard :is(.lk-tile,.sw,.pat):nth-child(5){animation-delay:.12s}#lookCard :is(.lk-tile,.sw,.pat):nth-child(6){animation-delay:.15s}#lookCard :is(.lk-tile,.sw,.pat):nth-child(n+7){animation-delay:.18s}
+@keyframes lk-rise{from{opacity:0;transform:translateY(10px) scale(.94)}}
+@keyframes lk-in{from{opacity:0;transform:translateY(12px) scale(.86)}}
+@keyframes lk-pop{0%{transform:scale(.8);filter:brightness(1.7)}55%{transform:scale(1.05)}100%{transform:none;filter:none}}
+@keyframes lk-up{from{opacity:0;transform:translateY(8px)}}
+@keyframes lk-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4%)}}
+@keyframes lk-shadow{0%,100%{transform:scale(1);opacity:.85}50%{transform:scale(.8);opacity:.5}}
+@keyframes lk-spin{to{transform:rotate(1turn)}}
+@keyframes lk-flash{0%{filter:brightness(2.4);transform:scale(1.14)}100%{filter:none;transform:none}}
+@keyframes lk-check{0%{transform:scale(0)}100%{transform:scale(1)}}
+@keyframes lk-sheen{0%,35%{background-position:120% 0}75%,100%{background-position:-20% 0}}
+
+/* landscape: the stage holds the left column under the bar while the right side scrolls */
+@media (orientation:landscape){
+  #overlay>#lookCard.page{grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);align-items:start}
+  #lookCard .lk-stage{position:sticky;top:72px;min-height:min(calc(100vh - 72px - max(20px,env(safe-area-inset-bottom))),560px);min-height:min(calc(100dvh - 72px - max(20px,env(safe-area-inset-bottom))),560px)}
+  #lookCard .lk-show{width:max(120px,min(100cqw - 24px,100vh - 196px - max(20px,env(safe-area-inset-bottom)),400px));width:max(120px,min(100cqw - 24px,100dvh - 196px - max(20px,env(safe-area-inset-bottom)),400px))}
+}
+@media (orientation:landscape) and (max-height:520px){
+  #overlay>#lookCard.page{gap:10px 16px}
+  /* a fixed-height stage: the cell takes whatever the name and chip leave, so a two-line name never pushes it off screen */
+  #lookCard .lk-stage{top:60px;min-height:200px;height:calc(100vh - 60px - max(14px,env(safe-area-inset-bottom)));height:calc(100dvh - 60px - max(14px,env(safe-area-inset-bottom)));grid-template-rows:minmax(0,1fr) auto auto;align-content:stretch;padding:8px 12px 14px;gap:6px;border-radius:22px}
+  #lookCard .lk-show{width:auto;height:100%;max-height:400px;min-height:0}
+  #lookCard #lookName{font-size:22px}#lookCard #lookName.lk-long{font-size:18px}#lookCard .lk-rar{padding:5px 10px 5px 9px;font-size:9.5px}
+  #lookCard .lk-side{gap:10px}#lookCard .lk-sec{gap:12px;padding:12px 12px 14px;border-radius:20px}#lookCard .lk-head b{font-size:15px}
+  #lookCard .lk-grid{grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px}
+  #lookCard .lk-tile{padding:10px 5px 9px;border-radius:16px}#lookCard .lk-tile canvas{width:56px;height:56px}
+  #lookCard .swatches{grid-template-columns:repeat(6,minmax(0,44px))}
+  #lookCard .pats{gap:8px}#lookCard .pat{border-radius:16px}
+  #lookCard #lookShop{min-height:40px;padding:0 15px 0 12px;font-size:13px}
+}
+/* portrait: the stage on top, shorter, then the sections */
+@media (orientation:portrait){
+  #lookCard .lk-stage{padding:8px 16px 20px}
+  #lookCard .lk-show{width:min(100cqw - 24px,62vw,260px)}
+}
 /* @ui:skins end */
 
 /* @ui:profile */
@@ -815,13 +930,13 @@ body:not(.playing) #toasts .toast:has(>span:last-child:empty){grid-template-area
   </div>
 
   <div class="card panel page" id="lookCard" hidden>
-    <header class="pg-top"><button class="lb-icon back" type="button" aria-label="Back to the lobby"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><h2>Skins</h2><button class="ghost" id="lookShop" type="button">Shop</button></header>
-    <div class="lk-stage"><canvas id="lookCv" width="320" height="320" aria-hidden="true"></canvas><b id="lookName">Default cell</b><span>Wearing now</span></div>
+    <header class="pg-top"><button class="lb-icon back" type="button" aria-label="Back to the lobby"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><h2>Skins</h2><button class="ghost" id="lookShop" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8.5h14l-1.1 10.6a2 2 0 0 1-2 1.9H8.1a2 2 0 0 1-2-1.9z"/><path d="M9 11V7.5a3 3 0 0 1 6 0V11"/></svg>Shop</button></header>
+    <div class="lk-stage" id="lookStage" data-r="classic"><div class="lk-show"><i class="lk-rays" aria-hidden="true"></i><i class="lk-ped" aria-hidden="true"></i><canvas id="lookCv" width="320" height="320" aria-hidden="true"></canvas></div><b id="lookName">Rose</b><span class="lk-rar" id="lookRar">Classic</span></div>
     <div class="lk-side">
-      <section class="lk-sec"><div class="lk-head"><b>Default cell</b><span>Free. Pick a colour and a pattern.</span></div>
-        <span class="label">Colour</span><div class="swatches" id="sw"></div>
-        <span class="label">Pattern</span><div class="pats" id="pats"></div></section>
-      <section class="lk-sec"><div class="lk-head"><b>Your skins</b><span id="ownedHint"></span></div><div class="skins" id="ownedSkins"></div></section>
+      <section class="lk-sec"><div class="lk-head"><b>Collection</b><span id="ownedHint"></span></div><div class="lk-grid" id="ownedSkins"></div></section>
+      <section class="lk-sec"><div class="lk-head"><b>Classic</b></div>
+        <div class="swatches" id="sw" role="group" aria-label="Colour"></div>
+        <div class="pats" id="pats" role="group" aria-label="Pattern"></div></section>
     </div>
   </div>
 
@@ -1587,10 +1702,7 @@ function renderSkins(){
   const byPrice=(a,b)=>a.price-b.price||a.id-b.id,seasonal=PREMIUM.filter(S=>S.season&&seasonState(S.season).open).sort(byPrice),rest=PREMIUM.filter(S=>!S.season||(!seasonState(S.season).open&&ownsSkin(S.id))).sort(byPrice);
   const head=key=>{const st=seasonState(key);return `<div class="sv-season"><b>${escH(st.name)}</b><span>Limited skins · leave the shop in ${fmtLeft(st.ends-Date.now())}</span></div>`;};
   el.innerHTML=(seasonal.length?head(seasonal[0].season)+seasonal.map(S=>card(S,true)).join('')+'<div class="sv-season all"><b>All skins</b></div>':'')+rest.map(S=>card(S,true)).join('');renderFeat();
-  const mine=PREMIUM.filter(S=>ownsSkin(S.id)),oe=$('ownedSkins');if(oe){const def=(settings.skin|0)<SKIN_FREE;
-    oe.innerHTML=`<button type="button" class="skin def" data-id="def" aria-pressed="${def}" aria-label="Default cell"><canvas width="144" height="144" data-def="1"></canvas><span class="sn">Default</span><span class="sp">${def?'✓ Wearing':'Free'}</span></button>`
-      +mine.map(S=>card(S,false)).join('')+(mine.length?'':'<button type="button" class="skin lk-get" data-id="shop"><i>+</i><span class="sn">Get skins</span><span class="sp">Shop</span></button>');
-    $('ownedHint').textContent=mine.length?`${mine.length} of ${PREMIUM.length} premium skins`:'Premium skins are in the Shop';}
+  renderOwned();
   renderPreviews();
 }
 function drawPreview(cv,S){
@@ -1613,9 +1725,24 @@ function drawAvatar(cv=$('avatarCv'),sk=settings.skin|0,st=settings.stain|0){ //
 }
 function renderPreviews(){for(const cv of document.querySelectorAll('#skins canvas, #ownedSkins canvas')){const S=PREMIUM[+cv.dataset.skin-SKIN_FREE];if(S)drawPreview(cv,S);else if(cv.dataset.def)drawAvatar(cv,settings.pat|0);}}
 setInterval(()=>{if(document.hidden||RM)return;if(!$('storeCard').hidden||!$('lookCard').hidden)renderPreviews();if(!$('startCard').hidden)drawAvatar($('meCv'));if(!$('lookCard').hidden)drawAvatar($('lookCv'));if(!$('profileCard').hidden)drawAvatar($('profCv'));},100);
-$('ownedSkins').addEventListener('click',e=>{const b=e.target.closest('.skin');if(!b)return;
+// Skins page › Collection: the classic cell first, then the premium skins you own, rarest first. Tiles are rebuilt only when
+// what you own changes, so picking one just flips aria-pressed and the selection animates.
+function renderOwned(){const oe=$('ownedSkins');if(!oe)return;
+  const RK={legendary:5,seasonal:4,epic:3,rare:2,common:1},sk=settings.skin|0,cn=classicName(),
+    mine=PREMIUM.filter(S=>ownsSkin(S.id)).sort((a,b)=>RK[rarOf(b)]-RK[rarOf(a)]||b.price-a.price||a.id-b.id),sig=mine.map(S=>S.id).join();
+  $('ownedHint').textContent=mine.length?`${mine.length}/${PREMIUM.length}`:'';
+  if(oe.dataset.sig!==sig){oe.dataset.sig=sig;
+    const tile=(id,r,name,rl,cv)=>`<button type="button" class="lk-tile" data-id="${id}" data-r="${r}" aria-pressed="false"><canvas width="192" height="192" ${cv}></canvas><b>${escH(name)}</b><span>${escH(rl)}</span><em class="lk-on" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5.5 12.5l4.2 4.2 8.8-9.2"/></svg></em></button>`;
+    oe.innerHTML=tile('def','classic',cn,'Classic','data-def="1"')+mine.map(S=>tile(S.id,rarOf(S),S.name,S.season?SEASONS[S.season].name:rarOf(S),`data-skin="${S.id}"`)).join('')
+      +(mine.length?'':`<button type="button" class="lk-tile lk-get" data-id="shop"><span class="lk-tease">${[17,22,13].map(id=>`<canvas width="144" height="144" data-skin="${id}"></canvas>`).join('')}</span><b>Get skins<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5.5l6.5 6.5L9 18.5"/></svg></b></button>`);}
+  for(const b of oe.children){const id=b.dataset.id;if(id==='shop')continue;const on=id==='def'?sk<SKIN_FREE:+id===sk,nm=b.querySelector('b');
+    if(id==='def')nm.textContent=cn;b.setAttribute('aria-pressed',String(on));b.setAttribute('aria-label',`${nm.textContent}, ${b.querySelector('span').textContent}${on?', wearing':''}`);}
+  lookStage();
+}
+$('ownedSkins').addEventListener('click',e=>{const b=e.target.closest('.lk-tile');if(!b)return;
   if(b.dataset.id==='shop'){$('lookShop').click();return;}
-  const id=b.dataset.id==='def'?settings.pat|0:+b.dataset.id;if(id<SKIN_FREE||ownsSkin(id)){settings.skin=id;saveSettings();syncPats();}});
+  const id=b.dataset.id==='def'?settings.pat|0:+b.dataset.id;if(id===(settings.skin|0))return;
+  if(id<SKIN_FREE||ownsSkin(id)){settings.skin=id;saveSettings();syncPats();Native.haptic('light');}});
 // The shop: tap a skin to show it large, then buy (tap twice to confirm) or wear it from the big button
 function renderFeat(){
   const S=PREMIUM.find(x=>x.id===shopSel)||PREMIUM[0],b=$('featBuy');if(!S||!b)return;shopSel=S.id;
@@ -3192,15 +3319,28 @@ function drawChart(h){
 /* ================= setup UI ================= */
 const swEl=$('sw');
 const STAIN_NAMES=['Rose','Violet','Teal','Amber','Coral','Pearl'],PAT_NAMES=['Plain','Spots','Stripes','Rings','Marbled'];
-STAINS.forEach((c,i)=>{const b=document.createElement('button');b.type='button';b.className='sw';b.style.background=col(c);b.setAttribute('aria-label',STAIN_NAMES[i]+' colour');b.title=STAIN_NAMES[i];
-  b.setAttribute('aria-pressed',String(i===settings.stain));b.addEventListener('click',()=>{settings.stain=i;saveSettings();[...swEl.children].forEach((x,j)=>x.setAttribute('aria-pressed',String(j===i)));});swEl.appendChild(b);});
+const LK_CHECK='<em class="lk-on" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5.5 12.5l4.2 4.2 8.8-9.2"/></svg></em>';
+STAINS.forEach((c,i)=>{const b=document.createElement('button');b.type='button';b.className='sw';b.style.background=`radial-gradient(circle at 34% 28%,${col(c,20)},${col(c,0)} 55%,${col(c,-14)})`;b.style.setProperty('--sc',col(c,4,.5));b.setAttribute('aria-label',STAIN_NAMES[i]+' colour');b.title=STAIN_NAMES[i];
+  b.setAttribute('aria-pressed',String(i===settings.stain));b.addEventListener('click',()=>{if(settings.stain===i)return;settings.stain=i;saveSettings();[...swEl.children].forEach((x,j)=>x.setAttribute('aria-pressed',String(j===i)));Native.haptic('light');});swEl.appendChild(b);});
 const patEl=$('pats');
+let lookKey=''; // what the Skins stage last showed, so a change plays the swap animation
+function classicName(){const p=settings.pat|0;return STAIN_NAMES[settings.stain|0]+(p?' '+PAT_NAMES[p]:'');} // e.g. "Teal Rings"
+function lookStage(){ // the Skins page stage: name, rarity chip, and a glow in the skin's own colour
+  const st=$('lookStage');if(!st)return;const sk=settings.skin|0,P=sk>=SKIN_FREE&&PREMIUM[sk-SKIN_FREE],r=P?rarOf(P):'classic',k=P&&P.base||STAINS[settings.stain|0]||STAINS[0];
+  const nm=$('lookName');nm.textContent=P?P.name:classicName();nm.classList.toggle('lk-long',nm.textContent.length>15);$('lookRar').textContent=P?(P.season?SEASONS[P.season].name:r):'Classic';
+  st.dataset.r=r;st.style.setProperty('--sk',`${k[0]} ${Math.max(k[1],40)}% ${clamp(k[2],50,66)}%`);
+  const key=sk+'.'+(settings.stain|0);if(key!==lookKey){if(lookKey&&!$('lookCard').hidden&&!RM){st.classList.remove('lk-pop');void st.offsetWidth;st.classList.add('lk-pop');}lookKey=key;}}
 const syncPats=()=>{const sk=settings.skin|0,P=sk>=SKIN_FREE&&PREMIUM[sk-SKIN_FREE];if(!P)settings.pat=sk; // remember the free pattern while a premium skin is worn
   [...patEl.children].forEach((x,j)=>{x.setAttribute('aria-pressed',String(j===sk));drawAvatar(x.querySelector('canvas'),j);});
-  $('lookName').textContent=P?P.name:sk?PAT_NAMES[sk]+' cell':'Default cell';renderSkins();drawAvatar();drawAvatar($('lookCv'));drawAvatar($('profCv'));};
-PAT_NAMES.forEach((n,i)=>{const b=document.createElement('button');b.type='button';b.className='pat';b.setAttribute('aria-label',n+' pattern');b.innerHTML=`<canvas width="112" height="112"></canvas><span>${n}</span>`;
-  b.addEventListener('click',()=>{settings.skin=i;saveSettings();syncPats();});patEl.appendChild(b);});
-swEl.addEventListener('click',()=>setTimeout(syncPats,0));syncPats();
+  renderSkins();drawAvatar();drawAvatar($('lookCv'));drawAvatar($('profCv'));}; // renderSkins also refreshes the Skins stage
+PAT_NAMES.forEach((n,i)=>{const b=document.createElement('button');b.type='button';b.className='pat';b.setAttribute('aria-label',n+' pattern');b.title=n;b.innerHTML=`<canvas width="168" height="168"></canvas>${LK_CHECK}`;
+  b.addEventListener('click',()=>{if((settings.skin|0)===i)return;settings.skin=i;saveSettings();syncPats();Native.haptic('light');});patEl.appendChild(b);});
+swEl.addEventListener('click',e=>{if(e.target.closest('.sw'))setTimeout(syncPats,0);});syncPats();
+$('lookCard').addEventListener('touchstart',()=>{},{passive:true}); // lets iOS show the tiles' :active pressed state
+(function lookLoop(){ // the stage cell at full device resolution, every frame while the Skins page is open
+  const cv=$('lookCv');if(cv&&!$('lookCard').hidden&&!document.hidden){const w=Math.min(720,Math.round(cv.clientWidth*(window.devicePixelRatio||1)))||320;
+    if(cv.width!==w){cv.width=cv.height=w;drawAvatar(cv);}else if(!RM)drawAvatar(cv);}
+  requestAnimationFrame(lookLoop);})();
 const achLine=()=>{$('achLine').textContent=`Achievements ${ACH.filter(a=>achGot.has(a.id)).length} of ${ACH.length}`+(achGot.size?' — '+ACH.filter(a=>achGot.has(a.id)).map(a=>a.name).join(', '):'');renderAch();};
 function renderAch(){ // the Profile's achievement grid: earned ones lit, the rest show what to aim for
   const g=$('achGrid');if(!g)return;const LOCK='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
