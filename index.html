@@ -4120,7 +4120,7 @@ function drawBpFeat(){const cv=$('bpCv'),S=bpSkin(bpReward(bpSel));if(!S||cv.hid
   const w=Math.min(640,Math.round(cv.clientWidth*(window.devicePixelRatio||1)))||288;if(cv.width!==w)cv.width=cv.height=w;drawPreview(cv,S);}
 function drawBpTiles(){for(const cv of document.querySelectorAll('#bpGrid canvas')){const S=PREMIUM[+cv.dataset.skin-SKIN_FREE];if(S)drawPreview(cv,S);}}
 let bpDrawn=0,bpAsked=0;
-(function passLoop(now){if(!$('passCard').hidden&&!document.hidden&&!RM){drawBpFeat();if(now-bpDrawn>100){bpDrawn=now;drawBpTiles();}}requestAnimationFrame(passLoop);})(0); // the tiles at 10 fps, like the shop's
+let bpFeatT=0;(function passLoop(now){if(!$('passCard').hidden&&!document.hidden&&!RM){if(now-bpFeatT>=30){bpFeatT=now;drawBpFeat();}if(now-bpDrawn>100){bpDrawn=now;drawBpTiles();}}requestAnimationFrame(passLoop);})(0); // the stage at 30 fps like the lobby's cell, the tiles at 10 fps like the shop's
 function bpTick(){const el=$('bpClock'),now=Date.now(),st=+el.dataset.starts||0,ms=+el.dataset.ends-now,pre=now<st; // testers see a season before it starts
   el.querySelector('span').textContent=pre?'Starts in '+fmtLeft(st-now):ms>864e5?fmtLeft(ms)+' left':svClock(ms);el.title=pre?'Season starts in':'Season ends in';}
 setInterval(()=>{if($('passCard').hidden||document.hidden)return;bpTick();bqTick();const Q=bqOn()?wallet.quests:null;
@@ -6298,7 +6298,7 @@ addEventListener('pointerdown',()=>{lastTouchAt=performance.now();},true);
 window.__wsTime=w=>{if(w>wsMax)wsMax=w;};setInterval(()=>{wsMax=0;},1000);
 function reportHitch(text){Native.send({type:'log',text});if(hitchSent++>40)return; // at most 40 reports per session
   try{fetch(window.MITOSIS_SERVER+'/api/log',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({who:(Native.platform||'web')+':'+(wallet.playerId||'?').slice(0,8),text})}).catch(()=>{});}catch(e){}}
-const COVER=new Set(['deathCard','storeCard','lookCard','rankCard','settingsCard','friendsCard','profileCard','deleteCard']); // full-screen pages: the arena under them can't be seen
+const COVER=new Set(['deathCard','storeCard','passCard','lookCard','rankCard','settingsCard','friendsCard','profileCard','deleteCard']); // full-screen pages: the arena under them can't be seen
 function frame(nowMs){
   // battery: menus and pauses redraw at 30 fps (battery saver: play too); nothing is drawn under a full-screen page, and an
   // arena nobody else shares stands still there
