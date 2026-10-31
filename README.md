@@ -18,6 +18,8 @@ A multiplayer cell-eating arena set in a giant petri well. Absorb anything small
 - **Rounds of ten minutes**: the arena is full size for the first minute, then closes in to 3% of the dish by 9:30. Anything caught outside dissolves. Bots stop respawning at 7:00, and the round ends as soon as one player's cells are all that is left: the last cell standing wins
 - **Practice and offline play** against bots at four difficulties (Easy, Normal, Hard, Expert). With no connection, Play starts a bot game straight away
 - **Nearby play** (iPhone app): phones in the same room play each other over Bluetooth and peer-to-peer Wi-Fi, no internet needed
+- **Friends and parties**: add friends by their 6-character friend code (Friends in the lobby) and see who's online. Invite one into a party: when either of you presses Play, the other joins the same arena. Allies get a dashed cyan ring and an arrow at the screen edge, can't eat each other, and whoever runs out of lives watches their ally
+- **High ping plays bots**: with a ping over 100 ms, Play in Ranked starts a bot game instead, unless *Allow high ping* is on in Settings or you're in a party
 - **Mutations** (Magnet, Phase, Surge), dash, frenzy streaks, a leader bounty, stain patterns and 12 achievements. There is no chat
 
 ## Controls
