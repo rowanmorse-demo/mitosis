@@ -519,88 +519,113 @@ body:not(.playing) #tip{display:none}
 /* @ui:base end */
 
 /* @ui:lobby */
-/* Home: the cell centre stage on a glowing dish, its name and rank under it; icon buttons on the left; one big Play with a
-   mode chip in the corner. The mode chip opens a sheet (Ranked · Casual · Nearby) that holds the details. Glass recipe: --lb-*. */
+/* Home, laid out like a MOBA main menu: player card (top left), currency and settings (top right), feature cards down the
+   left, your cell on a lit pedestal in the middle, a tab bar along the bottom, and PLAY with its mode tab bottom right.
+   The mode tab opens a full-screen mode select (Ranked · Casual · Nearby). Glass recipe: --lb-*. */
 .lobby{
-  --lb-glass:linear-gradient(180deg,rgba(255,255,255,.085),rgba(255,255,255,.02) 62%),rgba(6,19,21,.74);
+  --lb-glass:linear-gradient(180deg,rgba(255,255,255,.085),rgba(255,255,255,.02) 62%),rgba(6,19,21,.76);
   --lb-edge:rgba(170,235,225,.15);--lb-hi:inset 0 1px 0 rgba(255,255,255,.09);--lb-drop:0 10px 24px -10px rgba(0,0,0,.75);
-  --lb-gold:#ffcf5c;--lb-mint:#5fe0a8;--lb-blue:#6cb8ff;--lb-hw:min(300px,38vw);
+  --lb-gold:#ffcf5c;--lb-mint:#5fe0a8;--lb-blue:#6cb8ff;
   --lb-nowifi:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M3 3l18 18M8.6 16.3a5 5 0 0 1 6.8 0M5 12.8a10 10 0 0 1 4.9-2.7M14.4 10.2A10 10 0 0 1 19 12.8M2 9.2a15 15 0 0 1 4.2-2.6M10.6 5.1A15 15 0 0 1 22 9.2'/%3E%3Ccircle cx='12' cy='20' r='1' fill='black'/%3E%3C/svg%3E");
-  grid-template-columns:minmax(0,1fr) var(--lb-hw) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);grid-template-areas:"top top top" "rail hero play";gap:12px 20px;
+  grid-template-columns:minmax(180px,214px) minmax(0,1fr) minmax(226px,264px);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"top top top" "feed hero play" "nav nav play";gap:12px 20px;
   padding:max(14px,env(safe-area-inset-top)) max(20px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(20px,env(safe-area-inset-left));
-  background:radial-gradient(70% 80% at 50% 52%,rgba(2,8,9,.12),rgba(2,8,9,.55) 60%,rgba(2,8,9,.9));-webkit-backdrop-filter:blur(7px) saturate(1.15);backdrop-filter:blur(7px) saturate(1.15)}
+  background:radial-gradient(60% 70% at 50% 50%,rgba(2,8,9,.08),rgba(2,8,9,.5) 62%,rgba(2,8,9,.9));-webkit-backdrop-filter:blur(7px) saturate(1.15);backdrop-filter:blur(7px) saturate(1.15)}
 .lb-sprite{position:absolute;width:0;height:0;overflow:hidden}
-.lobby :is(.lb-me,.lb-atp,.lb-icon,.railbtn,.lb-modebtn){background:var(--lb-glass);border:1px solid var(--lb-edge);box-shadow:var(--lb-hi),var(--lb-drop);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);transition:transform .12s cubic-bezier(.3,.7,.4,1),border-color .15s}
-.lobby :is(.lb-me,.lb-atp,.lb-icon,.railbtn,.lb-event,.lb-modebtn,.lb-switch):active{transform:translateY(1px) scale(.94)}
-@media (hover:hover){.lobby :is(.lb-me,.lb-atp,.lb-icon,.railbtn,.lb-modebtn):hover{border-color:rgba(170,235,225,.34)}}
-/* top bar */
-.lobby .lb-top{grid-template-columns:1fr auto 1fr;gap:12px;min-height:46px}
-.lobby .lb-me{position:relative;width:46px;height:46px;padding:0;border-radius:50%;display:grid;place-items:center}
-.lobby .lb-me canvas{width:40px;height:40px;background:none}
-.lobby .lb-me-txt{display:none}
-.lobby .lb-me::after{content:"";position:absolute;right:-3px;bottom:-3px;width:18px;height:18px;border-radius:50%;box-shadow:0 0 0 2px #071719;background:var(--ink) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23071719' stroke-width='2.8' stroke-linecap='round'%3E%3Ccircle cx='12' cy='8.5' r='4'/%3E%3Cpath d='M4.5 21c1.4-3.9 4.3-5.8 7.5-5.8s6.1 1.9 7.5 5.8'/%3E%3C/svg%3E") center/11px no-repeat}
-.lobby .lb-brand{font:800 28px/1 var(--display);letter-spacing:-.05em;background:linear-gradient(180deg,#fff 25%,#93d6c4);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 14px rgba(95,224,168,.22))}
-.lobby .lb-event{height:46px;box-sizing:border-box;padding:0 18px 0 6px;gap:9px;border-radius:999px;border:1px solid rgba(255,150,60,.55);background:linear-gradient(180deg,rgba(255,150,50,.26),rgba(130,50,210,.2)),rgba(14,8,18,.74);box-shadow:inset 0 1px 0 rgba(255,220,180,.22),0 8px 26px -10px rgba(255,120,30,.5);animation:lbEvGlow 3s ease-in-out infinite;transition:transform .12s;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
-.lb-pumpkin{width:34px;height:34px;flex:none;filter:drop-shadow(0 0 7px rgba(255,140,40,.65))}
-.lobby .lb-event span{display:grid;gap:4px;text-align:left}
-.lobby .lb-event b{font:800 15px/1 var(--display);letter-spacing:-.01em;color:#ffb469}
-.lobby .lb-event small{display:flex;align-items:center;gap:4px;font:600 10.5px/1 var(--mono);letter-spacing:.02em;color:rgba(255,226,200,.75)}
-.lobby .lb-event small::before{content:"";width:10px;height:10px;border-radius:50%;box-sizing:border-box;border:1.5px solid currentColor;background:linear-gradient(currentColor,currentColor) 50% 2px/1.5px 3px no-repeat,linear-gradient(currentColor,currentColor) 3.5px 4.2px/2.5px 1.5px no-repeat;opacity:.8}
-@keyframes lbEvGlow{0%,100%{box-shadow:inset 0 1px 0 rgba(255,220,180,.22),0 8px 26px -12px rgba(255,120,30,.4)}50%{box-shadow:inset 0 1px 0 rgba(255,220,180,.22),0 8px 30px -6px rgba(255,120,30,.68)}}
-.lobby .lb-right{gap:10px}
-.lobby .lb-atp{height:46px;box-sizing:border-box;padding:0 6px 0 11px;gap:8px;border-radius:999px;border-color:rgba(242,177,52,.38);color:#ffd77a;font:800 17px/1 var(--display);letter-spacing:-.01em}
+.lobby :is(.lb-atp,.lb-icon,.lb-modebtn,.lb-nav,.lb-feat){background:var(--lb-glass);border:1px solid var(--lb-edge);box-shadow:var(--lb-hi),var(--lb-drop);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.lobby :is(.lb-atp,.lb-modebtn,.lb-switch,.lb-feat,.lb-tab){transition:transform .12s cubic-bezier(.3,.7,.4,1),border-color .15s,background-color .15s}
+.lobby :is(.lb-atp,.lb-modebtn,.lb-switch,.lb-tab):active{transform:translateY(1px) scale(.94)}
+.lobby .lb-feat:active{transform:scale(.97)}
+@media (hover:hover){.lobby :is(.lb-atp,.lb-modebtn,.lb-feat):hover{border-color:rgba(170,235,225,.34)}.lb-tab:hover{background:rgba(255,255,255,.06)}}
+/* top: player card, currency, settings */
+.lobby .lb-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;min-width:0}
+.lb-pcard{position:relative;flex:none;width:min(248px,100%);height:62px;--tc:#c4d0da;--tc1:#f2f7fb;--tc2:#6f7f8c}
+.lb-pcard[data-tier=Bronze]{--tc:#e6ab7c;--tc1:#f8cba3;--tc2:#8a4f27}.lb-pcard[data-tier=Gold]{--tc:#f6c04e;--tc1:#ffe58f;--tc2:#a86c0c}
+.lb-pcard[data-tier=Platinum]{--tc:#8fe3e0;--tc1:#d2fffc;--tc2:#2a8a87}.lb-pcard[data-tier=Diamond]{--tc:#9ac4ff;--tc1:#e0edff;--tc2:#3f6fd0}.lb-pcard[data-tier=Legend]{--tc:#ff7aa0;--tc1:#ffc2d3;--tc2:#a3184a}
+.lobby .lb-me{position:absolute;inset:0;width:100%;height:100%;max-width:none;box-sizing:border-box;display:flex;align-items:center;justify-content:flex-start;gap:11px;padding:0 14px 0 7px;border-radius:21px;border:1px solid var(--lb-edge);background:linear-gradient(100deg,color-mix(in srgb,var(--tc) 14%,transparent),transparent 55%),var(--lb-glass);box-shadow:var(--lb-hi),var(--lb-drop);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);color:var(--ink);text-align:left;transition:transform .12s}
+.lobby .lb-me:active{transform:scale(.97)}
+.lobby .lb-me::after{display:none}
+.lb-ava{flex:none;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 50% 38%,rgba(255,255,255,.1),rgba(0,0,0,.45));box-shadow:0 0 0 2px var(--tc),0 0 16px -3px var(--tc)}
+.lobby .lb-me canvas{width:42px;height:42px;border-radius:50%;background:none}
+.lobby .lb-me-txt{display:grid;align-content:center;min-width:0;padding-top:24px}
+.lobby .lb-me-txt>b{display:none}
+.lobby .lb-me-sub{display:flex;align-items:center;gap:6px;font:inherit;color:inherit}
+.lb-crest{width:16px;height:18px;flex:none;filter:drop-shadow(0 1px 4px color-mix(in srgb,var(--tc) 50%,transparent))}
+.lb-crest .s1{stop-color:var(--tc1)}.lb-crest .s2{stop-color:var(--tc2)}.lb-crest .o{fill:url(#lbgCrest)}.lb-crest .i{fill:rgba(3,12,14,.55)}.lb-crest .g{fill:var(--tc1)}
+.lobby .lb-me-sub .tier{font:700 10px/1 var(--mono);letter-spacing:.13em;text-transform:uppercase;color:var(--tc)}
+.lb-rt{font:800 14px/1 var(--display);letter-spacing:-.01em;color:var(--ink);font-variant-numeric:tabular-nums}
+.lb-pbar{position:absolute;left:68px;right:16px;bottom:8px;height:3px;border-radius:2px;background:rgba(255,255,255,.09);overflow:hidden}
+.lb-pbar i{display:block;height:100%;width:0;border-radius:2px;background:linear-gradient(90deg,var(--tc2),var(--tc1));transition:width .5s}
+.lb-name{position:absolute;z-index:1;left:62px;top:7px;max-width:calc(100% - 72px);box-sizing:border-box;display:inline-flex;align-items:center;gap:6px;padding:2px 6px;border-radius:9px;cursor:text;font:800 17px/1.2 var(--display);letter-spacing:-.02em;transition:background .15s,box-shadow .15s}
+@media (hover:hover){.lb-name:hover{background:rgba(255,255,255,.06)}}
+.lb-name:focus-within{background:rgba(2,8,9,.85);box-shadow:inset 0 0 0 1.5px rgba(255,92,138,.7)}
+.lobby .lb-name input[type=text]{width:7em;min-width:1.5em;max-width:140px;flex:none;background:none;border:0;border-radius:0;padding:0;font:inherit;letter-spacing:inherit;color:var(--ink);outline:none}
+.lobby .lb-name input[type=text]::placeholder{color:rgba(220,239,233,.62)}
+.lb-measure{position:absolute;left:0;top:0;visibility:hidden;white-space:pre;pointer-events:none}
+.lb-name svg{width:13px;height:13px;flex:none;fill:none;stroke:var(--muted);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.lobby .lb-right{display:flex;align-items:center;gap:10px}
+.lobby .lb-atp{height:46px;box-sizing:border-box;padding:0 6px 0 11px;gap:8px;border-radius:999px;border-color:rgba(242,177,52,.4);color:#ffd77a;font:800 17px/1 var(--display);letter-spacing:-.01em}
 .lobby .lb-atp i{width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 36% 30%,#fff4c8 0 7%,#ffd660 24%,#f2a91f 62%,#a8650c);box-shadow:inset 0 0 0 2px rgba(255,236,170,.35),0 0 12px rgba(242,177,52,.5)}
 .lobby .lb-atp span{width:32px;height:32px;background:linear-gradient(180deg,#ffdc78,#f2a91f);color:#2a1700;box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 2px 0 #9c5f08}
 .lobby .lb-atp span svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:3.2;stroke-linecap:round}
 .lobby .lb-icon{width:46px;height:46px;border-radius:50%}
 .lobby .lb-icon svg{width:22px;height:22px;stroke-width:1.8}
-/* icon buttons */
-.lobby .lb-rail{justify-self:start;align-self:center;gap:12px}
-.lobby .railbtn{width:58px;height:58px;border-radius:19px;gap:0;color:var(--ink)}
-.lobby .railbtn svg{width:27px;height:27px;stroke-width:1.8}
+/* feature cards */
+.lb-feed{grid-area:feed;align-self:start;display:flex;flex-direction:column;gap:10px;min-width:0;min-height:0}
+.lb-feat{position:relative;overflow:hidden;appearance:none;display:block;width:100%;box-sizing:border-box;padding:0;border-radius:20px;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.lb-feat .lb-art{position:absolute;right:-14%;top:44%;width:66%;height:auto;aspect-ratio:1;transform:translateY(-50%);filter:drop-shadow(0 8px 14px rgba(0,0,0,.55));animation:lbBob 4.5s ease-in-out infinite;pointer-events:none}
+.lobby .lb-ev{height:132px;border-color:rgba(255,150,60,.55);background:radial-gradient(70% 90% at 82% 42%,rgba(255,130,40,.42),transparent 62%),radial-gradient(60% 60% at 10% 100%,rgba(140,60,220,.35),transparent 70%),linear-gradient(155deg,#3b1650,#150919 72%);box-shadow:inset 0 1px 0 rgba(255,220,180,.22),0 12px 28px -10px rgba(255,110,30,.55)}
+.lb-left{position:absolute;left:10px;top:10px;display:flex;align-items:center;gap:5px;height:24px;box-sizing:border-box;padding:0 9px 0 7px;border-radius:999px;background:rgba(10,4,14,.62);box-shadow:inset 0 0 0 1px rgba(255,170,90,.35);font:700 11px/1 var(--mono);color:#ffd2a8;font-variant-numeric:tabular-nums}
+.lb-left i{width:11px;height:11px;border-radius:50%;box-sizing:border-box;border:1.6px solid currentColor;background:linear-gradient(currentColor,currentColor) 50% 1.8px/1.6px 3.4px no-repeat,linear-gradient(currentColor,currentColor) 3.6px 4.4px/2.6px 1.6px no-repeat}
+.lb-ft{position:absolute;left:12px;bottom:11px;right:12px;display:flex;align-items:center;gap:7px;min-width:0}
+.lb-ft b{min-width:0;font:800 18px/1.05 var(--display);letter-spacing:-.025em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 10px rgba(0,0,0,.6)}
+.lb-ev .lb-ft b{color:#ffb469}
+.lb-pumpkin{width:26px;height:26px;flex:none;filter:drop-shadow(0 0 6px rgba(255,140,40,.6))}
+.lobby .lb-sk{height:132px;border-color:rgba(154,140,255,.45);background:radial-gradient(70% 90% at 82% 42%,rgba(154,140,255,.32),transparent 62%),linear-gradient(155deg,#1d1840,#0a0f1c 72%)}
+.lb-tag{position:absolute;left:10px;top:10px;padding:5px 9px;border-radius:999px;background:var(--violet);color:#120b2e;font:800 10px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase}
+.lb-sk .lb-ft{flex-direction:column;align-items:flex-start;gap:5px}
+.lb-price{display:flex;align-items:center;gap:5px;font:800 13px/1 var(--display);color:#ffd77a}.lb-price i{width:13px;height:13px;border-radius:50%;background:radial-gradient(circle at 36% 30%,#fff4c8 0 7%,#ffd660 24%,#f2a91f 62%,#a8650c)}
+.lobby .lb-ach{height:62px;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:11px;padding:0 12px}
+.lb-medal{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(160deg,#ffe58f,#c98a12);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.6),inset 0 -2px 0 rgba(0,0,0,.15),0 0 16px -3px rgba(242,177,52,.65)}
+.lb-medal svg{width:21px;height:21px;fill:#3d2600}
+.lb-achtx{display:grid;gap:4px;min-width:0;padding-bottom:4px}.lb-achtx b{font:800 17px/1 var(--display);font-variant-numeric:tabular-nums}.lb-achtx small{font:600 10px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb-achbar{position:absolute;left:61px;right:14px;bottom:9px;height:3px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden}.lb-achbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#c98a12,#ffe58f)}
+/* centre: the cell on a lit pedestal */
+.lobby .lb-hero{grid-area:hero;display:grid;grid-template-columns:minmax(0,1fr);place-items:center;min-width:0;min-height:0}
+.lobby .lb-hero::before{content:"";position:absolute;left:50%;top:calc(50% - var(--cell)*1.02);height:calc(var(--cell)*1.62);width:calc(var(--cell)*1.7);transform:translateX(-50%);pointer-events:none;background:linear-gradient(180deg,rgba(255,190,210,0),rgba(255,150,185,.055) 48%,rgba(255,92,138,.11) 82%,rgba(255,92,138,0));clip-path:polygon(42% 0,58% 0,100% 100%,0 100%);filter:blur(14px)}
+.lobby .lb-hero{position:relative}
+.lobby{--cell:min(48vh,26vw,330px)}
+.lobby .hero-cell{width:var(--cell);animation:none;margin:0 0 6%}
+.lobby .hero-cell::before{inset:-30%;background:radial-gradient(circle,rgba(255,92,138,.34),rgba(255,92,138,.1) 40%,rgba(255,92,138,0) 66%)}
+.lobby .hero-cell::after{content:"";position:absolute;z-index:-1;left:-16%;right:-16%;bottom:-11%;height:26%;border-radius:50%;pointer-events:none;
+  background:radial-gradient(36% 40% at 50% 46%,rgba(0,0,0,.5),rgba(0,0,0,0) 100%),radial-gradient(closest-side,rgba(255,92,138,.24),rgba(255,92,138,.08) 70%,rgba(255,150,180,.45) 94%,rgba(255,92,138,0) 100%);
+  box-shadow:0 0 0 6px rgba(255,92,138,.06),0 0 0 14px rgba(255,92,138,.03),0 0 60px -4px rgba(255,92,138,.55)}
+.lobby .hero-cell canvas,.lobby .hero-edit{animation:lbBob 4.5s ease-in-out infinite}
+@keyframes lbBob{50%{translate:0 -8px}}
+.lobby .hero-edit{left:auto;right:2%;bottom:5%;transform:none;z-index:2;width:42px;height:42px;padding:0;gap:0;justify-content:center;border-radius:50%;background:linear-gradient(180deg,#fff,#cde5de);color:#0a1a1c;box-shadow:inset 0 -2px 0 rgba(0,0,0,.12),0 6px 16px rgba(0,0,0,.5),0 0 0 3px rgba(2,8,9,.7);transition:transform .12s}
+.lobby .hero-edit svg{width:19px;height:19px;stroke-width:2.1}
+.lobby .hero-cell:active .hero-edit{transform:scale(.9)}
+/* bottom tab bar */
+.lb-nav{grid-area:nav;justify-self:start;align-self:end;display:flex;gap:2px;padding:5px;border-radius:24px}
+.lb-tab{appearance:none;border:0;background:none;width:70px;height:56px;border-radius:19px;display:grid;place-items:center;align-content:center;gap:5px;color:var(--ink);font:700 11px/1 var(--display);letter-spacing:.01em;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.lb-tab span{color:rgba(220,239,233,.8)}
+.lb-tab svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .lobby #lookBtn svg{color:#ff8db0;filter:drop-shadow(0 0 7px rgba(255,92,138,.5))}
 .lobby #shopBtn svg{color:#ffc95c;filter:drop-shadow(0 0 7px rgba(242,177,52,.45))}
 .lobby #rankBtn svg{color:#b6abff;filter:drop-shadow(0 0 7px rgba(154,140,255,.5))}
-/* hero: the cell on its dish, name, rank */
-.lobby .lb-hero{grid-template-columns:minmax(0,1fr);justify-items:center;align-content:center;gap:12px;text-align:center;min-width:0}
-.lobby .hero-cell{width:clamp(150px,40vh,300px);animation:none;margin-bottom:22px}
-.lobby .hero-cell::before{inset:-26%;background:radial-gradient(circle,rgba(255,92,138,.32),rgba(255,92,138,.1) 40%,rgba(255,92,138,0) 66%)}
-.lobby .hero-cell::after{content:"";position:absolute;z-index:-1;left:-12%;right:-12%;bottom:-9%;height:22%;border-radius:50%;pointer-events:none;
-  background:radial-gradient(38% 42% at 50% 46%,rgba(0,0,0,.5),rgba(0,0,0,0) 100%),radial-gradient(closest-side,rgba(255,92,138,.22),rgba(255,92,138,.08) 72%,rgba(255,140,175,.38) 95%,rgba(255,92,138,0) 100%);
-  box-shadow:0 0 0 7px rgba(255,92,138,.05),0 0 46px -4px rgba(255,92,138,.5)}
-.lobby .hero-cell canvas,.lobby .hero-edit{animation:lbBob 4.5s ease-in-out infinite}
-@keyframes lbBob{50%{translate:0 -8px}}
-.lobby .hero-edit{left:auto;right:1%;bottom:4%;transform:none;z-index:2;width:42px;height:42px;padding:0;gap:0;justify-content:center;border-radius:50%;background:linear-gradient(180deg,#fff,#cde5de);color:#0a1a1c;box-shadow:inset 0 -2px 0 rgba(0,0,0,.12),0 6px 16px rgba(0,0,0,.5),0 0 0 3px rgba(2,8,9,.7);transition:transform .12s}
-.lobby .hero-edit svg{width:19px;height:19px;stroke-width:2.1}
-.lobby .hero-cell:active .hero-edit{transform:scale(.9)}
-.lobby .hero-id{justify-items:center;gap:10px;max-width:none;width:100%;min-width:0}
-.lb-name{position:relative;display:inline-flex;align-items:center;gap:8px;max-width:100%;box-sizing:border-box;padding:2px 12px 4px 16px;border-radius:14px;cursor:text;font:800 30px/1.15 var(--display);letter-spacing:-.035em;transition:background .15s,box-shadow .15s}
-@media (hover:hover){.lb-name:hover{background:rgba(255,255,255,.05)}}
-.lb-name:focus-within{background:rgba(255,255,255,.07);box-shadow:inset 0 0 0 1.5px rgba(255,92,138,.65)}
-.lobby .lb-name input[type=text]{width:7.5em;min-width:1.5em;max-width:calc(var(--lb-hw) - 60px);flex:none;background:none;border:0;border-radius:0;padding:0;font:inherit;letter-spacing:inherit;color:var(--ink);text-align:center;outline:none;text-shadow:0 2px 16px rgba(0,0,0,.6)}
-.lobby .lb-name input[type=text]::placeholder{color:rgba(220,239,233,.62)}
-.lb-measure{position:absolute;left:0;top:0;visibility:hidden;white-space:pre;pointer-events:none}
-.lb-name svg{width:18px;height:18px;flex:none;fill:none;stroke:var(--muted);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.lobby .hero-rank{appearance:none;display:grid;grid-template-columns:auto;justify-items:center;gap:7px;width:auto;min-width:150px;box-sizing:border-box;padding:8px 16px 9px;border-radius:999px;border:1px solid var(--lb-edge);background:var(--lb-glass);box-shadow:var(--lb-hi),var(--lb-drop);color:var(--ink);font:inherit;cursor:pointer;transition:transform .12s;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
-.lobby .hero-rank:active{transform:scale(.95)}
-.lobby .hero-rank .ht{display:flex;align-items:center;gap:9px;font:800 17px/1 var(--display);letter-spacing:-.01em;color:var(--ink);font-variant-numeric:tabular-nums}
-.lobby .hero-rank .ht .tier{display:flex;align-items:center;gap:7px;margin:0;font:700 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase}
-.lobby .hero-rank .ht .tier::before{content:"";width:15px;height:17px;background:linear-gradient(160deg,rgba(255,255,255,.85),currentColor 58%);clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}
-.lobby .hero-rank .next{display:none}
-.lobby .hero-rank .tierbar{display:block;width:100%;height:4px;border-radius:2px;background:rgba(255,255,255,.09)}
-.lobby .hero-rank .tierbar i{box-shadow:0 0 8px rgba(255,92,138,.6)}
-/* play: mode chip and the big button */
-.lobby .lb-play{grid-area:play;justify-self:end;align-self:end;display:grid;gap:10px;width:min(100%,270px);min-width:0;padding:0;border:0;border-radius:0;background:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
-:is(.lb-play,.lb-sheet)[data-mode=ranked],.lb-mcard[data-m=ranked]{--mc:var(--lb-gold);--mc-edge:rgba(255,207,92,.45);--mc-glow:rgba(255,207,92,.34);--mc-bg:rgba(255,207,92,.15)}
-:is(.lb-play,.lb-sheet)[data-mode=casual],.lb-mcard[data-m=casual]{--mc:var(--lb-mint);--mc-edge:rgba(95,224,168,.45);--mc-glow:rgba(95,224,168,.3);--mc-bg:rgba(95,224,168,.14)}
-:is(.lb-play,.lb-sheet)[data-mode=nearby],.lb-mcard[data-m=nearby]{--mc:var(--lb-blue);--mc-edge:rgba(108,184,255,.48);--mc-glow:rgba(108,184,255,.32);--mc-bg:rgba(108,184,255,.15)}
+.lobby #navProf svg{color:#7fe9c0;filter:drop-shadow(0 0 7px rgba(95,224,168,.45))}
+.lb-tab:active{background:rgba(255,255,255,.09)}
+/* PLAY, with its mode tab */
+.lobby .lb-play{grid-area:play;justify-self:end;align-self:end;display:grid;gap:8px;width:100%;min-width:0;padding:0;border:0;border-radius:0;background:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+:is(.lb-play,.lb-msel)[data-mode=ranked],.lb-mcard[data-m=ranked]{--mc:var(--lb-gold);--mc-edge:rgba(255,207,92,.45);--mc-glow:rgba(255,207,92,.34);--mc-bg:rgba(255,207,92,.15)}
+:is(.lb-play,.lb-msel)[data-mode=casual],.lb-mcard[data-m=casual]{--mc:var(--lb-mint);--mc-edge:rgba(95,224,168,.45);--mc-glow:rgba(95,224,168,.3);--mc-bg:rgba(95,224,168,.14)}
+:is(.lb-play,.lb-msel)[data-mode=nearby],.lb-mcard[data-m=nearby]{--mc:var(--lb-blue);--mc-edge:rgba(108,184,255,.48);--mc-glow:rgba(108,184,255,.32);--mc-bg:rgba(108,184,255,.15)}
 .lb-moderow{display:flex;gap:8px;min-width:0}
-.lb-modebtn{appearance:none;flex:1;min-width:0;height:52px;box-sizing:border-box;padding:0 12px 0 8px;display:flex;align-items:center;gap:10px;border-radius:17px;color:var(--ink);cursor:pointer;font:800 16px/1 var(--display);letter-spacing:-.01em}
-.lobby .lb-modebtn{border-color:var(--mc-edge)}
-.lb-modebtn .ic{position:relative;flex:none;width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(160deg,var(--mc-bg),rgba(255,255,255,.02));box-shadow:inset 0 0 0 1px var(--mc-edge)}
-.lb-modebtn .ic svg{grid-area:1/1;width:21px;height:21px;fill:none;stroke:var(--mc);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 5px var(--mc-glow));display:none}
+.lb-modebtn{appearance:none;flex:1;min-width:0;height:48px;box-sizing:border-box;padding:0 12px 0 7px;display:flex;align-items:center;gap:10px;border-radius:16px;color:var(--ink);cursor:pointer;font:800 15px/1 var(--display);letter-spacing:.06em;text-transform:uppercase}
+.lobby .lb-modebtn{border-color:var(--mc-edge);background:linear-gradient(100deg,var(--mc-bg),transparent 70%),var(--lb-glass)}
+.lb-modebtn .ic{position:relative;flex:none;width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:linear-gradient(160deg,var(--mc-bg),rgba(255,255,255,.02));box-shadow:inset 0 0 0 1px var(--mc-edge)}
+.lb-modebtn .ic svg{grid-area:1/1;width:20px;height:20px;fill:none;stroke:var(--mc);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 5px var(--mc-glow));display:none}
 .lb-play[data-mode=ranked] .m-ranked,.lb-play[data-mode=casual] .m-casual,.lb-play[data-mode=nearby] .m-nearby{display:block}
-.lb-modebtn b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:inherit}
+.lb-modebtn b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:inherit;color:var(--mc)}
 .lb-modebtn .chev{flex:none;width:18px;height:18px;margin-left:auto;fill:none;stroke:var(--muted);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
 .lb-netdot{position:absolute;right:-3px;top:-3px;width:9px;height:9px;border-radius:50%;background:#5d7470;box-shadow:0 0 0 2px #0b1618;display:none}
 .lb-play:is([data-mode=ranked],[data-mode=nearby]) .lb-netdot{display:block}
@@ -608,118 +633,112 @@ body:not(.playing) #tip{display:none}
 .lb-play[data-mode=ranked][data-net=wait] .lb-netdot,.lb-play[data-mode=nearby][data-peers="0"] .lb-netdot{background:var(--amber);animation:lbBlink 1s ease-in-out infinite}
 .lb-play[data-mode=ranked]:is([data-net=off],[data-net=full]) .lb-netdot{background:#ff6b78}
 @keyframes lbBlink{50%{opacity:.3}}
-.lb-pips{display:none;align-items:flex-end;gap:3px;height:16px;flex:none}
+.lb-pips{display:none;align-items:flex-end;gap:3px;height:15px;flex:none}
 .lb-play[data-mode=casual] .lb-pips{display:flex}
-.lb-pips i{width:4px;border-radius:2px;background:rgba(255,255,255,.14)}.lb-pips i:nth-child(1){height:7px}.lb-pips i:nth-child(2){height:10px}.lb-pips i:nth-child(3){height:13px}.lb-pips i:nth-child(4){height:16px}
+.lb-pips i{width:4px;border-radius:2px;background:rgba(255,255,255,.14)}.lb-pips i:nth-child(1){height:6px}.lb-pips i:nth-child(2){height:9px}.lb-pips i:nth-child(3){height:12px}.lb-pips i:nth-child(4){height:15px}
 .lb-play[data-k=easy] .lb-pips i:nth-child(-n+1),.lb-play[data-k=normal] .lb-pips i:nth-child(-n+2),.lb-play[data-k=hard] .lb-pips i:nth-child(-n+3),.lb-play[data-k=expert] .lb-pips i{background:var(--pk)}
 .lb-play[data-k=easy]{--pk:var(--lb-mint)}.lb-play[data-k=normal]{--pk:#dcefe9}.lb-play[data-k=hard]{--pk:#ffc04d}.lb-play[data-k=expert]{--pk:#ff7aa0}
-.lb-switch{appearance:none;flex:none;display:none;align-items:center;justify-content:center;gap:0;width:62px;height:52px;box-sizing:border-box;padding:0 2px 0 6px;border-radius:17px;border:1px solid rgba(95,224,168,.5);background:linear-gradient(180deg,rgba(95,224,168,.24),rgba(95,224,168,.08)),rgba(6,19,21,.74);box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 0 20px -6px rgba(95,224,168,.5);color:#8cf3c8;cursor:pointer;transition:transform .12s}
-.lb-play[data-mode=ranked]:is([data-net=off],[data-net=full]) .lb-switch{display:flex}
+.lb-switch{appearance:none;flex:none;display:none;align-items:center;justify-content:center;gap:0;width:60px;height:48px;box-sizing:border-box;padding:0 2px 0 6px;border-radius:16px;border:1px solid rgba(95,224,168,.5);background:linear-gradient(180deg,rgba(95,224,168,.24),rgba(95,224,168,.08)),rgba(6,19,21,.76);box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 0 20px -6px rgba(95,224,168,.5);color:#8cf3c8;cursor:pointer}
+.lb-play[data-mode=ranked]:is([data-net=off],[data-net=full],[data-slow="1"]) .lb-switch{display:flex}
 .lb-switch svg{width:22px;height:22px;flex:none;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 .lb-switch .chev{width:15px;height:15px;stroke-width:2.6}
 .lobby .lb-play .lb-go{display:none}
 .lb-play[data-mode=casual] #practiceBtn,.lb-play[data-mode=nearby] #go,.lb-play[data-mode=ranked][data-net=live] #go,.lb-play[data-mode=ranked]:not([data-net=live]) #lbWait{display:flex}
-.lobby .lb-go{position:relative;overflow:hidden;appearance:none;border:0;width:100%;height:72px;box-sizing:border-box;padding:0 18px;margin:0 0 5px;border-radius:22px;align-items:center;justify-content:center;gap:13px;cursor:pointer;
-  font:800 31px/1 var(--display);letter-spacing:-.025em;color:#2b0715;text-shadow:0 1px 0 rgba(255,255,255,.28);
-  background:linear-gradient(180deg,rgba(255,255,255,.32),rgba(255,255,255,0) 56%),linear-gradient(180deg,#ff8db0,#ff5c8a 52%,#ee3f78);
-  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.65),inset 0 -3px 0 rgba(150,10,60,.28),0 5px 0 #a81d52,0 20px 40px -10px rgba(255,80,140,.75);
+.lobby .lb-go{position:relative;overflow:hidden;appearance:none;border:0;width:100%;height:76px;box-sizing:border-box;padding:0 18px;margin:0 0 5px;border-radius:22px;align-items:center;justify-content:center;gap:14px;cursor:pointer;
+  font:800 32px/1 var(--display);letter-spacing:.05em;text-transform:uppercase;color:#2b0715;text-shadow:0 1px 0 rgba(255,255,255,.3);
+  background:linear-gradient(180deg,rgba(255,255,255,.34),rgba(255,255,255,0) 54%),linear-gradient(180deg,#ff94b5,#ff5c8a 50%,#ec3a74);
+  box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.22),inset 0 2px 0 rgba(255,255,255,.6),inset 0 -3px 0 rgba(150,10,60,.3),0 5px 0 #a51b50,0 22px 44px -10px rgba(255,80,140,.8);
   transition:transform .09s ease-out,box-shadow .09s ease-out,filter .15s;-webkit-tap-highlight-color:transparent}
-.lobby .lb-go::before{content:"";flex:none;width:38px;height:38px;border-radius:50%;background:#2b0715 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M8 5.8v12.4L18.5 12z' fill='%23ff7aa0' stroke='%23ff7aa0' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E") 58% 50%/16px no-repeat;box-shadow:0 1px 0 rgba(255,255,255,.4),inset 0 -1px 0 rgba(255,255,255,.1)}
+.lobby .lb-go::before{content:"";flex:none;width:36px;height:36px;border-radius:50%;background:#2b0715 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M8 5.8v12.4L18.5 12z' fill='%23ff7aa0' stroke='%23ff7aa0' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E") 58% 50%/15px no-repeat;box-shadow:0 1px 0 rgba(255,255,255,.4),inset 0 -1px 0 rgba(255,255,255,.1)}
 .lobby .lb-go::after{content:"";position:absolute;top:0;bottom:0;left:-40%;width:30%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.45),transparent);transform:skewX(-20deg);animation:lbShine 4.5s ease-in-out 1.5s infinite;pointer-events:none}
 @keyframes lbShine{0%,62%{transform:skewX(-20deg) translateX(0)}100%{transform:skewX(-20deg) translateX(520%)}}
 @media (hover:hover){.lobby .lb-go:not(:disabled):hover{filter:brightness(1.06)}}
-.lobby .lb-go:not(:disabled):active{transform:translateY(4px);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.5),inset 0 -2px 0 rgba(150,10,60,.28),0 1px 0 #a81d52,0 8px 18px -8px rgba(255,80,140,.6)}
-.lobby #go.queued{flex-direction:column;gap:5px;font-size:19px;color:var(--ink);text-shadow:none;background:linear-gradient(90deg,rgba(154,140,255,.45) 0 var(--sp,100%),rgba(30,24,52,.96) var(--sp,100%));box-shadow:inset 0 0 0 1.5px rgba(170,158,255,.75),inset 0 1px 0 rgba(255,255,255,.15),0 5px 0 #352a6e,0 16px 30px -12px rgba(154,140,255,.6);transition:background .45s linear,transform .09s}
+.lobby .lb-go:not(:disabled):active{transform:translateY(4px);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.2),inset 0 2px 0 rgba(255,255,255,.5),inset 0 -2px 0 rgba(150,10,60,.3),0 1px 0 #a51b50,0 8px 18px -8px rgba(255,80,140,.6)}
+.lobby #go.queued{flex-direction:column;gap:5px;font-size:18px;letter-spacing:0;text-transform:none;color:var(--ink);text-shadow:none;background:linear-gradient(90deg,rgba(154,140,255,.45) 0 var(--sp,100%),rgba(30,24,52,.96) var(--sp,100%));box-shadow:inset 0 0 0 1.5px rgba(170,158,255,.75),inset 0 1px 0 rgba(255,255,255,.15),0 5px 0 #352a6e,0 16px 30px -12px rgba(154,140,255,.6);transition:background .45s linear,transform .09s}
 .lobby #go.queued::before{display:none}
 .lobby #go.queued::after{content:'Tap to cancel';white-space:nowrap;position:static;width:auto;background:none;transform:none;animation:none;font:500 10.5px/1.2 var(--mono);letter-spacing:.02em;color:rgba(225,220,255,.75)}
-.lobby .lb-go.lb-off{cursor:default;gap:11px;font-size:19px;letter-spacing:-.01em;color:rgba(220,239,233,.62);text-shadow:none;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03)),rgba(6,19,21,.7);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1),inset 0 1px 0 rgba(255,255,255,.07),0 5px 0 rgba(0,0,0,.4);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.lobby .lb-go.lb-off{cursor:default;gap:11px;font-size:18px;letter-spacing:-.01em;text-transform:none;color:rgba(220,239,233,.62);text-shadow:none;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03)),rgba(6,19,21,.76);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1),inset 0 1px 0 rgba(255,255,255,.07),0 5px 0 rgba(0,0,0,.4);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
 .lobby .lb-go.lb-off::after{display:none}
 .lobby .lb-go.lb-off::before{width:21px;height:21px;border-radius:0;box-shadow:none;background:currentColor;-webkit-mask:var(--lb-nowifi) center/contain no-repeat;mask:var(--lb-nowifi) center/contain no-repeat}
 .lb-play[data-net=wait] .lb-go.lb-off::before{-webkit-mask:none;mask:none;background:none;width:16px;height:16px;border-radius:50%;border:2.5px solid rgba(220,239,233,.2);border-top-color:rgba(220,239,233,.85);animation:lbSpin .8s linear infinite}
 @keyframes lbSpin{to{transform:rotate(360deg)}}
-/* the mode sheet */
-.lb-sheet{position:absolute;inset:0;z-index:10;display:grid;place-items:center;box-sizing:border-box;padding:max(12px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));background:rgba(2,8,9,.66);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);animation:ov .22s ease-out}
-.lb-sheet-box{width:min(760px,100%);max-height:100%;overflow:auto;overscroll-behavior:contain;box-sizing:border-box;display:grid;gap:14px;padding:14px 16px 18px;border-radius:30px;border:1px solid var(--lb-edge);background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.015) 40%),rgba(5,16,18,.92);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 40px 80px -20px rgba(0,0,0,.9);animation:up .32s cubic-bezier(.2,.8,.2,1)}
-.lb-sheet-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-left:6px}
-.lb-sheet-top h2{margin:0;font:800 24px/1 var(--display);letter-spacing:-.035em}
-.lb-cards{--n:2;display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:12px}
-.lb-mcard{position:relative;display:grid;grid-template-rows:minmax(0,1fr) 44px;gap:12px;min-height:200px;box-sizing:border-box;padding:18px 14px 14px;border-radius:24px;border:1px solid var(--lb-edge);
-  background:radial-gradient(120% 75% at 50% 0%,var(--mc-bg),transparent 72%),linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.01)),rgba(4,14,16,.8);box-shadow:inset 0 1px 0 rgba(255,255,255,.07);transition:border-color .2s,box-shadow .2s,transform .12s}
+/* mode select: a full screen of illustrated mode cards */
+.lb-msel{--mc:var(--lb-gold);position:absolute;inset:0;z-index:10;display:grid;grid-template-rows:auto minmax(0,1fr);gap:12px;box-sizing:border-box;padding:max(14px,env(safe-area-inset-top)) max(20px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(20px,env(safe-area-inset-left));
+  background:radial-gradient(70% 60% at 50% 0%,color-mix(in srgb,var(--mc) 12%,transparent),transparent 70%),linear-gradient(180deg,#030b0c,#020809);animation:ov .22s ease-out}
+.lb-msel-top{display:flex;align-items:center;gap:14px}
+.lb-msel-top h2{margin:0;font:800 26px/1 var(--display);letter-spacing:-.04em}
+.lb-cards{--n:2;display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:14px;min-height:0;width:100%;max-width:1060px;justify-self:center}
+.lb-mcard{position:relative;display:grid;grid-template-rows:minmax(0,1fr) 44px;gap:12px;min-height:0;box-sizing:border-box;padding:12px 12px 14px;border-radius:26px;border:1px solid var(--lb-edge);
+  background:radial-gradient(110% 70% at 50% 18%,var(--mc-bg),transparent 70%),linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.01)),rgba(4,14,16,.85);box-shadow:inset 0 1px 0 rgba(255,255,255,.07);transition:border-color .2s,box-shadow .2s,transform .12s;animation:up .38s cubic-bezier(.2,.8,.2,1) backwards}
+.lb-mcard:nth-child(2){animation-delay:.05s}.lb-mcard:nth-child(3){animation-delay:.1s}
 .lb-mcard:active{transform:scale(.98)}
-.lb-mcard[data-on=true]{border-color:var(--mc-edge);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 0 0 1.5px var(--mc-edge),0 0 36px -8px var(--mc-glow)}
-.lb-mcard[data-on=true]::before{content:"";position:absolute;top:12px;right:12px;width:24px;height:24px;border-radius:50%;background:var(--mc) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23081214' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12.5l4 4 8-9'/%3E%3C/svg%3E") center/14px no-repeat;box-shadow:0 0 12px var(--mc-glow)}
-.lb-mpick{appearance:none;border:0;background:none;padding:0;color:var(--ink);display:grid;justify-items:center;align-content:center;gap:6px;text-align:center;cursor:pointer;font:inherit}
+.lb-mcard[data-on=true]{border-color:var(--mc-edge);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 0 0 1.5px var(--mc-edge),0 0 44px -8px var(--mc-glow)}
+.lb-mcard[data-on=true]::before{content:"";position:absolute;z-index:1;top:14px;right:14px;width:26px;height:26px;border-radius:50%;background:var(--mc) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23081214' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12.5l4 4 8-9'/%3E%3C/svg%3E") center/15px no-repeat;box-shadow:0 0 12px var(--mc-glow)}
+.lb-mpick{appearance:none;border:0;background:none;padding:0;min-height:0;color:var(--ink);display:grid;grid-template-rows:minmax(0,1fr) auto auto;justify-items:center;gap:4px;text-align:center;cursor:pointer;font:inherit}
 .lb-mpick::after{content:"";position:absolute;inset:0;border-radius:inherit}
 .lb-mpick:focus-visible{outline:none}.lb-mcard:has(.lb-mpick:focus-visible){outline:2px solid var(--ink);outline-offset:3px}
-.lb-mic{width:64px;height:64px;margin-bottom:4px;border-radius:21px;display:grid;place-items:center;background:linear-gradient(160deg,color-mix(in srgb,var(--mc) 92%,#fff),color-mix(in srgb,var(--mc) 70%,#000));box-shadow:inset 0 1.5px 0 rgba(255,255,255,.5),inset 0 -3px 0 rgba(0,0,0,.18),0 10px 24px -8px var(--mc-glow)}
-.lb-mic svg{width:32px;height:32px;fill:none;stroke:#0a1416;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.lb-mpick b{font:800 21px/1.05 var(--display);letter-spacing:-.025em}
-.lb-mpick small{font:600 10.5px/1.2 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-.lb-mstat{display:grid;justify-items:center;align-content:center;gap:4px;min-height:40px;text-align:center;min-width:0}
+.lb-mart{width:100%;min-height:0;display:grid;place-items:center;margin-bottom:6px;border-radius:19px;background:radial-gradient(60% 70% at 50% 55%,var(--mc-bg),transparent 72%),rgba(0,0,0,.22);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05)}
+.lb-mart svg{width:100%;height:100%;max-height:180px;min-height:0;filter:drop-shadow(0 8px 16px rgba(0,0,0,.45))}
+.lb-mpick b{font:800 24px/1 var(--display);letter-spacing:-.025em}
+.lb-mpick small{font:600 10.5px/1.2 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.lb-mstat{display:grid;justify-items:center;align-content:center;gap:4px;min-width:0;text-align:center}
 .lb-mstat p{margin:0;max-width:100%}
 .lobby .lb-netline{display:flex;align-items:center;gap:8px;min-width:0;font:600 12px/1.2 var(--mono);color:var(--ink)}
 .lobby .lb-netline span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lobby .lb-netline i{width:8px;height:8px;border-radius:50%;flex:none;background:var(--dim)}
 .lobby .lb-netline.live i{background:var(--lb-mint);animation:lbPing 2s ease-out infinite}
-.lb-sheet[data-mode=nearby] .lb-netline.live i{background:var(--lb-blue);animation-name:lbPingB}
+.lb-msel[data-mode=nearby] .lb-netline.live i{background:var(--lb-blue);animation-name:lbPingB}
 @keyframes lbPing{0%{box-shadow:0 0 0 0 rgba(95,224,168,.55)}80%,100%{box-shadow:0 0 0 7px rgba(95,224,168,0)}}
 @keyframes lbPingB{0%{box-shadow:0 0 0 0 rgba(108,184,255,.55)}80%,100%{box-shadow:0 0 0 7px rgba(108,184,255,0)}}
 .lobby #roundLine{margin:0;font:500 10.5px/1.2 var(--mono);letter-spacing:0;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lb-sheet:is([data-net=off],[data-net=full],[data-net=nearby]) #lbRankStat .lb-netline,.lb-sheet[data-net=nearby] #roundLine{display:none}
+.lb-msel:is([data-net=off],[data-net=full],[data-net=nearby]) #lbRankStat .lb-netline,.lb-msel[data-net=nearby] #roundLine{display:none}
 .lb-need{display:none;align-items:center;gap:7px;font:600 12px/1.25 var(--display)!important;color:#ff9aa3}
 .lb-need::before{content:"";flex:none;width:16px;height:16px;background:currentColor;-webkit-mask:var(--lb-nowifi) center/contain no-repeat;mask:var(--lb-nowifi) center/contain no-repeat}
-.lb-sheet:is([data-net=off],[data-net=full]) .lb-need{display:flex}
+.lb-msel:is([data-net=off],[data-net=full]) .lb-need{display:flex}
 .lb-bots{position:relative;z-index:2;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px;padding:3px;border-radius:14px;background:rgba(0,0,0,.4);box-shadow:inset 0 1px 2px rgba(0,0,0,.5)}
 .lb-bots button{appearance:none;border:0;background:none;min-width:0;height:38px;padding:0 2px;border-radius:11px;color:var(--muted);font:700 12px/1 var(--display);cursor:pointer;transition:background .2s,color .2s,box-shadow .2s}
 .lb-bots button[aria-checked=true]{color:var(--k);background:linear-gradient(180deg,rgba(255,255,255,.15),rgba(255,255,255,.05));box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 3px 10px -3px rgba(0,0,0,.5)}
 .lb-bots [data-k=easy]{--k:var(--lb-mint)}.lb-bots [data-k=normal]{--k:var(--ink)}.lb-bots [data-k=hard]{--k:#ffc04d}.lb-bots [data-k=expert]{--k:#ff7aa0}
-/* landscape phones */
+/* landscape phones (the iPhone app) */
 @media (orientation:landscape) and (max-height:520px){
-  .lobby{--lb-hw:min(270px,36vw);gap:8px 16px;padding:max(10px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
-  .lobby .lb-top{min-height:44px}.lobby .lb-me,.lobby .lb-icon{width:44px;height:44px}.lobby .lb-atp,.lobby .lb-event{height:44px}.lobby .lb-me canvas{width:38px;height:38px}
-  .lobby .lb-brand{font-size:25px}
-  .lobby .lb-rail{gap:10px}.lobby .railbtn{width:52px;height:52px;border-radius:17px}.lobby .railbtn svg{width:25px;height:25px}
-  .lobby .lb-hero{gap:8px}.lobby .hero-cell{width:min(44vh,190px);margin-bottom:18px}
-  .lb-name{font-size:24px}
-  .lobby .hero-rank{padding:7px 14px 8px;gap:6px}.lobby .hero-rank .ht{font-size:15px}
-  .lobby .lb-play{gap:8px;width:min(100%,250px)}
-  .lb-modebtn{height:48px;font-size:15px;border-radius:16px}.lb-modebtn .ic{width:32px;height:32px;border-radius:11px}.lb-switch{height:48px;width:58px;border-radius:16px}
-  .lobby .lb-go{height:62px;font-size:27px;border-radius:20px}.lobby .lb-go::before{width:32px;height:32px;background-size:14px}
-  .lobby #go.queued{font-size:16px}.lobby .lb-go.lb-off{font-size:17px}
-  .lb-sheet-box{padding:12px 14px 14px;gap:10px;border-radius:26px}.lb-sheet-top h2{font-size:21px}
-  .lb-mcard{min-height:0;padding:14px 12px 12px;gap:10px;border-radius:22px}.lb-mic{width:54px;height:54px;border-radius:18px}.lb-mic svg{width:28px;height:28px}.lb-mpick b{font-size:19px}
+  .lobby{grid-template-columns:minmax(168px,196px) minmax(0,1fr) minmax(214px,240px);gap:8px 16px;padding:max(10px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+  .lb-pcard{height:56px;width:min(232px,100%)}.lb-ava{width:42px;height:42px}.lobby .lb-me canvas{width:37px;height:37px}.lobby .lb-me{gap:10px;border-radius:19px}.lobby .lb-me-txt{padding-top:21px}
+  .lb-name{left:56px;top:5px;font-size:16px}.lb-pbar{left:62px;bottom:7px}
+  .lobby .lb-atp,.lobby .lb-icon{height:44px}.lobby .lb-icon{width:44px}
+  .lb-feed{gap:8px}.lobby .lb-ev,.lobby .lb-sk{height:114px;border-radius:18px}.lobby .lb-ach{height:54px;border-radius:18px}.lb-medal{width:34px;height:34px}.lb-medal svg{width:19px;height:19px}.lb-achbar{left:57px;bottom:8px}.lb-ft b{font-size:16px}
+  .lobby{--cell:min(46vh,25vw,230px)}
+  .lb-nav{padding:4px;border-radius:21px}.lb-tab{width:62px;height:50px;border-radius:17px;gap:4px;font-size:10.5px}.lb-tab svg{width:23px;height:23px}
+  .lobby .lb-play{gap:7px}.lb-modebtn{height:44px;font-size:14px;border-radius:15px}.lb-modebtn .ic{width:30px;height:30px;border-radius:10px}.lb-switch{height:44px;width:56px;border-radius:15px}
+  .lobby .lb-go{height:64px;font-size:27px;border-radius:20px}.lobby .lb-go::before{width:31px;height:31px;background-size:13px}
+  .lobby #go.queued{font-size:16px}.lobby .lb-go.lb-off{font-size:16px}
+  .lb-msel{gap:8px;padding:max(10px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}.lb-msel-top h2{font-size:22px}
+  .lb-cards{gap:10px}.lb-mcard{padding:9px 10px 10px;gap:8px;border-radius:22px}.lb-mpick b{font-size:20px}.lb-mart{margin-bottom:4px;border-radius:16px}
 }
-/* portrait: stacked, Play at the bottom under the thumb */
+/* portrait: player bar, cards, the cell, PLAY, and the tab bar at the bottom */
 @media (orientation:portrait){
-  .lobby{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto auto;grid-template-areas:"top" "hero" "rail" "play";gap:18px;--lb-hw:calc(100vw - 40px)}
-  .lobby .lb-top{grid-template-columns:auto 1fr auto;row-gap:12px}
-  .lobby:not(.event) .lb-brand{display:block;justify-self:center}
-  .lobby .lb-event{grid-column:1/-1;grid-row:2;justify-self:center}
-  .lobby .lb-rail{flex-direction:row;justify-self:center;gap:14px}.lobby .railbtn{flex:none;width:60px;height:60px}
-  .lobby .hero-cell{width:min(58vw,270px)}
-  .lobby .lb-play{justify-self:center;width:100%;max-width:440px}
-  .lb-sheet{place-items:end center}.lb-sheet-box{width:min(480px,100%)}
-  .lb-cards{grid-template-columns:minmax(0,1fr)}
-  .lb-mcard{min-height:0;grid-template-rows:none;padding:14px;gap:12px}
-  .lb-mpick{grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto;justify-items:start;text-align:left;column-gap:14px;row-gap:5px}
-  .lb-mic{grid-row:1/3;width:54px;height:54px;margin:0;border-radius:18px}.lb-mic svg{width:28px;height:28px}
-  .lb-mpick b{align-self:end}.lb-mpick small{align-self:start}
-  .lb-mstat{justify-items:start;min-height:0;padding-left:68px}.lb-mstat:empty{display:none}
-  .lb-mcard[data-m=nearby] .lb-mstat:not(:has(p)){display:none}
+  .lobby{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr) auto auto;grid-template-areas:"top" "feed" "hero" "play" "nav";gap:14px}
+  .lb-pcard{flex:1 1 auto;width:auto;max-width:250px;min-width:0}
+  .lb-feed{flex-direction:row;align-items:stretch}.lb-feed>.lb-feat{flex:1 1 0;min-width:0}.lobby .lb-ev,.lobby .lb-sk{height:108px;flex-grow:1.7}
+  .lobby .lb-ach{height:auto;grid-template-columns:1fr;justify-items:center;align-content:center;gap:7px;padding:10px 8px 16px;text-align:center}.lb-achtx{justify-items:center;padding:0}.lb-achbar{left:16px;right:16px;bottom:9px}
+  .lobby{--cell:min(58vw,34vh,280px)}
+  .lobby .lb-play{justify-self:stretch}
+  .lb-nav{justify-self:stretch;justify-content:space-around}.lb-tab{flex:1;width:auto}
+  .lb-cards{grid-template-columns:minmax(0,1fr);grid-template-rows:repeat(var(--n),minmax(0,1fr));gap:12px}
+  .lb-mcard{padding:10px 12px 12px;gap:10px}.lb-mart{margin-bottom:4px}.lb-mpick b{font-size:22px}
 }
 /* big screens */
-@media (min-width:1100px){.lobby{padding-left:max(48px,calc(50vw - 640px));padding-right:max(48px,calc(50vw - 640px))}}
+@media (min-width:1100px){.lobby{padding-left:max(40px,calc(50vw - 660px));padding-right:max(40px,calc(50vw - 660px))}}
 @media (min-width:1100px) and (min-height:700px){
-  .lobby{--lb-hw:min(400px,32vw);gap:16px 32px;padding-top:max(24px,env(safe-area-inset-top));padding-bottom:max(32px,env(safe-area-inset-bottom))}
-  .lobby .lb-top{min-height:50px}.lobby .lb-me,.lobby .lb-icon{width:50px;height:50px}.lobby .lb-atp,.lobby .lb-event{height:50px}.lobby .lb-me canvas{width:44px;height:44px}
-  .lobby .railbtn{width:66px;height:66px;border-radius:21px}.lobby .railbtn svg{width:30px;height:30px}.lobby .lb-rail{gap:14px}
-  .lobby .hero-cell{width:clamp(240px,38vh,330px);margin-bottom:20px}.lobby .lb-hero{gap:14px}
-  .lb-name{font-size:40px}.lb-name svg{width:22px;height:22px}
-  .lobby .hero-rank{padding:10px 20px 11px}.lobby .hero-rank .ht{font-size:19px}
-  .lobby .lb-play{width:min(100%,320px);gap:12px}
-  .lb-modebtn{height:58px;font-size:17px}.lb-modebtn .ic{width:40px;height:40px}.lb-switch{height:58px;width:68px}
-  .lobby .lb-go{height:84px;font-size:36px;border-radius:26px}.lobby .lb-go::before{width:46px;height:46px;background-size:19px}
-  .lb-mcard{min-height:230px}
+  .lobby{grid-template-columns:260px minmax(0,1fr) 320px;gap:16px 32px;padding-top:max(24px,env(safe-area-inset-top));padding-bottom:max(28px,env(safe-area-inset-bottom))}
+  .lb-pcard{width:290px;height:70px}.lb-ava{width:54px;height:54px}.lobby .lb-me canvas{width:48px;height:48px}.lobby .lb-me-txt{padding-top:28px}.lb-name{left:70px;top:9px;font-size:20px}.lb-pbar{left:78px;bottom:10px}.lobby .lb-name input[type=text]{max-width:170px}
+  .lobby .lb-atp,.lobby .lb-icon{height:50px}.lobby .lb-icon{width:50px}
+  .lobby .lb-ev,.lobby .lb-sk{height:170px}.lobby .lb-ach{height:70px}.lb-ft b{font-size:21px}
+  .lobby{--cell:min(46vh,26vw,360px)}
+  .lb-tab{width:84px;height:64px;font-size:12px}.lb-tab svg{width:28px;height:28px}
+  .lb-modebtn{height:54px;font-size:16px}.lb-modebtn .ic{width:38px;height:38px}.lb-switch{height:54px;width:66px}
+  .lobby .lb-go{height:86px;font-size:38px;border-radius:26px}.lobby .lb-go::before{width:44px;height:44px;background-size:18px}
+  .lb-cards{align-self:center;height:min(100%,520px)}.lb-mpick b{font-size:28px}
+  .lobby .lb-me-sub .tier{font-size:11px}.lb-rt{font-size:16px}.lb-crest{width:19px;height:21px}.lobby .hero-edit{width:50px;height:50px}.lobby .hero-edit svg{width:22px;height:22px}
 }
 /* @ui:lobby end */
 
@@ -2046,31 +2065,34 @@ body:not(.playing) #toasts .toast .tt{display:contents}body:not(.playing) #toast
 
 <div id="overlay">
   <div class="lobby" id="startCard">
+    <svg class="lb-sprite" aria-hidden="true" focusable="false"><defs><linearGradient id="lbgGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff2bf"/><stop offset=".45" stop-color="#ffcf5c"/><stop offset="1" stop-color="#c47f0c"/></linearGradient><linearGradient id="lbgMint" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9fff0"/><stop offset=".45" stop-color="#5fe0a8"/><stop offset="1" stop-color="#1b8d61"/></linearGradient><linearGradient id="lbgBlue" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e6f2ff"/><stop offset=".45" stop-color="#6cb8ff"/><stop offset="1" stop-color="#2a63c4"/></linearGradient></defs><symbol id="lbi-ranked" viewBox="0 0 24 24"><path d="M3.5 8.5l4.2 3.3L12 5.5l4.3 6.3 4.2-3.3-1.8 10H5.3z"/><path d="M6 21h12"/></symbol><symbol id="lbi-casual" viewBox="0 0 24 24"><rect x="4.5" y="8" width="15" height="11.5" rx="3.5"/><path d="M12 8V4.5M2 12.5v3M22 12.5v3"/><circle cx="12" cy="3.6" r="1.1"/><circle cx="9.3" cy="13.6" r="1.4" fill="currentColor" stroke="none"/><circle cx="14.7" cy="13.6" r="1.4" fill="currentColor" stroke="none"/></symbol><symbol id="lbi-nearby" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1.9" fill="currentColor" stroke="none"/><path d="M8.6 8.6a4.8 4.8 0 0 0 0 6.8M15.4 8.6a4.8 4.8 0 0 1 0 6.8M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8"/></symbol></svg>
     <header class="lb-top">
-      <button class="lb-me" id="profBtn" type="button" aria-label="Profile"><canvas id="meCv" width="144" height="144" aria-hidden="true"></canvas><span class="lb-me-txt"><b id="meName">Unnamed cell</b><span class="lb-me-sub"><span class="tier" id="rankTier">Silver</span><span id="rankVal">1000</span></span></span></button>
-      <h1 class="lb-brand">Mitosis</h1>
-      <button class="lb-event" id="eventPill" type="button" hidden><svg class="lb-pumpkin" viewBox="0 0 32 32" aria-hidden="true"><path d="M15.2 9.5c-.2-2.4.4-4.6 2.4-5.8l1.4 1.2c-1.4 1-1.8 2.6-1.6 4.6z" fill="#5c8f2e"/><ellipse cx="10.4" cy="19" rx="7.4" ry="9.4" fill="#d9640c"/><ellipse cx="21.6" cy="19" rx="7.4" ry="9.4" fill="#d9640c"/><ellipse cx="16" cy="19" rx="7.8" ry="10.2" fill="#ff8a1f"/><ellipse cx="13" cy="13.5" rx="2.6" ry="1.4" fill="#ffc27a" opacity=".55" transform="rotate(-30 13 13.5)"/><path d="M10.6 16.2l3.2 2.6h-3.6zM21.4 16.2l-3.2 2.6h3.6zM9.8 22c2.6 2.4 9.8 2.4 12.4 0-.8 3.6-11.6 3.6-12.4 0z" fill="#3a1200"/></svg><span><b id="eventName"></b><small id="eventSub"></small></span></button>
+      <div class="lb-pcard" id="lbCard" data-tier="Silver">
+        <button class="lb-me" id="profBtn" type="button" aria-label="Profile"><span class="lb-ava"><canvas id="meCv" width="144" height="144" aria-hidden="true"></canvas></span><span class="lb-me-txt"><b id="meName">Unnamed cell</b><span class="lb-me-sub"><svg class="lb-crest" viewBox="0 0 40 44" aria-hidden="true"><defs><linearGradient id="lbgCrest" x1="0" y1="0" x2=".35" y2="1"><stop offset="0" class="s1"/><stop offset="1" class="s2"/></linearGradient></defs><path class="o" d="M20 2.5 35.5 8v13.5c0 9.6-6.6 16.4-15.5 20-8.9-3.6-15.5-10.4-15.5-20V8z"/><path class="i" d="M20 7 31 11v10.7c0 7.1-4.8 12.2-11 14.9-6.2-2.7-11-7.8-11-14.9V11z"/><path class="g" d="M20 13.5l2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5-3.6-3.5 5-.7z"/></svg><span class="tier" id="rankTier">Silver</span><span class="lb-rt" id="rankVal">1000</span></span></span><span class="lb-pbar" aria-hidden="true"><i id="tierFill"></i></span></button>
+        <label class="lb-name"><input id="nameIn" type="text" maxlength="16" placeholder="Unnamed cell" autocomplete="off" spellcheck="false" enterkeyhint="go" aria-label="Your name"><span class="lb-measure" id="nameMeasure" aria-hidden="true"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg></label>
+      </div>
       <div class="lb-right">
-        <button class="lb-atp" id="atpChip" type="button" aria-label="ATP balance, open the shop"><i aria-hidden="true"></i><b id="lobbyAtp">0</b><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg></span></button>
+        <button class="lb-atp" id="atpChip" type="button" aria-label="ATP balance, get more"><i aria-hidden="true"></i><b id="lobbyAtp">0</b><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg></span></button>
         <button class="lb-icon" id="setBtn" type="button" aria-label="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
       </div>
     </header>
-    <svg class="lb-sprite" aria-hidden="true" focusable="false"><symbol id="lbi-ranked" viewBox="0 0 24 24"><path d="M3.5 8.5l4.2 3.3L12 5.5l4.3 6.3 4.2-3.3-1.8 10H5.3z"/><path d="M6 21h12"/></symbol><symbol id="lbi-casual" viewBox="0 0 24 24"><rect x="4.5" y="8" width="15" height="11.5" rx="3.5"/><path d="M12 8V4.5M2 12.5v3M22 12.5v3"/><circle cx="12" cy="3.6" r="1.1"/><circle cx="9.3" cy="13.6" r="1.4" fill="currentColor" stroke="none"/><circle cx="14.7" cy="13.6" r="1.4" fill="currentColor" stroke="none"/></symbol><symbol id="lbi-nearby" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1.9" fill="currentColor" stroke="none"/><path d="M8.6 8.6a4.8 4.8 0 0 0 0 6.8M15.4 8.6a4.8 4.8 0 0 1 0 6.8M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8"/></symbol></svg>
-    <nav class="lb-rail" aria-label="Menu">
-      <button class="railbtn" id="lookBtn" type="button" aria-label="Skins" title="Skins"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1 0 1.7-.8 1.7-1.7 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.9.8-1.7 1.7-1.7h2A4.4 4.4 0 0 0 21 11c0-4.4-4-8-9-8z"/><circle cx="7.5" cy="11.5" r="1.4" fill="currentColor" stroke="none"/><circle cx="10.5" cy="7.3" r="1.4" fill="currentColor" stroke="none"/><circle cx="15.5" cy="7.8" r="1.4" fill="currentColor" stroke="none"/></svg></button>
-      <button class="railbtn" id="shopBtn" type="button" aria-label="Shop" title="Shop"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 8h13l-1 12.5h-11z"/><path d="M9 10.5V7a3 3 0 0 1 6 0v3.5"/></svg></button>
-      <button class="railbtn" id="rankBtn" type="button" aria-label="Ranks" title="Ranks"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3"/><path d="M12 14v4M8 20h8"/></svg></button>
-    </nav>
+    <aside class="lb-feed" aria-label="News">
+      <button class="lb-feat lb-ev" id="eventPill" type="button" hidden><canvas class="lb-art" id="evCv" width="240" height="240" aria-hidden="true"></canvas><span class="lb-left" aria-hidden="true"><i></i><span id="eventSub"></span></span><span class="lb-ft"><svg class="lb-pumpkin" viewBox="0 0 32 32" aria-hidden="true"><path d="M15.2 9.5c-.2-2.4.4-4.6 2.4-5.8l1.4 1.2c-1.4 1-1.8 2.6-1.6 4.6z" fill="#5c8f2e"/><ellipse cx="10.4" cy="19" rx="7.4" ry="9.4" fill="#d9640c"/><ellipse cx="21.6" cy="19" rx="7.4" ry="9.4" fill="#d9640c"/><ellipse cx="16" cy="19" rx="7.8" ry="10.2" fill="#ff8a1f"/><ellipse cx="13" cy="13.5" rx="2.6" ry="1.4" fill="#ffc27a" opacity=".55" transform="rotate(-30 13 13.5)"/><path d="M10.6 16.2l3.2 2.6h-3.6zM21.4 16.2l-3.2 2.6h3.6zM9.8 22c2.6 2.4 9.8 2.4 12.4 0-.8 3.6-11.6 3.6-12.4 0z" fill="#3a1200"/></svg><b id="eventName"></b></span></button>
+      <button class="lb-feat lb-sk" id="lbSkinCard" type="button" hidden><canvas class="lb-art" id="skCv" width="240" height="240" aria-hidden="true"></canvas><span class="lb-tag">New</span><span class="lb-ft"><b id="skName"></b><span class="lb-price"><i aria-hidden="true"></i><span id="skPrice"></span></span></span></button>
+      <button class="lb-feat lb-ach" id="lbAch" type="button" aria-label="Achievements"><span class="lb-medal" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3.5l2.5 5.2 5.7.8-4.1 4 1 5.6-5.1-2.7-5.1 2.7 1-5.6-4.1-4 5.7-.8z"/></svg></span><span class="lb-achtx"><b id="lbAchN">0/0</b><small>Achievements</small></span><span class="lb-achbar" aria-hidden="true"><i id="lbAchFill"></i></span></button>
+    </aside>
     <section class="lb-hero">
       <button type="button" class="hero-cell" id="avatarBtn" aria-label="Change your skin"><canvas id="avatarCv" width="320" height="320" aria-hidden="true"></canvas><span class="hero-edit" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M19.5 3.5a2.1 2.1 0 0 1 3 3L12 17l-3-3z"/><path d="M9 14c-2.2 0-4 1.7-4 3.9 0 1.3-.8 2.2-2.5 2.6 1.2.9 2.8 1.5 4.5 1.5 3.3 0 5-2 5-5"/></svg></span></button>
-      <div class="hero-id">
-        <label class="lb-name"><input id="nameIn" type="text" maxlength="16" placeholder="Unnamed cell" autocomplete="off" spellcheck="false" enterkeyhint="go" aria-label="Your name"><span class="lb-measure" id="nameMeasure" aria-hidden="true"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg></label>
-        <button type="button" class="hero-rank" id="rankChip" aria-label="Your rank"><span class="ht"><b class="tier" id="heroTier">Silver</b><span id="heroRating">1000</span></span><span class="next" id="rankNext"></span><span class="tierbar" aria-hidden="true"><i id="tierFill"></i></span></button>
-      </div>
     </section>
+    <nav class="lb-nav" aria-label="Menu">
+      <button class="lb-tab" id="lookBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1 0 1.7-.8 1.7-1.7 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.9.8-1.7 1.7-1.7h2A4.4 4.4 0 0 0 21 11c0-4.4-4-8-9-8z"/><circle cx="7.5" cy="11.5" r="1.4" fill="currentColor" stroke="none"/><circle cx="10.5" cy="7.3" r="1.4" fill="currentColor" stroke="none"/><circle cx="15.5" cy="7.8" r="1.4" fill="currentColor" stroke="none"/></svg><span>Skins</span></button>
+      <button class="lb-tab" id="shopBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 8h13l-1 12.5h-11z"/><path d="M9 10.5V7a3 3 0 0 1 6 0v3.5"/></svg><span>Shop</span></button>
+      <button class="lb-tab" id="rankBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3"/><path d="M12 14v4M8 20h8"/></svg><span>Ranks</span></button>
+      <button class="lb-tab" id="navProf" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 21c1.4-3.9 4.3-5.8 7.5-5.8s6.1 1.9 7.5 5.8"/></svg><span>Profile</span></button>
+    </nav>
     <section class="lb-play" id="lbPlay" data-mode="ranked" data-net="wait" data-k="normal">
       <div class="lb-moderow">
-        <button type="button" class="lb-modebtn" id="modeBtn" aria-haspopup="dialog" aria-controls="modeSheet"><span class="ic"><svg class="m-ranked"><use href="#lbi-ranked"/></svg><svg class="m-casual"><use href="#lbi-casual"/></svg><svg class="m-nearby"><use href="#lbi-nearby"/></svg><i class="lb-netdot"></i></span><b id="modeName">Ranked</b><span class="lb-pips" aria-hidden="true"><i></i><i></i><i></i><i></i></span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg></button>
+        <button type="button" class="lb-modebtn" id="modeBtn" aria-haspopup="dialog" aria-controls="modeSheet"><span class="ic"><svg class="m-ranked"><use href="#lbi-ranked"/></svg><svg class="m-casual"><use href="#lbi-casual"/></svg><svg class="m-nearby"><use href="#lbi-nearby"/></svg><i class="lb-netdot"></i></span><b id="modeName">Ranked</b><span class="lb-pips" aria-hidden="true"><i></i><i></i><i></i><i></i></span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 15l5-5 5 5"/></svg></button>
         <button type="button" class="lb-switch" id="lbToCasual" aria-label="Switch to Casual" title="Casual"><svg aria-hidden="true"><use href="#lbi-casual"/></svg><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
       </div>
       <button id="go" class="lb-go" type="button">Play</button>
@@ -2078,17 +2100,15 @@ body:not(.playing) #toasts .toast .tt{display:contents}body:not(.playing) #toast
       <button id="lbWait" class="lb-go lb-off" type="button" disabled>Connecting…</button>
       <button id="skillBtn" type="button" hidden>Normal</button>
     </section>
-    <div class="lb-sheet" id="modeSheet" role="dialog" aria-modal="true" aria-labelledby="modeTitle" hidden>
-      <div class="lb-sheet-box">
-        <header class="lb-sheet-top"><h2 id="modeTitle">Mode</h2><button type="button" class="lb-icon" id="modeClose" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
-        <div class="lb-cards" id="modeSeg" role="radiogroup" aria-label="Game mode">
-          <div class="lb-mcard" data-m="ranked"><button type="button" class="lb-mpick" role="radio" data-m="ranked" aria-checked="true"><span class="lb-mic"><svg><use href="#lbi-ranked"/></svg></span><b>Ranked</b><small>Online · rated</small></button>
-            <div class="lb-mstat" id="lbRankStat"><p id="netLine" class="lb-netline"><i></i><span>Connecting…</span></p><p id="roundLine" hidden></p><p class="lb-need" id="lbNeed">Needs Wi-Fi or cellular</p></div></div>
-          <div class="lb-mcard" data-m="casual"><button type="button" class="lb-mpick" role="radio" data-m="casual" aria-checked="false"><span class="lb-mic"><svg><use href="#lbi-casual"/></svg></span><b>Casual</b><small>Bots · offline</small></button>
-            <div class="lb-bots" id="lbSkill" role="radiogroup" aria-label="Bot difficulty"><button type="button" role="radio" data-k="easy">Easy</button><button type="button" role="radio" data-k="normal">Normal</button><button type="button" role="radio" data-k="hard">Hard</button><button type="button" role="radio" data-k="expert">Expert</button></div></div>
-          <div class="lb-mcard" data-m="nearby" hidden><button type="button" class="lb-mpick" role="radio" data-m="nearby" aria-checked="false"><span class="lb-mic"><svg><use href="#lbi-nearby"/></svg></span><b>Nearby</b><small>Phones around you</small></button>
-            <div class="lb-mstat" id="lbNearStat"></div></div>
-        </div>
+    <div class="lb-msel" id="modeSheet" role="dialog" aria-modal="true" aria-labelledby="modeTitle" hidden>
+      <header class="lb-msel-top"><button type="button" class="lb-icon" id="modeClose" aria-label="Back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><h2 id="modeTitle">Select mode</h2></header>
+      <div class="lb-cards" id="modeSeg" role="radiogroup" aria-label="Game mode">
+        <div class="lb-mcard" data-m="ranked"><button type="button" class="lb-mpick" role="radio" data-m="ranked" aria-checked="true"><span class="lb-mart"><svg viewBox="0 0 200 120" aria-hidden="true"><g stroke="#ffcf5c" stroke-width="2" stroke-linecap="round" stroke-dasharray="2 6" opacity=".45"><path d="M100 64L34 18M100 64L166 18M100 64L18 64M100 64L182 64M100 64L66 4M100 64L134 4"/></g><circle cx="38" cy="90" r="10" fill="#ff5c8a" opacity=".55"/><circle cx="164" cy="34" r="6" fill="#9a8cff" opacity=".7"/><circle cx="160" cy="96" r="13" fill="#5fe0a8" opacity=".3"/><circle cx="46" cy="30" r="4" fill="#ffcf5c" opacity=".8"/><path d="M63 50l17 16 20-29 20 29 17-16-6 42H69z" fill="url(#lbgGold)" stroke="#6e4304" stroke-width="2.5" stroke-linejoin="round"/><rect x="67" y="96" width="66" height="10" rx="4" fill="url(#lbgGold)" stroke="#6e4304" stroke-width="2.5"/><circle cx="100" cy="34" r="5.5" fill="#fff6d6" stroke="#6e4304" stroke-width="2"/><circle cx="61" cy="47" r="4.5" fill="#fff6d6" stroke="#6e4304" stroke-width="2"/><circle cx="139" cy="47" r="4.5" fill="#fff6d6" stroke="#6e4304" stroke-width="2"/><circle cx="100" cy="78" r="7" fill="#ff5c8a" stroke="#6e4304" stroke-width="2"/></svg></span><b>Ranked</b><small>Online · rated</small></button>
+          <div class="lb-mstat" id="lbRankStat"><p id="netLine" class="lb-netline"><i></i><span>Connecting…</span></p><p id="roundLine" hidden></p><p class="lb-need" id="lbNeed">Needs Wi-Fi or cellular</p></div></div>
+        <div class="lb-mcard" data-m="casual"><button type="button" class="lb-mpick" role="radio" data-m="casual" aria-checked="false"><span class="lb-mart"><svg viewBox="0 0 200 120" aria-hidden="true"><circle cx="36" cy="42" r="12" fill="#ff8a5c" opacity=".65"/><circle cx="166" cy="80" r="14" fill="#9a8cff" opacity=".55"/><circle cx="46" cy="96" r="7" fill="#ffcf5c" opacity=".6"/><circle cx="158" cy="30" r="6" fill="#ff5c8a" opacity=".75"/><circle cx="24" cy="70" r="4" fill="#6cb8ff" opacity=".7"/><path d="M100 40V24" stroke="#0b4d33" stroke-width="3.5" stroke-linecap="round"/><circle cx="100" cy="19" r="7" fill="url(#lbgMint)" stroke="#0b4d33" stroke-width="2.5"/><rect x="57" y="58" width="10" height="22" rx="5" fill="#1b8d61" stroke="#0b4d33" stroke-width="2.5"/><rect x="133" y="58" width="10" height="22" rx="5" fill="#1b8d61" stroke="#0b4d33" stroke-width="2.5"/><rect x="65" y="38" width="70" height="60" rx="20" fill="url(#lbgMint)" stroke="#0b4d33" stroke-width="2.5"/><rect x="77" y="54" width="46" height="26" rx="13" fill="#062018"/><circle cx="90" cy="67" r="5.5" fill="#8cf3c8"/><circle cx="110" cy="67" r="5.5" fill="#8cf3c8"/></svg></span><b>Casual</b><small>Bots · offline</small></button>
+          <div class="lb-bots" id="lbSkill" role="radiogroup" aria-label="Bot difficulty"><button type="button" role="radio" data-k="easy">Easy</button><button type="button" role="radio" data-k="normal">Normal</button><button type="button" role="radio" data-k="hard">Hard</button><button type="button" role="radio" data-k="expert">Expert</button></div></div>
+        <div class="lb-mcard" data-m="nearby" hidden><button type="button" class="lb-mpick" role="radio" data-m="nearby" aria-checked="false"><span class="lb-mart"><svg viewBox="0 0 200 120" aria-hidden="true"><g fill="none" stroke="#6cb8ff" stroke-width="3" stroke-linecap="round"><path d="M80 47a19 19 0 0 1 0 26M120 47a19 19 0 0 0 0 26" opacity=".95"/><path d="M88 38a32 32 0 0 1 0 44M112 38a32 32 0 0 0 0 44" opacity=".55"/></g><circle cx="100" cy="60" r="6" fill="url(#lbgBlue)"/><rect x="28" y="26" width="40" height="70" rx="10" fill="#0a1a2c" stroke="url(#lbgBlue)" stroke-width="3"/><rect x="35" y="35" width="26" height="44" rx="4" fill="#163a63"/><circle cx="48" cy="57" r="7" fill="#ff5c8a"/><rect x="132" y="26" width="40" height="70" rx="10" fill="#0a1a2c" stroke="url(#lbgBlue)" stroke-width="3"/><rect x="139" y="35" width="26" height="44" rx="4" fill="#163a63"/><circle cx="152" cy="57" r="7" fill="#5fe0a8"/><circle cx="48" cy="88" r="2.5" fill="#6cb8ff"/><circle cx="152" cy="88" r="2.5" fill="#6cb8ff"/></svg></span><b>Nearby</b><small>Phones around you</small></button>
+          <div class="lb-mstat" id="lbNearStat"></div></div>
       </div>
     </div>
   </div>
@@ -5145,13 +5165,13 @@ const joySegEl=$('joySeg'),handSegEl=$('handSeg'),syncControls=()=>{const fl=set
   [...joySegEl.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.j==='float')===fl)));[...handSegEl.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.l==='1')===lh)));};
 joySegEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.joyMode=b.dataset.j==='float'?'float':'fixed';saveSettings();syncControls();});
 handSegEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.lefty=b.dataset.l==='1';saveSettings();syncControls();});syncControls();
-$('nameIn').value=settings.name||'';$('nameIn').addEventListener('input',renderMe);$('atpChip').addEventListener('click',()=>openStore());
+$('nameIn').value=settings.name||'';$('nameIn').addEventListener('input',renderMe);$('atpChip').addEventListener('click',()=>{openStore();shopTab('atp');}); // the + on the currency bar opens the ATP packs
 (function heroLoop(){if(!$('startCard').hidden&&!document.hidden&&!RM)drawAvatar();requestAnimationFrame(heroLoop);})();renderMe();
 /* Lobby Play: one big button and a mode picker. Ranked = the live arena, rated, needs the server; Casual = you and bots on
    this device, unrated, works offline (the old Practice); Nearby = phones around you (iOS app). #go plays Ranked and
    Nearby (updateSpawnLock writes its label: Play / Searching…), #practiceBtn plays Casual, #lbWait stands in for Ranked
    while there is no connection. The choice is kept in settings.playMode; with no server at launch the lobby opens on Casual. */
-let lbMode=settings.playMode==='casual'?'casual':'ranked',lbBoot=true,lbWasOff=false,lbFit='';
+let lbMode=settings.playMode==='casual'?'casual':'ranked',lbBoot=true,lbWasOff=false,lbFit='',lbWaitAt=0;
 const lbT0=performance.now();
 function lbNet(){ // the server as Ranked sees it: live | wait (first try) | off (unreachable, still retrying) | full | nearby
   const N=window.__mitosisNet;if(!N)return'off';if(N.mode==='nearby')return'nearby';
@@ -5172,14 +5192,15 @@ function fitName(){ // the name field is as wide as the name, so the pencil sits
   const inp=$('nameIn'),m=$('nameMeasure');if(!inp||!m||$('startCard').hidden)return;
   const k=inp.value+'|'+innerWidth+'|'+innerHeight+'|'+(document.fonts?document.fonts.status:'');if(k===lbFit)return;
   m.textContent=inp.value||inp.placeholder;const w=m.getBoundingClientRect().width;if(!w)return;lbFit=k;inp.style.width=Math.ceil(w)+3+'px';}
-function lbSharp(cv){ // canvases drawn at the screen's real resolution
-  if(!cv||!cv.clientWidth)return;const w=Math.min(720,Math.round(cv.clientWidth*(window.devicePixelRatio||1)));if(w>=48&&cv.width!==w){cv.width=cv.height=w;drawAvatar(cv);}}
+function lbSharp(cv){if(cv&&cv.clientWidth)drawAvatar(cv);} // the skin code (skinCanvas) sizes the backing store to CSS size x DPR; this just repaints
 function syncPlay(){
   const box=$('lbPlay');if(!box)return;const net=lbNet(),ios=Native.platform==='ios',home=!$('startCard').hidden,sheet=$('modeSheet');
   if(lbBoot){if(lbMode!=='ranked'||net==='live')lbBoot=false;else if(net==='off'||net==='full'||performance.now()-lbT0>6000){lbBoot=false;lbMode='casual';}} // no server at launch: Casual
   if(lbMode==='nearby'&&!isNearby())lbMode=settings.playMode==='casual'?'casual':'ranked';
   const k=SKILL[settings.botSkill]?settings.botSkill:'normal',set=(el,a,v)=>{if(el.getAttribute(a)!==v)el.setAttribute(a,v);};
-  const ds={mode:lbMode,net,k,peers:peerCount>1?'1':'0'};for(const n in ds)if(box.dataset[n]!==ds[n]){box.dataset[n]=ds[n];sheet.dataset[n]=ds[n];}
+  if(net!=='wait')lbWaitAt=0;else if(!lbWaitAt)lbWaitAt=performance.now();
+  const ds={mode:lbMode,net,k,peers:peerCount>1?'1':'0',slow:lbWaitAt&&performance.now()-lbWaitAt>2000?'1':'0'}; // slow: still connecting after 2 s
+  for(const n in ds){if(box.dataset[n]!==ds[n])box.dataset[n]=ds[n];if(sheet.dataset[n]!==ds[n])sheet.dataset[n]=ds[n];}
   const nm=lbMode==='casual'?'Casual':lbMode==='nearby'?'Nearby':'Ranked';if($('modeName').textContent!==nm)$('modeName').textContent=nm;
   set($('modeBtn'),'aria-label',`Mode: ${nm}${lbMode==='casual'?', '+SKILL[k].label+' bots':''}. Change mode`);
   const wt=net==='full'?'Server full':net==='wait'?'Connecting…':'No connection',w=$('lbWait');if(w.textContent!==wt)w.textContent=wt;
@@ -5190,20 +5211,31 @@ function syncPlay(){
   const nl=$('netLine'),host=lbMode==='nearby'?$('lbNearStat'):$('lbRankStat');if(nl.parentNode!==host)host.prepend(nl); // the live line sits on the card of the network in use
   if(queued&&lbMode==='ranked'&&net==='off'&&home){queued=false;updateSpawnLock();} // lost the server mid-search
   if(!home&&!sheet.hidden)sheet.hidden=true;
-  if(home){fitName();lbSharp($('avatarCv'));lbSharp($('meCv'));}
+  if(home){fitName();lbSharp($('avatarCv'));lbSharp($('meCv'));syncFeed();if(RM)lbDrawArt();}
 }
+// Home feature cards (left column): the season's event, else the newest skin you don't own, and your achievements
+const lbEvSkin=()=>{const key=Object.keys(SEASONS).find(k=>seasonState(k).open);return key?PREMIUM.find(x=>x.season===key&&!ownsSkin(x.id))||PREMIUM.find(x=>x.season===key):null;};
+const lbFeatSkin=()=>{const a=PREMIUM.filter(x=>!x.season&&!ownsSkin(x.id));return a[a.length-1]||null;};
+function syncFeed(){
+  const card=$('lbCard');if(card.dataset.tier!==wallet.tier)card.dataset.tier=wallet.tier;
+  const got=ACH.filter(a=>achGot.has(a.id)).length,t=`${got}/${ACH.length}`;if($('lbAchN').textContent!==t){$('lbAchN').textContent=t;$('lbAchFill').style.width=Math.round(got/Math.max(1,ACH.length)*100)+'%';$('lbAch').setAttribute('aria-label',`Achievements, ${got} of ${ACH.length}`);}
+  const F=$('eventPill').hidden?lbFeatSkin():null,sc=$('lbSkinCard');sc.hidden=!F;
+  if(F&&sc.dataset.id!==String(F.id)){sc.dataset.id=F.id;$('skName').textContent=F.name;$('skPrice').textContent=F.price.toLocaleString();sc.setAttribute('aria-label',`New skin: ${F.name}, ${F.price} ATP`);}
+}
+function lbDrawArt(){for(const [id,S] of [['evCv',lbEvSkin()],['skCv',lbFeatSkin()]]){const cv=$(id);if(S&&cv&&!cv.parentElement.hidden&&cv.clientWidth)drawPreview(cv,S);}} // drawPreview sizes the canvas itself
+let lbArtT=0;(function lbArtLoop(now){requestAnimationFrame(lbArtLoop);if(RM||document.hidden||$('startCard').hidden||now-lbArtT<40)return;lbArtT=now;lbDrawArt();})(0);
 function modeSheet(open){const sh=$('modeSheet');if(sh.hidden===!open)return;sh.hidden=!open;syncPlay();
   if(open){const b=sh.querySelector('.lb-mcard[data-on=true] .lb-mpick');if(b)b.focus({preventScroll:true});}else $('modeBtn').focus({preventScroll:true});}
 setInterval(syncPlay,250);addEventListener('resize',()=>{lbFit='';syncPlay();});if(document.fonts)document.fonts.ready.then(()=>{lbFit='';fitName();});
 $('modeBtn').addEventListener('click',()=>{modeSheet(true);Native.haptic('light');});
 $('modeClose').addEventListener('click',()=>modeSheet(false));
-$('modeSheet').addEventListener('click',e=>{if(e.target===e.currentTarget)modeSheet(false);}); // tap outside the box
 $('modeSeg').addEventListener('click',e=>{const b=e.target.closest('.lb-mpick');if(!b)return;setPlayMode(b.dataset.m);Native.haptic('light');setTimeout(()=>modeSheet(false),RM?0:180);});
 $('lbToCasual').addEventListener('click',()=>{setPlayMode('casual');Native.haptic('light');});
 $('lbSkill').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.botSkill=b.dataset.k;saveSettings();syncSkill();setPlayMode('casual');});
-$('rankChip').addEventListener('click',()=>$('rankBtn').click());
+$('navProf').addEventListener('click',()=>$('profBtn').click());$('lbAch').addEventListener('click',()=>$('profBtn').click());
+$('lbSkinCard').addEventListener('click',()=>{const F=lbFeatSkin();if(F)shopSel=F.id;openStore();});
 $('nameIn').addEventListener('input',fitName);
-// Enter on the lobby (or Go on the name keyboard) presses Play for the chosen mode; Escape closes the mode sheet
+// Enter on the lobby (or Go on the name keyboard) presses Play for the chosen mode; Escape closes the mode select
 addEventListener('keydown',e=>{if($('startCard').hidden||mode==='play')return;const t=e.target,tag=t&&t.tagName,sh=!$('modeSheet').hidden;
   if(e.key==='Escape'&&sh){e.preventDefault();e.stopImmediatePropagation();modeSheet(false);return;}
   if(e.key!=='Enter'||tag==='BUTTON'||tag==='TEXTAREA'||(tag==='INPUT'&&t.id!=='nameIn'))return;
