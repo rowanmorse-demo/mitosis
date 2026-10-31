@@ -557,7 +557,208 @@ body:not(.playing) #tip{display:none}
 /* @ui:base end */
 
 /* @ui:lobby */
-
+/* Home: the cell centre stage on a glowing dish, its name and rank under it; icon buttons on the left; one big Play with a
+   mode chip in the corner. The mode chip opens a sheet (Ranked · Casual · Nearby) that holds the details. Glass recipe: --lb-*. */
+.lobby{
+  --lb-glass:linear-gradient(180deg,rgba(255,255,255,.085),rgba(255,255,255,.02) 62%),rgba(6,19,21,.74);
+  --lb-edge:rgba(170,235,225,.15);--lb-hi:inset 0 1px 0 rgba(255,255,255,.09);--lb-drop:0 10px 24px -10px rgba(0,0,0,.75);
+  --lb-gold:#ffcf5c;--lb-mint:#5fe0a8;--lb-blue:#6cb8ff;--lb-hw:min(300px,38vw);
+  --lb-nowifi:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M3 3l18 18M8.6 16.3a5 5 0 0 1 6.8 0M5 12.8a10 10 0 0 1 4.9-2.7M14.4 10.2A10 10 0 0 1 19 12.8M2 9.2a15 15 0 0 1 4.2-2.6M10.6 5.1A15 15 0 0 1 22 9.2'/%3E%3Ccircle cx='12' cy='20' r='1' fill='black'/%3E%3C/svg%3E");
+  grid-template-columns:minmax(0,1fr) var(--lb-hw) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);grid-template-areas:"top top top" "rail hero play";gap:12px 20px;
+  padding:max(14px,env(safe-area-inset-top)) max(20px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(20px,env(safe-area-inset-left));
+  background:radial-gradient(70% 80% at 50% 52%,rgba(2,8,9,.12),rgba(2,8,9,.55) 60%,rgba(2,8,9,.9));-webkit-backdrop-filter:blur(7px) saturate(1.15);backdrop-filter:blur(7px) saturate(1.15)}
+.lb-sprite{position:absolute;width:0;height:0;overflow:hidden}
+.lobby :is(.lb-me,.lb-atp,.lb-icon,.railbtn,.lb-modebtn){background:var(--lb-glass);border:1px solid var(--lb-edge);box-shadow:var(--lb-hi),var(--lb-drop);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);transition:transform .12s cubic-bezier(.3,.7,.4,1),border-color .15s}
+.lobby :is(.lb-me,.lb-atp,.lb-icon,.railbtn,.lb-event,.lb-modebtn,.lb-switch):active{transform:translateY(1px) scale(.94)}
+@media (hover:hover){.lobby :is(.lb-me,.lb-atp,.lb-icon,.railbtn,.lb-modebtn):hover{border-color:rgba(170,235,225,.34)}}
+/* top bar */
+.lobby .lb-top{grid-template-columns:1fr auto 1fr;gap:12px;min-height:46px}
+.lobby .lb-me{position:relative;width:46px;height:46px;padding:0;border-radius:50%;display:grid;place-items:center}
+.lobby .lb-me canvas{width:40px;height:40px;background:none}
+.lobby .lb-me-txt{display:none}
+.lobby .lb-me::after{content:"";position:absolute;right:-3px;bottom:-3px;width:18px;height:18px;border-radius:50%;box-shadow:0 0 0 2px #071719;background:var(--ink) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23071719' stroke-width='2.8' stroke-linecap='round'%3E%3Ccircle cx='12' cy='8.5' r='4'/%3E%3Cpath d='M4.5 21c1.4-3.9 4.3-5.8 7.5-5.8s6.1 1.9 7.5 5.8'/%3E%3C/svg%3E") center/11px no-repeat}
+.lobby .lb-brand{font:800 28px/1 var(--display);letter-spacing:-.05em;background:linear-gradient(180deg,#fff 25%,#93d6c4);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 14px rgba(95,224,168,.22))}
+.lobby .lb-event{height:46px;box-sizing:border-box;padding:0 18px 0 6px;gap:9px;border-radius:999px;border:1px solid rgba(255,150,60,.55);background:linear-gradient(180deg,rgba(255,150,50,.26),rgba(130,50,210,.2)),rgba(14,8,18,.74);box-shadow:inset 0 1px 0 rgba(255,220,180,.22),0 8px 26px -10px rgba(255,120,30,.5);animation:lbEvGlow 3s ease-in-out infinite;transition:transform .12s;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.lb-pumpkin{width:34px;height:34px;flex:none;filter:drop-shadow(0 0 7px rgba(255,140,40,.65))}
+.lobby .lb-event span{display:grid;gap:4px;text-align:left}
+.lobby .lb-event b{font:800 15px/1 var(--display);letter-spacing:-.01em;color:#ffb469}
+.lobby .lb-event small{display:flex;align-items:center;gap:4px;font:600 10.5px/1 var(--mono);letter-spacing:.02em;color:rgba(255,226,200,.75)}
+.lobby .lb-event small::before{content:"";width:10px;height:10px;border-radius:50%;box-sizing:border-box;border:1.5px solid currentColor;background:linear-gradient(currentColor,currentColor) 50% 2px/1.5px 3px no-repeat,linear-gradient(currentColor,currentColor) 3.5px 4.2px/2.5px 1.5px no-repeat;opacity:.8}
+@keyframes lbEvGlow{0%,100%{box-shadow:inset 0 1px 0 rgba(255,220,180,.22),0 8px 26px -12px rgba(255,120,30,.4)}50%{box-shadow:inset 0 1px 0 rgba(255,220,180,.22),0 8px 30px -6px rgba(255,120,30,.68)}}
+.lobby .lb-right{gap:10px}
+.lobby .lb-atp{height:46px;box-sizing:border-box;padding:0 6px 0 11px;gap:8px;border-radius:999px;border-color:rgba(242,177,52,.38);color:#ffd77a;font:800 17px/1 var(--display);letter-spacing:-.01em}
+.lobby .lb-atp i{width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 36% 30%,#fff4c8 0 7%,#ffd660 24%,#f2a91f 62%,#a8650c);box-shadow:inset 0 0 0 2px rgba(255,236,170,.35),0 0 12px rgba(242,177,52,.5)}
+.lobby .lb-atp span{width:32px;height:32px;background:linear-gradient(180deg,#ffdc78,#f2a91f);color:#2a1700;box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 2px 0 #9c5f08}
+.lobby .lb-atp span svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:3.2;stroke-linecap:round}
+.lobby .lb-icon{width:46px;height:46px;border-radius:50%}
+.lobby .lb-icon svg{width:22px;height:22px;stroke-width:1.8}
+/* icon buttons */
+.lobby .lb-rail{justify-self:start;align-self:center;gap:12px}
+.lobby .railbtn{width:58px;height:58px;border-radius:19px;gap:0;color:var(--ink)}
+.lobby .railbtn svg{width:27px;height:27px;stroke-width:1.8}
+.lobby #lookBtn svg{color:#ff8db0;filter:drop-shadow(0 0 7px rgba(255,92,138,.5))}
+.lobby #shopBtn svg{color:#ffc95c;filter:drop-shadow(0 0 7px rgba(242,177,52,.45))}
+.lobby #rankBtn svg{color:#b6abff;filter:drop-shadow(0 0 7px rgba(154,140,255,.5))}
+/* hero: the cell on its dish, name, rank */
+.lobby .lb-hero{grid-template-columns:minmax(0,1fr);justify-items:center;align-content:center;gap:12px;text-align:center;min-width:0}
+.lobby .hero-cell{width:clamp(150px,40vh,300px);animation:none;margin-bottom:22px}
+.lobby .hero-cell::before{inset:-26%;background:radial-gradient(circle,rgba(255,92,138,.32),rgba(255,92,138,.1) 40%,rgba(255,92,138,0) 66%)}
+.lobby .hero-cell::after{content:"";position:absolute;z-index:-1;left:-12%;right:-12%;bottom:-9%;height:22%;border-radius:50%;pointer-events:none;
+  background:radial-gradient(38% 42% at 50% 46%,rgba(0,0,0,.5),rgba(0,0,0,0) 100%),radial-gradient(closest-side,rgba(255,92,138,.22),rgba(255,92,138,.08) 72%,rgba(255,140,175,.38) 95%,rgba(255,92,138,0) 100%);
+  box-shadow:0 0 0 7px rgba(255,92,138,.05),0 0 46px -4px rgba(255,92,138,.5)}
+.lobby .hero-cell canvas,.lobby .hero-edit{animation:lbBob 4.5s ease-in-out infinite}
+@keyframes lbBob{50%{translate:0 -8px}}
+.lobby .hero-edit{left:auto;right:1%;bottom:4%;transform:none;z-index:2;width:42px;height:42px;padding:0;gap:0;justify-content:center;border-radius:50%;background:linear-gradient(180deg,#fff,#cde5de);color:#0a1a1c;box-shadow:inset 0 -2px 0 rgba(0,0,0,.12),0 6px 16px rgba(0,0,0,.5),0 0 0 3px rgba(2,8,9,.7);transition:transform .12s}
+.lobby .hero-edit svg{width:19px;height:19px;stroke-width:2.1}
+.lobby .hero-cell:active .hero-edit{transform:scale(.9)}
+.lobby .hero-id{justify-items:center;gap:10px;max-width:none;width:100%;min-width:0}
+.lb-name{position:relative;display:inline-flex;align-items:center;gap:8px;max-width:100%;box-sizing:border-box;padding:2px 12px 4px 16px;border-radius:14px;cursor:text;font:800 30px/1.15 var(--display);letter-spacing:-.035em;transition:background .15s,box-shadow .15s}
+@media (hover:hover){.lb-name:hover{background:rgba(255,255,255,.05)}}
+.lb-name:focus-within{background:rgba(255,255,255,.07);box-shadow:inset 0 0 0 1.5px rgba(255,92,138,.65)}
+.lobby .lb-name input[type=text]{width:7.5em;min-width:1.5em;max-width:calc(var(--lb-hw) - 60px);flex:none;background:none;border:0;border-radius:0;padding:0;font:inherit;letter-spacing:inherit;color:var(--ink);text-align:center;outline:none;text-shadow:0 2px 16px rgba(0,0,0,.6)}
+.lobby .lb-name input[type=text]::placeholder{color:rgba(220,239,233,.62)}
+.lb-measure{position:absolute;left:0;top:0;visibility:hidden;white-space:pre;pointer-events:none}
+.lb-name svg{width:18px;height:18px;flex:none;fill:none;stroke:var(--muted);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.lobby .hero-rank{appearance:none;display:grid;grid-template-columns:auto;justify-items:center;gap:7px;width:auto;min-width:150px;box-sizing:border-box;padding:8px 16px 9px;border-radius:999px;border:1px solid var(--lb-edge);background:var(--lb-glass);box-shadow:var(--lb-hi),var(--lb-drop);color:var(--ink);font:inherit;cursor:pointer;transition:transform .12s;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.lobby .hero-rank:active{transform:scale(.95)}
+.lobby .hero-rank .ht{display:flex;align-items:center;gap:9px;font:800 17px/1 var(--display);letter-spacing:-.01em;color:var(--ink);font-variant-numeric:tabular-nums}
+.lobby .hero-rank .ht .tier{display:flex;align-items:center;gap:7px;margin:0;font:700 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase}
+.lobby .hero-rank .ht .tier::before{content:"";width:15px;height:17px;background:linear-gradient(160deg,rgba(255,255,255,.85),currentColor 58%);clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}
+.lobby .hero-rank .next{display:none}
+.lobby .hero-rank .tierbar{display:block;width:100%;height:4px;border-radius:2px;background:rgba(255,255,255,.09)}
+.lobby .hero-rank .tierbar i{box-shadow:0 0 8px rgba(255,92,138,.6)}
+/* play: mode chip and the big button */
+.lobby .lb-play{grid-area:play;justify-self:end;align-self:end;display:grid;gap:10px;width:min(100%,270px);min-width:0;padding:0;border:0;border-radius:0;background:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+:is(.lb-play,.lb-sheet)[data-mode=ranked],.lb-mcard[data-m=ranked]{--mc:var(--lb-gold);--mc-edge:rgba(255,207,92,.45);--mc-glow:rgba(255,207,92,.34);--mc-bg:rgba(255,207,92,.15)}
+:is(.lb-play,.lb-sheet)[data-mode=casual],.lb-mcard[data-m=casual]{--mc:var(--lb-mint);--mc-edge:rgba(95,224,168,.45);--mc-glow:rgba(95,224,168,.3);--mc-bg:rgba(95,224,168,.14)}
+:is(.lb-play,.lb-sheet)[data-mode=nearby],.lb-mcard[data-m=nearby]{--mc:var(--lb-blue);--mc-edge:rgba(108,184,255,.48);--mc-glow:rgba(108,184,255,.32);--mc-bg:rgba(108,184,255,.15)}
+.lb-moderow{display:flex;gap:8px;min-width:0}
+.lb-modebtn{appearance:none;flex:1;min-width:0;height:52px;box-sizing:border-box;padding:0 12px 0 8px;display:flex;align-items:center;gap:10px;border-radius:17px;color:var(--ink);cursor:pointer;font:800 16px/1 var(--display);letter-spacing:-.01em}
+.lobby .lb-modebtn{border-color:var(--mc-edge)}
+.lb-modebtn .ic{position:relative;flex:none;width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(160deg,var(--mc-bg),rgba(255,255,255,.02));box-shadow:inset 0 0 0 1px var(--mc-edge)}
+.lb-modebtn .ic svg{grid-area:1/1;width:21px;height:21px;fill:none;stroke:var(--mc);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 5px var(--mc-glow));display:none}
+.lb-play[data-mode=ranked] .m-ranked,.lb-play[data-mode=casual] .m-casual,.lb-play[data-mode=nearby] .m-nearby{display:block}
+.lb-modebtn b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:inherit}
+.lb-modebtn .chev{flex:none;width:18px;height:18px;margin-left:auto;fill:none;stroke:var(--muted);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.lb-netdot{position:absolute;right:-3px;top:-3px;width:9px;height:9px;border-radius:50%;background:#5d7470;box-shadow:0 0 0 2px #0b1618;display:none}
+.lb-play:is([data-mode=ranked],[data-mode=nearby]) .lb-netdot{display:block}
+.lb-play[data-mode=ranked][data-net=live] .lb-netdot,.lb-play[data-mode=nearby][data-peers="1"] .lb-netdot{background:var(--lb-mint);box-shadow:0 0 0 2px #0b1618,0 0 8px var(--lb-mint)}
+.lb-play[data-mode=ranked][data-net=wait] .lb-netdot,.lb-play[data-mode=nearby][data-peers="0"] .lb-netdot{background:var(--amber);animation:lbBlink 1s ease-in-out infinite}
+.lb-play[data-mode=ranked]:is([data-net=off],[data-net=full]) .lb-netdot{background:#ff6b78}
+@keyframes lbBlink{50%{opacity:.3}}
+.lb-pips{display:none;align-items:flex-end;gap:3px;height:16px;flex:none}
+.lb-play[data-mode=casual] .lb-pips{display:flex}
+.lb-pips i{width:4px;border-radius:2px;background:rgba(255,255,255,.14)}.lb-pips i:nth-child(1){height:7px}.lb-pips i:nth-child(2){height:10px}.lb-pips i:nth-child(3){height:13px}.lb-pips i:nth-child(4){height:16px}
+.lb-play[data-k=easy] .lb-pips i:nth-child(-n+1),.lb-play[data-k=normal] .lb-pips i:nth-child(-n+2),.lb-play[data-k=hard] .lb-pips i:nth-child(-n+3),.lb-play[data-k=expert] .lb-pips i{background:var(--pk)}
+.lb-play[data-k=easy]{--pk:var(--lb-mint)}.lb-play[data-k=normal]{--pk:#dcefe9}.lb-play[data-k=hard]{--pk:#ffc04d}.lb-play[data-k=expert]{--pk:#ff7aa0}
+.lb-switch{appearance:none;flex:none;display:none;align-items:center;justify-content:center;gap:0;width:62px;height:52px;box-sizing:border-box;padding:0 2px 0 6px;border-radius:17px;border:1px solid rgba(95,224,168,.5);background:linear-gradient(180deg,rgba(95,224,168,.24),rgba(95,224,168,.08)),rgba(6,19,21,.74);box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 0 20px -6px rgba(95,224,168,.5);color:#8cf3c8;cursor:pointer;transition:transform .12s}
+.lb-play[data-mode=ranked]:is([data-net=off],[data-net=full]) .lb-switch{display:flex}
+.lb-switch svg{width:22px;height:22px;flex:none;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.lb-switch .chev{width:15px;height:15px;stroke-width:2.6}
+.lobby .lb-play .lb-go{display:none}
+.lb-play[data-mode=casual] #practiceBtn,.lb-play[data-mode=nearby] #go,.lb-play[data-mode=ranked][data-net=live] #go,.lb-play[data-mode=ranked]:not([data-net=live]) #lbWait{display:flex}
+.lobby .lb-go{position:relative;overflow:hidden;appearance:none;border:0;width:100%;height:72px;box-sizing:border-box;padding:0 18px;margin:0 0 5px;border-radius:22px;align-items:center;justify-content:center;gap:13px;cursor:pointer;
+  font:800 31px/1 var(--display);letter-spacing:-.025em;color:#2b0715;text-shadow:0 1px 0 rgba(255,255,255,.28);
+  background:linear-gradient(180deg,rgba(255,255,255,.32),rgba(255,255,255,0) 56%),linear-gradient(180deg,#ff8db0,#ff5c8a 52%,#ee3f78);
+  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.65),inset 0 -3px 0 rgba(150,10,60,.28),0 5px 0 #a81d52,0 20px 40px -10px rgba(255,80,140,.75);
+  transition:transform .09s ease-out,box-shadow .09s ease-out,filter .15s;-webkit-tap-highlight-color:transparent}
+.lobby .lb-go::before{content:"";flex:none;width:38px;height:38px;border-radius:50%;background:#2b0715 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M8 5.8v12.4L18.5 12z' fill='%23ff7aa0' stroke='%23ff7aa0' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E") 58% 50%/16px no-repeat;box-shadow:0 1px 0 rgba(255,255,255,.4),inset 0 -1px 0 rgba(255,255,255,.1)}
+.lobby .lb-go::after{content:"";position:absolute;top:0;bottom:0;left:-40%;width:30%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.45),transparent);transform:skewX(-20deg);animation:lbShine 4.5s ease-in-out 1.5s infinite;pointer-events:none}
+@keyframes lbShine{0%,62%{transform:skewX(-20deg) translateX(0)}100%{transform:skewX(-20deg) translateX(520%)}}
+@media (hover:hover){.lobby .lb-go:not(:disabled):hover{filter:brightness(1.06)}}
+.lobby .lb-go:not(:disabled):active{transform:translateY(4px);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.5),inset 0 -2px 0 rgba(150,10,60,.28),0 1px 0 #a81d52,0 8px 18px -8px rgba(255,80,140,.6)}
+.lobby #go.queued{flex-direction:column;gap:5px;font-size:19px;color:var(--ink);text-shadow:none;background:linear-gradient(90deg,rgba(154,140,255,.45) 0 var(--sp,100%),rgba(30,24,52,.96) var(--sp,100%));box-shadow:inset 0 0 0 1.5px rgba(170,158,255,.75),inset 0 1px 0 rgba(255,255,255,.15),0 5px 0 #352a6e,0 16px 30px -12px rgba(154,140,255,.6);transition:background .45s linear,transform .09s}
+.lobby #go.queued::before{display:none}
+.lobby #go.queued::after{content:'Tap to cancel';white-space:nowrap;position:static;width:auto;background:none;transform:none;animation:none;font:500 10.5px/1.2 var(--mono);letter-spacing:.02em;color:rgba(225,220,255,.75)}
+.lobby .lb-go.lb-off{cursor:default;gap:11px;font-size:19px;letter-spacing:-.01em;color:rgba(220,239,233,.62);text-shadow:none;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03)),rgba(6,19,21,.7);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1),inset 0 1px 0 rgba(255,255,255,.07),0 5px 0 rgba(0,0,0,.4);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.lobby .lb-go.lb-off::after{display:none}
+.lobby .lb-go.lb-off::before{width:21px;height:21px;border-radius:0;box-shadow:none;background:currentColor;-webkit-mask:var(--lb-nowifi) center/contain no-repeat;mask:var(--lb-nowifi) center/contain no-repeat}
+.lb-play[data-net=wait] .lb-go.lb-off::before{-webkit-mask:none;mask:none;background:none;width:16px;height:16px;border-radius:50%;border:2.5px solid rgba(220,239,233,.2);border-top-color:rgba(220,239,233,.85);animation:lbSpin .8s linear infinite}
+@keyframes lbSpin{to{transform:rotate(360deg)}}
+/* the mode sheet */
+.lb-sheet{position:absolute;inset:0;z-index:10;display:grid;place-items:center;box-sizing:border-box;padding:max(12px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));background:rgba(2,8,9,.66);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);animation:ov .22s ease-out}
+.lb-sheet-box{width:min(760px,100%);max-height:100%;overflow:auto;overscroll-behavior:contain;box-sizing:border-box;display:grid;gap:14px;padding:14px 16px 18px;border-radius:30px;border:1px solid var(--lb-edge);background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.015) 40%),rgba(5,16,18,.92);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 40px 80px -20px rgba(0,0,0,.9);animation:up .32s cubic-bezier(.2,.8,.2,1)}
+.lb-sheet-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-left:6px}
+.lb-sheet-top h2{margin:0;font:800 24px/1 var(--display);letter-spacing:-.035em}
+.lb-cards{--n:2;display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:12px}
+.lb-mcard{position:relative;display:grid;grid-template-rows:minmax(0,1fr) 44px;gap:12px;min-height:200px;box-sizing:border-box;padding:18px 14px 14px;border-radius:24px;border:1px solid var(--lb-edge);
+  background:radial-gradient(120% 75% at 50% 0%,var(--mc-bg),transparent 72%),linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.01)),rgba(4,14,16,.8);box-shadow:inset 0 1px 0 rgba(255,255,255,.07);transition:border-color .2s,box-shadow .2s,transform .12s}
+.lb-mcard:active{transform:scale(.98)}
+.lb-mcard[data-on=true]{border-color:var(--mc-edge);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 0 0 1.5px var(--mc-edge),0 0 36px -8px var(--mc-glow)}
+.lb-mcard[data-on=true]::before{content:"";position:absolute;top:12px;right:12px;width:24px;height:24px;border-radius:50%;background:var(--mc) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23081214' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12.5l4 4 8-9'/%3E%3C/svg%3E") center/14px no-repeat;box-shadow:0 0 12px var(--mc-glow)}
+.lb-mpick{appearance:none;border:0;background:none;padding:0;color:var(--ink);display:grid;justify-items:center;align-content:center;gap:6px;text-align:center;cursor:pointer;font:inherit}
+.lb-mpick::after{content:"";position:absolute;inset:0;border-radius:inherit}
+.lb-mpick:focus-visible{outline:none}.lb-mcard:has(.lb-mpick:focus-visible){outline:2px solid var(--ink);outline-offset:3px}
+.lb-mic{width:64px;height:64px;margin-bottom:4px;border-radius:21px;display:grid;place-items:center;background:linear-gradient(160deg,color-mix(in srgb,var(--mc) 92%,#fff),color-mix(in srgb,var(--mc) 70%,#000));box-shadow:inset 0 1.5px 0 rgba(255,255,255,.5),inset 0 -3px 0 rgba(0,0,0,.18),0 10px 24px -8px var(--mc-glow)}
+.lb-mic svg{width:32px;height:32px;fill:none;stroke:#0a1416;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.lb-mpick b{font:800 21px/1.05 var(--display);letter-spacing:-.025em}
+.lb-mpick small{font:600 10.5px/1.2 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.lb-mstat{display:grid;justify-items:center;align-content:center;gap:4px;min-height:40px;text-align:center;min-width:0}
+.lb-mstat p{margin:0;max-width:100%}
+.lobby .lb-netline{display:flex;align-items:center;gap:8px;min-width:0;font:600 12px/1.2 var(--mono);color:var(--ink)}
+.lobby .lb-netline span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lobby .lb-netline i{width:8px;height:8px;border-radius:50%;flex:none;background:var(--dim)}
+.lobby .lb-netline.live i{background:var(--lb-mint);animation:lbPing 2s ease-out infinite}
+.lb-sheet[data-mode=nearby] .lb-netline.live i{background:var(--lb-blue);animation-name:lbPingB}
+@keyframes lbPing{0%{box-shadow:0 0 0 0 rgba(95,224,168,.55)}80%,100%{box-shadow:0 0 0 7px rgba(95,224,168,0)}}
+@keyframes lbPingB{0%{box-shadow:0 0 0 0 rgba(108,184,255,.55)}80%,100%{box-shadow:0 0 0 7px rgba(108,184,255,0)}}
+.lobby #roundLine{margin:0;font:500 10.5px/1.2 var(--mono);letter-spacing:0;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb-sheet:is([data-net=off],[data-net=full],[data-net=nearby]) #lbRankStat .lb-netline,.lb-sheet[data-net=nearby] #roundLine{display:none}
+.lb-need{display:none;align-items:center;gap:7px;font:600 12px/1.25 var(--display)!important;color:#ff9aa3}
+.lb-need::before{content:"";flex:none;width:16px;height:16px;background:currentColor;-webkit-mask:var(--lb-nowifi) center/contain no-repeat;mask:var(--lb-nowifi) center/contain no-repeat}
+.lb-sheet:is([data-net=off],[data-net=full]) .lb-need{display:flex}
+.lb-bots{position:relative;z-index:2;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px;padding:3px;border-radius:14px;background:rgba(0,0,0,.4);box-shadow:inset 0 1px 2px rgba(0,0,0,.5)}
+.lb-bots button{appearance:none;border:0;background:none;min-width:0;height:38px;padding:0 2px;border-radius:11px;color:var(--muted);font:700 12px/1 var(--display);cursor:pointer;transition:background .2s,color .2s,box-shadow .2s}
+.lb-bots button[aria-checked=true]{color:var(--k);background:linear-gradient(180deg,rgba(255,255,255,.15),rgba(255,255,255,.05));box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 3px 10px -3px rgba(0,0,0,.5)}
+.lb-bots [data-k=easy]{--k:var(--lb-mint)}.lb-bots [data-k=normal]{--k:var(--ink)}.lb-bots [data-k=hard]{--k:#ffc04d}.lb-bots [data-k=expert]{--k:#ff7aa0}
+/* landscape phones */
+@media (orientation:landscape) and (max-height:520px){
+  .lobby{--lb-hw:min(270px,36vw);gap:8px 16px;padding:max(10px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+  .lobby .lb-top{min-height:44px}.lobby .lb-me,.lobby .lb-icon{width:44px;height:44px}.lobby .lb-atp,.lobby .lb-event{height:44px}.lobby .lb-me canvas{width:38px;height:38px}
+  .lobby .lb-brand{font-size:25px}
+  .lobby .lb-rail{gap:10px}.lobby .railbtn{width:52px;height:52px;border-radius:17px}.lobby .railbtn svg{width:25px;height:25px}
+  .lobby .lb-hero{gap:8px}.lobby .hero-cell{width:min(44vh,190px);margin-bottom:18px}
+  .lb-name{font-size:24px}
+  .lobby .hero-rank{padding:7px 14px 8px;gap:6px}.lobby .hero-rank .ht{font-size:15px}
+  .lobby .lb-play{gap:8px;width:min(100%,250px)}
+  .lb-modebtn{height:48px;font-size:15px;border-radius:16px}.lb-modebtn .ic{width:32px;height:32px;border-radius:11px}.lb-switch{height:48px;width:58px;border-radius:16px}
+  .lobby .lb-go{height:62px;font-size:27px;border-radius:20px}.lobby .lb-go::before{width:32px;height:32px;background-size:14px}
+  .lobby #go.queued{font-size:16px}.lobby .lb-go.lb-off{font-size:17px}
+  .lb-sheet-box{padding:12px 14px 14px;gap:10px;border-radius:26px}.lb-sheet-top h2{font-size:21px}
+  .lb-mcard{min-height:0;padding:14px 12px 12px;gap:10px;border-radius:22px}.lb-mic{width:54px;height:54px;border-radius:18px}.lb-mic svg{width:28px;height:28px}.lb-mpick b{font-size:19px}
+}
+/* portrait: stacked, Play at the bottom under the thumb */
+@media (orientation:portrait){
+  .lobby{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto auto;grid-template-areas:"top" "hero" "rail" "play";gap:18px;--lb-hw:calc(100vw - 40px)}
+  .lobby .lb-top{grid-template-columns:auto 1fr auto;row-gap:12px}
+  .lobby:not(.event) .lb-brand{display:block;justify-self:center}
+  .lobby .lb-event{grid-column:1/-1;grid-row:2;justify-self:center}
+  .lobby .lb-rail{flex-direction:row;justify-self:center;gap:14px}.lobby .railbtn{flex:none;width:60px;height:60px}
+  .lobby .hero-cell{width:min(58vw,270px)}
+  .lobby .lb-play{justify-self:center;width:100%;max-width:440px}
+  .lb-sheet{place-items:end center}.lb-sheet-box{width:min(480px,100%)}
+  .lb-cards{grid-template-columns:minmax(0,1fr)}
+  .lb-mcard{min-height:0;grid-template-rows:none;padding:14px;gap:12px}
+  .lb-mpick{grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto;justify-items:start;text-align:left;column-gap:14px;row-gap:5px}
+  .lb-mic{grid-row:1/3;width:54px;height:54px;margin:0;border-radius:18px}.lb-mic svg{width:28px;height:28px}
+  .lb-mpick b{align-self:end}.lb-mpick small{align-self:start}
+  .lb-mstat{justify-items:start;min-height:0;padding-left:68px}.lb-mstat:empty{display:none}
+  .lb-mcard[data-m=nearby] .lb-mstat:not(:has(p)){display:none}
+}
+/* big screens */
+@media (min-width:1100px){.lobby{padding-left:max(48px,calc(50vw - 640px));padding-right:max(48px,calc(50vw - 640px))}}
+@media (min-width:1100px) and (min-height:700px){
+  .lobby{--lb-hw:min(400px,32vw);gap:16px 32px;padding-top:max(24px,env(safe-area-inset-top));padding-bottom:max(32px,env(safe-area-inset-bottom))}
+  .lobby .lb-top{min-height:50px}.lobby .lb-me,.lobby .lb-icon{width:50px;height:50px}.lobby .lb-atp,.lobby .lb-event{height:50px}.lobby .lb-me canvas{width:44px;height:44px}
+  .lobby .railbtn{width:66px;height:66px;border-radius:21px}.lobby .railbtn svg{width:30px;height:30px}.lobby .lb-rail{gap:14px}
+  .lobby .hero-cell{width:clamp(240px,38vh,330px);margin-bottom:20px}.lobby .lb-hero{gap:14px}
+  .lb-name{font-size:40px}.lb-name svg{width:22px;height:22px}
+  .lobby .hero-rank{padding:10px 20px 11px}.lobby .hero-rank .ht{font-size:19px}
+  .lobby .lb-play{width:min(100%,320px);gap:12px}
+  .lb-modebtn{height:58px;font-size:17px}.lb-modebtn .ic{width:40px;height:40px}.lb-switch{height:58px;width:68px}
+  .lobby .lb-go{height:84px;font-size:36px;border-radius:26px}.lobby .lb-go::before{width:46px;height:46px;background-size:19px}
+  .lb-mcard{min-height:230px}
+}
 /* @ui:lobby end */
 
 /* @ui:shop */
@@ -629,34 +830,50 @@ body:not(.playing) #tip{display:none}
 <div id="overlay">
   <div class="lobby" id="startCard">
     <header class="lb-top">
-      <button class="lb-me" id="profBtn" type="button" aria-label="Profile"><canvas id="meCv" width="96" height="96"></canvas><span class="lb-me-txt"><b id="meName">Unnamed cell</b><span class="lb-me-sub"><span class="tier" id="rankTier">Silver</span><span id="rankVal">1000</span></span></span></button>
+      <button class="lb-me" id="profBtn" type="button" aria-label="Profile"><canvas id="meCv" width="144" height="144" aria-hidden="true"></canvas><span class="lb-me-txt"><b id="meName">Unnamed cell</b><span class="lb-me-sub"><span class="tier" id="rankTier">Silver</span><span id="rankVal">1000</span></span></span></button>
       <h1 class="lb-brand">Mitosis</h1>
-      <button class="lb-event" id="eventPill" type="button" hidden><i aria-hidden="true"></i><span><b id="eventName"></b><small id="eventSub"></small></span></button>
+      <button class="lb-event" id="eventPill" type="button" hidden><svg class="lb-pumpkin" viewBox="0 0 32 32" aria-hidden="true"><path d="M15.2 9.5c-.2-2.4.4-4.6 2.4-5.8l1.4 1.2c-1.4 1-1.8 2.6-1.6 4.6z" fill="#5c8f2e"/><ellipse cx="10.4" cy="19" rx="7.4" ry="9.4" fill="#d9640c"/><ellipse cx="21.6" cy="19" rx="7.4" ry="9.4" fill="#d9640c"/><ellipse cx="16" cy="19" rx="7.8" ry="10.2" fill="#ff8a1f"/><ellipse cx="13" cy="13.5" rx="2.6" ry="1.4" fill="#ffc27a" opacity=".55" transform="rotate(-30 13 13.5)"/><path d="M10.6 16.2l3.2 2.6h-3.6zM21.4 16.2l-3.2 2.6h3.6zM9.8 22c2.6 2.4 9.8 2.4 12.4 0-.8 3.6-11.6 3.6-12.4 0z" fill="#3a1200"/></svg><span><b id="eventName"></b><small id="eventSub"></small></span></button>
       <div class="lb-right">
-        <button class="lb-atp" id="atpChip" type="button" aria-label="ATP balance, open the shop"><i aria-hidden="true"></i><b id="lobbyAtp">0</b><span aria-hidden="true">+</span></button>
-        <button class="lb-icon" id="setBtn" type="button" aria-label="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg></button>
+        <button class="lb-atp" id="atpChip" type="button" aria-label="ATP balance, open the shop"><i aria-hidden="true"></i><b id="lobbyAtp">0</b><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg></span></button>
+        <button class="lb-icon" id="setBtn" type="button" aria-label="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
       </div>
     </header>
+    <svg class="lb-sprite" aria-hidden="true" focusable="false"><symbol id="lbi-ranked" viewBox="0 0 24 24"><path d="M3.5 8.5l4.2 3.3L12 5.5l4.3 6.3 4.2-3.3-1.8 10H5.3z"/><path d="M6 21h12"/></symbol><symbol id="lbi-casual" viewBox="0 0 24 24"><rect x="4.5" y="8" width="15" height="11.5" rx="3.5"/><path d="M12 8V4.5M2 12.5v3M22 12.5v3"/><circle cx="12" cy="3.6" r="1.1"/><circle cx="9.3" cy="13.6" r="1.4" fill="currentColor" stroke="none"/><circle cx="14.7" cy="13.6" r="1.4" fill="currentColor" stroke="none"/></symbol><symbol id="lbi-nearby" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1.9" fill="currentColor" stroke="none"/><path d="M8.6 8.6a4.8 4.8 0 0 0 0 6.8M15.4 8.6a4.8 4.8 0 0 1 0 6.8M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8"/></symbol></svg>
     <nav class="lb-rail" aria-label="Menu">
-      <button class="railbtn" id="lookBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.6"/><circle cx="7.5" cy="9" r="1" fill="currentColor"/><circle cx="16.5" cy="9.5" r="1" fill="currentColor"/><circle cx="9" cy="16" r="1" fill="currentColor"/></svg><span>Skins</span></button>
-      <button class="railbtn" id="shopBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg><span>Shop</span></button>
-      <button class="railbtn" id="rankBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3"/><path d="M12 14v4M8 20h8"/></svg><span>Ranks</span></button>
+      <button class="railbtn" id="lookBtn" type="button" aria-label="Skins" title="Skins"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1 0 1.7-.8 1.7-1.7 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.9.8-1.7 1.7-1.7h2A4.4 4.4 0 0 0 21 11c0-4.4-4-8-9-8z"/><circle cx="7.5" cy="11.5" r="1.4" fill="currentColor" stroke="none"/><circle cx="10.5" cy="7.3" r="1.4" fill="currentColor" stroke="none"/><circle cx="15.5" cy="7.8" r="1.4" fill="currentColor" stroke="none"/></svg></button>
+      <button class="railbtn" id="shopBtn" type="button" aria-label="Shop" title="Shop"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 8h13l-1 12.5h-11z"/><path d="M9 10.5V7a3 3 0 0 1 6 0v3.5"/></svg></button>
+      <button class="railbtn" id="rankBtn" type="button" aria-label="Ranks" title="Ranks"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3"/><path d="M12 14v4M8 20h8"/></svg></button>
     </nav>
     <section class="lb-hero">
-      <button type="button" class="hero-cell" id="avatarBtn" aria-label="Change your skin"><canvas id="avatarCv" width="320" height="320"></canvas><span class="hero-edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 3.5a2.1 2.1 0 0 1 3 3L12 17l-3-3z"/><path d="M9 14c-2.2 0-4 1.7-4 3.9 0 1.3-.8 2.2-2.5 2.6 1.2.9 2.8 1.5 4.5 1.5 3.3 0 5-2 5-5"/></svg>Change skin</span></button>
+      <button type="button" class="hero-cell" id="avatarBtn" aria-label="Change your skin"><canvas id="avatarCv" width="320" height="320" aria-hidden="true"></canvas><span class="hero-edit" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M19.5 3.5a2.1 2.1 0 0 1 3 3L12 17l-3-3z"/><path d="M9 14c-2.2 0-4 1.7-4 3.9 0 1.3-.8 2.2-2.5 2.6 1.2.9 2.8 1.5 4.5 1.5 3.3 0 5-2 5-5"/></svg></span></button>
       <div class="hero-id">
-        <label class="label" for="nameIn">Specimen name</label>
-        <input id="nameIn" type="text" maxlength="16" placeholder="Unnamed cell" autocomplete="off" spellcheck="false">
-        <div class="hero-rank" id="rankChip"><div class="tierbar" aria-hidden="true"><i id="tierFill"></i></div><span class="ht"><b class="tier" id="heroTier">Silver</b> <span id="heroRating">1000</span></span><span class="next" id="rankNext"></span></div>
+        <label class="lb-name"><input id="nameIn" type="text" maxlength="16" placeholder="Unnamed cell" autocomplete="off" spellcheck="false" enterkeyhint="go" aria-label="Your name"><span class="lb-measure" id="nameMeasure" aria-hidden="true"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg></label>
+        <button type="button" class="hero-rank" id="rankChip" aria-label="Your rank"><span class="ht"><b class="tier" id="heroTier">Silver</b><span id="heroRating">1000</span></span><span class="next" id="rankNext"></span><span class="tierbar" aria-hidden="true"><i id="tierFill"></i></span></button>
       </div>
     </section>
-    <section class="lb-play">
-      <div class="lb-net" id="netSeg" role="group" aria-label="Where to play" hidden><button type="button" data-n="online" aria-pressed="true">Online</button><button type="button" data-n="nearby" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10-5 4V3l5 4L7 17"/></svg>Nearby</button></div>
-      <div class="lb-mode"><span class="label" id="modeLbl">Ranked · live arena</span><span class="lb-mode-sub" id="modeSub">10-minute rounds · two lives</span></div>
-      <div class="status"><p id="netLine" class="netline"><i></i><span>Connecting…</span></p><p id="roundLine" hidden></p></div>
-      <button id="go" class="primary play" type="button">Play</button>
-      <div class="prow"><button id="practiceBtn" class="ghost practice" type="button">Practice vs bots<small>unranked</small></button><button id="skillBtn" class="ghost skillbtn" type="button" aria-label="Bot difficulty">Normal</button></div>
+    <section class="lb-play" id="lbPlay" data-mode="ranked" data-net="wait" data-k="normal">
+      <div class="lb-moderow">
+        <button type="button" class="lb-modebtn" id="modeBtn" aria-haspopup="dialog" aria-controls="modeSheet"><span class="ic"><svg class="m-ranked"><use href="#lbi-ranked"/></svg><svg class="m-casual"><use href="#lbi-casual"/></svg><svg class="m-nearby"><use href="#lbi-nearby"/></svg><i class="lb-netdot"></i></span><b id="modeName">Ranked</b><span class="lb-pips" aria-hidden="true"><i></i><i></i><i></i><i></i></span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg></button>
+        <button type="button" class="lb-switch" id="lbToCasual" aria-label="Switch to Casual" title="Casual"><svg aria-hidden="true"><use href="#lbi-casual"/></svg><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+      </div>
+      <button id="go" class="lb-go" type="button">Play</button>
+      <button id="practiceBtn" class="lb-go" type="button">Play</button>
+      <button id="lbWait" class="lb-go lb-off" type="button" disabled>Connecting…</button>
+      <button id="skillBtn" type="button" hidden>Normal</button>
     </section>
+    <div class="lb-sheet" id="modeSheet" role="dialog" aria-modal="true" aria-labelledby="modeTitle" hidden>
+      <div class="lb-sheet-box">
+        <header class="lb-sheet-top"><h2 id="modeTitle">Mode</h2><button type="button" class="lb-icon" id="modeClose" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
+        <div class="lb-cards" id="modeSeg" role="radiogroup" aria-label="Game mode">
+          <div class="lb-mcard" data-m="ranked"><button type="button" class="lb-mpick" role="radio" data-m="ranked" aria-checked="true"><span class="lb-mic"><svg><use href="#lbi-ranked"/></svg></span><b>Ranked</b><small>Online · rated</small></button>
+            <div class="lb-mstat" id="lbRankStat"><p id="netLine" class="lb-netline"><i></i><span>Connecting…</span></p><p id="roundLine" hidden></p><p class="lb-need" id="lbNeed">Needs Wi-Fi or cellular</p></div></div>
+          <div class="lb-mcard" data-m="casual"><button type="button" class="lb-mpick" role="radio" data-m="casual" aria-checked="false"><span class="lb-mic"><svg><use href="#lbi-casual"/></svg></span><b>Casual</b><small>Bots · offline</small></button>
+            <div class="lb-bots" id="lbSkill" role="radiogroup" aria-label="Bot difficulty"><button type="button" role="radio" data-k="easy">Easy</button><button type="button" role="radio" data-k="normal">Normal</button><button type="button" role="radio" data-k="hard">Hard</button><button type="button" role="radio" data-k="expert">Expert</button></div></div>
+          <div class="lb-mcard" data-m="nearby" hidden><button type="button" class="lb-mpick" role="radio" data-m="nearby" aria-checked="false"><span class="lb-mic"><svg><use href="#lbi-nearby"/></svg></span><b>Nearby</b><small>Phones around you</small></button>
+            <div class="lb-mstat" id="lbNearStat"></div></div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="card panel intro" id="introCard" hidden>
@@ -2686,13 +2903,13 @@ function netUI(){
   const pill=$('netPill'),line=$('netLine'),others=peerCount-1,N=window.__mitosisNet;
   pill.hidden=!(room&&myPeer&&others>0);pill.textContent=`${others+1} live`;
   let txt,live=false;
-  if(!N)txt='Solo — double-click start.bat, then play at http://localhost:3000 to invite others.';
-  else if(N.state==='full')txt='This well is full — 16 players max.';
-  else if(N.mode==='nearby'){txt=others>0?`Nearby · with ${netNames.slice(0,3).join(', ')}${netNames.length>3?` +${netNames.length-3}`:''}`:'Nearby · looking for phones… open Nearby on theirs too';live=true;}
-  else if(N.state==='offline')txt=Native.platform?'Offline · Play starts a game against bots, or try Nearby':'Lost the server — reconnecting… (is start.bat still open?)';
-  else if(N.state!=='live'||!myPeer)txt='Connecting to the server…';
-  else if(others<=0){txt='Live · nobody else is here yet.';live=true;}
-  else{txt=`Live · ${others} other${others>1?'s':''} here${netNames.length?': '+netNames.slice(0,3).join(', ')+(netNames.length>3?'…':''):''}`;live=true;}
+  if(!N)txt='Solo';
+  else if(N.state==='full')txt='Server full';
+  else if(N.mode==='nearby'){txt=others>0?`With ${netNames.slice(0,2).join(', ')}${netNames.length>2?` +${netNames.length-2}`:''}`:'Looking for phones…';live=true;}
+  else if(N.state==='offline')txt='No connection';
+  else if(N.state!=='live'||!myPeer)txt='Connecting…';
+  else if(others<=0){txt='Online';live=true;}
+  else{txt=`${others+1} online`;live=true;}
   if(live&&N&&N.mode!=='nearby'&&N.rtt!=null)txt+=` · ${Math.round(N.rtt)} ms`;
   line.classList.toggle('live',live);const sp=line.querySelector('span');if(sp.textContent!==txt)sp.textContent=txt;
   const rl=$('roundLine');if(rl){let rt='';if(live&&!local&&(round.synced||isHost)&&!round.over&&roundT()>=0&&roundT()<ROUND_SEC){const left=ROUND_SEC-roundT();rt=`Round · ${Math.floor(left/60)}:${String(Math.floor(left%60)).padStart(2,'0')} left · ${roundOpen()?'spawns open':'spawns closed'}`;}rl.hidden=!rt;if(rl.textContent!==rt)rl.textContent=rt;}
@@ -3075,7 +3292,68 @@ joySegEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
 handSegEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.lefty=b.dataset.l==='1';saveSettings();syncControls();});syncControls();
 $('nameIn').value=settings.name||'';$('nameIn').addEventListener('input',renderMe);$('atpChip').addEventListener('click',()=>openStore());
 (function heroLoop(){if(!$('startCard').hidden&&!document.hidden&&!RM)drawAvatar();requestAnimationFrame(heroLoop);})();renderMe();
-$('go').addEventListener('click',startGame);
+/* Lobby Play: one big button and a mode picker. Ranked = the live arena, rated, needs the server; Casual = you and bots on
+   this device, unrated, works offline (the old Practice); Nearby = phones around you (iOS app). #go plays Ranked and
+   Nearby (updateSpawnLock writes its label: Play / Searching…), #practiceBtn plays Casual, #lbWait stands in for Ranked
+   while there is no connection. The choice is kept in settings.playMode; with no server at launch the lobby opens on Casual. */
+let lbMode=settings.playMode==='casual'?'casual':'ranked',lbBoot=true,lbWasOff=false,lbFit='';
+const lbT0=performance.now();
+function lbNet(){ // the server as Ranked sees it: live | wait (first try) | off (unreachable, still retrying) | full | nearby
+  const N=window.__mitosisNet;if(!N)return'off';if(N.mode==='nearby')return'nearby';
+  if(N.state==='live'){lbWasOff=false;return'live';}if(N.state==='full')return'full';
+  if(N.state==='offline')lbWasOff=true;return lbWasOff?'off':'wait';}
+function setPlayMode(m){
+  if(m==='nearby'&&Native.platform!=='ios')m='ranked';if(m!=='casual'&&m!=='nearby')m='ranked';
+  lbBoot=false;if(m!==lbMode&&queued){queued=false;updateSpawnLock();} // a ranked search stops when you switch away
+  lbMode=m;if(m!=='nearby'){settings.playMode=m;saveSettings();}
+  if((m==='nearby')!==isNearby())setNearby(m==='nearby');else syncPlay();
+}
+function lobbyPlay(){
+  if(lbMode==='casual'){startLocal('practice');return;}
+  if(lbMode==='ranked'&&lbNet()!=='live'){syncPlay();return;} // ranked never starts without the server
+  if(local)leaveLocal();startGame();
+}
+function fitName(){ // the name field is as wide as the name, so the pencil sits right after it
+  const inp=$('nameIn'),m=$('nameMeasure');if(!inp||!m||$('startCard').hidden)return;
+  const k=inp.value+'|'+innerWidth+'|'+innerHeight+'|'+(document.fonts?document.fonts.status:'');if(k===lbFit)return;
+  m.textContent=inp.value||inp.placeholder;const w=m.getBoundingClientRect().width;if(!w)return;lbFit=k;inp.style.width=Math.ceil(w)+3+'px';}
+function lbSharp(cv){ // canvases drawn at the screen's real resolution
+  if(!cv||!cv.clientWidth)return;const w=Math.min(720,Math.round(cv.clientWidth*(window.devicePixelRatio||1)));if(w>=48&&cv.width!==w){cv.width=cv.height=w;drawAvatar(cv);}}
+function syncPlay(){
+  const box=$('lbPlay');if(!box)return;const net=lbNet(),ios=Native.platform==='ios',home=!$('startCard').hidden,sheet=$('modeSheet');
+  if(lbBoot){if(lbMode!=='ranked'||net==='live')lbBoot=false;else if(net==='off'||net==='full'||performance.now()-lbT0>6000){lbBoot=false;lbMode='casual';}} // no server at launch: Casual
+  if(lbMode==='nearby'&&!isNearby())lbMode=settings.playMode==='casual'?'casual':'ranked';
+  const k=SKILL[settings.botSkill]?settings.botSkill:'normal',set=(el,a,v)=>{if(el.getAttribute(a)!==v)el.setAttribute(a,v);};
+  const ds={mode:lbMode,net,k,peers:peerCount>1?'1':'0'};for(const n in ds)if(box.dataset[n]!==ds[n]){box.dataset[n]=ds[n];sheet.dataset[n]=ds[n];}
+  const nm=lbMode==='casual'?'Casual':lbMode==='nearby'?'Nearby':'Ranked';if($('modeName').textContent!==nm)$('modeName').textContent=nm;
+  set($('modeBtn'),'aria-label',`Mode: ${nm}${lbMode==='casual'?', '+SKILL[k].label+' bots':''}. Change mode`);
+  const wt=net==='full'?'Server full':net==='wait'?'Connecting…':'No connection',w=$('lbWait');if(w.textContent!==wt)w.textContent=wt;
+  const nt=net==='full'?'Arena full · 16 max':'Needs Wi-Fi or cellular',ne=$('lbNeed');if(ne.textContent!==nt)ne.textContent=nt;
+  const cards=[...$('modeSeg').children];cards[2].hidden=!ios;$('modeSeg').style.setProperty('--n',cards.filter(c=>!c.hidden).length);
+  for(const c of cards){set(c,'data-on',String(c.dataset.m===lbMode));set(c.querySelector('.lb-mpick'),'aria-checked',String(c.dataset.m===lbMode));}
+  for(const b of $('lbSkill').children)set(b,'aria-checked',String(b.dataset.k===k));
+  const nl=$('netLine'),host=lbMode==='nearby'?$('lbNearStat'):$('lbRankStat');if(nl.parentNode!==host)host.prepend(nl); // the live line sits on the card of the network in use
+  if(queued&&lbMode==='ranked'&&net==='off'&&home){queued=false;updateSpawnLock();} // lost the server mid-search
+  if(!home&&!sheet.hidden)sheet.hidden=true;
+  if(home){fitName();lbSharp($('avatarCv'));lbSharp($('meCv'));}
+}
+function modeSheet(open){const sh=$('modeSheet');if(sh.hidden===!open)return;sh.hidden=!open;syncPlay();
+  if(open){const b=sh.querySelector('.lb-mcard[data-on=true] .lb-mpick');if(b)b.focus({preventScroll:true});}else $('modeBtn').focus({preventScroll:true});}
+setInterval(syncPlay,250);addEventListener('resize',()=>{lbFit='';syncPlay();});if(document.fonts)document.fonts.ready.then(()=>{lbFit='';fitName();});
+$('modeBtn').addEventListener('click',()=>{modeSheet(true);Native.haptic('light');});
+$('modeClose').addEventListener('click',()=>modeSheet(false));
+$('modeSheet').addEventListener('click',e=>{if(e.target===e.currentTarget)modeSheet(false);}); // tap outside the box
+$('modeSeg').addEventListener('click',e=>{const b=e.target.closest('.lb-mpick');if(!b)return;setPlayMode(b.dataset.m);Native.haptic('light');setTimeout(()=>modeSheet(false),RM?0:180);});
+$('lbToCasual').addEventListener('click',()=>{setPlayMode('casual');Native.haptic('light');});
+$('lbSkill').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.botSkill=b.dataset.k;saveSettings();syncSkill();setPlayMode('casual');});
+$('rankChip').addEventListener('click',()=>$('rankBtn').click());
+$('nameIn').addEventListener('input',fitName);
+// Enter on the lobby (or Go on the name keyboard) presses Play for the chosen mode; Escape closes the mode sheet
+addEventListener('keydown',e=>{if($('startCard').hidden||mode==='play')return;const t=e.target,tag=t&&t.tagName,sh=!$('modeSheet').hidden;
+  if(e.key==='Escape'&&sh){e.preventDefault();e.stopImmediatePropagation();modeSheet(false);return;}
+  if(e.key!=='Enter'||tag==='BUTTON'||tag==='TEXTAREA'||(tag==='INPUT'&&t.id!=='nameIn'))return;
+  e.preventDefault();e.stopImmediatePropagation();if(tag==='INPUT')t.blur();if(sh)modeSheet(false);else lobbyPlay();},true);
+$('go').addEventListener('click',lobbyPlay);
 $('practiceBtn').addEventListener('click',()=>startLocal('practice'));
 // Nearby (iOS app): play the phones around you over Bluetooth and peer-to-peer Wi-Fi, with no server or internet. Unranked.
 function setNearby(on){
@@ -3086,15 +3364,13 @@ function setNearby(on){
   else{Native.send({type:'nearby',cmd:'stop'});N.useNearby(null);}
   claimReady=false;yielded=false;roomAt=T;lastPeerCount=-1;syncNearby(); // elect a host again among whoever is reachable now
 }
-function syncNearby(){
-  const on=isNearby(),seg=$('netSeg');seg.hidden=Native.platform!=='ios';for(const b of seg.children)b.setAttribute('aria-pressed',String((b.dataset.n==='nearby')===on));
-  document.querySelector('.lb-play').classList.toggle('nearby',on);
-  $('modeLbl').textContent=on?'Nearby · Bluetooth & Wi-Fi':'Ranked · live arena';$('modeSub').textContent=on?'Phones around you · unranked':'10-minute rounds · two lives';netUI();
+function syncNearby(){ // Nearby is one of the lobby's play modes: it follows the app turning nearby play on or off
+  if(isNearby())lbMode='nearby';else if(lbMode==='nearby')lbMode=settings.playMode==='casual'?'casual':'ranked';
+  netUI();syncPlay();
 }
-$('netSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(b)setNearby(b.dataset.n==='nearby');});
 // Lobby event pill: while a season is on, it replaces the title and opens the shop on its limited skins
 function syncEvent(){const key=Object.keys(SEASONS).find(k=>seasonState(k).open),pill=$('eventPill');pill.hidden=!key;$('startCard').classList.toggle('event',!!key);if(!key)return;
-  const st=seasonState(key),n=PREMIUM.filter(S=>S.season===key).length;$('eventName').textContent=st.name+' event';$('eventSub').textContent=`${n} limited skins · ${fmtLeft(st.ends-Date.now())} left`;}
+  const st=seasonState(key),left=fmtLeft(st.ends-Date.now());$('eventName').textContent=st.name;$('eventSub').textContent=left;pill.setAttribute('aria-label',`${st.name} event, limited skins, ${left} left`);}
 $('eventPill').addEventListener('click',()=>{const key=Object.keys(SEASONS).find(k=>seasonState(k).open),S=PREMIUM.find(x=>x.season===key&&!ownsSkin(x.id))||PREMIUM.find(x=>x.season===key);if(S)shopSel=S.id;openStore();});
 syncEvent();setInterval(syncEvent,60000);
 syncNearby();
