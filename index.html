@@ -175,15 +175,7 @@ button:focus-visible,.sw:focus-visible{outline:2px solid var(--ink);outline-offs
 .toast{display:grid;gap:2px;justify-items:center;text-align:center;padding:10px 18px;border-radius:12px;background:var(--panel);border:1px solid rgba(242,193,78,.55);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);animation:up .35s cubic-bezier(.2,.8,.2,1);transition:opacity .5s,transform .5s}
 .toast .label{color:#f2c14e}.toast b{font:800 17px/1.2 var(--display)}.toast span:last-child{font:12px var(--display);color:var(--muted)}
 .toast.out{opacity:0;transform:translateY(-8px)}
-.pats{display:flex;gap:10px;flex-wrap:wrap}
-.pat{appearance:none;width:32px;height:32px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;box-shadow:inset 0 0 0 3px rgba(0,0,0,.28);transition:transform .15s}
-.pat:hover{transform:scale(1.08)}
-.pat[aria-pressed=true]{border-color:var(--ink)}
-.pat.p0{background:var(--c)}
-.pat.p1{background:radial-gradient(circle at 30% 35%,rgba(0,0,0,.3) 0 14%,transparent 15%),radial-gradient(circle at 68% 58%,rgba(0,0,0,.3) 0 12%,transparent 13%),radial-gradient(circle at 40% 76%,rgba(0,0,0,.3) 0 9%,transparent 10%),var(--c)}
-.pat.p2{background:repeating-linear-gradient(45deg,rgba(0,0,0,.28) 0 3px,transparent 3px 8px),var(--c)}
-.pat.p3{background:repeating-radial-gradient(circle,rgba(0,0,0,.3) 0 2px,transparent 2px 6px),var(--c)}
-.pat.p4{background:conic-gradient(from 30deg,rgba(0,0,0,.3),transparent 25%,rgba(0,0,0,.22) 50%,transparent 75%,rgba(0,0,0,.3)),var(--c)}
+
 .achline{margin:0;font:12px/1.5 var(--mono);color:var(--muted)}
 #dAch{margin:0;font:600 12.5px/1.3 var(--display);color:#f2c14e}
 .rmeter{display:grid;grid-template-columns:auto auto 1fr auto;align-items:center;gap:4px 10px;padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:rgba(0,0,0,.22);margin:0!important}
@@ -290,21 +282,13 @@ body:not(.playing) #joy{display:none!important}
 #stats,#roundClock{pointer-events:auto;cursor:pointer;-webkit-tap-highlight-color:transparent}
 #stats.mini #metaVal,#stats.mini .livesrow{display:none}#stats.mini{padding:4px 10px}
 #roundClock.mini .rcx{display:none}
-body.hud-hidden #stats,body.hud-hidden #roundClock,body.hud-hidden #board,body.hud-hidden #mini,body.hud-hidden #fx,body.hud-hidden #feed,body.hud-hidden #banner.mini{display:none!important}
-#hudBtn{font-size:0;width:36px;height:36px;padding:0;border-radius:50%;display:grid;place-items:center;color:#cfe8e2}
-#hudBtn::before{content:'';width:18px;height:18px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E") center/contain no-repeat}
-#hudBtn[aria-pressed=true]::before{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 3l18 18M10.6 5.1A10.4 10.4 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4M6.6 6.6C3.8 8.4 2 12 2 12s3.6 7 10 7a9.6 9.6 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 3l18 18M10.6 5.1A10.4 10.4 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4M6.6 6.6C3.8 8.4 2 12 2 12s3.6 7 10 7a9.6 9.6 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2'/%3E%3C/svg%3E")}
-@media (pointer:fine){#hudBtn{width:auto;height:auto;font-size:11px;padding:7px 13px;border-radius:999px}#hudBtn::before{display:none}}
 /* mutation and achievement pop-ups: one small line on phones, under the clock */
 @media (pointer:coarse){#toasts{top:calc(var(--gut) + 40px + env(safe-area-inset-top,0px))!important;gap:4px}.toast{display:flex!important;gap:7px;align-items:baseline;padding:4px 12px!important;border-radius:999px!important;max-width:min(70vw,420px)}.toast .label{font-size:9px!important;letter-spacing:.12em}.toast b{font-size:12.5px!important;white-space:nowrap}.toast span:last-child{display:none}}
 /* collapsible leaderboard */
 /* touch HUD: icon buttons and a compact ranking chip, so the arena keeps the screen */
 @media (pointer:coarse){
   #roundClock{font-size:11px;padding:6px 11px}
-  #scale{gap:8px}#pauseBtn,#snd{width:36px;height:36px;padding:0;font-size:0;border-radius:50%;display:grid;place-items:center;color:#cfe8e2}
-  #pauseBtn::before{content:'';width:11px;height:13px;background:linear-gradient(90deg,currentColor 0 34%,transparent 34% 66%,currentColor 66%)}
-  #snd::before{content:'';width:17px;height:17px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 9h4l5-4v14l-5-4H4z'/%3E%3Cpath d='M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 9h4l5-4v14l-5-4H4z'/%3E%3Cpath d='M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat}
-  #snd[aria-pressed=false]::before{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 9h4l5-4v14l-5-4H4z'/%3E%3Cpath d='M16.5 9.5l5 5M21.5 9.5l-5 5' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 9h4l5-4v14l-5-4H4z'/%3E%3Cpath d='M16.5 9.5l5 5M21.5 9.5l-5 5' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E")}
+  #scale{gap:8px}
   #board.collapsed{padding:6px 10px}#board.collapsed .bhead .label{display:none}#board.collapsed .bhead{gap:7px}
   #board.collapsed .bhead::before{content:'';width:16px;height:16px;flex:none;background:#cfe8e2;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 4h10v5a5 5 0 0 1-10 0V4z'/%3E%3Cpath d='M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3M12 14v4M8 20h8'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 4h10v5a5 5 0 0 1-10 0V4z'/%3E%3Cpath d='M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3M12 14v4M8 20h8'/%3E%3C/svg%3E") center/contain no-repeat}
 }
@@ -350,7 +334,9 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
 .hero-cell{appearance:none;position:relative;border:0;padding:0;background:none;cursor:pointer;width:clamp(150px,30vh,230px);aspect-ratio:1;display:grid;place-items:center;animation:bob 4.5s ease-in-out infinite}
 .hero-cell::before{content:"";position:absolute;inset:-14%;border-radius:50%;background:radial-gradient(circle,rgba(255,92,138,.22),rgba(255,92,138,0) 65%);pointer-events:none}
 .hero-cell canvas{position:relative;width:100%;height:100%;display:block}
-.hero-edit{position:absolute;bottom:2%;left:50%;transform:translateX(-50%);font:600 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:rgba(2,8,9,.7);border:1px solid var(--line-strong);border-radius:999px;padding:5px 10px;white-space:nowrap}
+.hero-edit{position:absolute;bottom:-4%;left:50%;transform:translateX(-50%);display:inline-flex;align-items:center;gap:7px;font:700 13.5px/1 var(--display);letter-spacing:-.01em;color:var(--accent-ink);background:var(--ink);border-radius:999px;padding:9px 16px 9px 12px;white-space:nowrap;box-shadow:0 8px 22px rgba(0,0,0,.5),0 0 0 4px rgba(2,8,9,.6);transition:transform .15s}
+.hero-edit svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.hero-cell:hover .hero-edit{background:#fff}.hero-cell:active .hero-edit{transform:translateX(-50%) scale(.95)}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 .hero-id{display:grid;gap:7px;min-width:0;max-width:340px}
 .hero-id input[type=text]{background:transparent;border:0;border-bottom:1.5px solid var(--line-strong);border-radius:0;padding:4px 0 6px;font:800 30px/1.1 var(--display);letter-spacing:-.03em;color:var(--ink);width:100%;box-sizing:border-box;outline:none;user-select:text;-webkit-user-select:text}
@@ -543,6 +529,68 @@ body:not(.playing) #tip{display:none}
 }
 @media (min-width:1100px){.shopview{padding-left:max(48px,calc(50vw - 620px));padding-right:max(48px,calc(50vw - 620px))}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* Skins page: a big live preview beside the default-cell customiser and the skins you own */
+#overlay>#lookCard.page{grid-template-columns:minmax(0,1fr);gap:14px 26px}
+#lookCard .lk-stage{display:grid;justify-items:center;align-content:start;gap:3px;padding:4px 0;text-align:center}
+#lookCard .lk-stage canvas{width:min(46vw,190px);height:auto;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,rgba(255,92,138,.18),rgba(255,92,138,0) 66%);animation:bob 4.5s ease-in-out infinite}
+#lookCard .lk-stage b{font:800 24px/1.1 var(--display);letter-spacing:-.03em;margin-top:6px}
+#lookCard .lk-stage span{font:600 10.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}
+#lookCard .lk-side{display:grid;gap:14px;min-width:0}
+#lookCard .lk-sec{display:grid;gap:10px;padding:16px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.012))}
+#lookCard .lk-head{display:flex;align-items:baseline;justify-content:space-between;gap:4px 12px;flex-wrap:wrap}
+#lookCard .lk-head b{font:800 18px/1.1 var(--display);letter-spacing:-.02em}
+#lookCard .lk-head span{font-size:12.5px;color:var(--muted)}
+#lookCard .swatches{display:flex;flex-wrap:wrap;gap:12px}
+#lookCard .sw{width:40px;height:40px;border:0;box-shadow:inset 0 0 0 3px rgba(0,0,0,.25),inset -5px -7px 12px rgba(0,0,0,.2);transition:transform .15s,box-shadow .15s}
+#lookCard .sw[aria-pressed=true]{box-shadow:inset 0 0 0 3px rgba(0,0,0,.25),inset -5px -7px 12px rgba(0,0,0,.2),0 0 0 3px var(--void),0 0 0 5px var(--ink)}
+#lookCard .pats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.pat{appearance:none;cursor:pointer;display:grid;justify-items:center;gap:5px;padding:9px 2px 8px;border:1px solid var(--line);border-radius:14px;background:rgba(2,8,9,.55);color:var(--muted);font:600 11.5px var(--display);transition:border-color .15s,background .15s}
+.pat canvas{width:min(12vw,54px);height:auto;aspect-ratio:1;display:block}
+.pat:hover{border-color:var(--line-strong)}
+.pat[aria-pressed=true]{border-color:transparent;box-shadow:0 0 0 2px var(--ink);background:rgba(255,255,255,.07);color:var(--ink)}
+#lookCard .skin.lk-get{border-style:dashed;color:var(--muted)}#lookCard .skin.lk-get::before{display:none}
+#lookCard .skin.lk-get i{width:58px;height:58px;display:grid;place-items:center;font:300 34px/1 var(--display);color:var(--accent);font-style:normal}
+@media (orientation:landscape){#overlay>#lookCard.page{grid-template-columns:minmax(0,.8fr) minmax(0,1.3fr);align-items:start}#lookCard .lk-stage{position:sticky;top:64px;padding-top:12px}#lookCard .lk-stage canvas{width:min(28vw,40vh,230px)}}
+/* ==== per-screen styles: each screen keeps its rules between its own two markers ==== */
+/* @ui:base */
+
+/* @ui:base end */
+
+/* @ui:lobby */
+
+/* @ui:lobby end */
+
+/* @ui:shop */
+
+/* @ui:shop end */
+
+/* @ui:skins */
+
+/* @ui:skins end */
+
+/* @ui:profile */
+
+/* @ui:profile end */
+
+/* @ui:ranks-settings */
+
+/* @ui:ranks-settings end */
+
+/* @ui:results */
+
+/* @ui:results end */
+
+/* @ui:hud */
+
+/* @ui:hud end */
+
+/* @ui:overlays */
+
+/* @ui:overlays end */
+
+/* @ui:skin-art */
+
+/* @ui:skin-art end */
 </style>
 </head>
 <body>
@@ -563,9 +611,6 @@ body:not(.playing) #tip{display:none}
 <div id="scale" class="hud">
   <div class="bar"><div id="scaleBar" style="width:80px"></div><span id="scaleLbl">100 µm</span></div>
   <span id="magLbl">×400</span>
-  <button id="pauseBtn" class="tiny" type="button">Pause</button>
-  <button id="snd" class="tiny" type="button">Sound on</button>
-  <button id="hudBtn" class="tiny" type="button" aria-label="Hide the on-screen info" aria-pressed="false">HUD</button>
 </div>
 <canvas id="mini" class="hud" aria-hidden="true"></canvas>
 <div id="banner" class="hud" hidden><div class="bnrow"><b id="bnTitle"></b><span id="bnTime"></span></div><span id="bnDesc"></span><div class="bnbar"><i id="bnBar"></i></div></div>
@@ -593,12 +638,12 @@ body:not(.playing) #tip{display:none}
       </div>
     </header>
     <nav class="lb-rail" aria-label="Menu">
-      <button class="railbtn" id="lookBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.6"/><circle cx="7.5" cy="9" r="1" fill="currentColor"/><circle cx="16.5" cy="9.5" r="1" fill="currentColor"/><circle cx="9" cy="16" r="1" fill="currentColor"/></svg><span>Look</span></button>
+      <button class="railbtn" id="lookBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.6"/><circle cx="7.5" cy="9" r="1" fill="currentColor"/><circle cx="16.5" cy="9.5" r="1" fill="currentColor"/><circle cx="9" cy="16" r="1" fill="currentColor"/></svg><span>Skins</span></button>
       <button class="railbtn" id="shopBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg><span>Shop</span></button>
       <button class="railbtn" id="rankBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3"/><path d="M12 14v4M8 20h8"/></svg><span>Ranks</span></button>
     </nav>
     <section class="lb-hero">
-      <button type="button" class="hero-cell" id="avatarBtn" aria-label="Change your look"><canvas id="avatarCv" width="320" height="320"></canvas><span class="hero-edit">Change look</span></button>
+      <button type="button" class="hero-cell" id="avatarBtn" aria-label="Change your skin"><canvas id="avatarCv" width="320" height="320"></canvas><span class="hero-edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 3.5a2.1 2.1 0 0 1 3 3L12 17l-3-3z"/><path d="M9 14c-2.2 0-4 1.7-4 3.9 0 1.3-.8 2.2-2.5 2.6 1.2.9 2.8 1.5 4.5 1.5 3.3 0 5-2 5-5"/></svg>Change skin</span></button>
       <div class="hero-id">
         <label class="label" for="nameIn">Specimen name</label>
         <input id="nameIn" type="text" maxlength="16" placeholder="Unnamed cell" autocomplete="off" spellcheck="false">
@@ -636,11 +681,14 @@ body:not(.playing) #tip{display:none}
   </div>
 
   <div class="card panel page" id="lookCard" hidden>
-    <header class="pg-top"><button class="lb-icon back" type="button" aria-label="Back to the lobby"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><h2>Look</h2><button class="ghost" id="lookShop" type="button">Shop</button></header>
-    <div class="phead"><canvas id="lookCv" class="pavatar" width="144" height="144" aria-hidden="true"></canvas><div class="pmain"><h2>Your cell</h2><p class="hint" id="lookHint">Tap a stain and a pattern. Premium skins from the Shop replace both.</p></div></div>
-    <div class="field"><span class="label">Stain</span><div class="swatches" id="sw"></div></div>
-    <div class="field"><span class="label">Pattern</span><div class="pats" id="pats"></div></div>
-    <div class="field"><span class="label">Your skins</span><div class="skins" id="ownedSkins"></div><p class="hint" id="ownedHint">Premium skins are in the Shop. You have <b id="atpBal">0</b> ATP.</p></div>
+    <header class="pg-top"><button class="lb-icon back" type="button" aria-label="Back to the lobby"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><h2>Skins</h2><button class="ghost" id="lookShop" type="button">Shop</button></header>
+    <div class="lk-stage"><canvas id="lookCv" width="320" height="320" aria-hidden="true"></canvas><b id="lookName">Default cell</b><span>Wearing now</span></div>
+    <div class="lk-side">
+      <section class="lk-sec"><div class="lk-head"><b>Default cell</b><span>Free. Pick a colour and a pattern.</span></div>
+        <span class="label">Colour</span><div class="swatches" id="sw"></div>
+        <span class="label">Pattern</span><div class="pats" id="pats"></div></section>
+      <section class="lk-sec"><div class="lk-head"><b>Your skins</b><span id="ownedHint"></span></div><div class="skins" id="ownedSkins"></div></section>
+    </div>
   </div>
 
   <div class="card panel page" id="rankCard" hidden>
@@ -680,6 +728,8 @@ body:not(.playing) #tip{display:none}
     <div class="field"><span class="label">Bot difficulty <span class="hintx">practice &amp; offline</span></span><div class="seg four" id="skillSeg"><button type="button" data-k="easy">Easy</button><button type="button" data-k="normal">Normal</button><button type="button" data-k="hard">Hard</button><button type="button" data-k="expert">Expert</button></div></div>
     <div class="field"><span class="label">Effects</span><div class="seg two" id="fxSeg"><button type="button" data-fx="0">Full<small>auras, embers, glow</small></button><button type="button" data-fx="1">Reduced<small>smoother on older phones</small></button></div></div>
     <div class="field"><span class="label">Vibration</span><div class="seg two" id="hapSeg"><button type="button" data-h="0">Off<small>recommended</small></button><button type="button" data-h="1">On<small>taps on split and kills</small></button></div></div>
+    <div class="field"><span class="label">Sound</span><div class="seg two" id="sndSeg"><button type="button" data-s="1">On</button><button type="button" data-s="0">Off</button></div></div>
+    <div class="field"><span class="label">In-game info</span><div class="seg two" id="infoSeg"><button type="button" data-i="0">Full<small>mass, cells, place, lives</small></button><button type="button" data-i="1">Compact<small>mass only</small></button></div></div>
     <div class="field"><span class="label">Show FPS &amp; ping</span><div class="seg two" id="perfSeg"><button type="button" data-p="0">Off</button><button type="button" data-p="1">On<small>frame rate and server ping</small></button></div></div>
     <div class="field touch-only"><span class="label">Joystick</span><div class="seg two" id="joySeg"><button type="button" data-j="fixed">Fixed<small>in the corner</small></button><button type="button" data-j="float">Floating<small>appears under your thumb</small></button></div></div>
     <div class="field touch-only"><span class="label">Layout</span><div class="seg two" id="handSeg"><button type="button" data-l="0">Right-handed<small>buttons on the right</small></button><button type="button" data-l="1">Left-handed<small>buttons on the left</small></button></div></div>
@@ -1405,7 +1455,10 @@ function renderSkins(){
   const byPrice=(a,b)=>a.price-b.price||a.id-b.id,seasonal=PREMIUM.filter(S=>S.season&&seasonState(S.season).open).sort(byPrice),rest=PREMIUM.filter(S=>!S.season||(!seasonState(S.season).open&&ownsSkin(S.id))).sort(byPrice);
   const head=key=>{const st=seasonState(key);return `<div class="sv-season"><b>${escH(st.name)}</b><span>Limited skins · leave the shop in ${fmtLeft(st.ends-Date.now())}</span></div>`;};
   el.innerHTML=(seasonal.length?head(seasonal[0].season)+seasonal.map(S=>card(S,true)).join('')+'<div class="sv-season all"><b>All skins</b></div>':'')+rest.map(S=>card(S,true)).join('');renderFeat();
-  const mine=PREMIUM.filter(S=>ownsSkin(S.id)),oe=$('ownedSkins');if(oe){oe.innerHTML=mine.map(S=>card(S,false)).join('');$('ownedHint').innerHTML=mine.length?'Tap a skin to wear it; the free patterns above always work too.':'No premium skins yet. The Shop has them, and you have <b id="atpBal">'+wallet.balance+'</b> ATP.';}
+  const mine=PREMIUM.filter(S=>ownsSkin(S.id)),oe=$('ownedSkins');if(oe){const def=(settings.skin|0)<SKIN_FREE;
+    oe.innerHTML=`<button type="button" class="skin def" data-id="def" aria-pressed="${def}" aria-label="Default cell"><canvas width="144" height="144" data-def="1"></canvas><span class="sn">Default</span><span class="sp">${def?'✓ Wearing':'Free'}</span></button>`
+      +mine.map(S=>card(S,false)).join('')+(mine.length?'':'<button type="button" class="skin lk-get" data-id="shop"><i>+</i><span class="sn">Get skins</span><span class="sp">Shop</span></button>');
+    $('ownedHint').textContent=mine.length?`${mine.length} of ${PREMIUM.length} premium skins`:'Premium skins are in the Shop';}
   renderPreviews();
 }
 function drawPreview(cv,S){
@@ -1416,19 +1469,21 @@ function drawPreview(cv,S){
   g.beginPath();g.arc(x,y,r,0,TAU);g.lineWidth=r*.085;g.strokeStyle=col(k,-26,.96);g.stroke();
   if(S.aura){g.globalCompositeOperation='destination-in';const m=g.createRadialGradient(x,y,48,x,y,72);m.addColorStop(0,'#000');m.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=m;g.fillRect(0,0,144,144);g.globalCompositeOperation='source-over';} // fade the aura out before the canvas edge
 }
-function drawAvatar(cv=$('avatarCv')){ // a live portrait of your cell: stain, pattern or premium skin
-  if(!cv)return;const sk=settings.skin|0;
+function drawAvatar(cv=$('avatarCv'),sk=settings.skin|0,st=settings.stain|0){ // a live portrait of a cell: stain, pattern or premium skin (yours unless told otherwise)
+  if(!cv)return;
   if(sk>=SKIN_FREE&&PREMIUM[sk-SKIN_FREE]){drawPreview(cv,PREMIUM[sk-SKIN_FREE]);return;}
-  const g=cv.getContext('2d'),x=72,y=72,r=58,k=STAINS[settings.stain|0]||STAINS[0],c={x,y,wob:1.3,svx:0,svy:0};g.setTransform(cv.width/144,0,0,cv.width/144,0,0);g.clearRect(0,0,144,144);
+  const g=cv.getContext('2d'),x=72,y=72,r=58,k=STAINS[st]||STAINS[0],c={x,y,wob:1.3,svx:0,svy:0};g.setTransform(cv.width/144,0,0,cv.width/144,0,0);g.clearRect(0,0,144,144);
   g.beginPath();g.arc(x,y,r,0,TAU);fillUnit(g,grad(g,'body'+k,q=>{const u=q.createRadialGradient(-.35,-.4,.05,0,0,1.05);u.addColorStop(0,col(k,18,1));u.addColorStop(.62,col(k,2,1));u.addColorStop(1,col(k,-10,1));return u;}),x,y,r);
   if(sk){g.save();g.beginPath();g.arc(x,y,r*.95,0,TAU);g.clip();g.fillStyle=g.strokeStyle=col(k,-30,.3);drawFreePattern(g,c,r,sk);g.restore();}
   g.beginPath();g.arc(x,y,r*.28,0,TAU);fillUnit(g,grad(g,'nuc'+k,q=>{const u=q.createRadialGradient(-.08,-.08,0,0,0,.3);u.addColorStop(0,col(k,-4,.5));u.addColorStop(1,col(k,-22,.62));return u;}),x,y,r);g.lineWidth=1;g.strokeStyle=col(k,-34,.45);g.stroke();
   g.beginPath();g.arc(x,y,r,0,TAU);g.lineWidth=r*.085;g.strokeStyle=col(k,-26,.96);g.stroke();
   g.beginPath();g.ellipse(x-r*.36,y-r*.42,r*.22,r*.09,-.72,0,TAU);g.fillStyle='rgba(255,255,255,.17)';g.fill();
 }
-function renderPreviews(){for(const cv of document.querySelectorAll('#skins canvas, #ownedSkins canvas')){const S=PREMIUM[+cv.dataset.skin-SKIN_FREE];if(S)drawPreview(cv,S);}}
+function renderPreviews(){for(const cv of document.querySelectorAll('#skins canvas, #ownedSkins canvas')){const S=PREMIUM[+cv.dataset.skin-SKIN_FREE];if(S)drawPreview(cv,S);else if(cv.dataset.def)drawAvatar(cv,settings.pat|0);}}
 setInterval(()=>{if(document.hidden||RM)return;if(!$('storeCard').hidden||!$('lookCard').hidden)renderPreviews();if(!$('startCard').hidden)drawAvatar($('meCv'));if(!$('lookCard').hidden)drawAvatar($('lookCv'));if(!$('profileCard').hidden)drawAvatar($('profCv'));},100);
-$('ownedSkins').addEventListener('click',e=>{const b=e.target.closest('.skin');if(!b)return;const id=+b.dataset.id;if(ownsSkin(id)){settings.skin=id;saveSettings();syncPats();}});
+$('ownedSkins').addEventListener('click',e=>{const b=e.target.closest('.skin');if(!b)return;
+  if(b.dataset.id==='shop'){$('lookShop').click();return;}
+  const id=b.dataset.id==='def'?settings.pat|0:+b.dataset.id;if(id<SKIN_FREE||ownsSkin(id)){settings.skin=id;saveSettings();syncPats();}});
 // The shop: tap a skin to show it large, then buy (tap twice to confirm) or wear it from the big button
 function renderFeat(){
   const S=PREMIUM.find(x=>x.id===shopSel)||PREMIUM[0],b=$('featBuy');if(!S||!b)return;shopSel=S.id;
@@ -2577,10 +2632,11 @@ const TIPS=[
   {id:'merge',when:()=>human.cells.length>1,text:()=>'Split pieces merge back together after about 20 seconds'},
   {id:'virus',when:()=>human.cells.some(c=>c.mass>150&&viruses.some(v=>Math.hypot(v.x-c.x,v.y-c.y)<c.r+500)),text:()=>'Big cells burst on green phages: steer around them'},
   {id:'arena',when:()=>arenaR()<R-1,text:()=>'The arena is closing: stay inside the ring'},
+  {id:'pause',when:()=>T-human.stats.born>45,text:()=>TOUCH_UI?'Tap your mass, top left, to pause or leave the round':'Press Esc to pause or leave the round'},
 ];
 function tipTick(){
   if(T-(tipTick.t||0)<.5)return;tipTick.t=T;
-  if(!human||!human.alive||tipRuns>6||(wallet.runs|0)>10||T-tipAt<10||document.body.classList.contains('hud-hidden'))return;
+  if(!human||!human.alive||tipRuns>6||(wallet.runs|0)>10||T-tipAt<10)return;
   for(const t of TIPS){if(tipSeen.has(t.id)||!t.when())continue;tipSeen.add(t.id);tipAt=T;try{localStorage.setItem('mitosis.tips',JSON.stringify([...tipSeen]));}catch(e){}
     const el=$('tip');el.textContent=t.text();el.classList.remove('show');void el.offsetWidth;el.classList.add('show');clearTimeout(tipTick.h);tipTick.h=setTimeout(()=>el.classList.remove('show'),4500);break;}
 }
@@ -2655,13 +2711,13 @@ function tickMass(dt){
 /* ================= audio ================= */
 let actx=null,master=null,noiseBuf=null,muted=false;try{muted=localStorage.getItem('mitosis.muted')==='1';}catch(e){}
 // minimisable HUD (remembered): tap the mass pill or the clock to shrink them; the eye hides every info panel
-const syncHud=()=>{$('stats').classList.toggle('mini',!!settings.hudStatsMini);$('roundClock').classList.toggle('mini',!!settings.hudClockMini);document.body.classList.toggle('hud-hidden',!!settings.hudHidden);const hb=$('hudBtn');hb.setAttribute('aria-pressed',String(!!settings.hudHidden));hb.setAttribute('aria-label',settings.hudHidden?'Show the on-screen info':'Hide the on-screen info');hb.textContent=settings.hudHidden?'Show HUD':'Hide HUD';};
-$('stats').addEventListener('click',()=>{settings.hudStatsMini=!settings.hudStatsMini;saveSettings();syncHud();});
-$('roundClock').addEventListener('click',()=>{settings.hudClockMini=!settings.hudClockMini;saveSettings();syncHud();});
-$('hudBtn').addEventListener('click',()=>{settings.hudHidden=!settings.hudHidden;saveSettings();syncHud();});syncHud();
-const sndBtn=$('snd');const syncSnd=()=>{sndBtn.textContent=muted?'Sound off':'Sound on';sndBtn.setAttribute('aria-pressed',String(!muted));sndBtn.setAttribute('aria-label',muted?'Turn sound on':'Turn sound off');};syncSnd();$('pauseBtn').setAttribute('aria-label','Pause');
+const infoEl=$('infoSeg'),syncHud=()=>{$('stats').classList.toggle('mini',!!settings.hudStatsMini);$('roundClock').classList.toggle('mini',!!settings.hudClockMini);[...infoEl.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.i==='1')===!!settings.hudStatsMini)));};
+infoEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.hudStatsMini=b.dataset.i==='1';saveSettings();syncHud();});
+$('stats').setAttribute('aria-label','Pause');$('stats').addEventListener('click',()=>setPaused(true));
+$('roundClock').addEventListener('click',()=>{settings.hudClockMini=!settings.hudClockMini;saveSettings();syncHud();});syncHud();
+const sndEl=$('sndSeg'),syncSnd=()=>[...sndEl.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.s==='1')===!muted)));syncSnd();
 function toggleSnd(){muted=!muted;syncSnd();try{localStorage.setItem('mitosis.muted',muted?'1':'0');}catch(e){}}
-sndBtn.addEventListener('click',toggleSnd);
+sndEl.addEventListener('click',e=>{const b=e.target.closest('button');if(b&&(b.dataset.s==='1')===muted)toggleSnd();});
 function initAudio(){
   if(actx)return;try{actx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){return;}
   // master → gentle low-pass → soft compressor → out, plus a small synthesised room on a send so sounds sit in a space
@@ -2951,11 +3007,11 @@ function startGame(){
   const m0=/[?&]autopilot=1/.test(location.search)&&/[?&]big=1/.test(location.search)?2500:25;
   spawn(human,m0);cam.x=human.cells[0].x;cam.y=human.cells[0].y;dispMass=m0;shownMass=-1;histT=0;
   pointer.x=W/2;pointer.y=H/2;mode='play';paused=false;slow=1;feed.length=0;renderFeed();
-  showCard(null);document.body.classList.add('playing');$('pauseBtn').textContent='Pause';cv.focus({preventScroll:true});
+  showCard(null);document.body.classList.add('playing');cv.focus({preventScroll:true});
   setTimeout(()=>sfx('start'),30);
 }
 function setPaused(v){
-  if(mode!=='play'||!human||!human.alive)return;paused=v;showCard(v?'pauseCard':null);$('pauseBtn').textContent=v?'Resume':'Pause';
+  if(mode!=='play'||!human||!human.alive)return;paused=v;showCard(v?'pauseCard':null);
   const lede=$('pauseCard').querySelector('.lede');lede.textContent=multi()?'Others are in this well, so the culture keeps going — your cell holds still until you resume.':'Nothing moves until you resume.';
   if(v)$('resume').focus();else cv.focus({preventScroll:true});
 }
@@ -2988,12 +3044,15 @@ function drawChart(h){
 
 /* ================= setup UI ================= */
 const swEl=$('sw');
-STAINS.forEach((c,i)=>{const b=document.createElement('button');b.type='button';b.className='sw';b.style.background=col(c);b.setAttribute('aria-label','Stain '+(i+1));
-  b.setAttribute('aria-pressed',String(i===settings.stain));b.addEventListener('click',()=>{settings.stain=i;[...swEl.children].forEach((x,j)=>x.setAttribute('aria-pressed',String(j===i)));});swEl.appendChild(b);});
+const STAIN_NAMES=['Rose','Violet','Teal','Amber','Coral','Pearl'],PAT_NAMES=['Plain','Spots','Stripes','Rings','Marbled'];
+STAINS.forEach((c,i)=>{const b=document.createElement('button');b.type='button';b.className='sw';b.style.background=col(c);b.setAttribute('aria-label',STAIN_NAMES[i]+' colour');b.title=STAIN_NAMES[i];
+  b.setAttribute('aria-pressed',String(i===settings.stain));b.addEventListener('click',()=>{settings.stain=i;saveSettings();[...swEl.children].forEach((x,j)=>x.setAttribute('aria-pressed',String(j===i)));});swEl.appendChild(b);});
 const patEl=$('pats');
-const syncPats=()=>{patEl.style.setProperty('--c',col(STAINS[settings.stain]));[...patEl.children].forEach((x,j)=>x.setAttribute('aria-pressed',String(j===settings.skin)));renderSkins();drawAvatar();drawAvatar($('lookCv'));drawAvatar($('profCv'));};
-['Plain','Spots','Stripes','Rings','Marbled'].forEach((n,i)=>{const b=document.createElement('button');b.type='button';b.className='pat p'+i;b.setAttribute('aria-label',n+' pattern');b.title=n;
-  b.addEventListener('click',()=>{settings.skin=i;syncPats();});patEl.appendChild(b);});
+const syncPats=()=>{const sk=settings.skin|0,P=sk>=SKIN_FREE&&PREMIUM[sk-SKIN_FREE];if(!P)settings.pat=sk; // remember the free pattern while a premium skin is worn
+  [...patEl.children].forEach((x,j)=>{x.setAttribute('aria-pressed',String(j===sk));drawAvatar(x.querySelector('canvas'),j);});
+  $('lookName').textContent=P?P.name:sk?PAT_NAMES[sk]+' cell':'Default cell';renderSkins();drawAvatar();drawAvatar($('lookCv'));drawAvatar($('profCv'));};
+PAT_NAMES.forEach((n,i)=>{const b=document.createElement('button');b.type='button';b.className='pat';b.setAttribute('aria-label',n+' pattern');b.innerHTML=`<canvas width="112" height="112"></canvas><span>${n}</span>`;
+  b.addEventListener('click',()=>{settings.skin=i;saveSettings();syncPats();});patEl.appendChild(b);});
 swEl.addEventListener('click',()=>setTimeout(syncPats,0));syncPats();
 const achLine=()=>{$('achLine').textContent=`Achievements ${ACH.filter(a=>achGot.has(a.id)).length} of ${ACH.length}`+(achGot.size?' — '+ACH.filter(a=>achGot.has(a.id)).map(a=>a.name).join(', '):'');renderAch();};
 function renderAch(){ // the Profile's achievement grid: earned ones lit, the rest show what to aim for
@@ -3046,8 +3105,7 @@ $('skillSeg').addEventListener('click',e=>{const b=e.target.closest('button');if
 $('again').addEventListener('click',startGame);
 $('setup').addEventListener('click',()=>{leaveLocal();mode='attract';achLine();showCard('startCard');});
 $('resume').addEventListener('click',()=>setPaused(false));
-$('quit').addEventListener('click',()=>{paused=false;$('dRank').hidden=true;econRunEnd();leaveLocal();showResults('Run over','Returned to the lobby',`You left the well after ${fmtT(T-human.stats.born)}.`);removeHuman();mode='attract';document.body.classList.remove('playing');$('pauseBtn').textContent='Pause';});
-$('pauseBtn').addEventListener('click',()=>setPaused(!paused));
+$('quit').addEventListener('click',()=>{paused=false;$('dRank').hidden=true;econRunEnd();leaveLocal();showResults('Run over','Returned to the lobby',`You left the well after ${fmtT(T-human.stats.born)}.`);removeHuman();mode='attract';document.body.classList.remove('playing');});
 $('copyInvite').addEventListener('click',()=>{const b=$('copyInvite'),i=$('inviteUrl');const done=t=>{b.textContent=t;setTimeout(()=>{b.textContent='Invite friends';},1600);};
   if(navigator.share&&TOUCH_UI){navigator.share({title:'Mitosis',text:'Come play Mitosis with me',url:i.value}).catch(()=>{});return;}
   const pick=()=>{i.focus();i.select();done('Press Ctrl+C');};
