@@ -577,7 +577,206 @@ body:not(.playing) #tip{display:none}
 /* @ui:ranks-settings end */
 
 /* @ui:results */
+/* Results: a full-screen after-match screen. Placement hero on the left (on top in portrait); rating, ATP and run stats
+   on the right, with Lobby and the big Play again / Respawn button under them. --rt tints it by outcome. */
+#overlay:has(>#deathCard:not([hidden])){padding:0;place-items:stretch;background:none}
+#overlay>#deathCard{--rt:255,92,138;--r:18px;position:absolute;inset:0;box-sizing:border-box;width:auto;max-width:none;max-height:none;margin:0;
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.12fr);grid-template-areas:"hero side";align-items:center;gap:12px clamp(20px,4.5vw,60px);
+  padding:max(14px,env(safe-area-inset-top)) max(22px,env(safe-area-inset-right),calc(50vw - 540px)) max(14px,env(safe-area-inset-bottom)) max(22px,env(safe-area-inset-left),calc(50vw - 540px));
+  background:radial-gradient(50% 70% at 25% 48%,rgba(var(--rt),.2),transparent 72%),radial-gradient(90% 60% at 50% 115%,rgba(0,0,0,.5),transparent 70%),linear-gradient(90deg,rgba(2,8,9,.84),rgba(2,8,9,.6) 46%,rgba(2,8,9,.84));
+  -webkit-backdrop-filter:blur(7px) saturate(1.2);backdrop-filter:blur(7px) saturate(1.2);
+  color:var(--ink);overflow:hidden auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;user-select:none;-webkit-user-select:none;animation:res-fade .3s ease-out}
+#overlay>#deathCard.win{--rt:242,177,52}
+#overlay>#deathCard.round,#overlay>#deathCard.quit{--rt:154,140,255}
+@keyframes res-fade{from{opacity:0}}
 
+/* hero: outcome pill, the giant placement, who got you */
+#deathCard .res-hero{grid-area:hero;position:relative;isolation:isolate;display:grid;justify-items:center;align-content:center;gap:12px;min-width:0;text-align:center}
+#deathCard .res-tags{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px}
+/* the outcome as a notched ribbon, like a game banner */
+#deathCard .res-status{--rb1:#ff8fb0;--rb2:#ec3f72;--rb3:#b81d4e;display:inline-flex;align-items:center;gap:9px;height:40px;padding:0 30px;color:#fff;font:800 17px/1 var(--display);letter-spacing:.14em;text-transform:uppercase;white-space:nowrap;
+  text-shadow:0 1px 0 rgba(0,0,0,.22);background:linear-gradient(180deg,var(--rb1),var(--rb2) 55%,var(--rb3));clip-path:polygon(0 0,100% 0,calc(100% - 13px) 50%,100% 100%,0 100%,13px 50%);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.45),inset 0 -3px 0 rgba(0,0,0,.22)}
+#deathCard .res-tags{filter:drop-shadow(0 6px 18px rgba(var(--rt),.38))}
+#deathCard.win .res-status{--rb1:#fff0b8;--rb2:#f5bd45;--rb3:#c9831a;color:#3a2300;text-shadow:0 1px 0 rgba(255,255,255,.4)}
+#deathCard.round .res-status,#deathCard.quit .res-status{--rb1:#c9c0ff;--rb2:#8c7cf5;--rb3:#5e4fc9}
+#deathCard .res-mode{display:inline-flex;align-items:center;height:28px;padding:0 12px;border-radius:999px;font:700 10.5px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;color:var(--muted);border:1px solid var(--line-strong);background:rgba(2,8,9,.6)}
+#deathCard .res-ico{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+#deathCard .res-place{position:relative;margin:0;display:flex;align-items:baseline;gap:16px;font:800 clamp(84px,min(37vh,24vw),180px)/.8 var(--display);letter-spacing:-.04em;white-space:nowrap}
+#deathCard .rp-n{display:inline-block;padding:0 .05em .04em 0;background:linear-gradient(180deg,#fff 10%,#d6f1ea 50%,#86b6aa 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 12px 28px rgba(0,0,0,.6))}
+#deathCard .rp-n small{font-size:.4em;letter-spacing:0;margin-right:.06em;vertical-align:1.05em;opacity:.62}
+#deathCard .rp-n b{font-weight:inherit}
+#deathCard .res-place.n2 .rp-n{font-size:.84em}
+#deathCard.win .rp-n,#deathCard.m1 .rp-n{background-image:linear-gradient(180deg,#fff7d9 6%,#ffd66e 42%,#f2a62a 74%,#c27612);filter:drop-shadow(0 0 30px rgba(242,177,52,.38)) drop-shadow(0 12px 24px rgba(0,0,0,.55))}
+#deathCard.m2 .rp-n{background-image:linear-gradient(180deg,#ffffff 6%,#e2ebf2 45%,#a9b8c6 78%,#7d8b99);filter:drop-shadow(0 0 26px rgba(200,220,240,.28)) drop-shadow(0 12px 24px rgba(0,0,0,.55))}
+#deathCard.m3 .rp-n{background-image:linear-gradient(180deg,#ffe6cf 6%,#f0b27c 45%,#c97b42 78%,#8d4f22);filter:drop-shadow(0 0 26px rgba(214,140,80,.3)) drop-shadow(0 12px 24px rgba(0,0,0,.55))}
+#deathCard .res-place::before{content:"";position:absolute;z-index:-1;left:50%;top:52%;width:1.25em;aspect-ratio:1;border-radius:50%;border:3px solid rgba(var(--rt),.75);box-shadow:0 0 30px rgba(var(--rt),.5),inset 0 0 24px rgba(var(--rt),.35);
+  opacity:0;transform:translate(-50%,-50%) scale(.3);animation:res-shock .75s cubic-bezier(.1,.7,.3,1) .36s both;pointer-events:none}
+@keyframes res-shock{0%{opacity:.95;transform:translate(-50%,-50%) scale(.3)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.6)}}
+#deathCard .rp-of{font:600 clamp(15px,1.4vw + 8px,22px)/1 var(--mono);letter-spacing:.02em;color:var(--muted)}
+#deathCard.win .res-hero::before{content:"";position:absolute;z-index:-1;left:50%;top:48%;width:min(140vh,600px);aspect-ratio:1;border-radius:50%;pointer-events:none;
+  background:repeating-conic-gradient(rgba(242,177,52,.15) 0 7deg,transparent 7deg 20deg);-webkit-mask:radial-gradient(closest-side,#000 12%,transparent 88%);mask:radial-gradient(closest-side,#000 12%,transparent 88%);
+  transform:translate(-50%,-50%);animation:res-spin 48s linear infinite}
+@keyframes res-spin{to{transform:translate(-50%,-50%) rotate(1turn)}}
+#deathCard #deathWhy{margin:0;display:flex;align-items:center;gap:9px;font:600 clamp(15px,.9vw + 10px,19px)/1.2 var(--display);color:var(--muted);min-width:0}
+#deathCard #deathWhy b{color:var(--ink);font-weight:800}
+#deathCard #deathWhy span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#deathCard .kdot{width:14px;height:14px;flex:none;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.55),transparent 45%),var(--kc);box-shadow:inset 0 -2px 3px rgba(0,0,0,.35),0 0 12px var(--kc)}
+#deathCard #dAch{margin:0;display:flex;flex-wrap:wrap;justify-content:center;gap:6px;font:inherit;color:inherit}
+#deathCard #dAch span{display:inline-flex;align-items:center;height:28px;padding:0 11px;border-radius:999px;font:700 12.5px/1 var(--display);color:#ffd77a;background:linear-gradient(180deg,rgba(242,193,78,.16),rgba(242,193,78,.06));border:1px solid rgba(242,193,78,.4);white-space:nowrap}
+
+/* side: glass cards */
+#deathCard .res-side{grid-area:side;display:grid;gap:10px;align-content:center;min-width:0}
+#deathCard .res-top{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px}
+#deathCard .res-top:not(:has(>:not([hidden]))){display:none}
+#deathCard .res-card{position:relative;box-sizing:border-box;min-width:0;border-radius:var(--r);border:1px solid rgba(160,225,215,.14);
+  background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02) 55%,rgba(255,255,255,.01)),rgba(5,17,19,.74);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 14px 34px rgba(0,0,0,.34)}
+/* rating: tier, the number counting, the bar filling toward the next tier */
+#deathCard #dRank{margin:0;padding:12px 16px 14px;display:grid;gap:9px;align-content:center;font:inherit;color:inherit;transition:border-color .4s,box-shadow .4s}
+#deathCard .rr-head{display:flex;align-items:center;gap:8px;min-width:0}
+#deathCard .rr-emb{width:17px;height:19px;flex:none;background:linear-gradient(150deg,rgba(255,255,255,.9),currentColor 40%,currentColor 62%,rgba(0,0,0,.5));clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}
+#deathCard .rr-tier{font:700 11.5px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase}
+#deathCard .rr-next{margin-left:auto;font:600 11px/1 var(--mono);color:var(--dim);white-space:nowrap}
+#deathCard .rr-mid{display:flex;align-items:center;gap:10px}
+#deathCard .rr-num{font:800 clamp(32px,4.2vh + 16px,44px)/.9 var(--display);letter-spacing:-.045em;font-variant-numeric:tabular-nums;color:var(--ink);transform-origin:left 70%;transition:color .3s,text-shadow .3s}
+#deathCard .rr-num.go{color:#c9ffe6;text-shadow:0 0 22px rgba(95,224,168,.55)}#deathCard #dRank.dn .rr-num.go{color:#ffd0d7;text-shadow:0 0 22px rgba(255,107,127,.5)}
+#deathCard .rr-num.bump{animation:res-bump .45s cubic-bezier(.2,1.6,.4,1)}
+@keyframes res-bump{40%{transform:scale(1.14)}}
+#deathCard .rr-track{display:flex;align-items:center;gap:9px}
+#deathCard .rr-track .rr-bar{flex:1}
+#deathCard .rr-to{opacity:.55;filter:saturate(.7)}
+#deathCard #dRank.promo .rr-head .rr-emb{animation:res-bump .6s cubic-bezier(.2,1.6,.4,1)}
+#deathCard .rr-delta{margin-left:auto;display:inline-flex;align-items:center;height:30px;padding:0 12px;border-radius:999px;font:800 16px/1 var(--display);font-variant-numeric:tabular-nums;opacity:0;transform:scale(.4)}
+#deathCard .rr-delta.show{opacity:1;transform:none;transition:transform .5s cubic-bezier(.2,1.8,.4,1),opacity .2s}
+#deathCard .rr-delta.up{color:#04170f;background:linear-gradient(180deg,#9ff5cf,#45d394);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 0 22px rgba(95,224,168,.4)}
+#deathCard .rr-delta.eq{color:var(--ink);background:rgba(255,255,255,.1);box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
+#deathCard .rr-delta.dn{color:#2b0711;background:linear-gradient(180deg,#ffb0bb,#ff6b7f);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 0 22px rgba(255,107,127,.35)}
+#deathCard .rr-bar{position:relative;height:10px;border-radius:99px;background:rgba(0,0,0,.5);box-shadow:inset 0 1px 3px rgba(0,0,0,.7),0 1px 0 rgba(255,255,255,.06);overflow:hidden}
+#deathCard .rr-bar i{position:absolute;left:0;top:0;bottom:0;width:0;min-width:10px;border-radius:inherit;background:linear-gradient(90deg,#7c6cff,var(--violet) 35%,var(--accent));box-shadow:0 0 14px rgba(255,92,138,.6)}
+#deathCard .rr-bar i::after{content:"";position:absolute;inset:0 0 45% 0;border-radius:inherit;background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,0))}
+#deathCard .rr-bar i::before{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);background-size:40% 100%;background-repeat:no-repeat;background-position:-60% 0;animation:res-sweep 2.6s ease-in-out 1.2s infinite}
+@keyframes res-sweep{0%{background-position:-60% 0}45%,100%{background-position:160% 0}}
+#deathCard #dRank.dn .rr-bar i{background:linear-gradient(90deg,#5a4fa8,#8a7ad8);box-shadow:none}
+#deathCard #dRank.promo{border-color:rgba(242,193,78,.7);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 0 0 1px rgba(242,193,78,.25),0 0 34px rgba(242,177,52,.3)}
+#deathCard #dRank .rr-next:not(:empty){padding:5px 9px;border-radius:999px;font:800 10px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:#2a1a00;background:linear-gradient(180deg,#ffe08a,#f2b134);box-shadow:0 0 16px rgba(242,177,52,.45)}
+#deathCard #dRank.dn .rr-next:not(:empty){color:var(--ink);background:rgba(255,255,255,.08);box-shadow:none}
+#deathCard #dRank.promo .rr-bar i{background:linear-gradient(90deg,#f2a62a,#ffe08a);box-shadow:0 0 16px rgba(242,177,52,.7)}
+/* ATP reward */
+#deathCard .res-atp{width:clamp(100px,13vw,136px);display:grid;justify-items:center;align-content:center;gap:5px;padding:12px 8px;text-align:center;border-color:rgba(242,177,52,.3);
+  background:radial-gradient(85% 65% at 50% 28%,rgba(242,177,52,.2),transparent 72%),linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.015)),rgba(5,17,19,.74)}
+#deathCard .coin{position:relative;width:36px;height:36px;border-radius:50%;background:radial-gradient(circle at 33% 28%,#fff6cf 0 7%,#ffd970 24%,#f2b134 55%,#a5690c 100%);
+  box-shadow:inset 0 -3px 5px rgba(120,66,0,.55),inset 0 2px 2px rgba(255,255,255,.65),0 0 0 3px rgba(242,177,52,.16),0 0 24px rgba(242,177,52,.5)}
+#deathCard .coin::after{content:"";position:absolute;inset:8px;border-radius:50%;border:2px solid rgba(135,80,4,.5);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 1px 0 rgba(255,255,255,.3)}
+#deathCard .ra-n{min-height:28px;font:800 30px/1 var(--display);letter-spacing:-.03em;color:#ffd36b;font-variant-numeric:tabular-nums;text-shadow:0 0 20px rgba(242,177,52,.45)}
+#deathCard .ra-l{font:700 10px/1.2 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:rgba(242,200,120,.78);white-space:nowrap}
+#deathCard .res-atp.wait .ra-n::before{content:"";display:inline-block;width:34px;height:8px;margin-top:10px;border-radius:99px;background:linear-gradient(90deg,rgba(242,177,52,.15),rgba(242,177,52,.6),rgba(242,177,52,.15));background-size:200% 100%;animation:res-shim 1s linear infinite}
+@keyframes res-shim{to{background-position:-200% 0}}
+#deathCard .res-atp:is(.none,.offline,.later){border-color:rgba(160,225,215,.14);background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.015)),rgba(5,17,19,.74)}
+#deathCard .res-atp:is(.none,.offline,.later) .coin{filter:grayscale(1) brightness(.55);box-shadow:inset 0 -3px 5px rgba(0,0,0,.4),inset 0 2px 2px rgba(255,255,255,.3)}
+#deathCard .res-atp:is(.none,.offline,.later) .ra-n{color:var(--muted);text-shadow:none}
+#deathCard .res-atp:is(.none,.offline,.later) .ra-l{color:var(--dim)}
+#deathCard .res-atp.got .coin{animation:res-coin .9s cubic-bezier(.2,1.3,.4,1),res-ring .8s ease-out .55s}
+#deathCard .res-atp.got .ra-n{animation:res-bump .45s cubic-bezier(.2,1.6,.4,1) .7s}
+#deathCard .res-atp.got{box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 0 0 1px rgba(242,177,52,.18),0 0 30px rgba(242,177,52,.22),0 14px 34px rgba(0,0,0,.34)}
+#deathCard .coin::before{content:"";position:absolute;right:-7px;top:-6px;width:14px;height:14px;background:#fffbe8;clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%);filter:drop-shadow(0 0 4px #fff);opacity:0;transform:scale(0)}
+#deathCard .res-atp.got .coin::before{animation:res-twinkle 2.6s ease-in-out .9s infinite}
+@keyframes res-twinkle{0%,100%{opacity:0;transform:scale(0) rotate(0)}12%{opacity:1;transform:scale(1) rotate(45deg)}26%{opacity:0;transform:scale(0) rotate(90deg)}}
+@keyframes res-coin{0%{transform:scale(.3) rotateY(0)}60%{transform:scale(1.25) rotateY(540deg)}100%{transform:scale(1) rotateY(720deg)}}
+@keyframes res-ring{0%{outline:2px solid rgba(255,220,120,.95);outline-offset:0}100%{outline:2px solid rgba(255,220,120,0);outline-offset:24px}}
+/* mass chart (unranked runs, in place of rating and ATP) */
+#deathCard .res-chart{grid-column:1/-1;height:clamp(92px,24vh,150px);padding:11px 12px 6px;display:grid;grid-template-rows:auto minmax(0,1fr);gap:2px}
+#deathCard .res-lbl,#deathCard .rs>span{display:flex;align-items:center;gap:6px;font:700 10px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+#deathCard #dChart{width:100%;height:100%;min-height:0;display:block}
+/* stats */
+#deathCard .res-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+#deathCard .rs{display:grid;gap:7px;padding:12px 14px 13px}
+#deathCard .rs b{font:800 clamp(23px,2.6vh + 12px,32px)/1 var(--display);letter-spacing:-.035em;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#deathCard .rs svg{width:14px;height:14px;flex:none;fill:none;stroke:var(--accent);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+#deathCard .rs svg [fill]{fill:var(--accent);stroke:none}
+#deathCard .rs-pb{position:absolute;top:-7px;right:10px;font:800 9px/1 var(--mono);font-style:normal;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-ink);background:linear-gradient(180deg,#ff8eae,var(--accent));padding:4px 7px;border-radius:999px;box-shadow:0 0 14px rgba(255,92,138,.5)}
+/* buttons */
+#deathCard .res-actions{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;margin-top:4px}
+#deathCard .res-lobby,#deathCard .res-play{appearance:none;position:relative;box-sizing:border-box;height:58px;margin:0;border-radius:var(--r);display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none;-webkit-user-select:none;transition:transform .1s,filter .15s,box-shadow .1s}
+#deathCard .res-lobby{padding:0 22px 0 18px;border:1px solid rgba(160,225,215,.24);color:var(--ink);font:700 16px/1 var(--display);
+  background:linear-gradient(180deg,rgba(255,255,255,.11),rgba(255,255,255,.03)),rgba(6,20,22,.86);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),inset 0 -3px 0 rgba(0,0,0,.35),0 10px 24px rgba(0,0,0,.35)}
+#deathCard .res-lobby svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+#deathCard .res-play{padding:0 18px;border:0;overflow:hidden;color:var(--accent-ink);font:800 20px/1 var(--display);letter-spacing:-.01em;
+  background:linear-gradient(180deg,#ff9fba 0%,#ff6e97 42%,#f04a7a 100%);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.6),inset 0 -4px 0 rgba(140,16,56,.42),0 0 0 1px rgba(255,130,165,.55),0 12px 32px rgba(255,92,138,.4)}
+#deathCard .res-play::before{content:"";position:absolute;left:0;right:0;top:0;height:48%;background:linear-gradient(180deg,rgba(255,255,255,.26),rgba(255,255,255,.02));pointer-events:none}
+#deathCard .res-play::after{content:"";position:absolute;top:-30%;bottom:-30%;left:-45%;width:34%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.45),transparent);transform:skewX(-20deg);pointer-events:none;animation:res-shine 3.8s ease-in-out 1.4s infinite}
+@keyframes res-shine{0%{left:-45%}32%,100%{left:125%}}
+#deathCard .res-lobby:active,#deathCard .res-play:active{transform:translateY(2px) scale(.985)}
+#deathCard .res-lobby:active{box-shadow:inset 0 1px 0 rgba(255,255,255,.1),inset 0 -1px 0 rgba(0,0,0,.35),0 4px 12px rgba(0,0,0,.35)}
+#deathCard .res-play:active{filter:brightness(.95);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(140,16,56,.42),0 0 0 1px rgba(255,130,165,.55),0 5px 16px rgba(255,92,138,.32)}
+@media (hover:hover){#deathCard .res-lobby:hover,#deathCard .res-play:hover{filter:brightness(1.08)}}
+#deathCard .res-lobby:focus-visible,#deathCard .res-play:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+#deathCard .rp-ico{position:relative;width:22px;height:22px;flex:none;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+#deathCard .rp-txt{position:relative;display:grid;justify-items:start;gap:4px;min-width:0}
+#deathCard .rp-txt b{font-weight:inherit;white-space:nowrap}
+#deathCard .rp-txt small{font:700 10px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;opacity:.68;white-space:nowrap}
+#deathCard .rp-txt small:empty{display:none}
+#deathCard .rp-lives{position:relative;display:flex;gap:5px;margin-left:4px;padding:6px 8px;border-radius:999px;background:rgba(70,0,25,.2);box-shadow:inset 0 1px 2px rgba(70,0,25,.3)}
+#deathCard .rp-lives i{width:9px;height:9px;border-radius:50%;background:rgba(70,0,25,.3)}
+#deathCard .rp-lives i.on{background:#fff;box-shadow:0 0 7px rgba(255,255,255,.85)}
+#deathCard .res-play.search{color:var(--ink);background:linear-gradient(90deg,rgba(154,140,255,.55) 0 var(--sp,100%),rgba(154,140,255,.14) var(--sp,100%)),#1d1834;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 0 0 1px rgba(154,140,255,.6),0 10px 28px rgba(154,140,255,.25)}
+#deathCard .res-play.search::after{display:none}
+#deathCard .res-play.search .rp-ico{animation:res-seek 1.4s ease-in-out infinite}
+@keyframes res-seek{50%{transform:translate(2px,-2px) rotate(-12deg)}}
+
+/* entrance: the hero pops, the cards follow in a quick stagger */
+#deathCard .res-tags,#deathCard #deathWhy,#deathCard #dAch,#deathCard .res-top>*,#deathCard .rs,#deathCard .res-actions{animation:res-up .5s cubic-bezier(.2,.9,.25,1) both}
+#deathCard .res-place{animation:res-pop .65s cubic-bezier(.2,1.35,.35,1) .06s both}
+#deathCard #deathWhy{animation-delay:.16s}#deathCard #dAch{animation-delay:.22s}
+#deathCard .res-top>*{animation-delay:.18s}#deathCard .res-top>#dEarn{animation-delay:.24s}
+#deathCard .rs{animation-delay:.28s}#deathCard .rs+.rs{animation-delay:.33s}#deathCard .rs+.rs+.rs{animation-delay:.38s}
+#deathCard .res-actions{animation-delay:.42s}
+@keyframes res-up{from{opacity:0;transform:translateY(14px)}}
+@keyframes res-pop{0%{opacity:0;transform:scale(2.2)}45%{opacity:1;transform:scale(.92)}70%{transform:scale(1.04)}100%{transform:none}}
+/* victory confetti: paper and little cells */
+#deathCard .res-fx{position:absolute;inset:0;z-index:3;overflow:hidden;pointer-events:none}
+#deathCard .res-fx i{position:absolute;top:-24px;left:var(--x);width:8px;height:13px;border-radius:2px;background:var(--c);opacity:0;transform:scale(var(--z));animation:res-fall var(--t) cubic-bezier(.3,.55,.45,1) var(--d) both}
+#deathCard .res-fx i.cell{width:11px;height:11px;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.8),transparent 40%),var(--c);box-shadow:0 0 8px var(--c)}
+@keyframes res-fall{0%{opacity:1;transform:translate(0,0) rotate(0) scale(var(--z))}85%{opacity:1}100%{opacity:0;transform:translate(var(--s),calc(100vh + 40px)) rotate(var(--r)) scale(var(--z))}}
+@media (prefers-reduced-motion:reduce){#overlay>#deathCard,#deathCard *,#deathCard *::before,#deathCard *::after{animation:none!important;transition:none!important}}
+
+/* landscape phones: everything on one screen */
+@media (orientation:landscape) and (max-height:500px){
+  #overlay>#deathCard{gap:10px clamp(18px,4vw,44px)}
+  #deathCard .res-hero{gap:9px}
+  #deathCard .res-status{height:36px;font-size:15.5px;padding:0 26px}
+  #deathCard .res-side{gap:8px}#deathCard .res-top,#deathCard .res-stats,#deathCard .res-actions{gap:8px}
+  #deathCard #dRank{padding:10px 14px 12px;gap:7px}
+  #deathCard .res-atp{padding:9px 6px}
+  #deathCard .rs{padding:10px 12px 11px;gap:6px}
+  #deathCard .res-lobby,#deathCard .res-play{height:54px}
+  #deathCard .res-actions{margin-top:2px}
+}
+/* portrait: one column, the buttons at the bottom within thumb reach */
+@media (orientation:portrait){
+  #overlay>#deathCard{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"hero" "side";align-items:stretch;row-gap:22px;
+    padding:max(24px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));
+    background:radial-gradient(80% 45% at 50% 28%,rgba(var(--rt),.2),transparent 72%),linear-gradient(180deg,rgba(2,8,9,.78),rgba(2,8,9,.9) 60%,rgba(2,8,9,.95))}
+  #deathCard .res-hero{gap:14px}
+  #deathCard .res-place{flex-direction:column;align-items:center;gap:4px;font-size:clamp(100px,42vw,190px)}
+  #deathCard.win .res-hero::before{left:50%;top:44%;width:min(120vw,620px)}
+  #deathCard .res-side{align-content:end}
+}
+@media (orientation:portrait) and (max-height:700px){#deathCard .res-place{font-size:clamp(84px,26vw,120px)}#overlay>#deathCard{row-gap:16px}}
+/* big screens: larger type and controls so the screen still feels full */
+@media (min-width:1000px) and (min-height:640px){
+  #overlay>#deathCard{padding-left:max(40px,calc(50vw - 520px));padding-right:max(40px,calc(50vw - 520px))}
+  #deathCard .res-place{font-size:clamp(150px,30vh,230px)}
+  #deathCard .res-status{height:48px;font-size:21px;padding:0 36px}#deathCard .res-ico{width:21px;height:21px}
+  #deathCard .res-mode{height:32px;font-size:12px}
+  #deathCard #deathWhy{font-size:22px}
+  #deathCard .res-side{gap:14px}#deathCard .res-top,#deathCard .res-stats,#deathCard .res-actions{gap:14px}
+  #deathCard #dRank{padding:18px 22px 20px;gap:12px}#deathCard .rr-num{font-size:52px}#deathCard .rr-tier{font-size:13px}#deathCard .rr-emb{width:21px;height:23px}
+  #deathCard .rr-delta{height:36px;font-size:19px;padding:0 15px}#deathCard .rr-bar{height:12px}
+  #deathCard .res-atp{width:168px}#deathCard .coin{width:48px;height:48px}#deathCard .coin::after{inset:11px}#deathCard .ra-n{font-size:38px}#deathCard .ra-l{font-size:11.5px}
+  #deathCard .res-chart{height:190px}
+  #deathCard .rs{padding:16px 18px 17px;gap:9px}#deathCard .rs b{font-size:38px}#deathCard .res-lbl,#deathCard .rs>span{font-size:11.5px}#deathCard .rs svg{width:16px;height:16px}
+  #deathCard .res-lobby,#deathCard .res-play{height:66px;border-radius:20px}#deathCard .res-play{font-size:23px}#deathCard .res-lobby{font-size:18px;padding:0 28px 0 22px}
+}
 /* @ui:results end */
 
 /* @ui:hud */
@@ -790,21 +989,35 @@ body:not(.playing) #tip{display:none}
     <div class="row"><button id="resume" class="primary" type="button">Resume</button><button id="quit" class="ghost" type="button">Return to lobby</button></div>
   </div>
 
-  <div class="card panel" id="deathCard" hidden>
-    <p class="eyebrow" id="dEyebrow">Specimen lost</p>
-    <h2 id="dTitle">Lysed</h2>
-    <p id="deathWhy">Absorbed.</p>
-    <p id="dPlace" class="place" hidden></p>
-    <div class="statgrid">
-      <div><span class="label">Peak mass</span><b id="dPeak">0</b></div>
-      <div><span class="label">Cells absorbed</span><b id="dEaten">0</b></div>
-      <div><span class="label">Survived</span><b id="dTime">0:00</b></div>
-      <div><span class="label">Best peak</span><b id="dBest">0</b></div>
-    </div>
-    <div class="rmeter" id="dRank" hidden></div>
-    <div class="dchips"><p id="dEarn" class="earn" hidden></p><p id="dAch" hidden></p></div>
-    <div class="chartbox"><span class="label">Mass over time</span><canvas id="dChart"></canvas></div>
-    <div class="row"><button id="again" class="primary" type="button">Re-inoculate</button><button id="setup" class="ghost" type="button">Lobby</button></div>
+  <!-- Results: full-screen after a death, a round's end or leaving from the pause menu (resFill / resShow) -->
+  <div class="res dead" id="deathCard" role="dialog" aria-labelledby="dTitle" hidden>
+    <section class="res-hero">
+      <div class="res-tags"><span class="res-status" id="dEyebrow"><svg class="res-ico" id="resIco" viewBox="0 0 24 24" aria-hidden="true"></svg><span id="dTitle">Eliminated</span></span><span class="res-mode" id="resMode" hidden>Practice</span></div>
+      <h2 class="res-place" id="dPlace"><span class="rp-n"><small>#</small><b id="resPlaceN">1</b></span><span class="rp-of" id="resPlaceOf"></span></h2>
+      <p class="res-why" id="deathWhy"></p>
+      <p class="res-ach" id="dAch" hidden></p>
+    </section>
+    <section class="res-side">
+      <div class="res-top">
+        <div class="res-card res-rating" id="dRank" hidden>
+          <div class="rr-head"><i class="rr-emb tier" aria-hidden="true"></i><span class="rr-tier tier"></span><span class="rr-next"></span></div>
+          <div class="rr-mid"><b class="rr-num">0</b><span class="rr-delta"></span></div>
+          <div class="rr-track"><div class="rr-bar"><i></i></div><i class="rr-emb rr-to tier" aria-hidden="true"></i></div>
+        </div>
+        <div class="res-card res-atp" id="dEarn" hidden><i class="coin" aria-hidden="true"></i><b class="ra-n"></b><span class="ra-l">ATP</span></div>
+        <div class="res-card res-chart" id="resChart" hidden><span class="res-lbl">Mass</span><canvas id="dChart" aria-hidden="true"></canvas></div>
+      </div>
+      <div class="res-stats">
+        <div class="res-card rs"><b id="dPeak">0</b><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Peak</span><em class="rs-pb" id="dBest" hidden>Best</em></div>
+        <div class="res-card rs"><b id="dEaten">0</b><span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="12" r="7.5"/><circle cx="13.2" cy="10" r="2.3" fill="currentColor"/></svg>Eaten</span></div>
+        <div class="res-card rs"><b id="dTime">0:00</b><span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 10v3.5l2.3 1.6M9.5 3h5"/></svg>Time</span></div>
+      </div>
+      <div class="res-actions">
+        <button id="setup" class="res-lobby" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-6.5 8 6.5"/><path d="M6.5 9.5V19h11V9.5"/></svg>Lobby</button>
+        <button id="resPlay" class="res-play" type="button"><svg class="rp-ico" id="resPlayIco" viewBox="0 0 24 24" aria-hidden="true"></svg><span class="rp-txt"><b id="resPlayLbl">Play again</b><small id="resPlaySub"></small></span><span class="rp-lives" id="resLives" hidden><i></i><i></i><i></i></span></button>
+        <span id="again" hidden></span><!-- updateSpawnLock() writes its long label here; syncResPlay() draws the button -->
+      </div>
+    </section>
   </div>
 </div>
 
@@ -1331,13 +1544,42 @@ let runId=null,runPromise=null;
 const isNearby=()=>{const N=window.__mitosisNet;return !!N&&N.mode==='nearby';};
 function econRunStart(){runId=null;if(local==='practice'||isNearby()){runPromise=null;return;}runPromise=api('run/start').then(r=>{runId=r.runId;return r.runId;}).catch(()=>null);}
 async function econRunEnd(){
-  if(!human)return;if(local==='practice'||isNearby()){showEarn((local==='practice'?'Practice':'Nearby')+' — unranked, no ATP or rating');return;}
+  if(!human)return;const unranked=local==='practice'?'practice':isNearby()?'nearby':'';resPrep(unranked);if(unranked)return;
   const s=human.stats,rep={survived:Math.max(0,T-s.born),eaten:s.eaten|0,peak:Math.round(s.peak),bestRank:s.bestRank||999,place:s.place|0,of:s.of|0,life:Math.max(0,livesUsed()-1),show:1};
   rep.name=human.name;const rid=runId||(runPromise?await runPromise:null);runId=null;runPromise=null;
-  if(!rid){showEarn(wallet.online?'':'Offline — ATP is only earned while connected');return;}
-  rep.runId=rid;const a=loadPending();a.push(rep);savePending(a);showEarn('Counting ATP…');flushRuns();
+  if(!rid){showEarn(wallet.online?null:{k:'offline'});return;}
+  rep.runId=rid;const a=loadPending();a.push(rep);savePending(a);flushRuns();
 }
-function showEarn(t){const el=$('dEarn');el.hidden=!t;el.textContent=t||'';}
+/* ---- results screen (#deathCard): placement, rating count-up, ATP reward, run stats and the play-again button ---- */
+const RES_ICO={
+  dead:'<circle cx="12" cy="12" r="8.5"/><path d="M9.2 9.2l5.6 5.6M14.8 9.2l-5.6 5.6"/>',
+  arena:'<circle cx="12" cy="12" r="8.5" stroke-dasharray="3.4 2.6"/><circle cx="12" cy="12" r="2.6"/>',
+  win:'<path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3M12 14v4M8 20h8"/>',
+  round:'<circle cx="12" cy="13.5" r="7.5"/><path d="M12 10v3.5l2.3 1.6M9.5 3h5"/>',
+  quit:'<path d="M14 4h4.5v16H14M10 16l-4-4 4-4M6 12h10"/>',
+  play:'<path d="M8 5.6v12.8a1 1 0 0 0 1.52.85l10.3-6.4a1 1 0 0 0 0-1.7L9.52 4.75A1 1 0 0 0 8 5.6z" fill="currentColor" stroke="none"/>',
+  respawn:'<path d="M4.6 12a7.4 7.4 0 1 0 2.2-5.25"/><path d="M4.6 4.2v3.9h3.9"/>',
+  find:'<circle cx="11" cy="11" r="6.4"/><path d="M20 20l-4.4-4.4"/>'};
+let resS={mode:'',earn:null,rank:null,at:0,t:0,t2:0}; // at: when the screen appeared, so the count-ups start once it is in view
+function resPrep(unranked){ // a run just ended (econRunEnd): reset the rating and reward panels for it. unranked: '' | 'practice' | 'nearby'
+  clearTimeout(resS.t);clearTimeout(resS.t2);cancelAnimationFrame(rankAnim);resS={mode:unranked,earn:null,rank:null,at:0,t:0,t2:0};
+  const el=$('dRank');el.hidden=!!unranked;el.classList.remove('promo','dn');const chip=el.querySelector('.rr-delta');chip.className='rr-delta';chip.textContent='';el.querySelector('.rr-next').textContent='';el.querySelector('.rr-num').classList.remove('bump','go');
+  rrSet(wallet.rating,tierAtRating(wallet.rating));showEarn(unranked?null:{k:'wait'});
+}
+function tierNext(r){const names=(wallet.catalog&&wallet.catalog.tiers)||[],at=((wallet.catalog&&wallet.catalog.tierAt)||[]).map(v=>v==null?Infinity:v),i=at.findIndex(v=>r<v);
+  return i>=0&&i<names.length-1&&isFinite(at[i])?{name:names[i+1],left:at[i]-r}:null;}
+function rrSet(r,t){const el=$('dRank'),tier=el.querySelector('.rr-tier'),to=el.querySelector('.rr-to'),nx=tierNext(r);el.querySelector('.rr-num').textContent=r;el.querySelector('.rr-bar i').style.width=(t.pct*100).toFixed(1)+'%';
+  if(tier.textContent!==t.name){tier.textContent=t.name;tier.dataset.tier=el.querySelector('.rr-emb').dataset.tier=t.name;}
+  to.hidden=!nx;if(nx&&to.dataset.tier!==nx.name){to.dataset.tier=nx.name;to.title=nx.name;}}
+function showEarn(o){ // the ATP tile. o: null (hidden) | {k:'wait'} | {k:'atp',n} | {k:'none',why} | {k:'offline'} | {k:'later'}
+  const el=$('dEarn');resS.earn=o||null;el.hidden=!o;if(!o)return;el.className='res-card res-atp '+o.k;
+  el.querySelector('.ra-n').textContent=o.k==='atp'?'+0':o.k==='none'?'0':o.k==='wait'?'':'—';
+  el.querySelector('.ra-l').textContent=o.k==='none'?o.why:o.k==='offline'?'Offline':o.k==='later'?'Pending':'ATP';
+  if(resS.at)resPlayEarn();}
+function resPlayEarn(){const o=resS.earn;if(!o||o.k!=='atp')return;clearTimeout(resS.t2);
+  resS.t2=setTimeout(()=>{const el=$('dEarn'),n=el.querySelector('.ra-n');if(resS.earn!==o)return;el.classList.add('got');if(RM){n.textContent='+'+o.n;return;}
+    const t0=performance.now(),tick=now=>{const k=clamp((now-t0)/700,0,1);n.textContent='+'+Math.round(o.n*(1-Math.pow(1-k,3)));if(k<1&&resS.earn===o)requestAnimationFrame(tick);};requestAnimationFrame(tick);},
+    Math.max(0,resS.at+520-performance.now()));}
 function tierProgress(){ // where this rating sits inside its tier, for the progress bars
   const names=(wallet.catalog&&wallet.catalog.tiers)||[],at=(wallet.catalog&&wallet.catalog.tierAt)||[],i=names.indexOf(wallet.tier);
   if(i<0||at.length!==names.length)return{text:'',pct:0};
@@ -1357,19 +1599,18 @@ function tierAtRating(r){ // tier name and progress through it for any rating, f
   if(!names.length||at.length!==names.length)return{name:wallet.tier||'',pct:0};let i=at.findIndex(v=>r<v);if(i<0)i=names.length-1;
   const hi=at[i],lo=i>0?at[i-1]:Math.min(at[0]-300,r);return{name:names[i],pct:isFinite(hi)?clamp((r-lo)/(hi-lo),0,1):1};}
 let rankAnim=0;
-function showRank(w){const el=$('dRank');if(typeof w.ratingDelta!=='number'){el.hidden=true;return;}const d=w.ratingDelta,to=w.rating,from=to-d;updateRunDelta(d,to);
-  const a=tierAtRating(from),b=tierAtRating(to);
-  el.innerHTML=`<span class="label">Rating</span><b class="rnum">${from}</b><span class="rdelta ${d>=0?'up':'dn'}">${d>=0?'▲ +':'▼ −'}${Math.abs(d)}</span><span class="rtier tier" data-tier="${escH(a.name)}">${escH(a.name)}</span><div class="rbar"><i style="width:${Math.round(a.pct*100)}%"></i></div><span class="rmsg"></span>`;
-  el.hidden=false;el.classList.remove('promo');const num=el.querySelector('.rnum'),bar=el.querySelector('.rbar i'),chip=el.querySelector('.rdelta'),tierEl=el.querySelector('.rtier'),msg=el.querySelector('.rmsg');
-  const finish=()=>{num.textContent=to;bar.style.width=Math.round(b.pct*100)+'%';tierEl.textContent=b.name;tierEl.dataset.tier=b.name;
-    if(a.name!==b.name){msg.textContent=d>0?`Promoted to ${b.name}`:`Down to ${b.name}`;el.classList.toggle('promo',d>0);}};
-  cancelAnimationFrame(rankAnim);setTimeout(()=>chip.classList.add('show'),120);
-  if(RM||!d){finish();return;}
-  const t0=performance.now(),dur=1300;
-  const tick=now=>{const k=clamp((now-t0)/dur,0,1),e=1-Math.pow(1-k,3),r=Math.round(from+d*e),t=tierAtRating(r);
-    num.textContent=r;bar.style.width=Math.round(t.pct*100)+'%';if(tierEl.textContent!==t.name){tierEl.textContent=t.name;tierEl.dataset.tier=t.name;}
-    if(k<1)rankAnim=requestAnimationFrame(tick);else finish();};
-  rankAnim=requestAnimationFrame(tick);}
+function showRank(w){ // the server's answer for this run: count the rating up (or down) once the results screen is in view
+  if(typeof w.ratingDelta!=='number')return;updateRunDelta(w.ratingDelta,w.rating);resS.rank=w;if(resS.at)resPlayRank();}
+function resPlayRank(){const w=resS.rank,el=$('dRank');if(!w||el.hidden)return;clearTimeout(resS.t);
+  resS.t=setTimeout(()=>{if(resS.rank!==w)return;const d=w.ratingDelta,to=w.rating,from=to-d,a=tierAtRating(from),b=tierAtRating(to),chip=el.querySelector('.rr-delta');
+    rrSet(from,a);chip.textContent=d>0?'+'+d:d<0?'−'+-d:'±0';chip.className='rr-delta '+(d>0?'up':d<0?'dn':'eq');void chip.offsetWidth;chip.classList.add('show');el.classList.toggle('dn',d<0);
+    const num=el.querySelector('.rr-num');num.classList.add('go');
+    const finish=()=>{rrSet(to,b);num.classList.remove('go');num.classList.add('bump');if(a.name!==b.name){el.querySelector('.rr-next').textContent=d>0?'Promoted':'Demoted';el.classList.toggle('promo',d>0);if(d>0)sfx('ach');}};
+    cancelAnimationFrame(rankAnim);if(RM||!d){finish();return;}
+    const t0=performance.now(),dur=Math.min(1700,800+Math.abs(d)*45);
+    const tick=now=>{const k=clamp((now-t0)/dur,0,1),e=1-Math.pow(1-k,3),r=Math.round(from+d*e);rrSet(r,tierAtRating(r));
+      if(k<1)rankAnim=requestAnimationFrame(tick);else finish();};
+    rankAnim=requestAnimationFrame(tick);},Math.max(0,resS.at+650-performance.now()));}
 async function loadTop(){try{const r=await fetch(window.MITOSIS_SERVER+'/api/leaderboard');const j=await r.json();const me=wallet.playerId;
   const myName=cleanName($('nameIn').value)||settings.name||'Unnamed cell';let seen=false;
   const row=(t,me)=>`<li${me?' class="me"':''}><span class="rk">${t.rank}</span><span class="n">${escH(t.name)}${me?' · you':''}</span><span class="tr" data-tier="${escH(t.tier)}">${escH(t.tier)}</span><span class="rt">${t.rating}</span></li>`;
@@ -1406,15 +1647,51 @@ $('profBtn').addEventListener('click',()=>{renderProfile();renderAccount();showC
 $('profShop').addEventListener('click',()=>openStore());
 $('lookShop').addEventListener('click',()=>openStore());
 for(const b of document.querySelectorAll('.card .back'))b.addEventListener('click',()=>showCard('startCard'));
-// ending a run on purpose shows the same results screen as dying
-function showResults(title,eyebrow,why){
+// ending a run without dying shows the same results screen. kind: 'win' | 'round' (the round ended) | anything else = left from the pause menu
+function showResults(kind,sub){
   if(!human)return;const s=human.stats,m=human.cells.reduce((a,c)=>a+(c.dead?0:c.mass),0);
-  $('dEyebrow').textContent=eyebrow;$('dTitle').textContent=title;$('deathWhy').textContent=why;
-  const pe=$('dPlace');if(s.place){pe.textContent=`${ordinal(s.place)} of ${s.of}`;pe.hidden=false;}else pe.hidden=true;
-  $('dPeak').textContent=Math.round(s.peak);$('dPeak').classList.remove('pb');$('dEaten').textContent=s.eaten;$('dTime').textContent=fmtT(T-s.born);$('dBest').textContent=Math.round(Math.max(best,s.peak));
-  const dA=$('dAch');dA.hidden=!runAch.length;dA.textContent=runAch.length?'Unlocked: '+runAch.join(', '):'';
-  const hist=human.hist.slice();hist.push(m);showCard('deathCard');drawChart(hist);maybeAskReview(s.place);
+  if(kind!=='win'&&kind!=='round'){kind='quit';sub='';}
+  resFill(kind,notePeak(s.peak),sub);const hist=human.hist.slice();hist.push(m);resShow(hist);maybeAskReview(s.place);
 }
+function notePeak(p){const pb=p>best;if(pb){best=p;try{localStorage.setItem('mitosis.best',String(Math.round(best)));}catch(e){}}return pb;} // true for a new personal best
+function resFill(kind,pb,sub){ // kind: dead | arena (dissolved by the closing arena) | win | round | quit
+  const s=human.stats,card=$('deathCard'),un=resS.mode;
+  card.className='res '+(kind==='arena'?'dead arena':kind)+(un?' unranked':'')+(s.place>=1&&s.place<=3?' m'+(s.place|0):'');
+  $('dTitle').textContent={dead:'Eliminated',arena:'Dissolved',win:'Victory',round:'Round over',quit:'Run ended'}[kind];$('resIco').innerHTML=RES_ICO[kind];
+  const md=$('resMode');md.hidden=!un;md.textContent=un==='nearby'?'Nearby':'Practice';
+  const place=s.place|0,shown=place||(kind==='quit'?s.bestRank|0:0);$('dPlace').hidden=!shown;
+  $('resPlaceN').textContent=shown;$('dPlace').classList.toggle('n2',shown>=10);$('resPlaceOf').textContent=place?'of '+s.of:'best';
+  const why=$('deathWhy'),k=s.killerRef;
+  if(kind==='dead')why.innerHTML=`${k&&k.color?`<i class="kdot" style="--kc:${col(k.color)}"></i>`:''}<span>by <b>${escH(s.killer||'a bigger cell')}</b></span>`;
+  else why.textContent=kind==='arena'?'Outside the arena':sub||'';
+  why.hidden=!why.textContent;
+  const dA=$('dAch');dA.hidden=!runAch.length;dA.innerHTML=runAch.slice(0,2).map(n=>`<span>★ ${escH(n)}</span>`).join('')+(runAch.length>2?`<span>+${runAch.length-2}</span>`:'');
+  $('dPeak').textContent=Math.round(s.peak).toLocaleString();$('dPeak').dataset.v=Math.round(s.peak);$('dBest').hidden=!pb;$('dEaten').textContent=s.eaten|0;$('dEaten').dataset.v=s.eaten|0;$('dTime').textContent=fmtT(T-s.born);
+  $('resChart').hidden=!un;
+}
+function resShow(hist){showCard('deathCard');resS.at=performance.now();syncResPlay();if(!$('resChart').hidden)drawChart(hist);resPlayRank();resPlayEarn();
+  for(const x of $('deathCard').querySelectorAll('.res-fx'))x.remove();if(RM)return;
+  for(const [el,d] of [[$('dPeak'),420],[$('dEaten'),500]]){const to=+el.dataset.v||0,t0=performance.now()+d;if(!to)continue; // stats count up as their tiles land
+    const tick=now=>{const k=clamp((now-t0)/700,0,1);el.textContent=Math.round(to*(1-Math.pow(1-k,3))).toLocaleString();if(k<1&&!$('deathCard').hidden)requestAnimationFrame(tick);else el.textContent=to.toLocaleString();};requestAnimationFrame(tick);}
+  if($('deathCard').classList.contains('win')){const box=document.createElement('div'),C=['#ffd36b','#ff5c8a','#9a8cff','#5fe0a8','#8fe3e0','#fff6d6']; // victory: confetti and little cells rain down
+    box.className='res-fx';box.setAttribute('aria-hidden','true');
+    for(let i=0;i<46;i++){const p=document.createElement('i');if(i%3===0)p.className='cell';
+      p.style.cssText=`--x:${rand(1,99).toFixed(1)}%;--d:${rand(.15,.9).toFixed(2)}s;--t:${rand(2.4,4).toFixed(2)}s;--r:${Math.round(rand(-900,900))}deg;--s:${Math.round(rand(-70,70))}px;--c:${C[i%C.length]};--z:${rand(.6,1.3).toFixed(2)}`;box.appendChild(p);}
+    $('deathCard').appendChild(box);setTimeout(()=>box.remove(),5200);}
+}
+function syncResPlay(){ // the big button: Respawn while lives are left, Play again, Find game when you can't rejoin, or the search countdown
+  const b=$('resPlay');if(!b||$('deathCard').hidden)return;
+  let k='again',sub='',left=-1;const lv=$('resLives');
+  if(queued){k='search';const ms=searchUntil-performance.now();sub='0:'+String(Math.max(0,Math.ceil(ms/1000))).padStart(2,'0');b.style.setProperty('--sp',(clamp(ms/(SEARCH_MAX*1000),0,1)*100).toFixed(1)+'%');}
+  else if(local||!isOffline()){
+    if(!spawnOpen()){k='find';sub=spawnBlockReason()==='lives'?'No lives left':'Round closed';}
+    else if(local!=='practice'){left=MAX_RESPAWNS+1-livesUsed();if(left<=MAX_RESPAWNS&&$('deathCard').classList.contains('dead'))k='respawn';}}
+  if(b.dataset.k!==k){b.dataset.k=k;b.className='res-play '+k;$('resPlayIco').innerHTML=RES_ICO[k==='search'||k==='find'?'find':k==='respawn'?'respawn':'play'];
+    $('resPlayLbl').textContent={again:'Play again',respawn:'Respawn',find:'Find game',search:'Searching'}[k];}
+  if($('resPlaySub').textContent!==sub)$('resPlaySub').textContent=sub;
+  lv.hidden=k!=='respawn';if(!lv.hidden)[...lv.children].forEach((d,i)=>d.classList.toggle('on',i<left));
+}
+setInterval(syncResPlay,250);
 function maybeAskReview(place){ // after a top-3 finish, now and then, let iOS offer an App Store rating (iOS itself shows it at most 3 times a year)
   if(Native.platform!=='ios'||!place||place>3||local==='practice'||isNearby()||(wallet.runs|0)<5)return;
   let last=0;try{last=+localStorage.getItem('mitosis.reviewAt')||0;}catch(e){}
@@ -1427,8 +1704,8 @@ let flushing=false;
 async function flushRuns(){ // report finished runs; keep them queued while the server is unreachable
   if(flushing)return;flushing=true;
   try{let a=loadPending();while(a.length){const rep=a[0];
-    try{const w=await api('run/end',rep);applyWallet(w);if(rep.show){const br=rep.bestRank<999?` · best rank #${rep.bestRank}`:'';showEarn(w.payout?`+${w.payout} ATP${br}`:rep.survived<20?'No ATP — survive at least 20 seconds':`No ATP — finish in the top ${((wallet.catalog&&wallet.catalog.rules&&wallet.catalog.rules.byRank)||[[30]]).slice(-1)[0][0]}`);showRank(w);}}
-    catch(e){if(!e.status||e.status>=500){if(rep.show)showEarn('ATP will be counted when the server is back');break;}}
+    try{const w=await api('run/end',rep);applyWallet(w);if(rep.show){const R=(wallet.catalog&&wallet.catalog.rules)||{};showEarn(w.payout?{k:'atp',n:w.payout}:{k:'none',why:rep.survived<(R.minSec||20)?`Survive ${R.minSec||20}s`:`Top ${(R.byRank||[[30]]).slice(-1)[0][0]} only`});showRank(w);}}
+    catch(e){if(!e.status||e.status>=500){if(rep.show)showEarn({k:'later'});break;}}
     a.shift();savePending(a);}}
   finally{flushing=false;}
 }
@@ -1906,9 +2183,8 @@ function finishHumanRound(){ // the arena closed: whoever is still alive is rank
   if(!human||!human.alive||mode!=='play')return;
   const ranked=players.filter(p=>p.alive&&p.cells.length).map(p=>({p,m:p.cells.reduce((s,c)=>s+(c.dead?0:c.mass),0)})).sort((a,b)=>b.m-a.m);
   const place=Math.max(1,ranked.findIndex(r=>r.p===human)+1),of=Math.max(round.n,ranked.length);human.stats.place=place;human.stats.of=of;
-  paused=false;$('dRank').hidden=true;econRunEnd();
-  const early=roundT()<ROUND_SEC-1;
-  showResults(place===1?'You won the round':'Round over',place===1?'Victory':'Time is up',`${place===1?'Last cell standing':ordinal(place)+' of '+of}${early?'':' when the arena closed'}, after ${fmtT(T-human.stats.born)}.`);
+  paused=false;econRunEnd();
+  showResults(place===1?'win':'round',place>1?"Time's up":ranked.filter(r=>!r.p.boss).length<=1?'Last cell standing':'Biggest cell');
   if(BISECT.auto)reportHitch(`autopilot round over place=${place} of=${of} round=${round.id}`);
   removeHuman();mode='dead';document.body.classList.remove('playing');sfx(place===1?'ach':'die');
 }
@@ -3017,29 +3293,28 @@ function setPaused(v){
 }
 function die(){
   mode='dead';if(!multi())slow=.22;sfx('die');Native.haptic('heavy');const s=human.stats;human.hist.push(0);paused=false;
-  const pb=s.peak>best;if(pb){best=s.peak;try{localStorage.setItem('mitosis.best',String(Math.round(best)));}catch(e){}}
-  $('dEyebrow').textContent='Specimen lost';$('dTitle').textContent='Lysed';$('dRank').hidden=true;
-  const pl=placeOf();s.place=pl.place;s.of=pl.of;if(BISECT.auto)reportHitch(`autopilot died place=${pl.place} of=${pl.of} by=${s.killer} t=${fmtT(T-s.born)} roundT=${roundT().toFixed(0)}`);$('dPlace').textContent=`${ordinal(s.place)} of ${s.of}`;$('dPlace').hidden=false;recordRun({t:Date.now(),place:s.place,of:s.of,peak:Math.round(s.peak),eaten:s.eaten,sec:Math.round(T-s.born),practice:local==='practice'});
-  $('deathWhy').textContent=(s.killer==='the collapse'?'Dissolved outside the closing arena':`Absorbed by ${s.killer}`)+` after ${fmtT(T-s.born)}.`;
-  $('dPeak').textContent=Math.round(s.peak);$('dPeak').classList.toggle('pb',pb);$('dEaten').textContent=s.eaten;$('dTime').textContent=fmtT(T-s.born);$('dBest').textContent=Math.round(best);
-  const dA=$('dAch');dA.hidden=!runAch.length;dA.textContent=runAch.length?'Unlocked: '+runAch.join(', '):'';evoOffer=null;renderEvo();lysedAt=0;
-  econRunEnd();
+  const pb=notePeak(s.peak);
+  const pl=placeOf();s.place=pl.place;s.of=pl.of;if(BISECT.auto)reportHitch(`autopilot died place=${pl.place} of=${pl.of} by=${s.killer} t=${fmtT(T-s.born)} roundT=${roundT().toFixed(0)}`);recordRun({t:Date.now(),place:s.place,of:s.of,peak:Math.round(s.peak),eaten:s.eaten,sec:Math.round(T-s.born),practice:local==='practice'});
+  evoOffer=null;renderEvo();lysedAt=0;
+  econRunEnd();resFill(s.killer==='the collapse'?'arena':'dead',pb);
   const hist=human.hist.slice();
-  setTimeout(()=>{if(mode!=='dead')return;document.body.classList.remove('playing');showCard('deathCard');drawChart(hist);$('again').focus();},1200);
+  setTimeout(()=>{if(mode!=='dead')return;document.body.classList.remove('playing');resShow(hist);$('resPlay').focus({preventScroll:true});},1200);
 }
-function drawChart(h){
-  const c=$('dChart'),w=c.clientWidth,ht=c.clientHeight;if(!w)return;c.width=w*DPR;c.height=ht*DPR;
+function drawChart(h){ // mass over the run, for the results screen's chart tile
+  const c=$('dChart'),w=c.clientWidth,ht=c.clientHeight;if(!w||!ht)return;c.width=Math.round(w*DPR);c.height=Math.round(ht*DPR);
   const g=c.getContext('2d');g.setTransform(DPR,0,0,DPR,0,0);g.clearRect(0,0,w,ht);
   if(h.length<2)h=[h[0]||0,h[0]||0];
-  const mx=Math.max(...h,1),pad=4,X=i=>pad+i/(h.length-1)*(w-pad*2),Y=v=>ht-pad-(v/mx)*(ht-pad*2-14);
-  g.strokeStyle='rgba(140,210,200,.12)';g.lineWidth=1;g.beginPath();g.moveTo(0,ht-pad+.5);g.lineTo(w,ht-pad+.5);g.stroke();
-  const line=new Path2D();line.moveTo(X(0),Y(h[0]));for(let i=1;i<h.length;i++)line.lineTo(X(i),Y(h[i]));
-  const area=new Path2D(line);area.lineTo(X(h.length-1),ht-pad);area.lineTo(X(0),ht-pad);area.closePath();
-  const gr=g.createLinearGradient(0,0,0,ht);gr.addColorStop(0,'rgba(255,92,138,.32)');gr.addColorStop(1,'rgba(255,92,138,0)');g.fillStyle=gr;g.fill(area);
-  g.strokeStyle='#ff5c8a';g.lineWidth=2;g.lineJoin='round';g.stroke(line);
-  const pi=h.indexOf(mx);g.beginPath();g.arc(X(pi),Y(mx),4,0,TAU);g.fillStyle='#ff5c8a';g.fill();g.lineWidth=2;g.strokeStyle='#071618';g.stroke();
-  g.font='500 11px "IBM Plex Mono",monospace';g.fillStyle='#dcefe9';g.textBaseline='bottom';
-  const lbl='peak '+Math.round(mx),tw=g.measureText(lbl).width;g.textAlign='left';g.fillText(lbl,clamp(X(pi)-tw/2,0,w-tw),Y(mx)-7);
+  const mx=Math.max(...h,1),top=12,bot=3,X=i=>6+i/(h.length-1)*(w-12),Y=v=>ht-bot-(v/mx)*(ht-top-bot);
+  g.strokeStyle='rgba(160,225,215,.07)';g.lineWidth=1;for(let i=0;i<=3;i++){const y=Math.round(ht-bot-(ht-top-bot)*i/3)+.5;g.beginPath();g.moveTo(0,y);g.lineTo(w,y);g.stroke();}
+  const line=new Path2D();line.moveTo(X(0),Y(h[0]));
+  for(let i=1;i<h.length;i++){const x0=X(i-1),y0=Y(h[i-1]),x1=X(i),y1=Y(h[i]);line.quadraticCurveTo(x0,y0,(x0+x1)/2,(y0+y1)/2);}
+  line.lineTo(X(h.length-1),Y(h[h.length-1]));
+  const area=new Path2D(line);area.lineTo(X(h.length-1),ht);area.lineTo(X(0),ht);area.closePath();
+  const gr=g.createLinearGradient(0,top,0,ht);gr.addColorStop(0,'rgba(255,92,138,.36)');gr.addColorStop(1,'rgba(255,92,138,0)');g.fillStyle=gr;g.fill(area);
+  g.save();g.shadowColor='rgba(255,92,138,.75)';g.shadowBlur=10;g.strokeStyle='#ff6f98';g.lineWidth=2.5;g.lineJoin='round';g.lineCap='round';g.stroke(line);g.restore();
+  const pi=h.indexOf(mx),px=X(pi),py=Y(mx);
+  g.beginPath();g.arc(px,py,8,0,TAU);g.fillStyle='rgba(255,92,138,.2)';g.fill();
+  g.beginPath();g.arc(px,py,3.8,0,TAU);g.fillStyle='#fff';g.fill();g.lineWidth=2;g.strokeStyle='#ff5c8a';g.stroke();
 }
 
 /* ================= setup UI ================= */
@@ -3102,7 +3377,7 @@ if(/[?&]nearby=1/.test(location.search))setTimeout(()=>setNearby(true),1500); //
 const syncSkill=()=>{const k=SKILL[settings.botSkill]?settings.botSkill:'normal';const b=$('skillBtn');b.textContent=SKILL[k].label;b.dataset.k=k;[...$('skillSeg').children].forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.k===k)));};
 $('skillBtn').addEventListener('click',()=>{const i=SKILL_LIST.indexOf(settings.botSkill||'normal');settings.botSkill=SKILL_LIST[(i+1)%SKILL_LIST.length];saveSettings();syncSkill();toast('Bots',`${SKILL[settings.botSkill].label} bots`,'Used in practice and offline games');});
 $('skillSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.botSkill=b.dataset.k;saveSettings();syncSkill();});syncSkill();
-$('again').addEventListener('click',startGame);
+$('resPlay').addEventListener('click',startGame);
 $('setup').addEventListener('click',()=>{leaveLocal();mode='attract';achLine();showCard('startCard');});
 $('resume').addEventListener('click',()=>setPaused(false));
 $('quit').addEventListener('click',()=>{paused=false;$('dRank').hidden=true;econRunEnd();leaveLocal();showResults('Run over','Returned to the lobby',`You left the well after ${fmtT(T-human.stats.born)}.`);removeHuman();mode='attract';document.body.classList.remove('playing');});
