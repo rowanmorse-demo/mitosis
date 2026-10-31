@@ -239,16 +239,20 @@ All endpoints take and return JSON. Authenticated ones need `Authorization: Bear
 | `POST /api/session` `{secret}` | Create or load the player; returns wallet, owned skins and the catalogue |
 | `POST /api/run/start` | Begin a run (server timestamps it) |
 | `POST /api/run/end` `{runId, survived, eaten, peak, place, of, bestRank, name}` | Pay out the run by placement and adjust the rating; idempotent |
-| `POST /api/skins/buy` `{skinId}` | Spend ATP on a skin |
+| `POST /api/skins/buy` `{skinId}` | Spend ATP on a skin (battle pass skins are not for sale) |
+| `POST /api/pass` | The battle pass: your level, Battle Stars, Battle Pass (premium) and claims, plus the season's pages (`pass` and `catalog.pass` are `null` while it is off) |
+| `POST /api/pass/premium` `{bundle}` | Buy the Battle Pass for this season with ATP, or the Battle Bundle (the pass plus 10 levels); once a season |
+| `POST /api/pass/claim` `{reward}` | Spend Battle Stars on a reward (`'2c'`: page 2, third reward): it must be on an open page, free or covered by the Battle Pass, and not claimed yet |
 | `POST /api/iap/apple` `{transactionId, jws}` | Verify a StoreKit 2 transaction and credit ATP |
 | `POST /api/iap/google` `{purchaseToken, productId, orderId}` | Verify a Play purchase and credit ATP |
 | `POST /api/auth/apple` `{identityToken, nonce}` | Sign in with Apple: link the account to this wallet, or join the account's wallet (`merged: true`) |
 | `POST /api/auth/google` `{idToken, nonce}` | Sign in with Google, same behaviour |
 | `POST /api/auth/signout` | Detach this device from the account (the page then starts a fresh secret) |
-| `POST /api/account/delete` | `{confirm:'DELETE'}`: delete the player and everything linked (skins, runs, sign-ins, devices); purchase receipts stay as anonymous ids so they cannot be replayed. In the game: Profile › Account › Delete account, or Settings › Account & data |
+| `POST /api/account/delete` | `{confirm:'DELETE'}`: delete the player and everything linked (skins, runs, battle pass, sign-ins, devices); purchase receipts stay as anonymous ids so they cannot be replayed. In the game: Profile › Account › Delete account, or Settings › Account & data |
 | `POST /api/crash` `{platform, kind, app, os, device, report}` | Crash and hang reports from the apps; logged (`!!` lines) and kept in `DATA_DIR/crashes/` |
 | `POST /api/log` `{who, text}` | Client diagnostics: frame stalls, page errors, autopilot events; printed in the server log |
 | `POST /api/net` | Connection quality from the game: ping samples, lost pings, frame rate, time zone (anonymous) |
 | `GET /admin/net?token=…` | The connection report: ping and frame rate by area, time zone, platform and connection, and what most likely needs fixing. The token is `ADMIN_TOKEN`, or the one the server makes on first start in `data/admin-token` (also printed at start-up). `&days=30`, `&format=json` |
 | `GET /admin/live?token=…` | Live players: who is online right now (website, iPhone app, Android app), what they are doing (live arena, searching, solo game, menus, away), rooms in use, peak today and a 24-hour chart. Updates live over `GET /admin/live/stream?token=…` (server-sent events); `&format=json` for the numbers. Same token as the connection report. Counts only; the 24-hour history is kept in `DATA_DIR/live-history.json` |
-| `GET /api/catalog` | Skins, packs, payout rules and which stores are verified |
+| `GET /admin/pass?token=…` | The battle pass switch (same token): whether it is on, the season and its dates, and how many players have progress, bought the Battle Pass and claimed rewards. The pass is off until you press Turn on; it is shown only while it is on and a season in `PASS_SEASONS` (economy.js) is running. The switch is kept in the database, so it survives deploys |
+| `GET /api/catalog` | Skins, packs, payout rules, the battle pass season (while it is on) and which stores are verified |

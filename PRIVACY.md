@@ -6,7 +6,7 @@ Mitosis: Cell Arena ("Mitosis", "the game") is made by Catapult Consulting, LLC.
 
 ## What the game stores
 
-**A device identity.** When you first play, the game creates a random identifier on your device and sends it to the Mitosis server. It is used to keep your wallet (ATP balance and skins), your rating and your run history together. It contains nothing about you and is not shared with anyone.
+**A device identity.** When you first play, the game creates a random identifier on your device and sends it to the Mitosis server. It is used to keep your wallet (ATP balance and skins), your rating, your battle pass progress and your run history together. It contains nothing about you and is not shared with anyone.
 
 **Account sign-in (optional).** If you choose Sign in with Apple or Sign in with Google, Apple or Google sends the game a signed token identifying your account. The server verifies that token and stores the account identifier, and the email address if you share it, so your wallet, skins and rating can follow you to other devices. The game never sees your password. Apple's "Hide My Email" relay addresses are supported.
 
@@ -37,7 +37,7 @@ The Mitosis server stores wallets, accounts, run results, purchase identifiers a
 
 ## Deleting your data
 
-- **Delete account** in the game (Profile › Account › Delete account, or Settings › Account & data) permanently deletes your account from the server straight away: rating, XP and level, ATP, skins, run history, display name, and any Sign in with Apple or Google link. Records of App Store and Google Play purchases are kept only as anonymous transaction ids, so a purchase cannot be credited twice; they are no longer linked to you. The game then clears its data on your device and starts you fresh.
+- **Delete account** in the game (Profile › Account › Delete account, or Settings › Account & data) permanently deletes your account from the server straight away: rating, XP and level, ATP, skins, battle pass progress, run history, display name, and any Sign in with Apple or Google link. Records of App Store and Google Play purchases are kept only as anonymous transaction ids, so a purchase cannot be credited twice; they are no longer linked to you. The game then clears its data on your device and starts you fresh.
 - If you signed in with Apple, you can also stop using your Apple Account with the game in iPhone Settings › your name › Sign in with Apple.
 - **Sign out** in the game's Profile tab detaches your device from your account and gives the device a fresh wallet.
 - **Deleting the app** or clearing the website's site data removes the device identity from your device; a new one is created next time you play.

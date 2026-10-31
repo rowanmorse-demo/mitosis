@@ -32,6 +32,11 @@ const SKINS = [
   { id: 25, key: 'widow', name: 'Widow', price: 2000, season: 'halloween' },
   { id: 26, key: 'jackolantern', name: "Jack-o'-Lantern", price: 3000, season: 'halloween' },
   { id: 27, key: 'witching', name: 'Witching Hour', price: 7500, season: 'halloween' },
+  // battle pass rewards (PASS_SEASONS): never sold, only claimed from the pass
+  { id: 28, key: 'diatom', name: 'Diatom', price: 0, pass: 's1' },
+  { id: 29, key: 'seasparkle', name: 'Sea Sparkle', price: 0, pass: 's1' },
+  { id: 30, key: 'radiolarian', name: 'Radiolarian', price: 0, pass: 's1' },
+  { id: 31, key: 'bloom', name: 'Bloom', price: 0, pass: 's1' },
 ];
 const PACKS = [
   { id: 'atp_500', atp: 500 },
@@ -114,8 +119,58 @@ function seasonOpen(key, t = now()) {
   const y = new Date(t).getUTCFullYear(), day = 864e5;
   return [y - 1, y].some(yy => { const a = Date.UTC(yy, s.from[0] - 1, s.from[1]) - day, b = Date.UTC(yy, s.to[0] - 1, s.to[1]) + 2 * day; return t >= a && t < b; });
 }
+// Battle pass, set up like Fortnite's: everyone has the free pass, and the Battle Pass (premium) is bought once per season
+// with ATP, so real money goes through the App Store and Google Play ATP packs. Ranked lives fill it with the same XP that
+// counts for profile levels (xpFor, added here in runEnd and never claimed by the client). Every levelXp is a level, and
+// each level gives Battle Stars. Rewards sit on pages: spend stars on any reward on an open page, in any order, each once.
+// Free rewards are for everyone; the rest need the Battle Pass. Page 1 is open from the start, and a page opens when you
+// reach its level or claim `need` rewards on the page before it. The last page is the Bonus page, for after the rest.
+// The Battle Pass pays back its price in ATP on pages 1-5, plus more on the Bonus page. A shop skin you already own is
+// paid out at its shop price in ATP instead. The Battle Bundle is the Battle Pass plus bundleLevels levels.
+// Seasons run between fixed UTC dates (from inclusive, to exclusive), and the pass also has a switch (/admin/pass, kept
+// in the store) so it stays hidden until it is launched. While it is off, or between seasons, the pass is in neither the
+// catalogue nor the wallet, and lives add nothing to it. Rewards are known by their place ('2c' is page 2's third), so
+// never reorder a season that has started.
+const PASS = { levelXp: 300, stars: 5, need: 4, premium: 2500, bundle: 4500, bundleLevels: 10 };
+const A = atp => ({ atp }), K = skin => ({ skin }), F = (stars, r) => ({ stars, free: true, ...r }), P = (stars, r) => ({ stars, ...r });
+const PASS_SEASONS = [
+  { key: 's1', n: 1, name: 'Bloom', from: '2026-11-16', to: '2026-12-28', pages: [
+    { rewards: [P(0, K(29)), F(4, A(100)), P(4, A(150)), P(5, K(18)), P(5, A(150)), F(4, A(50))] },             // Sea Sparkle as soon as you buy, Koi
+    { level: 6, rewards: [P(5, A(150)), P(6, K(21)), F(5, A(100)), P(5, A(150)), P(7, K(17)), F(5, A(50))] },   // Sakura, Aurora
+    { level: 12, rewards: [P(8, K(30)), P(6, A(150)), F(6, A(100)), P(6, A(200)), P(7, K(19)), P(6, A(150))] }, // Radiolarian, Plasma
+    { level: 18, rewards: [F(8, K(28)), P(7, A(200)), P(8, K(23)), P(7, A(200)), F(7, A(100)), P(7, A(200))] }, // Diatom (free), Glitch
+    { level: 24, rewards: [P(10, K(31)), P(8, A(250)), F(8, A(100)), P(8, A(300)), P(9, K(20)), P(8, A(250))] }, // Bloom, Geode
+    { level: 40, need: 6, bonus: true, rewards: [P(10, A(250)), P(10, A(250)), P(10, A(250)), P(10, A(250))] },
+  ] },
+];
+for (const s of PASS_SEASONS) s.pages.forEach((pg, i) => pg.rewards.forEach((r, j) => { r.id = (i + 1) + 'abcdefgh'[j]; r.page = i; }));
+const passSeason = (t = now()) => PASS_SEASONS.find(s => t >= Date.parse(s.from) && t < Date.parse(s.to)) || null;
+const passLive = (store, t = now()) => (store && store.flag('pass') === 'on' && passSeason(t)) || null; // the season players see, or null
+const passLevelAt = xp => 1 + Math.floor(Math.max(0, xp) / PASS.levelXp);
+const passReward = (s, id) => s.pages.flatMap(pg => pg.rewards).find(r => r.id === id) || null;
+const passCatalog = s => s && { key: s.key, n: s.n, name: s.name, starts: Date.parse(s.from), ends: Date.parse(s.to), levelXp: PASS.levelXp, stars: PASS.stars, premium: PASS.premium, bundle: PASS.bundle, bundleLevels: PASS.bundleLevels,
+  pages: s.pages.map(pg => ({ level: pg.level || 1, need: pg.need || PASS.need, bonus: !!pg.bonus, rewards: pg.rewards })) };
+// A player's pass this season: XP and level, Battle Stars left to spend, whether they have the Battle Pass, the rewards
+// they claimed, how many pages are open (always the first ones), and how many rewards they could claim right now.
+function passOf(store, p, s = passLive(store)) {
+  if (!s) return null;
+  const row = store.passRow(p.id, s.key), xp = Number(row && row.xp) || 0, premium = !!Number(row && row.premium), level = passLevelAt(xp), claimed = store.passClaims(p.id, s.key);
+  const stars = Math.max(0, level * PASS.stars - claimed.reduce((n, id) => n + ((passReward(s, id) || {}).stars || 0), 0));
+  let pages = 1;
+  while (pages < s.pages.length) { const pg = s.pages[pages], got = s.pages[pages - 1].rewards.filter(r => claimed.includes(r.id)).length;
+    if (level >= (pg.level || 1) || got >= (pg.need || PASS.need)) pages++; else break; }
+  const claimable = s.pages.slice(0, pages).flatMap(pg => pg.rewards).filter(r => !claimed.includes(r.id) && (r.free || premium) && r.stars <= stars).length;
+  return { season: s.key, xp, level, stars, premium, claimed, pages, claimable };
+}
+// runEnd: a ranked life's XP also fills the pass; returns how many levels it gained.
+function passAddXp(store, p, n) {
+  const s = passLive(store); if (!s || !(n > 0)) return 0;
+  const before = Number((store.passRow(p.id, s.key) || {}).xp) || 0;
+  store.passAddXp(p.id, s.key, n, Date.now());
+  return passLevelAt(before + n) - passLevelAt(before);
+}
 const packById = id => PACKS.find(p => p.id === id);
-const catalog = () => ({ skins: SKINS, seasons: Object.fromEntries(Object.entries(SEASONS).map(([k, s]) => [k, { ...s, open: seasonOpen(k) }])), packs: PACKS, rules: RULES, rating: RATING, xp: XP, tiers: TIERS.map(t => t[1]), tierAt: TIERS.map(t => t[0]), iap: iap.status(), auth: signin.status() });
+const catalog = store => ({ skins: SKINS, seasons: Object.fromEntries(Object.entries(SEASONS).map(([k, s]) => [k, { ...s, open: seasonOpen(k) }])), pass: passCatalog(passLive(store)), packs: PACKS, rules: RULES, rating: RATING, xp: XP, tiers: TIERS.map(t => t[1]), tierAt: TIERS.map(t => t[0]), iap: iap.status(), auth: signin.status() });
 
 function payoutFor({ survived, bestRank, place }) {
   const sec = Math.max(0, Math.min(RULES.maxRunSec, +survived || 0));
@@ -129,7 +184,7 @@ class ApiError extends Error { constructor(status, msg) { super(msg); this.statu
 const hash = s => crypto.createHash('sha256').update(String(s)).digest('hex');
 // The sign-in a wallet belongs to (Apple or Google), or null for a device-only wallet.
 const accountOf = (store, p) => { const i = store.identities(p.id)[0]; return i ? { provider: i.provider, email: i.email || null, since: Number(i.at) } : null; };
-const wallet = (store, p) => ({ playerId: p.id, balance: Number(p.balance), earned: Number(p.earned), skins: store.skins(p.id), rating: Number(p.rating ?? RATING.base), tier: tierOf(Number(p.rating ?? RATING.base)), runs: Number(p.runs || 0), ...levelOf(p.xp), account: accountOf(store, p) });
+const wallet = (store, p) => ({ playerId: p.id, balance: Number(p.balance), earned: Number(p.earned), skins: store.skins(p.id), rating: Number(p.rating ?? RATING.base), tier: tierOf(Number(p.rating ?? RATING.base)), runs: Number(p.runs || 0), ...levelOf(p.xp), pass: passOf(store, p), account: accountOf(store, p) });
 
 /* ---------- handlers: each gets (store, body, player?) and returns a JSON-able object ---------- */
 function session(store, body) {
@@ -139,7 +194,7 @@ function session(store, body) {
   let p = store.playerBySecret(h);
   if (!p) p = store.createPlayer(crypto.randomBytes(8).toString('hex'), h, now);
   else store.touch(p.id, now);
-  return { ...wallet(store, p), catalog: catalog() };
+  return { ...wallet(store, p), catalog: catalog(store) };
 }
 function auth(store, headers) {
   const m = /^Bearer\s+([a-z0-9]{24,64})$/.exec(headers.authorization || '');
@@ -202,6 +257,7 @@ function runEnd(store, body, p) {
   const xp = xpFor({ survived, place: body.place, of: body.of }), level = levelOf(p.xp).level;
   const w = { balance: Number(p.balance) + payout, earned: Number(p.earned) + payout, hour_at: Number(p.hour_at), hour_sum: Number(p.hour_sum) };
   store.setWallet(p.id, w); store.addXp(p.id, xp.total); store.endRun(run.id, now, payout, xp.total);
+  const passUp = passAddXp(store, p, xp.total);   // the same XP fills the battle pass while a season is on
   Object.assign(p, w); p.xp = Number(p.xp || 0) + xp.total;
   // rating
   const before = Number(p.rating ?? RATING.base), delta = ratingDelta(before, survived, body.eaten, body.place, body.of, body.life), rating = Math.max(0, before + delta);
@@ -209,11 +265,12 @@ function runEnd(store, body, p) {
   store.setRating(p.id, rating, name); p.rating = rating; p.name = name; p.runs = Number(p.runs || 0) + 1;
   // xpParts: where the XP came from (time alive, placing, the win); levelUp: how many levels this life gained
   const out = wallet(store, p);
-  return { payout, ratingDelta: delta, xpGained: xp.total, xpParts: { time: xp.time, place: xp.place, win: xp.win }, levelUp: out.level - level, ...out };
+  return { payout, ratingDelta: delta, xpGained: xp.total, xpParts: { time: xp.time, place: xp.place, win: xp.win }, levelUp: out.level - level, passUp, ...out };
 }
 function buySkin(store, body, p) {
   const skin = skinById(body.skinId | 0);
   if (!skin) throw new ApiError(404, 'no such skin');
+  if (skin.pass) throw new ApiError(403, `${skin.name} comes only from the battle pass`);
   if (skin.season && !seasonOpen(skin.season) && !store.skins(p.id).includes(skin.id)) throw new ApiError(403, `${skin.name} is only in the shop during ${SEASONS[skin.season].name}`);
   if (store.skins(p.id).includes(skin.id)) return { ...wallet(store, p), already: true };
   if (Number(p.balance) < skin.price) throw new ApiError(402, `need ${skin.price - Number(p.balance)} more ATP`);
@@ -242,6 +299,44 @@ async function iapGoogle(store, body, p) {
   return credit(store, p, 'google', v, v.orderId);
 }
 
+/* ---------- battle pass ---------- */
+const passNeeded = store => { const s = passLive(store); if (!s) throw new ApiError(404, 'the battle pass is not on'); return s; };
+// The pass page asks for the latest state when it opens (the session has it too).
+function passView(store, body, p) { return { ...wallet(store, p), catalog: catalog(store) }; }
+// Buy the Battle Pass (premium) for this season, or the Battle Bundle (the pass plus bundleLevels levels). Once per season.
+function passPremium(store, body, p) {
+  const s = passNeeded(store), bundle = !!body.bundle, price = bundle ? PASS.bundle : PASS.premium;
+  if (passOf(store, p, s).premium) return { ...wallet(store, p), already: true };
+  if (Number(p.balance) < price) throw new ApiError(402, `need ${price - Number(p.balance)} more ATP`);
+  const w = { balance: Number(p.balance) - price, earned: Number(p.earned), hour_at: Number(p.hour_at), hour_sum: Number(p.hour_sum) }, now = Date.now();
+  store.setWallet(p.id, w); store.passSetPremium(p.id, s.key, now); if (bundle) store.passAddXp(p.id, s.key, PASS.bundleLevels * PASS.levelXp, now);
+  Object.assign(p, w); console.log(`$ battle pass ${s.key}${bundle ? ' bundle' : ''} (-${price} ATP)`);
+  return { ...wallet(store, p), unlocked: true, bundle };
+}
+// Claim one reward with Battle Stars: it must be on an open page, free or covered by the Battle Pass, affordable, and not claimed yet.
+function passClaim(store, body, p) {
+  const s = passNeeded(store), r = passReward(s, String(body.reward || ''));
+  if (!r) throw new ApiError(404, 'no such reward');
+  const st = passOf(store, p, s);
+  if (st.claimed.includes(r.id)) return { ...wallet(store, p), already: true };
+  if (r.page >= st.pages) throw new ApiError(403, `page ${r.page + 1} is still locked`);
+  if (!r.free && !st.premium) throw new ApiError(403, 'that reward needs the Battle Pass');
+  if (st.stars < r.stars) throw new ApiError(402, `need ${r.stars - st.stars} more Battle Stars`);
+  const now = Date.now();
+  if (!store.passClaim(p.id, s.key, r.id, now)) return { ...wallet(store, p), already: true };
+  let atp = r.atp || 0, skin = r.skin || null, refund = 0;
+  if (skin && store.skins(p.id).includes(skin)) { refund = (skinById(skin) || {}).price || 0; atp += refund; skin = null; } // owned already: its shop price instead
+  if (skin) store.addSkin(p.id, skin, now);
+  if (atp) { const w = { balance: Number(p.balance) + atp, earned: Number(p.earned) + atp, hour_at: Number(p.hour_at), hour_sum: Number(p.hour_sum) }; store.setWallet(p.id, w); Object.assign(p, w); }
+  return { ...wallet(store, p), claimed: { reward: r.id, atp, skin, refund } };
+}
+// /admin/pass: the switch, the season and how many are playing it
+function passAdmin(store, on) {
+  if (on != null) { store.setFlag('pass', on ? 'on' : 'off'); console.log(`battle pass switched ${on ? 'on' : 'off'}`); }
+  const s = passSeason(), next = PASS_SEASONS.find(x => Date.parse(x.from) > now());
+  return { on: store.flag('pass') === 'on', live: !!passLive(store), season: passCatalog(s), next: next ? { key: next.key, name: next.name, starts: Date.parse(next.from) } : null, stats: s ? store.passStats(s.key) : null };
+}
+
 function leaderboard(store) { return { top: store.top(10).map((r, i) => ({ rank: i + 1, name: (r.name && !nameBlocked(r.name) && r.name) || 'Unnamed cell', rating: r.rating, tier: tierOf(r.rating), runs: r.runs })) }; }
 
-module.exports = { SKINS, PACKS, RULES, RATING, XP, SEASONS, seasonOpen, catalog, payoutFor, ratingDelta, xpFor, levelOf, xpAtLevel, xpToNext, tierOf, nameBlocked, ApiError, auth, handlers: { deleteAccount, session, runStart, runEnd, buySkin, iapApple, iapGoogle, leaderboard, signInApple, signInGoogle, signOut } };
+module.exports = { SKINS, PACKS, RULES, RATING, XP, SEASONS, seasonOpen, PASS, PASS_SEASONS, passSeason, passAdmin, catalog, payoutFor, ratingDelta, xpFor, levelOf, xpAtLevel, xpToNext, tierOf, nameBlocked, ApiError, auth, handlers: { deleteAccount, session, runStart, runEnd, buySkin, iapApple, iapGoogle, leaderboard, signInApple, signInGoogle, signOut, passView, passPremium, passClaim } };

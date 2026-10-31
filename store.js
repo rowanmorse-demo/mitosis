@@ -38,7 +38,11 @@ class SqliteStore {
       CREATE INDEX IF NOT EXISTS devices_player ON devices(player);
       -- connection quality reports (netstats.js): anonymous, no player id
       CREATE TABLE IF NOT EXISTS netstats(at INTEGER, platform TEXT, app TEXT, tz TEXT, conn TEXT, n INTEGER, lost INTEGER, min INTEGER, med INTEGER, p90 INTEGER, jit INTEGER, fps INTEGER, slow INTEGER);
-      CREATE INDEX IF NOT EXISTS netstats_at ON netstats(at);`);
+      CREATE INDEX IF NOT EXISTS netstats_at ON netstats(at);
+      -- battle pass (economy.js PASS): each player's XP and premium per season, the rewards they claimed, and the on/off switch
+      CREATE TABLE IF NOT EXISTS pass(player TEXT, season TEXT, xp INTEGER NOT NULL DEFAULT 0, premium INTEGER NOT NULL DEFAULT 0, at INTEGER, PRIMARY KEY(player, season));
+      CREATE TABLE IF NOT EXISTS pass_claims(player TEXT, season TEXT, reward TEXT, at INTEGER, PRIMARY KEY(player, season, reward));
+      CREATE TABLE IF NOT EXISTS flags(name TEXT PRIMARY KEY, value TEXT);`);
     for (const sql of ['ALTER TABLE players ADD COLUMN rating INTEGER NOT NULL DEFAULT 1000', 'ALTER TABLE players ADD COLUMN name TEXT', 'ALTER TABLE players ADD COLUMN runs INTEGER NOT NULL DEFAULT 0',
       'ALTER TABLE players ADD COLUMN xp INTEGER NOT NULL DEFAULT 0', 'ALTER TABLE runs ADD COLUMN xp INTEGER'])
       try { this.db.exec(sql); } catch (e) {} // already migrated
@@ -81,6 +85,19 @@ class SqliteStore {
       delRuns: p('DELETE FROM runs WHERE player = ?'),
       delDevicesOf: p('DELETE FROM devices WHERE player = ?'),
       anonPurchases: p('UPDATE purchases SET player = NULL WHERE player = ?'),
+      passRow: p('SELECT xp, premium FROM pass WHERE player = ? AND season = ?'),
+      passXp: p('INSERT INTO pass(player, season, xp, at) VALUES(?, ?, ?, ?) ON CONFLICT(player, season) DO UPDATE SET xp = xp + excluded.xp'),
+      passPremium: p('INSERT INTO pass(player, season, premium, at) VALUES(?, ?, 1, ?) ON CONFLICT(player, season) DO UPDATE SET premium = 1'),
+      passClaims: p('SELECT reward FROM pass_claims WHERE player = ? AND season = ? ORDER BY at, reward'),
+      passClaim: p('INSERT OR IGNORE INTO pass_claims(player, season, reward, at) VALUES(?, ?, ?, ?)'),
+      passStats: p('SELECT COUNT(*) AS players, COALESCE(SUM(premium), 0) AS premium, COALESCE(SUM(xp), 0) AS xp FROM pass WHERE season = ?'),
+      passClaimCount: p('SELECT COUNT(*) AS n FROM pass_claims WHERE season = ?'),
+      movePass: p('INSERT INTO pass(player, season, xp, premium, at) SELECT ?, season, xp, premium, at FROM pass WHERE player = ? ON CONFLICT(player, season) DO UPDATE SET xp = xp + excluded.xp, premium = MAX(premium, excluded.premium)'),
+      delPass: p('DELETE FROM pass WHERE player = ?'),
+      movePassClaims: p('INSERT OR IGNORE INTO pass_claims(player, season, reward, at) SELECT ?, season, reward, at FROM pass_claims WHERE player = ?'),
+      delPassClaims: p('DELETE FROM pass_claims WHERE player = ?'),
+      flag: p('SELECT value FROM flags WHERE name = ?'),
+      setFlag: p('INSERT OR REPLACE INTO flags(name, value) VALUES(?, ?)'),
       insNet: p('INSERT INTO netstats(at, platform, app, tz, conn, n, lost, min, med, p90, jit, fps, slow) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'),
       netSince: p('SELECT * FROM netstats WHERE at > ? ORDER BY at DESC LIMIT 50000'),
       pruneNet: p('DELETE FROM netstats WHERE at < ?'),
@@ -92,7 +109,7 @@ class SqliteStore {
   linkIdentity(provider, subject, player, email, now) { this.q.insIdentity.run(provider, subject, player, email, now); }
   addDevice(h, player, now) { this.q.insDevice.run(h, player, now, now); }
   forgetDevice(h) { this.q.delDevice.run(h); }
-  /** Folds player `from` into `to`: wallet, XP, skins, history, sign-ins and device secrets all move; `from` is deleted. */
+  /** Folds player `from` into `to`: wallet, XP, skins, battle pass (XP adds up, claims join), history, sign-ins and device secrets all move; `from` is deleted. */
   mergePlayers(from, to) {
     const a = this.player(from), b = this.player(to); if (!a || !b || from === to) return;
     this.db.exec('BEGIN');
@@ -102,15 +119,16 @@ class SqliteStore {
       this.q.moveRuns.run(to, from); this.q.movePurchases.run(to, from);
       this.q.moveIdentities.run(to, from); this.q.delIdentities.run(from);
       this.q.moveDevices.run(to, from);
+      this.q.movePass.run(to, from); this.q.delPass.run(from); this.q.movePassClaims.run(to, from); this.q.delPassClaims.run(from);
       this.q.delPlayer.run(from);                       // frees a.secret, which becomes a device of `to`
       this.q.insDevice.run(a.secret, to, Number(a.created) || Date.now(), Date.now());
       this.db.exec('COMMIT');
     } catch (e) { this.db.exec('ROLLBACK'); throw e; }
   }
-  /** Deletes a player and everything linked to them (skins, runs, sign-ins, devices); purchase receipts are kept without the player. */
+  /** Deletes a player and everything linked to them (skins, runs, battle pass, sign-ins, devices); purchase receipts are kept without the player. */
   deletePlayer(id) {
     this.db.exec('BEGIN');
-    try { this.q.delSkins.run(id); this.q.delRuns.run(id); this.q.delIdentities.run(id); this.q.delDevicesOf.run(id); this.q.anonPurchases.run(id); this.q.delPlayer.run(id); this.db.exec('COMMIT'); }
+    try { this.q.delSkins.run(id); this.q.delRuns.run(id); this.q.delIdentities.run(id); this.q.delDevicesOf.run(id); this.q.anonPurchases.run(id); this.q.delPass.run(id); this.q.delPassClaims.run(id); this.q.delPlayer.run(id); this.db.exec('COMMIT'); }
     catch (e) { this.db.exec('ROLLBACK'); throw e; }
   }
   player(id) { return this.q.byId.get(id) || null; }
@@ -129,6 +147,15 @@ class SqliteStore {
   setRating(id, rating, name) { this.q.setRating.run(rating, name, id); }
   addXp(id, n) { this.q.addXp.run(n, id); }
   top(n) { return this.q.top.all(n).map(r => ({ name: r.name, rating: Number(r.rating), runs: Number(r.runs) })); }
+  passRow(player, season) { return this.q.passRow.get(player, season) || null; }
+  passAddXp(player, season, n, now) { this.q.passXp.run(player, season, n, now); }
+  passSetPremium(player, season, now) { this.q.passPremium.run(player, season, now); }
+  passClaims(player, season) { return this.q.passClaims.all(player, season).map(r => r.reward); }
+  /** Records a claimed reward; false if it was claimed already, so each reward is paid once. */
+  passClaim(player, season, reward, now) { return Number(this.q.passClaim.run(player, season, reward, now).changes) > 0; }
+  passStats(season) { const r = this.q.passStats.get(season); return { players: Number(r.players), premium: Number(r.premium), xp: Number(r.xp), claims: Number(this.q.passClaimCount.get(season).n) }; }
+  flag(name) { const r = this.q.flag.get(name); return r ? r.value : null; }
+  setFlag(name, value) { this.q.setFlag.run(name, value); }
   addNet(r) { this.q.insNet.run(r.at, r.platform, r.app, r.tz, r.conn, r.n, r.lost, r.min, r.med, r.p90, r.jit, r.fps, r.slow); if (Math.random() < .01) this.q.pruneNet.run(r.at - 90 * 864e5); }
   netSince(t) { return this.q.netSince.all(t).map(r => ({ ...r, fps: r.fps == null ? null : Number(r.fps) })); }
 }
@@ -137,7 +164,7 @@ class SqliteStore {
 class JsonStore {
   constructor(file) {
     this.kind = 'json'; this.file = file; this.timer = null;
-    this.d = { players: {}, secrets: {}, skins: {}, runs: {}, purchases: {}, identities: {}, devices: {}, net: [] };
+    this.d = { players: {}, secrets: {}, skins: {}, runs: {}, purchases: {}, identities: {}, devices: {}, net: [], pass: {}, flags: {} };
     try { const raw = JSON.parse(fs.readFileSync(file, 'utf8')); if (raw && raw.players) this.d = Object.assign(this.d, raw); } catch (e) {}
   }
   save() {
@@ -163,13 +190,16 @@ class JsonStore {
     for (const p of Object.values(this.d.purchases)) if (p.player === from) p.player = to;
     for (const i of Object.values(this.d.identities)) if (i.player === from) i.player = to;
     for (const d of Object.values(this.d.devices)) if (d.player === from) d.player = to;
+    const ps = this.d.pass[to] || (this.d.pass[to] = {});
+    for (const [season, r] of Object.entries(this.d.pass[from] || {})) { const t = ps[season]; if (!t) { ps[season] = r; continue; } t.xp += r.xp; t.premium = t.premium || r.premium; for (const c of r.claims) if (!t.claims.includes(c)) t.claims.push(c); }
+    delete this.d.pass[from];
     delete this.d.secrets[a.secret]; delete this.d.players[from];
     this.d.devices[a.secret] = { player: to, created: a.created, seen: Date.now() };
     this.save();
   }
   deletePlayer(id) {
     const a = this.d.players[id]; if (!a) return;
-    delete this.d.skins[id]; delete this.d.secrets[a.secret]; delete this.d.players[id];
+    delete this.d.skins[id]; delete this.d.pass[id]; delete this.d.secrets[a.secret]; delete this.d.players[id];
     for (const [k, r] of Object.entries(this.d.runs)) if (r.player === id) delete this.d.runs[k];
     for (const [k, i] of Object.entries(this.d.identities)) if (i.player === id) delete this.d.identities[k];
     for (const [k, d] of Object.entries(this.d.devices)) if (d.player === id) delete this.d.devices[k];
@@ -194,6 +224,15 @@ class JsonStore {
   setRating(id, rating, name) { const p = this.d.players[id]; if (p) { p.rating = rating; p.name = name; p.runs = (p.runs || 0) + 1; this.save(); } }
   addXp(id, n) { const p = this.d.players[id]; if (p) { p.xp = (p.xp || 0) + n; this.save(); } }
   top(n) { return Object.values(this.d.players).filter(p => p.runs > 0).sort((a, b) => (b.rating - a.rating) || (b.runs - a.runs)).slice(0, n).map(p => ({ name: p.name, rating: p.rating, runs: p.runs })); }
+  passEntry(player, season, now) { const m = this.d.pass[player] || (this.d.pass[player] = {}); return m[season] || (m[season] = { xp: 0, premium: 0, at: now, claims: [] }); }
+  passRow(player, season) { const r = (this.d.pass[player] || {})[season]; return r ? { xp: r.xp, premium: r.premium } : null; }
+  passAddXp(player, season, n, now) { this.passEntry(player, season, now).xp += n; this.save(); }
+  passSetPremium(player, season, now) { this.passEntry(player, season, now).premium = 1; this.save(); }
+  passClaims(player, season) { const r = (this.d.pass[player] || {})[season]; return r ? r.claims.slice() : []; }
+  passClaim(player, season, reward, now) { const r = this.passEntry(player, season, now); if (r.claims.includes(reward)) return false; r.claims.push(reward); this.save(); return true; }
+  passStats(season) { const o = { players: 0, premium: 0, xp: 0, claims: 0 }; for (const m of Object.values(this.d.pass)) { const r = m[season]; if (r) { o.players++; o.premium += r.premium ? 1 : 0; o.xp += r.xp; o.claims += r.claims.length; } } return o; }
+  flag(name) { return this.d.flags[name] ?? null; }
+  setFlag(name, value) { this.d.flags[name] = value; this.save(); }
   addNet(r) { const a = this.d.net || (this.d.net = []); a.push(r); if (a.length > 20000) a.splice(0, a.length - 20000); this.save(); }
   netSince(t) { return (this.d.net || []).filter(r => r.at > t); }
   prune() { // keep the run log small

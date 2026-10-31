@@ -19,7 +19,7 @@ const sha256 = s => crypto.createHash('sha256').update(s).digest('hex');
 const minuteNow = Math.floor(Date.now() / 60e3);
 fs.writeFileSync(path.join(dataDir, 'live-history.json'), JSON.stringify({ rows: [[minuteNow - 25 * 60, 9, 9, 9, 0, 9, 0, 0, 0, 0], [minuteNow - 30, 5, 4, 3, 1, 2, 2, 1, 0, 0]], best: { n: 40, at: Date.now() - 864e5 * 9 } }));
 const child = spawn(process.execPath, [path.join(__dirname, 'server.js')],
-  { env: { ...process.env, PORT, DATA_DIR: dataDir, IAP_UNVERIFIED: '1', AUTH_APPLE_JWKS: `http://127.0.0.1:${KEY_PORT}/apple`, AUTH_GOOGLE_JWKS: `http://127.0.0.1:${KEY_PORT}/google`, GOOGLE_CLIENT_IDS: 'test-google-client' }, stdio: ['ignore', 'ignore', 'inherit'] });
+  { env: { ...process.env, PORT, DATA_DIR: dataDir, IAP_UNVERIFIED: '1', MITOSIS_DATE: '2026-11-20T12:00:00Z' /* the server's calendar: inside battle pass season 1 */, AUTH_APPLE_JWKS: `http://127.0.0.1:${KEY_PORT}/apple`, AUTH_GOOGLE_JWKS: `http://127.0.0.1:${KEY_PORT}/google`, GOOGLE_CLIENT_IDS: 'test-google-client' }, stdio: ['ignore', 'ignore', 'inherit'] });
 const base = `http://127.0.0.1:${PORT}`;
 
 async function waitUp() {
@@ -291,6 +291,136 @@ async function post(url, body, secret) {
   r = await post('/api/auth/apple', { identityToken: apple(), nonce: 'n1' }, secret3); assert.equal(r.status, 200); assert.equal(r.body.merged, false, 'the Apple ID no longer leads to the deleted account'); assert.equal(r.body.balance, 0);
   { const lb = await (await fetch(base + '/api/leaderboard')).json(); assert.ok(Array.isArray(lb.top) && lb.top.every(t => t.runs !== undefined), 'leaderboard still answers'); assert.equal(lb.top.length, 0, 'the deleted player is gone from the leaderboard'); }
 
+  { // Battle pass: hidden until switched on; ranked XP fills it on the server; Battle Stars claim each reward once; the Battle Pass (premium) costs ATP
+    const { PASS, PASS_SEASONS, passSeason, SKINS } = require('./economy'), s1 = PASS_SEASONS[0], all = s1.pages.flatMap(p => p.rewards), at = Date.parse;
+    assert.equal(passSeason(at('2026-11-15T23:59:59Z')), null, 'no season before its first day'); assert.equal(passSeason(at('2026-11-16T00:00:00Z')).key, 's1', 'season 1 from its first day (UTC)');
+    assert.equal(passSeason(at('2026-12-27T23:59:59Z')).key, 's1'); assert.equal(passSeason(at('2026-12-28T00:00:00Z')), null, 'and over on its end date');
+    assert.equal(new Set(all.map(r => r.id)).size, all.length, 'every reward has its own place'); assert.ok(all.every(r => (r.atp > 0) !== !!r.skin && r.stars >= 0), 'each reward is ATP or a skin');
+    for (const r of all.filter(r => r.skin)) assert.ok(SKINS.some(k => k.id === r.skin), 'reward skin ' + r.skin + ' is a real skin');
+    assert.deepEqual(SKINS.filter(k => k.pass === 's1').map(k => k.id).sort(), all.map(r => r.skin).filter(id => id && SKINS.find(k => k.id === id).pass).sort(), 'each season 1 skin is on its pass exactly once');
+    assert.ok(s1.pages.filter(p => !p.bonus).flatMap(p => p.rewards).filter(r => !r.free).reduce((n, r) => n + (r.atp || 0), 0) >= PASS.premium, 'the Battle Pass pays back its price on pages 1-5');
+    assert.ok(all.some(r => r.free && r.skin) && all.some(r => !r.free), 'free and premium rewards, with a skin for free players');
+
+    const token = fs.readFileSync(path.join(dataDir, 'admin-token'), 'utf8').trim(), store = (await (await fetch(base + '/health')).json()).store;
+    const flip = async on => (await fetch(base + '/admin/pass?token=' + token, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'on=' + (on ? 1 : 0), redirect: 'manual' })).status;
+    const admin = async () => (await fetch(base + '/admin/pass?format=json&token=' + token)).json();
+    const atp = async (sec, n) => post('/api/iap/google', { purchaseToken: 'bp-' + n, productId: 'atp_5000', orderId: 'GPA.bp.' + n }, sec);
+    // this block's requests come from their own address, so the API limit (120 a minute per address) counts them apart from the rest
+    const post = async (url, body, secret) => { const headers = { 'Content-Type': 'application/json', 'X-Forwarded-For': '10.9.9.9' }; if (secret) headers.Authorization = 'Bearer ' + secret;
+      const res = await fetch(base + url, { method: 'POST', headers, body: JSON.stringify(body || {}) }); return { status: res.status, body: await res.json() }; };
+    const sp = 'passsecret' + 'p'.repeat(22), sq = 'passsecret' + 'q'.repeat(22);
+    // off: not in the catalogue or the wallet, nothing to claim or buy, and lives add nothing to it
+    assert.equal((await fetch(base + '/admin/pass')).status, 403, 'the switch needs the token');
+    assert.equal((await fetch(base + '/admin/pass?token=wrong', { method: 'POST', body: 'on=1' })).status, 403, 'and so does flipping it');
+    let a = await admin(); assert.deepEqual([a.on, a.live, a.season.key, a.season.premium], [false, false, 's1', PASS.premium], 'the pass starts off, with season 1 on the calendar');
+    assert.match(await (await fetch(base + '/admin/pass?token=' + token)).text(), /Off \(hidden\)[\s\S]*Turn on/, 'the switch page says it is off');
+    r = await post('/api/session', { secret: sp }); assert.equal(r.body.pass, null, 'no pass in the wallet while off'); assert.equal(r.body.catalog.pass, null, 'nor in the catalogue');
+    assert.equal((await (await fetch(base + '/api/catalog')).json()).pass, null);
+    for (const [u, b] of [['/api/pass', {}], ['/api/pass/claim', { reward: '1b' }], ['/api/pass/premium', {}]]) if (u !== '/api/pass') assert.equal((await post(u, b, sp)).status, 404, u + ' is closed while off');
+    r = await post('/api/run/start', {}, sp); r = await post('/api/run/end', { runId: r.body.runId, survived: 9999 }, sp); assert.deepEqual([r.body.xpGained, r.body.passUp, r.body.pass], [2, 0, null], 'XP while off goes to the profile only');
+    // on: everyone has the free pass
+    assert.equal(await flip(true), 303); a = await admin(); assert.deepEqual([a.on, a.live], [true, true], 'switched on');
+    assert.match(await (await fetch(base + '/admin/pass?token=' + token)).text(), /Live[\s\S]*Turn off/);
+    r = await post('/api/session', { secret: sp }); const C = r.body.catalog.pass;
+    assert.deepEqual([C.key, C.premium, C.bundle, C.levelXp, C.stars, C.pages.length, C.ends], ['s1', PASS.premium, PASS.bundle, PASS.levelXp, PASS.stars, s1.pages.length, at('2026-12-28')], 'the season and its pages are in the catalogue');
+    assert.deepEqual(r.body.pass, { season: 's1', xp: 0, level: 1, stars: 5, premium: false, claimed: [], pages: 1, claimable: 2 }, 'level 1 with 5 stars, page 1 open, its two free rewards in reach');
+    // progress: the XP the server counts for a ranked life, never anything the client sends
+    r = await post('/api/run/start', {}, sp); r = await post('/api/run/end', { runId: r.body.runId, survived: 9999, place: 1, of: 20, xp: 9000, passXp: 9000, level: 30 }, sp);
+    assert.deepEqual([r.body.xpGained, r.body.pass.xp, r.body.passUp], [2, 2, 0], 'the pass gets the same XP as the profile');
+    r = await post('/api/pass', { xp: 9000, level: 30, stars: 500, premium: true }, sp); assert.deepEqual([r.body.pass.xp, r.body.pass.stars, r.body.pass.premium], [2, 5, false], 'the client cannot set its own progress');
+    r = await post('/api/run/end', { runId: (await post('/api/run/start', {}, sp)).body.runId, survived: 5 }, sp); const rid = r.body;
+    if (store === 'sqlite') {
+      const db = new (require('node:sqlite').DatabaseSync)(path.join(dataDir, 'mitosis.sqlite')), backdate = (id, s) => db.prepare('UPDATE runs SET started = started - ? WHERE id = ?').run(s * 1000, id);
+      r = await post('/api/run/start', {}, sp); backdate(r.body.runId, 400); r = await post('/api/run/end', { runId: r.body.runId, survived: 9999, place: 1, of: 20 }, sp);
+      assert.deepEqual([r.body.xpGained, r.body.pass.xp, r.body.pass.level, r.body.passUp], [182, rid.pass.xp + 182, 1, 0], 'a won life of 400 s');
+      const long = (await post('/api/run/start', {}, sp)).body.runId; backdate(long, 2000); r = await post('/api/run/end', { runId: long, survived: 9999, place: 20, of: 20 }, sp);
+      assert.deepEqual([r.body.xpGained, r.body.pass.level, r.body.passUp, r.body.pass.stars], [120, 2, 1, 10], 'a whole round in last place: level 2 and 5 more stars');
+      r = await post('/api/run/end', { runId: long, survived: 9999, place: 1, of: 20 }, sp); assert.equal(r.body.duplicate, true); assert.equal(r.body.pass.level, 2, 'a repeated run/end adds nothing');
+      db.prepare("UPDATE pass SET xp = 0 WHERE player = ?").run(r.body.playerId); db.close(); // back to level 1 for the claims below
+    } else console.log('(JSON store: skipping the backdated pass XP)');
+    // claiming: open page, free (or the Battle Pass), enough stars, once
+    r = await post('/api/session', { secret: sp }); let bal = r.body.balance;
+    r = await post('/api/pass/claim', { reward: '1b' }, sp); assert.deepEqual(r.body.claimed, { reward: '1b', atp: 100, skin: null, refund: 0 }, 'a free reward');
+    assert.deepEqual([r.body.balance, r.body.earned >= 100, r.body.pass.stars, r.body.pass.claimed], [bal + 100, true, 1, ['1b']], 'pays its ATP and spends its stars');
+    r = await post('/api/pass/claim', { reward: '1b' }, sp); assert.equal(r.body.already, true); assert.equal(r.body.balance, bal + 100, 'a reward pays once');
+    r = await post('/api/pass/claim', { reward: '1f' }, sp); assert.equal(r.status, 402, 'not enough stars'); assert.match(r.body.error, /3 more Battle Stars/);
+    r = await post('/api/pass/claim', { reward: '1a' }, sp); assert.equal(r.status, 403, 'premium rewards need the Battle Pass'); assert.match(r.body.error, /Battle Pass/);
+    r = await post('/api/pass/claim', { reward: '2c' }, sp); assert.equal(r.status, 403, 'page 2 is locked'); assert.match(r.body.error, /page 2/);
+    for (const reward of ['zz', '', '9a', undefined]) assert.equal((await post('/api/pass/claim', { reward }, sp)).status, 404, 'no reward ' + reward);
+    r = await post('/api/skins/buy', { skinId: 31 }, sp); assert.equal(r.status, 403, 'pass skins are not for sale'); assert.match(r.body.error, /battle pass/);
+    // the Battle Pass: ATP, once a season; stars already earned count straight away
+    r = await post('/api/pass/premium', {}, sp); assert.equal(r.status, 402, 'the Battle Pass costs ATP');
+    await atp(sp, 1); r = await post('/api/session', { secret: sp }); bal = r.body.balance;
+    r = await post('/api/pass/premium', {}, sp); assert.deepEqual([r.body.unlocked, r.body.balance, r.body.pass.premium], [true, bal - PASS.premium, true], 'bought for its price');
+    r = await post('/api/pass/premium', { bundle: true }, sp); assert.deepEqual([r.body.already, r.body.balance, r.body.pass.level], [true, bal - PASS.premium, 1], 'and only once');
+    r = await post('/api/pass/claim', { reward: '1a' }, sp); assert.deepEqual([r.body.claimed.skin, r.body.skins.includes(29), r.body.pass.stars], [29, true, 1], 'Sea Sparkle for 0 stars');
+    a = await admin(); assert.deepEqual([a.stats.premium, a.stats.claims], [1, 2], 'the switch page counts buyers and claims');
+    // the Battle Bundle: the pass plus 10 levels; pages open by level or by claiming on the page before; a skin you own pays its price
+    await post('/api/session', { secret: sq }); await atp(sq, 2); r = await post('/api/skins/buy', { skinId: 18 }, sq); assert.ok(r.body.skins.includes(18), 'owns Koi already');
+    r = await post('/api/pass/premium', { bundle: true }, sq); assert.deepEqual([r.body.bundle, r.body.balance, r.body.pass.xp, r.body.pass.level, r.body.pass.stars, r.body.pass.pages], [true, 5000 - 500 - PASS.bundle, PASS.bundleLevels * PASS.levelXp, 11, 55, 2], 'level 11 at once, page 2 open by level');
+    const five = await Promise.all([1, 2, 3, 4, 5].map(() => post('/api/pass/claim', { reward: '1c' }, sq)));
+    assert.equal(five.filter(x => x.body.claimed).length, 1, 'five claims at once pay once'); r = await post('/api/session', { secret: sq }); assert.deepEqual([r.body.balance, r.body.pass.stars], [150, 51]);
+    r = await post('/api/pass/claim', { reward: '1d' }, sq); assert.deepEqual(r.body.claimed, { reward: '1d', atp: 500, skin: null, refund: 500 }, 'Koi, owned already, pays its 500 ATP instead');
+    assert.equal(r.body.skins.filter(id => id === 18).length, 1);
+    r = await post('/api/pass/claim', { reward: '3a' }, sq); assert.equal(r.status, 403, 'page 3 waits for level 12');
+    for (const id of ['2a', '2b', '2c']) { r = await post('/api/pass/claim', { reward: id }, sq); assert.ok(r.body.claimed, id); }
+    assert.equal(r.body.pass.pages, 2, 'three claims on page 2 are not enough');
+    r = await post('/api/pass/claim', { reward: '2d' }, sq); assert.equal(r.body.pass.pages, 3, 'the fourth opens page 3');
+    r = await post('/api/pass/claim', { reward: '3a' }, sq); assert.equal(r.body.claimed.skin, 30, 'Radiolarian');
+    assert.equal(r.body.pass.stars, 55 - 4 - 5 - 5 - 6 - 5 - 5 - 8, 'stars are what the levels gave less what was spent');
+    r = await post('/api/pass/claim', { reward: '4a' }, sq); assert.equal(r.status, 403, 'page 4 stays shut');
+    // off again: hidden and frozen, with progress kept for when it comes back
+    assert.equal(await flip(false), 303); r = await post('/api/session', { secret: sq }); assert.equal(r.body.pass, null); assert.equal(r.body.catalog.pass, null);
+    assert.equal((await post('/api/pass/claim', { reward: '1e' }, sq)).status, 404, 'no claims while off');
+    r = await post('/api/run/start', {}, sq); r = await post('/api/run/end', { runId: r.body.runId, survived: 9999 }, sq); assert.equal(r.body.passUp, 0);
+    assert.equal(await flip(true), 303); r = await post('/api/session', { secret: sq }); assert.deepEqual([r.body.pass.xp, r.body.pass.claimed.length, r.body.pass.premium], [3000, 7, true], 'on again: progress kept, nothing added while off');
+    // old apps: the fields they read are all still there, and they never see the new ones
+    r = await post('/api/run/start', {}, sq); r = await post('/api/run/end', { runId: r.body.runId, survived: 30, eaten: 1, peak: 40, bestRank: 3, place: 5, of: 9, life: 0, show: 1, name: 'Old app' }, sq);
+    for (const k of ['payout', 'ratingDelta', 'balance', 'earned', 'skins', 'rating', 'tier', 'runs', 'playerId']) assert.ok(k in r.body, 'run/end still sends ' + k);
+    // merging accounts: the pass XP adds up, the claims join, the Battle Pass stays; deleting the account removes it all
+    r = await post('/api/auth/apple', { identityToken: apple({ sub: 'apple-pass' }), nonce: 'n1' }, sp); assert.equal(r.body.merged, false);
+    const px = (await post('/api/pass', {}, sp)).body.pass;
+    r = await post('/api/auth/apple', { identityToken: apple({ sub: 'apple-pass' }), nonce: 'n1' }, sq); assert.equal(r.body.merged, true);
+    assert.deepEqual([r.body.pass.xp, r.body.pass.premium, [...r.body.pass.claimed].sort()], [px.xp + 3002, true, [...px.claimed, '1c', '1d', '2a', '2b', '2c', '2d', '3a'].sort()], 'merged: XP added, claims joined');
+    assert.ok([29, 30, 18].every(id => r.body.skins.includes(id)), 'and the skins');
+    r = await post('/api/pass/claim', { reward: '1b' }, sq); assert.equal(r.body.already, true, 'a reward claimed on either device stays claimed');
+    const before = (await admin()).stats.players;
+    r = await post('/api/account/delete', { confirm: 'DELETE' }, sp); assert.equal(r.body.deleted, true);
+    assert.equal((await admin()).stats.players, before - 1, 'deleting the account deletes its pass');
+    r = await post('/api/session', { secret: sq }); assert.deepEqual([r.body.pass.xp, r.body.pass.claimed, r.body.pass.premium], [0, [], false], 'a device of the deleted account starts a fresh pass');
+    r = await post('/api/account/delete', { confirm: 'DELETE' }, sq); assert.equal(r.body.deleted, true);
+    assert.equal(await flip(false), 303);
+  }
+  { // both stores keep the pass: XP adds up per season, premium, each claim once; merges join it, deletion drops it; the switch is kept
+    const { SqliteStore, JsonStore } = require('./store'), dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mitosis-pass-'));
+    let sqlite = null; try { sqlite = require('node:sqlite'); } catch (e) {}
+    const open = kind => kind === 'json' ? new JsonStore(path.join(dir, 'p.json')) : new SqliteStore(sqlite, path.join(dir, 'p.sqlite'));
+    for (const kind of sqlite ? ['sqlite', 'json'] : ['json']) {
+      let st = open(kind); const k = m => kind + ': ' + m;
+      const reopen = async () => { if (kind === 'json') await new Promise(res => setTimeout(res, 400)); else st.db.close(); st = open(kind); };
+      assert.equal(st.flag('pass'), null, k('no switch at first')); st.setFlag('pass', 'on');
+      st.createPlayer('a', 'ha', 1); st.createPlayer('b', 'hb', 1);
+      assert.equal(st.passRow('a', 's1'), null);
+      st.passAddXp('a', 's1', 120, 5); st.passAddXp('a', 's1', 30, 6); st.passAddXp('a', 's0', 999, 1); st.passSetPremium('a', 's1', 7);
+      assert.equal(st.passClaim('a', 's1', '1a', 8), true); assert.equal(st.passClaim('a', 's1', '1a', 9), false, k('a claim counts once')); assert.equal(st.passClaim('a', 's1', '2c', 9), true);
+      st.passAddXp('b', 's1', 40, 5); st.passClaim('b', 's1', '1b', 6); st.passClaim('b', 's1', '2c', 7);
+      await reopen();
+      assert.equal(st.flag('pass'), 'on', k('the switch is kept'));
+      assert.deepEqual([Number(st.passRow('a', 's1').xp), Number(st.passRow('a', 's1').premium), Number(st.passRow('a', 's0').xp)], [150, 1, 999], k('XP adds up per season'));
+      assert.deepEqual(st.passClaims('a', 's1'), ['1a', '2c']); assert.deepEqual(st.passClaims('a', 's0'), []);
+      assert.deepEqual(st.passStats('s1'), { players: 2, premium: 1, xp: 190, claims: 4 }, k('stats for the switch page'));
+      st.mergePlayers('b', 'a');
+      assert.deepEqual([Number(st.passRow('a', 's1').xp), Number(st.passRow('a', 's1').premium)], [190, 1], k('a merge adds the XP and keeps the Battle Pass'));
+      assert.deepEqual([...st.passClaims('a', 's1')].sort(), ['1a', '1b', '2c'], k('and joins the claims')); assert.equal(st.passRow('b', 's1'), null);
+      st.createPlayer('c', 'hc', 1); st.passAddXp('c', 's1', 10, 1); st.passSetPremium('c', 's1', 2); st.mergePlayers('a', 'c');
+      assert.deepEqual([Number(st.passRow('c', 's1').xp), Number(st.passRow('c', 's1').premium), Number(st.passRow('c', 's0').xp)], [200, 1, 999], k('merging into a player who has a pass'));
+      await reopen(); assert.deepEqual([...st.passClaims('c', 's1')].sort(), ['1a', '1b', '2c'], k('the merge is saved'));
+      st.deletePlayer('c'); assert.equal(st.passRow('c', 's1'), null, k('deleting the player deletes its pass')); assert.deepEqual(st.passClaims('c', 's1'), []);
+      assert.deepEqual(st.passStats('s1'), { players: 0, premium: 0, xp: 0, claims: 0 });
+      st.setFlag('pass', 'off'); await reopen(); assert.equal(st.flag('pass'), 'off', k('switching off is kept'));
+      if (kind === 'sqlite') st.db.close();
+    }
+  }
   { // both stores keep XP, add it up, carry it through a merge and drop it with the player; old databases gain the column
     const { SqliteStore, JsonStore } = require('./store'), dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mitosis-xp-'));
     let sqlite = null; try { sqlite = require('node:sqlite'); } catch (e) {}

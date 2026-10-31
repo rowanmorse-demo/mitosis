@@ -38,7 +38,10 @@ const ROUTES = {
   'POST /api/auth/google': { fn: economy.handlers.signInGoogle, auth: true },
   'POST /api/auth/signout': { fn: economy.handlers.signOut, auth: true },
   'POST /api/account/delete': { fn: economy.handlers.deleteAccount, auth: true },
-  'GET /api/catalog': { fn: () => economy.catalog(), auth: false },
+  'POST /api/pass': { fn: economy.handlers.passView, auth: true },
+  'POST /api/pass/premium': { fn: economy.handlers.passPremium, auth: true },
+  'POST /api/pass/claim': { fn: economy.handlers.passClaim, auth: true },
+  'GET /api/catalog': { fn: store => economy.catalog(store), auth: false },
   'GET /api/leaderboard': { fn: store => economy.handlers.leaderboard(store), auth: false },
   // clients report long frames here so stalls on phones can be read from the server log
   'POST /api/log': { fn: (store, body) => { log('[client ' + String(body.who || '?').slice(0, 24) + '] ' + String(body.text || '').slice(0, 300)); return { ok: true }; }, auth: false },
@@ -47,7 +50,7 @@ const ROUTES = {
   // connection quality from the games (ping, lost pings, frame rate, time-zone region); read it at /admin/net
   'POST /api/net': { fn: (store, body) => { const r = netstats.clean(body, Date.now()); if (r) store.addNet(r); return { ok: true }; }, auth: false },
 };
-// The admin pages are for the operator: /admin/net?token=… (connection report) and /admin/live?token=… (live players).
+// The admin pages are for the operator: /admin/net?token=… (connection report), /admin/live?token=… (live players) and /admin/pass?token=… (the battle pass switch).
 // The token is ADMIN_TOKEN, or one made on first start and kept in the data dir.
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || (() => {
   const f = path.join(DATA_DIR, 'admin-token');
@@ -68,6 +71,29 @@ function netReport(req, res) {
   const days = Math.min(90, Math.max(1, Number(q.get('days')) || 7)), sum = netstats.summary(store.netSince(Date.now() - days * 864e5));
   if (q.get('format') === 'json') { res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify({ days, ...sum })); return; }
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }); res.end(netstats.page(sum, days));
+}
+// The battle pass switch: GET shows it (&format=json for numbers), POST on=1 / on=0 flips it. It is kept in the store, so it survives deploys.
+async function passPage(req, res) {
+  if (!adminOk(req, res)) return;
+  const q = new URL(req.url, 'http://x').searchParams;
+  if (req.method === 'POST') {
+    let body = ''; for await (const d of req) { body += d; if (body.length > 1024) break; }
+    economy.passAdmin(store, new URLSearchParams(body).get('on') === '1');
+    res.writeHead(303, { Location: '/admin/pass?token=' + encodeURIComponent(q.get('token')) }); return res.end();
+  }
+  const a = economy.passAdmin(store);
+  if (q.get('format') === 'json') { res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); return res.end(JSON.stringify(a)); }
+  const day = t => new Date(t).toISOString().slice(0, 10), s = a.season, st = a.stats;
+  const where = s ? `Season ${s.n}: ${s.name}, ${day(s.starts)} to ${day(s.ends)} (${Math.max(0, Math.ceil((s.ends - Date.now()) / 864e5))} days left)` : `No season runs today.${a.next ? ` Next: ${a.next.name}, from ${day(a.next.starts)}.` : ' Add one to PASS_SEASONS in economy.js.'}`;
+  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+  res.end(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mitosis battle pass</title>
+<style>body{margin:0;padding:24px 16px;background:#020809;color:#dcefe9;font:16px/1.5 system-ui,sans-serif}main{max-width:520px;margin:auto}h1{font-size:24px;margin:0 0 16px}
+.st{display:inline-block;padding:4px 12px;border-radius:99px;font-weight:700;background:${a.live ? '#1f6f4f' : '#5b2330'}}p{color:#8aaea9}dl{display:grid;grid-template-columns:auto 1fr;gap:6px 16px}dt{color:#8aaea9}dd{margin:0;font-weight:600}
+button{font:700 16px system-ui;padding:12px 22px;border-radius:99px;border:0;cursor:pointer;background:${a.on ? '#e5484d' : '#ff5c8a'};color:#fff}</style>
+<main><h1>Battle pass</h1><p><span class="st">${a.live ? 'Live' : a.on ? 'On, but no season today' : 'Off (hidden)'}</span></p><p>${where}</p>
+${st ? `<dl><dt>Players with progress</dt><dd>${st.players}</dd><dt>Bought the Battle Pass</dt><dd>${st.premium}</dd><dt>Rewards claimed</dt><dd>${st.claims}</dd><dt>XP earned</dt><dd>${st.xp.toLocaleString()}</dd></dl>` : ''}
+<form method="post"><input type="hidden" name="on" value="${a.on ? 0 : 1}"><button>${a.on ? 'Turn off (hide it)' : 'Turn on'}</button></form>
+<p>Players see the pass only while it is on and a season is running. Turning it off hides it; progress and rewards stay.</p></main>`);
 }
 const crashDir = path.join(DATA_DIR, 'crashes');
 function crashReport(store, body) {
@@ -127,6 +153,8 @@ const server = http.createServer((req, res) => {
     if (!adminOk(req, res)) return;
     if (new URL(req.url, 'http://x').searchParams.get('format') === 'json') { res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(players.json())); return; }
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }); res.end(players.page());
+  } else if (url === '/admin/pass') {
+    passPage(req, res).catch(e => { console.error(e); res.end(); });
   } else if (url === '/admin/live/stream') {
     if (adminOk(req, res)) players.stream(req, res);
   } else if (url === '/health') {
@@ -245,6 +273,7 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`\n  Wallets and skins:  ${store.kind} store in ${DATA_DIR}`);
   console.log(`  Connection report:  http://localhost:${PORT}/admin/net?token=${ADMIN_TOKEN}`);
   console.log(`  Live players:       http://localhost:${PORT}/admin/live?token=${ADMIN_TOKEN}`);
+  console.log(`  Battle pass switch: http://localhost:${PORT}/admin/pass?token=${ADMIN_TOKEN}  (${economy.passAdmin(store).on ? 'on' : 'off'})`);
   console.log(`  Purchases:          Apple ${iap.apple ? 'verified' : 'not configured'} · Google Play ${iap.google ? 'verified' : 'not configured'}${iap.unverified ? '  (IAP_UNVERIFIED=1: trusting clients — dev only!)' : ''}`);
   const auth = economy.catalog().auth;
   console.log(`  Sign-in:            Apple ready for the app${auth.apple.web ? ' and the website' : ''} · Google ${auth.google.configured ? 'ready' : 'not configured (set GOOGLE_CLIENT_IDS)'}`);
