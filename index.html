@@ -2770,6 +2770,8 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
   let ws=null,connected=false,mine={},mineObj=Object.freeze({}),snap=Object.freeze([]),connFns=[],pending=false,lastSend=0,retry=0;
   let nearby=null; // set while playing phones nearby: posts our presence to them through the app instead of the server
   const others=new Map(),gotAt=new Map(); // gotAt: when each peer's latest presence arrived (performance.now), for smoothing its cells
+  let inbox=[]; // every presence since the game last looked (N.take): two can arrive between frames, and peers() has only the latest
+  const got=(id,p,t)=>{others.set(id,p);gotAt.set(id,t);inbox.push({id,p,at:t});if(inbox.length>64)inbox.shift();};
   function rebuild(){const a=[{peer:myId,by:null,isMe:true,sameTab:true,kind:'viewer',guest:false,presence:mineObj,updatedAt:0}];
     for(const [id,p] of others)a.push({peer:id,by:null,isMe:false,sameTab:false,kind:'viewer',guest:false,presence:p,updatedAt:gotAt.get(id)||0});snap=Object.freeze(a);}
   function setConn(v){if(connected===v)return;connected=v;for(const f of connFns){try{f(v);}catch(e){}}}
@@ -2785,7 +2787,7 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
   function onMsg(ev){if(nearby)return;let m;try{m=JSON.parse(ev.data);}catch(e){return;}if(!m||typeof m!=='object')return;
       if(m.t==='welcome'){others.clear();for(const q of Array.isArray(m.peers)?m.peers:[])if(q&&typeof q.id==='string'&&q.p&&typeof q.p==='object'){others.set(q.id,Object.freeze(q.p));gotAt.set(q.id,performance.now());}
         N.lan=Array.isArray(m.lan)?m.lan.filter(u=>typeof u==='string'):[];N.state='live';rebuild();setConn(true);flush();}
-      else if(m.t==='p'&&typeof m.id==='string'&&m.p&&typeof m.p==='object'){others.set(m.id,Object.freeze(m.p));gotAt.set(m.id,performance.now());rebuild();}
+      else if(m.t==='p'&&typeof m.id==='string'&&m.p&&typeof m.p==='object'){got(m.id,Object.freeze(m.p),performance.now());rebuild();}
       else if(m.t==='bye'&&typeof m.id==='string'){others.delete(m.id);rebuild();}
       else if(m.t==='pong'&&typeof m.c==='number'&&pings.delete(m.c)){const rtt=performance.now()-m.c;if(rtt>=0&&rtt<60000){NS.rtts.push(rtt);if(NS.rtts.length>300)NS.rtts.shift();NS.pongs++;N.rtt=N.rtt==null?rtt:N.rtt*.7+rtt*.3;}}
       else if(m.t==='full')N.state='full';}
@@ -2814,7 +2816,7 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
   const nearSeen=new Map();N.rxBy=new Map(); // rxBy: messages from each phone, for the device log
   setInterval(()=>{if(!nearby)return;const now=performance.now();let gone=false;for(const [id,t] of nearSeen)if(now-t>8000){nearSeen.delete(id);gone=others.delete(id)||gone;}if(gone)rebuild();},2000);
   N.onNearby=m=>{if(!nearby||!m||typeof m.id!=='string')return;
-    if(m.ev==='p'&&typeof m.data==='string'){let p;try{p=JSON.parse(m.data);}catch(e){return;}if(p&&typeof p==='object'){const t=performance.now();others.set(m.id,Object.freeze(p));gotAt.set(m.id,t);nearSeen.set(m.id,t);N.rx=(N.rx||0)+1;N.rxB=(N.rxB||0)+m.data.length;N.rxBy.set(m.id,(N.rxBy.get(m.id)||0)+1);rebuild();}}
+    if(m.ev==='p'&&typeof m.data==='string'){let p;try{p=JSON.parse(m.data);}catch(e){return;}if(p&&typeof p==='object'){const t=performance.now();got(m.id,Object.freeze(p),t);nearSeen.set(m.id,t);N.rx=(N.rx||0)+1;N.rxB=(N.rxB||0)+m.data.length;N.rxBy.set(m.id,(N.rxBy.get(m.id)||0)+1);rebuild();}}
     else if(m.ev==='bye'){others.delete(m.id);nearSeen.delete(m.id);rebuild();}
     else if(m.ev==='join')flush();};
   // Ping: a small message every 4 s that the server echoes back. N.rtt is the smoothed round trip; NS collects samples
@@ -2822,7 +2824,7 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
   const pings=new Map(),NS=N.stats={rtts:[],pongs:0,lost:0};N.rtt=null;
   setInterval(()=>{const now=performance.now();for(const [c,t] of pings)if(now-t>5000){pings.delete(c);if(NS.pongs)NS.lost++;}
     if(nearby||!ws||ws.readyState!==1||document.hidden)return;const c=Math.round(now*1000)/1000;pings.set(c,now);try{ws.send(JSON.stringify({t:'ping',c}));}catch(e){}},4000);
-  rebuild();connect();N.peers=()=>snap;
+  rebuild();connect();N.peers=()=>snap;N.take=()=>{const a=inbox;inbox=[];return a;};
   window.claude={use:async n=>n==='room'?room:null};
 })();
 </script>
@@ -5758,6 +5760,7 @@ function netTick(dt){
   let peers;try{peers=room.peers();}catch(e){return;}
   const me=peers.find(p=>p.sameTab);if(me&&!myPeer){myPeer=me.peer;roomAt=T;}
   if(!myPeer)return;
+  const N=window.__mitosisNet,inbox=N&&N.take?N.take():[]; // every message since the last frame, oldest first
   if(local){peerCount=1;queuedPeers=0;return;}   // a local game ignores the room until you leave it
   const others=peers.filter(p=>!p.sameTab&&p.kind==='viewer'&&p.presence&&p.presence.v===PROTO);
   peerCount=1+others.length;queuedPeers=others.filter(p=>p.presence.q===1).length;netNames=others.map(p=>cleanName(p.presence.n)||'Guest cell');
@@ -5770,6 +5773,10 @@ function netTick(dt){
   }
   const newHost=isHost?myPeer:(claims[0]||null);
   if(newHost!==hostPeer){hostPeer=newHost;if(hostPeer&&hostPeer!==myPeer)lastSeen.delete(hostPeer);}
+  // messages that arrived together: the earlier ones first (peers() has only the latest), so a bot or a pellet only one of
+  // them carried isn't lost. The Nearby host sends far bots in every 4th message and far pellet eats once.
+  const tNow=performance.now();
+  for(const e of inbox){const p=others.find(q=>q.peer===e.id);if(!p||p.presence===e.p||lastSeen.get(e.id)===e.p||e.p.v!==PROTO||tNow-e.at>1000)continue;try{ingest(e.id,e.p,e.id===hostPeer,e.at);}catch(err){}}
   const live=new Set();
   for(const p of others){live.add(p.peer);if(lastSeen.get(p.peer)===p.presence)continue;lastSeen.set(p.peer,p.presence);seenAt.set(p.peer,T);
     try{ingest(p.peer,p.presence,p.peer===hostPeer,p.updatedAt);}catch(e){}}
