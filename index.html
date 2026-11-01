@@ -2865,8 +2865,10 @@ const MAX_HUNTERS=6,HUNTER_R=42,INF_MIN=8,INF_MAX=10,PROTO=6,SEED=90210; // PROT
 let ROUND_SEC=+((location.search.match(/[?&]round=(\d+)/)||[])[1])||600,ROUND_GRACE=Math.round(ROUND_SEC*.1),ROUND_HOLD=Math.round(ROUND_SEC*.05),BOT_CUTOFF=Math.round(ROUND_SEC*.7);const R_MIN=R*.03,ROUND_GAP=6; // arena full for the first minute, closed to 3% by 9:30; bots stop respawning at 7:00
 let round={id:1,start:0,n:0,synced:false,over:false};
 // Balance: a cell is absorbed once EAT_COVER of its diameter is inside a cell at least 10% heavier (see need()).
-// Ejecting costs EJECT_COST and makes a blob of EJECT_MASS, at most once every EJECT_GAP seconds.
-const EAT_COVER=.3,EJECT_COST=16,EJECT_MASS=15,EJECT_GAP=.06,BOTS_PER_PLAYER=5,SKIN_FREE=5;
+// Ejecting costs EJECT_COST and makes a blob of EJECT_MASS, at most once every EJECT_GAP seconds. The blob leaves at
+// EJECT_SPEED and slows by EJECT_DRAG per second, so it flies EJECT_SPEED/EJECT_DRAG ≈ 480 units: about 7.5 radii of a
+// mass-100 cell, as far as agar.io shoots (it was 172, short of the phages bots aim at from 460 out).
+const EAT_COVER=.3,EJECT_COST=16,EJECT_MASS=15,EJECT_GAP=.06,EJECT_SPEED=1450,EJECT_DRAG=3,BOTS_PER_PLAYER=5,SKIN_FREE=5;
 const COS=new Float32Array(NP),SIN=new Float32Array(NP);for(let i=0;i<NP;i++){COS[i]=Math.cos(i/NP*TAU);SIN[i]=Math.sin(i/NP*TAU);}
 const PX=new Float32Array(NP),PY=new Float32Array(NP),TMP=new Float32Array(NP);
 const rand=(a,b)=>a+Math.random()*(b-a);
@@ -4457,7 +4459,7 @@ function eject(p){
   for(const c of p.cells){
     if(c.dead||c.mass<35)continue;const[nx,ny]=aim(p,c);
     c.mass-=EJECT_COST;c.r=radius(c.mass);
-    ejected.push({x:c.x+nx*(c.r+10),y:c.y+ny*(c.r+10),vx:nx*860,vy:ny*860,dx:nx,dy:ny,mass:EJECT_MASS,r:14,color:p.color,owner:p,born:T,dead:false});
+    ejected.push({x:c.x+nx*(c.r+10),y:c.y+ny*(c.r+10),vx:nx*EJECT_SPEED,vy:ny*EJECT_SPEED,dx:nx,dy:ny,mass:EJECT_MASS,r:14,color:p.color,owner:p,born:T,dead:false});
     for(let i=0;i<NP;i++){const d=COS[i]*nx+SIN[i]*ny;if(d>.7)c.pv[i]+=1.6*d;}
     did=true;
   }
@@ -4912,9 +4914,9 @@ function step(dt){
   }
   // ejected mass (ours). A Magnet pulls in other players' blobs as it does food: whoever shot a blob moves it, toward
   // local or remote magnets alike (remote players' fx bits carry the magnet), and the eat check below credits the catcher.
-  const ke=Math.exp(-5*dt),mags=cells.filter(c=>!c.dead&&c.owner.fx.magnet>0);
+  const ke=Math.exp(-5*dt),kj=Math.exp(-EJECT_DRAG*dt),mags=cells.filter(c=>!c.dead&&c.owner.fx.magnet>0);
   for(const e of ejected){
-    e.x+=e.vx*dt;e.y+=e.vy*dt;e.vx*=ke;e.vy*=ke;
+    e.x+=e.vx*dt;e.y+=e.vy*dt;e.vx*=kj;e.vy*=kj;
     for(const c of mags){if(c.owner===e.owner)continue;const dx=c.x-e.x,dy=c.y-e.y,d=Math.hypot(dx,dy);if(d<c.r+300&&d>1){const m=Math.min(d,560*dt);e.x+=dx/d*m;e.y+=dy/d*m;break;}}
     const dc=Math.hypot(e.x,e.y);if(dc>R-e.r){e.x*=(R-e.r)/dc;e.y*=(R-e.r)/dc;}
     for(const h of hunters){if(h.dead)continue;if(Math.hypot(h.x-e.x,h.y-e.y)<HUNTER_R+e.r){e.dead=true;
