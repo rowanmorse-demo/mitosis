@@ -51,8 +51,8 @@ class SqliteStore {
       CREATE INDEX IF NOT EXISTS quests_at ON quests(at);`);
     for (const sql of ['ALTER TABLE players ADD COLUMN rating INTEGER NOT NULL DEFAULT 1000', 'ALTER TABLE players ADD COLUMN name TEXT', 'ALTER TABLE players ADD COLUMN runs INTEGER NOT NULL DEFAULT 0',
       'ALTER TABLE players ADD COLUMN xp INTEGER NOT NULL DEFAULT 0', 'ALTER TABLE runs ADD COLUMN xp INTEGER',
-      // lifetime stats: wins and top-3 finishes, seconds alive, cells absorbed, and the best rating reached (null: never recorded)
-      'ALTER TABLE players ADD COLUMN wins INTEGER NOT NULL DEFAULT 0', 'ALTER TABLE players ADD COLUMN podiums INTEGER NOT NULL DEFAULT 0',
+      // lifetime stats: lives counted, wins and top-3 finishes, seconds alive, cells absorbed, and the best rating reached (null: never recorded)
+      'ALTER TABLE players ADD COLUMN played INTEGER NOT NULL DEFAULT 0', 'ALTER TABLE players ADD COLUMN wins INTEGER NOT NULL DEFAULT 0', 'ALTER TABLE players ADD COLUMN podiums INTEGER NOT NULL DEFAULT 0',
       'ALTER TABLE players ADD COLUMN alive INTEGER NOT NULL DEFAULT 0', 'ALTER TABLE players ADD COLUMN eaten INTEGER NOT NULL DEFAULT 0', 'ALTER TABLE players ADD COLUMN peak INTEGER'])
       try { this.db.exec(sql); } catch (e) {} // already migrated
     const p = s => this.db.prepare(s);
@@ -73,7 +73,7 @@ class SqliteStore {
       count: p('SELECT COUNT(*) AS n FROM players'),
       setRating: p('UPDATE players SET rating = ?, name = ?, runs = runs + 1 WHERE id = ?'),
       addXp: p('UPDATE players SET xp = xp + ? WHERE id = ?'),
-      addStats: p('UPDATE players SET wins = wins + ?, podiums = podiums + ?, alive = alive + ?, eaten = eaten + ?, peak = MAX(COALESCE(peak, 0), ?) WHERE id = ?'),
+      addStats: p('UPDATE players SET played = played + ?, wins = wins + ?, podiums = podiums + ?, alive = alive + ?, eaten = eaten + ?, peak = MAX(COALESCE(peak, 0), ?) WHERE id = ?'),
       trophies: p('SELECT tier, at FROM trophies WHERE player = ?'),
       insTrophy: p('INSERT OR IGNORE INTO trophies(player, tier, at) VALUES(?, ?, ?)'),
       moveTrophies: p('INSERT INTO trophies(player, tier, at) SELECT ?, tier, at FROM trophies WHERE player = ? ON CONFLICT(player, tier) DO UPDATE SET at = MIN(at, excluded.at)'),
@@ -87,7 +87,7 @@ class SqliteStore {
       identities: p('SELECT provider, subject, email, at FROM identities WHERE player = ? ORDER BY at'),
       insIdentity: p('INSERT OR IGNORE INTO identities(provider, subject, player, email, at) VALUES(?, ?, ?, ?, ?)'),
       // merging one player into another (a device signing in to an account it did not create)
-      mergeWallet: p('UPDATE players SET balance = balance + ?, earned = earned + ?, runs = runs + ?, xp = xp + ?, wins = wins + ?, podiums = podiums + ?, alive = alive + ?, eaten = eaten + ?, peak = MAX(COALESCE(peak, 0), ?), rating = MAX(rating, ?), name = COALESCE(name, ?) WHERE id = ?'),
+      mergeWallet: p('UPDATE players SET balance = balance + ?, earned = earned + ?, runs = runs + ?, xp = xp + ?, played = played + ?, wins = wins + ?, podiums = podiums + ?, alive = alive + ?, eaten = eaten + ?, peak = MAX(COALESCE(peak, 0), ?), rating = MAX(rating, ?), name = COALESCE(name, ?) WHERE id = ?'),
       moveSkins: p('INSERT OR IGNORE INTO skins(player, skin, at) SELECT ?, skin, at FROM skins WHERE player = ?'),
       delSkins: p('DELETE FROM skins WHERE player = ?'),
       moveRuns: p('UPDATE runs SET player = ? WHERE player = ?'),
@@ -137,7 +137,7 @@ class SqliteStore {
     const a = this.player(from), b = this.player(to); if (!a || !b || from === to) return;
     this.db.exec('BEGIN');
     try {
-      this.q.mergeWallet.run(Number(a.balance), Number(a.earned), Number(a.runs || 0), Number(a.xp || 0), Number(a.wins || 0), Number(a.podiums || 0), Number(a.alive || 0), Number(a.eaten || 0), Math.max(Number(a.peak || 0), Number(a.rating ?? 1000)), Number(a.rating ?? 1000), a.name || null, to);
+      this.q.mergeWallet.run(Number(a.balance), Number(a.earned), Number(a.runs || 0), Number(a.xp || 0), Number(a.played || 0), Number(a.wins || 0), Number(a.podiums || 0), Number(a.alive || 0), Number(a.eaten || 0), Math.max(Number(a.peak || 0), Number(a.rating ?? 1000)), Number(a.rating ?? 1000), a.name || null, to);
       this.q.moveTrophies.run(to, from); this.q.delTrophies.run(from);
       this.q.moveSkins.run(to, from); this.q.delSkins.run(from);
       this.q.moveRuns.run(to, from); this.q.movePurchases.run(to, from);
@@ -171,7 +171,7 @@ class SqliteStore {
   playerCount() { return Number(this.q.count.get().n); }
   setRating(id, rating, name) { this.q.setRating.run(rating, name, id); }
   addXp(id, n) { this.q.addXp.run(n, id); }
-  addStats(id, s, peak) { this.q.addStats.run(s.wins, s.podiums, s.alive, s.eaten, peak, id); }
+  addStats(id, s, peak) { this.q.addStats.run(s.played, s.wins, s.podiums, s.alive, s.eaten, peak, id); }
   trophies(id) { return this.q.trophies.all(id).map(r => ({ tier: r.tier, at: Number(r.at) })); }
   addTrophies(id, tiers, at) { for (const k of tiers) this.q.insTrophy.run(id, k, at); }
   top(n) { return this.q.top.all(n).map(r => ({ name: r.name, rating: Number(r.rating), runs: Number(r.runs) })); }
@@ -221,7 +221,7 @@ class JsonStore {
   mergePlayers(from, to) {
     const a = this.d.players[from], b = this.d.players[to]; if (!a || !b || from === to) return;
     b.balance += a.balance; b.earned += a.earned; b.runs = (b.runs || 0) + (a.runs || 0); b.xp = (b.xp || 0) + (a.xp || 0);
-    for (const k of ['wins', 'podiums', 'alive', 'eaten']) b[k] = (b[k] || 0) + (a[k] || 0);
+    for (const k of ['played', 'wins', 'podiums', 'alive', 'eaten']) b[k] = (b[k] || 0) + (a[k] || 0);
     b.peak = Math.max(b.peak || 0, a.peak || 0, a.rating ?? 1000); b.rating = Math.max(b.rating ?? 1000, a.rating ?? 1000);
     const tr = this.d.trophies[to] || (this.d.trophies[to] = {}); for (const [k, at] of Object.entries(this.d.trophies[from] || {})) tr[k] = tr[k] == null ? at : Math.min(tr[k], at); delete this.d.trophies[from]; b.name = b.name || a.name || null;
     const s = this.d.skins[to] || (this.d.skins[to] = []); for (const k of this.d.skins[from] || []) if (!s.includes(k)) s.push(k); delete this.d.skins[from];
@@ -250,7 +250,7 @@ class JsonStore {
     this.save();
   }
   createPlayer(id, h, now) {
-    this.d.players[id] = { id, secret: h, created: now, seen: now, balance: 0, earned: 0, hour_at: 0, hour_sum: 0, rating: 1000, name: null, runs: 0, xp: 0, wins: 0, podiums: 0, alive: 0, eaten: 0, peak: null };
+    this.d.players[id] = { id, secret: h, created: now, seen: now, balance: 0, earned: 0, hour_at: 0, hour_sum: 0, rating: 1000, name: null, runs: 0, xp: 0, played: 0, wins: 0, podiums: 0, alive: 0, eaten: 0, peak: null };
     this.d.secrets[h] = id; this.save(); return this.player(id);
   }
   touch(id, now) { const p = this.d.players[id]; if (p) { p.seen = now; this.save(); } }
@@ -266,7 +266,7 @@ class JsonStore {
   playerCount() { return Object.keys(this.d.players).length; }
   setRating(id, rating, name) { const p = this.d.players[id]; if (p) { p.rating = rating; p.name = name; p.runs = (p.runs || 0) + 1; this.save(); } }
   addXp(id, n) { const p = this.d.players[id]; if (p) { p.xp = (p.xp || 0) + n; this.save(); } }
-  addStats(id, s, peak) { const p = this.d.players[id]; if (!p) return; for (const k of ['wins', 'podiums', 'alive', 'eaten']) p[k] = (p[k] || 0) + s[k]; p.peak = Math.max(p.peak || 0, peak); this.save(); }
+  addStats(id, s, peak) { const p = this.d.players[id]; if (!p) return; for (const k of ['played', 'wins', 'podiums', 'alive', 'eaten']) p[k] = (p[k] || 0) + s[k]; p.peak = Math.max(p.peak || 0, peak); this.save(); }
   trophies(id) { return Object.entries((this.d.trophies || {})[id] || {}).map(([tier, at]) => ({ tier, at })); }
   addTrophies(id, tiers, at) { const m = this.d.trophies || (this.d.trophies = {}), t = m[id] || (m[id] = {}); let n = 0; for (const k of tiers) if (t[k] == null) { t[k] = at; n++; } if (n) this.save(); }
   recentPlayers(since, n) { return Object.values(this.d.players).filter(p => p.seen > since).sort((a, b) => b.seen - a.seen).slice(0, n).map(p => ({ id: p.id, name: p.name, seen: p.seen, runs: p.runs || 0, xp: p.xp || 0 })); }

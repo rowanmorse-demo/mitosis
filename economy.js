@@ -89,13 +89,13 @@ const TIER_NAMES = { Bronze: 'Spore', Silver: 'Microbe', Gold: 'Amoeba', Platinu
 // Rank trophies: one per tier, earned (with the date) the first time a ranked life ends at that tier or above; the tiers
 // below come with it, so the shelf fills from the bottom. Players from before trophies get theirs at their next session.
 const tiersUpTo = r => TIERS.slice(0, TIERS.findIndex(t => r < t[0]) + 1).map(t => t[1]);
-// Lifetime stats for the Profile's Stats page. A win or a top-3 finish counts on the same terms as XP's placing (4+ in the
+// Lifetime stats for the Profile's Stats page (played: lives counted since these began, for rates and averages). A win or a top-3 finish counts on the same terms as XP's placing (4+ in the
 // round, a life of at least minSec); time alive is the server-capped survival; cells absorbed are capped per life.
 const STATS = { eatCap: 300 };
 function lifeStats({ survived, place, of, eaten }) {
   const sec = Math.max(0, Math.min(RULES.maxRunSec, +survived || 0)), n = Math.floor(+of || 0), pl = Math.floor(+place || 0);
   const placed = sec >= XP.minSec && n >= XP.minOf && pl >= 1 && pl <= n;
-  return { wins: placed && pl === 1 ? 1 : 0, podiums: placed && pl <= 3 ? 1 : 0, alive: Math.round(sec), eaten: Math.max(0, Math.min(STATS.eatCap, Math.floor(+eaten || 0))) };
+  return { played: 1, wins: placed && pl === 1 ? 1 : 0, podiums: placed && pl <= 3 ? 1 : 0, alive: Math.round(sec), eaten: Math.max(0, Math.min(STATS.eatCap, Math.floor(+eaten || 0))) };
 }
 function ratingDelta(rating, survived, eaten, place, of, life = 0) {
   // placing: 1st of N earns the full bonus, last earns none; needs at least 4 in the round to count. Winning adds more.
@@ -297,7 +297,7 @@ const hash = s => crypto.createHash('sha256').update(String(s)).digest('hex');
 // The sign-in a wallet belongs to (Apple or Google), or null for a device-only wallet.
 const accountOf = (store, p) => { const i = store.identities(p.id)[0]; return i ? { provider: i.provider, email: i.email || null, since: Number(i.at) } : null; };
 // stats: lifetime totals (peak is the best rating known, at least the current one); trophies: [{ tier, at }] up the ladder
-const statsOf = p => ({ wins: Number(p.wins || 0), podiums: Number(p.podiums || 0), alive: Number(p.alive || 0), eaten: Number(p.eaten || 0), peak: Math.max(Number(p.peak || 0), Number(p.rating ?? RATING.base)) });
+const statsOf = p => ({ played: Number(p.played || 0), wins: Number(p.wins || 0), podiums: Number(p.podiums || 0), alive: Number(p.alive || 0), eaten: Number(p.eaten || 0), peak: Math.max(Number(p.peak || 0), Number(p.rating ?? RATING.base)) });
 const trophiesOf = (store, p) => { const at = new Map(store.trophies(p.id).map(t => [t.tier, Number(t.at)])); return TIERS.map(t => t[1]).filter(k => at.has(k)).map(tier => ({ tier, at: at.get(tier) })); };
 const awardTrophies = (store, p, rating, at) => { if (Number(p.runs || 0) > 0) store.addTrophies(p.id, tiersUpTo(rating), at); };
 const wallet = (store, p) => ({ playerId: p.id, balance: Number(p.balance), earned: Number(p.earned), skins: store.skins(p.id), rating: Number(p.rating ?? RATING.base), tier: tierOf(Number(p.rating ?? RATING.base)), runs: Number(p.runs || 0), ...levelOf(p.xp), stats: statsOf(p), trophies: trophiesOf(store, p), pass: passOf(store, p), quests: questsOf(store, p), account: accountOf(store, p) });
@@ -384,7 +384,7 @@ function runEnd(store, body, p) {
   store.setRating(p.id, rating, name); p.rating = rating; p.name = name; p.runs = Number(p.runs || 0) + 1;
   // lifetime stats and rank trophies (the rating before the life counts as reached too)
   const st = lifeStats({ survived, place: body.place, of: body.of, eaten: body.eaten }), top = Math.max(before, rating);
-  store.addStats(p.id, st, top); for (const k of ['wins', 'podiums', 'alive', 'eaten']) p[k] = Number(p[k] || 0) + st[k]; p.peak = Math.max(Number(p.peak || 0), top);
+  store.addStats(p.id, st, top); for (const k of ['played', 'wins', 'podiums', 'alive', 'eaten']) p[k] = Number(p[k] || 0) + st[k]; p.peak = Math.max(Number(p.peak || 0), top);
   awardTrophies(store, p, top, now);
   // xpParts: where the XP came from (time alive, placing, the win); levelUp: how many levels this life gained;
   // passUp: pass levels from the life and its quests; questXp and questsDone: the quests it finished

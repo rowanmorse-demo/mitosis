@@ -104,9 +104,9 @@ async function post(url, body, secret) {
   }
   { // lifetime stats and rank trophies
     const { lifeStats, tiersUpTo, TIERS, TIER_NAMES, STATS } = require('./economy');
-    assert.deepEqual(lifeStats({ survived: 300, place: 1, of: 20, eaten: 12 }), { wins: 1, podiums: 1, alive: 300, eaten: 12 }, 'a win is also a top-3 finish');
-    assert.deepEqual(lifeStats({ survived: 300, place: 3, of: 20 }), { wins: 0, podiums: 1, alive: 300, eaten: 0 });
-    assert.deepEqual(lifeStats({ survived: 300, place: 4, of: 20 }), { wins: 0, podiums: 0, alive: 300, eaten: 0 });
+    assert.deepEqual(lifeStats({ survived: 300, place: 1, of: 20, eaten: 12 }), { played: 1, wins: 1, podiums: 1, alive: 300, eaten: 12 }, 'a win is also a top-3 finish');
+    assert.deepEqual(lifeStats({ survived: 300, place: 3, of: 20 }), { played: 1, wins: 0, podiums: 1, alive: 300, eaten: 0 });
+    assert.deepEqual(lifeStats({ survived: 300, place: 4, of: 20 }), { played: 1, wins: 0, podiums: 0, alive: 300, eaten: 0 });
     assert.equal(lifeStats({ survived: 15, place: 1, of: 20 }).wins, 0, 'a life under 20 s wins nothing'); assert.equal(lifeStats({ survived: 300, place: 1, of: 3 }).wins, 0, 'nor a round of 3');
     assert.equal(lifeStats({ survived: 300, eaten: 1e6 }).eaten, STATS.eatCap, 'cells absorbed are capped per life'); assert.equal(lifeStats({ survived: 1e9 }).alive, require('./economy').RULES.maxRunSec);
     assert.deepEqual([tiersUpTo(0), tiersUpTo(899), tiersUpTo(900), tiersUpTo(1099)], [['Bronze'], ['Bronze'], ['Bronze', 'Silver'], ['Bronze', 'Silver']]);
@@ -116,7 +116,7 @@ async function post(url, body, secret) {
   // rating: that run (15 s on the server clock, 10 kills) is a quick death: +0.5 survival +20 kills -7.5 penalty = +13
   assert.equal(r.body.ratingDelta, 13); assert.equal(r.body.rating, 1013); assert.equal(r.body.tier, 'Silver');
   // XP is capped the same way: ~15 s of time, so 2 XP however long the client says it lived
-  assert.deepEqual(r.body.stats, { wins: 0, podiums: 0, alive: 15, eaten: 10, peak: 1013 }, 'lifetime stats: the capped time and the kills');
+  assert.deepEqual(r.body.stats, { played: 1, wins: 0, podiums: 0, alive: 15, eaten: 10, peak: 1013 }, 'lifetime stats: the capped time and the kills');
   assert.deepEqual(r.body.trophies.map(t => t.tier), ['Bronze', 'Silver'], 'a first ranked life earns the trophies up to its tier'); assert.ok(r.body.trophies.every(t => Math.abs(t.at - Date.now()) < 60e3), 'dated');
   assert.equal(r.body.xpGained, 2); assert.deepEqual(r.body.xpParts, { time: 2, place: 0, win: 0 }); assert.equal(r.body.xp, 2); assert.equal(r.body.level, 1); assert.equal(r.body.levelXp, 2); assert.equal(r.body.levelNeed, 100); assert.equal(r.body.levelUp, 0);
   r = await post('/api/run/end', { runId, survived: 9999, eaten: 10, peak: 800 }, secret);
@@ -265,7 +265,7 @@ async function post(url, body, secret) {
     const sec4 = 'xpsecret' + 'd'.repeat(24), store = (await (await fetch(base + '/health')).json()).store;
     r = await post('/api/session', { secret: sec4 }); assert.deepEqual([r.body.xp, r.body.level, r.body.levelXp, r.body.levelNeed], [0, 1, 0, 100], 'a new player is level 1 with no XP');
     assert.deepEqual(r.body.catalog.xp, require('./economy').XP, 'the catalogue carries the XP rules'); assert.deepEqual(r.body.catalog.tierNames, require('./economy').TIER_NAMES, 'and the tier names');
-    assert.deepEqual([r.body.trophies, r.body.stats], [[], { wins: 0, podiums: 0, alive: 0, eaten: 0, peak: 1000 }], 'a new player has no trophies yet');
+    assert.deepEqual([r.body.trophies, r.body.stats], [[], { played: 0, wins: 0, podiums: 0, alive: 0, eaten: 0, peak: 1000 }], 'a new player has no trophies yet');
     r = await post('/api/run/start', {}, sec4); r = await post('/api/run/end', { runId: r.body.runId, survived: 9999, place: 1, of: 20, bestRank: 999 }, sec4);
     assert.equal(r.body.xpGained, 2, 'claiming a long winning life right after starting it earns only the time that passed');
     if (store === 'sqlite') {
@@ -281,7 +281,7 @@ async function post(url, body, secret) {
       r = await post('/api/run/start', {}, sec4); backdate(r.body.runId, 250);
       r = await post('/api/run/end', { runId: r.body.runId, survived: 200, place: 4, of: 7, bestRank: 999 }, sec4);
       assert.deepEqual([r.body.xpGained, r.body.levelUp], [40 + 30, 0], 'the client may claim less than the server saw');
-      assert.deepEqual([r.body.stats.wins, r.body.stats.podiums, r.body.stats.alive], [1, 1, 15 + 415 + 2015 + 200], 'last and 4th place are not podiums; time alive adds up');
+      assert.deepEqual([r.body.stats.played, r.body.stats.wins, r.body.stats.podiums, r.body.stats.alive], [4, 1, 1, 15 + 415 + 2015 + 200], 'last and 4th place are not podiums; time alive adds up');
       // a player who reached Hydra before trophies existed gets the shelf up to it at the next session; dropping back keeps them
       const won = r.body.trophies; db.prepare('UPDATE players SET rating = 1850 WHERE secret = ?').run(require('crypto').createHash('sha256').update(sec4).digest('hex'));
       r = await post('/api/session', { secret: sec4 }); assert.deepEqual(r.body.trophies.map(t => t.tier), ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond'], 'trophies up to the current tier');
@@ -332,7 +332,7 @@ async function post(url, body, secret) {
   r = await post('/api/run/start', {}, secret2); r = await post('/api/run/end', { runId: r.body.runId, survived: 9999, eaten: 7, peak: 25, bestRank: 999 }, secret2); assert.equal(r.body.xp, 2); const dev2 = r.body;
   r = await post('/api/auth/apple', { identityToken: apple(), nonce: 'n1' }, secret2);
   assert.equal(r.status, 200); assert.equal(r.body.merged, true); assert.equal(r.body.balance, 2200, 'the two wallets merge'); assert.equal(r.body.xp, acctXp + 2, 'and so does their XP');
-  assert.deepEqual(r.body.stats, { ...acctStats, alive: acctStats.alive + dev2.stats.alive, eaten: acctStats.eaten + dev2.stats.eaten }, 'and their lifetime stats');
+  assert.deepEqual(r.body.stats, { ...acctStats, played: acctStats.played + 1, alive: acctStats.alive + dev2.stats.alive, eaten: acctStats.eaten + dev2.stats.eaten }, 'and their lifetime stats');
   assert.deepEqual(r.body.trophies, acctTrophies, 'trophies both had keep the earlier date'); assert.ok(dev2.trophies[0].at >= acctTrophies[0].at); assert.deepEqual(r.body.skins, [9]); assert.equal(r.body.account.provider, 'apple');
   r = await post('/api/session', { secret: secret2 }); assert.equal(r.body.balance, 2200, 'the second device now opens the account');
   r = await post('/api/session', { secret }); assert.equal(r.body.balance, 2200, 'and so does the first');
@@ -731,12 +731,12 @@ async function post(url, body, secret) {
       await reopen();
       assert.deepEqual(['old', 'a', 'b'].map(id => Number(st.player(id).xp)), [40, 150, 500], kind + ': XP adds up and is kept');
       assert.equal(Number(st.run('r1', 'a').xp), 42, kind + ': a run keeps the XP it earned');
-      st.addStats('a', { wins: 2, podiums: 3, alive: 600, eaten: 9 }, 1500); st.addStats('b', { wins: 1, podiums: 1, alive: 100, eaten: 1 }, 1200);
+      st.addStats('a', { played: 5, wins: 2, podiums: 3, alive: 600, eaten: 9 }, 1500); st.addStats('b', { played: 2, wins: 1, podiums: 1, alive: 100, eaten: 1 }, 1200);
       st.addTrophies('a', ['Bronze', 'Silver', 'Gold', 'Platinum'], 50); st.addTrophies('b', ['Bronze', 'Silver'], 20); st.addTrophies('b', ['Bronze'], 99);
       await reopen();
       assert.deepEqual(st.trophies('b').sort((x, y) => x.tier < y.tier ? -1 : 1), [{ tier: 'Bronze', at: 20 }, { tier: 'Silver', at: 20 }], kind + ': a trophy is earned once, with its first date');
       st.mergePlayers('a', 'b'); assert.equal(st.player('a'), null); assert.equal(Number(st.player('b').xp), 650, kind + ': merging adds the XP together');
-      assert.deepEqual(['wins', 'podiums', 'alive', 'eaten', 'peak'].map(k => Number(st.player('b')[k])), [3, 4, 700, 10, 1500], kind + ': merging adds the stats and keeps the best peak');
+      assert.deepEqual(['played', 'wins', 'podiums', 'alive', 'eaten', 'peak'].map(k => Number(st.player('b')[k])), [7, 3, 4, 700, 10, 1500], kind + ': merging adds the stats and keeps the best peak');
       assert.deepEqual(Object.fromEntries(st.trophies('b').map(t => [t.tier, t.at])), { Bronze: 20, Silver: 20, Gold: 50, Platinum: 50 }, kind + ': merging joins the trophies, earliest date first');
       assert.deepEqual(st.trophies('a'), [], kind + ': none are left behind');
       assert.equal(Number(st.playerBySecret('ha').xp), 650, kind + ': the merged device opens the summed XP');
