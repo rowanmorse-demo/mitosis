@@ -847,23 +847,19 @@ body:not(.playing) #tip{display:none}
 #storeCard .sv-list::-webkit-scrollbar{display:none}
 #storeCard #skins,#storeCard .sv-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px}
 #storeCard #skinHint{display:none}
-#storeCard .svc{--rc:143,216,198;appearance:none;position:relative;display:grid;justify-items:center;align-content:start;gap:5px;min-width:0;padding:12px 6px 10px;border-radius:18px;cursor:pointer;color:var(--ink);font:inherit;text-align:center;overflow:hidden;
-  border:1px solid rgba(var(--rc),.24);background:radial-gradient(90% 62% at 50% 34%,rgba(var(--rc),.2),transparent 72%),linear-gradient(180deg,rgba(16,34,38,.92),rgba(5,14,16,.94));
+#storeCard .svc{--rc:143,216,198;appearance:none;position:relative;display:grid;grid-template-rows:auto 1fr auto;justify-items:center;align-items:center;gap:5px;min-width:0;padding:12px 6px 10px;border-radius:18px;cursor:pointer;color:var(--ink);font:inherit;text-align:center;overflow:hidden;
+  border:1px solid rgba(255,255,255,.08);background:radial-gradient(90% 62% at 50% 34%,rgba(var(--rc),.16),transparent 72%),linear-gradient(180deg,rgba(16,34,38,.92),rgba(5,14,16,.94));
   box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 6px 16px rgba(0,0,0,.32);transition:transform .12s,box-shadow .15s,border-color .15s}
 #storeCard .svc.rare{--rc:154,140,255}#storeCard .svc.epic{--rc:242,177,52}#storeCard .svc.legendary{--rc:255,110,70}#storeCard .svc.seasonal{--rc:255,138,42}
-#storeCard .svc::after{content:"";position:absolute;left:20%;right:20%;bottom:0;height:2px;border-radius:2px 2px 0 0;background:rgb(var(--rc));box-shadow:0 0 10px rgba(var(--rc),.9);opacity:.85}
 #storeCard .svc canvas{width:66px;height:66px;filter:drop-shadow(0 6px 8px rgba(0,0,0,.5))}
-#storeCard .svc .sn{max-width:100%;box-sizing:border-box;padding:0 4px;font:700 12.5px/1.15 var(--display);letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#storeCard .svc .sn{max-width:100%;box-sizing:border-box;padding:0 4px;font:700 12.5px/1.15 var(--display);letter-spacing:-.01em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere} /* long names take two lines; the price row stays aligned */
 #storeCard .svc .sp{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:22px;padding:0 9px 0 6px;border-radius:999px;background:rgba(0,0,0,.4);box-shadow:inset 0 1px 2px rgba(0,0,0,.35);color:#ffd77a;font:800 12px/1 var(--display);font-variant-numeric:tabular-nums}
 #storeCard .svc .sp .sv-coin{font-size:13px}
 #storeCard .svc.own .sp{padding:0 6px;background:none;box-shadow:none;color:var(--muted);font:700 9.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase}
 #storeCard .svc.eq .sp{color:#7af0bd}
-#storeCard .sv-gem{position:absolute;top:9px;left:9px;width:7px;height:7px;border-radius:1.5px;transform:rotate(45deg);background:rgb(var(--rc));box-shadow:0 0 8px rgba(var(--rc),.9)}
-#storeCard .sv-own{position:absolute;top:6px;right:6px;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(180deg,#8ff2c6,#3fcf8e);box-shadow:0 2px 6px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.5)}
-#storeCard .sv-own svg{width:12px;height:12px;fill:none;stroke:#05301c;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}
 #storeCard .svc.legendary{border-color:rgba(255,120,70,.55);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 22px rgba(255,100,50,.22),0 6px 16px rgba(0,0,0,.32)}
 #storeCard .svc.eq{border-color:rgba(95,224,168,.6);box-shadow:inset 0 0 0 1px rgba(95,224,168,.25),0 0 18px rgba(95,224,168,.16),0 6px 16px rgba(0,0,0,.32)}
-#storeCard .svc:hover{border-color:rgba(var(--rc),.55)}
+#storeCard .svc:hover{border-color:rgba(255,255,255,.2)}
 #storeCard .svc:active{transform:scale(.95)}
 /* the limited seasonal row: its own glowing panel with a live countdown */
 #storeCard .sv-ltd{grid-column:1/-1;position:relative;overflow:hidden;display:grid;gap:10px;padding:11px 11px 12px;border-radius:22px;border:1px solid rgba(255,138,42,.42);
@@ -1301,15 +1297,15 @@ body:not(.playing) #tip{display:none}
 /* collection tiles: lit in their rarity colour, the rarity underneath the name */
 #lookCard .lk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:10px}
 #lookCard .lk-tile{appearance:none;position:relative;min-width:0;display:grid;grid-template-rows:auto 1fr auto;justify-items:center;align-items:center;gap:3px;padding:12px 6px 11px;border-radius:18px;cursor:pointer;color:var(--ink);font:inherit;text-align:center;
-  border:1px solid rgb(var(--rc)/.3);background:radial-gradient(90% 62% at 50% 32%,rgb(var(--rc)/.22),rgb(var(--rc)/0) 72%),linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.01) 55%,rgba(0,0,0,.18)),#081719;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),inset 0 -3px 0 rgb(var(--rc)/.55),0 6px 16px rgba(0,0,0,.3);transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s,border-color .2s,background-color .2s}
+  border:1px solid rgba(255,255,255,.08);background:radial-gradient(90% 62% at 50% 32%,rgb(var(--rc)/.16),rgb(var(--rc)/0) 72%),linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.01) 55%,rgba(0,0,0,.18)),#081719;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 6px 16px rgba(0,0,0,.3);transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s,border-color .2s,background-color .2s}
 #lookCard .lk-tile canvas{width:64px;height:64px;display:block;margin-bottom:5px;filter:drop-shadow(0 6px 8px rgba(0,0,0,.5));transition:transform .25s cubic-bezier(.2,.9,.3,1.3)}
 #lookCard .lk-tile b{max-width:100%;font:700 12.5px/1.12 var(--display);letter-spacing:-.01em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
-#lookCard .lk-tile span{font:700 8.5px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:rgb(var(--rc));margin-top:2px}
+#lookCard .lk-tile>span:not(.lk-tease){display:none} /* the rarity: kept for the tile's label, shown on the stage */
 #lookCard .lk-tile[data-r=legendary]{background:radial-gradient(90% 62% at 50% 32%,rgba(255,110,90,.3),rgba(255,92,138,0) 72%),linear-gradient(160deg,rgba(255,92,138,.16),rgba(255,180,80,.06) 60%,rgba(0,0,0,.18)),#120b10}
 #lookCard .lk-tile[data-r=legendary]::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(105deg,transparent 40%,rgba(255,220,190,.16) 50%,transparent 60%) no-repeat;background-size:250% 100%;animation:lk-sheen 3.8s ease-in-out infinite}
 #lookCard .lk-tile:active{transform:scale(.94)}
-#lookCard .lk-tile[aria-pressed=true]{border-color:rgba(255,92,138,.9);background-color:#1a0d14;box-shadow:0 0 0 1.5px var(--accent),0 0 24px rgba(255,92,138,.32),inset 0 1px 0 rgba(255,255,255,.12),inset 0 -3px 0 rgb(var(--rc)/.7)}
+#lookCard .lk-tile[aria-pressed=true]{border-color:rgba(255,92,138,.9);background-color:#1a0d14;box-shadow:0 0 0 1.5px var(--accent),0 0 24px rgba(255,92,138,.32),inset 0 1px 0 rgba(255,255,255,.12)}
 #lookCard .lk-tile[aria-pressed=true] canvas{transform:scale(1.08)}
 /* nothing owned yet: a wide teaser of three shop skins that opens the Shop */
 #lookCard .lk-tile.lk-get{--rc:255 92 138;grid-column:2/-1;grid-template-rows:auto auto;align-content:center;gap:8px;border:1px solid rgba(255,92,138,.5);
@@ -4143,7 +4139,7 @@ $('ownedSkins').addEventListener('click',e=>{const b=e.target.closest('.lk-tile'
 function svIcon(n){return '<svg viewBox="0 0 24 24" aria-hidden="true">'+({check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',plus:'<path d="M12 5.5v13M5.5 12h13"/>'})[n]+'</svg>';}
 function svClock(ms){const s=Math.max(0,Math.floor(ms/1000)),d=Math.floor(s/86400),p=n=>String(n).padStart(2,'0'),hms=`${p(Math.floor(s%86400/3600))}:${p(Math.floor(s%3600/60))}:${p(s%60)}`;return d?`${d}d ${hms}`:hms;}
 function shopCard(S){const own=ownsSkin(S.id),eq=settings.skin===S.id,rar=rarOf(S),px=Math.min(208,Math.max(144,Math.round(70*(window.devicePixelRatio||1))));
-  return `<button type="button" class="svc ${rar}${own?' own':''}${eq?' eq':''}${S.id===shopSel?' sel':''}" data-id="${S.id}" aria-pressed="${S.id===shopSel}" aria-label="${escH(S.name)}, ${rar}${eq?', wearing':own?', owned':', '+S.price+' ATP'}"><span class="sv-gem" aria-hidden="true"></span>${own?'<span class="sv-own" aria-hidden="true">'+svIcon('check')+'</span>':''}<canvas width="${px}" height="${px}" data-skin="${S.id}"></canvas><span class="sn">${escH(S.name)}</span><span class="sp">${eq?'Wearing':own?'Owned':'<i class="sv-coin"></i>'+fmtAtp(S.price)}</span></button>`;}
+  return `<button type="button" class="svc ${rar}${own?' own':''}${eq?' eq':''}${S.id===shopSel?' sel':''}" data-id="${S.id}" aria-pressed="${S.id===shopSel}" aria-label="${escH(S.name)}, ${rar}${eq?', wearing':own?', owned':', '+S.price+' ATP'}"><canvas width="${px}" height="${px}" data-skin="${S.id}"></canvas><span class="sn">${escH(S.name)}</span><span class="sp">${eq?'Wearing':own?'Owned':'<i class="sv-coin"></i>'+fmtAtp(S.price)}</span></button>`;}
 function renderShopGrid(el){ // limited seasonal skins lead in their own banner with a live countdown (and are hidden out of season unless owned); the rest run cheapest first
   const byPrice=(a,b)=>a.price-b.price||a.id-b.id,seasonal=PREMIUM.filter(S=>S.season&&seasonState(S.season).open).sort(byPrice),rest=PREMIUM.filter(S=>!S.pass&&(!S.season||(!seasonState(S.season).open&&ownsSkin(S.id)))).sort(byPrice);
   let html='';if(seasonal.length){const st=seasonState(seasonal[0].season);
