@@ -14,6 +14,7 @@ A multiplayer cell-eating arena set in a giant petri well. Absorb anything small
 - **Hunter phages** that breach the rim and inject cells; the cell bursts into up to 16 pieces 8–10 s later
 - **ATP and skins**: earn ATP by placing well (or buy it in the apps) and spend it in a full-screen shop on nineteen premium skins, up to the 12,000,000 ATP One Cell to Rule Them All
 - **Levels**: every ranked life earns XP for how long you stay alive and where you place, and XP adds up into a profile level. The lobby and the Profile show your level with a bar toward the next one; the results screen counts the XP in, shows where it came from and celebrates a level-up
+- **A profile like a player card**: your portrait with its level, your rank trophy and progress, and three tabs: Overview (the trophy shelf, recent form, skins and account), Stats (games, wins, win rate, top-3 finishes, time alive, cells absorbed, peak rating and recent runs, counted by the server) and Trophies (all six rank trophies and the achievements). Delete account is the last thing on the page and asks to confirm
 - **A lobby that knows you**: a live portrait of your cell, your level and your rating with progress to the next tier, who is in the room and the round clock. First launch shows a three-step welcome card (Settings can bring it back). The Profile keeps your last runs with placement, time, peak mass and rating change
 - **Background** in Settings: a black dish (the default) or a white one
 - **Effects toggle** in Settings (Full or Reduced) for older phones; the game also drops to reduced effects on its own when frames run long
@@ -73,7 +74,7 @@ Every player has an Elo-style rating, starting at 1000, adjusted by the server a
 | Dying inside the first minute | up to −10, the sooner the worse |
 | Rating above 1000 | gains shrink and losses grow (at 2000, gains ×0.5 and losses ×1.5), so ratings settle rather than inflate |
 
-Tiers: Bronze (under 900), Silver (900+), Gold (1100+), Platinum (1400+), Diamond (1800+), Legend (2300+). The lobby shows your rating and the top ten, and the results screen after every run (death or Return to lobby) shows the change. `GET /api/leaderboard` returns the top ten.
+Tiers are stages of life: Spore (under 900), Microbe (900+), Amoeba (1100+), Colony (1400+), Hydra (1800+) and Apex (2300+). The API keeps the old keys (Bronze, Silver, Gold, Platinum, Diamond, Legend) so older apps still colour them right; the catalogue sends the names (`TIER_NAMES` in economy.js). Every tier is a **trophy**: its organism in a glass orb on a stand of the tier's metal, earned (with the date) the first time a ranked life ends at that tier or above, the tiers below coming with it. Trophies are kept for good, even after a drop. The lobby shows your rating and the top ten, and the results screen after every run (death or Return to lobby) shows the change. `GET /api/leaderboard` returns the top ten.
 
 ## Levels and XP
 
