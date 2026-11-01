@@ -3047,26 +3047,116 @@ function witchBat(g,x,y,s,f){const u=-.55*f;g.beginPath();g.moveTo(x,y);
 const SEASONS={halloween:{name:'Halloween',from:[10,24],to:[11,3]}};
 function seasonState(key,d=new Date()){const S=SEASONS[key];if(!S)return{open:false};const y=d.getFullYear(),start=new Date(y,S.from[0]-1,S.from[1]),end=new Date(y,S.to[0]-1,S.to[1],23,59,59);
   return d>=start&&d<=end?{open:true,ends:end.getTime(),name:S.name}:{open:false,name:S.name,next:(d<start?start:new Date(y+1,S.from[0]-1,S.from[1])).getTime()};}
+// Space skins (Nebula, Galaxy, Black Hole, Supernova, Plasma, Aurora, Glitch): value noise, and fields painted pixel by pixel. A field is
+// computed once per skin on a small canvas (about 200 px, never a pixel loop over a bake), cached, and scaled into every bake under the sharp detail.
+const COSMO_P=(()=>{const R=prng(977),p=new Float32Array(16384);for(let i=0;i<16384;i++)p[i]=R();return p;})(),COSMO_TEX=new Map();
+function cosmoNoise(x,y){const P=COSMO_P,xi=Math.floor(x),yi=Math.floor(y),fx=x-xi,fy=y-yi,ux=fx*fx*(3-2*fx),uy=fy*fy*(3-2*fy),i0=xi&127,i1=(xi+1)&127,j0=(yi&127)<<7,j1=((yi+1)&127)<<7,
+  a=P[j0|i0],b=P[j0|i1],c=P[j1|i0];return a+(b-a)*ux+(c-a+(a-b+P[j1|i1]-c)*ux)*uy;}
+function cosmoFbm(x,y,o){let s=0,a=.5,w=0,t;for(let i=0;i<o;i++){s+=a*cosmoNoise(x,y);w+=a;t=x;x=x*1.7-y*1.1+17.3;y=t*1.1+y*1.7+9.1;a*=.5;}return s/w;} // 0..1, mostly .3-.7
+function cosmoStep(a,b,v){const t=Math.min(1,Math.max(0,(v-a)/(b-a)));return t*t*(3-2*t);}
+function cosmoTex(key,N,fn){let c=COSMO_TEX.get(key);if(c)return c; // fn(x,y,o) sets o to the 0-255 RGB at x,y (unit space, ±SKIN_BR)
+  c=document.createElement('canvas');c.width=c.height=N;const q=c.getContext('2d'),im=q.createImageData(N,N),d=im.data,o=[0,0,0],e=SKIN_BR,lim=e*e*1.02;
+  for(let j=0;j<N;j++){const y=((j+.5)/N*2-1)*e;for(let i=0;i<N;i++){const x=((i+.5)/N*2-1)*e;if(x*x+y*y>lim)continue;fn(x,y,o);const k=(j*N+i)<<2;d[k]=o[0];d[k+1]=o[1];d[k+2]=o[2];d[k+3]=255;}}
+  q.putImageData(im,0,0);COSMO_TEX.set(key,c);return c;}
+function cosmoField(q,tex){q.drawImage(tex,-SKIN_BR,-SKIN_BR,2*SKIN_BR,2*SKIN_BR);}
+function cosmoStar(q,u,x,y,s,rgb,sp){ // a bright star: halo, hot core and, when sp, the diffraction spikes of a JWST image (six long, two short)
+  q.globalCompositeOperation='lighter';disc(q,x,y,s*3.2,rgr(q,x,y,s*3.2,[0,`rgba(${rgb},.42)`,.22,`rgba(${rgb},.13)`,1,`rgba(${rgb},0)`]));
+  if(sp){q.fillStyle=rgr(q,0,0,1,[0,`rgba(${rgb},.95)`,.25,`rgba(${rgb},.32)`,1,`rgba(${rgb},0)`]);const w=Math.max(s*.09,.9/u);
+    for(const [a,L] of[[Math.PI/2,1],[Math.PI/6,1],[-Math.PI/6,1],[0,.42]]){q.save();q.translate(x,y);q.rotate(a);q.scale(s*sp*L,w);q.beginPath();q.arc(0,0,1,0,TAU);q.fill();q.restore();}}
+  disc(q,x,y,s*.62,rgr(q,x,y,s*.62,[0,'rgba(255,255,255,1)',.45,`rgba(${rgb},.85)`,1,`rgba(${rgb},0)`]));q.globalCompositeOperation='source-over';}
+const COSMO_STAR=['255,255,255','205,222,255','170,198,255','255,244,222','255,214,165','255,172,128'];
+// Nebula: the gas, its filaments and dust, warped together; NEB_F holds the last sample for the stars that sit in it
+const NEB_C=[-.17,-.2],NEB_F={gas:0,fil:0,D:0,rim:0,cav:0};
+function nebulaField(x,y){const F=NEB_F,wx=cosmoFbm(x*1.3+3.1,y*1.3+.7,2),wy=cosmoFbm(x*1.3+8.3,y*1.3+5.2,2),px=x+(wx-.5)*1.6,py=y+(wy-.5)*1.6,
+    dx=x-NEB_C[0],dy=y-NEB_C[1],d2=dx*dx+dy*dy,L=Math.sqrt(d2)+.001,cav=Math.exp(-d2*3.4),f0=1-Math.abs(cosmoFbm(px*3.4+6,py*3.4+1,3)*2-1),
+    b=y*.2+x*.12-cav*.2;
+  F.gas=cosmoFbm(px*2.1+1.7,py*2.1+2.9,4);F.fil=f0*f0*f0*f0*f0*f0;F.cav=cav;F.D=nebulaDust(px,py,b);F.rim=F.D*(1-nebulaDust(px-dx/L*.045,py-dy/L*.045,b));return F;}
+function nebulaDust(x,y,b){return cosmoStep(.5,.57,cosmoFbm(x*1.7+20.1,y*1.05+4.3,3)+b);} // dark columns, thicker low right
+function nebulaPx(x,y,o){const F=nebulaField(x,y),g=F.gas,em=g*g*1.9+F.fil*(.25+g)*.9,k=1-F.D*.9,cv=F.cav;
+  const h=em*(1-cv),R=(.03+h*1.05+em*cv*.3+g*.1)*k+F.rim*1.8+F.D*g*.06,G=(.008+h*.12+g*.04+cv*(.2+g*1.2)+cv*F.fil*.9)*k+F.rim*.72+F.D*g*.025,B=(.07+h*.55+g*.45+cv*(.5+g*1.1)+cv*F.fil*.4)*k+F.rim*.3+F.D*g*.04;
+  o[0]=255-255*Math.exp(-R*1.25);o[1]=255-255*Math.exp(-G*1.25);o[2]=255-255*Math.exp(-B*1.25);}
+const NEB_STARS=[[.42,-.46,.05,'205,222,255'],[-.56,.3,.042,'255,214,165'],[.18,.58,.036,'255,255,255'],[-.3,-.66,.03,'255,172,128'],[.66,.22,.032,'170,198,255']]; // the bright stars, with spikes; draw() twinkles them
+// Galaxy: a two-armed grand design spiral; GAL_F holds the last sample
+const GAL_F={arm:0,dust:0,cl:0,r:0};
+function galaxyField(x,y){const F=GAL_F,r=Math.hypot(x,y)+1e-4,th=Math.atan2(y,x),n=cosmoFbm(x*2.6+4.2,y*2.6+1.3,3),ph=2*(th+3.1*Math.log(r))+(n-.5)*2.6,env=cosmoStep(1.06,.5,r)*cosmoStep(.04,.2,r);
+  F.r=r;F.cl=cosmoFbm(x*9+2,y*9+7,3);const ca=.5+.5*Math.cos(ph),cd=.5+.5*Math.cos(ph+.9),cd2=cd*cd,cd4=cd2*cd2;F.arm=ca*ca*Math.sqrt(ca)*env;
+  F.dust=cd4*cd4*cosmoStep(.3,.6,cosmoFbm(x*6+9,y*6+3,3))*cosmoStep(.07,.22,r)*cosmoStep(1.05,.6,r);return F;}
+function galaxyPx(x,y,o){const F=galaxyField(x,y),r=F.r,a=F.arm,cl=F.cl,bul=Math.exp(-Math.sqrt(r/.028)),disk=Math.exp(-r/.25),yg=a*(.25+cl*1.6),hii=a*a*cosmoStep(.6,.75,cl),k=1-F.dust*.88;
+  const R=(.012+bul*4.2+disk*.2+yg*.32+hii*1.5)*k+F.dust*disk*.04,G=(.012+bul*3.4+disk*.2+yg*.58+hii*.36)*k+F.dust*disk*.025,B=(.04+bul*2.1+disk*.27+yg*1.3+hii*.85)*k;
+  o[0]=255-255*Math.exp(-R*1.4);o[1]=255-255*Math.exp(-G*1.4);o[2]=255-255*Math.exp(-B*1.4);}
+// Black Hole: shadow, lensed far side of the disk (an arch over the top, a thin ring under) and the disk nearly edge on, brighter on the side coming at us
+const BH_RS=.29,BH_RP=.305,BH_YB=.035,BH_SQ=.15;
+function holePx(x,y,o){const rho=Math.hypot(x,y)+1e-4,ux=x/rho,uy=y/rho,dop=1-.55*ux;let I=0,H=0;
+  if(rho>BH_RS){const e=(rho-.36)/.16;I=Math.exp(-e*e)*.1;const up=Math.max(0,-uy),dn=Math.max(0,uy),w=.03+.14*Math.sqrt(up)+.03*dn,t=(rho-BH_RP)/w;
+    if(t>0&&t<1.25){const s=cosmoFbm(rho*34+ux*1.2,uy*1.2+3,3),f=t<1?1-t*t*.7:(1.25-t)*1.2,a=f*(1-Math.exp(-t*25))*(.2+s*1.6)*(uy<0?1.5:.8)*dop;I+=a;H+=a*(1-t*.8);}}
+  const Y=(y-BH_YB)/BH_SQ,R=Math.hypot(x,Y);
+  if(R>.37&&R<1.16&&!(Y<0&&rho<BH_RS)){const s=cosmoFbm(R*22+x/R*1.6,Y/R*1.6+7,2),dp=1-.62*x/R,b=Math.exp(-(R-.37)*2.3)*(1-Math.exp(-(R-.37)*45))*(.35+s*1.35)*dp*cosmoStep(1.15,.75,R)*1.5;I+=b;H+=b*Math.exp(-(R-.37)*3.2);}
+  const bl=Math.max(0,dop-1)*.5;o[0]=255-255*Math.exp(-(.014+I*1.1)*1.6);o[1]=255-255*Math.exp(-(.007+I*.46+H*.5+bl*I*.3)*1.6);o[2]=255-255*Math.exp(-(.03+I*.14+H*.42+bl*I*.6)*1.6);}
+function holeAt(c,r,cs,sn,a,d){const X=Math.cos(a)*d,Y=BH_YB+Math.sin(a)*d*BH_SQ;PT2[0]=c.x+(X*cs-Y*sn)*r;PT2[1]=c.y+(X*sn+Y*cs)*r;return Math.sin(a)<0&&Math.hypot(X,Y)<BH_RS+.02;} // a point of the disk on screen into PT2; true when the shadow hides it
+// Supernova: the remnant inside the membrane: a warped shock shell of knotted filaments, a web of ejecta and blue synchrotron glow round the core
+function novaPx(x,y,o){const rho=Math.hypot(x,y),px=x+(cosmoFbm(x*2.2+1.3,y*2.2+3.1,2)-.5)*.55,py=y+(cosmoFbm(x*2.2+7.7,y*2.2+2.2,2)-.5)*.55,rp=Math.hypot(px,py),e=(rp-.8)/.1,sh=Math.exp(-e*e),
+    r0=1-Math.abs(cosmoFbm(px*6+2,py*6+5,3)*2-1),rid=r0*r0*r0,f0=1-Math.abs(cosmoFbm(px*4+8,py*4+6,3)*2-1),f2=f0*f0*f0,fil=f2*f2,kn=cosmoStep(.56,.7,cosmoFbm(px*8+3,py*8+1,2)),
+    inner=cosmoStep(.9,.3,rho),haze=Math.exp(-rho*rho*5),fire=Math.exp(-rho*rho*1.6),gold=sh*(.3+rid*2.2)+fil*inner*(.25+rho)*1.1,teal=sh*kn*rid*1.6,red=cosmoStep(.78,1.02,rp)*(.25+rid*1.2)+sh*.25;
+  o[0]=255-255*Math.exp(-(.08+fire*.95+gold*1.05+red*.95+haze*.12)*1.3);o[1]=255-255*Math.exp(-(.015+fire*.3+gold*.58+red*.14+teal*.95+haze*.26)*1.3);o[2]=255-255*Math.exp(-(.012+fire*.03+gold*.18+red*.1+teal*.75+haze*.7)*1.3);}
+// Plasma: where this frame's tendrils touch the glass
+const PLASMA_END=new Float32Array(16);
+// Aurora: the land under the lights, painted once upright and once upside down in the lake (AUR_W is the waterline)
+const AUR_W=.43,AUR_FAR=[[-1.2,.26],[-1.02,.13],[-.86,.2],[-.66,.02],[-.5,.17],[-.36,.1],[-.16,-.04],[.02,.12],[.16,.06],[.34,.18],[.52,0],[.7,.15],[.88,.07],[1.04,.18],[1.2,.11]],
+  AUR_NEAR=[[-1.2,.34],[-.94,.24],[-.76,.31],[-.56,.2],[-.3,.33],[-.06,.25],[.2,.34],[.44,.22],[.68,.32],[.92,.25],[1.2,.35]];
+function auroraRange(q,P,body,lit,shade,snow,R){const base=AUR_W+.02;q.beginPath();q.moveTo(P[0][0],base);for(const [x,y] of P)q.lineTo(x,y);q.lineTo(P[P.length-1][0],base);q.closePath();q.fillStyle=body;q.fill();
+  for(let i=1;i<P.length-1;i++){const [x,y]=P[i],[lx,ly]=P[i-1],[rx,ry]=P[i+1];if(ly<=y||ry<=y)continue; // each peak: its far flank in shadow, the near one catching the sky's light, then snow
+    q.beginPath();q.moveTo(x,y);q.lineTo(rx,ry);q.lineTo(rx,base);q.lineTo(x+(rx-x)*.3,base);q.closePath();q.fillStyle=shade;q.fill();
+    q.beginPath();q.moveTo(x,y);q.lineTo(lx,ly);q.lineTo(lx+(x-lx)*.55,base);q.closePath();q.fillStyle=lit;q.fill();
+    if(!snow)continue;const h=Math.min(.1,(Math.min(ly,ry)-y)*.75),fl=h/(ly-y),fr=Math.min(.9,h/(ry-y)*1.15),ax=x+(lx-x)*fl,ay=y+(ly-y)*fl,bx=x+(rx-x)*fr,by=y+(ry-y)*fr;
+    q.beginPath();q.moveTo(x,y);q.lineTo(ax,ay);for(let k=1;k<6;k++){const t=k/6;q.lineTo(ax+(bx-ax)*t,ay+(by-ay)*t-(k%2?h*.35:-h*.1)*(.6+R()*.8));}q.lineTo(bx,by);q.closePath();
+    q.fillStyle=lgr(q,x-.06,0,x+.06,0,snow);q.fill();}}
+function auroraPine(q,x,y,h){const w=h*.34;q.moveTo(x,y-h); // a spruce: four drooping tiers and a stub of trunk, added to the current path
+  for(let i=1;i<=4;i++){const t=i/4,yy=y-h+h*t*.9,ww=w*t;q.lineTo(x+ww,yy);q.lineTo(x+ww*.42,yy-h*.06);}
+  q.lineTo(x+w*.08,y);q.lineTo(x-w*.08,y);for(let i=4;i>=1;i--){const t=i/4,yy=y-h+h*t*.9,ww=w*t;q.lineTo(x-ww*.42,yy-h*.06);q.lineTo(x-ww,yy);}q.closePath();}
+function auroraLand(q,R){
+  auroraRange(q,AUR_FAR,'#1b3352','rgba(140,230,210,.1)','rgba(5,12,28,.5)',[0,'rgba(230,255,248,.92)',.5,'rgba(200,235,240,.8)',1,'rgba(110,150,195,.6)'],R);
+  auroraRange(q,AUR_NEAR,'#0c1a2b','rgba(120,220,200,.06)','rgba(2,6,14,.55)',[0,'rgba(200,240,240,.55)',1,'rgba(90,130,170,.4)'],R);
+  q.beginPath();for(let i=0;i<40;i++){const x=-1.18+i*.06+R()*.03,h=.05+R()*.07;auroraPine(q,x,AUR_W-.035+R()*.02,h);}q.fillStyle='#091522';q.fill(); // the far trees, softened by distance
+  q.beginPath();for(let i=0;i<30;i++){const x=-1.18+i*.081+R()*.04,h=.08+R()*R()*.2;auroraPine(q,x,AUR_W+.004,h);}q.fillStyle='#02060c';q.fill(); // spruces on the shore
+  q.fillStyle='rgba(185,225,235,.5)';q.fillRect(-1.2,AUR_W-.002,2.4,.006);} // snow along the shore
+// Glitch: the hologram's face, one character per pixel: # lit, k pupil, w glint, p blush, m mouth, r tongue
+const GLITCH_PIX=['..###.....###..','.#####...#####.','.##wk#...##wk#.','.##kk#...##kk#.','.#####...#####.','..###.....###..','.pp.........pp.','...............','.#...........#.','..#mmmmmmmmm#..','...#mmrrrmm#...','....#######....'],
+  GLITCH_COL={'#':'#d6fff8',k:'#05292c',w:'#ffffff',p:'#ff5aa5',m:'#062b2c',r:'#ff4f7c'},GLITCH_P=.088,GLITCH_Y=-.03;
+function glitchFace(fn){for(let j=0;j<GLITCH_PIX.length;j++){const row=GLITCH_PIX[j];for(let i=0;i<row.length;i++)if(row[i]!=='.')fn((i-7)*GLITCH_P,(j-5.5)*GLITCH_P+GLITCH_Y,row[i],i,j);}} // fn(x,y,char,col,row), x,y the pixel's middle
+function auroraCurtain(q,u){const R=prng(171);q.globalCompositeOperation='lighter'; // one curtain: a sheet brightest at its lower edge, pink at the top, combed into rays that fade upward
+  q.fillStyle=lgr(q,0,-.3,0,.9,[0,'rgba(110,255,180,0)',.45,'rgba(110,255,180,.16)',.7,'rgba(110,255,175,.55)',.765,'rgba(235,255,240,.95)',.8,'rgba(120,255,190,.22)',1,'rgba(120,255,190,0)']);q.fillRect(-1,-.3,2,1.2);
+  for(let i=0;i<116;i++){const fold=i<8,x=-1+R()*2,w=fold?.04+R()*.06:.004+R()*R()*.03,top=-.98+R()*R()*.95,a=fold?.4+R()*.2:.08+R()*.32;
+    q.fillStyle=lgr(q,0,top,0,.66,[0,'rgba(255,80,170,0)',.28,`rgba(220,90,200,${(a*.55).toFixed(3)})`,.62,`rgba(110,255,180,${a.toFixed(3)})`,.95,`rgba(220,255,235,${Math.min(1,a*1.5).toFixed(3)})`,1,'rgba(120,255,190,0)']);q.fillRect(x,top,w,.66-top);}
+  q.globalCompositeOperation='destination-out';q.fillStyle=lgr(q,-1,0,-.75,0,[0,'#000',1,'rgba(0,0,0,0)']);q.fillRect(-1,-1,.25,2);q.fillStyle=lgr(q,.75,0,1,0,[0,'rgba(0,0,0,0)',1,'#000']);q.fillRect(.75,-1,.25,2);q.globalCompositeOperation='source-over';}
+function auroraPx(x,y,o){let R,G,B;
+  if(y<AUR_W){const t=(y+1.15)/(AUR_W+1.15),d=(x-.05)*.523+(y+.42)*.852,mw=Math.exp(-d*d*45)*(.35+cosmoFbm(x*5+2,y*5+7,3)*.9)*(1-.75*Math.exp(-(d+.012)*(d+.012)*1400)*cosmoStep(.42,.6,cosmoFbm(x*9+3,y*9,2))),gl=Math.exp((y-AUR_W)/.3)*.4;
+    R=.008+t*t*.07+mw*.15+gl*.03;G=.022+t*.12+t*t*.13+mw*.15+gl*.24;B=.07+t*.19+mw*.2+gl*.12;} // night sky, the Milky Way with its dust lane, the lights' glow low down
+  else{const t=(y-AUR_W)/(SKIN_BR-AUR_W),gl=Math.exp(-(y-AUR_W)/.16);R=.05-.04*t+gl*.04;G=.17-.15*t+gl*.2;B=.24-.2*t+gl*.13;} // the lake, catching the glow by the shore
+  o[0]=Math.min(255,R*255);o[1]=Math.min(255,G*255);o[2]=Math.min(255,B*255);}
+// Plasma: the dark gas in the globe and the glass round it
+function plasmaPx(x,y,o){const rho=Math.hypot(x,y),gas=cosmoFbm(x*2.6+3,y*2.6+1,3),s0=1-Math.abs(cosmoFbm(x*4.5+gas*2.2,y*4.5-gas*2.2,2)*2-1),s2=s0*s0*s0,sw=s2*s2,f=Math.min(1,rho/.82),
+    glow=Math.exp(-rho*rho*5.5)*.42,cl=cosmoStep(.42,.72,gas)*.24*(1-rho*.6)+sw*.16*(1-rho*.5),e1=(rho-.78)/.035,e2=(rho-.84)/.018,k=1-.5*Math.exp(-e1*e1),ring=.5*Math.exp(-e2*e2),
+    th=Math.atan2(y,x),e3=(rho-.865)/.035,ca=th>.05&&th<1.55?Math.sin((th-.05)/1.5*Math.PI)*Math.exp(-e3*e3)*.28:0;
+  const R=((.2-.14*f)+glow*.8+cl*.7)*k+ring*.9+ca*.9,G=((.065-.055*f)+glow*.32+cl*.3)*k+ring*.78+ca*.6,B=((.31-.19*f)+glow+cl)*k+ring+ca;
+  o[0]=255-255*Math.exp(-R*1.25);o[1]=255-255*Math.exp(-G*1.25);o[2]=255-255*Math.exp(-B*1.25);}
 const PREMIUM=[
 {id:5,key:'nebula',name:'Nebula',price:400,base:[262,72,42],edge:'#2a1660',edge2:'rgba(255,170,230,.5)',
-  // a glowing cloud of gas (a hot pink heart, violet round it, teal veils at its edges) cut by dark dust, with a cluster of young stars that twinkle
-  bake(q){const R=prng(5);fillAll(q,rgr(q,0,0,1.2,[0,'#24124f',.55,'#140a36',1,'#07041a']));
-    q.globalCompositeOperation='lighter';
-    for(const [x,y,s,cc,a] of[[-.5,.38,.85,'40,170,230',.34],[.18,-.14,.9,'235,60,170',.42],[.55,.5,.6,'125,70,255',.3],[-.35,-.55,.55,'110,80,255',.22]])disc(q,x,y,s,rgr(q,x,y,s,[0,`rgba(${cc},${a})`,1,`rgba(${cc},0)`])); // broad washes of colour
-    const C=['60,200,250','150,90,255','255,80,185','255,120,200','255,170,120'];
-    for(let i=0;i<170;i++){const t=R(),x=(t-.5)*2+(R()-.5)*.4,y=Math.sin(t*5+.5)*.34+(R()-.5)*.5,s=.06+R()*.26,cc=C[Math.min(4,Math.floor(t*3.2+R()*1.6))];disc(q,x,y,s,rgr(q,x,y,s,[0,`rgba(${cc},${(.07+R()*.13).toFixed(3)})`,1,`rgba(${cc},0)`]));} // puffs along the glowing ribbon
-    disc(q,.12,-.08,.42,rgr(q,.12,-.08,.42,[0,'rgba(255,225,245,.55)',.3,'rgba(255,130,210,.22)',1,'rgba(255,90,190,0)'])); // the hot heart
-    q.globalCompositeOperation='source-over';
-    for(let l=0;l<3;l++){let x=-1.1,y=-.2+l*.32+(R()-.5)*.2,a=-.25+R()*.5;for(let i=0;i<46;i++){a+=(R()-.5)*.5;x+=Math.cos(a)*.05;y+=Math.sin(a)*.05+Math.sin(x*3+l)*.012;const s=.025+R()*.07;disc(q,x,y,s,rgr(q,x,y,s,[0,`rgba(6,2,18,${(.3+R()*.25).toFixed(3)})`,1,'rgba(6,2,18,0)']));}} // dust lanes winding across
-    q.globalCompositeOperation='lighter';
-    for(let i=0;i<220;i++){const x=(R()*2-1)*1.15,y=(R()*2-1)*1.15,s=.003+R()*R()*.013;disc(q,x,y,s,R()<.25?'rgba(190,215,255,.95)':'rgba(255,255,255,.85)');}
-    for(let i=0;i<14;i++){const a=R()*TAU,d=R()*.32,x=.12+Math.cos(a)*d,y=-.08+Math.sin(a)*d,s=.012+R()*.02;disc(q,x,y,s*3,rgr(q,x,y,s*3,[0,'rgba(255,255,255,.7)',.3,'rgba(220,230,255,.25)',1,'rgba(200,210,255,0)']));} // the young cluster
-    for(let i=0;i<6;i++){const x=(R()*2-1)*.8,y=(R()*2-1)*.8,s=.05+R()*.05;disc(q,x,y,s,rgr(q,x,y,s,[0,'rgba(255,255,255,.95)',.14,'rgba(210,225,255,.45)',1,'rgba(150,170,255,0)']));
-      q.fillStyle='rgba(235,240,255,.75)';q.beginPath();q.ellipse(x,y,s*2.2,s*.08,0,0,TAU);q.ellipse(x,y,s*.08,s*2.2,0,0,TAU);q.fill();} // bright stars with spikes
-    q.globalCompositeOperation='source-over';},
+  // a star-forming nebula as a space telescope sees it: glowing filaments of gas warped round a cavity a young cluster has blown, dark dust columns
+  // with bright rims where its light eats into them, newborn stars with jets in their tips, and stars of every colour with diffraction spikes
+  bake(q,u){const R=prng(5),px=.7/u;fillAll(q,'#0b0620');cosmoField(q,cosmoTex('nebula',180,nebulaPx));q.globalCompositeOperation='lighter';
+    disc(q,NEB_C[0],NEB_C[1],.55,rgr(q,NEB_C[0],NEB_C[1],.55,[0,'rgba(210,240,255,.32)',.25,'rgba(120,200,255,.1)',1,'rgba(120,200,255,0)'])); // the cavity's glow
+    for(let i=0;i<320;i++){const x=(R()*2-1)*1.1,y=(R()*2-1)*1.1,D=nebulaField(x,y).D,a=(.3+R()*.65)*(1-D*.8),s=Math.max(.0022+R()*R()*.009,px),cc=D>.4?'255,150,120':COSMO_STAR[Math.floor(R()*R()*6)];
+      if(a>.06)disc(q,x,y,s,`rgba(${cc},${a.toFixed(3)})`);} // field stars, dimmed and reddened behind the dust
+    for(let i=0;i<34;i++){const a=R()*TAU,d=Math.sqrt(-2*Math.log(1-R()*.97))*.07,x=NEB_C[0]+Math.cos(a)*d,y=NEB_C[1]+Math.sin(a)*d,s=.003+R()*R()*.01,cc=R()<.7?'205,222,255':'255,255,255';
+      disc(q,x,y,s*2.4,rgr(q,x,y,s*2.4,[0,'rgba(255,255,255,1)',.22,`rgba(${cc},.5)`,1,`rgba(${cc},0)`]));} // the young cluster
+    for(let i=0,n=0;i<500&&n<6;i++){const x=(R()*2-1)*.85,y=(R()*2-1)*.85,F=nebulaField(x,y);if(F.rim<.3||F.D<.6)continue;n++; // newborn stars in the column tips, each firing a jet both ways
+      const s=.028+R()*.02,a=Math.atan2(y-NEB_C[1],x-NEB_C[0])+Math.PI/2+(R()-.5)*.6,ca=Math.cos(a)*s*1.8,sa=Math.sin(a)*s*1.8;disc(q,x,y,s,rgr(q,x,y,s,[0,'rgba(255,200,150,.85)',.3,'rgba(255,100,90,.3)',1,'rgba(255,60,90,0)']));
+      q.lineWidth=Math.max(.005,px);q.strokeStyle='rgba(255,170,160,.5)';q.beginPath();q.moveTo(x-ca,y-sa);q.lineTo(x+ca,y+sa);q.stroke();disc(q,x,y,Math.max(.006,px),'rgba(255,245,225,1)');}
+    cosmoStar(q,u,NEB_C[0]+.02,NEB_C[1]-.015,.034,'205,222,255',6);cosmoStar(q,u,NEB_C[0]-.06,NEB_C[1]+.05,.022,'255,255,255',5);
+    for(const [x,y,s,cc] of NEB_STARS)cosmoStar(q,u,x,y,s,cc,7);q.globalCompositeOperation='source-over';},
   draw(g,c,r,k){const q=skinPx(g,r),rot=c.wob+T*.02;skinArt(g,this,c,r,rot);
-    if(q>10){g.globalCompositeOperation='lighter';for(let i=0;i<2;i++){const a=c.wob+i*2.6+T*.15;soft(g,c.x+Math.cos(a)*r*.42,c.y+Math.sin(a)*r*.42,r*.62,i?'90,200,255':'255,110,220',.22);}g.globalCompositeOperation='source-over';}
-    if(q>16)for(let i=0;i<5;i++){const a=i*2.399+rot,d=(.18+((i*.37)%1)*.62)*r;glint(g,c.x+Math.cos(a)*d,c.y+Math.sin(a)*d,r*(.07+.03*(i%2)),Math.sin(T*2.2+i*1.9+c.wob));}}},
+    if(q>10){g.globalCompositeOperation='lighter';for(let i=0;i<2;i++){const a=c.wob+i*2.6+T*.15;soft(g,c.x+Math.cos(a)*r*.42,c.y+Math.sin(a)*r*.42,r*.62,i?'90,200,255':'255,110,220',.13);}g.globalCompositeOperation='source-over';}
+    if(q>16){const cs=Math.cos(rot),sn=Math.sin(rot);for(let i=0;i<5;i++){const S=NEB_STARS[i];glint(g,c.x+(S[0]*cs-S[1]*sn)*r,c.y+(S[0]*sn+S[1]*cs)*r,r*S[2]*2.4,.55+.45*Math.sin(T*2.2+i*1.9+c.wob));}}}},
 {id:6,key:'magma',name:'Magma',price:500,base:[12,72,20],edge:'#260b04',edge2:'rgba(255,140,50,.55)',
   // cooled basalt crust split by cracks of lava that flare with each pulse, and embers lifting off
   bake(q){const R=prng(6);fillAll(q,rgr(q,0,0,1.2,[0,'#40190f',.6,'#2a100a',1,'#160705'],-.3,-.35,.1));
@@ -3170,19 +3260,15 @@ const PREMIUM=[
   draw(g,c,r,k,stain){const mv=Math.hypot(c.svx,c.svy)+1,nx=c.x-c.svx/mv*r*.12,ny=c.y-c.svy/mv*r*.12,ir=r*.5,K=stain||[200,25,60];skinArt(g,this,c,r,c.wob);
     g.drawImage(bake(g,'iris'+K,skinPx(g,ir)*2,this.iris,1,K),nx-ir,ny-ir,ir*2,ir*2);}},
 {id:13,key:'galaxy',name:'Galaxy',price:700,base:[250,60,14],edge:'#1b1242',edge2:'rgba(205,195,255,.5)',
-  // a barred spiral of thousands of stars, dust lanes and pink star-forming knots, turning slowly round a blazing core
-  bake(q,u){const R=prng(13);fillAll(q,rgr(q,0,0,1.2,[0,'#2a1c5c',.5,'#120b30',1,'#05030f']));
-    q.globalCompositeOperation='lighter';disc(q,0,0,.95,rgr(q,0,0,.95,[0,'rgba(255,220,180,.32)',.35,'rgba(150,120,255,.14)',1,'rgba(80,60,200,0)']));
-    for(let i=0;i<120;i++){const a=R()*TAU,d=.3+R()*.9;disc(q,Math.cos(a)*d,Math.sin(a)*d,.003+R()*.006,'rgba(255,255,255,.7)');}
-    for(let arm=0;arm<2;arm++)for(let i=0;i<80;i++){const t=i/80,a=arm*Math.PI+t*4.4,d=.07+t*.95,s=.28-t*.12,x=Math.cos(a)*d,y=Math.sin(a)*d,cc=t<.3?'255,215,170':'120,145,255';
-      disc(q,x,y,s,rgr(q,x,y,s,[0,`rgba(${cc},${(.13-t*.06).toFixed(3)})`,1,`rgba(${cc},0)`]));} // the arms' diffuse glow
-    for(let i=0;i<500;i++){const a=R()*TAU,d=Math.sqrt(R())*.95,x=Math.cos(a)*d,y=Math.sin(a)*d;disc(q,x,y,.003+R()*.005,`rgba(200,210,255,${(.15+R()*.35).toFixed(3)})`);} // the faint disc between the arms
-    for(let arm=0;arm<2;arm++)for(let i=0;i<9;i++){const t=.3+R()*.6,a=arm*Math.PI+t*4.4+(R()-.5)*.1,d=.07+t*.95,x=Math.cos(a)*d,y=Math.sin(a)*d,s=.035+R()*.03;disc(q,x,y,s,rgr(q,x,y,s,[0,'rgba(255,120,190,.5)',1,'rgba(255,120,190,0)']));} // star-forming knots
-    for(let arm=0;arm<2;arm++)for(let i=0;i<820;i++){const t=Math.pow(R(),.85),a=arm*Math.PI+t*4.4,d=.07+t*.95,sp=(R()+R()+R()-1.5)*.2*(.3+t),x=Math.cos(a)*d-Math.sin(a)*sp,y=Math.sin(a)*d+Math.cos(a)*sp,
-      s=.003+R()*.009*(1-t*.5),cc=t<.3?'255,232,200':R()<.12?'255,130,200':'175,195,255';disc(q,x,y,s*2.2,`rgba(${cc},${(.04+R()*.07).toFixed(3)})`);disc(q,x,y,s,`rgba(${cc},${(.35+R()*.55).toFixed(3)})`);}
-    q.globalCompositeOperation='source-over';q.save();q.translate(-6,0);q.shadowOffsetX=6*u;q.shadowBlur=.025*u;q.shadowColor='rgba(8,4,22,.42)';q.lineWidth=.05;q.strokeStyle='#000'; // soft dust lanes on the inner edge of each arm
-    for(let arm=0;arm<2;arm++){q.beginPath();for(let i=0;i<=40;i++){const t=i/40,a=arm*Math.PI+t*4.4-.24,d=.14+t*.85;i?q.lineTo(Math.cos(a)*d,Math.sin(a)*d):q.moveTo(Math.cos(a)*d,Math.sin(a)*d);}q.stroke();}q.restore();
-    q.globalCompositeOperation='lighter';disc(q,0,0,.36,rgr(q,0,0,.36,[0,'rgba(255,252,240,1)',.25,'rgba(255,220,170,.7)',1,'rgba(255,170,120,0)']));q.globalCompositeOperation='source-over';},
+  // a grand design spiral seen face on, turning: a golden bulge, blue arms of young star clusters edged by dark dust lanes, pink nebulae strung along them, far galaxies behind
+  bake(q,u){const R=prng(13),px=.7/u;fillAll(q,'#05040f');cosmoField(q,cosmoTex('galaxy',200,galaxyPx));q.globalCompositeOperation='lighter';
+    for(let i=0;i<120;i++){const x=(R()*2-1)*1.12,y=(R()*2-1)*1.12;if(Math.hypot(x,y)<.7)continue;disc(q,x,y,Math.max(.002+R()*R()*.008,px),`rgba(${COSMO_STAR[Math.floor(R()*R()*6)]},${(.3+R()*.6).toFixed(3)})`);} // stars of our own galaxy
+    for(const [x,y,a,s] of[[.8,-.6,.5,.04],[-.84,.5,-.9,.03],[.6,.82,1.9,.022]]){q.save();q.translate(x,y);q.rotate(a);q.scale(1,.38);disc(q,0,0,s,rgr(q,0,0,s,[0,'rgba(255,235,205,.6)',.4,'rgba(220,200,255,.2)',1,'rgba(200,190,255,0)']));q.restore();} // far galaxies
+    for(let i=0,n=0;i<2600&&n<480;i++){const x=(R()*2-1)*1.02,y=(R()*2-1)*1.02,F=galaxyField(x,y);if(F.arm<.38||F.dust>.25||F.r<.1)continue;n++; // young clusters on the arms
+      const s=Math.max(.002+R()*R()*R()*.01,px);if(R()<.12)disc(q,x,y,s*3.5,rgr(q,x,y,s*3.5,[0,'rgba(170,200,255,.35)',1,'rgba(170,200,255,0)']));disc(q,x,y,s,`rgba(${R()<.8?'190,212,255':'255,255,255'},${(.4+R()*.5).toFixed(3)})`);}
+    for(let i=0,n=0;i<1600&&n<30;i++){const x=(R()*2-1)*.95,y=(R()*2-1)*.95,F=galaxyField(x,y);if(F.arm<.5||F.cl<.56||F.dust>.3||F.r<.2)continue;n++; // pink nebulae where stars are forming
+      const s=.012+R()*.02;disc(q,x,y,s,rgr(q,x,y,s,[0,'rgba(255,205,230,.9)',.25,'rgba(255,90,170,.5)',1,'rgba(255,70,160,0)']));}
+    disc(q,0,0,.16,rgr(q,0,0,.16,[0,'rgba(255,250,235,.95)',.18,'rgba(255,225,170,.5)',1,'rgba(255,190,120,0)']));q.globalCompositeOperation='source-over';},
   draw(g,c,r,k){skinArt(g,this,c,r,T*.25+c.wob);},
   eye(g,c,r,nx,ny,sick){dot(g,c.x,c.y,r*.28,sick?'255,90,110':'255,225,180',.75+.15*Math.sin(T*2+c.wob));}},
 {id:14,key:'gilded',name:'Gilded',price:800,base:[46,92,54],edge:'#5e3a02',edge2:'rgba(255,246,200,.75)',
@@ -3200,22 +3286,27 @@ const PREMIUM=[
     const ph=((T*.32+c.wob*.1)%1.5)*2-1.5;if(Math.abs(ph)<1.1){g.beginPath();g.rect(c.x-r*1.2,c.y-r*1.2,r*2.4,r*2.4);g.save();g.translate(c.x+ph*r,c.y+ph*r);g.scale(r,r);g.fillStyle=grad(g,'gild_sh',m=>lgr(m,-.5,-.5,.5,.5,[0,'rgba(255,255,240,0)',.36,'rgba(255,255,240,0)',.5,'rgba(255,255,240,.55)',.64,'rgba(255,255,240,0)',1,'rgba(255,255,240,0)']));g.fill();g.restore();}
     glint(g,c.x-r*.42,c.y-r*.46,r*.2,Math.sin(T*3+c.wob));glint(g,c.x+r*.36,c.y+r*.6,r*.11,Math.sin(T*2.3+c.wob+2));glint(g,c.x-r*.03,c.y-r*.05,r*.09,Math.sin(T*1.7+c.wob+4));}},
 {id:15,key:'blackhole',name:'Black Hole',price:10000,base:[262,45,5],pupil:true,noGlint:true,edge:'#140b2a',edge2:'rgba(205,175,255,.45)',
-  // a hot accretion disc spinning round a shadow edged by a photon ring; its far side bent up over the top by gravity, starlight smeared into arcs
-  bake(q){const R=prng(15);fillAll(q,rgr(q,0,0,1.2,[0,'#000',.3,'#05020c',.62,'#150a2c',1,'#0b0620']));
-    q.globalCompositeOperation='lighter';disc(q,0,0,.8,rgr(q,0,0,.8,[0,'rgba(0,0,0,0)',.5,'rgba(0,0,0,0)',.62,'rgba(150,100,255,.2)',1,'rgba(90,60,200,0)']));
-    for(let i=0;i<120;i++){const d=.42+R()*.78,a=R()*TAU,L=.02+.5*Math.pow(.5/d,3)*R();q.lineWidth=.005+R()*.008;q.strokeStyle=`rgba(${R()<.3?'200,210,255':'255,255,255'},${(.35+R()*.55).toFixed(3)})`;q.beginPath();q.arc(0,0,d,a,a+L);q.stroke();}
-    q.lineWidth=.012;q.strokeStyle='rgba(220,200,255,.22)';q.beginPath();q.arc(0,0,.47,0,TAU);q.stroke();q.globalCompositeOperation='source-over';},
-  disk(q){const R=prng(151);disc(q,0,0,1,rgr(q,0,0,1,[0,'rgba(0,0,0,0)',.3,'rgba(0,0,0,0)',.33,'rgba(255,250,235,.95)',.46,'rgba(255,200,110,.85)',.68,'rgba(240,110,50,.5)',.88,'rgba(150,60,200,.2)',1,'rgba(90,30,170,0)']));
-    q.globalCompositeOperation='lighter';for(let i=0;i<170;i++){const rr=.34+Math.pow(R(),1.4)*.6,a=R()*TAU,L=.3+R()*1.2,hot=1-(rr-.34)/.6;q.lineWidth=.006+R()*.02;q.strokeStyle=`rgba(255,${Math.round(150+hot*100)},${Math.round(70+hot*160)},${(.08+R()*.22).toFixed(3)})`;q.beginPath();q.arc(0,0,rr,a,a+L);q.stroke();}
-    q.globalCompositeOperation='destination-out';for(let i=0;i<46;i++){const rr=.38+R()*.58,a=R()*TAU,L=.2+R()*.7;q.lineWidth=.008+R()*.016;q.strokeStyle=`rgba(0,0,0,${(.2+R()*.35).toFixed(3)})`;q.beginPath();q.arc(0,0,rr,a,a+L);q.stroke();}q.globalCompositeOperation='source-over';},
-  draw(g,c,r,k){const q=skinPx(g,r),tilt=-.32+Math.sin(c.wob)*.2,rot=T*.9+c.wob;skinArt(g,this,c,r,c.wob);g.lineCap='round';
-    for(let i=0,n=q>18?8:4;i<n;i++){const a0=rot*(1+(i%3)*.15)+i*.785,d0=r*(.6+((i*.618)%1)*.42);g.lineWidth=r*.022;g.strokeStyle=`rgba(${200+(i%2)*55},${120+(i%3)*40},255,${.3+((i*.37)%1)*.35})`;
-      g.beginPath();for(let s=0;s<=6;s++){const t=s/6,a=a0+t*1.5,d=d0*(1-t*.62);s?g.lineTo(c.x+Math.cos(a)*d,c.y+Math.sin(a)*d):g.moveTo(c.x+Math.cos(a)*d,c.y+Math.sin(a)*d);}g.stroke();}
-    g.save();g.translate(c.x,c.y);g.rotate(tilt);g.beginPath();g.ellipse(0,0,r*.42,r*.38,0,Math.PI*1.06,Math.PI*1.94);g.lineWidth=r*.1;g.strokeStyle='rgba(255,140,60,.3)';g.stroke();g.lineWidth=r*.035;g.strokeStyle='rgba(255,236,200,.85)';g.stroke();
-    g.scale(1,.3);g.rotate(T*.8+c.wob);g.drawImage(bake(g,'bh_disk',q*2,this.disk,1),-r*.98,-r*.98,r*1.96,r*1.96);g.restore();g.lineCap='butt';},
-  eye(g,c,r,nx,ny,sick){const tilt=-.32+Math.sin(c.wob)*.2;g.beginPath();g.arc(c.x,c.y,r*.27,0,TAU);g.fillStyle=sick?col(INF_C,-30,.9):'#000';g.fill();
-    g.lineWidth=r*.016;g.strokeStyle='rgba(255,238,210,.9)';g.beginPath();g.arc(c.x,c.y,r*.29,0,TAU);g.stroke();
-    g.save();g.translate(c.x,c.y);g.rotate(tilt);g.beginPath();g.rect(-r,0,2*r,r);g.clip();g.scale(1,.3);g.rotate(T*.8+c.wob);g.drawImage(bake(g,'bh_disk',skinPx(g,r)*2,this.disk,1),-r*.98,-r*.98,r*1.96,r*1.96);g.restore();}},
+  // a black hole as Interstellar drew one: a shadow edged by a thin photon ring, a hot disk seen nearly edge on and brighter on the side swinging toward us,
+  // the far side of the disk bent up over the top and under the bottom, starlight smeared into arcs round it; matter spirals in and is swallowed
+  bake(q,u){const R=prng(15),px=.7/u;fillAll(q,'#030108');cosmoField(q,cosmoTex('blackhole',192,holePx));q.globalCompositeOperation='lighter';q.lineCap='butt';
+    for(let i=0;i<200;i++){const a=R()*TAU,d=Math.sqrt(.12+R()*1.2),cc=COSMO_STAR[Math.floor(R()*R()*6)],al=(.3+R()*.6).toFixed(3);
+      if(d<.62&&R()<.6){const L=Math.min(1.4,.03+.55*Math.pow(BH_RS/d,3));q.lineWidth=Math.max(.003+R()*.004,px);q.strokeStyle=`rgba(${cc},${al})`;q.beginPath();q.arc(0,0,d,a-L/2,a+L/2);q.stroke(); // starlight bent into an arc
+        if(d<.6){q.globalAlpha=.4;q.beginPath();q.arc(0,0,BH_RP+.02+(.6-d)*.12,a+Math.PI-L/3,a+Math.PI+L/3);q.stroke();q.globalAlpha=1;}} // and the star's faint second image across the hole
+      else disc(q,Math.cos(a)*d,Math.sin(a)*d,Math.max(.002+R()*R()*.007,px),`rgba(${cc},${al})`);}
+    for(const [w,cl] of[[.032,'rgba(255,170,90,.2)'],[.012,'rgba(255,220,170,.5)'],[Math.max(.0045,px),'rgba(255,250,235,.95)']]){q.lineWidth=w;q.strokeStyle=cl; // the photon ring, broken where the disk crosses it
+      q.beginPath();q.arc(0,0,BH_RP,Math.PI+.07,TAU-.07);q.stroke();q.beginPath();q.arc(0,0,BH_RP,.3,Math.PI-.3);q.stroke();}
+    q.save();q.translate(0,BH_YB);q.scale(1,BH_SQ);q.lineWidth=.016; // fine streaks of hot gas in the disk, none on the far half where the shadow hides it
+    for(let i=0;i<120;i++){const rr=.38+Math.pow(R(),1.6)*.75,a=R()*TAU,L=.25+R()*.9,hot=Math.exp(-(rr-.38)*2.5),al=(.12+R()*.3)*(1-.6*Math.cos(a+L/2));let ok=true;
+      for(let s=0;s<=4&&ok;s++){const b=a+L*s/4,Y=Math.sin(b)*rr;if(Y<0&&Math.hypot(Math.cos(b)*rr,BH_YB+Y*BH_SQ)<BH_RS+.01)ok=false;}
+      if(ok){q.strokeStyle=`rgba(255,${Math.round(170+hot*80)},${Math.round(90+hot*140)},${Math.min(1,al).toFixed(3)})`;q.beginPath();q.arc(0,0,rr,a,a+L);q.stroke();}}
+    q.restore();q.globalCompositeOperation='source-over';},
+  draw(g,c,r,k){const q=skinPx(g,r),tilt=-.2+Math.sin(c.wob)*.12;skinArt(g,this,c,r,tilt);if(q<12)return;
+    const n=q>24?7:4,cs=Math.cos(tilt),sn=Math.sin(tilt),P=PT2;g.beginPath(); // matter spiralling in along the disk, faster and hotter as it falls, gone behind the shadow
+    for(let i=0;i<n;i++){const ph=(T*.11+i/n+c.wob*.37)%1,d=1-ph*.62,a=i*2.4+c.wob+ph*ph*9;if(holeAt(c,r,cs,sn,a,d))continue;g.moveTo(P[0],P[1]);for(let s=1;s<=3;s++){holeAt(c,r,cs,sn,a-s*.16,d+s*.02);g.lineTo(P[0],P[1]);}}
+    g.lineCap='round';g.lineWidth=r*.014;g.strokeStyle='rgba(255,215,165,.45)';g.stroke();g.lineCap='butt';
+    for(let i=0;i<n;i++){const ph=(T*.11+i/n+c.wob*.37)%1,d=1-ph*.62,a=i*2.4+c.wob+ph*ph*9;if(holeAt(c,r,cs,sn,a,d))continue;dot(g,P[0],P[1],r*.05*(.6+ph*.6),'255,222,175',(.35+.65*ph)*(.7-.3*Math.cos(a)));}},
+  eye(g,c,r,nx,ny,sick){if(sick){g.beginPath();g.arc(c.x,c.y,r*BH_RS*.9,0,TAU);g.fillStyle=col(INF_C,-30,.9);g.fill();}
+    const tilt=-.2+Math.sin(c.wob)*.12;g.globalAlpha=.4+.3*Math.sin(T*2.6+c.wob);g.beginPath();g.arc(c.x,c.y,r*BH_RP,tilt+Math.PI+.25,tilt+TAU-.25);g.lineWidth=r*.012;g.strokeStyle='#fff3dc';g.stroke();g.globalAlpha=1;}},
 {id:16,key:'onering',name:'One Cell to Rule Them All',price:12000000,base:[42,92,46],pupil:true,noGlint:true,edge:'#3a1904',edge2:'rgba(255,205,100,.6)',
   // obsidian veined with lava, a band of molten gold with script burning across it, an eye of flame, and beyond the membrane a sigil of
   // orbiting runes, god rays, lightning off the band, flame satellites, a shockwave every few seconds, embers and a fire trail when it moves
@@ -3299,24 +3390,27 @@ const PREMIUM=[
     g.lineCap='butt';
   }},
 {id:17,key:'aurora',name:'Aurora',price:900,base:[226,62,14],edge:'#0a1a36',edge2:'rgba(130,255,200,.5)',
-  // curtains of northern light rippling over a starry sky, above snowy peaks, pines and a lake that catches the glow
-  bake(q){const R=prng(17);fillAll(q,lgr(q,0,-1.15,0,1.15,[0,'#040818',.42,'#081a34',.6,'#0f3448',.7,'#0b2236',1,'#04070f']));
-    for(let i=0;i<120;i++){const x=(R()*2-1)*1.15,y=-1.15+R()*1.45,s=.003+R()*R()*.012;disc(q,x,y,s,`rgba(255,255,255,${(.35+R()*.65).toFixed(3)})`);}
-    q.fillStyle=lgr(q,0,.0,0,.42,[0,'rgba(90,255,190,0)',1,'rgba(90,255,190,.16)']);q.fillRect(-1.2,0,2.4,.42);
-    const M=[[-1.2,.46],[-.86,.22],[-.62,.38],[-.36,.14],[-.06,.36],[.22,.18],[.5,.34],[.78,.1],[1.2,.4]];q.beginPath();q.moveTo(-1.2,1.2);for(const [x,y] of M)q.lineTo(x,y);q.lineTo(1.2,1.2);q.closePath();q.fillStyle=lgr(q,0,.1,0,.7,[0,'#12253a',1,'#060c16']);q.fill();
-    q.fillStyle='rgba(175,255,225,.3)';for(let i=1;i<M.length-1;i++){const [x,y]=M[i];if(M[i-1][1]>y&&M[i+1][1]>y){q.beginPath();q.moveTo(x,y);q.lineTo(x-.1,y+.09);q.lineTo(x-.04,y+.065);q.lineTo(x+.01,y+.1);q.lineTo(x+.06,y+.06);q.closePath();q.fill();}}
-    q.fillStyle='#02060c';for(let i=0;i<34;i++){const x=-1.18+i*.072+R()*.03,h=.09+R()*.13,y=.63+R()*.03;q.beginPath();q.moveTo(x,y-h);q.lineTo(x+h*.3,y);q.lineTo(x-h*.3,y);q.closePath();q.fill();}
-    q.fillRect(-1.2,.64,2.4,.6);q.fillStyle=lgr(q,0,.66,0,1.1,[0,'rgba(90,240,200,.2)',1,'rgba(90,240,200,0)']);q.fillRect(-1.2,.66,2.4,.5);
-    q.strokeStyle='rgba(160,255,230,.18)';q.lineWidth=.008;q.beginPath();for(let i=0;i<9;i++){const y=.7+i*.045,x=(R()-.5)*1.4,w=.1+R()*.3;q.moveTo(x-w,y);q.lineTo(x+w,y);}q.stroke();},
-  draw(g,c,r,k){const q=skinPx(g,r),hi=q>26,C=['120,255,180','80,220,255','190,130,255'];skinArt(g,this,c,r,0);g.globalCompositeOperation='lighter';g.lineCap='round';
-    for(let b=0;b<3;b++){const y0=c.y-r*.52+b*r*.19,sh=.16+.08*Math.sin(T*1.3+b*2),f1=T*(1+b*.3)+c.wob+b*2,f2=-T*1.7+b,wv=t=>y0+Math.sin(t*5+f1)*r*.11+Math.sin(t*11+f2)*r*.03;
-      // the curtain: light rising off a bright lower edge and fading upward, its height rippling along the fold
-      g.fillStyle=`rgba(${C[b]},${(sh*.55).toFixed(3)})`;for(const L of hi?[1,.6,.3]:[1,.45]){g.beginPath();for(let s=0;s<=16;s++){const t=s/16;g.lineTo(c.x-r*1.05+t*r*2.1,wv(t)+r*.02);}
-        for(let s=16;s>=0;s--){const t=s/16;g.lineTo(c.x-r*1.05+t*r*2.1,wv(t)-r*L*(.3+.13*Math.sin(t*7+T*.9+b*2.4+L*3)+.06*Math.sin(t*17-T*1.3+b)));}g.fill();} // stacked: brightest at the lower edge, fading upward
-      if(hi){g.beginPath();for(let s=0;s<24;s++){const t=(s+.5+.4*Math.sin(s*3.7+b))/24,x=c.x-r*1.05+t*r*2.1,y=wv(t);g.moveTo(x,y);g.lineTo(x,y-r*(.1+.22*(.5+.5*Math.sin(s*2.3+b*1.9+T*.7))));}g.lineWidth=r*.014;g.strokeStyle=`rgba(${C[b]},.12)`;g.stroke();}
-      g.beginPath();for(let s=0;s<=16;s++){const t=s/16;s?g.lineTo(c.x-r*1.05+t*r*2.1,wv(t)):g.moveTo(c.x-r*1.05,wv(0));}
-      g.lineWidth=r*.07;g.strokeStyle=`rgba(${C[b]},${sh.toFixed(3)})`;g.stroke();g.lineWidth=r*.016;g.strokeStyle=`rgba(${C[b]},.85)`;g.stroke();}
-    g.globalCompositeOperation='source-over';g.lineCap='butt';}},
+  // the northern lights over a winter lake: curtains of green light with rays and pink upper fringes rippling across a sky of stars, the Milky Way
+  // and a thin moon, above snow-capped peaks and dark spruces, all mirrored in the still water, the lights shimmering in it too
+  bake(q,u){const R=prng(17),px=.7/u;fillAll(q,'#020611');cosmoField(q,cosmoTex('aurora',128,auroraPx));q.globalCompositeOperation='lighter'; // sky, Milky Way, lake
+    for(let i=0;i<170;i++){const t=R()*2-1,o=(R()+R()-1)*.16,x=.05+Math.cos(-.55)*t*1.3-Math.sin(-.55)*o,y=-.42+Math.sin(-.55)*t*1.3+Math.cos(-.55)*o;disc(q,x,y,Math.max(.0018+R()*.003,px*.8),`rgba(220,225,255,${(.15+R()*.35).toFixed(3)})`);}
+    for(let i=0;i<190;i++){const x=(R()*2-1)*1.12,y=-1.15+R()*(AUR_W+1.05),s=.002+R()*R()*.008;disc(q,x,y,Math.max(s,px),`rgba(${COSMO_STAR[Math.floor(R()*R()*6)]},${(.35+R()*.6).toFixed(3)})`);}
+    for(let i=0;i<7;i++){const x=(R()*2-1)*.8,y=-.95+R()*.6,s=.012+R()*.01;disc(q,x,y,s,rgr(q,x,y,s,[0,'rgba(255,255,255,.95)',.25,'rgba(210,225,255,.3)',1,'rgba(200,220,255,0)']));}
+    disc(q,.52,-.6,.16,rgr(q,.52,-.6,.16,[0,'rgba(255,250,225,.25)',1,'rgba(255,250,225,0)']));q.beginPath();q.arc(.52,-.6,.055,-1.9,1.9);q.arc(.545,-.6,.048,1.85,-1.85,true);q.closePath();q.fillStyle='rgba(255,250,228,.95)';q.fill(); // a thin moon
+    q.globalCompositeOperation='source-over';q.save();q.beginPath();q.rect(-1.2,AUR_W,2.4,.8);q.clip();q.translate(0,2*AUR_W);q.scale(1,-1);q.globalAlpha=.5;auroraLand(q,prng(171));q.restore(); // the land mirrored in the lake
+    q.globalCompositeOperation='lighter';
+    for(let i=0;i<46;i++){const y=AUR_W+.02+Math.pow(R(),1.4)*.66,x=(R()*2-1)*1.1,w=.04+R()*.25;q.fillStyle=`rgba(${R()<.6?'150,255,215':'200,230,255'},${(.05+R()*.14).toFixed(3)})`;q.fillRect(x-w,y,w*2,Math.max(.004,px));} // ripples
+    for(let i=0;i<9;i++){const y=AUR_W+.03+i*.035,w=.03+R()*.03;q.fillStyle='rgba(255,250,225,.3)';q.fillRect(.52-w,y,w*2,Math.max(.005,px));} // the moon's path on the water
+    q.globalCompositeOperation='source-over';auroraLand(q,prng(171));},
+  curtain:auroraCurtain,
+  reflect(q,u){q.scale(1,-1);auroraCurtain(q,u);},
+  draw(g,c,r,k){const q=skinPx(g,r);skinArt(g,this,c,r,0);if(q<8)return;const hi=q>26,n=hi?8:5,cur=bake(g,'aurora_cur',q*2.2,this.curtain,1),W=cur.width,sw=W/n,dw=r*2.2/n,x0=c.x-r*1.1;
+    g.globalCompositeOperation='lighter';
+    for(let b=hi?1:0;b>=0;b--){const yb=b?-.52:-.2,tl=b?.24:-.26,H=(b?.36:.48)*r*1.25,f1=T*(.9+b*.3)+c.wob+b*2;g.globalAlpha=(b?.55:.9)*(.85+.15*Math.sin(T*1.3+b*2));let e0=yb-tl*.5+Math.sin(f1)*.1+Math.sin(-T*1.4+b)*.03;
+      for(let s=0;s<n;s++){const t=(s+1)/n,e1=yb+(t-.5)*tl+Math.sin(t*5+f1)*.1+Math.sin(t*11-T*1.4+b)*.03,h=H*(1+.3*Math.sin((t-.5/n)*7+T*.7+b*2.4)); // each curtain in strips, sheared so the lower edge runs on unbroken as it ripples
+        g.save();g.translate(x0+s*dw,c.y+e0*r);g.transform(1,(e1-e0)*r/dw,0,1,0,0);g.drawImage(cur,s*sw,0,sw,W,0,-h*.8,dw,h);g.restore();e0=e1;}}
+    if(hi){const ref=bake(g,'aurora_ref',q*2.2,this.reflect,1);g.globalAlpha=.2;for(let s=0;s<n;s+=2)g.drawImage(ref,s*sw,0,sw*2,W,x0+s*dw+Math.sin(T*2+s)*r*.012,c.y+AUR_W*r-r*.1,dw*2,r*.5);} // and in the lake
+    g.globalAlpha=1;g.globalCompositeOperation='source-over';}},
 {id:18,key:'koi',name:'Koi',price:500,base:[194,46,32],edge:'#0b3550',edge2:'rgba(190,250,255,.5)',
   // two koi circling a clear pond, sunlight netting the pebbles below, past lily pads and a lotus in flower
   bake(q,u){const R=prng(18);fillAll(q,rgr(q,0,0,1.2,[0,'#38adbf',.45,'#1c7590',.8,'#0e4865',1,'#072a42'],-.15,-.2,0));
@@ -3346,19 +3440,29 @@ const PREMIUM=[
       g.save();g.translate(x,y);g.rotate(a+Math.PI/2);g.save();g.translate(-L*.46,0);g.rotate(wag);const tl=bake(g,'koi_t'+i,skinPx(g,L*.55)*2,this.tail,1,i);g.drawImage(tl,-L*.55,-L*.55,L*1.1,L*1.1);g.restore();
       g.rotate(-wag*.15);g.drawImage(bake(g,'koi_f'+i,q*.62,this.fish,1,i),-L*.62,-L*.62,L*1.24,L*1.24);g.restore();}}},
 {id:19,key:'plasma',name:'Plasma',price:1200,base:[282,72,12],edge:'#1e0634',edge2:'rgba(230,160,255,.55)',
-  // a plasma globe: dark glass round an electrode, filaments flickering out to the membrane where they bloom
-  bake(q){fillAll(q,rgr(q,0,0,1.15,[0,'#3c0e5e',.45,'#24073c',.85,'#13021f',1,'#0a0114']));
-    q.globalCompositeOperation='lighter';disc(q,0,0,.6,rgr(q,0,0,.6,[0,'rgba(210,100,255,.25)',1,'rgba(210,100,255,0)']));q.globalCompositeOperation='source-over';
-    q.lineWidth=.07;q.strokeStyle='rgba(255,255,255,.1)';q.beginPath();q.arc(0,0,.84,3.55,4.65);q.stroke();q.lineWidth=.025;q.strokeStyle='rgba(255,255,255,.22)';q.beginPath();q.arc(0,0,.84,3.7,4.4);q.stroke();
-    q.lineWidth=.03;q.strokeStyle='rgba(220,160,255,.1)';q.beginPath();q.arc(0,0,.8,.3,1.3);q.stroke();},
-  draw(g,c,r,k){const H=hash,fr=Math.floor(T*14),q=skinPx(g,r),n=q>22?7:5;skinArt(g,this,c,r,0);g.globalCompositeOperation='lighter';g.lineCap='round';g.lineJoin='round';
-    for(let i=0;i<n;i++){const a=c.wob+i*TAU/n*.98+Math.sin(T*.8+i*1.7)*.55,ca=Math.cos(a),sa=Math.sin(a);
-      g.beginPath();g.moveTo(c.x+ca*r*.1,c.y+sa*r*.1);for(let s=1;s<=6;s++){const d=r*(.1+s*.15),j=s<6?(H(fr*7+i*31+s)-.5)*r*.16:0;g.lineTo(c.x+ca*d-sa*j,c.y+sa*d+ca*j);}
-      g.lineWidth=r*.075;g.strokeStyle='rgba(170,60,255,.22)';g.stroke();g.lineWidth=r*.022;g.strokeStyle='rgba(255,210,255,.9)';g.stroke();
-      dot(g,c.x+ca*r*.98,c.y+sa*r*.98,r*.2,'230,140,255',.6+.4*H(fr+i));}
+  // a plasma globe: thin violet gas in a glass sphere round a glowing electrode, tendrils of light forking out from it with white-hot cores and blooming
+  // where they touch the glass; the glass bends light into a bright rim and a caustic, and a window of the room is caught in its curve
+  bake(q,u){const R=prng(19),px=.7/u;fillAll(q,'#070112');cosmoField(q,cosmoTex('plasma',160,plasmaPx));q.globalCompositeOperation='lighter'; // the gas, glowing round the electrode, and the glass bending light into a bright rim and a caustic
+    q.lineCap='round';for(let i=0;i<26;i++){let a=R()*TAU,d=.15,x=Math.cos(a)*d,y=Math.sin(a)*d;q.lineWidth=.015+R()*.05;q.strokeStyle=`rgba(${R()<.5?'190,110,255':'255,120,220'},${(.025+R()*.045).toFixed(3)})`;q.beginPath();q.moveTo(x,y); // old discharge paths, faint in the gas
+      for(let s=0;s<8;s++){a+=(R()-.5)*.5;d+=.1;x=Math.cos(a)*d;y=Math.sin(a)*d;q.lineTo(x,y);}q.stroke();}
+    for(let i=0;i<90;i++){const a=R()*TAU,d=Math.sqrt(R())*.9;disc(q,Math.cos(a)*d,Math.sin(a)*d,Math.max(.002+R()*R()*.006,px),`rgba(240,200,255,${(.15+R()*.4).toFixed(3)})`);} // glints in the gas
+    q.save();q.translate(-.44,-.5);q.rotate(-.42);q.scale(1,.72);for(const [x,y,w,h] of[[-.15,-.1,.13,.09],[.01,-.1,.13,.09],[-.15,.012,.13,.09],[.01,.012,.13,.09]]){rrect(q,x,y,w,h,.02);q.fillStyle='rgba(255,240,255,.085)';q.fill();} // a window of the room, four panes
+    q.restore();q.lineWidth=.016;q.strokeStyle='rgba(255,230,255,.2)';q.beginPath();q.arc(0,0,.9,3.5,4.5);q.stroke();q.globalCompositeOperation='source-over';},
+  core(q){disc(q,0,0,1,rgr(q,0,0,1,[0,'rgba(255,235,255,.95)',.2,'rgba(240,150,255,.7)',.42,'rgba(190,80,255,.22)',1,'rgba(150,50,255,0)'])); // the electrode: a small glass ball lit from inside
+    disc(q,0,0,.4,rgr(q,-.08,-.1,.48,[0,'#ffffff',.3,'#f6d2ff',.65,'#b45ef0',1,'#4c1688']));q.lineWidth=.025;q.strokeStyle='rgba(255,255,255,.35)';
+    for(let i=0;i<3;i++){q.beginPath();q.arc(.02,.03,.12+i*.08,i*1.9,i*1.9+2.2);q.stroke();}q.lineWidth=.03;q.strokeStyle='rgba(255,215,255,.7)';q.beginPath();q.arc(0,0,.4,0,TAU);q.stroke();
+    q.beginPath();q.ellipse(-.14,-.17,.1,.05,-.7,0,TAU);q.fillStyle='rgba(255,255,255,.9)';q.fill();},
+  draw(g,c,r,k){const H=hash,fr=Math.floor(T*14),q=skinPx(g,r),n=q>22?7:5,mv=Math.hypot(c.svx,c.svy)+1,ex=c.x-c.svx/mv*r*.048,ey=c.y-c.svy/mv*r*.048,E=PLASMA_END;skinArt(g,this,c,r,0);
+    g.beginPath(); // every tendril and its fork in one path, stroked three times: violet glow, pink body, white-hot core
+    for(let i=0;i<n;i++){const a=c.wob+i*TAU/n*.98+Math.sin(T*.8+i*1.7)*.55,ca=Math.cos(a),sa=Math.sin(a),sw=Math.sin(T*1.3+i*2.1)*r*.12;let x=ex+ca*r*.12,y=ey+sa*r*.12;g.moveTo(x,y);
+      for(let s=1;s<=7;s++){const t=s/7,d=r*(.12+t*.82),j=(H(fr*7+i*31+s)-.5)*r*.1*t+sw*Math.sin(t*3.1);x=ex+ca*d-sa*j;y=ey+sa*d+ca*j;g.lineTo(x,y);
+        if(s===4&&q>16){const b=a+(H(fr*3+i*7)<.5?.5:-.5),cb=Math.cos(b),sb=Math.sin(b);for(let m=1;m<=3;m++){const dd=r*.12*m,jj=(H(fr*11+i*5+m)-.5)*r*.07;g.lineTo(x+cb*dd-sb*jj,y+sb*dd+cb*jj);}g.moveTo(x,y);}}
+      E[i*2]=x;E[i*2+1]=y;}
+    g.globalCompositeOperation='lighter';g.lineCap=g.lineJoin='round';g.lineWidth=r*.075;g.strokeStyle='rgba(165,60,255,.22)';g.stroke();g.lineWidth=r*.028;g.strokeStyle='rgba(235,120,255,.6)';g.stroke();g.lineWidth=r*.012;g.strokeStyle='rgba(255,245,255,.95)';g.stroke();
+    for(let i=0;i<n;i++)dot(g,E[i*2],E[i*2+1],r*.17,'235,140,255',.55+.45*H(fr+i)); // blooms on the glass
     g.globalCompositeOperation='source-over';g.lineCap='butt';g.lineJoin='miter';},
-  eye(g,c,r,nx,ny,sick){const p=1+.12*Math.sin(T*9+c.wob);g.beginPath();g.arc(nx,ny,r*.3*p,0,TAU);fillUnit(g,grad(g,'plasma0',q=>{const u=q.createRadialGradient(0,0,0,0,0,1);u.addColorStop(0,'rgba(255,255,255,1)');u.addColorStop(.3,'rgba(255,190,255,.95)');u.addColorStop(.65,'rgba(200,90,255,.45)');u.addColorStop(1,'rgba(160,50,255,0)');return u;}),nx,ny,r*.3*p);
-    if(sick){g.beginPath();g.arc(nx,ny,r*.12,0,TAU);g.fillStyle=col(INF_C,-30,.9);g.fill();}}},
+  eye(g,c,r,nx,ny,sick){const p=1+.08*Math.sin(T*9+c.wob),s=r*.36*p,ex=c.x+(nx-c.x)*.4,ey=c.y+(ny-c.y)*.4;g.drawImage(bake(g,'plasma_core',skinPx(g,s)*2,this.core,1),ex-s,ey-s,2*s,2*s);
+    if(sick){g.beginPath();g.arc(ex,ey,r*.12,0,TAU);g.fillStyle=col(INF_C,-30,.9);g.fill();}}},
 {id:20,key:'geode',name:'Geode',price:2500,base:[268,26,40],edge:'#2c2631',
   // cracked open: a rough rind, fine agate banding, a sparkling quartz lip and a cavity packed with amethyst points
   bake(q,u){const R=prng(20);fillAll(q,rgr(q,0,0,1.2,[0,'#6e6672',1,'#3d3540']));
@@ -3402,48 +3506,59 @@ const PREMIUM=[
     for(let i=0;i<n;i++){const sp=.07+((i*.37)%1)*.06,ph=(T*sp+i*.143+c.wob*.05)%1,x=c.x-r*1.1+ph*r*2.2,y=c.y-r*.9+((i*.618)%1)*r*1.6+Math.sin(T*1.5+i*2)*r*.12+ph*r*.3;
       g.save();g.translate(x,y);g.rotate(T*1.4+i*2);g.scale(1,.55+.45*Math.sin(T*2.1+i));g.drawImage(img,-s,-s,2*s,2*s);g.restore();}}},
 {id:22,key:'supernova',name:'Supernova',price:6000,base:[22,96,50],noGlint:true,edge:'#7c2005',edge2:'rgba(255,232,170,.7)',
-  // a star in its final blaze: boiling granulated plasma with sunspots, a streaming corona, flares and prominences, a shock ring every few seconds
+  // a star blown apart: a shock shell of knotted gold and oxygen-teal filaments racing outward, a web of ejecta and blue glow inside it round the
+  // blazing core, the corona streaming past the membrane, clumps of debris flung off and a shock ring every few seconds
   aura(g,c,r,k,sr,lead){
     const p=.5+.5*Math.sin(T*2.2+c.wob);g.beginPath();g.arc(c.x,c.y,r*2.05,0,TAU);fillUnit(g,grad(g,'nova_c',q=>{const u=q.createRadialGradient(0,0,.85,0,0,1.85);u.addColorStop(0,'rgba(255,205,100,.55)');u.addColorStop(.3,'rgba(255,120,40,.24)');u.addColorStop(1,'rgba(255,60,20,0)');return u;}),c.x,c.y,r*(1+.06*p));
-    if(sr>14){const img=bake(g,'nova_rays',skinPx(g,r)*4.2,this.rays,2.1);g.globalAlpha=.85;blit(g,img,c.x,c.y,r,T*.05+c.wob,2.1);if(lead&&sr>24){g.globalAlpha=.5;blit(g,img,c.x,c.y,r*1.07,-T*.035+c.wob+.4,2.1);}g.globalAlpha=1;
-      const n=lead?16:10,two=g!==ctx||sr>40;for(let i=0;i<n;i++){const a=i*TAU/n+T*.1+c.wob+Math.sin(T*1.7+i*2.1)*.06,fl=.5+.5*Math.sin(T*3.1+i*2.3),ca=Math.cos(a),sa=Math.sin(a),
-        h=r*(1.1+.26*fl*(i%3?1:1.7)),w=r*(.09+.03*fl),bx=c.x+ca*r*.9,by=c.y+sa*r*.9,sw=Math.sin(T*4+i)*r*.05;
-        const tongue=(h,w,fill)=>{g.beginPath();g.moveTo(bx-sa*w,by+ca*w);g.quadraticCurveTo(c.x+ca*h*.8-sa*w*.6,c.y+sa*h*.8+ca*w*.6,c.x+ca*h-sa*sw,c.y+sa*h+ca*sw);g.quadraticCurveTo(c.x+ca*h*.8+sa*w*.6,c.y+sa*h*.8-ca*w*.6,bx+sa*w,by-ca*w);g.closePath();g.fillStyle=fill;g.fill();};
-        tongue(h,w,`rgba(255,${Math.round(110+fl*90)},${Math.round(30+fl*50)},${(.45+.35*fl).toFixed(3)})`);if(two)tongue(r+(h-r)*.7,w*.45,`rgba(255,240,${Math.round(170+fl*60)},${(.5+.4*fl).toFixed(3)})`);}}
-    if(lead&&sr>24){g.lineCap='round';for(let i=0;i<2;i++){const a=T*.08+c.wob+i*2.8,sp=.32,h=r*(1.2+.1*Math.sin(T*1.1+i*3)); // prominences: glowing loops arching off the surface
-        g.beginPath();g.moveTo(c.x+Math.cos(a-sp)*r*.95,c.y+Math.sin(a-sp)*r*.95);g.bezierCurveTo(c.x+Math.cos(a-sp*.9)*h*1.3,c.y+Math.sin(a-sp*.9)*h*1.3,c.x+Math.cos(a+sp*.9)*h*1.3,c.y+Math.sin(a+sp*.9)*h*1.3,c.x+Math.cos(a+sp)*r*.95,c.y+Math.sin(a+sp)*r*.95);
-        g.lineWidth=r*.09;g.strokeStyle='rgba(255,110,40,.35)';g.stroke();g.lineWidth=r*.035;g.strokeStyle='rgba(255,225,160,.85)';g.stroke();}g.lineCap='butt';}
-    if(lead){const ph=(T*.45+c.wob*.03)%1;g.beginPath();g.arc(c.x,c.y,r*(1+ph*1.1),0,TAU);g.lineWidth=r*.05*(1-ph);g.strokeStyle=`rgba(255,225,170,${(.55*(1-ph)).toFixed(3)})`;g.stroke();}},
-  rays(q){const R=prng(221);q.globalCompositeOperation='lighter';for(let i=0;i<110;i++){const a=R()*TAU,L=1.2+Math.pow(R(),2)*.9,w=.008+R()*.03;q.beginPath();q.moveTo(Math.cos(a-w)*.9,Math.sin(a-w)*.9);q.lineTo(Math.cos(a)*L,Math.sin(a)*L);q.lineTo(Math.cos(a+w)*.9,Math.sin(a+w)*.9);q.closePath();
-      q.fillStyle=rgr(q,0,0,L,[0,'rgba(255,230,160,0)',.9/L,`rgba(255,${Math.round(180+R()*60)},120,${(.18+R()*.22).toFixed(3)})`,1,'rgba(255,120,40,0)']);q.fill();}q.globalCompositeOperation='source-over';},
-  bake(q){const R=prng(22);fillAll(q,rgr(q,0,0,1,[0,'#fffbe6',.35,'#ffd66b',.7,'#ff8a24',.92,'#d8460c',1,'#9a2406']));
-    for(let i=0;i<700;i++){const a=R()*TAU,d=Math.sqrt(R())*1.1,x=Math.cos(a)*d,y=Math.sin(a)*d,s=.02+R()*.03;disc(q,x,y,s,`rgba(150,40,0,${(.1+R()*.12).toFixed(3)})`);}
-    q.globalCompositeOperation='lighter';for(let i=0;i<900;i++){const a=R()*TAU,d=Math.sqrt(R())*1.1,x=Math.cos(a)*d,y=Math.sin(a)*d,s=.012+R()*.026;disc(q,x,y,s,rgr(q,x,y,s,[0,`rgba(255,245,200,${(.16+R()*.16).toFixed(3)})`,1,'rgba(255,220,150,0)']));}
-    for(let i=0;i<10;i++){const a=R()*TAU,d=.75+R()*.2,x=Math.cos(a)*d,y=Math.sin(a)*d,s=.08+R()*.08;disc(q,x,y,s,rgr(q,x,y,s,[0,'rgba(255,250,210,.3)',1,'rgba(255,250,210,0)']));}
-    q.globalCompositeOperation='source-over';
-    for(const [x,y,s] of[[.42,-.3,.075],[-.35,.45,.055]]){q.lineWidth=.008;q.strokeStyle='rgba(120,35,0,.45)';q.beginPath();for(let i=0;i<24;i++){const a=i/24*TAU;q.moveTo(x+Math.cos(a)*s*.6,y+Math.sin(a)*s*.6);q.lineTo(x+Math.cos(a)*s*1.6,y+Math.sin(a)*s*1.6);}q.stroke();
-      disc(q,x,y,s*1.5,rgr(q,x,y,s*1.5,[0,'rgba(110,30,0,.6)',.6,'rgba(150,45,0,.45)',1,'rgba(150,45,0,0)']));disc(q,x,y,s*.6,'rgba(45,10,0,.88)');}
-    disc(q,0,0,1.15,rgr(q,0,0,1.02,[0,'rgba(140,20,0,0)',.7,'rgba(140,20,0,0)',1,'rgba(140,20,0,.45)']));},
-  draw(g,c,r,k){const q=skinPx(g,r);skinArt(g,this,c,r,T*.04+c.wob);if(q>18){g.globalAlpha=.35;skinArt(g,this,c,r,-T*.03+c.wob+1.7);g.globalAlpha=1;}},
-  eye(g,c,r,nx,ny,sick){const p=1+.1*Math.sin(T*6+c.wob);g.beginPath();g.arc(nx,ny,r*.38*p,0,TAU);fillUnit(g,grad(g,'nova1',q=>{const u=q.createRadialGradient(0,0,0,0,0,1);u.addColorStop(0,'rgba(255,255,255,1)');u.addColorStop(.35,'rgba(255,252,225,.9)');u.addColorStop(1,'rgba(255,230,150,0)');return u;}),nx,ny,r*.38*p);
+    if(sr>14){const img=bake(g,'nova_rays',skinPx(g,r)*4.2,this.rays,2.1);g.globalAlpha=.85;blit(g,img,c.x,c.y,r,T*.05+c.wob,2.1);if(lead&&sr>24){g.globalAlpha=.5;blit(g,img,c.x,c.y,r*1.07,-T*.035+c.wob+.4,2.1);}
+      const n=lead?16:10,two=g!==ctx||sr>40;for(let i=0;i<n;i++){const a=i*TAU/n+T*.1+c.wob+Math.sin(T*1.7+i*2.1)*.06,fl=.5+.5*Math.sin(T*3.1+i*2.3),ca=Math.cos(a),sa=Math.sin(a), // tongues of the corona
+        h=r*(1.1+.26*fl*(i%3?1:1.7)),w=r*(.06+.025*fl),bx=c.x+ca*r*.9,by=c.y+sa*r*.9,sw=Math.sin(T*4+i)*r*.05;
+        for(let j=two?1:0;j>=0;j--){const hh=j?r+(h-r)*.7:h,ww=j?w*.45:w;g.beginPath();g.moveTo(bx-sa*ww,by+ca*ww);g.quadraticCurveTo(c.x+ca*hh*.8-sa*ww*.6,c.y+sa*hh*.8+ca*ww*.6,c.x+ca*hh-sa*sw,c.y+sa*hh+ca*sw);
+          g.quadraticCurveTo(c.x+ca*hh*.8+sa*ww*.6,c.y+sa*hh*.8-ca*ww*.6,bx+sa*ww,by-ca*ww);g.closePath();g.fillStyle=j?'#fff0c8':'#ff9a3c';g.globalAlpha=j?.45+.35*fl:.34+.3*fl;g.fill();}}
+      g.globalAlpha=1;}
+    if(lead&&sr>24)for(let i=0;i<4;i++){const ph=(T*.32+i*.25+c.wob*.1)%1,a=c.wob+i*1.7+T*.05+Math.sin(i*5.3)*.4,d=r*(.98+ph*.75);dot(g,c.x+Math.cos(a)*d,c.y+Math.sin(a)*d,r*.08*(1-ph*.5),'255,200,120',(1-ph)*.95);} // clumps of debris flung outward
+    if(lead){const ph=(T*.45+c.wob*.03)%1;g.beginPath();g.arc(c.x,c.y,r*(1+ph*1.1),0,TAU);g.lineWidth=r*.05*(1-ph);g.strokeStyle='#ffe1aa';g.globalAlpha=.55*(1-ph);g.stroke();g.globalAlpha=1;}},
+  rays(q){const R=prng(221);q.globalCompositeOperation='lighter';for(let i=0;i<150;i++){const a=R()*TAU,L=1.15+Math.pow(R(),2)*.95,w=.004+R()*R()*.034,h=R(),cc=h<.1?'150,255,225':h<.6?'255,205,130':'255,140,70',m=L*.7+.3;
+      q.beginPath();q.moveTo(Math.cos(a-w)*.9,Math.sin(a-w)*.9);q.quadraticCurveTo(Math.cos(a+w*.4)*m,Math.sin(a+w*.4)*m,Math.cos(a)*L,Math.sin(a)*L);q.lineTo(Math.cos(a+w)*.9,Math.sin(a+w)*.9);q.closePath();
+      q.fillStyle=rgr(q,0,0,L,[0,`rgba(${cc},0)`,.88/L,`rgba(${cc},${(.16+R()*.26).toFixed(3)})`,1,`rgba(${cc},0)`]);q.fill();}q.globalCompositeOperation='source-over';},
+  bake(q,u){const R=prng(22),px=.7/u;fillAll(q,'#1c0603');cosmoField(q,cosmoTex('supernova',192,novaPx));q.globalCompositeOperation='lighter';
+    for(let i=0;i<60;i++){const a=R()*TAU,d=Math.sqrt(R())*.7;disc(q,Math.cos(a)*d,Math.sin(a)*d,Math.max(.002+R()*R()*.006,px),`rgba(${COSMO_STAR[Math.floor(R()*6)]},${(.25+R()*.5).toFixed(3)})`);} // stars seen through the shell
+    q.lineCap='round';for(let i=0;i<22;i++){const a=R()*TAU,d=.88+R()*.08,L=.15+R()*.45;q.lineWidth=Math.max(.004+R()*.008,px);q.strokeStyle=`rgba(255,${Math.round(225+R()*30)},${Math.round(170+R()*70)},${(.25+R()*.45).toFixed(3)})`;q.beginPath();q.arc(0,0,d,a,a+L);q.stroke();} // the shock front, crisp and broken
+    for(let i=0;i<46;i++){const a=R()*TAU,d=.72+R()*.2,x=Math.cos(a)*d,y=Math.sin(a)*d,s=.008+R()*R()*.03,cc=R()<.3?'140,255,225':R()<.5?'255,250,225':'255,190,110';disc(q,x,y,s,rgr(q,x,y,s,[0,`rgba(${cc},.95)`,.35,`rgba(${cc},.35)`,1,`rgba(${cc},0)`]));} // bright knots in the shell
+    disc(q,0,0,.42,rgr(q,0,0,.42,[0,'rgba(255,250,230,.85)',.2,'rgba(255,215,150,.4)',.6,'rgba(150,170,255,.08)',1,'rgba(120,150,255,0)']));q.globalCompositeOperation='source-over';},
+  core(q){disc(q,0,0,1,rgr(q,0,0,1,[0,'rgba(255,255,255,1)',.14,'rgba(255,252,230,.95)',.32,'rgba(255,225,150,.45)',.6,'rgba(255,170,80,.12)',1,'rgba(255,140,60,0)'])); // the blazing core and its flare
+    q.globalCompositeOperation='lighter';q.fillStyle=rgr(q,0,0,1,[0,'rgba(255,255,245,.95)',.3,'rgba(255,230,180,.35)',1,'rgba(255,200,140,0)']);
+    for(const [a,L,w] of[[0,1,.035],[Math.PI/2,1,.035],[Math.PI/4,.6,.025],[-Math.PI/4,.6,.025]]){q.save();q.rotate(a+.2);q.scale(L,w);q.beginPath();q.arc(0,0,1,0,TAU);q.fill();q.restore();}q.globalCompositeOperation='source-over';},
+  draw(g,c,r,k){const q=skinPx(g,r),rot=T*.04+c.wob,img=bake(g,this.key,q*2*SKIN_BR,this.bake);blit(g,img,c.x,c.y,r,rot);
+    if(q>18){const ph=(T*.3+c.wob*.1)%1;g.globalAlpha=(1-ph)*.3;blit(g,img,c.x,c.y,r*(1+ph*.14),rot);g.globalAlpha=1;}}, // an echo of the shell, expanding
+  eye(g,c,r,nx,ny,sick){const p=1+.1*Math.sin(T*6+c.wob),s=r*.62*p;g.drawImage(bake(g,'nova_core',skinPx(g,s)*2,this.core,1),nx-s,ny-s,2*s,2*s);
     if(sick){g.beginPath();g.arc(nx,ny,r*.12,0,TAU);g.fillStyle=col(INF_C,-30,.9);g.fill();}}},
 {id:23,key:'glitch',name:'Glitch',price:1500,base:[176,72,13],edge:'#043230',edge2:'rgba(120,255,240,.6)',
-  // a hologram that can't hold itself together: a pixel face split into its colour channels on a scanned screen, stuck pixels, a sweep, and slices that tear and jump
-  bake(q,u){const R=prng(23),p=.11,hl=Math.max(.004,.7/u);fillAll(q,rgr(q,0,0,1.15,[0,'#104c4e',.6,'#072a2c',1,'#021314']));
-    q.fillStyle='rgba(80,255,230,.08)';for(let i=-11;i<=11;i++){q.fillRect(i*p-p/2,-1.2,hl,2.4);q.fillRect(-1.2,i*p-p/2,2.4,hl);} // the pixel grid
-    for(let i=0;i<40;i++){const x=Math.round((R()*2-1)*9)*p,y=Math.round((R()*2-1)*9)*p;if(Math.hypot(x,y)>1.05)continue; // stuck pixels
-      q.fillStyle=R()<.5?`rgba(255,50,150,${(.12+R()*.25).toFixed(3)})`:`rgba(60,240,255,${(.12+R()*.25).toFixed(3)})`;q.fillRect(x-p/2,y-p/2,p*(1+Math.floor(R()*3)),p);}
-    q.fillStyle='rgba(120,255,235,.22)';for(let i=0;i<12;i++){const y=-.9+R()*1.8,x=-.8+R()*1.2;q.fillRect(x,y,.05+R()*.3,.018);} // stray data
-    const face=()=>{for(const [x,y] of GLITCH_FACE)q.fillRect(x*p-p*.46,y*p-p*.46,p*.92,p*.92);};q.globalCompositeOperation='lighter';
-    for(const [dx,cl] of[[-.05,'rgba(255,40,140,.85)'],[.05,'rgba(40,220,255,.85)']]){q.save();q.translate(dx,0);q.fillStyle=cl;face();q.restore();} // the face in its split colour channels
-    q.save();q.shadowColor='rgba(120,255,240,.9)';q.shadowBlur=.08*u;q.fillStyle='#d8fffa';face();q.restore();q.globalCompositeOperation='source-over';
-    for(let y=-1.15;y<1.15;y+=.045){q.fillStyle='rgba(0,0,0,.3)';q.fillRect(-1.15,y,2.3,.016);}
-    disc(q,0,0,1.15,rgr(q,0,0,1.05,[0,'rgba(60,255,230,0)',.75,'rgba(60,255,230,0)',1,'rgba(60,255,230,.3)']));},
-  draw(g,c,r,k){const H=hash,fr=Math.floor(T*9+c.wob*3),q=skinPx(g,r),img=bake(g,this.key,q*2*SKIN_BR,this.bake),e=r*SKIN_BR;g.drawImage(img,c.x-e,c.y-e,2*e,2*e);
-    const sw=((T*.45+c.wob*.1)%1)*2.4-1.2;g.fillStyle='rgba(120,255,240,.16)';g.fillRect(c.x-r,c.y+sw*r,r*2,r*.18);
+  // a hologram that can't hold itself together: a grinning pixel face that blooms, splits into its colour channels and blinks, on a scanned phosphor
+  // screen with an aperture grille, broken video blocks, a torn band, a hex dump and a status line; slices tear and jump, and it flickers
+  bake(q,u){const R=prng(23),p=GLITCH_P,hl=Math.max(.004,.7/u);fillAll(q,'#04201f');disc(q,0,0,.98,rgr(q,0,0,.98,[0,'#125552',.6,'#0a3537',1,'#04201f']));
+    q.fillStyle='rgba(80,255,230,.07)';for(let i=-13;i<=13;i++){q.fillRect(i*p-p/2,-1.2,hl,2.4);q.fillRect(-1.2,i*p-p/2+GLITCH_Y,2.4,hl);} // the pixel grid
+    if(u>150){const st=Math.max(.012,3/u);q.globalAlpha=.07;for(let x=-1.15,i=0;x<1.15;x+=st,i++){q.fillStyle=i%3?i%3>1?'#3070ff':'#30ff90':'#ff3060';q.fillRect(x,-1.15,st*.55,2.3);}q.globalAlpha=1;} // the aperture grille, when there is room to see it
+    for(let i=0;i<16;i++){const x=Math.round((R()*2-1)*9)*p,y=Math.round((R()*2-1)*9)*p,w=p*(1+Math.floor(R()*3)),h=p*(1+Math.floor(R()*2)),cl=R();if(Math.hypot(x,y)>1)continue; // broken blocks of video
+      q.fillStyle=cl<.4?'rgba(255,50,150,.24)':cl<.8?'rgba(60,240,255,.2)':'rgba(255,255,255,.13)';q.fillRect(x-p/2,y-p/2,w,h);q.fillStyle='rgba(0,0,0,.25)';for(let s=0;s<h/p*3;s++)q.fillRect(x-p/2,y-p/2+s*p/3,w,p/9);}
+    if(u>110){const H='0123456789ABCDEF',hx=()=>H[R()*16|0]+H[R()*16|0];q.save();q.scale(1/u,1/u);q.font=`600 ${Math.round(.052*u)}px Menlo,ui-monospace,monospace`;q.fillStyle='rgba(120,255,235,.34)'; // the data
+      for(let j=0;j<11;j++){const y=-.42+j*.085;q.fillText(hx()+' '+hx(),-.97*u,y*u);q.fillText(hx()+hx(),.72*u,y*u);}
+      q.fillStyle='rgba(150,255,240,.55)';q.fillText('HOLO.EXE  v2.3',-.33*u,-.7*u);q.fillText('SIGNAL',-.36*u,.8*u);for(let i=0;i<5;i++){q.fillStyle=i<3?'rgba(150,255,240,.6)':'rgba(150,255,240,.18)';q.fillRect((.04+i*.06)*u,.765*u,.042*u,.04*u);}
+      q.fillStyle='rgba(200,255,250,.8)';q.fillRect(.24*u,-.745*u,.03*u,.05*u);q.restore();} // a cursor after the title
+    const fc=document.createElement('canvas'),f=fc.getContext('2d');fc.width=19;fc.height=16;glitchFace((x,y,ch,i,j)=>{if(ch==='k'||ch==='m')return;f.fillStyle=GLITCH_COL[ch];f.fillRect(i+2,j+2,1,1);});
+    q.globalCompositeOperation='lighter';const fx=-9.5*p,fy=-8*p+GLITCH_Y;q.globalAlpha=.85;q.drawImage(fc,fx,fy,19*p,16*p);q.globalAlpha=1; // the bloom: the face drawn tiny and scaled up
+    for(const [dx,cl] of[[-.034,'rgba(255,40,130,.8)'],[.034,'rgba(40,225,255,.8)']]){q.fillStyle=cl;q.beginPath();glitchFace((x,y,ch)=>{if(ch!=='k'&&ch!=='m')q.rect(x+dx-p*.43,y-p*.43,p*.86,p*.86);});q.fill();} // the colour channels, split
+    q.globalCompositeOperation='source-over';glitchFace((x,y,ch)=>{q.fillStyle=GLITCH_COL[ch];const d=ch==='k'||ch==='m'?p*.51:p*.43;q.fillRect(x-d,y-d,d*2,d*2);if(u>90&&ch!=='k'&&ch!=='m'){q.fillStyle='rgba(255,255,255,.4)';q.fillRect(x-p*.43,y-p*.43,p*.86,p*.16);}}); // the lit pixels, each with a bright top
+    q.fillStyle='rgba(0,0,0,.28)';for(let y=-1.15;y<1.15;y+=.032)q.fillRect(-1.15,y,2.3,.011); // scanlines
+    const cv=q.canvas,b=cv.width;q.save();q.setTransform(1,0,0,1,0,0);for(const [t,h,dx] of[[.6,.03,.035],[.27,.016,-.025]])q.drawImage(cv,0,Math.round(b*t),b,Math.max(1,Math.round(b*h)),Math.round(b*dx),Math.round(b*t),b,Math.max(1,Math.round(b*h)));q.restore(); // two bands torn sideways for good
+    q.lineWidth=.16;q.strokeStyle='rgba(60,255,230,.1)';q.beginPath();q.arc(0,0,1,0,TAU);q.stroke();q.lineWidth=.05;q.strokeStyle='rgba(90,255,235,.16)';q.stroke();}, // the screen's edge glowing
+  draw(g,c,r,k){const H=hash,fr=Math.floor(T*9+c.wob*3),q=skinPx(g,r),img=bake(g,this.key,q*2*SKIN_BR,this.bake),e=r*SKIN_BR;
+    g.globalAlpha=H(fr*17+3)<.05?.6:1;g.drawImage(img,c.x-e,c.y-e,2*e,2*e);g.globalAlpha=1; // now and then the hologram flickers
+    const sw=((T*.45+c.wob*.1)%1)*2.4-1.2;g.fillStyle='rgba(120,255,240,.14)';g.fillRect(c.x-r,c.y+sw*r,r*2,r*.16);
     const jit=H(fr)<.22?(H(fr+1)-.5)*r*.16:0; // now and then a slice of the screen tears sideways
     if(jit&&q>14)for(let s=0;s<2;s++){const sy=(H(fr+3+s*5)*.7+.15)*img.height,sh=img.height*(.04+H(fr+4+s*5)*.1);g.drawImage(img,0,sy,img.width,sh,c.x-e+jit*(2-s*3),c.y-e+sy/img.height*2*e,2*e,sh/img.height*2*e);}
-    for(let i=0;i<5;i++){if(H(fr*13+i*7)>.5)continue;const y=c.y+(H(fr*5+i)-.5)*r*1.6,x=c.x+(H(fr*3+i*11)-.5)*r*1.3,w=r*(.2+H(fr+i)*.6),hh=r*(.04+H(fr*2+i)*.08);g.fillStyle=i%2?'rgba(255,40,140,.6)':'rgba(40,255,230,.6)';g.fillRect(x-w/2,y,w,hh);}}},
+    if(q>16&&(T*.3+c.wob*.07)%1<.03){const p=GLITCH_P*r,y=c.y+GLITCH_Y*r;g.fillStyle='#0d4243';g.fillRect(c.x-6.5*p,y-6*p,5*p,6*p);g.fillRect(c.x+1.5*p,y-6*p,5*p,6*p);g.fillStyle='#d6fff8';g.fillRect(c.x-6*p,y-3.4*p,4*p,.8*p);g.fillRect(c.x+2*p,y-3.4*p,4*p,.8*p);} // a blink
+    for(let i=0;i<4;i++){if(H(fr*13+i*7)>.5)continue;const y=c.y+(H(fr*5+i)-.5)*r*1.6,x=c.x+(H(fr*3+i*11)-.5)*r*1.3,w=r*(.2+H(fr+i)*.6),hh=r*(.04+H(fr*2+i)*.08);g.fillStyle=i%2?'rgba(255,40,140,.6)':'rgba(40,255,230,.6)';g.fillRect(x-w/2,y,w,hh);}}},
 {id:24,key:'ghost',name:'Ghost',price:1500,season:'halloween',base:[214,28,90],noGlint:true,
   // a little ghost: cold mist swirling inside, a soft glow and wisps trailing behind it, glossy eyes that blink
   aura(g,c,r,k,sr,lead){
