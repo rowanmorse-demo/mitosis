@@ -3039,18 +3039,9 @@ function drawFreePattern(g,c,r,sk,hq){ // fillStyle and strokeStyle are the cell
     if(hq){g.translate(-.02,-.025);g.beginPath();veins();twigs();g.lineWidth=.016;g.strokeStyle='rgba(255,255,255,.24)';g.stroke();}}
   g.restore();}
 // paths and positions some skins share between their baked and live layers
-const MAGMA_PATHS=(()=>{const R=prng(61),out=[];for(let i=0;i<6;i++){let a=i*TAU/6+R()*.6,x=Math.cos(a)*.07,y=Math.sin(a)*.07;const p=[x,y];
-  for(let s=0;s<7;s++){a+=(R()-.5)*1.1;const L=.12+R()*.07;x+=Math.cos(a)*L;y+=Math.sin(a)*L;p.push(x,y);
-    if(s>0&&s<5&&R()<.55){let b=a+(R()<.5?1:-1)*(.7+R()*.6),bx=x,by=y;const br=[bx,by];for(let t=0;t<3;t++){b+=(R()-.5)*.9;bx+=Math.cos(b)*.1;by+=Math.sin(b)*.1;br.push(bx,by);}out.push({p:br,w:.5});}}
-  out.push({p,w:1});}return out;})();
-function magmaCracks(q,style,w){if(w>.1){q.strokeStyle=style;q.lineWidth=w;q.beginPath();for(const C of MAGMA_PATHS){q.moveTo(C.p[0],C.p[1]);for(let i=2;i<C.p.length;i+=2)q.lineTo(C.p[i],C.p[i+1]);}q.stroke();return;} // a wide, faint halo: one path, so joints don't double up
-  for(const C of MAGMA_PATHS)taper(q,C.p,w*C.w,w*C.w*.35,style);}
-const CIRCUIT=(()=>{const R=prng(8),tr=[],pads=[];for(let i=0;i<14;i++){const a0=i/14*TAU+R()*.2,d=Math.round(a0/(Math.PI/4));let x=Math.cos(a0)*.2,y=Math.sin(a0)*.2;const p=[x,y];
-  for(let s=0;s<9&&Math.hypot(x,y)<1.08;s++){const L=.09+R()*.15,da=(d+(R()<.4?(R()<.5?1:-1):0))*Math.PI/4,nx=x+Math.cos(da)*L,ny=y+Math.sin(da)*L;if(Math.hypot(nx,ny)<=Math.hypot(x,y)+.03)continue;x=nx;y=ny;p.push(x,y);}
-  tr.push(p);if(Math.hypot(x,y)<.92)pads.push(x,y);}return{tr,pads};})();
 function alongPath(p,t,out){let L=0;for(let i=2;i<p.length;i+=2)L+=Math.hypot(p[i]-p[i-2],p[i+1]-p[i-1]);let d=t*L;
   for(let i=2;i<p.length;i+=2){const s=Math.hypot(p[i]-p[i-2],p[i+1]-p[i-1]);if(d<=s||i===p.length-2){const f=s?Math.min(1,d/s):0;out[0]=p[i-2]+(p[i]-p[i-2])*f;out[1]=p[i-1]+(p[i+1]-p[i-1])*f;return out;}d-=s;}out[0]=p[0];out[1]=p[1];return out;}
-const PT2=[0,0],HONEY_GL=[.32,-.18,-.45,.36,0,.62]; // HONEY_GL: where the comb's glints sit
+const PT2=[0,0];
 const GLITCH_FACE=[[-3,-3],[-2,-3],[-3,-2],[-2,-2],[-3,-1],[-2,-1],[2,-3],[3,-3],[2,-2],[3,-2],[2,-1],[3,-1],[-3,1],[3,1],[-2,2],[-1,2],[0,2],[1,2],[2,2]]; // Glitch's pixel smile, in pixels from the middle
 // the carved face of the Jack-o'-Lantern, in a unit box (1 = 0.62 r)
 function jackFace(q){q.beginPath();
@@ -4824,15 +4815,15 @@ async function flushRuns(){ // report finished runs; keep them queued while the 
 // Skins grid on the start card
 let confirmSkin=0,confirmT=0;
 const RARITY={12:'rare',13:'rare',14:'rare',15:'epic',16:'legendary',17:'rare',19:'rare',20:'epic',22:'epic',23:'rare',28:'rare',29:'rare',30:'epic',31:'legendary'};
-const SKIN_DESC={5:'Gas clouds and newborn stars drifting through the membrane.',6:'Cracks of molten rock that flare as it pulses.',7:'Wax cells brimming with honey, and a bee at work.',8:'Traces and blinking nodes, like a living circuit board.',
-  9:'Rosettes on warm gold.',10:'Ice facets with a cold glint.',11:'Radioactive slime swirling round a glowing hazard sign.',12:'A bloodshot eye whose iris, in your colour, looks wherever you go.',13:'A spiral galaxy turning slowly inside you.',
-  14:'Polished gold set with a ruby, a shine sweeping across it.',15:'Light spirals in and never comes out.',16:'Obsidian and molten gold set with rubies and diamonds, burning script and an eye of flame, with runes, lightning and fire beyond the membrane.',
-  17:'Curtains of northern light rippling over a night sky.',18:'Two koi circling a quiet pond.',19:'Arcs of plasma reaching from the core to the membrane.',20:'Cracked open to show the amethyst inside.',
+const SKIN_DESC={5:'Gas clouds and newborn stars drifting through the membrane.',6:'Basalt plates split by lava that flares as it pulses.',7:'Wax cells brimming with honey, and a bee at work.',8:'A circuit board with a chip at its heart: traces, parts, and data pulsing along the lines.',
+  9:'Golden fur with black rosettes round tawny hearts.',10:'Cut ice with trapped bubbles, fractures and frost at the rim.',11:'Bubbling radioactive slime round a glowing hazard sign.',12:'A bloodshot eye whose iris, in your colour, looks wherever you go.',13:'A spiral galaxy turning slowly inside you.',
+  14:'An 18-carat medallion: filigree set with diamonds round a faceted ruby, a shine sweeping across it.',15:'Light spirals in and never comes out.',16:'Obsidian and molten gold set with rubies and diamonds, burning script and an eye of flame, with runes, lightning and fire beyond the membrane.',
+  17:'Curtains of northern light rippling over a night sky.',18:'Two koi circling a sunlit pond, under lily pads and a water lily.',19:'Arcs of plasma reaching from the core to the membrane.',20:'Cracked open: banded agate round a cavity of amethyst points.',
   21:'A cherry branch in bloom, with petals on the breeze.',
   24:'A little ghost shouting boo on a misty moonlit night, glowing and see-through, with blinking eyes and wisps trailing behind it. Halloween only.',25:'A glossy black widow in her dewy web, her red hourglass glowing. Halloween only.',
   26:'A carved pumpkin lit by a candle inside, its glowing face turning wherever you go. Halloween only.',27:'Midnight in a graveyard: a witch and her cat fly across the full moon, and bats circle your cell. Halloween only.',22:'A star in its final blaze, with a corona that burns past the membrane.',23:'A pixel face on a hologram that cannot quite hold itself together.',
-  28:'A shell of golden glass, ribbed and pored like the algae it is named after. Battle Pass, free for everyone.',29:'Night water full of plankton that flash blue in waves, brighter the faster you swim. Battle Pass.',
-  30:'A lattice of glass windows over a sphere, and long spines that reach through the membrane. Battle Pass.',31:'Teal and magenta light swirling round a glowing heart, with a halo, sparks and trailing tendrils. Battle Pass.'};
+  28:'A shell of golden glass, ribbed and pored like the algae it is named after. Battle Pass, free for everyone.',29:'Night sea swirling with glowing plankton that flash brighter the faster you swim. Battle Pass.',
+  30:'A glass skeleton: a lattice sphere round an amber heart, and barbed spines through the membrane. Battle Pass.',31:'Teal and magenta light swirling round a glowing heart, with a halo, sparks and trailing tendrils. Battle Pass.'};
 let shopSel=0; // the skin shown large in the shop
 const rarOf=S=>S.season?'seasonal':RARITY[S.id]||'common';
 const fmtLeft=ms=>{const m=Math.max(0,Math.round(ms/60000)),d=Math.floor(m/1440),h=Math.floor(m%1440/60);return d?`${d}d ${h}h`:h?`${h}h ${m%60}m`:`${m%60}m`;};
