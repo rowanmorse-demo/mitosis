@@ -36,6 +36,8 @@ let failures = 0; const check = (ok, what, got) => { log(ok ? 'PASS' : 'FAIL', w
   const server = spawn(process.execPath, ['server.js'], { cwd: dir, env: { ...process.env, PORT, DATA_DIR: data }, stdio: 'ignore' });
   const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'near-chrome-'));
   const chrome = spawn(CHROME, ['--headless=new', '--no-sandbox', '--disable-gpu', '--mute-audio', '--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--disable-backgrounding-occluded-windows', `--remote-debugging-port=${DPORT}`, `--user-data-dir=${profile}`, '--window-size=430,900'], { stdio: 'ignore' });
+  // a busy Mac can leave a page that never answers: give up instead of waiting forever (the whole match takes about 4 minutes)
+  setTimeout(() => { log('test failed: timed out, a page stopped answering (is the machine busy?)'); chrome.kill('SIGKILL'); server.kill(); process.exit(1); }, (process.env.QUICK ? 4 : 10) * 60000).unref();
   try {
     let v = null; for (let i = 0; i < 150 && !v; i++) { try { v = await (await fetch(`http://127.0.0.1:${DPORT}/json/version`)).json(); } catch (e) { await sleep(200); } }
     if (!v) throw new Error('Chrome did not start');
@@ -109,5 +111,6 @@ let failures = 0; const check = (ok, what, got) => { log(ok ? 'PASS' : 'FAIL', w
     check(r && r.ok, 'after the round it is back in the lobby, as the host', r && r.x);
     check((Date.now() - t0) / 1000 > 165, 'the match ran to the clock (no early end when left alone)', Math.round((Date.now() - t0) / 1000) + ' s');
   } finally { chrome.kill('SIGKILL'); server.kill(); }
+})().then(() => { // after QUICK and MEASURE return early too
   log(failures ? `${failures} check(s) failed` : 'all Nearby lobby checks passed'); process.exit(failures ? 1 : 0);
-})().catch(e => { log('test failed:', e.message); process.exit(1); });
+}, e => { log('test failed:', e.message); process.exit(1); });

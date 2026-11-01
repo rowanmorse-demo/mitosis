@@ -713,6 +713,11 @@ body:not(.playing) #tip{display:none}
 .lb-near-sum{margin:0;font-size:12px;line-height:1.3;color:var(--muted)}
 .lb-near-set{appearance:none;border:0;flex:none;height:30px;padding:0 12px;border-radius:10px;font:700 12px/1 var(--display);color:var(--lb-blue);background:rgba(108,184,255,.15);cursor:pointer}
 .lb-near-note{margin:0;font-size:13px;line-height:1.35;color:var(--muted)}
+.lb-nbody{min-height:0;overflow:auto;overscroll-behavior:contain;display:grid;align-content:start;gap:14px;width:min(560px,100%);justify-self:center;padding-bottom:8px}
+@media (orientation:landscape) and (max-height:520px){
+  .lb-nbody{width:min(820px,100%)}.lb-nbody .lb-near-rows{grid-template-columns:1fr 1fr;column-gap:18px}
+  .lobby .lb-near{margin:0;padding:5px 6px 5px 12px;border-radius:14px}.lb-near-sum{display:none}.lb-near-set{height:28px}.lb-near-who{font-size:13px}
+}
 .lb-near-rows{display:grid;gap:12px}
 .lb-near-row{display:grid;gap:6px}.lb-near-row>span{font:700 11px/1 var(--display);color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
 .lb-near-row .lb-bots{--k:var(--ink)}.lb-near-row .lb-bots.c3{grid-template-columns:repeat(3,minmax(0,1fr))}.lb-near-row .lb-bots.c4{grid-template-columns:repeat(4,minmax(0,1fr))}
@@ -2425,9 +2430,9 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
           <div class="lb-mstat" id="lbNearStat"></div></div>
       </div>
     </div>
-    <div class="lb-sheet" id="nearSheet" role="dialog" aria-modal="true" aria-labelledby="nearTitle" hidden>
-      <div class="lb-sheet-box">
-        <header class="lb-sheet-top"><h2 id="nearTitle">Nearby match</h2><button type="button" class="lb-icon" id="nearClose" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
+    <div class="lb-msel lb-nsheet" id="nearSheet" data-mode="nearby" role="dialog" aria-modal="true" aria-labelledby="nearTitle" hidden>
+      <header class="lb-msel-top"><button type="button" class="lb-icon" id="nearClose" aria-label="Back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><h2 id="nearTitle">Nearby match</h2></header>
+      <div class="lb-nbody">
         <p class="lb-near-note" id="nearNote"></p>
         <div class="lb-near-rows">
           <div class="lb-near-row"><span id="nearKL">Bot difficulty</span><div class="lb-bots" data-set="k" role="radiogroup" aria-labelledby="nearKL"><button type="button" role="radio" data-v="easy" data-k="easy">Easy</button><button type="button" role="radio" data-v="normal" data-k="normal">Normal</button><button type="button" role="radio" data-v="hard" data-k="hard">Hard</button><button type="button" role="radio" data-v="expert" data-k="expert">Expert</button><button type="button" role="radio" data-v="master" data-k="master">Master</button></div></div>
@@ -2790,7 +2795,7 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
   const room=Object.freeze({
     peers:()=>snap,
     presence(patch){mine={...mine};for(const k in patch){if(patch[k]===null)delete mine[k];else mine[k]=patch[k];}mineObj=Object.freeze(mine);rebuild();
-      if(!pending){pending=true;setTimeout(flush,Math.max(0,(nearby?66:33)-(performance.now()-lastSend)));}return Promise.resolve();}, // 15 a second nearby: Bluetooth is slower than the internet
+      if(!pending){pending=true;setTimeout(flush,Math.max(0,(nearby?100:33)-(performance.now()-lastSend)));}return Promise.resolve();}, // 10 a second nearby: Bluetooth is slower than the internet
     onConnection(fn){connFns.push(fn);setTimeout(()=>fn(connected),0);return()=>{connFns=connFns.filter(f=>f!==fn);};},
     onPeers(){return()=>{};},connected:()=>connected,emit:()=>Promise.resolve(),on:()=>()=>{}
   });
@@ -4391,7 +4396,7 @@ function spawn(p,mass){
 }
 // food: deterministic positions from (index, generation) so every player sees the same pellets
 function placePellet(pl){const k=(pl.i*7919+pl.g*104729+SEED)|0,s=hpos(k,14);pl.x=s.x;pl.y=s.y;pl.m=h32(k+2)<.07?3:1;pl.r=pl.m===3?8:5;pl.h=Math.floor(h32(k+3)*PH);pl.born=T;if(pl.gk!==undefined)gridMove(pl);}
-function eatPellet(pl){peLog.push({i:pl.i,g:pl.g,t:T});pl.g=(pl.g+1)%262143;placePellet(pl);}
+function eatPellet(pl){peLog.push({i:pl.i,g:pl.g,t:T,x:pl.x,y:pl.y});pl.g=(pl.g+1)%262143;placePellet(pl);}
 // phage slots: deterministic positions from (slot, generation)
 function placeSlot(v){const k=(v.slot*15485863+v.g*32452843+SEED*7)|0,s=hpos(k,300);v.x=v.tx=s.x;v.y=v.ty=s.y;}
 function setVM(v){v.mass=VIRUS_M+v.feed*4;v.r=radius(v.mass);}
@@ -4997,7 +5002,7 @@ function step(dt){
 }
 function smoothRemote(dt){
   const t=now(),k=Math.min(1,dt*14);
-  for(const c of cells){if(!c.owner.remote)continue;const lead=Math.min(.12,t-c.tt);c.x+=(c.tx+c.nvx*lead-c.x)*k;c.y+=(c.ty+c.nvy*lead-c.y)*k;}
+  for(const c of cells){if(!c.owner.remote)continue;const lead=Math.min(nearMode()?.25:.12,t-c.tt);c.x+=(c.tx+c.nvx*lead-c.x)*k;c.y+=(c.ty+c.nvy*lead-c.y)*k;}
   if(!isHost){
     for(const v of freeV){v.x+=(v.tx-v.x)*k;v.y+=(v.ty-v.y)*k;}
     for(const h of hunters){const was=Math.hypot(h.x,h.y);const ox=h.x,oy=h.y;h.x+=(h.tx-h.x)*k;h.y+=(h.ty-h.y)*k;
@@ -5640,7 +5645,9 @@ function ingestWorld(P){
       const list=decCells(s,o+6,Math.min(n,MAX_CELLS));o+=6+n*12;seenB.add(bid);
       let pl=botProx.get(bid);if(!pl){pl=makePlayer(botName(bid),botColor(bid),true);pl.bid=bid;pl.remote=true;pl.boss=bid===BOSS_BID;pl.skin=botSkin(bid);botProx.set(bid,pl);players.push(pl);}
       setFx(pl,f);syncProxyCells(pl,list);pl.alive=pl.cells.length>0;}
-    for(const [bid,pl] of botProx)if(!seenB.has(bid)){removePlayer(pl);botProx.delete(bid);}
+    const part=P.bp===1,mv=part&&human&&human.alive?nearViews([human],.75):null;
+    for(const [bid,pl] of botProx){if(seenB.has(bid)){pl.seenAt=t;continue;}
+      if(!part||t-(pl.seenAt??t)>2||(mv&&pl.cells.some(c=>inView(mv,c.x,c.y,0)))){removePlayer(pl);botProx.delete(bid);}}
   }
   if(typeof P.ev==='string'){
     if(P.ev.length>=11){const t=dec(P.ev,0,1),id=dec(P.ev,1,2),rem=dec(P.ev,3,2),x=dec(P.ev,5,3)-OFF,y=dec(P.ev,8,3)-OFF;
@@ -5689,21 +5696,23 @@ function becomeHost(){
 }
 function send(){
   const P={v:PROTO,h:(isHost&&claimReady&&!yielded)?1:0,n:(human?human.name:(cleanName($('nameIn').value)||'Unnamed cell')).slice(0,16),s:settings.stain|0,
-    a:human&&human.alive?1:0,f:human?fxBits(human):0,k:wireSkin(human?human.skin:settings.skin),ks:human?human.skin:settings.skin,q:queued?1:0,em:null,ev:null,rd:null,cl:null,ej:null,r:null,pe:null,b:null,vs:null,vw:null,pu:null,hv:null,
+    a:human&&human.alive?1:0,f:human?fxBits(human):0,k:wireSkin(human?human.skin:settings.skin),ks:human?human.skin:settings.skin,q:queued?1:0,bp:null,em:null,ev:null,rd:null,cl:null,ej:null,r:null,pe:null,b:null,vs:null,vw:null,pu:null,hv:null,
     pt:soc&&soc.party?soc.party.id:null}; // pt: your party, so your ally's game treats you as an ally (older games ignore it)
   if(human&&human.alive)P.cl=human.cells.slice(0,MAX_CELLS).map(encCell).join('');
   if(ejected.length)P.ej=ejected.slice(-16).map(e=>enc(e.x+OFF,3)+enc(e.y+OFF,3)).join('');
   recs=recs.filter(r=>T-r.t<3).slice(-20);if(recs.length)P.r=recs.map(r=>r.d);
   peLog=peLog.filter(p=>T-p.t<(nearMode()?.25:.7)); // each eaten pellet is repeated for a while in case a message is lost; Nearby repeats it less
-  const peStr=n=>peLog.slice(-n).map(p=>enc(p.i,3)+enc(p.g,3)).join('');
-  P.pe=peLog.length?peStr(120):null;
+  const nv=nearMode()&&isHost&&claimReady&&!yielded?nearViews():null; // Nearby host: where the other phones' cells are
+  const peL=nv?peLog.filter(p=>T-p.t<.11||p.x==null||inView(nv,p.x,p.y,0)):peLog; // ...far eats go once, near ones are repeated
+  const peStr=n=>peL.slice(-n).map(p=>enc(p.i,3)+enc(p.g,3)).join('');
+  P.pe=peL.length?peStr(120):null;
   if(local){P.h=0;P.a=0;P.cl=null;P.ej=null;P.r=null;P.pe=null;}   // a local game is invisible to the room
   P.lb=nearMode()&&isHost?nearWire():null;   // Nearby: the match settings and whether a match is on
   const host=P.h===1;
-  const bots=perCell=>{let s='';for(const b of players){if(!b.bot||b.remote||!b.alive||!b.cells.length)continue;
+  const bots=(perCell,keep)=>{let s='';for(const b of players){if(!b.bot||b.remote||!b.alive||!b.cells.length||(keep&&!keep(b)))continue;
       const cs=b.cells.slice().sort((a,c)=>c.mass-a.mass).slice(0,perCell);s+=enc(b.bid,2)+enc(fxBits(b),3)+enc(cs.length,1)+cs.map(encCell).join('');}return s;};
   if(host){
-    P.b=bots(nearMode()?2:4);
+    P.b=nv?bots(2,b=>(b.bid+near.tx)%4===0||b.cells.some(c=>inView(nv,c.x,c.y,c.r))):bots(4);if(nv)P.bp=1; // bp: only the bots near the other phones, and a quarter of the rest in turn
     P.vs=vslots.map(v=>enc(v.g*16+Math.min(5,v.feed)*2+(v.alive?1:0),2)).join('');
     P.vw=freeV.map(v=>enc(v.id,2)+enc(v.x+OFF,3)+enc(v.y+OFF,3)).join('');
     P.pu=powerups.map(u=>enc(u.id,2)+enc(u.x+OFF,3)+enc(u.y+OFF,3)+enc(PUK.indexOf(u.type),1)).join('');
@@ -5713,9 +5722,9 @@ function send(){
   }
   if(host&&nearMode()&&++near.tx%4){P.vs=null;P.pu=null;} // Nearby: virus slots and power-ups change slowly, so they go in every 4th message
   let js=JSON.stringify(P),budget=3900;
-  if(js.length>budget){P.pe=peLog.length?peStr(40):null;js=JSON.stringify(P);}
-  if(js.length>budget&&host){P.b=bots(2);js=JSON.stringify(P);}
-  if(js.length>budget&&host){P.b=bots(1);js=JSON.stringify(P);}
+  if(js.length>budget){P.pe=peL.length?peStr(40):null;js=JSON.stringify(P);}
+  if(js.length>budget&&host&&!nv){P.b=bots(2);js=JSON.stringify(P);}
+  if(js.length>budget&&host&&!nv){P.b=bots(1);js=JSON.stringify(P);}
   if(js.length>budget){P.r=recs.slice(-6).map(r=>r.d);js=JSON.stringify(P);}
   if(js.length>budget){P.pe=null;P.ej=null;}
   if(nearMode()){near.txn++;near.txb+=js.length;}
@@ -5743,7 +5752,7 @@ function netTick(dt){
     try{ingest(p.peer,p.presence,p.peer===hostPeer);}catch(e){}}
   for(const [k,pl] of proxies)if(!live.has(k)){removePlayer(pl);proxies.delete(k);remoteEj.delete(k);lastSeen.delete(k);seenAt.delete(k);lastSeq.delete(k);}
   for(const m of [vSup,wSup,puSup,hSup])for(const [k,t] of m)if(T-t>4)m.delete(k);
-  netSendT-=dt;if(netSendT<=0){netSendT=.066;if(!BISECT.nosend)send();}
+  netSendT-=dt;if(netSendT<=0){netSendT=nearMode()?.1:.066;if(!BISECT.nosend)send();}
 }
 function onRoomErr(){
   room=null;netState='solo';myPeer=null;peerCount=1;lastPeerCount=1;if(isHost)syncBots();
@@ -6149,6 +6158,10 @@ const ROUND_SEC0=ROUND_SEC;
 {const s=settings.nearby||{};near.k=SKILL[s.k]?s.k:SKILL[settings.botSkill]?settings.botSkill:'normal';if(Object.hasOwn(NEAR_BOTS,s.b))near.b=s.b;if(NEAR_LEN.includes(s.len))near.len=s.len;if(NEAR_LIVES.includes(s.lives))near.lives=s.lives;}
 const nearWire=()=>[near.k,near.b,near.len,near.lives,near.m].join(',');
 const nearHost=()=>claimReady&&!!myPeer&&hostPeer===myPeer; // settled: for 1.5 s after joining every phone thinks it hosts
+// Nearby host: the other phones' cells and roughly how far each one sees (it grows with the cell); guests use 3/4 of it
+function nearViews(list=[...proxies.values()],k=1){const v=[];for(const pl of list){if(!pl.alive||!pl.cells.length)continue;let m=0,x=0,y=0,r=0;
+  for(const c of pl.cells){x+=c.x*c.mass;y+=c.y*c.mass;m+=c.mass;r=Math.max(r,c.r);}if(m>0)v.push({x:x/m,y:y/m,r:Math.min(3500,1700+r*3)*k});}return v;}
+const inView=(v,x,y,pad)=>v.some(q=>(x-q.x)**2+(y-q.y)**2<(q.r+pad)**2);
 function nearLog(t){Native.send({type:'log',text:'nearby '+t});} // to the app's log (Xcode console), for testing on phones
 function nearApply(){const on=isNearby();setRoundLen(on?near.len:ROUND_SEC0);MAX_RESPAWNS=on?near.lives-1:2;} // the match rules on every phone
 function nearName(peer){if(!peer)return'The host';if(peer===myPeer)return'You';const N=window.__mitosisNet,p=N&&N.peers().find(q=>q.peer===peer);return(p&&p.presence&&cleanName(p.presence.n))||'Another phone';}
@@ -6198,7 +6211,7 @@ function nearSync(){
 setInterval(nearSync,250);
 $('nearSetBtn').addEventListener('click',()=>{$('nearSheet').hidden=false;nearSheetSync();Native.haptic('light');});
 $('nearClose').addEventListener('click',()=>{$('nearSheet').hidden=true;});
-$('nearSheet').addEventListener('click',e=>{if(e.target===e.currentTarget){e.currentTarget.hidden=true;return;}
+$('nearSheet').addEventListener('click',e=>{
   const b=e.target.closest('[data-set] button');if(!b||b.disabled||!nearHost()||near.m)return;
   const key=b.parentElement.dataset.set;near[key]=key==='len'||key==='lives'?+b.dataset.v:b.dataset.v;nearApply();
   settings.nearby={k:near.k,b:near.b,len:near.len,lives:near.lives};saveSettings();nearSheetSync();nearSync();Native.haptic('light');});
