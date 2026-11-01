@@ -83,6 +83,20 @@ function levelOf(xp) {
 }
 const TIERS = [[900, 'Bronze'], [1100, 'Silver'], [1400, 'Gold'], [1800, 'Platinum'], [2300, 'Diamond'], [Infinity, 'Legend']];
 const tierOf = r => TIERS.find(t => r < t[0])[1];
+// What players see: each tier is a stage of life. The keys above stay in the API (old apps colour and draw tiers by
+// them), and the catalogue sends these names for the game to show.
+const TIER_NAMES = { Bronze: 'Spore', Silver: 'Microbe', Gold: 'Amoeba', Platinum: 'Colony', Diamond: 'Hydra', Legend: 'Apex' };
+// Rank trophies: one per tier, earned (with the date) the first time a ranked life ends at that tier or above; the tiers
+// below come with it, so the shelf fills from the bottom. Players from before trophies get theirs at their next session.
+const tiersUpTo = r => TIERS.slice(0, TIERS.findIndex(t => r < t[0]) + 1).map(t => t[1]);
+// Lifetime stats for the Profile's Stats page. A win or a top-3 finish counts on the same terms as XP's placing (4+ in the
+// round, a life of at least minSec); time alive is the server-capped survival; cells absorbed are capped per life.
+const STATS = { eatCap: 300 };
+function lifeStats({ survived, place, of, eaten }) {
+  const sec = Math.max(0, Math.min(RULES.maxRunSec, +survived || 0)), n = Math.floor(+of || 0), pl = Math.floor(+place || 0);
+  const placed = sec >= XP.minSec && n >= XP.minOf && pl >= 1 && pl <= n;
+  return { wins: placed && pl === 1 ? 1 : 0, podiums: placed && pl <= 3 ? 1 : 0, alive: Math.round(sec), eaten: Math.max(0, Math.min(STATS.eatCap, Math.floor(+eaten || 0))) };
+}
 function ratingDelta(rating, survived, eaten, place, of, life = 0) {
   // placing: 1st of N earns the full bonus, last earns none; needs at least 4 in the round to count. Winning adds more.
   const n = Math.max(0, of | 0), pl = Math.max(1, place | 0), placing = n >= 4 && pl <= n ? RATING.placeBonus * (1 - (pl - 1) / (n - 1)) : 0;
@@ -268,7 +282,7 @@ function questsTick(store, p, life, t = now()) {
   return out;
 }
 const packById = id => PACKS.find(p => p.id === id);
-const catalog = (store, p = null) => ({ skins: SKINS, seasons: Object.fromEntries(Object.entries(SEASONS).map(([k, s]) => [k, { ...s, open: seasonOpen(k) }])), pass: passCatalog(passLive(store, now(), p)), packs: PACKS, rules: RULES, rating: RATING, xp: XP, tiers: TIERS.map(t => t[1]), tierAt: TIERS.map(t => t[0]), iap: iap.status(), auth: signin.status() });
+const catalog = (store, p = null) => ({ skins: SKINS, seasons: Object.fromEntries(Object.entries(SEASONS).map(([k, s]) => [k, { ...s, open: seasonOpen(k) }])), pass: passCatalog(passLive(store, now(), p)), packs: PACKS, rules: RULES, rating: RATING, xp: XP, tiers: TIERS.map(t => t[1]), tierAt: TIERS.map(t => t[0]), tierNames: TIER_NAMES, iap: iap.status(), auth: signin.status() });
 
 function payoutFor({ survived, bestRank, place }) {
   const sec = Math.max(0, Math.min(RULES.maxRunSec, +survived || 0));
@@ -282,7 +296,11 @@ class ApiError extends Error { constructor(status, msg) { super(msg); this.statu
 const hash = s => crypto.createHash('sha256').update(String(s)).digest('hex');
 // The sign-in a wallet belongs to (Apple or Google), or null for a device-only wallet.
 const accountOf = (store, p) => { const i = store.identities(p.id)[0]; return i ? { provider: i.provider, email: i.email || null, since: Number(i.at) } : null; };
-const wallet = (store, p) => ({ playerId: p.id, balance: Number(p.balance), earned: Number(p.earned), skins: store.skins(p.id), rating: Number(p.rating ?? RATING.base), tier: tierOf(Number(p.rating ?? RATING.base)), runs: Number(p.runs || 0), ...levelOf(p.xp), pass: passOf(store, p), quests: questsOf(store, p), account: accountOf(store, p) });
+// stats: lifetime totals (peak is the best rating known, at least the current one); trophies: [{ tier, at }] up the ladder
+const statsOf = p => ({ wins: Number(p.wins || 0), podiums: Number(p.podiums || 0), alive: Number(p.alive || 0), eaten: Number(p.eaten || 0), peak: Math.max(Number(p.peak || 0), Number(p.rating ?? RATING.base)) });
+const trophiesOf = (store, p) => { const at = new Map(store.trophies(p.id).map(t => [t.tier, Number(t.at)])); return TIERS.map(t => t[1]).filter(k => at.has(k)).map(tier => ({ tier, at: at.get(tier) })); };
+const awardTrophies = (store, p, rating, at) => { if (Number(p.runs || 0) > 0) store.addTrophies(p.id, tiersUpTo(rating), at); };
+const wallet = (store, p) => ({ playerId: p.id, balance: Number(p.balance), earned: Number(p.earned), skins: store.skins(p.id), rating: Number(p.rating ?? RATING.base), tier: tierOf(Number(p.rating ?? RATING.base)), runs: Number(p.runs || 0), ...levelOf(p.xp), stats: statsOf(p), trophies: trophiesOf(store, p), pass: passOf(store, p), quests: questsOf(store, p), account: accountOf(store, p) });
 
 /* ---------- handlers: each gets (store, body, player?) and returns a JSON-able object ---------- */
 function session(store, body) {
@@ -291,7 +309,7 @@ function session(store, body) {
   const h = hash(secret), now = Date.now();
   let p = store.playerBySecret(h);
   if (!p) p = store.createPlayer(crypto.randomBytes(8).toString('hex'), h, now);
-  else store.touch(p.id, now);
+  else { store.touch(p.id, now); awardTrophies(store, p, statsOf(p).peak, now); }
   return { ...wallet(store, p), catalog: catalog(store, p) };
 }
 function auth(store, headers) {
@@ -364,6 +382,10 @@ function runEnd(store, body, p) {
   const before = Number(p.rating ?? RATING.base), delta = ratingDelta(before, survived, body.eaten, body.place, body.of, body.life), rating = Math.max(0, before + delta);
   const name = cleanName(body.name) || p.name || null;
   store.setRating(p.id, rating, name); p.rating = rating; p.name = name; p.runs = Number(p.runs || 0) + 1;
+  // lifetime stats and rank trophies (the rating before the life counts as reached too)
+  const st = lifeStats({ survived, place: body.place, of: body.of, eaten: body.eaten }), top = Math.max(before, rating);
+  store.addStats(p.id, st, top); for (const k of ['wins', 'podiums', 'alive', 'eaten']) p[k] = Number(p[k] || 0) + st[k]; p.peak = Math.max(Number(p.peak || 0), top);
+  awardTrophies(store, p, top, now);
   // xpParts: where the XP came from (time alive, placing, the win); levelUp: how many levels this life gained;
   // passUp: pass levels from the life and its quests; questXp and questsDone: the quests it finished
   const out = wallet(store, p);
@@ -447,4 +469,4 @@ function passAdmin(store, on, tester) {
 
 function leaderboard(store) { return { top: store.top(10).map((r, i) => ({ rank: i + 1, name: (r.name && !nameBlocked(r.name) && r.name) || 'Unnamed cell', rating: r.rating, tier: tierOf(r.rating), runs: r.runs })) }; }
 
-module.exports = { SKINS, PACKS, RULES, RATING, XP, SEASONS, seasonOpen, PASS, PASS_SEASONS, passSeason, passLive, passAdmin, QUESTS, QUEST_SLOTS, questsAt, questsOf, questsTick, isoWeekOf, catalog, payoutFor, ratingDelta, xpFor, levelOf, xpAtLevel, xpToNext, tierOf, nameBlocked, ApiError, auth, handlers: { deleteAccount, session, runStart, runEnd, buySkin, iapApple, iapGoogle, leaderboard, signInApple, signInGoogle, signOut, passView, passPremium, passClaim } };
+module.exports = { SKINS, PACKS, RULES, RATING, XP, TIERS, TIER_NAMES, STATS, tiersUpTo, lifeStats, SEASONS, seasonOpen, PASS, PASS_SEASONS, passSeason, passLive, passAdmin, QUESTS, QUEST_SLOTS, questsAt, questsOf, questsTick, isoWeekOf, catalog, payoutFor, ratingDelta, xpFor, levelOf, xpAtLevel, xpToNext, tierOf, nameBlocked, ApiError, auth, handlers: { deleteAccount, session, runStart, runEnd, buySkin, iapApple, iapGoogle, leaderboard, signInApple, signInGoogle, signOut, passView, passPremium, passClaim } };
