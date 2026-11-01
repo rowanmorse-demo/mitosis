@@ -1727,27 +1727,57 @@ body:not(.playing) #tip{display:none}
 :is(#settingsCard,#friendsCard) #helpSec .facts dt.hot{color:#ff6b78}
 :is(#settingsCard,#friendsCard) #achLine{display:none}
 @media (max-width:420px){:is(#settingsCard,#friendsCard) .seg button{padding:0 9px;font-size:12.5px}:is(#settingsCard,#friendsCard) .srow{gap:10px;padding-left:10px}:is(#settingsCard,#friendsCard) .srow+.srow::before,:is(#settingsCard,#friendsCard) .srow-d+.srow::before,:is(#settingsCard,#friendsCard) .srow+.srow-d>.srow::before{left:50px}:is(#settingsCard,#friendsCard) #helpSec .body{padding-left:50px}}
-/* Friends page: the Settings list look (shared rules above), plus the code, the add field, status dots and row actions */
-#friendsCard .sg-wrap{columns:1;max-width:560px;margin:0 auto;width:100%}
-#friendsCard .fr-code{display:block;margin-top:3px;font:700 21px/1.1 var(--mono);letter-spacing:.2em;color:var(--ink)}
-#friendsCard .sl small{display:block;margin-top:3px;font:500 11.5px/1.2 var(--display);color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#friendsCard .fr-add input{flex:1;min-width:0;height:36px;box-sizing:border-box;padding:0 12px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.35);color:var(--ink);font:600 16px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase}
-#friendsCard .fr-add input::placeholder{letter-spacing:.04em;text-transform:none;color:var(--dim)}
-#friendsCard .fr-add input:focus{outline:none;border-color:rgba(255,92,138,.65)}
-#friendsCard .fr-dot{flex:none;width:30px;height:30px;display:grid;place-items:center}
-#friendsCard .fr-dot::before{content:"";width:10px;height:10px;border-radius:50%;background:#56686a;box-shadow:0 0 0 3px rgba(86,104,106,.18)}
-#friendsCard .fr-dot.none::before{display:none}
-#friendsCard .fr-dot[data-s=menu]::before{background:#5fe0a8;box-shadow:0 0 0 3px rgba(95,224,168,.2)}
-#friendsCard .fr-dot:is([data-s=arena],[data-s=practice],[data-s=nearby],[data-s=spectating])::before{background:#ffd36b;box-shadow:0 0 0 3px rgba(255,211,107,.2)}
-#friendsCard .fr-dot[data-s=party]::before{background:#6ee1ff;box-shadow:0 0 0 3px rgba(110,225,255,.22)}
+/* Friends page, its own look: your code card (in landscape a sticky left column), then invites, party and friends */
+#overlay>#friendsCard.page .fr-wrap{grid-column:1/-1}
+#friendsCard .fr-wrap{min-width:0;width:100%;max-width:980px;margin:0 auto;display:grid;gap:18px;align-items:start;padding-bottom:max(18px,env(safe-area-inset-bottom))}
+@media (orientation:landscape){#friendsCard .fr-wrap{grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:22px}#friendsCard .fr-me{position:sticky;top:80px}}
+#friendsCard .fr-me{display:grid;gap:14px;padding:18px;border-radius:22px;background:radial-gradient(120% 100% at 0% 0%,rgba(79,227,194,.13),transparent 62%),linear-gradient(180deg,rgba(22,46,48,.84),rgba(8,24,26,.92));border:1px solid rgba(140,210,200,.17);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 16px 34px -20px rgba(0,0,0,.8)}
+#friendsCard .fr-me-top{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:34px}
+#friendsCard .fr-k{font:600 11px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+#friendsCard .fr-code{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+#friendsCard .fr-code i{height:54px;display:grid;place-items:center;border-radius:13px;font:700 26px/1 var(--mono);font-style:normal;color:var(--ink);background:rgba(0,0,0,.34);box-shadow:inset 0 0 0 1px rgba(140,210,200,.15),inset 0 2px 8px rgba(0,0,0,.4)}
+#friendsCard .fr-code.off i{color:var(--dim)}
+#friendsCard .fr-add{display:flex;gap:8px;margin:0;padding-top:14px;border-top:1px solid rgba(140,210,200,.12)}
+#friendsCard .fr-add input{flex:1;min-width:0;height:46px;box-sizing:border-box;padding:0 14px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.35);color:var(--ink);font:600 17px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase}
+#friendsCard .fr-add input::placeholder{font:500 15px/1 var(--display);letter-spacing:0;text-transform:none;color:var(--dim)}
+#friendsCard .fr-add input:focus{outline:none;border-color:rgba(255,92,138,.65);box-shadow:0 0 0 3px rgba(255,92,138,.15)}
+#friendsCard .fr-add .fr-btn{min-height:46px;padding:0 22px;border-radius:14px;font-size:15px}
+#friendsCard .fr-msg{margin:-4px 2px 0;font:500 13px/1.35 var(--display);color:var(--muted)}
+#friendsCard .fr-msg:empty{display:none}
+#friendsCard .fr-msg.bad{color:#ff8c96}
+#friendsCard .fr-col{display:grid;gap:20px;min-width:0}
+#friendsCard .fr-sec{display:grid;gap:9px;min-width:0}
+#friendsCard .fr-h{margin:0;padding:0 4px;display:flex;align-items:center;gap:8px;font:800 19px/1 var(--display);letter-spacing:-.025em;color:var(--ink)}
+#friendsCard .fr-h span{padding:4px 8px;border-radius:999px;font:600 11px/1 var(--mono);color:var(--muted);background:rgba(255,255,255,.07)}
+#friendsCard .fr-h span:empty{display:none}
+#friendsCard .fr-list{display:grid;border-radius:20px;overflow:hidden;background:linear-gradient(180deg,rgba(22,46,48,.72),rgba(8,24,26,.82));border:1px solid rgba(140,210,200,.13);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+#friendsCard .fr-row{position:relative;min-height:64px;box-sizing:border-box;padding:10px 12px 10px 14px;display:flex;align-items:center;gap:12px}
+#friendsCard .fr-row+.fr-row{border-top:1px solid rgba(140,210,200,.09)}
+#friendsCard .fr-av{position:relative;flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font:800 17px/1 var(--display);font-style:normal;color:rgba(4,22,20,.85);background:linear-gradient(160deg,hsl(var(--h) 80% 74%),hsl(var(--h) 60% 50%));box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -2px 0 rgba(0,0,0,.12),0 4px 10px rgba(0,0,0,.35)}
+#friendsCard .fr-av[data-s]::after{content:"";position:absolute;right:-1px;bottom:-1px;width:12px;height:12px;border-radius:50%;background:#56686a;box-shadow:0 0 0 2.5px #0c2123}
+#friendsCard .fr-av[data-s=menu]::after{background:#5fe0a8}
+#friendsCard .fr-av:is([data-s=arena],[data-s=practice],[data-s=nearby],[data-s=spectating])::after{background:#ffd36b}
+#friendsCard .fr-av[data-s=party]::after{background:#6ee1ff}
+#friendsCard .fr-tx{flex:1;min-width:0;display:grid;gap:4px}
+#friendsCard .fr-tx b{font:700 15.5px/1.2 var(--display);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#friendsCard .fr-tx small{font:500 12.5px/1.2 var(--display);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#friendsCard .fr-row.solo .fr-tx b{font-weight:600;color:var(--muted)}
 #friendsCard .fr-acts{flex:none;display:flex;gap:6px}
-#friendsCard .s-act.hot{border-color:transparent;color:var(--accent-ink);background:linear-gradient(180deg,#ff8eae,#ff5c8a 55%,#ee437a)}
-#friendsCard .s-act.ghost{padding:0 12px;color:var(--muted)}
-#friendsCard .s-act:disabled{opacity:.5}
-#friendsCard .fr-msg{margin:0;padding:0 8px;min-height:1.3em;font:500 12px/1.4 var(--display);color:var(--muted)}
-#friendsCard .fr-msg.bad{color:#ff7d88}
-#friendsCard .fr-note{margin:0;padding:0 8px;font:500 12px/1.45 var(--display);color:var(--dim)}
-#friendsCard .fr-empty .sl{white-space:normal;font-size:13px;line-height:1.4;color:var(--dim)}
+#friendsCard .fr-btn{position:relative;flex:none;appearance:none;min-height:36px;padding:0 16px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:linear-gradient(180deg,rgba(255,255,255,.15),rgba(255,255,255,.05));color:var(--ink);font:700 13.5px/1 var(--display);cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:transform .12s}
+#friendsCard .fr-btn::after{content:"";position:absolute;inset:-8px -5px}
+#friendsCard .fr-btn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+#friendsCard .fr-btn:active{transform:scale(.94)}
+#friendsCard .fr-btn.hot{border-color:transparent;color:var(--accent-ink);background:linear-gradient(180deg,#ff8eae,#ff5c8a 55%,#ee437a);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 6px 16px -8px rgba(255,92,138,.8)}
+#friendsCard .fr-btn.ghost{min-width:36px;padding:0 12px;justify-content:center;color:var(--muted);background:rgba(255,255,255,.05)}
+#friendsCard .fr-btn:disabled{opacity:.45;cursor:default}
+#friendsCard .fr-empty{display:grid;justify-items:center;gap:6px;padding:30px 20px 28px;text-align:center}
+#friendsCard .fr-empty i{width:58px;height:58px;margin-bottom:6px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 50% 30%,rgba(255,255,255,.1),rgba(255,255,255,.03));box-shadow:inset 0 0 0 1px rgba(140,210,200,.16),0 8px 20px rgba(0,0,0,.35)}
+#friendsCard .fr-empty i svg{width:28px;height:28px;fill:none;stroke:var(--muted);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#friendsCard .fr-empty b{font:800 21px/1.1 var(--display);letter-spacing:-.03em;color:var(--ink)}
+#friendsCard .fr-empty span{max-width:300px;font:500 13.5px/1.4 var(--display);color:var(--muted)}
+#friendsCard .fr-empty .fr-btn{margin-top:10px}
+#friendsCard .fr-note{margin:0;padding:0 6px;font:500 12.5px/1.45 var(--display);color:var(--dim)}
+@media (hover:hover){#friendsCard .fr-btn:not(:disabled):hover{filter:brightness(1.12)}}
 #friendsBtn{position:relative}.lb-tab .rail-badge{top:4px;right:10px}
 .rail-badge{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;padding:0 5px;box-sizing:border-box;border-radius:9px;background:#ff5c8a;color:#fff;font:700 11px/18px var(--display);text-align:center;box-shadow:0 0 0 2px rgba(4,12,14,.92);pointer-events:none}
 .lb-party{margin:8px 0 0;text-align:center;font:600 12.5px/1.3 var(--display);color:#8fe9ff}
@@ -2731,16 +2761,21 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
   <!-- Friends and parties (socRender): your friend code, adding by code, requests, the party and its invites -->
   <div class="card panel page" id="friendsCard" hidden>
     <header class="pg-top"><button class="lb-icon back" type="button" aria-label="Back to the lobby"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><h2>Friends</h2></header>
-    <div class="sg-wrap">
-      <section class="sg"><h3 class="sg-h">You</h3><div class="sg-list">
-        <div class="srow"><i class="si si-teal"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="6" width="17" height="12" rx="3"/><path d="M7 10.5h4M7 13.5h6M15.5 10.5h1.5"/></svg></i><span class="sl">Your friend code<b class="fr-code" id="frCode">······</b></span><button id="frCopy" class="s-act" type="button">Copy</button></div>
-        <form class="srow fr-add" id="frAdd"><i class="si si-green"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9.5" cy="8.5" r="3.5"/><path d="M3 19.5a6.5 6.5 0 0 1 13 0M19 8v6M16 11h6"/></svg></i><input id="frAddIn" type="text" maxlength="6" placeholder="Their code" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="send" aria-label="A friend's code"><button class="s-act hot" type="submit">Add</button></form>
-      </div><p class="fr-msg" id="frMsg" role="status"></p></section>
-      <section class="sg" id="frInvSec" hidden><h3 class="sg-h">Invites</h3><div class="sg-list" id="frInv"></div></section>
-      <section class="sg" id="frPartySec" hidden><h3 class="sg-h">Party</h3><div class="sg-list" id="frParty"></div><p class="fr-note">Press Play and your ally joins the same arena. You can't eat each other, and once you're out of lives you watch your ally.</p></section>
-      <section class="sg"><h3 class="sg-h">Friends</h3><div class="sg-list" id="frList"></div></section>
+    <div class="fr-wrap">
+      <section class="fr-me" aria-label="Your friend code">
+        <div class="fr-me-top"><span class="fr-k">Your friend code</span><button id="frCopy" class="fr-btn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8.5" y="8.5" width="11" height="11" rx="2.5"/><path d="M15.5 8.5V6a1.5 1.5 0 0 0-1.5-1.5H6A1.5 1.5 0 0 0 4.5 6v8A1.5 1.5 0 0 0 6 15.5h2.5"/></svg>Copy</button></div>
+        <b class="fr-code off" id="frCode" aria-live="polite"></b>
+        <form class="fr-add" id="frAdd"><input id="frAddIn" type="text" maxlength="6" placeholder="Add a friend by their code" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="send" aria-label="A friend's code"><button class="fr-btn hot" type="submit">Add</button></form>
+        <p class="fr-msg" id="frMsg" role="status"></p>
+      </section>
+      <div class="fr-col">
+        <section class="fr-sec" id="frInvSec" hidden><h3 class="fr-h">Invites</h3><div class="fr-list" id="frInv"></div></section>
+        <section class="fr-sec" id="frPartySec" hidden><h3 class="fr-h">Party</h3><div class="fr-list" id="frParty"></div><p class="fr-note">Press Play and your ally joins the same arena. You can't eat each other, and once you're out of lives you watch your ally.</p></section>
+        <section class="fr-sec"><h3 class="fr-h">Friends<span id="frCount"></span></h3><div class="fr-list" id="frList"></div></section>
+      </div>
     </div>
   </div>
+
 
   <!-- Results: full-screen after a death, a round's end or leaving from the pause menu (resFill / resShow) -->
   <div class="res dead" id="deathCard" role="dialog" aria-labelledby="dTitle" hidden>
@@ -6115,12 +6150,18 @@ function socAct(path,body,ok){
   socMsg='';socCall(path,body).then(v=>{socMsg=typeof ok==='function'?ok(v):ok||'';socMsgAt=performance.now();socKey='';socRender();}).catch(()=>{socKey='';socRender();});
 }
 const friendName=code=>{const f=soc&&soc.friends.find(x=>x.code===code);return f?f.name:code;};
-function frRow(dot,name,sub,acts){
-  const r=document.createElement('div');r.className='srow fr';
-  r.innerHTML=`<i class="fr-dot${dot==='none'?' none':''}"${dot&&dot!=='none'?` data-s="${dot}"`:''}></i><span class="sl">${esc(name)}${sub?`<small>${esc(sub)}</small>`:''}</span><span class="fr-acts"></span>`;
-  for(const [label,cls,fn,off] of acts){const b=document.createElement('button');b.type='button';b.className='s-act'+(cls?' '+cls:'');b.textContent=label;b.disabled=!!off;b.addEventListener('click',fn);r.lastChild.appendChild(b);}
+function frRow(dot,name,sub,acts){ // dot: a status (draws the avatar's dot), null (avatar, no dot) or 'none' (a plain row, no avatar)
+  const r=document.createElement('div');r.className='fr-row'+(dot==='none'?' solo':'');let h=0;for(const ch of name)h=(h*31+ch.charCodeAt(0))%360;
+  r.innerHTML=`${dot==='none'?'':`<i class="fr-av" style="--h:${h}"${dot?` data-s="${dot}"`:''}>${esc((name.trim()[0]||'?').toUpperCase())}</i>`}<span class="fr-tx"><b>${esc(name)}</b>${sub?`<small>${esc(sub)}</small>`:''}</span><span class="fr-acts"></span>`;
+  for(const [label,cls,fn,off] of acts){const b=document.createElement('button');b.type='button';b.className='fr-btn'+(cls?' '+cls:'');b.textContent=label;b.disabled=!!off;b.addEventListener('click',fn);r.lastChild.appendChild(b);}
   return r;
 }
+const FR_ICO={off:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M9 5.4A6.5 6.5 0 0 1 18.4 10a4.6 4.6 0 0 1 2.1 7.6M16.5 19H7.2a4.6 4.6 0 0 1-1.1-9.1"/></svg>',
+  wait:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
+  none:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.5" r="3.5"/><path d="M2.5 19.5a6.5 6.5 0 0 1 13 0"/><circle cx="17" cy="9.5" r="2.6"/><path d="M15.8 14.2a5 5 0 0 1 5.7 5.3"/></svg>'};
+function frEmpty(ico,title,sub,retry){const e=document.createElement('div');e.className='fr-empty';e.innerHTML=`<i>${FR_ICO[ico]}</i><b>${esc(title)}</b><span>${esc(sub)}</span>`;
+  if(retry){const b=document.createElement('button');b.type='button';b.className='fr-btn';b.textContent='Retry';b.addEventListener('click',()=>{socErr='';socNext=0;socKey='';socRender();socTick();});e.appendChild(b);}return e;}
+function frCodeSet(t){const c=$('frCode');c.classList.toggle('off',!t);c.innerHTML=[...(t||'------')].map(ch=>`<i>${esc(ch==='-'?'–':ch)}</i>`).join('');c.setAttribute('aria-label',t?`Your friend code: ${t.split('').join(' ')}`:'Your friend code is loading');}
 function socRender(){
   const v=soc,n=v?v.incoming.length+v.invites.length:0,bd=$('friendsBadge');
   bd.hidden=!n;if(n)bd.textContent=n>9?'9+':String(n);
@@ -6128,11 +6169,13 @@ function socRender(){
   lp.hidden=!ally;if(ally)lp.textContent=`In a party with ${ally.name} · Play together`;
   if($('friendsCard').hidden)return;
   if(socMsg&&performance.now()-socMsgAt>5000)socMsg='';
-  $('frCode').textContent=v?v.code:'······';$('frCopy').disabled=!v;
-  const msg=$('frMsg');msg.textContent=socMsg||socErr||(v?'':'Connecting…');msg.classList.toggle('bad',!socMsg&&!!socErr);
-  const key=JSON.stringify([v&&[v.friends,v.incoming,v.outgoing,v.party,v.invites],socArm]);if(key===socKey)return;socKey=key; // rebuild only on change, so taps land
+  if($('frCode').dataset.c!==(v?v.code:'')){$('frCode').dataset.c=v?v.code:'';frCodeSet(v&&v.code);}$('frCopy').disabled=!v;
+  const off=/^Offline/.test(socErr); // with no data yet the list says why; with data, a lost connection is a quiet note and only a failed action is red
+  const msg=$('frMsg');msg.textContent=socMsg||(v?(off?'Offline. Your friends as they were last seen.':socErr):'');msg.classList.toggle('bad',!socMsg&&!!socErr&&!off);
+  $('frCount').textContent=v&&v.friends.length?String(v.friends.length):'';
+  const key=JSON.stringify([v&&[v.friends,v.incoming,v.outgoing,v.party,v.invites],socArm,!v&&socErr]);if(key===socKey)return;socKey=key; // rebuild only on change, so taps land
   const inv=$('frInv'),party=$('frParty'),list=$('frList');inv.textContent='';party.textContent='';list.textContent='';
-  if(!v)return;
+  if(!v){list.appendChild(socErr?frEmpty('off','Offline',socErr.replace(/^Offline: /,'').replace(/^./,ch=>ch.toUpperCase()),true):frEmpty('wait','Connecting…','Looking up your friends'));return;}
   for(const i of v.invites)inv.appendChild(frRow('party',i.from.name,'invited you to a party',[['Join','hot',()=>socAct('party/join',{party:i.party},`You're in a party with ${i.from.name}`)],['✕','ghost',()=>socAct('party/decline',{party:i.party})]]));
   for(const r of v.incoming)inv.appendChild(frRow(null,r.name,'wants to be friends',[['Accept','hot',()=>socAct('accept',{code:r.code},`You're now friends with ${r.name}`)],['✕','ghost',()=>socAct('remove',{code:r.code})]]));
   $('frInvSec').hidden=!inv.children.length;
@@ -6150,7 +6193,7 @@ function socRender(){
     list.appendChild(frRow(f.inParty?'party':f.status,f.name,f.inParty?'In your party':SOC_ST[f.status]||'',acts));
   }
   for(const o of v.outgoing)list.appendChild(frRow(null,o.name,'Friend request sent',[['Cancel','ghost',()=>socAct('remove',{code:o.code})]]));
-  if(!list.children.length)list.appendChild(Object.assign(frRow('none','No friends yet. Send your code to a friend, or add theirs above.','',[]),{className:'srow fr fr-empty'}));
+  if(!list.children.length)list.appendChild(frEmpty('none','No friends yet','Send your code to a friend, or add theirs. Friends can party up and play in the same arena.'));
 }
 $('friendsBtn').addEventListener('click',()=>{showCard('friendsCard');socKey='';socRender();socNext=0;});
 $('frAdd').addEventListener('submit',e=>{e.preventDefault();const inp=$('frAddIn'),code=inp.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
@@ -6158,7 +6201,7 @@ $('frAdd').addEventListener('submit',e=>{e.preventDefault();const inp=$('frAddIn
   inp.value='';inp.blur();socAct('add',{code},v=>{const f=v.friends.find(x=>x.code===code);return f?`You're now friends with ${f.name}`:'Friend request sent';});});
 $('frCopy').addEventListener('click',()=>{if(!soc)return;const t=soc.code;
   const done=()=>{socMsg=`Copied ${t}. Send it to a friend`;socMsgAt=performance.now();socRender();};
-  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(done,()=>{$('frCode').textContent=t;done();});else done();});
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(done,done);else done();});
 // spectating your ally once you're out of lives: the results card waits behind a small bar
 let specHist=null;
 function specStart(hist){const a=allyOf();if(!a)return false;specOn=true;specHist=hist;showCard(null);$('specName').textContent=a.name;$('specBar').hidden=false;socNext=0;return true;}
