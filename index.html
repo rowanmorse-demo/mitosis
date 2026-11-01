@@ -2769,9 +2769,9 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
   const N=window.__mitosisNet={lan:[],state:'connecting'};
   let ws=null,connected=false,mine={},mineObj=Object.freeze({}),snap=Object.freeze([]),connFns=[],pending=false,lastSend=0,retry=0;
   let nearby=null; // set while playing phones nearby: posts our presence to them through the app instead of the server
-  const others=new Map();
+  const others=new Map(),gotAt=new Map(); // gotAt: when each peer's latest presence arrived (performance.now), for smoothing its cells
   function rebuild(){const a=[{peer:myId,by:null,isMe:true,sameTab:true,kind:'viewer',guest:false,presence:mineObj,updatedAt:0}];
-    for(const [id,p] of others)a.push({peer:id,by:null,isMe:false,sameTab:false,kind:'viewer',guest:false,presence:p,updatedAt:0});snap=Object.freeze(a);}
+    for(const [id,p] of others)a.push({peer:id,by:null,isMe:false,sameTab:false,kind:'viewer',guest:false,presence:p,updatedAt:gotAt.get(id)||0});snap=Object.freeze(a);}
   function setConn(v){if(connected===v)return;connected=v;for(const f of connFns){try{f(v);}catch(e){}}}
   function flush(){pending=false;if(nearby){lastSend=performance.now();nearby(JSON.stringify(mine));return;}
     if(ws&&ws.readyState===1){lastSend=performance.now();try{ws.send(JSON.stringify({t:'p',p:mine}));}catch(e){}}}
@@ -2783,9 +2783,9 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
     ws.onopen=()=>{retry=0;ws.send(JSON.stringify(N.party?{t:'hello',id:myId,party:N.party}:{t:'hello',id:myId}));}; // party: the server seats party members in one arena
     ws.onmessage=ev=>{const w0=performance.now();try{onMsg(ev);}finally{const w=performance.now()-w0;if(window.__wsTime)window.__wsTime(w);}};
   function onMsg(ev){if(nearby)return;let m;try{m=JSON.parse(ev.data);}catch(e){return;}if(!m||typeof m!=='object')return;
-      if(m.t==='welcome'){others.clear();for(const q of Array.isArray(m.peers)?m.peers:[])if(q&&typeof q.id==='string'&&q.p&&typeof q.p==='object')others.set(q.id,Object.freeze(q.p));
+      if(m.t==='welcome'){others.clear();for(const q of Array.isArray(m.peers)?m.peers:[])if(q&&typeof q.id==='string'&&q.p&&typeof q.p==='object'){others.set(q.id,Object.freeze(q.p));gotAt.set(q.id,performance.now());}
         N.lan=Array.isArray(m.lan)?m.lan.filter(u=>typeof u==='string'):[];N.state='live';rebuild();setConn(true);flush();}
-      else if(m.t==='p'&&typeof m.id==='string'&&m.p&&typeof m.p==='object'){others.set(m.id,Object.freeze(m.p));rebuild();}
+      else if(m.t==='p'&&typeof m.id==='string'&&m.p&&typeof m.p==='object'){others.set(m.id,Object.freeze(m.p));gotAt.set(m.id,performance.now());rebuild();}
       else if(m.t==='bye'&&typeof m.id==='string'){others.delete(m.id);rebuild();}
       else if(m.t==='pong'&&typeof m.c==='number'&&pings.delete(m.c)){const rtt=performance.now()-m.c;if(rtt>=0&&rtt<60000){NS.rtts.push(rtt);if(NS.rtts.length>300)NS.rtts.shift();NS.pongs++;N.rtt=N.rtt==null?rtt:N.rtt*.7+rtt*.3;}}
       else if(m.t==='full')N.state='full';}
@@ -2795,7 +2795,7 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
   const room=Object.freeze({
     peers:()=>snap,
     presence(patch){mine={...mine};for(const k in patch){if(patch[k]===null)delete mine[k];else mine[k]=patch[k];}mineObj=Object.freeze(mine);rebuild();
-      if(!pending){pending=true;setTimeout(flush,Math.max(0,(nearby?100:33)-(performance.now()-lastSend)));}return Promise.resolve();}, // 10 a second nearby: Bluetooth is slower than the internet
+      if(!pending){pending=true;setTimeout(flush,Math.max(0,33-(performance.now()-lastSend)));}return Promise.resolve();}, // the game sends 15 a second (netTick); this only stops bursts
     onConnection(fn){connFns.push(fn);setTimeout(()=>fn(connected),0);return()=>{connFns=connFns.filter(f=>f!==fn);};},
     onPeers(){return()=>{};},connected:()=>connected,emit:()=>Promise.resolve(),on:()=>()=>{}
   });
@@ -2811,10 +2811,10 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
     else{N.mode='server';N.state='connecting';setConn(false);retry=0;connect();}
   };
   // a phone that went quiet without a goodbye (its app was closed, or iOS ended the session in the background) drops out after 8 s
-  const nearSeen=new Map();
+  const nearSeen=new Map();N.rxBy=new Map(); // rxBy: messages from each phone, for the device log
   setInterval(()=>{if(!nearby)return;const now=performance.now();let gone=false;for(const [id,t] of nearSeen)if(now-t>8000){nearSeen.delete(id);gone=others.delete(id)||gone;}if(gone)rebuild();},2000);
   N.onNearby=m=>{if(!nearby||!m||typeof m.id!=='string')return;
-    if(m.ev==='p'&&typeof m.data==='string'){let p;try{p=JSON.parse(m.data);}catch(e){return;}if(p&&typeof p==='object'){others.set(m.id,Object.freeze(p));nearSeen.set(m.id,performance.now());N.rx=(N.rx||0)+1;N.rxB=(N.rxB||0)+m.data.length;rebuild();}}
+    if(m.ev==='p'&&typeof m.data==='string'){let p;try{p=JSON.parse(m.data);}catch(e){return;}if(p&&typeof p==='object'){const t=performance.now();others.set(m.id,Object.freeze(p));gotAt.set(m.id,t);nearSeen.set(m.id,t);N.rx=(N.rx||0)+1;N.rxB=(N.rxB||0)+m.data.length;N.rxBy.set(m.id,(N.rxBy.get(m.id)||0)+1);rebuild();}}
     else if(m.ev==='bye'){others.delete(m.id);nearSeen.delete(m.id);rebuild();}
     else if(m.ev==='join')flush();};
   // Ping: a small message every 4 s that the server echoes back. N.rtt is the smoothed round trip; NS collects samples
@@ -2903,7 +2903,7 @@ const DIFF={calm:{bots:40,aggr:.35,think:.36},standard:{bots:60,aggr:.65,think:.
 const SKILL={easy:{label:'Easy',aggr:.3,think:.44,caution:.55},normal:{label:'Normal',aggr:.65,think:.26,caution:1},hard:{label:'Hard',aggr:.92,think:.17,caution:1.15},expert:{label:'Expert',aggr:1.1,think:.11,caution:1.3},
   master:{label:'Master',aggr:1.15,think:.12,caution:1.45,smart:true}},SKILL_LIST=['easy','normal','hard','expert','master']; // Master thinks no faster than Expert, it thinks better (see think)
 // Nearby match settings: the host phone picks them in the lobby and the others follow (see nearIngest)
-const NEAR_BOTS={none:0,few:20,normal:40,lots:60},NEAR_LEN=[180,300,600],NEAR_LIVES=[1,3,5],near={k:'normal',b:'normal',len:300,lives:3,m:0,heard:false,tx:0,txn:0,txb:0,rx:0,rxb:0,logAt:0,was:null,wasName:''};
+const NEAR_BOTS={none:0,few:20,normal:40,lots:60},NEAR_LEN=[180,300,600],NEAR_LIVES=[1,3,5],near={k:'normal',b:'normal',len:300,lives:3,m:0,heard:false,tx:0,sq:0,txn:0,txb:0,rx:0,rxb:0,logAt:0,fN:0,sqAt:new Map(),was:null,wasName:''};
 const nearMode=()=>{const N=window.__mitosisNet;return !local&&!!N&&N.mode==='nearby';};
 const skillNow=()=>SKILL[local==='practice'?(settings.botSkill||'normal'):nearMode()?near.k:'normal']||SKILL.normal;
 const STAINS=[[340,100,68],[250,100,76],[174,62,54],[40,90,58],[18,100,64],[200,25,88]];
@@ -4377,7 +4377,7 @@ function makeOrg(){const o=[];for(let i=0;i<6;i++)o.push({a:rand(0,TAU),d:rand(.
 function addCell(p,x,y,mass,vx=0,vy=0){
   const r=radius(mass);
   const c={id:nextId++,nid:(nidC++%4095)+1,owner:p,x,y,px:x,py:y,svx:0,svy:0,mass,r,dr:r,vx,vy,mergeAt:0,wob:Math.random()*TAU,dead:false,inf:0,infVis:false,
-    tx:x,ty:y,tt:0,nvx:0,nvy:0,pts:new Float32Array(NP).fill(1),pv:new Float32Array(NP),lim:new Float32Array(NP),org:makeOrg()};
+    tx:x,ty:y,tt:0,nvx:0,nvy:0,ex:0,ey:0,pts:new Float32Array(NP).fill(1),pv:new Float32Array(NP),lim:new Float32Array(NP),org:makeOrg()};
   p.cells.push(c);cells.push(c);return c;
 }
 function kick(c,s){for(let i=0;i<NP;i++)c.pv[i]+=rand(-s,s);}
@@ -5001,8 +5001,10 @@ function step(dt){
   for(const f of floats)f.t+=dt;floats=floats.filter(f=>f.t<f.life);
 }
 function smoothRemote(dt){
-  const t=now(),k=Math.min(1,dt*14);
-  for(const c of cells){if(!c.owner.remote)continue;const lead=Math.min(nearMode()?.25:.12,t-c.tt);c.x+=(c.tx+c.nvx*lead-c.x)*k;c.y+=(c.ty+c.nvy*lead-c.y)*k;}
+  // a remote cell is drawn where its last message put it, moved on at its speed for as long ago as that was (up to
+  // leadCap: a phone that goes quiet stops moving), plus what is left of the jump that message made, eased away
+  const t=now(),k=Math.min(1,dt*14),keep=1-k,cap=leadCap();
+  for(const c of cells){if(!c.owner.remote)continue;const lead=Math.min(cap,Math.max(0,t-c.tt));c.ex*=keep;c.ey*=keep;c.x=c.tx+c.nvx*lead+c.ex;c.y=c.ty+c.nvy*lead+c.ey;}
   if(!isHost){
     for(const v of freeV){v.x+=(v.tx-v.x)*k;v.y+=(v.ty-v.y)*k;}
     for(const h of hunters){const was=Math.hypot(h.x,h.y);const ox=h.x,oy=h.y;h.x+=(h.tx-h.x)*k;h.y+=(h.ty-h.y)*k;
@@ -5584,13 +5586,17 @@ function sfx(kind,amt=0){
 
 /* ================= live room (multiplayer) ================= */
 function removePlayer(pl){for(const c of pl.cells)c.dead=true;pl.cells=[];pl.alive=false;const i=players.indexOf(pl);if(i>=0)players.splice(i,1);}
-function syncProxyCells(pl,list){
-  const t=now(),seen=new Set();
+const leadCap=()=>nearMode()?.3:.2; // seconds a remote cell keeps moving on its own after its last message
+function syncProxyCells(pl,list,sT){ // sT: when the sender had its cells there, on our clock (sampleTime)
+  const t=now(),seen=new Set(),cap=leadCap();
   for(const [id,x,y,m0] of list){
     const inf=m0>=INF_FLAG,m=clamp(inf?m0-INF_FLAG:m0,1,MAX_MASS);seen.add(id);
     let c=pl.cells.find(c=>c.nid===id);
-    if(!c){c=addCell(pl,x,y,m);c.nid=id;c.tx=x;c.ty=y;c.tt=t;c.dr=radius(m)*.9;}
-    else{const dt=Math.max(.03,t-c.tt);c.nvx=clamp((x-c.tx)/dt,-1600,1600);c.nvy=clamp((y-c.ty)/dt,-1600,1600);c.tx=x;c.ty=y;c.tt=t;}
+    if(!c){c=addCell(pl,x,y,m);c.nid=id;c.tx=x;c.ty=y;c.tt=sT;c.dr=radius(m)*.9;}
+    else if(sT>c.tt){const dt=Math.max(.03,sT-c.tt);c.nvx=dt<1?clamp((x-c.tx)/dt,-1600,1600):0;c.nvy=dt<1?clamp((y-c.ty)/dt,-1600,1600):0;c.tx=x;c.ty=y;c.tt=sT;
+      // speed from the sender's own times, so a late message followed by a prompt one isn't read as a sprint; the cell
+      // stays drawn where it is and the difference eases away (smoothRemote). Over 800 apart is a respawn: go there.
+      const lead=Math.min(cap,Math.max(0,t-sT));c.ex=c.x-(x+c.nvx*lead);c.ey=c.y-(y+c.nvy*lead);if(c.ex*c.ex+c.ey*c.ey>640000)c.ex=c.ey=0;}
     c.mass=m;c.r=radius(m);c.infVis=inf;
   }
   for(const c of pl.cells)if(!seen.has(c.nid))c.dead=true;
@@ -5622,13 +5628,28 @@ function applyRec(r){
   else if(t==='i'){const h=hunters.find(h=>h.id===(r[2]|0));if(h)h.dead=true;}
   else if(t==='h'){const h=hunters.find(h=>h.id===(r[2]|0));if(h){h.hp--;if(h.hp<=0)lyseHunter(h);}}
 }
-function ingest(peer,P,fromHost){
+// Each message carries the sender's clock (ts, ms). The quickest a peer's messages arrive against that clock stands for
+// no delay, so a message held up on the way (Bluetooth delivers in bursts) is known to be late and its cells are moved on
+// further, instead of the next prompt one looking like a sprint. Older games send no ts: then the arrival time stands in.
+const TS_WRAP=16777216,peerClk=new Map();
+function sampleTime(peer,ts,at){
+  const a=(at>0?at:performance.now())/1000,raw=typeof ts==='string'&&ts.length===4?dec(ts,0,4):NaN;
+  if(Number.isNaN(raw))return a;
+  let k=peerClk.get(peer);
+  if(!k){k={raw,u:raw/1000,min:a-raw/1000,at:a,late:0,lateMax:0,n:0};peerClk.set(peer,k);}
+  else{let d=raw-k.raw;if(d<-TS_WRAP/2)d+=TS_WRAP;else if(d>TS_WRAP/2)d-=TS_WRAP;k.raw=raw;k.u+=d/1000;
+    const off=a-k.u;k.min=Math.min(off,k.min+(a-k.at)*.01);if(off-k.min>2)k.min=off;k.at=a; // the floor creeps up 10 ms a second; over 2 s late: the sender restarted
+    const late=off-k.min;k.late+=late;k.n++;if(late>k.lateMax)k.lateMax=late;}
+  return k.u+k.min;
+}
+function ingest(peer,P,fromHost,at){
+  const sT=sampleTime(peer,P.ts,at);
   let pl=proxies.get(peer);
   if(!pl){pl=makePlayer('',STAINS[0],false);pl.remote=true;pl.key=peer;proxies.set(peer,pl);players.push(pl);}
   pl.name=cleanName(P.n)||'Guest cell';pl.stain=clamp(P.s|0,0,STAINS.length-1);pl.skin=P.ks>0&&P.ks<SKIN_COUNT?P.ks|0:(P.k|0)<SKIN_COUNT?clamp(P.k|0,0,SKIN_COUNT-1):0;pl.color=skinColor(pl.stain,pl.skin);setFx(pl,P.f|0);
   pl.pt=typeof P.pt==='string'&&/^[a-z0-9]{6,16}$/.test(P.pt)?P.pt:null;
   const alive=P.a===1;
-  syncProxyCells(pl,alive&&typeof P.cl==='string'?decCells(P.cl,0,MAX_CELLS):[]);
+  syncProxyCells(pl,alive&&typeof P.cl==='string'?decCells(P.cl,0,MAX_CELLS):[],sT);
   pl.alive=alive&&pl.cells.length>0;
   const ej=[];if(typeof P.ej==='string')for(let o=0;o+6<=P.ej.length&&ej.length<20;o+=6){const x=dec(P.ej,o,3)-OFF,y=dec(P.ej,o+3,3)-OFF;if(!Number.isNaN(x+y))ej.push({x,y,color:pl.color});}
   remoteEj.set(peer,ej);
@@ -5636,15 +5657,15 @@ function ingest(peer,P,fromHost){
     for(const r of P.r.slice(-24)){if(!Array.isArray(r)||r.length<2)continue;const s=r[0]|0;if(s<=last)continue;if(s>mx)mx=s;try{applyRec(r);}catch(e){}}
     lastSeq.set(peer,mx);}
   if(typeof P.pe==='string')for(let o=0;o+6<=P.pe.length;o+=6){const i=dec(P.pe,o,3),g=dec(P.pe,o+3,3);if(Number.isNaN(i+g)||i<0||i>=PELLETS)continue;const p2=pellets[i];if(p2.g<=g){p2.g=(g+1)%262143;placePellet(p2);}}
-  if(fromHost&&!isHost){ingestWorld(P);nearIngest(P.lb);}
+  if(fromHost&&!isHost){ingestWorld(P,sT);nearIngest(P.lb);}
 }
-function ingestWorld(P){
+function ingestWorld(P,sT){
   const t=now();
   if(typeof P.b==='string'){const s=P.b,seenB=new Set();let o=0;
     while(o+6<=s.length&&seenB.size<120){const bid=dec(s,o,2),f=dec(s,o+2,3),n=dec(s,o+5,1);if(Number.isNaN(bid+f+n))break;
       const list=decCells(s,o+6,Math.min(n,MAX_CELLS));o+=6+n*12;seenB.add(bid);
       let pl=botProx.get(bid);if(!pl){pl=makePlayer(botName(bid),botColor(bid),true);pl.bid=bid;pl.remote=true;pl.boss=bid===BOSS_BID;pl.skin=botSkin(bid);botProx.set(bid,pl);players.push(pl);}
-      setFx(pl,f);syncProxyCells(pl,list);pl.alive=pl.cells.length>0;}
+      setFx(pl,f);syncProxyCells(pl,list,sT);pl.alive=pl.cells.length>0;}
     const part=P.bp===1,mv=part&&human&&human.alive?nearViews([human],.75):null;
     for(const [bid,pl] of botProx){if(seenB.has(bid)){pl.seenAt=t;continue;}
       if(!part||t-(pl.seenAt??t)>2||(mv&&pl.cells.some(c=>inView(mv,c.x,c.y,0)))){removePlayer(pl);botProx.delete(bid);}}
@@ -5697,7 +5718,8 @@ function becomeHost(){
 function send(){
   const P={v:PROTO,h:(isHost&&claimReady&&!yielded)?1:0,n:(human?human.name:(cleanName($('nameIn').value)||'Unnamed cell')).slice(0,16),s:settings.stain|0,
     a:human&&human.alive?1:0,f:human?fxBits(human):0,k:wireSkin(human?human.skin:settings.skin),ks:human?human.skin:settings.skin,q:queued?1:0,bp:null,em:null,ev:null,rd:null,cl:null,ej:null,r:null,pe:null,b:null,vs:null,vw:null,pu:null,hv:null,
-    pt:soc&&soc.party?soc.party.id:null}; // pt: your party, so your ally's game treats you as an ally (older games ignore it)
+    pt:soc&&soc.party?soc.party.id:null, // pt: your party, so your ally's game treats you as an ally (older games ignore it)
+    ts:enc(Math.floor(performance.now())%TS_WRAP,4),sq:nearMode()?enc(++near.sq%4096,2):null}; // ts: our clock, for smoothing (sampleTime); sq: Nearby counts lost messages
   if(human&&human.alive)P.cl=human.cells.slice(0,MAX_CELLS).map(encCell).join('');
   if(ejected.length)P.ej=ejected.slice(-16).map(e=>enc(e.x+OFF,3)+enc(e.y+OFF,3)).join('');
   recs=recs.filter(r=>T-r.t<3).slice(-20);if(recs.length)P.r=recs.map(r=>r.d);
@@ -5730,6 +5752,7 @@ function send(){
   if(nearMode()){near.txn++;near.txb+=js.length;}
   room.presence(P).catch(()=>{});
 }
+const SEND_IV=.066;
 function netTick(dt){
   if(!room)return;
   let peers;try{peers=room.peers();}catch(e){return;}
@@ -5749,14 +5772,16 @@ function netTick(dt){
   if(newHost!==hostPeer){hostPeer=newHost;if(hostPeer&&hostPeer!==myPeer)lastSeen.delete(hostPeer);}
   const live=new Set();
   for(const p of others){live.add(p.peer);if(lastSeen.get(p.peer)===p.presence)continue;lastSeen.set(p.peer,p.presence);seenAt.set(p.peer,T);
-    try{ingest(p.peer,p.presence,p.peer===hostPeer);}catch(e){}}
-  for(const [k,pl] of proxies)if(!live.has(k)){removePlayer(pl);proxies.delete(k);remoteEj.delete(k);lastSeen.delete(k);seenAt.delete(k);lastSeq.delete(k);}
+    try{ingest(p.peer,p.presence,p.peer===hostPeer,p.updatedAt);}catch(e){}}
+  for(const [k,pl] of proxies)if(!live.has(k)){removePlayer(pl);proxies.delete(k);remoteEj.delete(k);lastSeen.delete(k);seenAt.delete(k);lastSeq.delete(k);peerClk.delete(k);}
   for(const m of [vSup,wSup,puSup,hSup])for(const [k,t] of m)if(T-t>4)m.delete(k);
-  netSendT-=dt;if(netSendT<=0){netSendT=nearMode()?.1:.066;if(!BISECT.nosend)send();}
+  // 15 messages a second, on the real clock (dt is the frame's whole gap): a phone drawing 15 frames a second sends every
+  // frame. The clock used to restart each send and count frames' capped time, so slow phones sent every 2nd frame (~7 a second)
+  netSendT-=dt;if(netSendT<=0){netSendT=Math.max(netSendT+SEND_IV,SEND_IV/4);if(!BISECT.nosend)send();}
 }
 function onRoomErr(){
   room=null;netState='solo';myPeer=null;peerCount=1;lastPeerCount=1;if(isHost)syncBots();
-  for(const [,pl] of proxies)removePlayer(pl);proxies.clear();remoteEj.clear();
+  for(const [,pl] of proxies)removePlayer(pl);proxies.clear();remoteEj.clear();peerClk.clear();
   if(!isHost)becomeHost();
 }
 (async()=>{
@@ -6202,8 +6227,12 @@ function nearSync(){
   if(host&&near.m&&(round.over||round.id!==near.m)){near.m=0;nearLog('match over');toast('Nearby','Match over','Start the next one from the lobby');} // the match round ended
   if(near.m&&host&&near.was&&near.was!==myPeer){nearLog('took over hosting from '+near.was);toast('Nearby','You host the match now',(near.wasName||'The host')+' left. The match goes on');}
   if(claimReady&&hostPeer){near.was=hostPeer;if(hostPeer!==myPeer)near.wasName=nearName(hostPeer);}
-  if(performance.now()-near.logAt>10000){near.logAt=performance.now();const N=window.__mitosisNet,rx=(N&&N.rx)||0,rxb=(N&&N.rxB)||0; // traffic, for the device log
-    nearLog(`peers=${peerCount} host=${host?1:0} match=${near.m} sent ${(near.txn/10).toFixed(1)}/s ${(near.txb/10240).toFixed(1)} KB/s, got ${((rx-near.rx)/10).toFixed(1)}/s ${((rxb-near.rxb)/10240).toFixed(1)} KB/s`);near.txn=near.txb=0;near.rx=rx;near.rxb=rxb;}
+  if(performance.now()-near.logAt>10000){const N=window.__mitosisNet,rx=(N&&N.rx)||0,rxb=(N&&N.rxB)||0,el=(performance.now()-near.logAt)/1000;near.logAt=performance.now(); // traffic, for the device log
+    let sent=0,got=0,late=0,lateN=0,lateMax=0; // lost: from the senders' message counts (sq); late: held up on the way, against each phone's quickest
+    for(const p of N?N.peers():[]){if(p.isMe||!p.presence||typeof p.presence.sq!=='string')continue;const q=dec(p.presence.sq,0,2),r=(N.rxBy&&N.rxBy.get(p.peer))||0,was=near.sqAt.get(p.peer);
+      if(was&&!Number.isNaN(q)){sent+=(q-was.q+4096)%4096;got+=r-was.r;}near.sqAt.set(p.peer,{q,r});const k=peerClk.get(p.peer);if(k&&k.n){late+=k.late;lateN+=k.n;lateMax=Math.max(lateMax,k.lateMax);k.late=k.lateMax=k.n=0;}}
+    nearLog(`peers=${peerCount} host=${host?1:0} match=${near.m} fps ${Math.round((frameN-near.fN)/el)}${saverOn?' saver':''}${power.low?' low-power':''}${power.thermal?' thermal '+power.thermal:''} sent ${(near.txn/el).toFixed(1)}/s ${(near.txb/el/1024).toFixed(1)} KB/s, got ${((rx-near.rx)/el).toFixed(1)}/s ${((rxb-near.rxb)/el/1024).toFixed(1)} KB/s`+(sent>0?`, lost ${Math.round(Math.max(0,1-got/sent)*100)}%`:'')+(lateN?`, late ${Math.round(late/lateN*1000)} ms avg ${Math.round(lateMax*1000)} max`:''));
+    near.txn=near.txb=0;near.rx=rx;near.rxb=rxb;near.fN=frameN;}
   setTxt($('nearWho'),peerCount<=1?(host?(near.m?'You host · the others left':'No phones yet · you can start alone'):'Looking for phones…'):peerCount+' phones · '+(host?'you host':!claimReady||hostPeer===myPeer?'choosing a host…':nearName(hostPeer)+' hosts'));
   setTxt($('nearSum'),(near.m?'Match on · ':'')+nearSummary());setTxt($('nearSetBtn'),host&&!near.m?'Settings':'View');
   if($('startCard').hidden)$('nearSheet').hidden=true;else if(!$('nearSheet').hidden)nearSheetSync();
@@ -6234,7 +6263,7 @@ $('copyInvite').addEventListener('click',()=>{const b=$('copyInvite'),i=$('invit
 /* ================= input ================= */
 let touchId=null;
 // ?debug=1: a handle on the game state for headless tests (movement, merging); never used by the game itself
-if(/[?&]debug=1/.test(location.search))window.__mt={get human(){return human;},get cam(){return cam;},get T(){return T;},split:()=>split(human),sfx:(k,a)=>sfx(k,a),audio:()=>({state:actx&&actx.state,live:liveNodes}),netReport:()=>netReport()};
+if(/[?&]debug=1/.test(location.search))window.__mt={get human(){return human;},get players(){return players;},get isHost(){return isHost;},get cam(){return cam;},get T(){return T;},split:()=>split(human),sfx:(k,a)=>sfx(k,a),audio:()=>({state:actx&&actx.state,live:liveNodes}),netReport:()=>netReport()};
 cv.addEventListener('pointermove',e=>{if(e.pointerType==='touch'&&e.pointerId!==touchId)return;pointer.x=e.clientX;pointer.y=e.clientY;});
 cv.addEventListener('pointerdown',e=>{if(e.pointerType==='touch'){if(touchId!==null)return;touchId=e.pointerId;try{cv.setPointerCapture(e.pointerId);}catch(_){}}pointer.x=e.clientX;pointer.y=e.clientY;});
 const release=e=>{if(e.pointerId===touchId){touchId=null;pointer.x=W/2;pointer.y=H/2;}};
@@ -6316,7 +6345,7 @@ showCard(seenIntro?'startCard':'introCard');
 $('introGo').addEventListener('click',()=>{try{localStorage.setItem('mitosis.intro','1');}catch(e){}if(mode==='play'&&paused){showCard('pauseCard');syncPause();}else showCard('startCard');}); // opened from Settings over a paused game: back to the pause card
 $('introAgain').addEventListener('click',()=>showCard('introCard'));
 const PF=window.__mt?{n:0,step:0,net:0,draw:0,gap:0,slow:0}:null;if(PF)window.__mt.pf=PF; // ?debug=1: frame-phase timing for profiling
-let last=performance.now(),hudT=0,ema=16,playT=0,lastHitchAt=0,hitchSent=0,wsMax=0,lastTouchAt=0;
+let frameN=0,last=performance.now(),hudT=0,ema=16,playT=0,lastHitchAt=0,hitchSent=0,wsMax=0,lastTouchAt=0;
 addEventListener('pointerdown',()=>{lastTouchAt=performance.now();},true);
 window.__wsTime=w=>{if(w>wsMax)wsMax=w;};setInterval(()=>{wsMax=0;},1000);
 function reportHitch(text){Native.send({type:'log',text});if(hitchSent++>40)return; // at most 40 reports per session
@@ -6327,7 +6356,7 @@ function frame(nowMs){
   // arena nobody else shares stands still there
   const idle=mode!=='play'||paused;
   if((idle||saverOn)&&nowMs-last<30){requestAnimationFrame(frame);return;}
-  const cover=idle&&COVER.has(shownCard);
+  const cover=idle&&COVER.has(shownCard);frameN++;
   const gapMs=nowMs-last,raw=Math.min(.05,Math.max(0,gapMs/1000));last=nowMs;
   if(mode==='play'&&!paused&&!saverOn&&!document.hidden&&gapMs<1000){FG.push(gapMs);if(FG.length>2400)FG.splice(0,600);}
   ema=ema*.95+raw*1000*.05;
@@ -6335,7 +6364,7 @@ function frame(nowMs){
   slow+=(1-slow)*Math.min(1,raw*1.2);
   const run=(!paused||multi())&&!(cover&&!multi());const t0=performance.now();
   if(run){const sub=idle&&!multi()?1/30:1/60;let dt=raw*slow;while(dt>0){const s=Math.min(dt,sub);step(s);dt-=s;}}
-  const t1=performance.now();try{netTick(raw);}catch(e){}
+  const t1=performance.now();try{netTick(Math.min(1,Math.max(0,gapMs/1000)));}catch(e){}
   const t2=performance.now();updateCam(raw);if(!BISECT.nocanvas&&!cover)draw();tickMass(raw);const t3=performance.now();
   // watchdog: tell the app shell about long frames so stalls can be read from the device log
   if((t3-t0>180||gapMs>=400)&&nowMs-lastHitchAt>1000){lastHitchAt=nowMs;reportHitch(`hitch gap=${Math.round(gapMs)}ms wsmax=${Math.round(wsMax)}ms sinceTouch=${Math.round(nowMs-lastTouchAt)}ms step=${(t1-t0).toFixed(0)} net=${(t2-t1).toFixed(0)} draw=${(t3-t2).toFixed(0)} cells=${cells.length} players=${players.length} parts=${parts.length} ej=${ejected.length} host=${isHost} peers=${peerCount} mode=${mode} z=${cam.z.toFixed(2)} audio=${liveNodes} tag=${BISECT.tag}`);}
