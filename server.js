@@ -38,8 +38,8 @@ function lanUrls() {
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Authorization', 'Access-Control-Max-Age': '86400' };
 const ROUTES = {
   'POST /api/session': { fn: economy.handlers.session, auth: false },
-  'POST /api/run/start': { fn: (store, body, p) => { const r = economy.handlers.runStart(store, body, p); players.runStarted(r.runId); return r; }, auth: true },
-  'POST /api/run/end': { fn: (store, body, p) => { const r = economy.handlers.runEnd(store, body, p); players.runEnded(body.runId); return r; }, auth: true },
+  'POST /api/run/start': { fn: (store, body, p) => { const r = economy.handlers.runStart(store, body, p); players.runStarted(r.runId); runRelay(r.runId, body.relay); return r; }, auth: true },
+  'POST /api/run/end': { fn: (store, body, p) => { const r = economy.handlers.runEnd(store, body, p, { metSince: t => metSince(body.runId, body.relay, t) }); players.runEnded(body.runId); runConns.delete(String(body.runId)); return r; }, auth: true },
   'POST /api/skins/buy': { fn: economy.handlers.buySkin, auth: true },
   'POST /api/iap/apple': { fn: economy.handlers.iapApple, auth: true },
   'POST /api/iap/google': { fn: economy.handlers.iapGoogle, auth: true },
@@ -199,6 +199,17 @@ const server = http.createServer((req, res) => {
 
 /* ---------- minimal WebSocket (RFC 6455) ---------- */
 const clients = new Set(), rooms = []; // every game that said hello; the arena rooms they are in (see the relay below)
+// Who a ranked life was against (economy.js runKind): each game gets a secret key in its welcome and sends it with run/start
+// and run/end (older apps don't, and are rated as before). A game's metAt is the last time it was alive in the arena
+// while another game in its room was too, so a life met another player if metAt is after its start. runConns keeps the game
+// a life started in, also after it disconnects, and run/end's key covers a game that reconnected mid-life.
+const byKey = new Map(), runConns = new Map(), MEET_EVERY = 500;
+function runRelay(runId, key) { const c = byKey.get(String(key || '')); if (c) runConns.set(runId, { c, at: Date.now() }); }
+function metSince(runId, key, t) { const a = runConns.get(String(runId || '')), b = byKey.get(String(key || '')); return [a && a.c, b].some(c => c && c.metAt >= t); }
+function meet(c, now) { // c just said it is alive in the arena
+  if (now - (c.meetAt || 0) < MEET_EVERY) return; c.meetAt = now;
+  for (const o of c.room) if (o !== c && live.activityOf(o, now) === 'arena') c.metAt = o.metAt = now;
+}
 // who is online and what they are doing, for /admin/live
 const players = live.create({ file: path.join(DATA_DIR, 'live-history.json'), conns: () => clients, rooms: () => rooms, roomSize: ROOM_SIZE, cap: ROOM_SIZE * MAX_ROOMS });
 const GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
@@ -291,10 +302,12 @@ function onMessage(c, text) {
     let id = typeof m.id === 'string' && /^[a-z0-9]{6,20}$/.test(m.id) ? m.id : crypto.randomBytes(6).toString('hex');
     while ([...clients].some(o => o.id === id)) id += Math.floor(Math.random() * 10);
     c.id = id; c.pAt = c.pingAt = now; c.room = room; room.add(c); clients.add(c); players.tick();
-    send(c, { t: 'welcome', id, peers: [...room].filter(o => o !== c && o.p).map(o => ({ id: o.id, p: o.p })), lan: lanUrls() });
+    c.key = crypto.randomBytes(12).toString('hex'); byKey.set(c.key, c);
+    send(c, { t: 'welcome', id, key: c.key, peers: [...room].filter(o => o !== c && o.p).map(o => ({ id: o.id, p: o.p })), lan: lanUrls() });
     log(`+ player joined room ${roomNo(c)} (${room.size} there, ${clients.size} online in ${rooms.length} room${rooms.length === 1 ? '' : 's'})`);
   } else if (m.t === 'p' && c.id && m.p && typeof m.p === 'object' && !Array.isArray(m.p)) {
     c.p = m.p; c.pAt = now;
+    if (m.p.a === 1) meet(c, now);
     broadcast(c, { t: 'p', id: c.id, p: m.p });
   }
 }
@@ -302,10 +315,12 @@ function kill(c) {
   if (c.dead) return; c.dead = true;
   try { c.sock.destroy(); } catch (e) {}
   if (!clients.delete(c)) return;
+  byKey.delete(c.key);
   const n = roomNo(c); c.room.delete(c); if (!c.room.size) rooms.splice(n - 1, 1);
   players.tick(); broadcast(c, { t: 'bye', id: c.id }); log(`- player left room ${n} (${c.room.size} there, ${clients.size} online)`);
 }
 setInterval(() => {
+  const old = Date.now() - 3600e3; for (const [id, r] of runConns) if (r.at < old) runConns.delete(id); // lives never ended
   for (const c of clients) {
     if (!c.alive) { kill(c); continue; }
     c.alive = false; sendRaw(c, frame(9, Buffer.alloc(0)));

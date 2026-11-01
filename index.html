@@ -1418,6 +1418,11 @@ body:not(.playing) #tip{display:none}
 #profileCard .pf-rk{display:grid;gap:4px}
 #profileCard .pf-rk .tier{font:600 10.5px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--tc)}
 #profileCard .pf-rk b{font:800 25px/1 var(--display);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+#profileCard .pf-rk-k{font:600 9px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+#profileCard .pf-ai{--ac:#c4d0da;display:flex;align-items:center;gap:8px;margin-left:6px;padding-left:16px;border-left:1px solid rgba(220,239,233,.12)}
+#profileCard .pf-ai .pf-mcw{width:27px;height:30px}
+#profileCard .pf-ai .tier{color:var(--ac)}
+#profileCard .pf-ai .pf-rk b{font-size:21px}
 #profileCard .pf-prog{width:100%;display:grid;gap:7px;margin-top:2px}
 #profileCard .pf-track{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px}
 #profileCard .pf-mcw{display:grid;width:22px;height:24px}#profileCard .pf-mcw:empty{display:none}
@@ -1569,6 +1574,12 @@ body:not(.playing) #tip{display:none}
 #rankCard .rk-me-t{display:grid;gap:3px;min-width:0}
 #rankCard .rk-me-t .tier{font:600 11px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase}
 #rankCard .rk-me-t b{font:800 38px/.95 var(--display);letter-spacing:-.04em;font-variant-numeric:tabular-nums;color:var(--ink);text-shadow:0 2px 14px rgba(0,0,0,.4)}
+#rankCard .rk-k{justify-self:start;text-align:left;font:600 9.5px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+#rankCard .rk-ai{--tc:#a9b8c7;display:grid;grid-template-columns:38px minmax(0,1fr) auto;align-items:center;gap:12px;padding:10px 18px 10px 14px;border-radius:16px;
+  background:radial-gradient(90% 140% at 0% 0%,color-mix(in srgb,var(--tc) 16%,transparent),transparent 62%),rgba(5,16,18,.66);border:1px solid color-mix(in srgb,var(--tc) 22%,rgba(140,210,200,.1))}
+#rankCard .rk-ai:empty{display:none}
+#rankCard .rk-ai-e{width:38px;height:38px;filter:drop-shadow(0 4px 8px rgba(0,0,0,.45))}#rankCard .rk-ai-e .emb{width:100%;height:100%}
+#rankCard .rk-ai-r{font:800 26px/1 var(--display);letter-spacing:-.03em;font-variant-numeric:tabular-nums;color:var(--ink)}
 #rankCard .rk-pos{align-self:start;justify-self:end;font:800 17px/1 var(--display);letter-spacing:-.02em;color:#2a1a00;padding:7px 10px 6px;border-radius:12px;background:linear-gradient(180deg,#ffe28a,#f2b134);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 4px 12px rgba(242,177,52,.3)}
 #rankCard .rk-bar{grid-column:1/3;height:8px;border-radius:5px;background:rgba(0,0,0,.42);box-shadow:inset 0 1px 2px rgba(0,0,0,.6),0 1px 0 rgba(255,255,255,.05);overflow:hidden}
 #rankCard .rk-bar i{display:block;height:100%;min-width:8px;border-radius:5px;background:linear-gradient(90deg,var(--violet),var(--tc));box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 0 10px var(--tc);transition:width .6s cubic-bezier(.2,.8,.2,1)}
@@ -1810,6 +1821,8 @@ body:not(.playing) #tip{display:none}
 #deathCard .rr-emb{width:17px;height:19px;flex:none;background:linear-gradient(150deg,rgba(255,255,255,.9),currentColor 40%,currentColor 62%,rgba(0,0,0,.5));clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}
 #deathCard .rr-tier{font:700 11.5px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase}
 #deathCard .rr-next{margin-left:auto;font:600 11px/1 var(--mono);color:var(--dim);white-space:nowrap}
+#deathCard .rr-k{min-width:0;overflow:hidden;text-overflow:ellipsis;padding:4px 7px;border-radius:999px;border:1px solid rgba(160,225,215,.18);font:600 9.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+#deathCard #dRank.ai .rr-k{color:#c3bbff;border-color:rgba(154,140,255,.4)}
 #deathCard .rr-mid{display:flex;align-items:center;gap:10px}
 #deathCard .rr-num{font:800 clamp(32px,4.2vh + 16px,44px)/.9 var(--display);letter-spacing:-.045em;font-variant-numeric:tabular-nums;color:var(--ink);transform-origin:left 70%;transition:color .3s,text-shadow .3s}
 #deathCard .rr-num.go{color:#c9ffe6;text-shadow:0 0 22px rgba(95,224,168,.55)}#deathCard #dRank.dn .rr-num.go{color:#ffd0d7;text-shadow:0 0 22px rgba(255,107,127,.5)}
@@ -2491,6 +2504,7 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
     <div class="rk-wrap">
       <aside class="rk-side">
         <div class="rk-me" id="rkMe"></div>
+        <div class="rk-ai" id="rkAi"></div>
         <ol class="rk-ladder" id="tierLegend" aria-label="Tiers"></ol>
         <ul class="rk-how" id="rankHint" aria-label="Rating rises when you">
           <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9.5 2.5h5"/></svg>Survive</li>
@@ -2513,7 +2527,8 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
       <h2 class="pf-name" id="profName">Unnamed cell</h2>
       <div class="pf-rank">
         <svg class="pf-crest" viewBox="0 0 40 44" aria-hidden="true"><defs><linearGradient id="pfCrestG" x1="0" y1="0" x2=".35" y2="1"><stop offset="0" class="s1"/><stop offset="1" class="s2"/></linearGradient></defs><path class="o" d="M20 2.5 35.5 8v13.5c0 9.6-6.6 16.4-15.5 20-8.9-3.6-15.5-10.4-15.5-20V8z"/><path class="i" d="M20 7 31 11v10.7c0 7.1-4.8 12.2-11 14.9-6.2-2.7-11-7.8-11-14.9V11z"/><g class="g" id="pCrest"></g></svg>
-        <span class="pf-rk"><span class="tier" id="pTierTxt">Silver</span><b id="pRating">1000</b></span>
+        <span class="pf-rk"><small class="pf-rk-k">vs players</small><span class="tier" id="pTierTxt">Silver</span><b id="pRating">1000</b></span>
+        <span class="pf-ai" id="pAi"><span class="pf-mcw" id="pAiMc"></span><span class="pf-rk"><small class="pf-rk-k">vs AI</small><span class="tier" id="pAiTier">Silver</span><b id="pAiRating">1000</b></span></span>
       </div>
       <div class="pf-prog" id="pProg"><div class="pf-track" aria-hidden="true"><span class="pf-mcw" id="pCurMc"></span><div class="pf-bar"><i id="pFill"></i></div><span class="pf-mcw nx" id="pNextMc"></span></div><span id="pNext"></span></div>
       <div class="pf-lv" id="pLv" hidden><span class="lv-badge" aria-hidden="true"><b id="pLvN">1</b></span><div class="pf-lvm"><div class="pf-lvt"><b>Level <span id="pLvN2">1</span></b><span id="pLvXp"></span></div><div class="pf-bar pf-xpbar" aria-hidden="true"><i id="pLvFill"></i></div><span id="pLvNext"></span></div></div>
@@ -2742,7 +2757,7 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
     <section class="res-side">
       <div class="res-top">
         <div class="res-card res-rating" id="dRank" hidden>
-          <div class="rr-head"><i class="rr-emb tier" aria-hidden="true"></i><span class="rr-tier tier"></span><span class="rr-next"></span></div>
+          <div class="rr-head"><i class="rr-emb tier" aria-hidden="true"></i><span class="rr-tier tier"></span><span class="rr-k">vs players</span><span class="rr-next"></span></div>
           <div class="rr-mid"><b class="rr-num">0</b><span class="rr-delta"></span></div>
           <div class="rr-track"><div class="rr-bar"><i></i></div><i class="rr-emb rr-to tier" aria-hidden="true"></i></div>
         </div>
@@ -2794,12 +2809,12 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
     ws.onmessage=ev=>{const w0=performance.now();try{onMsg(ev);}finally{const w=performance.now()-w0;if(window.__wsTime)window.__wsTime(w);}};
   function onMsg(ev){if(nearby)return;let m;try{m=JSON.parse(ev.data);}catch(e){return;}if(!m||typeof m!=='object')return;
       if(m.t==='welcome'){others.clear();for(const q of Array.isArray(m.peers)?m.peers:[])if(q&&typeof q.id==='string'&&q.p&&typeof q.p==='object')others.set(q.id,Object.freeze(q.p));
-        N.lan=Array.isArray(m.lan)?m.lan.filter(u=>typeof u==='string'):[];N.state='live';rebuild();setConn(true);flush();}
+        N.lan=Array.isArray(m.lan)?m.lan.filter(u=>typeof u==='string'):[];N.key=typeof m.key==='string'?m.key:null;N.state='live';rebuild();setConn(true);flush();}
       else if(m.t==='p'&&typeof m.id==='string'&&m.p&&typeof m.p==='object'){others.set(m.id,Object.freeze(m.p));rebuild();}
       else if(m.t==='bye'&&typeof m.id==='string'){others.delete(m.id);rebuild();}
       else if(m.t==='pong'&&typeof m.c==='number'&&pings.delete(m.c)){const rtt=performance.now()-m.c;if(rtt>=0&&rtt<60000){NS.rtts.push(rtt);if(NS.rtts.length>300)NS.rtts.shift();NS.pongs++;N.rtt=N.rtt==null?rtt:N.rtt*.7+rtt*.3;}}
       else if(m.t==='full')N.state='full';}
-    ws.onclose=()=>{if(nearby)return;setConn(false);others.clear();rebuild();if(N.state!=='full'){N.state='offline';later();}};
+    ws.onclose=()=>{if(nearby)return;N.key=null;setConn(false);others.clear();rebuild();if(N.state!=='full'){N.state='offline';later();}};
     ws.onerror=()=>{};
   }
   const room=Object.freeze({
@@ -3605,7 +3620,7 @@ const saveSettings=()=>{try{localStorage.setItem('mitosis.settings',JSON.stringi
    "credit this purchase". A device secret in localStorage identifies the player — no sign-up. */
 const ATP_PACKS=[{id:'atp_500',atp:500,label:'Pouch'},{id:'atp_1500',atp:1500,label:'Flask',tag:'Popular'},{id:'atp_5000',atp:5000,label:'Culture',tag:'Best value'},{id:'atp_12000',atp:12000,label:'Bioreactor'},{id:'atp_150000',atp:150000,label:'Biosphere',tag:'Most ATP'}];
 const escH=s=>String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[ch]);
-let wallet={balance:0,earned:0,skins:[],online:false,playerId:null,rating:1000,tier:'Silver',xp:0,level:null};
+let wallet={balance:0,earned:0,skins:[],online:false,playerId:null,rating:1000,tier:'Silver',aiRating:1000,aiTier:'Silver',aiRuns:0,xp:0,level:null};
 // XP and profile levels: the server's rules (economy.js XP) or this copy while offline. Going from level L to L+1 takes first + step*(L-1) XP.
 const XP_FB={perTenSec:2,timeCapSec:600,place:60,win:40,minOf:4,minSec:20,first:100,step:50};
 const xpRules=()=>{const x=wallet.catalog&&wallet.catalog.xp;return x&&x.first>0&&x.step>=0?x:XP_FB;};
@@ -3657,6 +3672,7 @@ function allyOf(){if(!soc||!soc.party||local)return null;for(const p of players)
 function applyWallet(w){
   if(!w)return;wallet.balance=w.balance|0;wallet.earned=w.earned|0;if(Array.isArray(w.skins))wallet.skins=w.skins;wallet.playerId=w.playerId||wallet.playerId;wallet.online=true;
   if(typeof w.rating==='number'){wallet.rating=w.rating;wallet.tier=w.tier||wallet.tier;}wallet.runs=w.runs|0;
+  if(typeof w.aiRating==='number'){wallet.aiRating=w.aiRating;wallet.aiTier=w.aiTier||wallet.aiTier;wallet.aiRuns=w.aiRuns|0;} // the AI rating: bots only (a server from before it has none)
   if(typeof w.level==='number')Object.assign(wallet,{xp:w.xp|0,level:w.level,levelXp:w.levelXp|0,levelNeed:w.levelNeed|0});else wallet.level=null; // a server from before levels: no level shown
   renderRank();renderProfile();
   if('account' in w){wallet.account=w.account||null;renderAccount();}
@@ -3675,13 +3691,20 @@ async function econInit(){
   try{const w=await api('session',{secret},false);applyWallet(w);loadAuthProviders(w.catalog);econDelay=5000;Native.send({type:'ready'});flushRuns();}
   catch(e){wallet.online=false;renderSkins();setTimeout(econInit,econDelay);econDelay=Math.min(60000,econDelay*2);}
 }
-// Runs: the server stamps when a run starts, so survival time can't be inflated.
+// Runs: the server stamps when a run starts, so survival time can't be inflated. It also decides who a life was against
+// (economy.js runKind): the game says its mode (casual: Casual; bots: a ranked game of bots on this device; arena) and
+// sends its relay key, and the arena counts as against players only if the server saw another player alive beside us.
+// Bots move only the AI rating. Casual is reported only to a server that rates it (its catalogue has the win rules);
+// an older server would count it as ranked. Nearby is never reported.
 let runId=null,runPromise=null;
 const isNearby=()=>{const N=window.__mitosisNet;return !!N&&N.mode==='nearby';};
-function econRunStart(){runId=null;if(local==='practice'||isNearby()){runPromise=null;return;}runPromise=api('run/start').then(r=>{runId=r.runId;return r.runId;}).catch(()=>null);}
+const casualRated=()=>!!(wallet.catalog&&wallet.catalog.wins),runMode=()=>local==='practice'?'casual':local?'bots':'arena',relayKey=()=>{const N=window.__mitosisNet;return(N&&N.key)||undefined;};
+const runOff=()=>isNearby()||(local==='practice'&&!casualRated());
+function econRunStart(){runId=null;if(runOff()){runPromise=null;return;}runPromise=api('run/start',{mode:runMode(),relay:relayKey()}).then(r=>{runId=r.runId;return r.runId;}).catch(()=>null);}
 async function econRunEnd(){
-  if(!human)return;const unranked=local==='practice'?'practice':isNearby()?'nearby':'';resPrep(unranked);if(unranked)return;
-  const s=human.stats,rep={survived:Math.max(0,T-s.born),eaten:s.eaten|0,peak:Math.round(s.peak),bestRank:s.bestRank||999,place:s.place|0,of:s.of|0,life:Math.max(0,livesUsed()-1),show:1};
+  if(!human)return;const unranked=isNearby()?'nearby':local==='practice'?'practice':'',off=runOff();resPrep(unranked,off);if(off)return;
+  const s=human.stats,rep={survived:Math.max(0,T-s.born),eaten:s.eaten|0,peak:Math.round(s.peak),bestRank:s.bestRank||999,place:s.place|0,of:s.of|0,life:Math.max(0,livesUsed()-1),show:1,relay:relayKey()};
+  if(unranked)rep.skill=settings.botSkill||'normal'; // Casual: the bots' skill scales AI rating gains
   rep.name=human.name;const rid=runId||(runPromise?await runPromise:null);runId=null;runPromise=null;
   if(!rid){showEarn(wallet.online?null:{k:'offline'});showXp(null);return;}
   rep.runId=rid;const a=loadPending();a.push(rep);savePending(a);flushRuns();
@@ -3697,21 +3720,22 @@ const RES_ICO={
   respawn:'<path d="M4.6 12a7.4 7.4 0 1 0 2.2-5.25"/><path d="M4.6 4.2v3.9h3.9"/>',
   find:'<circle cx="11" cy="11" r="6.4"/><path d="M20 20l-4.4-4.4"/>'};
 let resS={mode:'',earn:null,rank:null,xp:null,at:0,t:0,t2:0,t3:0}; // at: when the screen appeared, so the count-ups start once it is in view
-function resPrep(unranked){ // a run just ended (econRunEnd): reset the rating and reward panels for it. unranked: '' | 'practice' | 'nearby'
+function resPrep(unranked,off){ // a run just ended (econRunEnd): reset the rating and reward panels for it. unranked: '' | 'practice' | 'nearby'; off: not reported
   clearTimeout(resS.t);clearTimeout(resS.t2);clearTimeout(resS.t3);cancelAnimationFrame(rankAnim);cancelAnimationFrame(xpAnim);resS={mode:unranked,earn:null,rank:null,xp:null,at:0,t:0,t2:0,t3:0};
   xpPrep(!unranked);
-  const el=$('dRank');el.hidden=!!unranked;el.classList.remove('promo','dn');const chip=el.querySelector('.rr-delta');chip.className='rr-delta';chip.textContent='';el.querySelector('.rr-next').textContent='';el.querySelector('.rr-num').classList.remove('bump','go');
-  rrSet(wallet.rating,tierAtRating(wallet.rating));showEarn(unranked?null:{k:'wait'});
+  const el=$('dRank');el.hidden=!!off;el.classList.remove('promo','dn');const chip=el.querySelector('.rr-delta');chip.className='rr-delta';chip.textContent='';el.querySelector('.rr-next').textContent='';el.querySelector('.rr-num').classList.remove('bump','go');
+  const ai=!!unranked||!!local;rrKind(ai);const r=ai?wallet.aiRating:wallet.rating;rrSet(r,tierAtRating(r));showEarn(off?null:{k:'wait'}); // until the server says, bot games on this device move the AI rating
 }
+function rrKind(ai){const k=$('dRank').querySelector('.rr-k');k.textContent=ai?'vs AI':'vs players';$('dRank').classList.toggle('ai',ai);} // which rating the card shows
 function tierNext(r){const names=(wallet.catalog&&wallet.catalog.tiers)||[],at=((wallet.catalog&&wallet.catalog.tierAt)||[]).map(v=>v==null?Infinity:v),i=at.findIndex(v=>r<v);
   return i>=0&&i<names.length-1&&isFinite(at[i])?{name:names[i+1],left:at[i]-r}:null;}
 function rrSet(r,t){const el=$('dRank'),tier=el.querySelector('.rr-tier'),to=el.querySelector('.rr-to'),nx=tierNext(r);el.querySelector('.rr-num').textContent=r;el.querySelector('.rr-bar i').style.width=(t.pct*100).toFixed(1)+'%';
   if(tier.textContent!==t.name){tier.textContent=t.name;tier.dataset.tier=el.querySelector('.rr-emb').dataset.tier=t.name;}
   to.hidden=!nx;if(nx&&to.dataset.tier!==nx.name){to.dataset.tier=nx.name;to.title=nx.name;}}
-function showEarn(o){ // the ATP tile. o: null (hidden) | {k:'wait'} | {k:'atp',n} | {k:'none',why} | {k:'offline'} | {k:'later'}
+function showEarn(o){ // the ATP tile. o: null (hidden) | {k:'wait'} | {k:'atp',n,tag} | {k:'none',why} | {k:'offline'} | {k:'later'}; tag: what a win bonus was for
   const el=$('dEarn');resS.earn=o||null;el.hidden=!o;if(!o)return;el.className='res-card res-atp '+o.k;
   el.querySelector('.ra-n').textContent=o.k==='atp'?'+0':o.k==='none'?'0':o.k==='wait'?'':'—';
-  el.querySelector('.ra-l').textContent=o.k==='none'?o.why:o.k==='offline'?'Offline':o.k==='later'?'Pending':'ATP';
+  el.querySelector('.ra-l').textContent=o.k==='none'?o.why:o.k==='offline'?'Offline':o.k==='later'?'Pending':o.tag?'ATP · '+o.tag:'ATP';
   if(resS.at)resPlayEarn();}
 function resPlayEarn(){const o=resS.earn;if(!o||o.k!=='atp')return;clearTimeout(resS.t2);
   resS.t2=setTimeout(()=>{const el=$('dEarn'),n=el.querySelector('.ra-n');if(resS.earn!==o)return;el.classList.add('got');if(RM){n.textContent='+'+o.n;return;}
@@ -3727,6 +3751,7 @@ function xpPrep(on){const el=$('dXp');el.hidden=!on||wallet.level==null;el.class
   for(const x of el.querySelectorAll('.rx-spark'))x.remove();if(!el.hidden)xpSet(wallet);}
 function showXp(w){ // w: the server's run/end answer | {later:1} (queued until the server is reachable) | null (no XP for this life)
   const el=$('dXp');resS.xp=w||null;
+  if(resS.mode==='practice'||(w&&w.kind==='casual')){resS.xp=null;el.hidden=true;return;} // Casual earns no XP
   if(w&&w.later){el.hidden=wallet.level==null;el.className='res-card res-xp later';el.querySelector('.rx-gain').textContent='Pending';return;}
   if(!w||typeof w.xpGained!=='number'||typeof w.level!=='number'){el.hidden=true;return;}
   el.hidden=false;el.className='res-card res-xp';el.querySelector('.rx-gain').textContent='+0 XP';
@@ -3775,9 +3800,11 @@ function renderTierLegend(){const el=$('tierLegend'),me=$('rkMe');if(!el||!me)re
   let i=T.tiers.indexOf(wallet.tier);if(i<0){i=T.tierAt.findIndex(v=>v!=null&&r<v);if(i<0)i=T.tiers.length-1;}
   const name=T.tiers[i],hi=T.tierAt[i],lo=i>0?T.tierAt[i-1]:Math.min(T.tierAt[0]-300,r),top=hi==null,pct=top?100:Math.round(clamp((r-lo)/(hi-lo),0,1)*100);
   me.style.setProperty('--tc',tierCol(name));
-  me.innerHTML=`<div class="rk-me-e">${tierEmblem(name)}</div><div class="rk-me-t"><span class="tier" data-tier="${escH(name)}">${escH(name)}</span><b>${r}</b></div>${rkPos?`<span class="rk-pos">#${rkPos}</span>`:''}`
+  me.innerHTML=`<div class="rk-me-e">${tierEmblem(name)}</div><div class="rk-me-t"><small class="rk-k">vs players</small><span class="tier" data-tier="${escH(name)}">${escH(name)}</span><b>${r}</b></div>${rkPos?`<span class="rk-pos">#${rkPos}</span>`:''}`
     +`<div class="rk-bar"><i style="width:${pct}%"></i></div><small class="rk-next">${top?'Top tier':`<b>${hi-r}</b> to ${escH(T.tiers[i+1])}`}</small>`;
   el.style.setProperty('--prog',T.tiers.length>1?i/(T.tiers.length-1):1);
+  const ai=$('rkAi'),at=T.tiers.includes(wallet.aiTier)?wallet.aiTier:T.tiers[1]; // the AI rating: bots only, never the ladder or the leaderboard
+  if(ai){ai.style.setProperty('--tc',tierCol(at));ai.innerHTML=`<div class="rk-ai-e">${tierEmblem(at)}</div><div class="rk-me-t"><small class="rk-k">vs AI</small><span class="tier" data-tier="${escH(at)}">${escH(at)}</span></div><b class="rk-ai-r">${wallet.aiRating|0}</b>`;}
   el.innerHTML=T.tiers.map((n,k)=>`<li class="${k<i?'done':k===i?'cur':'up'}" style="--tc:${tierCol(n)}">${tierEmblem(n)}<b>${escH(n)}</b><span>${k?T.tierAt[k-1]:'<'+T.tierAt[0]}</span></li>`).join('');}
 function renderMe(){const n=$('meName');if(n)n.textContent=cleanName($('nameIn').value)||settings.name||'Unnamed cell';const a=$('lobbyAtp');if(a)a.textContent=(wallet.balance|0).toLocaleString();
   if(!renderMe.raf)renderMe.raf=requestAnimationFrame(()=>{renderMe.raf=0;drawAvatar($('meCv'));});} // next frame: the wallet can arrive before the game clock exists, and animated skins read it
@@ -3792,10 +3819,11 @@ function tierAtRating(r){ // tier name and progress through it for any rating, f
   if(!names.length||at.length!==names.length)return{name:wallet.tier||'',pct:0};let i=at.findIndex(v=>r<v);if(i<0)i=names.length-1;
   const hi=at[i],lo=i>0?at[i-1]:Math.min(at[0]-300,r);return{name:names[i],pct:isFinite(hi)?clamp((r-lo)/(hi-lo),0,1):1};}
 let rankAnim=0;
-function showRank(w){ // the server's answer for this run: count the rating up (or down) once the results screen is in view
-  if(typeof w.ratingDelta!=='number')return;updateRunDelta(w.ratingDelta,w.rating);resS.rank=w;if(resS.at)resPlayRank();}
+function showRank(w){ // the server's answer for this run: count the rating it moved up (or down) once the results screen is in view. Bots move only the AI rating.
+  const ai=w.kind==='ai'||w.kind==='casual',d=ai?w.aiDelta:w.ratingDelta,to=ai?w.aiRating:w.rating;if(typeof d!=='number'||typeof to!=='number')return;
+  updateRunDelta(d,to,ai);rrKind(ai);resS.rank={d,to};if(resS.at)resPlayRank();}
 function resPlayRank(){const w=resS.rank,el=$('dRank');if(!w||el.hidden)return;clearTimeout(resS.t);
-  resS.t=setTimeout(()=>{if(resS.rank!==w)return;const d=w.ratingDelta,to=w.rating,from=to-d,a=tierAtRating(from),b=tierAtRating(to),chip=el.querySelector('.rr-delta');
+  resS.t=setTimeout(()=>{if(resS.rank!==w)return;const d=w.d,to=w.to,from=to-d,a=tierAtRating(from),b=tierAtRating(to),chip=el.querySelector('.rr-delta');
     rrSet(from,a);chip.textContent=d>0?'+'+d:d<0?'−'+-d:'±0';chip.className='rr-delta '+(d>0?'up':d<0?'dn':'eq');void chip.offsetWidth;chip.classList.add('show');el.classList.toggle('dn',d<0);
     const num=el.querySelector('.rr-num');num.classList.add('go');
     const finish=()=>{rrSet(to,b);num.classList.remove('go');num.classList.add('bump');if(a.name!==b.name){el.querySelector('.rr-next').textContent=d>0?'Promoted':'Demoted';el.classList.toggle('promo',d>0);if(d>0)sfx('ach');}};
@@ -3849,7 +3877,7 @@ $('deleteGo').addEventListener('click',async()=>{
 $('deleteDone').addEventListener('click',()=>location.reload());
 function loadHistory(){try{const a=JSON.parse(localStorage.getItem('mitosis.history')||'[]');return Array.isArray(a)?a:[];}catch(e){return[];}}
 function recordRun(e){const h=loadHistory();h.push(e);try{localStorage.setItem('mitosis.history',JSON.stringify(h.slice(-12)));}catch(err){}}
-function updateRunDelta(delta,rating){const h=loadHistory();const last=h[h.length-1];if(!last||last.delta!=null||Date.now()-last.t>60000)return;last.delta=delta;last.rating=rating;try{localStorage.setItem('mitosis.history',JSON.stringify(h));}catch(err){}}
+function updateRunDelta(delta,rating,ai){const h=loadHistory();const last=h[h.length-1];if(!last||last.delta!=null||Date.now()-last.t>60000)return;last.delta=delta;last.rating=rating;if(ai)last.ai=1;try{localStorage.setItem('mitosis.history',JSON.stringify(h));}catch(err){}}
 /* Profile page: a hero with the rank crest, stat tiles, the skins you own, achievement badges, recent runs and the account */
 const PF_IC={peak:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19.5l6.2-10 4.3 5.6 3-4.1 4.5 8.5z"/></svg>',time:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
   eat:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.9 4A8.5 8.5 0 1 0 20 9.1 3.9 3.9 0 0 1 14.9 4z"/></svg>'};
@@ -3859,8 +3887,8 @@ const fmtStat=n=>{n=Math.max(0,Math.round(+n||0));return n>=1e6?(n/1e6).toFixed(
 const bestMass=()=>{try{return Math.round(+localStorage.getItem('mitosis.best')||0);}catch(e){return 0;}};
 function renderRuns(){const el=$('runList'),f=$('runsField');if(!el||!f)return;const h=loadHistory().slice(-5).reverse();f.hidden=!h.length;
   el.innerHTML=h.map(r=>{const pl=r.place|0,dl=typeof r.delta==='number'?r.delta:null,
-    d=dl!=null?`<em class="${dl>0?'up':dl<0?'dn':''}">${dl>0?'+':dl<0?'−':'±'}${Math.abs(dl)}</em>`:r.practice?'<em class="pr">Practice</em>':'<em class="nil"></em>',
-    lbl=`${pl?ordinal(pl)+' of '+r.of:'Unplaced'}, peak ${r.peak|0}, survived ${fmtT(r.sec|0)}, ate ${r.eaten|0}${dl!=null?', rating '+(dl>0?'+':'')+dl:r.practice?', practice':''}`;
+    d=dl!=null?`<em class="${dl>0?'up':dl<0?'dn':''}">${r.ai?'AI ':''}${dl>0?'+':dl<0?'−':'±'}${Math.abs(dl)}</em>`:r.practice?'<em class="pr">Practice</em>':'<em class="nil"></em>',
+    lbl=`${pl?ordinal(pl)+' of '+r.of:'Unplaced'}, peak ${r.peak|0}, survived ${fmtT(r.sec|0)}, ate ${r.eaten|0}${dl!=null?(r.ai?', AI rating ':', rating ')+(dl>0?'+':'')+dl:r.practice?', practice':''}`;
     return `<li aria-label="${escH(lbl)}"><span class="pf-pl${pl&&pl<4?' p'+pl:''}"><b>${pl?ordinal(pl):'—'}</b>${pl&&r.of?`<small>of ${r.of|0}</small>`:''}</span><span class="pf-m">${PF_IC.peak}<b>${(r.peak|0).toLocaleString()}</b></span><span class="pf-m">${PF_IC.time}<b>${fmtT(r.sec|0)}</b></span><span class="pf-m pf-eat">${PF_IC.eat}<b>${r.eaten|0}</b></span>${d}</li>`;}).join('');}
 function renderInv(){ // the skins you own, worn one first; tapping any opens the Skins page
   const el=$('invStrip');if(!el)return;const sk=settings.skin|0,mine=PREMIUM.filter(S=>ownsSkin(S.id)),worn=mine.find(S=>S.id===sk);
@@ -3878,8 +3906,9 @@ function renderProfileNow(){renderRuns();renderAch();renderInv();
   $('profName').textContent=cleanName($('nameIn').value)||settings.name||'Unnamed cell';
   const t=wallet.tier,p=tierProgress(),names=(wallet.catalog&&wallet.catalog.tiers)||[],nx=names[names.indexOf(t)+1]||'';
   $('profileCard').dataset.tier=t;$('pTierTxt').textContent=t;$('pTierTxt').dataset.tier=t;$('pCrest').innerHTML=PF_GLYPH[t]||PF_GLYPH.Silver;$('pRating').textContent=wallet.rating;
+  {const at=wallet.aiTier||'Silver';$('pAi').style.setProperty('--ac',tierCol(at));$('pAiTier').textContent=at;$('pAiRating').textContent=wallet.aiRating|0;$('pAiMc').innerHTML=miniCrest(at);} // the AI rating (bots only)
   $('pCurMc').innerHTML=miniCrest(t);$('pNextMc').innerHTML=nx?miniCrest(nx):'';
-  const nums=[[$('pAtp'),wallet.balance],[$('pEarned'),wallet.earned],[$('pRuns'),wallet.runs],[$('pBest'),bestMass()]],fill=$('pFill'),xf=$('pLvFill'),intro=pfIntro&&!RM;pfIntro=false;cancelAnimationFrame(pfCount);
+  const nums=[[$('pAtp'),wallet.balance],[$('pEarned'),wallet.earned],[$('pRuns'),(wallet.runs|0)+(wallet.aiRuns|0)],[$('pBest'),bestMass()]],fill=$('pFill'),xf=$('pLvFill'),intro=pfIntro&&!RM;pfIntro=false;cancelAnimationFrame(pfCount);
   for(const[el,v]of nums)el.textContent=fmtStat(intro?0:v);
   $('pProg').hidden=!p.text;$('pNext').textContent=p.text;
   const lv=wallet.level!=null;$('pLv').hidden=!lv;
@@ -3905,7 +3934,7 @@ function resFill(kind,pb,sub){ // kind: dead | arena (dissolved by the closing a
   const s=human.stats,card=$('deathCard'),un=resS.mode;
   card.className='res '+(kind==='arena'?'dead arena':kind)+(un?' unranked':'')+(s.place>=1&&s.place<=3?' m'+(s.place|0):'');
   $('dTitle').textContent={dead:'Eliminated',arena:'Dissolved',win:'Victory',round:'Round over',quit:'Run ended'}[kind];$('resIco').innerHTML=RES_ICO[kind];
-  const md=$('resMode');md.hidden=!un;md.textContent=un==='nearby'?'Nearby':'Practice';
+  const md=$('resMode');md.hidden=!un;md.textContent=un==='nearby'?'Nearby':'Casual';
   const place=s.place|0,shown=place||(kind==='quit'?s.bestRank|0:0);$('dPlace').hidden=!shown;
   $('resPlaceN').textContent=shown;$('dPlace').classList.toggle('n2',shown>=10);$('resPlaceOf').textContent=place?'of '+s.of:'best';
   const why=$('deathWhy'),k=s.killerRef;
@@ -3951,7 +3980,8 @@ let flushing=false;
 async function flushRuns(){ // report finished runs; keep them queued while the server is unreachable
   if(flushing)return;flushing=true;
   try{let a=loadPending();while(a.length){const rep=a[0];
-    try{const w=await api('run/end',rep);applyWallet(w);if(rep.show){const R=(wallet.catalog&&wallet.catalog.rules)||{};showEarn(w.payout?{k:'atp',n:w.payout}:{k:'none',why:rep.survived<(R.minSec||20)?`Survive ${R.minSec||20}s`:`Top ${(R.byRank||[[30]]).slice(-1)[0][0]} only`});showRank(w);showXp(w);
+    try{const w=await api('run/end',rep);applyWallet(w);if(rep.show){const R=(wallet.catalog&&wallet.catalog.rules)||{};const W=wallet.catalog&&wallet.catalog.wins,cas=w.kind==='casual',pl=rep.place|0;
+      showEarn(w.payout?{k:'atp',n:w.payout,tag:w.winCapped?'capped':w.winBonus>0?(pl===1?'Win':'Top 3'):''}:{k:'none',why:w.winCapped?'Daily cap':cas?(W&&rep.survived<W.minSec?`Survive ${Math.round(W.minSec/60)} min`:'Top 3 only'):rep.survived<(R.minSec||20)?`Survive ${R.minSec||20}s`:`Top ${(R.byRank||[[30]]).slice(-1)[0][0]} only`});showRank(w);showXp(w);
       const qd=Array.isArray(w.questsDone)?w.questsDone:[],up=w.passUp>0&&bpOn()?`Tier ${w.pass.level}, +${w.passUp*wallet.catalog.pass.stars} Battle Stars`:'';
       if(qd.length&&bpOn()){for(const q of qd)bqJust.add(q.id);toast('Battle Pass',`${qd.length>1?qd.length+' quests':'Quest'} complete · +${(w.questXp|0).toLocaleString()} XP`,up||(qd.length>1?qd.map(q=>q.text).join(' · '):qd[0].text));} // phones show only the title
       else if(up)toast('Battle Pass',`Tier ${w.pass.level}`,`+${w.passUp*wallet.catalog.pass.stars} Battle Stars to spend`);}}
@@ -4327,7 +4357,7 @@ async function signOut(){
   // forget this device's secret: the account keeps its wallet, this device starts a fresh one
   secret='';const a=new Uint8Array(32);crypto.getRandomValues(a);for(const b of a)secret+=(b%36).toString(36);
   try{localStorage.setItem('mitosis.secret',secret);localStorage.removeItem('mitosis.wallet');}catch(e){}
-  wallet={balance:0,earned:0,skins:[],online:false,playerId:null,rating:1000,tier:'Silver',xp:0,level:null,account:null};
+  wallet={balance:0,earned:0,skins:[],online:false,playerId:null,rating:1000,tier:'Silver',aiRating:1000,aiTier:'Silver',aiRuns:0,xp:0,level:null,account:null};
   if(settings.skin>=SKIN_FREE){settings.skin=0;saveSettings();}
   renderSkins();renderRank();renderAccount();toast('Account','Signed out','This device now has a fresh wallet.');econInit();
 }
@@ -4616,7 +4646,8 @@ function startLocal(kind){ // a game on this device only: bots fill every slot. 
   round={id:(round.id%4095)+1,start:T,n:0,synced:true,over:false};isHost=true;claimReady=false;
   syncBots();
   const sk=SKILL[settings.botSkill]||SKILL.normal;
-  toast(kind==='practice'?(isOffline()?'Offline':'Practice'):'Game found',kind==='practice'?`${sk.label} bots${isOffline()?' · no connection needed':''}`:'Bots fill the empty slots',kind==='practice'?'Unranked: no ATP, no rating change':'Ranked like any other game');
+  toast(kind==='practice'?(isOffline()?'Offline':'Practice'):'Game found',kind==='practice'?`${sk.label} bots${isOffline()?' · no connection needed':''}`:'Bots fill the empty slots',
+    kind!=='practice'?'Ranked rules against bots: counts for your AI rating':casualRated()&&!isOffline()?'Counts for your AI rating · ATP for a top 3':'Unranked: no ATP, no rating change');
   startGame();
 }
 function leaveLocal(){ // back to the shared world
@@ -5987,8 +6018,8 @@ function lobbyPlay(){
   if(lbMode==='casual'){startLocal('practice');return;}
   if(lbMode==='ranked'&&lbNet()!=='live'){syncPlay();return;} // ranked never starts without the server
   if(lbMode==='ranked'&&pingTooHigh()){
-    const ms=Math.round(pingNow());startLocal('practice');
-    toast('Connection',`${ms} ms ping: playing bots`,`Your max ping is ${settings.maxPing} ms. To play online anyway, raise Max ping in Settings.`);return;}
+    const ms=Math.round(pingNow());startLocal('auto'); // ranked rules against bots: it counts for the AI rating, never the ranked one
+    toast('Connection',`${ms} ms ping: playing bots`,`Rated vs AI. Your max ping is ${settings.maxPing} ms; to play online anyway, raise Max ping in Settings.`);return;}
   if(local)leaveLocal();if(lbMode==='ranked')partyPlay();startGame();
 }
 // a laggy connection makes for a bad online game: over Settings › Max ping the lobby's Play starts bots instead, unless

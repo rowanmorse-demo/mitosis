@@ -57,6 +57,32 @@ const HOUR = 3600 * 1000;
 // Everyone starts at 1000.
 // winBonus: finishing 1st of 4+; lifePenalty: each respawn already used this round trims the gain (dying less pays more).
 const RATING = { base: 1000, perTenSec: .5, survCap: 25, perKill: 2, killCap: 30, placeBonus: 8, winBonus: 10, lifePenalty: .25, quickDeathSec: 60, quickPenalty: 10, scale: 2000 };
+// Who a life was against decides which rating it moves and what a win pays. The server decides it (runKind), never the
+// game: 'comp' only when the relay saw another player alive in the same arena room during the life (server.js metSince);
+// 'ai' is ranked rules against bots only (nobody found in the search, ping over Max ping, or alone in the arena); 'casual'
+// is Casual. Apps from before this (no mode in run/start) are rated as they always were, on the competitive rating.
+// The AI rating works like the competitive one, from its own 1000, and bots can never move the competitive one. Its
+// gains (not its losses) scale with the bots' skill, so beating Easy bots climbs slowly.
+const RATING_AI = { skill: { easy: .5, normal: 1, hard: 1.2, expert: 1.35, master: 1.5 } };
+// Wins: on top of the placement payout (none in Casual), 1st place pays win[0] and 2nd or 3rd pays win[1], by kind.
+// Only a placing of minOf or more cells counts, and only a life of minSec or more on the server's clock, so a quit
+// (no placing), an early death or an abandoned life (never ended) pays nothing. Each day (UTC) bonuses stop at the cap:
+// bots (ai and casual together) and comp (friends could trade wins) each have their own.
+const WINS = { comp: [50, 15], ai: [25, 5], casual: [20, 5], minSec: 120, minOf: 8, cap: { bots: 200, comp: 400 } };
+const WIN_POOLS = { bots: ['ai', 'casual'], comp: ['comp'] }, winPool = kind => (kind === 'comp' ? 'comp' : 'bots');
+function winBonus({ kind, survived, place, of }) {
+  const t = Array.isArray(WINS[kind]) ? WINS[kind] : null; if (!t) return 0;
+  const n = Math.floor(+of || 0), pl = Math.floor(+place || 0);
+  if ((+survived || 0) < WINS.minSec || n < WINS.minOf || pl < 1 || pl > 3 || pl > n) return 0;
+  return pl === 1 ? t[0] : t[1];
+}
+const RUN_MODES = ['arena', 'bots', 'casual'];
+// mode: what the game said at run/start; metSince(t): whether the relay saw another player alive beside this one since t
+function runKind(run, metSince) {
+  if (!run.mode) return 'legacy';
+  if (run.mode === 'casual') return 'casual';
+  return run.mode === 'arena' && typeof metSince === 'function' && metSince(Number(run.started)) ? 'comp' : 'ai';
+}
 // XP and profile levels: every ranked life earns XP for the time it lasted plus a bonus for where it placed, and XP
 // only ever adds up. Time uses the same server-capped survival as ATP and rating, and counts up to one round (10 min).
 // Placing: 1st of N earns the full bonus, last earns none, and winning adds more; like the rating it needs 4+ in the
@@ -83,12 +109,12 @@ function levelOf(xp) {
 }
 const TIERS = [[900, 'Bronze'], [1100, 'Silver'], [1400, 'Gold'], [1800, 'Platinum'], [2300, 'Diamond'], [Infinity, 'Legend']];
 const tierOf = r => TIERS.find(t => r < t[0])[1];
-function ratingDelta(rating, survived, eaten, place, of, life = 0) {
+function ratingDelta(rating, survived, eaten, place, of, life = 0, mult = 1) { // mult scales the gain only (RATING_AI.skill)
   // placing: 1st of N earns the full bonus, last earns none; needs at least 4 in the round to count. Winning adds more.
   const n = Math.max(0, of | 0), pl = Math.max(1, place | 0), placing = n >= 4 && pl <= n ? RATING.placeBonus * (1 - (pl - 1) / (n - 1)) : 0;
   const won = n >= 4 && pl === 1 ? RATING.winBonus : 0;
   const careful = Math.max(.4, 1 - RATING.lifePenalty * Math.max(0, Math.min(2, life | 0)));   // 2nd life earns 75%, 3rd 50%
-  const gain = (Math.min(RATING.survCap, Math.floor(survived / 10) * RATING.perTenSec) + Math.min(RATING.killCap, Math.max(0, eaten | 0) * RATING.perKill) + placing + won) * careful;
+  const gain = (Math.min(RATING.survCap, Math.floor(survived / 10) * RATING.perTenSec) + Math.min(RATING.killCap, Math.max(0, eaten | 0) * RATING.perKill) + placing + won) * careful * mult;
   const quick = survived < RATING.quickDeathSec ? (RATING.quickDeathSec - survived) / RATING.quickDeathSec * RATING.quickPenalty : 0;
   const k = Math.max(0, rating - RATING.base) / RATING.scale;
   return Math.round(gain * Math.max(.35, 1 - k) - quick * (1 + k));
@@ -268,7 +294,7 @@ function questsTick(store, p, life, t = now()) {
   return out;
 }
 const packById = id => PACKS.find(p => p.id === id);
-const catalog = (store, p = null) => ({ skins: SKINS, seasons: Object.fromEntries(Object.entries(SEASONS).map(([k, s]) => [k, { ...s, open: seasonOpen(k) }])), pass: passCatalog(passLive(store, now(), p)), packs: PACKS, rules: RULES, rating: RATING, xp: XP, tiers: TIERS.map(t => t[1]), tierAt: TIERS.map(t => t[0]), iap: iap.status(), auth: signin.status() });
+const catalog = (store, p = null) => ({ skins: SKINS, seasons: Object.fromEntries(Object.entries(SEASONS).map(([k, s]) => [k, { ...s, open: seasonOpen(k) }])), pass: passCatalog(passLive(store, now(), p)), packs: PACKS, rules: RULES, rating: RATING, ratingAi: RATING_AI, wins: WINS, xp: XP, tiers: TIERS.map(t => t[1]), tierAt: TIERS.map(t => t[0]), iap: iap.status(), auth: signin.status() });
 
 function payoutFor({ survived, bestRank, place }) {
   const sec = Math.max(0, Math.min(RULES.maxRunSec, +survived || 0));
@@ -282,7 +308,8 @@ class ApiError extends Error { constructor(status, msg) { super(msg); this.statu
 const hash = s => crypto.createHash('sha256').update(String(s)).digest('hex');
 // The sign-in a wallet belongs to (Apple or Google), or null for a device-only wallet.
 const accountOf = (store, p) => { const i = store.identities(p.id)[0]; return i ? { provider: i.provider, email: i.email || null, since: Number(i.at) } : null; };
-const wallet = (store, p) => ({ playerId: p.id, balance: Number(p.balance), earned: Number(p.earned), skins: store.skins(p.id), rating: Number(p.rating ?? RATING.base), tier: tierOf(Number(p.rating ?? RATING.base)), runs: Number(p.runs || 0), ...levelOf(p.xp), pass: passOf(store, p), quests: questsOf(store, p), account: accountOf(store, p) });
+const wallet = (store, p) => ({ playerId: p.id, balance: Number(p.balance), earned: Number(p.earned), skins: store.skins(p.id), rating: Number(p.rating ?? RATING.base), tier: tierOf(Number(p.rating ?? RATING.base)), runs: Number(p.runs || 0),
+  aiRating: Number(p.ai_rating ?? RATING.base), aiTier: tierOf(Number(p.ai_rating ?? RATING.base)), aiRuns: Number(p.ai_runs || 0), ...levelOf(p.xp), pass: passOf(store, p), quests: questsOf(store, p), account: accountOf(store, p) });
 
 /* ---------- handlers: each gets (store, body, player?) and returns a JSON-able object ---------- */
 function session(store, body) {
@@ -342,32 +369,45 @@ function runStart(store, body, p) {
   const now = Date.now();
   if (store.openRuns(p.id, now - HOUR) > 20) throw new ApiError(429, 'too many open runs');
   const id = crypto.randomBytes(8).toString('hex');
-  store.createRun(id, p.id, now);
+  store.createRun(id, p.id, now, RUN_MODES.includes(body.mode) ? body.mode : null);   // mode: the game's word for where it is played, checked at run/end
   return { runId: id };
 }
-function runEnd(store, body, p) {
+// ctx (from server.js): metSince(t), whether the relay saw this game alive beside another player since t
+function runEnd(store, body, p, ctx = {}) {
   const now = Date.now();
   const run = store.run(String(body.runId || ''), p.id);
   if (!run) throw new ApiError(404, 'unknown run');
-  if (run.ended) return { payout: Number(run.payout) || 0, xpGained: Number(run.xp) || 0, ...wallet(store, p), duplicate: true };
+  if (run.ended) return { payout: Number(run.payout) || 0, winBonus: Number(run.bonus) || 0, kind: run.kind || 'legacy', xpGained: Number(run.xp) || 0, ...wallet(store, p), duplicate: true };
   // The client can't claim more survival time than actually elapsed on the server.
   const elapsed = (now - Number(run.started)) / 1000 + 15;
   const survived = Math.min(+body.survived || 0, elapsed);
-  const payout = payoutFor({ survived, bestRank: body.bestRank, place: body.place });
-  const xp = xpFor({ survived, place: body.place, of: body.of }), level = levelOf(p.xp).level;
+  // Casual pays only for a win or a top-3 finish, and earns no XP (it has endless lives)
+  const kind = runKind(run, ctx.metSince), casual = kind === 'casual', life = { survived, place: body.place, of: body.of };
+  let bonus = winBonus({ kind, ...life }), capped = false;
+  if (bonus) {
+    const pool = winPool(kind), day = dayOf(now).starts, used = WIN_POOLS[pool].reduce((n, k) => n + store.bonusSince(p.id, day, k), 0);
+    const left = Math.max(0, WINS.cap[pool] - used); if (bonus > left) { bonus = left; capped = true; }
+  }
+  const payout = (casual ? 0 : payoutFor({ survived, bestRank: body.bestRank, place: body.place })) + bonus;
+  const xp = casual ? { time: 0, place: 0, win: 0, total: 0 } : xpFor(life), level = levelOf(p.xp).level;
   const w = { balance: Number(p.balance) + payout, earned: Number(p.earned) + payout, hour_at: Number(p.hour_at), hour_sum: Number(p.hour_sum) };
-  store.setWallet(p.id, w); store.addXp(p.id, xp.total); store.endRun(run.id, now, payout, xp.total);
+  store.setWallet(p.id, w); store.addXp(p.id, xp.total); store.endRun(run.id, now, payout, xp.total, kind, bonus);
   // the same XP fills the battle pass while a season is on, and the life moves the quests on, which pay the pass only
-  const passUp = passAddXp(store, p, xp.total), passMid = passOf(store, p), q = questsTick(store, p, { survived, place: body.place, of: body.of });
+  const passUp = passAddXp(store, p, xp.total), passMid = passOf(store, p), q = casual ? { xp: 0, done: [] } : questsTick(store, p, life);
   Object.assign(p, w); p.xp = Number(p.xp || 0) + xp.total;
-  // rating
-  const before = Number(p.rating ?? RATING.base), delta = ratingDelta(before, survived, body.eaten, body.place, body.of, body.life), rating = Math.max(0, before + delta);
-  const name = cleanName(body.name) || p.name || null;
-  store.setRating(p.id, rating, name); p.rating = rating; p.name = name; p.runs = Number(p.runs || 0) + 1;
+  // rating: bots move only the AI rating. Ranked bot games always have Normal bots; Casual says which it had.
+  const name = cleanName(body.name) || p.name || null, vsBots = kind === 'ai' || casual;
+  const before = Number((vsBots ? p.ai_rating : p.rating) ?? RATING.base), mult = casual ? RATING_AI.skill[body.skill] || 1 : 1;
+  const delta = ratingDelta(before, survived, body.eaten, body.place, body.of, body.life, mult), rating = Math.max(0, before + delta);
+  if (vsBots) { store.setAiRating(p.id, rating, name); p.ai_rating = rating; p.ai_runs = Number(p.ai_runs || 0) + 1; }
+  else { store.setRating(p.id, rating, name); p.rating = rating; p.runs = Number(p.runs || 0) + 1; }
+  p.name = name;
+  // kind: who the life was against (comp, ai, casual; legacy for apps that don't say); ratingDelta and aiDelta: how each
+  // rating moved (one is 0); winBonus: the part of payout a win or top 3 paid; winCapped: the day's cap cut it;
   // xpParts: where the XP came from (time alive, placing, the win); levelUp: how many levels this life gained;
   // passUp: pass levels from the life and its quests; questXp and questsDone: the quests it finished
   const out = wallet(store, p);
-  return { payout, ratingDelta: delta, xpGained: xp.total, xpParts: { time: xp.time, place: xp.place, win: xp.win }, levelUp: out.level - level,
+  return { payout, kind, winBonus: bonus, winCapped: capped, ratingDelta: vsBots ? 0 : delta, aiDelta: vsBots ? delta : 0, xpGained: xp.total, xpParts: { time: xp.time, place: xp.place, win: xp.win }, levelUp: out.level - level,
     passUp: passUp + (passMid && out.pass ? out.pass.level - passMid.level : 0), questXp: q.xp, questsDone: q.done, ...out };
 }
 function buySkin(store, body, p) {
@@ -447,4 +487,4 @@ function passAdmin(store, on, tester) {
 
 function leaderboard(store) { return { top: store.top(10).map((r, i) => ({ rank: i + 1, name: (r.name && !nameBlocked(r.name) && r.name) || 'Unnamed cell', rating: r.rating, tier: tierOf(r.rating), runs: r.runs })) }; }
 
-module.exports = { SKINS, PACKS, RULES, RATING, XP, SEASONS, seasonOpen, PASS, PASS_SEASONS, passSeason, passLive, passAdmin, QUESTS, QUEST_SLOTS, questsAt, questsOf, questsTick, isoWeekOf, catalog, payoutFor, ratingDelta, xpFor, levelOf, xpAtLevel, xpToNext, tierOf, nameBlocked, ApiError, auth, handlers: { deleteAccount, session, runStart, runEnd, buySkin, iapApple, iapGoogle, leaderboard, signInApple, signInGoogle, signOut, passView, passPremium, passClaim } };
+module.exports = { SKINS, PACKS, RULES, RATING, RATING_AI, WINS, winBonus, runKind, XP, SEASONS, seasonOpen, PASS, PASS_SEASONS, passSeason, passLive, passAdmin, QUESTS, QUEST_SLOTS, questsAt, questsOf, questsTick, isoWeekOf, catalog, payoutFor, ratingDelta, xpFor, levelOf, xpAtLevel, xpToNext, tierOf, nameBlocked, ApiError, auth, handlers: { deleteAccount, session, runStart, runEnd, buySkin, iapApple, iapGoogle, leaderboard, signInApple, signInGoogle, signOut, passView, passPremium, passClaim } };

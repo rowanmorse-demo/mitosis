@@ -45,8 +45,8 @@ On phones, drag to steer and use the on-screen buttons. In the Android app the b
 - A **round lasts 10 minutes**. The dish is full size for the first minute, then the safe area shrinks at a steady rate to 3% of the dish by 9:30 and holds there until 10:00. The clock at the top of the screen counts down and says when the collapse starts.
 - Cells outside the arena lose 20% of their mass per second plus 12 mass per second (60% in the final arena), and dissolve below 10 mass. A cell bigger than the final arena still counts as inside when it is centred. Bots steer back inside; new cells always spawn inside, including inside an antibiotic tide.
 - **Bots stop respawning at 7:00.** From then on, as soon as only one player's cells are left the round ends and that player wins. If more than one is still alive at 10:00 (rare, given the final arena), they are ranked by mass.
-- **Lives and the spawn window.** Everyone gets two respawns per round, and nobody spawns in the last 5 minutes. When you can't join, Play **searches for a game** for up to 30 seconds (the round may open or a new one start); after that you're put into a game on your device where **bots fill every slot people didn't**. Those games are ranked like any other.
-- **Practice** (the button under Play) is the same bot-filled game but unranked: no ATP, no rating change, and no connection needed. The pill beside it (and Settings) sets the bots to Easy, Normal, Hard or Expert. When the app has no connection, Play starts a practice game at once instead of searching.
+- **Lives and the spawn window.** Everyone gets two respawns per round, and nobody spawns in the last 5 minutes. When you can't join, Play **searches for a game** for up to 30 seconds (the round may open or a new one start); after that you're put into a game on your device where **bots fill every slot people didn't**. Those games keep ranked rules (lives, XP, ATP by placement) but count for your **AI rating**, not your ranked one. So does Play when your ping is over Settings › Max ping.
+- **Casual** (practice: the button under Play) is the same bot-filled game with endless lives and no XP. It moves your AI rating (gains scale with the bots: Easy ×0.5 to Master ×1.5) and pays ATP for a win or a top-3 finish. The pill beside it (and Settings) sets the bots to Easy, Normal, Hard, Expert or Master. It needs no connection, but offline games are not rated. When the app has no connection, Play starts a Casual game at once instead of searching.
 - **Nearby** (a play mode in the iPhone app's lobby) connects phones around you with MultipeerConnectivity, over Bluetooth and peer-to-peer Wi-Fi. The phones relay the game to each other the way the server does online, so rounds, bots and hosting work the same. Nearby games are unranked. The phones form a lobby: the host phone picks the match (bot difficulty Easy to Master; no, few, normal or lots of bots; a 3, 5 or 10-minute round; 1, 3 or 5 lives) and taps Start match, which pulls every phone on the home screen into it; when the round ends everyone is back in the lobby. If the host closes the app, the iPhone app leaves the session at once and another phone takes over hosting, so the match goes on; a player left alone with no bots plays on to the clock. The settings travel in the host's presence (`lb`). `node tools/nearby-test.js` plays a match between two headless Chrome pages with a stand-in for the app's Nearby bridge.
 - **Merging**: split pieces can fuse again after 15 s plus a little more for bigger cells (about 20–30 s at everyday sizes). Until then pieces that touch slide around each other; when it is time they glide together and fuse once they overlap.
 - **Rating** rewards dying less and winning: finishing 1st of 4+ adds a win bonus, and a run on your second or third life of the round earns 75% or 50% of the gain.
@@ -75,6 +75,18 @@ Every player has an Elo-style rating, starting at 1000, adjusted by the server a
 
 Tiers: Bronze (under 900), Silver (900+), Gold (1100+), Platinum (1400+), Diamond (1800+), Legend (2300+). The lobby shows your rating and the top ten, and the results screen after every run (death or Return to lobby) shows the change. `GET /api/leaderboard` returns the top ten.
 
+**Two ratings: vs players and vs AI.** The rating above (labelled *vs players*) moves only for arena lives where the server saw another player alive in the same arena room during the life. Every other life is against bots and moves the separate **AI rating** (*vs AI*), worked out the same way from its own 1000: Casual, ranked games of bots after a search or over Max ping, and arena lives with nobody else alive in the room. Bots can never move the competitive rating. The game can't claim a real opponent: each relay connection gets a secret key in its welcome, `run/start` and `run/end` send it, and the relay notes when that game was alive in the arena while another game in its room was too (`metSince` in server.js, `runKind` in economy.js). Apps from before this send no mode and are rated as they always were. The Profile, the Ranks page and the results screen show both, labelled; the leaderboard is vs players only.
+
+**Win rewards (ATP).** On top of the payout by placement (ranked lives only), a 1st place pays a win bonus and a 2nd or 3rd a smaller one:
+
+| Against | Win | 2nd or 3rd | A ranked win in all |
+| --- | --- | --- | --- |
+| Players (arena, another player alive in the room) | +50 | +15 | 75 ATP |
+| Bots, ranked rules | +25 | +5 | 50 ATP |
+| Bots, Casual (no placement payout) | +20 | +5 | 20 ATP |
+
+The life must last 2 minutes on the server's clock in a round of 8 or more cells, so an early death, a quit (no placing) or a life never ended pays nothing. Bonuses stop for the day (UTC) at 200 ATP from bots (ranked and Casual together) and 400 ATP against players. `WINS` in economy.js.
+
 ## Levels and XP
 
 Every ranked life earns XP when it ends, worked out by the server:
@@ -85,7 +97,7 @@ Every ranked life earns XP when it ends, worked out by the server:
 | Placing | up to 60 for 1st, scaling down to 0 for last (rounds with at least 4 players, lives of at least 20 s) |
 | Winning | +40 for 1st (same conditions) |
 
-So surviving a whole round and winning it is 220 XP, and a 7-minute life that places 2nd of 18 is 142. Survival is the same time the server caps for ATP and rating (what really passed on its clock since the run started), so a client can't claim more. Practice, Nearby and offline games earn no XP, just as they pay no ATP and leave the rating alone.
+So surviving a whole round and winning it is 220 XP, and a 7-minute life that places 2nd of 18 is 142. Survival is the same time the server caps for ATP and rating (what really passed on its clock since the run started), so a client can't claim more. Casual, Nearby and offline games earn no XP (Casual still pays win ATP and moves the AI rating).
 
 XP only ever adds up, into a profile level. Going from level L to L+1 takes 100 + 50 × (L − 1) XP, so each level needs 50 more than the one before: level 2 at 100 XP, level 3 at 250, level 5 at 700, level 10 at 2,700, level 20 at 10,450 and level 50 at 63,700. Signing in on a second device adds that device's XP to the account's; deleting the account deletes its XP. The rules are `XP` in economy.js; the catalogue sends them to the game, which keeps a copy (`XP_FB`) for offline use.
 
@@ -243,8 +255,8 @@ All endpoints take and return JSON. Authenticated ones need `Authorization: Bear
 | Endpoint | Purpose |
 | --- | --- |
 | `POST /api/session` `{secret}` | Create or load the player; returns wallet, owned skins and the catalogue |
-| `POST /api/run/start` | Begin a run (server timestamps it) |
-| `POST /api/run/end` `{runId, survived, eaten, peak, place, of, bestRank, name}` | Pay out the run by placement and adjust the rating; idempotent. While the battle pass is on it also fills the pass and moves the quests on: `questsDone` and `questXp` are the quests this life finished, `passUp` the tiers it gained |
+| `POST /api/run/start` `{mode, relay}` | Begin a run (server timestamps it). `mode`: `arena`, `bots` (a ranked game of bots on the device) or `casual`; `relay`: the relay connection's key from its welcome. Both optional (older apps send neither) |
+| `POST /api/run/end` `{runId, survived, eaten, peak, place, of, bestRank, name, relay, skill}` | Pay out the run by placement plus any win bonus and adjust the rating it was against; idempotent. `kind` says who it was against (`comp`, `ai`, `casual`, or `legacy` for older apps), `ratingDelta` and `aiDelta` how each rating moved (one is 0), `winBonus` the part of `payout` the win paid and `winCapped` whether the day's cap cut it. While the battle pass is on it also fills the pass and moves the quests on: `questsDone` and `questXp` are the quests this life finished, `passUp` the tiers it gained |
 | `POST /api/skins/buy` `{skinId}` | Spend ATP on a skin (battle pass skins are not for sale) |
 | `POST /api/pass` | The battle pass: your tier (`pass.level`; the game says Tier so it is not mixed up with the profile level), Battle Stars, Battle Pass (premium) and claims, plus the season's pages, and `quests`: today's and this week's quests with their progress (`pass`, `quests` and `catalog.pass` are `null` while it is off). Every wallet response carries `quests` |
 | `POST /api/pass/premium` `{bundle}` | Buy the Battle Pass for this season with ATP, or the Battle Bundle (the pass plus 10 tiers); once a season |
