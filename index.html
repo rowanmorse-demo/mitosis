@@ -1158,9 +1158,14 @@ body:not(.playing) #tip{display:none}
 #passCard .bq.just{animation:bqDone 1.2s cubic-bezier(.2,.8,.2,1)}
 @keyframes bqDone{0%{background:rgba(95,224,168,.35)}100%{background:rgba(95,224,168,.06)}}
 /* buying: a sheet over the whole screen (beside the page, which scrolls in portrait) with what it gives and the two offers */
-#bpSheet{--bp:79,240,216;--bp2:226,104,255;z-index:12}
-#bpSheet .lb-sheet-box{width:min(520px,100%)}
-#bpSheet h2{background:linear-gradient(180deg,#fff,#f0b8ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+/* its own rules for the dimmed backdrop, the box and the bar, so lobby changes can't unstyle it (the lobby's .lb-sheet is gone) */
+#bpSheet{--bp:79,240,216;--bp2:226,104,255;position:absolute;inset:0;z-index:12;display:grid;place-items:center;box-sizing:border-box;padding:max(12px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));
+  background:rgba(2,8,9,.66);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);animation:ov .22s ease-out}
+#bpSheet .lb-sheet-box{width:min(520px,100%);max-height:100%;overflow:auto;overscroll-behavior:contain;box-sizing:border-box;display:grid;gap:14px;padding:14px 16px 18px;border-radius:30px;border:1px solid rgba(170,235,225,.15);
+  background:radial-gradient(90% 50% at 0% 0%,rgba(var(--bp2),.12),transparent 70%),linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.015) 40%),rgba(5,16,18,.94);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 40px 80px -20px rgba(0,0,0,.9);animation:up .32s cubic-bezier(.2,.8,.2,1)}
+#bpSheet .lb-sheet-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-left:6px}
+#bpSheet h2{margin:0;font:800 24px/1 var(--display);letter-spacing:-.035em;background:linear-gradient(180deg,#fff,#f0b8ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+#bpSheet .lb-icon svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
 #bpSheet .bp-perks{margin:0;padding:0 4px;list-style:none;display:grid;gap:9px}
 #bpSheet .bp-perks li{display:flex;align-items:flex-start;gap:10px;font:500 14px/1.4 var(--display);color:var(--muted)}#bpSheet .bp-perks b{color:var(--ink);font-weight:700}
 #bpSheet .bp-perks svg{flex:none;width:18px;height:18px;margin-top:1px;padding:3px;border-radius:50%;color:#2a0233;background:linear-gradient(180deg,#f6b3ff,#e068ff)}
@@ -1175,6 +1180,11 @@ body:not(.playing) #tip{display:none}
 #bpSheet .bp-offer.confirm .bo-go{color:#2a1600;background:linear-gradient(180deg,#ffeaa0,#f7bb3a 48%,#e0920f);animation:svpulse 1s ease-in-out infinite}
 #bpSheet .bp-offer.short .bo-go{color:#ffd36b;background:rgba(242,177,52,.12);box-shadow:inset 0 0 0 1.5px rgba(242,177,52,.6)}
 #bpSheet .bp-sheetmsg{margin:0;font:600 12px/1.35 var(--mono);color:#ff9aa3;text-align:center}#bpSheet .bp-sheetmsg:empty{display:none}
+@media (orientation:landscape) and (max-height:520px){
+  #bpSheet .lb-sheet-box{width:min(720px,100%);gap:10px;padding:10px 14px 14px;border-radius:24px}#bpSheet h2{font-size:21px}
+  #bpSheet .bp-perks{gap:5px}#bpSheet .bp-perks li{font-size:12.5px;line-height:1.3}#bpSheet .bp-perks svg{width:15px;height:15px}
+  #bpSheet .bp-offers{grid-template-columns:1fr 1fr}#bpSheet .bp-offer{min-height:0;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto;row-gap:8px;padding:10px 10px 10px 14px}#bpSheet .bp-offer .bo-t{grid-column:1/-1}#bpSheet .bo-go{height:38px;min-width:76px}
+}
 /* landscape phones: everything on one screen */
 @media (orientation:landscape) and (max-height:520px){
   .passview{grid-template-columns:minmax(220px,.72fr) minmax(0,1.5fr);gap:8px 14px}
