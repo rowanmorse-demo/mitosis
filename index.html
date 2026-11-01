@@ -997,9 +997,6 @@ body:not(.playing) #tip{display:none}
 .lobby .lb-bp .lb-medal svg{fill:#03322b}
 .lobby .lb-bp .lb-achbar i{background:linear-gradient(90deg,#1fb9a5,#7ff3e2);transition:width .5s}
 .lobby .lb-bp .bp-badge{top:7px;right:7px}
-@media (orientation:portrait){ /* three cards in the row: the event or new-skin card gives a little room and keeps its title whole */
-  .lb-feed:has(.lb-bp:not([hidden])) :is(.lb-ev,.lb-sk){flex-grow:1.85}.lb-feed:has(.lb-bp:not([hidden])) .lb-ft b{font-size:15px}
-  .lb-feed:has(.lb-bp:not([hidden])) .lb-ach{padding-left:6px;padding-right:6px}.lb-feed:has(.lb-bp:not([hidden])) .lb-achtx small{font-size:9.5px;letter-spacing:.06em}}
 .bp-badge{position:absolute;top:-6px;right:-6px;min-width:22px;height:22px;box-sizing:border-box;padding:0 6px;border-radius:999px;display:grid;place-items:center;font:800 12px/1 var(--display);font-style:normal;color:#2b0715;background:linear-gradient(180deg,#ff9bb7,#ff5c8a);box-shadow:0 0 0 2.5px #071719,0 0 12px rgba(255,92,138,.7);animation:bpBadge 2.4s ease-in-out infinite}
 @keyframes bpBadge{0%,100%{transform:scale(1)}8%{transform:scale(1.18)}16%{transform:scale(1)}}
 .toast[data-kind=battle]{--tc:79,240,216;--ti:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1.8l3 6.3 6.9.9-5 4.8 1.3 6.8L12 17.3l-6.2 3.3 1.3-6.8-5-4.8 6.9-.9z'/%3E%3C/svg%3E")}
@@ -2418,7 +2415,6 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
       <button class="lb-feat lb-ev" id="eventPill" type="button" hidden><canvas class="lb-art" id="evCv" width="240" height="240" aria-hidden="true"></canvas><span class="lb-left" aria-hidden="true"><i></i><span id="eventSub"></span></span><span class="lb-ft"><svg class="lb-pumpkin" viewBox="0 0 32 32" aria-hidden="true"><path d="M15.2 9.5c-.2-2.4.4-4.6 2.4-5.8l1.4 1.2c-1.4 1-1.8 2.6-1.6 4.6z" fill="#5c8f2e"/><ellipse cx="10.4" cy="19" rx="7.4" ry="9.4" fill="#d9640c"/><ellipse cx="21.6" cy="19" rx="7.4" ry="9.4" fill="#d9640c"/><ellipse cx="16" cy="19" rx="7.8" ry="10.2" fill="#ff8a1f"/><ellipse cx="13" cy="13.5" rx="2.6" ry="1.4" fill="#ffc27a" opacity=".55" transform="rotate(-30 13 13.5)"/><path d="M10.6 16.2l3.2 2.6h-3.6zM21.4 16.2l-3.2 2.6h3.6zM9.8 22c2.6 2.4 9.8 2.4 12.4 0-.8 3.6-11.6 3.6-12.4 0z" fill="#3a1200"/></svg><b id="eventName"></b></span></button>
       <button class="lb-feat lb-sk" id="lbSkinCard" type="button" hidden><canvas class="lb-art" id="skCv" width="240" height="240" aria-hidden="true"></canvas><span class="lb-tag">New</span><span class="lb-ft"><b id="skName"></b><span class="lb-price"><i aria-hidden="true"></i><span id="skPrice"></span></span></span></button>
       <button class="lb-feat lb-ach lb-bp" id="passBtn" type="button" aria-label="Battle Pass" hidden><span class="lb-medal" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2.6l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8z"/></svg></span><span class="lb-achtx"><b id="lbBpTier">Tier 1</b><small>Battle Pass</small></span><span class="lb-achbar" aria-hidden="true"><i id="lbBpFill"></i></span><i class="bp-badge" id="passBadge" aria-hidden="true" hidden></i></button>
-      <button class="lb-feat lb-ach" id="lbAch" type="button" aria-label="Achievements"><span class="lb-medal" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3.5l2.5 5.2 5.7.8-4.1 4 1 5.6-5.1-2.7-5.1 2.7 1-5.6-4.1-4 5.7-.8z"/></svg></span><span class="lb-achtx"><b id="lbAchN">0/0</b><small>Achievements</small></span><span class="lb-achbar" aria-hidden="true"><i id="lbAchFill"></i></span></button>
     </aside>
     <section class="lb-hero">
       <button type="button" class="hero-cell" id="avatarBtn" aria-label="Change your skin"><canvas id="avatarCv" width="320" height="320" aria-hidden="true"></canvas><span class="hero-edit" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M19.5 3.5a2.1 2.1 0 0 1 3 3L12 17l-3-3z"/><path d="M9 14c-2.2 0-4 1.7-4 3.9 0 1.3-.8 2.2-2.5 2.6 1.2.9 2.8 1.5 4.5 1.5 3.3 0 5-2 5-5"/></svg></span></button>
@@ -6143,12 +6139,11 @@ function syncPlay(){
   if(!home&&!sheet.hidden)sheet.hidden=true;
   if(home){fitName();lbSharp($('avatarCv'));lbSharp($('meCv'));syncFeed();if(RM)lbDrawArt();}
 }
-// Home feature cards (left column): the season's event, else the newest skin you don't own, and your achievements
+// Home feature cards (left column): the season's event, else the newest skin you don't own (achievements live on Profile)
 const lbEvSkin=()=>{const key=Object.keys(SEASONS).find(k=>seasonState(k).open);return key?PREMIUM.find(x=>x.season===key&&!ownsSkin(x.id))||PREMIUM.find(x=>x.season===key):null;};
 const lbFeatSkin=()=>{const a=PREMIUM.filter(x=>!x.season&&!ownsSkin(x.id));return a[a.length-1]||null;};
 function syncFeed(){
   const card=$('lbCard');if(card.dataset.tier!==wallet.tier)card.dataset.tier=wallet.tier;
-  const got=ACH.filter(a=>achGot.has(a.id)).length,t=`${got}/${ACH.length}`;if($('lbAchN').textContent!==t){$('lbAchN').textContent=t;$('lbAchFill').style.width=Math.round(got/Math.max(1,ACH.length)*100)+'%';$('lbAch').setAttribute('aria-label',`Achievements, ${got} of ${ACH.length}`);}
   const F=$('eventPill').hidden?lbFeatSkin():null,sc=$('lbSkinCard');sc.hidden=!F;
   if(F&&sc.dataset.id!==String(F.id)){sc.dataset.id=F.id;$('skName').textContent=F.name;$('skPrice').textContent=F.price.toLocaleString();sc.setAttribute('aria-label',`New skin: ${F.name}, ${F.price} ATP`);}
 }
@@ -6162,7 +6157,7 @@ $('modeClose').addEventListener('click',()=>modeSheet(false));
 $('modeSeg').addEventListener('click',e=>{const b=e.target.closest('.lb-mpick');if(!b)return;setPlayMode(b.dataset.m);Native.haptic('light');setTimeout(()=>modeSheet(false),RM?0:180);});
 $('lbToCasual').addEventListener('click',()=>{setPlayMode('casual');Native.haptic('light');});
 $('lbSkill').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.botSkill=b.dataset.k;saveSettings();syncSkill();setPlayMode('casual');});
-$('navProf').addEventListener('click',()=>$('profBtn').click());$('lbAch').addEventListener('click',()=>$('profBtn').click());
+$('navProf').addEventListener('click',()=>$('profBtn').click());
 $('lbSkinCard').addEventListener('click',()=>{const F=lbFeatSkin();if(F)shopSel=F.id;openStore();});
 $('nameIn').addEventListener('input',fitName);
 // Enter on the lobby (or Go on the name keyboard) presses Play for the chosen mode; Escape closes the mode select
