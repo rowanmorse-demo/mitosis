@@ -34,6 +34,13 @@ crashes() { # $1 = file. True if the app's own process crashed (Java or native) 
   grep -qE "Process: $PKG, PID|>>> $PKG <<<|ANR in $PKG" "$1"
 }
 
+# The emulator's emulated GPU goes down under this WebView's drawing: in CI runs 2-5 the emulator died about 15 s
+# after the page started drawing, with or without Vulkan and with 4 GB of RAM. WebViews read flags from this file
+# (debuggable apps on any image, every app on a userdebug image), so they draw in software here. The game is all
+# 2D canvas, which software draws the same way. This is the emulator's limitation, not something real phones need.
+adb shell "echo '_ --disable-gpu --disable-gpu-compositing --disable-gpu-rasterization' > /data/local/tmp/webview-command-line"
+echo "image build type: $(adb shell getprop ro.build.type | tr -d '\r'); WebView flags: $(adb shell cat /data/local/tmp/webview-command-line | tr -d '\r')"
+
 # ---------------------------------------------------------------- debug build: the full test
 adb logcat -c || true
 "$ADB_BIN" logcat -v time > "$OUT/debug/logcat.txt" 2>&1 &   # runs all test long: no timeout
