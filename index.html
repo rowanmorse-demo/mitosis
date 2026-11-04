@@ -3176,6 +3176,7 @@ const Native=(()=>{
     if(m.id&&waits.has(m.id)){const w=waits.get(m.id);waits.delete(m.id);if(m.ok===false)w.rej(new Error(m.error||'Failed'));else w.res(m);return;}
     if(m.type==='purchase'&&m.purchase)redeem(m.purchase).catch(()=>{});
     if(m.type==='app')reportHitch('app '+m.text);
+    if(m.type==='power')powerFx(m);
     if(m.type==='nearby'){const N=window.__mitosisNet;if(m.ev==='error'){toast('Nearby','Nearby play stopped',m.text||'');setNearby(false);}else if(N&&N.onNearby)N.onNearby(m);}}};
   // taps closer than 120 ms are dropped; the strong ones (death, a win, a burst, an infection) always play, but the
   // same one at most every 300 ms (several achievements can unlock in one frame)
@@ -3439,8 +3440,8 @@ function syncResPlay(){ // the big button: Respawn while lives are left, Play ag
   lv.hidden=k!=='respawn';if(!lv.hidden)[...lv.children].forEach((d,i)=>d.classList.toggle('on',i<left));
 }
 setInterval(syncResPlay,250);
-function maybeAskReview(place){ // after a top-3 finish, now and then, let iOS offer an App Store rating (iOS itself shows it at most 3 times a year)
-  if(Native.platform!=='ios'||!place||place>3||local==='practice'||isNearby()||(wallet.runs|0)<5)return;
+function maybeAskReview(place){ // after a top-3 finish, now and then, let the app offer a store rating (iOS shows it at most 3 times a year; Google Play keeps its own quota)
+  if(!Native.platform||!place||place>3||local==='practice'||isNearby()||(wallet.runs|0)<5)return;
   let last=0;try{last=+localStorage.getItem('mitosis.reviewAt')||0;}catch(e){}
   if(Date.now()-last<90*864e5)return;try{localStorage.setItem('mitosis.reviewAt',String(Date.now()));}catch(e){}
   setTimeout(()=>Native.send({type:'review'}),2200); // once the rating count-up has settled
@@ -5274,6 +5275,11 @@ const diffEl=$('diff');const syncDiff=()=>{[...diffEl.children].forEach(b=>b.set
 diffEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.diff=b.dataset.d;syncDiff();});syncDiff();
 const fxSegEl=$('fxSeg'),syncFxSeg=()=>[...fxSegEl.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.fx==='1')===!!settings.lowFx)));
 fxSegEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.lowFx=b.dataset.fx==='1';lowFx=settings.lowFx;saveSettings();syncFxSeg();});syncFxSeg();
+// battery saver or a hot phone (the Android app sends {type:'power',low,thermal}) means reduced effects while it lasts;
+// only what this turned on is turned back off, so the Effects setting and the slow-frame fallback keep their say
+let fxByPower=false;
+function powerFx(m){const on=!!m.low||m.thermal==='serious'||m.thermal==='critical';
+  if(on&&!lowFx){lowFx=true;fxByPower=true;}else if(!on&&fxByPower){fxByPower=false;lowFx=!!settings.lowFx;}}
 const bgSegEl=$('bgSeg'),syncBgSeg=()=>{BG=BGS[settings.bg]||BGS.black;document.body.dataset.bg=BG===BGS.white?'white':'black';[...bgSegEl.children].forEach(b=>b.setAttribute('aria-pressed',String(BGS[b.dataset.bg]===BG)));};
 bgSegEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.bg=b.dataset.bg;saveSettings();syncBgSeg();});syncBgSeg();
 const hapEl=$('hapSeg'),syncHap=()=>[...hapEl.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.h==='1')===!!settings.haptics)));

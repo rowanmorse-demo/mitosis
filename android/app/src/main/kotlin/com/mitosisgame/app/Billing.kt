@@ -2,6 +2,8 @@ package com.mitosisgame.app
 
 import android.app.Activity
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingClientStateListener
 import com.android.billingclient.api.BillingFlowParams
@@ -17,20 +19,30 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /**
- * Google Play Billing for the ATP packs. The server (economy.js) is the source of
- * truth: a purchase only becomes ATP once the game has sent the purchase token to
- * /api/iap/google and the server credited it. Only then is the purchase consumed;
- * anything unconsumed is re-delivered on the next launch.
+ * Google Play Billing (Play Billing Library 8) for the ATP packs: atp_500, atp_1500, atp_5000, atp_12000 and
+ * atp_150000, all consumable in-app products. The server (economy.js) is the source of truth: a purchase only
+ * becomes ATP once the game has sent the purchase token to /api/iap/google and the server credited it. Only then
+ * is the purchase consumed; anything unconsumed is delivered again when the page is ready and on every return
+ * to the app (the server ignores an order it has already credited).
+ *
+ * Billing callbacks can arrive on a background thread, so every one hops to the main thread before it touches
+ * this object's state.
  */
 class Billing(context: Context, private val reply: (JSONObject) -> Unit) : PurchasesUpdatedListener {
     private val client = BillingClient.newBuilder(context)
         .setListener(this)
         .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
+        .enableAutoServiceReconnection()
         .build()
+    private val main = Handler(Looper.getMainLooper())
     private val details = HashMap<String, ProductDetails>()
     private val queue = ArrayList<(Boolean) -> Unit>()
     private var connecting = false
     private var buyRequestId = -1L
+
+    private fun onMain(block: () -> Unit) {
+        if (Looper.myLooper() == Looper.getMainLooper()) block() else main.post(block)
+    }
 
     private fun whenReady(block: (Boolean) -> Unit) {
         if (client.isReady) { block(true); return }
@@ -38,26 +50,40 @@ class Billing(context: Context, private val reply: (JSONObject) -> Unit) : Purch
         if (connecting) return
         connecting = true
         client.startConnection(object : BillingClientStateListener {
-            override fun onBillingSetupFinished(result: BillingResult) {
+            override fun onBillingSetupFinished(result: BillingResult) = onMain {
                 connecting = false
                 val ok = result.responseCode == BillingClient.BillingResponseCode.OK
                 val pending = ArrayList(queue); queue.clear()
                 pending.forEach { it(ok) }
             }
-            override fun onBillingServiceDisconnected() { connecting = false }
+            override fun onBillingServiceDisconnected() = onMain { connecting = false }
         })
+    }
+
+    /** Looks up [ids] on Google Play and remembers them for [buy]; null on failure, with Play's message. */
+    private fun fetch(ids: List<String>, done: (List<ProductDetails>?, String) -> Unit) {
+        val params = QueryProductDetailsParams.newBuilder().setProductList(ids.map {
+            QueryProductDetailsParams.Product.newBuilder().setProductId(it).setProductType(BillingClient.ProductType.INAPP).build()
+        }).build()
+        client.queryProductDetailsAsync(params) { result, found ->
+            onMain {
+                if (result.responseCode != BillingClient.BillingResponseCode.OK) done(null, result.debugMessage)
+                else {
+                    val list = found.productDetailsList
+                    list.forEach { details[it.productId] = it }
+                    done(list, "")
+                }
+            }
+        }
     }
 
     fun products(requestId: Long, ids: List<String>) = whenReady { ok ->
         if (!ok) { reply(error(requestId, "Google Play is not available")); return@whenReady }
-        val params = QueryProductDetailsParams.newBuilder().setProductList(ids.map {
-            QueryProductDetailsParams.Product.newBuilder().setProductId(it).setProductType(BillingClient.ProductType.INAPP).build()
-        }).build()
-        client.queryProductDetailsAsync(params) { result, list ->
-            if (result.responseCode != BillingClient.BillingResponseCode.OK) { reply(error(requestId, result.debugMessage.ifEmpty { "Could not load products" })); return@queryProductDetailsAsync }
+        if (ids.isEmpty()) { reply(JSONObject().put("id", requestId).put("ok", true).put("products", JSONArray())); return@whenReady }
+        fetch(ids) { list, message ->
+            if (list == null) { reply(error(requestId, message.ifEmpty { "Could not load products" })); return@fetch }
             val arr = JSONArray()
             for (pd in list.sortedBy { it.oneTimePurchaseOfferDetails?.priceAmountMicros ?: 0 }) {
-                details[pd.productId] = pd
                 arr.put(JSONObject().put("id", pd.productId).put("price", pd.oneTimePurchaseOfferDetails?.formattedPrice ?: "")
                     .put("title", pd.name).put("description", pd.description))
             }
@@ -66,8 +92,19 @@ class Billing(context: Context, private val reply: (JSONObject) -> Unit) : Purch
     }
 
     fun buy(activity: Activity, requestId: Long, productId: String) = whenReady { ok ->
-        val pd = details[productId]
-        if (!ok || pd == null) { reply(error(requestId, "Product $productId is not available on Google Play yet")); return@whenReady }
+        if (!ok) { reply(error(requestId, "Google Play is not available")); return@whenReady }
+        val known = details[productId]
+        if (known != null) { launch(activity, requestId, known); return@whenReady }
+        // the shop normally loaded the packs first; if not, look this one up now
+        fetch(listOf(productId)) { list, _ ->
+            val pd = list?.firstOrNull { it.productId == productId }
+            if (pd == null) reply(error(requestId, "Product $productId is not available on Google Play yet"))
+            else launch(activity, requestId, pd)
+        }
+    }
+
+    private fun launch(activity: Activity, requestId: Long, pd: ProductDetails) {
+        if (activity.isFinishing) { reply(error(requestId, "The app is closing")); return }
         val flow = BillingFlowParams.newBuilder().setProductDetailsParamsList(listOf(
             BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(pd).build()
         )).build()
@@ -77,6 +114,10 @@ class Billing(context: Context, private val reply: (JSONObject) -> Unit) : Purch
     }
 
     override fun onPurchasesUpdated(result: BillingResult, purchases: MutableList<Purchase>?) {
+        onMain { purchasesUpdated(result, purchases) }
+    }
+
+    private fun purchasesUpdated(result: BillingResult, purchases: List<Purchase>?) {
         val id = buyRequestId; buyRequestId = -1
         when (result.responseCode) {
             BillingClient.BillingResponseCode.OK -> {
@@ -85,6 +126,8 @@ class Billing(context: Context, private val reply: (JSONObject) -> Unit) : Purch
                 if (!delivered && id >= 0) reply(JSONObject().put("id", id).put("ok", true).put("cancelled", true)) // pending payment: arrives later
             }
             BillingClient.BillingResponseCode.USER_CANCELED -> if (id >= 0) reply(JSONObject().put("id", id).put("ok", true).put("cancelled", true))
+            // already owned = bought before but never credited: hand that one over again
+            BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> { if (id >= 0) reply(JSONObject().put("id", id).put("ok", true).put("cancelled", true)); deliverPending() }
             else -> if (id >= 0) reply(error(id, result.debugMessage.ifEmpty { "Purchase failed" }))
         }
     }
@@ -104,7 +147,7 @@ class Billing(context: Context, private val reply: (JSONObject) -> Unit) : Purch
         if (!ok) return@whenReady
         val params = QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.INAPP).build()
         client.queryPurchasesAsync(params) { result, list ->
-            if (result.responseCode == BillingClient.BillingResponseCode.OK) list.forEach { deliver(it, -1) }
+            onMain { if (result.responseCode == BillingClient.BillingResponseCode.OK) list.forEach { deliver(it, -1) } }
         }
     }
 
