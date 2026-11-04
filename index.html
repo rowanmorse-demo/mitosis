@@ -502,7 +502,7 @@ body:not(.playing) #tip{display:none}
 @media (orientation:portrait){
   :is(.shopview,#lookCard) .skins{grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:8px}:is(.shopview,#lookCard) .skin canvas{width:52px;height:52px}:is(.shopview,#lookCard) .skin .sp{font-size:9.5px;padding:3px 6px}
 }
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 /* ==== per-screen styles: each screen keeps its rules between its own two markers ==== */
 /* @ui:base */
 /* shared controls (the rules themselves live in place above): pressed states for icon buttons and rail tiles,
@@ -546,19 +546,20 @@ body:not(.playing) #tip{display:none}
 .lobby .lb-me::after{display:none}
 .lb-ava{flex:none;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 50% 38%,rgba(255,255,255,.1),rgba(0,0,0,.45));box-shadow:0 0 0 2px var(--tc),0 0 16px -3px var(--tc)}
 .lobby .lb-me canvas{width:42px;height:42px;border-radius:50%;background:none}
-.lobby .lb-me-txt{display:grid;align-content:center;min-width:0;padding-top:24px}
+.lobby .lb-me-txt{display:grid;align-content:center;min-width:0;padding-top:20px}
 .lobby .lb-me-txt>b{display:none}
-.lobby .lb-me-sub{display:flex;align-items:center;gap:6px;font:inherit;color:inherit}
+.lobby .lb-me-sub{display:flex;align-items:center;gap:6px;min-width:0;font:inherit;color:inherit}
 .lb-crest{width:16px;height:18px;flex:none;filter:drop-shadow(0 1px 4px color-mix(in srgb,var(--tc) 50%,transparent))}
 .lb-crest .s1{stop-color:var(--tc1)}.lb-crest .s2{stop-color:var(--tc2)}.lb-crest .o{fill:url(#lbgCrest)}.lb-crest .i{fill:rgba(3,12,14,.55)}.lb-crest .g{fill:var(--tc1)}
-.lobby .lb-me-sub .tier{font:700 10px/1 var(--mono);letter-spacing:.13em;text-transform:uppercase;color:var(--tc)}
-.lb-rt{font:800 14px/1 var(--display);letter-spacing:-.01em;color:var(--ink);font-variant-numeric:tabular-nums}
-.lb-pbar{position:absolute;left:68px;right:16px;bottom:8px;height:3px;border-radius:2px;background:rgba(255,255,255,.09);overflow:hidden}
+.lobby .lb-me-sub .tier{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:700 11px/1 var(--mono);letter-spacing:.13em;text-transform:uppercase;color:var(--tc)}
+.lb-rt{flex:none;font:800 14px/1 var(--display);letter-spacing:-.01em;color:var(--ink);font-variant-numeric:tabular-nums}
+.lb-pbar{position:absolute;left:68px;right:16px;bottom:6px;height:3px;border-radius:2px;background:rgba(255,255,255,.09);overflow:hidden}
 .lb-pbar i{display:block;height:100%;width:0;border-radius:2px;background:linear-gradient(90deg,var(--tc2),var(--tc1));transition:width .5s}
 .lb-name{position:absolute;z-index:1;left:62px;top:7px;max-width:calc(100% - 72px);box-sizing:border-box;display:inline-flex;align-items:center;gap:6px;padding:2px 6px;border-radius:9px;cursor:text;font:800 17px/1.2 var(--display);letter-spacing:-.02em;transition:background .15s,box-shadow .15s}
+.lb-name::before{content:"";position:absolute;z-index:-1;left:-4px;right:-4px;bottom:-3px;height:40px} /* a 40px tap target for the name */
 @media (hover:hover){.lb-name:hover{background:rgba(255,255,255,.06)}}
 .lb-name:focus-within{background:rgba(2,8,9,.85);box-shadow:inset 0 0 0 1.5px rgba(255,92,138,.7)}
-.lobby .lb-name input[type=text]{width:7em;min-width:1.5em;max-width:140px;flex:none;background:none;border:0;border-radius:0;padding:0;font:inherit;letter-spacing:inherit;color:var(--ink);outline:none}
+.lobby .lb-name input[type=text]{width:7em;min-width:1.5em;max-width:140px;flex:0 1 auto;text-overflow:ellipsis;background:none;border:0;border-radius:0;padding:0;font:inherit;letter-spacing:inherit;color:var(--ink);outline:none}
 .lobby .lb-name input[type=text]::placeholder{color:rgba(220,239,233,.62)}
 .lb-measure{position:absolute;left:0;top:0;visibility:hidden;white-space:pre;pointer-events:none}
 .lb-name svg{width:13px;height:13px;flex:none;fill:none;stroke:var(--muted);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
@@ -581,13 +582,13 @@ body:not(.playing) #tip{display:none}
 .lb-ev .lb-ft b{color:#ffb469}
 .lb-pumpkin{width:26px;height:26px;flex:none;filter:drop-shadow(0 0 6px rgba(255,140,40,.6))}
 .lobby .lb-sk{height:132px;border-color:rgba(154,140,255,.45);background:radial-gradient(70% 90% at 82% 42%,rgba(154,140,255,.32),transparent 62%),linear-gradient(155deg,#1d1840,#0a0f1c 72%)}
-.lb-tag{position:absolute;left:10px;top:10px;padding:5px 9px;border-radius:999px;background:var(--violet);color:#120b2e;font:800 10px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase}
+.lb-tag{position:absolute;left:10px;top:10px;padding:5px 9px;border-radius:999px;background:var(--violet);color:#120b2e;font:800 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase}
 .lb-sk .lb-ft{flex-direction:column;align-items:flex-start;gap:5px}
 .lb-price{display:flex;align-items:center;gap:5px;font:800 13px/1 var(--display);color:#ffd77a}.lb-price i{width:13px;height:13px;border-radius:50%;background:radial-gradient(circle at 36% 30%,#fff4c8 0 7%,#ffd660 24%,#f2a91f 62%,#a8650c)}
 .lobby .lb-ach{height:62px;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:11px;padding:0 12px}
 .lb-medal{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(160deg,#ffe58f,#c98a12);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.6),inset 0 -2px 0 rgba(0,0,0,.15),0 0 16px -3px rgba(242,177,52,.65)}
 .lb-medal svg{width:21px;height:21px;fill:#3d2600}
-.lb-achtx{display:grid;gap:4px;min-width:0;padding-bottom:4px}.lb-achtx b{font:800 17px/1 var(--display);font-variant-numeric:tabular-nums}.lb-achtx small{font:600 10px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb-achtx{display:grid;gap:4px;min-width:0;padding-bottom:4px}.lb-achtx b{font:800 17px/1 var(--display);font-variant-numeric:tabular-nums}.lb-achtx small{font:600 11px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lb-achbar{position:absolute;left:61px;right:14px;bottom:9px;height:3px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden}.lb-achbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#c98a12,#ffe58f)}
 /* centre: the cell on a lit pedestal */
 .lobby .lb-hero{grid-area:hero;display:grid;grid-template-columns:minmax(0,1fr);place-items:center;min-width:0;min-height:0}
@@ -612,6 +613,7 @@ body:not(.playing) #tip{display:none}
 .lobby #lookBtn svg{color:#ff8db0;filter:drop-shadow(0 0 7px rgba(255,92,138,.5))}
 .lobby #shopBtn svg{color:#ffc95c;filter:drop-shadow(0 0 7px rgba(242,177,52,.45))}
 .lobby #rankBtn svg{color:#b6abff;filter:drop-shadow(0 0 7px rgba(154,140,255,.5))}
+.lobby #friendsBtn svg{color:#7cc4ff;filter:drop-shadow(0 0 7px rgba(108,184,255,.5))}
 .lobby #navProf svg{color:#7fe9c0;filter:drop-shadow(0 0 7px rgba(95,224,168,.45))}
 .lb-tab:active{background:rgba(255,255,255,.09)}
 /* PLAY, with its mode tab */
@@ -654,9 +656,10 @@ body:not(.playing) #tip{display:none}
 @keyframes lbShine{0%,62%{transform:skewX(-20deg) translateX(0)}100%{transform:skewX(-20deg) translateX(520%)}}
 @media (hover:hover){.lobby .lb-go:not(:disabled):hover{filter:brightness(1.06)}}
 .lobby .lb-go:not(:disabled):active{transform:translateY(4px);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.2),inset 0 2px 0 rgba(255,255,255,.5),inset 0 -2px 0 rgba(150,10,60,.3),0 1px 0 #a51b50,0 8px 18px -8px rgba(255,80,140,.6)}
-.lobby #go.queued{flex-direction:column;gap:5px;font-size:18px;letter-spacing:0;text-transform:none;color:var(--ink);text-shadow:none;background:linear-gradient(90deg,rgba(154,140,255,.45) 0 var(--sp,100%),rgba(30,24,52,.96) var(--sp,100%));box-shadow:inset 0 0 0 1.5px rgba(170,158,255,.75),inset 0 1px 0 rgba(255,255,255,.15),0 5px 0 #352a6e,0 16px 30px -12px rgba(154,140,255,.6);transition:background .45s linear,transform .09s}
+.lobby #go.lb-closed{gap:11px;font-size:18px;letter-spacing:-.01em;text-transform:none;text-wrap:balance} /* Round closed / No lives left · find a game: too long for the big PLAY type */
+.lobby #go.queued{flex-direction:column;gap:5px;font-size:18px;letter-spacing:0;text-transform:none;white-space:nowrap;color:var(--ink);text-shadow:none;background:linear-gradient(90deg,rgba(154,140,255,.45) 0 var(--sp,100%),rgba(30,24,52,.96) var(--sp,100%));box-shadow:inset 0 0 0 1.5px rgba(170,158,255,.75),inset 0 1px 0 rgba(255,255,255,.15),0 5px 0 #352a6e,0 16px 30px -12px rgba(154,140,255,.6);transition:background .45s linear,transform .09s}
 .lobby #go.queued::before{display:none}
-.lobby #go.queued::after{content:'Tap to cancel';white-space:nowrap;position:static;width:auto;background:none;transform:none;animation:none;font:500 10.5px/1.2 var(--mono);letter-spacing:.02em;color:rgba(225,220,255,.75)}
+.lobby #go.queued::after{content:attr(data-sub);white-space:nowrap;position:static;width:auto;background:none;transform:none;animation:none;font:500 11px/1.2 var(--mono);letter-spacing:.02em;color:rgba(225,220,255,.75)}
 .lobby .lb-go.lb-off{cursor:default;gap:11px;font-size:18px;letter-spacing:-.01em;text-transform:none;color:rgba(220,239,233,.62);text-shadow:none;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03)),rgba(6,19,21,.76);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1),inset 0 1px 0 rgba(255,255,255,.07),0 5px 0 rgba(0,0,0,.4);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
 .lobby .lb-go.lb-off::after{display:none}
 .lobby .lb-go.lb-off::before{width:21px;height:21px;border-radius:0;box-shadow:none;background:currentColor;-webkit-mask:var(--lb-nowifi) center/contain no-repeat;mask:var(--lb-nowifi) center/contain no-repeat}
@@ -668,7 +671,7 @@ body:not(.playing) #tip{display:none}
 .lb-msel-top{display:flex;align-items:center;gap:14px}
 .lb-msel-top h2{margin:0;font:800 26px/1 var(--display);letter-spacing:-.04em}
 .lb-cards{--n:2;display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:14px;min-height:0;width:100%;max-width:1060px;justify-self:center}
-.lb-mcard{position:relative;display:grid;grid-template-rows:minmax(0,1fr) 44px;gap:12px;min-height:0;box-sizing:border-box;padding:12px 12px 14px;border-radius:26px;border:1px solid var(--lb-edge);
+.lb-mcard{position:relative;display:grid;grid-template-rows:minmax(0,1fr) 50px;gap:12px;min-height:0;box-sizing:border-box;padding:12px 12px 14px;border-radius:26px;border:1px solid var(--lb-edge);
   background:radial-gradient(110% 70% at 50% 18%,var(--mc-bg),transparent 70%),linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.01)),rgba(4,14,16,.85);box-shadow:inset 0 1px 0 rgba(255,255,255,.07);transition:border-color .2s,box-shadow .2s,transform .12s;animation:up .38s cubic-bezier(.2,.8,.2,1) backwards}
 .lb-mcard:nth-child(2){animation-delay:.05s}.lb-mcard:nth-child(3){animation-delay:.1s}
 .lb-mcard:active{transform:scale(.98)}
@@ -680,7 +683,7 @@ body:not(.playing) #tip{display:none}
 .lb-mart{width:100%;min-height:0;display:grid;place-items:center;margin-bottom:6px;border-radius:19px;background:radial-gradient(60% 70% at 50% 55%,var(--mc-bg),transparent 72%),rgba(0,0,0,.22);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05)}
 .lb-mart svg{width:100%;height:100%;max-height:180px;min-height:0;filter:drop-shadow(0 8px 16px rgba(0,0,0,.45))}
 .lb-mpick b{font:800 24px/1 var(--display);letter-spacing:-.025em}
-.lb-mpick small{font:600 10.5px/1.2 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.lb-mpick small{font:600 11px/1.2 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .lb-mstat{display:grid;justify-items:center;align-content:center;gap:4px;min-width:0;text-align:center}
 .lb-mstat p{margin:0;max-width:100%}
 .lobby .lb-netline{display:flex;align-items:center;gap:8px;min-width:0;font:600 12px/1.2 var(--mono);color:var(--ink)}
@@ -690,13 +693,13 @@ body:not(.playing) #tip{display:none}
 .lb-msel[data-mode=nearby] .lb-netline.live i{background:var(--lb-blue);animation-name:lbPingB}
 @keyframes lbPing{0%{box-shadow:0 0 0 0 rgba(95,224,168,.55)}80%,100%{box-shadow:0 0 0 7px rgba(95,224,168,0)}}
 @keyframes lbPingB{0%{box-shadow:0 0 0 0 rgba(108,184,255,.55)}80%,100%{box-shadow:0 0 0 7px rgba(108,184,255,0)}}
-.lobby #roundLine{margin:0;font:500 10.5px/1.2 var(--mono);letter-spacing:0;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lobby #roundLine{margin:0;font:500 11px/1.2 var(--mono);letter-spacing:0;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lb-msel:is([data-net=off],[data-net=full],[data-net=nearby]) #lbRankStat .lb-netline,.lb-msel[data-net=nearby] #roundLine{display:none}
 .lb-need{display:none;align-items:center;gap:7px;font:600 12px/1.25 var(--display)!important;color:#ff9aa3}
 .lb-need::before{content:"";flex:none;width:16px;height:16px;background:currentColor;-webkit-mask:var(--lb-nowifi) center/contain no-repeat;mask:var(--lb-nowifi) center/contain no-repeat}
 .lb-msel:is([data-net=off],[data-net=full]) .lb-need{display:flex}
 .lb-bots{position:relative;z-index:2;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:3px;padding:3px;border-radius:14px;background:rgba(0,0,0,.4);box-shadow:inset 0 1px 2px rgba(0,0,0,.5)}
-.lb-bots button{appearance:none;border:0;background:none;min-width:0;height:38px;padding:0 2px;border-radius:11px;color:var(--muted);font:700 12px/1 var(--display);cursor:pointer;transition:background .2s,color .2s,box-shadow .2s}
+.lb-bots button{appearance:none;border:0;background:none;min-width:0;height:44px;padding:0 2px;border-radius:11px;color:var(--muted);font:700 12px/1 var(--display);cursor:pointer;transition:background .2s,color .2s,box-shadow .2s}
 .lb-bots button[aria-checked=true]{color:var(--k);background:linear-gradient(180deg,rgba(255,255,255,.15),rgba(255,255,255,.05));box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 3px 10px -3px rgba(0,0,0,.5)}
 .lb-bots [data-k=easy]{--k:var(--lb-mint)}.lb-bots [data-k=normal]{--k:var(--ink)}.lb-bots [data-k=hard]{--k:#ffc04d}.lb-bots [data-k=expert]{--k:#ff7aa0}.lb-bots [data-k=master]{--k:#c9a4ff}
 /* Nearby lobby: who is here, the match settings, and the host who picks them */
@@ -717,17 +720,22 @@ body:not(.playing) #tip{display:none}
 /* landscape phones (the iPhone app) */
 @media (orientation:landscape) and (max-height:520px){
   .lobby{grid-template-columns:minmax(168px,196px) minmax(0,1fr) minmax(214px,240px);gap:8px 16px;padding:max(10px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
-  .lb-pcard{height:56px;width:min(232px,100%)}.lb-ava{width:42px;height:42px}.lobby .lb-me canvas{width:37px;height:37px}.lobby .lb-me{gap:10px;border-radius:19px}.lobby .lb-me-txt{padding-top:21px}
-  .lb-name{left:56px;top:5px;font-size:16px}.lb-pbar{left:62px;bottom:7px}
+  .lb-pcard{height:56px;width:min(232px,100%)}.lb-ava{width:42px;height:42px}.lobby .lb-me canvas{width:37px;height:37px}.lobby .lb-me{gap:10px;border-radius:19px}.lobby .lb-me-txt{padding-top:17px}
+  .lb-name{left:56px;top:5px;font-size:16px}.lb-pbar{left:62px;bottom:5px}
   .lobby .lb-atp,.lobby .lb-icon{height:44px}.lobby .lb-icon{width:44px}
   .lb-feed{gap:8px}.lobby .lb-ev,.lobby .lb-sk{height:114px;border-radius:18px}.lobby .lb-ach{height:54px;border-radius:18px}.lb-medal{width:34px;height:34px}.lb-medal svg{width:19px;height:19px}.lb-achbar{left:57px;bottom:8px}.lb-ft b{font-size:16px}
   .lobby{--cell:min(46vh,25vw,230px)}
-  .lb-nav{padding:4px;border-radius:21px}.lb-tab{width:62px;height:50px;border-radius:17px;gap:4px;font-size:10.5px}.lb-tab svg{width:23px;height:23px}
+  .lb-nav{padding:4px;border-radius:21px}.lb-tab{width:62px;height:50px;border-radius:17px;gap:4px;font-size:11px}.lb-tab svg{width:23px;height:23px}
   .lobby .lb-play{gap:7px}.lb-modebtn{height:44px;font-size:14px;border-radius:15px}.lb-modebtn .ic{width:30px;height:30px;border-radius:10px}.lb-switch{height:44px;width:56px;border-radius:15px}
   .lobby .lb-go{height:64px;font-size:27px;border-radius:20px}.lobby .lb-go::before{width:31px;height:31px;background-size:13px}
-  .lobby #go.queued{font-size:16px}.lobby .lb-go.lb-off{font-size:16px}
+  .lobby #go.queued,.lobby #go.lb-closed{font-size:16px}.lobby .lb-go.lb-off{font-size:16px}
   .lb-msel{gap:8px;padding:max(10px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}.lb-msel-top h2{font-size:22px}
   .lb-cards{gap:10px}.lb-mcard{padding:9px 10px 10px;gap:8px;border-radius:22px}.lb-mpick b{font-size:20px}.lb-mart{margin-bottom:4px;border-radius:16px}
+}
+/* narrow landscape (small Androids, split screen): slimmer side columns and tabs, so the tab bar and the cell stay clear of PLAY */
+@media (orientation:landscape) and (max-height:520px) and (max-width:620px){
+  .lobby{grid-template-columns:minmax(150px,168px) minmax(0,1fr) minmax(200px,214px);--cell:min(40vh,20vw,200px)}
+  .lb-tab{width:54px}
 }
 /* portrait: player bar, cards, the cell, PLAY, and the tab bar at the bottom */
 @media (orientation:portrait){
@@ -741,11 +749,18 @@ body:not(.playing) #tip{display:none}
   .lb-cards{grid-template-columns:minmax(0,1fr);grid-template-rows:repeat(var(--n),minmax(0,1fr));gap:12px}
   .lb-mcard{padding:10px 12px 12px;gap:10px}.lb-mart{margin-bottom:4px}.lb-mpick b{font-size:22px}
 }
+/* narrow portrait phones: a tighter top bar so the name and rating stay inside the player card */
+@media (orientation:portrait) and (max-width:420px){
+  .lobby .lb-top{gap:8px}.lobby .lb-right{gap:6px}.lobby .lb-atp{gap:6px;padding:0 5px 0 9px}.lobby .lb-atp i{width:19px;height:19px}.lobby .lb-atp span{width:30px;height:30px}
+  .lb-ava{width:42px;height:42px}.lobby .lb-me canvas{width:36px;height:36px}.lobby .lb-me{gap:9px;padding:0 10px 0 7px}.lb-name{left:54px;font-size:16px;max-width:calc(100% - 60px)}.lb-pbar{left:60px;right:12px}
+  .lobby .lb-me-txt{overflow:hidden}
+}
+@media (orientation:portrait) and (max-width:379px){.lobby .lb-me-sub .tier{display:none}} /* the crest's colour still shows the tier */
 /* big screens */
 @media (min-width:1100px){.lobby{padding-left:max(40px,calc(50vw - 660px));padding-right:max(40px,calc(50vw - 660px))}}
 @media (min-width:1100px) and (min-height:700px){
   .lobby{grid-template-columns:260px minmax(0,1fr) 320px;gap:16px 32px;padding-top:max(24px,env(safe-area-inset-top));padding-bottom:max(28px,env(safe-area-inset-bottom))}
-  .lb-pcard{width:290px;height:70px}.lb-ava{width:54px;height:54px}.lobby .lb-me canvas{width:48px;height:48px}.lobby .lb-me-txt{padding-top:28px}.lb-name{left:70px;top:9px;font-size:20px}.lb-pbar{left:78px;bottom:10px}.lobby .lb-name input[type=text]{max-width:170px}
+  .lb-pcard{width:290px;height:70px}.lb-ava{width:54px;height:54px}.lobby .lb-me canvas{width:48px;height:48px}.lobby .lb-me-txt{padding-top:24px}.lb-name{left:70px;top:9px;font-size:20px}.lb-pbar{left:78px;bottom:7px}.lobby .lb-name input[type=text]{max-width:170px}
   .lobby .lb-atp,.lobby .lb-icon{height:50px}.lobby .lb-icon{width:50px}
   .lobby .lb-ev,.lobby .lb-sk{height:170px}.lobby .lb-ach{height:70px}.lb-ft b{font-size:21px}
   .lobby{--cell:min(46vh,26vw,360px)}
@@ -774,8 +789,8 @@ body:not(.playing) #tip{display:none}
 #storeCard #storeBack{width:44px;height:44px;border-color:var(--line-strong);background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.02)),rgba(2,8,9,.6);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 4px 14px rgba(0,0,0,.3);transition:transform .1s}
 #storeCard #storeBack:active{transform:scale(.92)}
 #storeCard .sv-title{margin:0;font:800 26px/1 var(--display);letter-spacing:-.045em;background:linear-gradient(180deg,#f6fcf9,#a9d9ca);-webkit-background-clip:text;background-clip:text;color:transparent}
-#storeCard .sv-tabs{justify-self:center;display:flex;gap:4px;padding:4px;border-radius:999px;border:1px solid var(--line);background:rgba(1,6,7,.72);box-shadow:inset 0 2px 6px rgba(0,0,0,.45),0 1px 0 rgba(255,255,255,.04)}
-#storeCard .sv-tabs button{appearance:none;border:0;display:flex;align-items:center;justify-content:center;gap:8px;min-width:108px;height:38px;padding:0 18px 0 14px;border-radius:999px;background:none;color:var(--muted);font:700 14px/1 var(--display);letter-spacing:-.01em;cursor:pointer;transition:background .2s,color .2s,transform .1s}
+#storeCard .sv-tabs{justify-self:center;display:flex;gap:4px;padding:3px;border-radius:999px;border:1px solid var(--line);background:rgba(1,6,7,.72);box-shadow:inset 0 2px 6px rgba(0,0,0,.45),0 1px 0 rgba(255,255,255,.04)}
+#storeCard .sv-tabs button{appearance:none;border:0;display:flex;align-items:center;justify-content:center;gap:8px;min-width:108px;height:44px;padding:0 18px 0 14px;border-radius:999px;background:none;color:var(--muted);font:700 14px/1 var(--display);letter-spacing:-.01em;cursor:pointer;transition:background .2s,color .2s,transform .1s}
 #storeCard .sv-tabs button svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9}
 #storeCard .sv-tabs .sv-coin{font-size:17px}
 #storeCard .sv-tabs button:active{transform:scale(.95)}
@@ -795,7 +810,7 @@ body:not(.playing) #tip{display:none}
 #storeCard .sv-stage::after{content:"";position:absolute;left:12%;right:12%;bottom:0;height:14%;z-index:0;border-radius:50%;background:radial-gradient(closest-side,rgba(var(--rc),.45),rgba(var(--rc),.1) 55%,transparent),radial-gradient(closest-side,rgba(0,0,0,.6),transparent)}
 #storeCard .sv-stage canvas{position:relative;z-index:1;width:100%;height:100%;animation:bob 4.5s ease-in-out infinite}
 @keyframes svspin{to{transform:rotate(1turn)}}
-#storeCard .sv-info{display:grid;gap:8px;justify-items:center;width:100%;max-width:340px;min-width:0}
+#storeCard .sv-info{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;justify-items:center;width:100%;max-width:340px;min-width:0}
 #storeCard .sv-badges{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px}
 #storeCard .sv-rar{display:inline-flex;align-items:center;gap:7px;height:24px;box-sizing:border-box;padding:0 11px 0 9px;border-radius:999px;font:700 10px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:rgb(var(--rc));background:rgba(var(--rc),.13);border:1px solid rgba(var(--rc),.45);box-shadow:0 0 16px rgba(var(--rc),.15)}
 #storeCard .sv-rar::before{content:"";width:7px;height:7px;border-radius:1.5px;transform:rotate(45deg);background:currentColor;box-shadow:0 0 8px currentColor}
@@ -804,7 +819,7 @@ body:not(.playing) #tip{display:none}
 #storeCard .sv-info h3{margin:0;font:800 28px/1.02 var(--display);letter-spacing:-.035em;text-wrap:balance;text-shadow:0 2px 24px rgba(0,0,0,.6)}
 #storeCard #featDesc{margin:-2px 0 2px;font:500 13px/1.4 var(--display);color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-wrap:balance}
 #storeCard #featDesc:empty{display:none}
-#storeCard .sv-buy{position:relative;width:100%;max-width:320px;height:54px;margin-top:2px;padding:0 7px 0 20px;border:0;border-radius:17px;display:flex;align-items:center;justify-content:space-between;gap:10px;font:800 19px/1 var(--display);letter-spacing:-.015em;font-variant-numeric:tabular-nums;color:#2b0715;cursor:pointer;
+#storeCard .sv-buy{position:relative;width:100%;max-width:320px;min-width:0;height:54px;margin-top:2px;padding:0 7px 0 20px;border:0;border-radius:17px;display:flex;align-items:center;justify-content:space-between;gap:10px;font:800 19px/1 var(--display);letter-spacing:-.015em;font-variant-numeric:tabular-nums;color:#2b0715;cursor:pointer;
   background:linear-gradient(180deg,#ff9bb7,#ff6993 42%,#f04477);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.5),inset 0 -3px 0 rgba(130,10,50,.4),0 10px 26px rgba(255,92,138,.32),0 2px 0 rgba(0,0,0,.25);transition:transform .1s,box-shadow .12s,filter .15s}
 #storeCard .sv-buy:not(:disabled):active{transform:translateY(2px);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),inset 0 -1px 0 rgba(130,10,50,.4),0 4px 12px rgba(255,92,138,.25)}
 #storeCard .sv-buy,#storeCard .sv-pack .pr{position:relative;isolation:isolate}
@@ -823,23 +838,25 @@ body:not(.playing) #tip{display:none}
 #storeCard .sv-buy.off{color:var(--muted);background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.04));box-shadow:inset 0 0 0 1px var(--line-strong)}
 #storeCard .sv-buy.off .pz{background:rgba(0,0,0,.3);color:var(--muted)}
 #storeCard .sv-buy.off .sv-coin{filter:saturate(.4) brightness(.8)}
+#storeCard .sv-buy.busy{opacity:1;filter:none;cursor:progress;color:#2a1600;background:linear-gradient(180deg,#ffeaa0,#f7bb3a 48%,#e0920f)}#storeCard .sv-buy.busy .pz{background:rgba(60,30,0,.32)}#storeCard .sv-buy.busy>span:first-child{animation:svblink 1s ease-in-out infinite}
 #storeCard .sv-note{display:flex;align-items:center;gap:10px;width:100%;max-width:320px;min-height:0;margin:0;font:700 11.5px/1 var(--mono);color:#ffd36b;font-variant-numeric:tabular-nums}
 #storeCard .sv-note:empty{display:none}
 #storeCard .sv-prog{flex:1;height:7px;border-radius:999px;background:rgba(255,255,255,.08);box-shadow:inset 0 1px 2px rgba(0,0,0,.5);overflow:hidden}
 #storeCard .sv-prog i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#e8960f,#ffe08a);box-shadow:0 0 10px rgba(242,177,52,.6)}
 #storeCard .sv-of{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+#storeCard .sv-err{flex:1;line-height:1.3;text-align:center;color:#ff9e9e}
 /* the grid */
 #storeCard .sv-list{grid-area:list;min-height:0;overflow:auto;display:block;margin:-6px -6px 0;padding:6px 6px 22px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;scrollbar-width:none;-webkit-mask-image:linear-gradient(180deg,#000 calc(100% - 26px),transparent);mask-image:linear-gradient(180deg,#000 calc(100% - 26px),transparent)}
 #storeCard .sv-list::-webkit-scrollbar{display:none}
 #storeCard #skins,#storeCard .sv-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px}
 #storeCard #skinHint{display:none}
-#storeCard .svc{--rc:143,216,198;appearance:none;position:relative;display:grid;justify-items:center;align-content:start;gap:5px;min-width:0;padding:12px 6px 10px;border-radius:18px;cursor:pointer;color:var(--ink);font:inherit;text-align:center;overflow:hidden;
+#storeCard .svc{--rc:143,216,198;appearance:none;position:relative;display:grid;grid-template-rows:auto 1fr auto;justify-items:center;align-content:start;gap:5px;min-width:0;padding:12px 6px 10px;border-radius:18px;cursor:pointer;color:var(--ink);font:inherit;text-align:center;overflow:hidden;
   border:1px solid rgba(var(--rc),.24);background:radial-gradient(90% 62% at 50% 34%,rgba(var(--rc),.2),transparent 72%),linear-gradient(180deg,rgba(16,34,38,.92),rgba(5,14,16,.94));
   box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 6px 16px rgba(0,0,0,.32);transition:transform .12s,box-shadow .15s,border-color .15s}
 #storeCard .svc.rare{--rc:154,140,255}#storeCard .svc.epic{--rc:242,177,52}#storeCard .svc.legendary{--rc:255,110,70}#storeCard .svc.seasonal{--rc:255,138,42}
 #storeCard .svc::after{content:"";position:absolute;left:20%;right:20%;bottom:0;height:2px;border-radius:2px 2px 0 0;background:rgb(var(--rc));box-shadow:0 0 10px rgba(var(--rc),.9);opacity:.85}
 #storeCard .svc canvas{width:66px;height:66px;filter:drop-shadow(0 6px 8px rgba(0,0,0,.5))}
-#storeCard .svc .sn{max-width:100%;box-sizing:border-box;padding:0 4px;font:700 12.5px/1.15 var(--display);letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#storeCard .svc .sn{align-self:center;max-width:100%;box-sizing:border-box;padding:0 4px;font:700 12.5px/1.15 var(--display);letter-spacing:-.01em;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;text-wrap:balance} /* long names take two lines; the prices stay level */
 #storeCard .svc .sp{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:22px;padding:0 9px 0 6px;border-radius:999px;background:rgba(0,0,0,.4);box-shadow:inset 0 1px 2px rgba(0,0,0,.35);color:#ffd77a;font:800 12px/1 var(--display);font-variant-numeric:tabular-nums}
 #storeCard .svc .sp .sv-coin{font-size:13px}
 #storeCard .svc.own .sp{padding:0 6px;background:none;box-shadow:none;color:var(--muted);font:700 9.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase}
@@ -866,7 +883,7 @@ body:not(.playing) #tip{display:none}
 #storeCard .sv-ltd .svc:not(.sel){background:radial-gradient(90% 62% at 50% 34%,rgba(255,138,42,.26),transparent 72%),linear-gradient(180deg,rgba(40,20,30,.92),rgba(14,8,18,.95))}
 #storeCard .sv-season.all{grid-column:1/-1;margin-top:10px;gap:8px}
 #storeCard .sv-season.all b{font:800 17px/1 var(--display);letter-spacing:-.02em;background:none;color:var(--ink)}
-#storeCard .sv-season.all span{font:700 11px/1 var(--mono);color:var(--dim)}
+#storeCard .sv-season.all span{font:700 11px/1 var(--mono);color:var(--muted)}
 #storeCard .svc.sel{border-color:transparent;transform:translateY(-2px);background:radial-gradient(90% 62% at 50% 34%,rgba(var(--rc),.34),transparent 72%),linear-gradient(180deg,rgba(28,50,54,.96),rgba(8,20,22,.96));box-shadow:0 0 0 2px #f2fbf8,0 0 0 6px rgba(var(--rc),.28),0 12px 26px rgba(0,0,0,.45)}
 #storeCard .svc.sel:active{transform:scale(.95)}
 /* ATP packs */
@@ -886,7 +903,8 @@ body:not(.playing) #tip{display:none}
 #storeCard .pk-amt{display:grid;gap:5px;justify-items:center}
 #storeCard .pk-amt b{font:800 26px/1 var(--display);letter-spacing:-.035em;font-variant-numeric:tabular-nums;background:linear-gradient(180deg,#fff8de 25%,#ffc53d);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 8px rgba(0,0,0,.5))}
 #storeCard .pk-amt small{font:700 9.5px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
-#storeCard .sv-pack .pr{width:100%;height:42px;box-sizing:border-box;margin-top:4px;padding:0 6px;display:grid;place-items:center;border-radius:13px;font:800 17px/1 var(--display);letter-spacing:-.01em;color:#2a1600;background:linear-gradient(180deg,#ffeaa0,#f7bb3a 50%,#e0920f);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.6),inset 0 -3px 0 rgba(120,60,0,.35),0 4px 12px rgba(0,0,0,.3)}
+#storeCard .sv-pack .pr{width:100%;height:42px;box-sizing:border-box;margin-top:4px;padding:0 6px;display:grid;place-items:center;border-radius:13px;font:800 17px/1 var(--display);letter-spacing:-.01em;color:#2a1600;background:linear-gradient(180deg,#ffeaa0,#f7bb3a 50%,#e0920f);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.6),inset 0 -3px 0 rgba(120,60,0,.35),0 4px 12px rgba(0,0,0,.3);container-type:inline-size}
+#storeCard .sv-pack .pr>span{white-space:nowrap;font-size:max(10px,min(1em,calc(100cqi / (var(--n,6) * .6))))} /* a long local price shrinks to stay on one line (--n: its length) */
 #storeCard .sv-pack:disabled .pr{background:rgba(255,255,255,.06);color:var(--muted);font:700 11px/1 var(--mono);letter-spacing:.06em;box-shadow:inset 0 0 0 1px var(--line)}
 #storeCard .sv-dots::before{content:"•••";letter-spacing:.2em;animation:svblink 1s ease-in-out infinite}
 @keyframes svblink{50%{opacity:.35}}
@@ -910,7 +928,7 @@ body:not(.playing) #tip{display:none}
 #storeCard .sv-earn .m3 .md{color:#2a1406;background:radial-gradient(circle at 35% 30%,#ffe2c4,#d4925a 60%,#8a5228)}
 #storeCard .sv-earn li b{font-weight:800}
 #storeCard .sv-earn li .sv-coin{font-size:14px}
-#storeCard #storeHint{margin:0;text-align:center;font:600 11px/1.3 var(--mono);color:var(--dim)}
+#storeCard #storeHint{margin:0;text-align:center;font:600 11px/1.3 var(--mono);color:var(--muted)}
 #storeCard #storeHint:empty{display:none}
 /* landscape phones: everything on one screen */
 @media (orientation:landscape) and (max-height:520px){
@@ -927,7 +945,7 @@ body:not(.playing) #tip{display:none}
   #storeCard .svc canvas{width:58px;height:58px}
   #storeCard .sv-ltd{padding:9px 9px 10px;gap:8px;border-radius:20px}
   #storeCard .sv-atp{gap:10px;padding-top:6px}
-  #storeCard .sv-atp:has(#storeNeed:not([hidden])) .pk-art svg{max-height:62px}#storeCard .sv-atp:has(#storeNeed:not([hidden])) #storeHint{display:none}
+  #storeCard .sv-atp:has(#storeNeed:not([hidden])){gap:6px;padding-top:2px}#storeCard .sv-atp:has(#storeNeed:not([hidden])) .pk-art svg{max-height:40px} /* the "N more" note and the hint both fit */
   #storeCard .sv-pack{padding:24px 8px 8px;gap:4px;border-radius:18px}
   #storeCard .pk-art svg{max-height:80px}
   #storeCard .pk-amt b{font-size:22px}#storeCard .sv-pack.t5 .pk-amt b{font-size:26px}
@@ -1463,7 +1481,7 @@ body:not(.playing) #tip{display:none}
 #friendsCard .fr-empty .sl{white-space:normal;font-size:13px;line-height:1.4;color:var(--dim)}
 #friendsBtn{position:relative}.lb-tab .rail-badge{top:4px;right:10px}
 .rail-badge{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;padding:0 5px;box-sizing:border-box;border-radius:9px;background:#ff5c8a;color:#fff;font:700 11px/18px var(--display);text-align:center;box-shadow:0 0 0 2px rgba(4,12,14,.92);pointer-events:none}
-.lb-party{margin:8px 0 0;text-align:center;font:600 12.5px/1.3 var(--display);color:#8fe9ff}
+.lb-party{margin:8px 0 0;text-align:center;font:600 12.5px/1.3 var(--display);color:#8fe9ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .spec-bar{position:fixed;z-index:40;top:calc(14px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px;padding:7px 8px 7px 16px;border-radius:999px;background:rgba(4,16,18,.84);border:1px solid rgba(110,225,255,.35);color:#dcefe9;font:500 13.5px/1 var(--display);white-space:nowrap;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
 .spec-bar[hidden]{display:none}
 .spec-bar b{color:#8fe9ff}
@@ -1981,7 +1999,9 @@ body.joy-float #joy{opacity:.4}body.joy-float #joy.active{opacity:1}
   #introCard #introGo{justify-self:stretch;min-width:0}
 }
 /* toasts over the menus (the lobby, shop and pages hide the HUD, so they used to vanish there): a notification that drops from the top */
-body:not(.playing) #toasts{display:grid!important;z-index:8;top:calc(10px + env(safe-area-inset-top,0px))!important;left:50%;transform:translateX(-50%);gap:8px;justify-items:center;width:max-content;max-width:calc(100% - 32px)}
+body:not(.playing) #toasts,body:not(.playing) #board.collapsed ~ #toasts{display:grid!important;z-index:8;top:calc(10px + env(safe-area-inset-top,0px))!important;left:50%;right:auto;transform:translateX(-50%);gap:8px;justify-items:center;width:max-content;max-width:calc(100% - 32px)} /* the second selector: the folded-ranking HUD rule must not pull them into a corner here */
+body:not(.playing):has(#overlay #storeCard:not([hidden])) #toasts{top:calc(max(12px,env(safe-area-inset-top,0px)) + 58px)!important} /* in the shop: just under its header and tabs, or at the bottom in portrait, clear of the buy button */
+@media (orientation:portrait){body:not(.playing):has(#overlay #storeCard:not([hidden])) #toasts{top:auto!important;bottom:calc(24px + env(safe-area-inset-bottom,0px))}}
 body:not(.playing) #toasts .toast{display:grid!important;grid-template-columns:36px minmax(0,1fr);grid-template-areas:"i t" "i d";column-gap:12px;row-gap:2px;align-items:center;justify-items:start;text-align:left;box-sizing:border-box;min-width:min(260px,calc(100vw - 32px));max-width:min(420px,calc(100vw - 32px));padding:10px 18px 10px 10px!important;border-radius:20px!important;
   background:linear-gradient(180deg,rgba(24,52,54,.97),rgba(8,22,24,.97));border:1px solid rgba(170,235,225,.15);box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 16px 40px rgba(0,0,0,.55),0 4px 12px rgba(0,0,0,.3);animation:ov-drop .4s cubic-bezier(.18,.9,.28,1.15)}
 @keyframes ov-drop{from{opacity:0;transform:translateY(-16px) scale(.95)}}
@@ -2139,7 +2159,7 @@ body:not(.playing) #toasts .toast .tt{display:contents}body:not(.playing) #toast
     <ol class="ov-steps">
       <li class="ov-step" style="--c:255,92,138"><span class="ov-art" aria-hidden="true"><svg viewBox="0 0 64 64"><defs><radialGradient id="ovB1" cx=".36" cy=".3" r=".8"><stop offset="0" stop-color="#ffc6d6"/><stop offset=".5" stop-color="#ff5c8a"/><stop offset="1" stop-color="#a81f50"/></radialGradient></defs><circle cx="25" cy="37" r="18" fill="url(#ovB1)" stroke="#ff9cba" stroke-width="1.4"/><circle cx="28" cy="40" r="5.5" fill="#c92c62" opacity=".6"/><path class="shine" d="M14 31a13 13 0 0 1 8-8"/><circle cx="48" cy="21" r="8.5" fill="#5fe0a8" opacity=".16"/><circle cx="48" cy="21" r="4.6" fill="#5fe0a8"/><circle cx="57" cy="9.5" r="2.7" fill="#ffd36b"/><circle cx="53.5" cy="35" r="2.3" fill="#7cc7ff"/></svg></span><b>Eat smaller</b><span>Dodge anything bigger</span></li>
       <li class="ov-step" style="--c:154,140,255"><span class="ov-art" aria-hidden="true"><svg viewBox="0 0 64 64"><defs><radialGradient id="ovB2" cx=".36" cy=".3" r=".8"><stop offset="0" stop-color="#e6e0ff"/><stop offset=".5" stop-color="#9a8cff"/><stop offset="1" stop-color="#4f3fc0"/></radialGradient></defs><path class="trail" d="M27 33.5l6.5-3.6M25.5 41l9-4.8M31.5 26.5l3.5-1.9"/><circle cx="18" cy="42" r="13" fill="url(#ovB2)" stroke="#c9c0ff" stroke-width="1.4"/><circle cx="46" cy="22" r="10.5" fill="url(#ovB2)" stroke="#c9c0ff" stroke-width="1.4"/><circle cx="20" cy="44" r="4" fill="#5a49cf" opacity=".6"/><circle cx="47.5" cy="23.5" r="3.2" fill="#5a49cf" opacity=".6"/><path class="shine" d="M10 38a9 9 0 0 1 5-5.5M39.5 18.5a7 7 0 0 1 4-4"/></svg></span><b>Split to strike</b><span>Launch half your mass</span></li>
-      <li class="ov-step" style="--c:242,177,52"><span class="ov-art" aria-hidden="true"><svg viewBox="0 0 64 64"><defs><linearGradient id="ovC" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff2b8"/><stop offset=".5" stop-color="#ffcf5a"/><stop offset="1" stop-color="#d9900e"/></linearGradient></defs><circle class="ring" cx="32" cy="35" r="27"/><circle cx="32" cy="41" r="12.5" fill="url(#ovB1)" stroke="#ff9cba" stroke-width="1.4"/><circle cx="34" cy="43.5" r="3.8" fill="#c92c62" opacity=".6"/><path class="shine" d="M24.5 37a8.5 8.5 0 0 1 5-5"/><path d="M21.5 27.5l-2-11.5 7 5.2L32 12.5l5.5 8.7 7-5.2-2 11.5z" fill="url(#ovC)" stroke="#a86f00" stroke-width="1.2" stroke-linejoin="round"/><circle cx="32" cy="12.5" r="1.8" fill="#fff2b8"/></svg></span><b>Last one wins</b><span>10 min · 2 lives</span></li>
+      <li class="ov-step" style="--c:242,177,52"><span class="ov-art" aria-hidden="true"><svg viewBox="0 0 64 64"><defs><linearGradient id="ovC" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff2b8"/><stop offset=".5" stop-color="#ffcf5a"/><stop offset="1" stop-color="#d9900e"/></linearGradient></defs><circle class="ring" cx="32" cy="35" r="27"/><circle cx="32" cy="41" r="12.5" fill="url(#ovB1)" stroke="#ff9cba" stroke-width="1.4"/><circle cx="34" cy="43.5" r="3.8" fill="#c92c62" opacity=".6"/><path class="shine" d="M24.5 37a8.5 8.5 0 0 1 5-5"/><path d="M21.5 27.5l-2-11.5 7 5.2L32 12.5l5.5 8.7 7-5.2-2 11.5z" fill="url(#ovC)" stroke="#a86f00" stroke-width="1.2" stroke-linejoin="round"/><circle cx="32" cy="12.5" r="1.8" fill="#fff2b8"/></svg></span><b>Last one wins</b><span>10 min · 3 lives</span></li>
     </ol>
     <button class="primary ov-btn" id="introGo" type="button">Let's go</button>
   </div>
@@ -2283,7 +2303,7 @@ body:not(.playing) #toasts .toast .tt{display:contents}body:not(.playing) #toast
             <dt>Mass</dt><dd>Tap to pause</dd>
           </dl>
           <dl class="keys facts">
-            <dt>Rounds</dt><dd>10 min · 2 lives · last cell wins</dd>
+            <dt>Rounds</dt><dd>10 min · 3 lives · last cell wins</dd>
             <dt>Arena</dt><dd>Shrinks from 1:00 · stay inside</dd>
             <dt>Mutate</dt><dd>New trait at mass milestones</dd>
             <dt>Events</dt><dd>Blooms, tides, swarms, Leviathan</dd>
@@ -2308,14 +2328,14 @@ body:not(.playing) #toasts .toast .tt{display:contents}body:not(.playing) #toast
       <div class="sv-tabs" role="tablist" aria-label="Shop sections"><button type="button" role="tab" id="tabSkins" aria-controls="skinSec" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="10.5" cy="11" r="2.6"/><circle cx="15.5" cy="15.2" r="1"/></svg>Skins</button><button type="button" role="tab" id="tabAtp" aria-controls="packSec" aria-selected="false"><i class="sv-coin" aria-hidden="true"></i>ATP</button></div>
       <button class="sv-bal" id="storeBalBtn" type="button" aria-label="Your ATP, get more"><i class="sv-coin" aria-hidden="true"></i><b id="storeBal">0</b><span class="sv-plus" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg></span></button>
     </header>
-    <section class="sv-feat" id="skinFeat" aria-live="polite">
+    <section class="sv-feat" id="skinFeat">
       <div class="sv-stage"><canvas id="featCv" width="320" height="320" aria-hidden="true"></canvas></div>
       <div class="sv-info">
         <div class="sv-badges"><span class="sv-rar" id="featRar"></span><span class="sv-left" id="featLeft" hidden></span></div>
-        <h3 id="featName"></h3>
+        <h3 id="featName" aria-live="polite"></h3>
         <p id="featDesc"></p>
         <button class="primary sv-buy" id="featBuy" type="button"></button>
-        <p class="sv-note" id="featNote"></p>
+        <p class="sv-note" id="featNote" aria-live="polite"></p>
       </div>
     </section>
     <section class="sv-list" id="skinSec" role="tabpanel" aria-labelledby="tabSkins"><div class="skins" id="skins"></div><p class="hint" id="skinHint"></p></section>
@@ -3158,7 +3178,7 @@ const saveSettings=()=>{try{localStorage.setItem('mitosis.settings',JSON.stringi
 const ATP_PACKS=[{id:'atp_500',atp:500,label:'Pouch'},{id:'atp_1500',atp:1500,label:'Flask',tag:'Popular'},{id:'atp_5000',atp:5000,label:'Culture',tag:'Best value'},{id:'atp_12000',atp:12000,label:'Bioreactor'},{id:'atp_150000',atp:150000,label:'Biosphere',tag:'Most ATP'}];
 const escH=s=>String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[ch]);
 let wallet={balance:0,earned:0,skins:[],online:false,playerId:null,rating:1000,tier:'Silver'};
-try{const w=JSON.parse(localStorage.getItem('mitosis.wallet')||'null');if(w&&typeof w==='object'){wallet.balance=w.balance|0;wallet.skins=Array.isArray(w.skins)?w.skins:[];}}catch(e){}
+try{const w=JSON.parse(localStorage.getItem('mitosis.wallet')||'null');if(w&&typeof w==='object'){wallet.balance=w.balance|0;wallet.skins=Array.isArray(w.skins)?w.skins:[];if(Number.isFinite(w.rating)&&typeof w.tier==='string'&&/^[A-Za-z]{1,16}$/.test(w.tier)){wallet.rating=w.rating;wallet.tier=w.tier;}}}catch(e){} // the last known rank, so an offline start doesn't show Silver 1000
 let secret='';try{secret=localStorage.getItem('mitosis.secret')||'';}catch(e){}
 if(!/^[a-z0-9]{24,64}$/.test(secret)){secret='';const a=new Uint8Array(32);crypto.getRandomValues(a);for(const b of a)secret+=(b%36).toString(36);try{localStorage.setItem('mitosis.secret',secret);}catch(e){}}
 const ownsSkin=id=>id<SKIN_FREE||wallet.skins.includes(id);
@@ -3201,7 +3221,7 @@ function applyWallet(w){
   if(!w)return;wallet.balance=w.balance|0;wallet.earned=w.earned|0;if(Array.isArray(w.skins))wallet.skins=w.skins;wallet.playerId=w.playerId||wallet.playerId;wallet.online=true;
   if(typeof w.rating==='number'){wallet.rating=w.rating;wallet.tier=w.tier||wallet.tier;}wallet.runs=w.runs|0;renderRank();renderProfile();
   if('account' in w){wallet.account=w.account||null;renderAccount();}
-  try{localStorage.setItem('mitosis.wallet',JSON.stringify({balance:wallet.balance,skins:wallet.skins}));}catch(e){}
+  try{localStorage.setItem('mitosis.wallet',JSON.stringify({balance:wallet.balance,skins:wallet.skins,rating:wallet.rating,tier:wallet.tier}));}catch(e){}
   if(w.catalog){wallet.catalog=w.catalog;for(const s of w.catalog.skins||[]){const P=PREMIUM.find(x=>x.id===s.id);if(P&&s.price>0)P.price=s.price;}for(const p of w.catalog.packs||[]){const K=ATP_PACKS.find(x=>x.id===p.id);if(K&&p.atp>0)K.atp=p.atp;}renderRank();}
   if(settings.skin>=SKIN_FREE&&!ownsSkin(settings.skin)){settings.skin=0;saveSettings();}
   drawAvatar();
@@ -3285,7 +3305,8 @@ function renderTierLegend(){const el=$('tierLegend'),me=$('rkMe');if(!el||!me)re
     +`<div class="rk-bar"><i style="width:${pct}%"></i></div><small class="rk-next">${top?'Top tier':`<b>${hi-r}</b> to ${escH(T.tiers[i+1])}`}</small>`;
   el.style.setProperty('--prog',T.tiers.length>1?i/(T.tiers.length-1):1);
   el.innerHTML=T.tiers.map((n,k)=>`<li class="${k<i?'done':k===i?'cur':'up'}" style="--tc:${tierCol(n)}">${tierEmblem(n)}<b>${escH(n)}</b><span>${k?T.tierAt[k-1]:'<'+T.tierAt[0]}</span></li>`).join('');}
-function renderMe(){const n=$('meName');if(n)n.textContent=cleanName($('nameIn').value)||settings.name||'Unnamed cell';const a=$('lobbyAtp');if(a)a.textContent=(wallet.balance|0).toLocaleString();
+function renderMe(){const n=$('meName'),nm=cleanName($('nameIn').value)||settings.name||'Unnamed cell';if(n)n.textContent=nm;const a=$('lobbyAtp'),bal=(wallet.balance|0).toLocaleString();if(a)a.textContent=bal;
+  const ac=$('atpChip'),pb=$('profBtn');if(ac)ac.setAttribute('aria-label',`${bal} ATP, get more`);if(pb)pb.setAttribute('aria-label',`Profile: ${nm}, ${wallet.tier} ${wallet.rating}`); // the visible values, for screen readers
   if(!renderMe.raf)renderMe.raf=requestAnimationFrame(()=>{renderMe.raf=0;drawAvatar($('meCv'));});} // next frame: the wallet can arrive before the game clock exists, and animated skins read it
 function renderRank(){renderTierLegend();renderMe();$('rankVal').textContent=wallet.rating;{const ht=$('heroTier');if(ht){ht.textContent=wallet.tier;ht.dataset.tier=wallet.tier;$('heroRating').textContent=wallet.rating;}}$('rankTier').textContent=wallet.tier;$('rankTier').dataset.tier=wallet.tier;
   const p=tierProgress(),nx=$('rankNext'),fill=$('tierFill');if(nx)nx.textContent=p.text;if(fill)fill.style.width=p.pct+'%';
@@ -3467,12 +3488,14 @@ const SKIN_DESC={5:'Gas clouds and newborn stars drifting through the membrane.'
   21:'A cherry branch in bloom, with petals on the breeze.',
   24:'A little ghost with blinking eyes and wisps trailing behind it. Halloween only.',25:'A black cell strung with a silver web, and a spider letting itself down on a thread. Halloween only.',
   26:'A carved pumpkin whose candlelit face turns toward wherever you go. Halloween only.',27:'Midnight in a graveyard: a full moon, and bats crossing the sky and circling your cell. Halloween only.',22:'A star in its final blaze, with a corona that burns past the membrane.',23:'A hologram that cannot quite hold itself together.'};
-let shopSel=0; // the skin shown large in the shop
+let shopSel=0,buyingSkin=0,needFor=0,buyErr=null; // the skin shown large in the shop; the one being bought; the one "N more for" is about; the last failed buy {id,msg}
+const shopOk=id=>{const S=PREMIUM.find(x=>x.id===id);return !!S&&(!S.season||ownsSkin(id)||seasonState(S.season).open);}; // on sale now: a seasonal skin only in its season, unless owned
+const shopPick=()=>{const w=settings.skin|0;return w>=SKIN_FREE&&ownsSkin(w)?w:PREMIUM[0].id;}; // nothing asked for: the skin you wear, else the first
 const rarOf=S=>S.season?'seasonal':RARITY[S.id]||'common';
 const fmtLeft=ms=>{const m=Math.max(0,Math.round(ms/60000)),d=Math.floor(m/1440),h=Math.floor(m%1440/60);return d?`${d}d ${h}h`:h?`${h}h ${m%60}m`:`${m%60}m`;};
 const fmtAtp=n=>n>=1e6?(n/1e6).toLocaleString(undefined,{maximumFractionDigits:1})+'M':n.toLocaleString();
 function renderSkins(){
-  const el=$('skins');if(!el)return;const ab=$('atpBal');if(ab)ab.textContent=wallet.balance;$('storeBal').textContent=wallet.balance.toLocaleString(); // #atpBal only exists while no premium skin is owned
+  const el=$('skins');if(!el)return;const ab=$('atpBal');if(ab)ab.textContent=wallet.balance;$('storeBal').textContent=wallet.balance.toLocaleString();$('storeBalBtn').setAttribute('aria-label',wallet.balance.toLocaleString()+' ATP, get more'); // #atpBal only exists while no premium skin is owned
   $('skinHint').textContent=wallet.online?'Tap a skin to see it up close. You earn ATP by placing well in ranked rounds.':'Offline: skins you own still work, and buying needs a connection.';
   const card=(S,shop)=>{const own=ownsSkin(S.id),eq=settings.skin===S.id,sel=shop&&S.id===shopSel;
     const rar=rarOf(S);return `<button type="button" class="skin ${rar}${own?' own':''}${sel?' sel':''}" data-id="${S.id}" aria-pressed="${eq}" aria-label="${escH(S.name)} skin, ${rar}${own?', owned':', '+S.price+' ATP'}"><canvas width="144" height="144" data-skin="${S.id}"></canvas><span class="sn">${escH(S.name)}</span>${rar!=='common'?`<span class="rt">${S.season?SEASONS[S.season].name:rar}</span>`:''}<span class="sp">${own?(eq?'✓ Wearing':'Owned'):fmtAtp(S.price)+' ATP'}</span></button>`;};
@@ -3531,20 +3554,24 @@ function svClock(ms){const s=Math.max(0,Math.floor(ms/1000)),d=Math.floor(s/8640
 function shopCard(S){const own=ownsSkin(S.id),eq=settings.skin===S.id,rar=rarOf(S),px=Math.min(208,Math.max(144,Math.round(70*(window.devicePixelRatio||1))));
   return `<button type="button" class="svc ${rar}${own?' own':''}${eq?' eq':''}${S.id===shopSel?' sel':''}" data-id="${S.id}" aria-pressed="${S.id===shopSel}" aria-label="${escH(S.name)}, ${rar}${eq?', wearing':own?', owned':', '+S.price+' ATP'}"><span class="sv-gem" aria-hidden="true"></span>${own?'<span class="sv-own" aria-hidden="true">'+svIcon('check')+'</span>':''}<canvas width="${px}" height="${px}" data-skin="${S.id}"></canvas><span class="sn">${escH(S.name)}</span><span class="sp">${eq?'Wearing':own?'Owned':'<i class="sv-coin"></i>'+fmtAtp(S.price)}</span></button>`;}
 function renderShopGrid(el){ // limited seasonal skins lead in their own banner with a live countdown (and are hidden out of season unless owned); the rest run cheapest first
+  if(shopSel&&!shopOk(shopSel)){shopSel=shopPick();confirmSkin=0;} // its season just ended: show another skin
   const byPrice=(a,b)=>a.price-b.price||a.id-b.id,seasonal=PREMIUM.filter(S=>S.season&&seasonState(S.season).open).sort(byPrice),rest=PREMIUM.filter(S=>!S.season||(!seasonState(S.season).open&&ownsSkin(S.id))).sort(byPrice);
   let html='';if(seasonal.length){const st=seasonState(seasonal[0].season);
     html=`<section class="sv-ltd" aria-label="${escH(st.name)}, limited time"><div class="sv-season"><svg class="sv-pump" viewBox="0 0 32 32" aria-hidden="true"><defs><radialGradient id="svPumpG" cx=".38" cy=".34" r=".8"><stop offset="0" stop-color="#ffc878"/><stop offset=".55" stop-color="#ff7d1e"/><stop offset="1" stop-color="#a63a00"/></radialGradient></defs><path d="M16 9.5c-.6-3 .4-5.2 2.8-6.3" fill="none" stroke="#6c9a2e" stroke-width="2.6" stroke-linecap="round"/><ellipse cx="10.4" cy="18.5" rx="7.6" ry="9.6" fill="url(#svPumpG)"/><ellipse cx="21.6" cy="18.5" rx="7.6" ry="9.6" fill="url(#svPumpG)"/><ellipse cx="16" cy="18.5" rx="7" ry="10.2" fill="url(#svPumpG)"/><path d="M9.6 16.2l2.6-3.4 2.6 3.4zM17.2 16.2l2.6-3.4 2.6 3.4zM9 20.6q7 5.4 14 0l-1.9 2.6-1.7-1.3-1.6 1.9-1.8-1.6-1.8 1.6-1.6-1.9-1.7 1.3z" fill="#3b1300"/></svg><b>${escH(st.name)}</b><span class="sv-tag">Limited</span><span class="sv-clock" data-ends="${st.ends}">${svIcon('clock')}<span>${svClock(st.ends-Date.now())}</span></span></div><div class="sv-row" style="--n:${seasonal.length}">${seasonal.map(S=>shopCard(S)).join('')}</div></section><div class="sv-season all"><b>All skins</b><span>${rest.length}</span></div>`;}
-  el.innerHTML=html+rest.map(S=>shopCard(S)).join('');renderFeat();
+  const fid=el.contains(document.activeElement)&&document.activeElement.dataset.id; // the rebuild keeps keyboard focus on the same tile
+  el.innerHTML=html+rest.map(S=>shopCard(S)).join('');if(fid){const n=el.querySelector(`.svc[data-id="${fid}"]`);if(n)n.focus({preventScroll:true});}renderFeat();
 }
 function renderFeat(){
-  const S=PREMIUM.find(x=>x.id===shopSel)||PREMIUM[0],b=$('featBuy');if(!S||!b)return;shopSel=S.id;
+  const S=PREMIUM.find(x=>x.id===shopSel)||PREMIUM[0],b=$('featBuy');if(!S||!b)return; // the fallback is only drawn, not kept: openStore picks the skin
   const rar=rarOf(S),own=ownsSkin(S.id),eq=settings.skin===S.id,cf=confirmSkin===S.id&&performance.now()-confirmT<4000,need=S.price-wallet.balance,
-    st=eq?'wearing':own?'own':!wallet.online?'off':need>0?'short':cf?'confirm':'buy',price=`<span class="pz"><i class="sv-coin"></i>${S.price.toLocaleString()}</span>`;
-  $('storeCard').dataset.r=rar;$('featRar').className='sv-rar '+rar;$('featRar').textContent=S.season?SEASONS[S.season].name:rar;$('featName').textContent=S.name;$('featDesc').textContent=SKIN_DESC[S.id]||'';
+    st=eq?'wearing':own?'own':buyingSkin===S.id?'busy':!wallet.online?'off':need>0?'short':cf?'confirm':'buy',price=`<span class="pz"><i class="sv-coin"></i>${fmtAtp(S.price)}</span>`;
+  $('storeCard').dataset.r=rar;$('featRar').className='sv-rar '+rar;$('featRar').textContent=S.season?SEASONS[S.season].name:rar;if($('featName').textContent!==S.name)$('featName').textContent=S.name;$('featDesc').textContent=SKIN_DESC[S.id]||''; // #featName is announced, so only when it changes
   const ss=S.season&&!own?seasonState(S.season):null,fl=$('featLeft');fl.hidden=!(ss&&ss.open);if(ss&&ss.open){fl.dataset.ends=ss.ends;fl.innerHTML=svIcon('clock')+'<span>'+svClock(ss.ends-Date.now())+'</span>';}
-  b.className='primary sv-buy '+st;b.disabled=eq;
-  b.innerHTML=eq?svIcon('check')+'<span>Wearing</span>':own?'<span>Wear</span>':st==='off'?'<span>Connect to buy</span>'+price:st==='short'?svIcon('plus')+'<span>Get ATP</span>':cf?'<span>Confirm</span>'+price:'<span>Buy</span>'+price;
-  $('featNote').innerHTML=st==='short'?`<span class="sv-prog"><i style="width:${Math.max(3,Math.min(100,wallet.balance/S.price*100)).toFixed(1)}%"></i></span><span class="sv-of"><i class="sv-coin"></i>${fmtAtp(wallet.balance)} / ${fmtAtp(S.price)}</span>`:'';
+  b.className='primary sv-buy '+st;b.disabled=eq||!own&&!!buyingSkin; // one buy at a time
+  b.innerHTML=eq?svIcon('check')+'<span>Wearing</span>':own?'<span>Wear</span>':st==='busy'?'<span>Buying…</span>'+price:st==='off'?'<span>Connect to buy</span>'+price:st==='short'?svIcon('plus')+'<span>Get ATP</span>':cf?'<span>Confirm</span>'+price:'<span>Buy</span>'+price;
+  const fn=$('featNote'),nh=buyErr&&buyErr.id===S.id&&!own?`<span class="sv-err">${escH(buyErr.msg)}</span>`:st==='short'?`<span class="sv-prog"><i style="width:${Math.max(3,Math.min(100,wallet.balance/S.price*100)).toFixed(1)}%"></i></span><span class="sv-of"><i class="sv-coin"></i>${fmtAtp(wallet.balance)} / ${fmtAtp(S.price)}</span>`:'';
+  if(fn._h!==nh){fn._h=nh;fn.innerHTML=nh;} // a failed buy says why here (phones show toasts without their details); announced, so only when it changes
+  if(!$('storeCard').hidden)showStoreHint(); // the "N more for X" note follows the wallet
   drawFeat();
 }
 function drawFeat(){const cv=$('featCv'),S=PREMIUM.find(x=>x.id===shopSel);if(!cv||!S||$('storeCard').hidden)return;drawPreview(cv,S);} // drawPreview sizes the canvas
@@ -3553,17 +3580,20 @@ setInterval(()=>{if($('storeCard').hidden||document.hidden)return; // tick the l
   for(const c of document.querySelectorAll('#storeCard [data-ends]')){if(c.hidden)continue;const ms=+c.dataset.ends-Date.now();if(ms<=0){renderSkins();return;}const s=c.querySelector('span');if(s)s.textContent=svClock(ms);}},1000);
 function shopTab(t){const atp=t==='atp';$('tabSkins').setAttribute('aria-selected',String(!atp));$('tabAtp').setAttribute('aria-selected',String(atp));$('skinFeat').hidden=$('skinSec').hidden=atp;$('packSec').hidden=!atp;$('storeCard').dataset.tab=atp?'atp':'skins';if(!atp)renderFeat();}
 $('tabSkins').addEventListener('click',()=>shopTab('skins'));$('tabAtp').addEventListener('click',()=>shopTab('atp'));$('storeBalBtn').addEventListener('click',()=>shopTab('atp'));
-$('skins').addEventListener('click',e=>{const b=e.target.closest('.svc');if(!b)return;const id=+b.dataset.id;if(id===shopSel||!PREMIUM.some(x=>x.id===id))return;shopSel=id;confirmSkin=0;renderSkins();Native.haptic('light');});
+$('skins').addEventListener('click',e=>{const b=e.target.closest('.svc');if(!b)return;const id=+b.dataset.id;if(id===shopSel||!PREMIUM.some(x=>x.id===id))return;shopSel=id;confirmSkin=0;needFor=0;storeNote='';buyErr=null;renderSkins();Native.haptic('light');});
 $('featBuy').addEventListener('click',async()=>{
-  const id=shopSel,S=PREMIUM.find(x=>x.id===id),b=$('featBuy');if(!S)return;
+  const id=shopSel,S=PREMIUM.find(x=>x.id===id);if(!S)return;
   if(ownsSkin(id)){settings.skin=id;saveSettings();syncPats();Native.haptic('medium');return;}
+  if(buyingSkin)return; // one buy at a time
   if(!wallet.online){toast('ATP','Not connected','Skins can be bought once the server is reachable.');return;}
-  if(wallet.balance<S.price){storeNote=`${(S.price-wallet.balance).toLocaleString()} more for ${S.name}`;showStoreHint();shopTab('atp');return;}
-  if(confirmSkin!==id||performance.now()-confirmT>4000){confirmSkin=id;confirmT=performance.now();renderFeat();setTimeout(()=>{if(confirmSkin===id)renderFeat();},4100);return;}
-  confirmSkin=0;b.disabled=true;
+  if(wallet.balance<S.price){needFor=id;showStoreHint();shopTab('atp');return;}
+  if(confirmSkin===id&&performance.now()-confirmT<400)return; // the second tap of a double tap is not a confirmation
+  if(confirmSkin!==id||performance.now()-confirmT>4000){confirmSkin=id;confirmT=performance.now();buyErr=null;renderFeat();setTimeout(()=>{if(confirmSkin===id)renderFeat();},4100);return;}
+  confirmSkin=0;buyingSkin=id;buyErr=null;renderFeat();
   try{const w=await api('skins/buy',{skinId:id});applyWallet(w);settings.skin=id;saveSettings();syncPats();toast('ATP','Skin unlocked',S.name+' is yours');Native.haptic('success');}
-  catch(err){toast('ATP','Could not buy',err.message);}
-  finally{renderSkins();}
+  catch(err){buyErr={id,msg:'Could not buy: '+err.message};toast('ATP','Could not buy',err.message);
+    api('session',{secret},false).then(applyWallet,()=>{});} // the wallet may have changed elsewhere (another device): show it as the server has it
+  finally{buyingSkin=0;renderSkins();}
 });
 function renderEarn(){ // the placement payouts, from the server's rules when we have them: medals for the podium, then the top-N brackets
   const br=(wallet.catalog&&wallet.catalog.rules&&wallet.catalog.rules.byRank)||[[1,25],[2,20],[3,16],[10,5],[30,1]],at=n=>(br.find(([r])=>n<=r)||[0,0])[1],last=br[br.length-1][0];
@@ -3571,9 +3601,11 @@ function renderEarn(){ // the placement payouts, from the server's rules when we
 }
 // ATP store (packs are sold through the App Store / Google Play from inside the apps)
 let storeNote='',storeMsg='';
-const showStoreHint=()=>{const nd=$('storeNeed');nd.hidden=!storeNote;nd.innerHTML=storeNote?'<i class="sv-coin"></i>'+escH(storeNote):'';$('storeHint').textContent=storeMsg;};
+const showStoreHint=()=>{const N=needFor&&PREMIUM.find(x=>x.id===needFor),n=N&&!ownsSkin(N.id)?N.price-wallet.balance:0; // "N more for X", worked out again from the wallet; gone once X is affordable
+  if(N){storeNote=n>0?`${n.toLocaleString()} more for ${N.name}`:'';if(n<=0)needFor=0;}
+  const nd=$('storeNeed');nd.hidden=!storeNote;nd.innerHTML=storeNote?'<i class="sv-coin"></i>'+escH(storeNote):'';$('storeHint').textContent=storeMsg;};
 async function openStore(note){
-  storeNote=note||'';if(!PREMIUM.some(x=>x.id===shopSel))shopSel=settings.skin>=SKIN_FREE?settings.skin:PREMIUM[0].id;confirmSkin=0;
+  storeNote=note||'';needFor=0;buyErr=null;if(!shopOk(shopSel))shopSel=shopPick();confirmSkin=0; // the skin asked for (shopSel set by the caller), else the one you wear, else the first
   showCard('storeCard');shopTab(note?'atp':'skins');renderSkins();renderEarn();renderPacks([],true);
   if(!Native.platform){renderPacks(null);storeMsg='Packs are sold in the iPhone and Android app';showStoreHint();return;}
   storeMsg='';showStoreHint();
@@ -3595,7 +3627,7 @@ let packList=null; // the products the store last returned
 function renderPacks(products,loading){
   const el=$('packs');let html='';if(!loading)packList=products;
   ATP_PACKS.forEach((P,i)=>{const pr=products&&products.find(x=>x.id===P.id),tg=P.tag?' tg-'+P.tag.toLowerCase().replace(/\W+/g,'-'):'';
-    html+=`<button type="button" class="pack sv-pack t${i+1}${tg}" data-id="${P.id}"${pr?'':' disabled'} aria-label="${P.atp.toLocaleString()} ATP, ${escH(P.label)}${pr?', '+escH(pr.price):''}">${P.tag?'<span class="tag">'+escH(P.tag)+'</span>':''}<span class="pk-art" aria-hidden="true">${packArt(i)}</span><span class="pk-amt"><b>${P.atp.toLocaleString()}</b><small>${escH(P.label)}</small></span><span class="pr">${pr?escH(pr.price):loading?'<i class="sv-dots"></i>':products?'—':'In the app'}</span></button>`;});
+    html+=`<button type="button" class="pack sv-pack t${i+1}${tg}" data-id="${P.id}"${pr?'':' disabled'} aria-label="${P.atp.toLocaleString()} ATP, ${escH(P.label)}${pr?', '+escH(pr.price):''}">${P.tag?'<span class="tag">'+escH(P.tag)+'</span>':''}<span class="pk-art" aria-hidden="true">${packArt(i)}</span><span class="pk-amt"><b>${P.atp.toLocaleString()}</b><small>${escH(P.label)}</small></span><span class="pr">${pr?`<span style="--n:${String(pr.price).length}">${escH(pr.price)}</span>`:loading?'<i class="sv-dots"></i>':products?'—':'In the app'}</span></button>`;});
   el.innerHTML=html;
 }
 let buying=false;
@@ -3640,7 +3672,7 @@ if(/[?&]autopilot=1/.test(location.search)){
 }
 $('shopBtn').addEventListener('click',()=>openStore());
 
-$('storeBack').addEventListener('click',()=>{showCard('startCard');renderSkins();});
+$('storeBack').addEventListener('click',()=>{shopSel=0;showCard('startCard');renderSkins();}); // next time the shop opens on the skin asked for, or the one you wear
 /* ---------- Account: Sign in with Apple / Google, so the wallet follows the player across devices ---------- */
 let authProviders=null,webAuthConfig=null,signingIn=false; // which sign-in buttons this build can offer
 function renderAccount(){
@@ -3963,13 +3995,13 @@ function updateSpawnLock(){
     if(performance.now()>=searchUntil){queued=false;startLocal('auto');return;}   // nothing to join in time: bots fill the slots
   }
   let goT=!local&&isOffline()?'Play offline':'Play',agT='Re-inoculate';
-  if(queued){const left=Math.max(0,Math.ceil((searchUntil-performance.now())/1000));goT=agT=`Searching… 0:${String(left).padStart(2,'0')}${queuedPeers?' · '+(queuedPeers+1)+' waiting':''}`;}
-  else if(!open){const why=spawnBlockReason();goT=agT=(why==='lives'?'No lives left · ':'Round closed · ')+'find a game';}
+  if(queued){const left=Math.max(0,Math.ceil((searchUntil-performance.now())/1000)),w=queuedPeers?(queuedPeers+1)+' waiting':'',sub=(w?w+' · ':'')+'Tap to cancel';goT=`Searching… 0:${String(left).padStart(2,'0')}`;agT=w?goT+' · '+w:goT;if(go.dataset.sub!==sub)go.dataset.sub=sub;} // the lobby button puts who's waiting on its second line
+  else if(!open){const why=spawnBlockReason();goT=agT=(why==='lives'?'No lives left\u00a0· ':'Round closed\u00a0· ')+'find a game';}
   else{const left=MAX_RESPAWNS+1-livesUsed();if(!local&&left<=MAX_RESPAWNS)agT=`Re-inoculate · ${left} ${left===1?'life':'lives'} left`;}
   if(nearMode()&&!queued)goT=nearLabel();
   go.classList.toggle('lb-wait',nearMode()&&!near.m&&!nearHost()); // a guest waits for the host to start
   if(go.textContent!==goT)go.textContent=goT;if(ag.textContent!==agT)ag.textContent=agT;
-  go.classList.toggle('queued',queued);ag.classList.toggle('queued',queued);ag.classList.add('sm');
+  go.classList.toggle('queued',queued);ag.classList.toggle('queued',queued);ag.classList.add('sm');go.classList.toggle('lb-closed',!queued&&!open&&!nearMode()); // lb-closed: a smaller type for the long label
   if(queued){const sp=clamp((searchUntil-performance.now())/(SEARCH_MAX*1000),0,1)*100+'%';go.style.setProperty('--sp',sp);ag.style.setProperty('--sp',sp);}
 }
 setInterval(updateSpawnLock,250);
@@ -5161,6 +5193,7 @@ function init(){
 function removeHuman(){if(!human)return;removePlayer(human);cells=cells.filter(c=>!c.dead);human=null;}
 let shownCard='startCard';
 function showCard(id){
+  if(queued&&id&&id!=='startCard'&&id!=='deathCard'){queued=false;updateSpawnLock();} // leaving the lobby ends a Play search, or it would start a game over the Shop or Settings
   // diagnostic: a report of what sends the page from Settings back to the start card (Settings → Account → sign in)
   if(id==='startCard'&&shownCard==='settingsCard')reportHitch('settings->start via '+String(new Error().stack||'').split('\n').slice(1,4).map(s=>s.trim()).join(' | '));
   shownCard=id;if(id)$('tip').classList.remove('show');if(id==='startCard')setTimeout(drawAvatar,0);if(id==='lookCard')setTimeout(()=>drawAvatar($('lookCv')),0);
@@ -5318,7 +5351,10 @@ const joySegEl=$('joySeg'),handSegEl=$('handSeg'),syncControls=()=>{const fl=set
   [...joySegEl.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.j==='float')===fl)));[...handSegEl.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.l==='1')===lh)));};
 joySegEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.joyMode=b.dataset.j==='float'?'float':'fixed';saveSettings();syncControls();});
 handSegEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.lefty=b.dataset.l==='1';saveSettings();syncControls();});syncControls();
-$('nameIn').value=settings.name||'';$('nameIn').addEventListener('input',renderMe);$('atpChip').addEventListener('click',()=>{openStore();shopTab('atp');}); // the + on the currency bar opens the ATP packs
+$('nameIn').value=settings.name||'';$('nameIn').addEventListener('input',renderMe);
+$('nameIn').addEventListener('change',()=>{const typed=$('nameIn').value.trim();settings.name=cleanName(typed);saveSettings(); // kept as soon as it's typed, not only when Play is pressed
+  if(typed&&!settings.name){$('nameIn').value='';renderMe();toast('Name','Pick another name','That name is not allowed in Mitosis, so you will play as Unnamed cell.');}});
+$('atpChip').addEventListener('click',()=>{openStore();shopTab('atp');}); // the + on the currency bar opens the ATP packs
 (function heroLoop(){if(!$('startCard').hidden&&!document.hidden&&!RM)drawAvatar();requestAnimationFrame(heroLoop);})();renderMe();
 /* Lobby Play: one big button and a mode picker. Ranked = the live arena, rated, needs the server; Casual = you and bots on
    this device, unrated, works offline (the old Practice); Nearby = phones around you (iOS app). #go plays Ranked and
@@ -5400,7 +5436,7 @@ function socRender(){
   const v=soc,n=v?v.incoming.length+v.invites.length:0,bd=$('friendsBadge');
   bd.hidden=!n;if(n)bd.textContent=n>9?'9+':String(n);
   const ally=v&&v.party?v.party.members.find(m=>m.code!==v.code):null,lp=$('lbParty');
-  lp.hidden=!ally;if(ally)lp.textContent=`In a party with ${ally.name} · Play together`;
+  lp.hidden=!ally;if(ally)lp.textContent=`Party with ${ally.name} · Play together`;
   if($('friendsCard').hidden)return;
   if(socMsg&&performance.now()-socMsgAt>5000)socMsg='';
   $('frCode').textContent=v?v.code:'······';$('frCopy').disabled=!v;
@@ -5456,13 +5492,14 @@ function syncPlay(){
   const nm=lbMode==='casual'?'Casual':lbMode==='nearby'?'Nearby':'Ranked';if($('modeName').textContent!==nm)$('modeName').textContent=nm;
   set($('modeBtn'),'aria-label',`Mode: ${nm}${lbMode==='casual'?', '+SKILL[k].label+' bots':''}. Change mode`);
   const wt=net==='full'?'Server full':net==='wait'?'Connecting…':'No connection',w=$('lbWait');if(w.textContent!==wt)w.textContent=wt;
-  const nt=net==='full'?'Arena full · 16 max':'Needs Wi-Fi or cellular',ne=$('lbNeed');if(ne.textContent!==nt)ne.textContent=nt;
+  const nt=net==='full'?'Arena full · 16 max':navigator.onLine?"Can't reach the server":'Needs Wi-Fi or cellular',ne=$('lbNeed');if(ne.textContent!==nt)ne.textContent=nt;
   const cards=[...$('modeSeg').children];cards[2].hidden=!ios;$('modeSeg').style.setProperty('--n',cards.filter(c=>!c.hidden).length);
   for(const c of cards){set(c,'data-on',String(c.dataset.m===lbMode));set(c.querySelector('.lb-mpick'),'aria-checked',String(c.dataset.m===lbMode));}
   for(const b of $('lbSkill').children)set(b,'aria-checked',String(b.dataset.k===k));
   const nl=$('netLine'),host=lbMode==='nearby'?$('lbNearStat'):$('lbRankStat');if(nl.parentNode!==host)host.prepend(nl); // the live line sits on the card of the network in use
   if(queued&&lbMode==='ranked'&&net==='off'&&home){queued=false;updateSpawnLock();} // lost the server mid-search
   if(!home&&!sheet.hidden)sheet.hidden=true;
+  const so=!sheet.hidden;for(const el of $('startCard').children)if(el!==sheet&&el.inert!==so)el.inert=so; // the mode select is modal: the lobby behind it takes no focus or taps
   if(home){fitName();lbSharp($('avatarCv'));lbSharp($('meCv'));syncFeed();if(RM)lbDrawArt();}
 }
 // Home feature cards (left column): the season's event, else the newest skin you don't own, and your achievements
