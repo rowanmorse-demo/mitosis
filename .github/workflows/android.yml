@@ -124,6 +124,11 @@ jobs:
           target: google_apis
           arch: x86_64
           profile: pixel_6
+          # the default AVD memory isn't enough for Android 15 with Google apps plus a WebView game: the
+          # low-memory killer empties the phone, the app hangs and the emulator goes down
+          ram-size: 4096M
+          heap-size: 512M
+          cores: 4
           disable-animations: true
           # no guest Vulkan: WebView renders with it when offered, and the emulator's software GPU falls over
           emulator-options: -no-window -gpu swiftshader_indirect -feature -Vulkan -noaudio -no-boot-anim -camera-back none -no-snapshot
