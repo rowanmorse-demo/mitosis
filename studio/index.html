@@ -410,6 +410,8 @@ kbd { font: 10px/1 var(--font-num); color: var(--dim); background: var(--ink-3);
   <symbol id="i-b-crease" viewBox="0 0 24 24"><path d="M3 9c4 0 6.5 1 9 8.5C14.5 10 17 9 21 9"/></symbol>
   <symbol id="i-b-layer" viewBox="0 0 24 24"><path d="M3 16h4c0-4 10-4 10 0h4"/><path d="M3 19.5h18" opacity=".45"/></symbol>
   <symbol id="i-b-mask" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor" fill-opacity=".55"/></symbol>
+  <symbol id="i-dyntopo" viewBox="0 0 24 24"><path d="M3 19 12 4l9 15zM7.5 11.5h9M12 19l-4.5-7.5M12 19l4.5-7.5M9.75 15.25h4.5"/></symbol>
+  <symbol id="i-remesh" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5v17M5 7.5h14M5 16.5h14M7.5 5v14M16.5 5v14" opacity=".6"/></symbol>
   <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 3.5h8l4 4v13H6zM14 3.5v4h4"/></symbol>
   <symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6 9.5h.01M9.5 9.5h.01M13 9.5h.01M16.5 9.5h.01M7 14.5h10"/></symbol>
   <symbol id="i-image" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><circle cx="9" cy="10" r="1.8"/><path d="M4 18l5-5 4 3.5 3-2.5 4 4"/></symbol>
@@ -500,7 +502,7 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js';
 import { FullScreenQuad } from 'three/addons/postprocessing/Pass.js';
 import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
-import { computeBoundsTree, disposeBoundsTree, acceleratedRaycast } from 'three-mesh-bvh';
+import { computeBoundsTree, disposeBoundsTree, acceleratedRaycast, MeshBVH } from 'three-mesh-bvh';
 import { WebGLPathTracer, PhysicalCamera, ProceduralEquirectTexture } from 'three-gpu-pathtracer';
 
 THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
@@ -1564,6 +1566,8 @@ const History = {
   push(cmd) {
     this.stack.length = this.i + 1; this.stack.push(cmd);
     if (this.stack.length > 160) this.stack.shift();
+    let bytes = 0; for (const c of this.stack) bytes += c.bytes || 0;
+    while (bytes > 600e6 && this.stack.length > 1) bytes -= this.stack.shift().bytes || 0;
     this.i = this.stack.length - 1;
     changed('history');
   },
@@ -1868,7 +1872,7 @@ function commitCageEdit(s, label) {
   const o = s.o, after = cloneCage(o.userData.cage), selAfter = edit.obj === o ? editSelSnapshot() : null;
   if (sameCage(s.before, after)) return false;
   o.userData.prim = null;
-  History.push({ label: label || s.label, undo() { setCage(o, s.before, s.selBefore, s.primBefore); }, redo() { setCage(o, after, selAfter, null); } });
+  History.push({ label: label || s.label, bytes: (s.before.v.length + after.v.length) * 8 + (s.before.f.length + after.f.length) * 56, undo() { setCage(o, s.before, s.selBefore, s.primBefore); }, redo() { setCage(o, after, selAfter, null); } });
   ui.dirty = true;
   return true;
 }
@@ -2705,24 +2709,294 @@ const BRUSHES = [
   { id: 'pinch', name: 'Pinch', key: 'p', tip: 'Pull vertices together to sharpen ridges' },
   { id: 'crease', name: 'Crease', key: 'k', tip: 'Cut sharp grooves (Ctrl for ridges)' },
 ];
-const sculpt = { obj: null, brush: 'draw', radius: isTouch ? 70 : 55, strength: 0.5, sym: true, invert: false, P: null, N: null, idx: null, stroke: null, dirty: [], stamp: 1 };
+const sculpt = { obj: null, brush: 'draw', radius: isTouch ? 70 : 55, strength: 0.5, sym: true, invert: false, P: null, N: null, idx: null, stroke: null, dirty: [], stamp: 1, dyn: false, detail: 12, dm: null, packed: null };
+
+/* Dynamic topology mesh: a triangle soup with per-vertex triangle lists, so edges can be split and collapsed while
+   sculpting. Slots of removed triangles and vertices stay dead until the stroke ends and the mesh is compacted. */
+class DynMesh {
+  constructor(cage) {
+    const nv = cageNV(cage);
+    let nt = 0; for (const f of cage.f) nt += Math.max(0, f.length - 2);
+    this.capV = Math.max(64, nv); this.capT = Math.max(64, nt);
+    this.P = new Float32Array(this.capV * 3); this.N = new Float32Array(this.capV * 3);
+    this.T = new Uint32Array(this.capT * 3);
+    this.tdead = new Uint8Array(this.capT); this.vdead = new Uint8Array(this.capV);
+    this.tmark = new Uint32Array(this.capT); this.vmark = new Uint32Array(this.capV); this.dmark = new Uint32Array(this.capV);
+    this.I = new Int32Array(this.capV); this.W = new Float32Array(this.capV); this.tmpP = new Float32Array(this.capV * 3);
+    this.stamp = 1; this.dstamp = 1; this.dirty = []; this.topo = false; this.realloc = true;
+    this.P.set(cage.v); this.nv = nv; this.nt = 0;
+    this.vt = new Array(this.capV); for (let i = 0; i < nv; i++) this.vt[i] = [];
+    for (const f of cage.f) for (let i = 1; i < f.length - 1; i++) this.addTri(f[0], f[i], f[i + 1]);
+    const all = []; for (let i = 0; i < nv; i++) all.push(i);
+    this.updateNormals(all);
+  }
+  growV() {
+    const cap = Math.ceil(this.capV * 1.6) + 1024, g = (A, n) => { const B = new A.constructor(n); B.set(A); return B; };
+    this.P = g(this.P, cap * 3); this.N = g(this.N, cap * 3); this.vdead = g(this.vdead, cap); this.vmark = g(this.vmark, cap); this.dmark = g(this.dmark, cap);
+    this.I = new Int32Array(cap); this.W = new Float32Array(cap); this.tmpP = new Float32Array(cap * 3);
+    this.vt.length = cap; this.capV = cap; this.realloc = true;
+  }
+  growT() {
+    const cap = Math.ceil(this.capT * 1.6) + 2048, g = (A, n) => { const B = new A.constructor(n); B.set(A); return B; };
+    this.T = g(this.T, cap * 3); this.tdead = g(this.tdead, cap); this.tmark = g(this.tmark, cap);
+    this.capT = cap; this.realloc = true;
+  }
+  addVert(x, y, z) {
+    if (this.nv >= this.capV) this.growV();
+    const i = this.nv++; this.P[i * 3] = x; this.P[i * 3 + 1] = y; this.P[i * 3 + 2] = z; this.vt[i] = []; this.vdead[i] = 0;
+    return i;
+  }
+  addTri(a, b, c) {
+    if (this.nt >= this.capT) this.growT();
+    const t = this.nt++; this.T[t * 3] = a; this.T[t * 3 + 1] = b; this.T[t * 3 + 2] = c; this.tdead[t] = 0;
+    this.vt[a].push(t); this.vt[b].push(t); this.vt[c].push(t); this.topo = true;
+    return t;
+  }
+  unlink(v, t) { const l = this.vt[v], i = l.indexOf(t); if (i >= 0) { l[i] = l[l.length - 1]; l.pop(); } }
+  killTri(t) {
+    const T = this.T;
+    for (let k = 0; k < 3; k++) this.unlink(T[t * 3 + k], t);
+    T[t * 3] = T[t * 3 + 1] = T[t * 3 + 2] = 0; this.tdead[t] = 1; this.topo = true;
+  }
+  has(t, v) { const T = this.T; return T[t * 3] === v || T[t * 3 + 1] === v || T[t * 3 + 2] === v; }
+  edgeTris(a, b) { const out = []; for (const t of this.vt[a]) if (this.has(t, b)) out.push(t); return out; }
+  d2(a, b) { const P = this.P; return (P[a * 3] - P[b * 3]) ** 2 + (P[a * 3 + 1] - P[b * 3 + 1]) ** 2 + (P[a * 3 + 2] - P[b * 3 + 2]) ** 2; }
+  neighbors(v) { const s = new Set(), T = this.T; for (const t of this.vt[v]) for (let k = 0; k < 3; k++) { const w = T[t * 3 + k]; if (w !== v) s.add(w); } return s; }
+  isBoundary(v) {
+    const cnt = new Map(), T = this.T;
+    for (const t of this.vt[v]) for (let k = 0; k < 3; k++) { const w = T[t * 3 + k]; if (w !== v) cnt.set(w, (cnt.get(w) || 0) + 1); }
+    for (const c of cnt.values()) if (c !== 2) return true;
+    return false;
+  }
+  triNormal(t, out = new THREE.Vector3()) {
+    const P = this.P, T = this.T, a = T[t * 3] * 3, b = T[t * 3 + 1] * 3, c = T[t * 3 + 2] * 3;
+    const ux = P[b] - P[a], uy = P[b + 1] - P[a + 1], uz = P[b + 2] - P[a + 2], wx = P[c] - P[a], wy = P[c + 1] - P[a + 1], wz = P[c + 2] - P[a + 2];
+    return out.set(uy * wz - uz * wy, uz * wx - ux * wz, ux * wy - uy * wx).normalize();
+  }
+  updateNormals(list) {
+    const P = this.P, N = this.N, T = this.T;
+    for (const v of list) {
+      if (this.vdead[v]) continue;
+      let nx = 0, ny = 0, nz = 0;
+      for (const t of this.vt[v]) {
+        const a = T[t * 3] * 3, b = T[t * 3 + 1] * 3, c = T[t * 3 + 2] * 3;
+        const ux = P[b] - P[a], uy = P[b + 1] - P[a + 1], uz = P[b + 2] - P[a + 2], wx = P[c] - P[a], wy = P[c + 1] - P[a + 1], wz = P[c + 2] - P[a + 2];
+        nx += uy * wz - uz * wy; ny += uz * wx - ux * wz; nz += ux * wy - uy * wx;
+      }
+      const l = Math.hypot(nx, ny, nz) || 1; N[v * 3] = nx / l; N[v * 3 + 1] = ny / l; N[v * 3 + 2] = nz / l;
+    }
+  }
+  markDirty(v) { if (this.dmark[v] !== this.dstamp) { this.dmark[v] = this.dstamp; this.dirty.push(v); } }
+  // closest point on triangle t to c is within r (Ericson, Real-Time Collision Detection 5.1.5)
+  triSphere(t, c, r) {
+    const P = this.P, T = this.T, A = T[t * 3] * 3, B = T[t * 3 + 1] * 3, C = T[t * 3 + 2] * 3;
+    const ax = P[A], ay = P[A + 1], az = P[A + 2];
+    const abx = P[B] - ax, aby = P[B + 1] - ay, abz = P[B + 2] - az, acx = P[C] - ax, acy = P[C + 1] - ay, acz = P[C + 2] - az;
+    const apx = c.x - ax, apy = c.y - ay, apz = c.z - az;
+    const d1 = abx * apx + aby * apy + abz * apz, d2 = acx * apx + acy * apy + acz * apz;
+    let qx, qy, qz;
+    if (d1 <= 0 && d2 <= 0) { qx = ax; qy = ay; qz = az; }
+    else {
+      const bpx = c.x - P[B], bpy = c.y - P[B + 1], bpz = c.z - P[B + 2];
+      const d3 = abx * bpx + aby * bpy + abz * bpz, d4 = acx * bpx + acy * bpy + acz * bpz;
+      const cpx = c.x - P[C], cpy = c.y - P[C + 1], cpz = c.z - P[C + 2];
+      const d5 = abx * cpx + aby * cpy + abz * cpz, d6 = acx * cpx + acy * cpy + acz * cpz;
+      const vc = d1 * d4 - d3 * d2, vb = d5 * d2 - d1 * d6, va = d3 * d6 - d5 * d4;
+      if (d3 >= 0 && d4 <= d3) { qx = P[B]; qy = P[B + 1]; qz = P[B + 2]; }
+      else if (d6 >= 0 && d5 <= d6) { qx = P[C]; qy = P[C + 1]; qz = P[C + 2]; }
+      else if (vc <= 0 && d1 >= 0 && d3 <= 0) { const v = d1 / (d1 - d3); qx = ax + abx * v; qy = ay + aby * v; qz = az + abz * v; }
+      else if (vb <= 0 && d2 >= 0 && d6 <= 0) { const w = d2 / (d2 - d6); qx = ax + acx * w; qy = ay + acy * w; qz = az + acz * w; }
+      else if (va <= 0 && d4 - d3 >= 0 && d5 - d6 >= 0) { const w = (d4 - d3) / ((d4 - d3) + (d5 - d6)); qx = P[B] + (P[C] - P[B]) * w; qy = P[B + 1] + (P[C + 1] - P[B + 1]) * w; qz = P[B + 2] + (P[C + 2] - P[B + 2]) * w; }
+      else { const den = 1 / (va + vb + vc), v = vb * den, w = vc * den; qx = ax + abx * v + acx * w; qy = ay + aby * v + acy * w; qz = az + abz * v + acz * w; }
+    }
+    return (qx - c.x) ** 2 + (qy - c.y) ** 2 + (qz - c.z) ** 2 <= r * r;
+  }
+  nearestTri(c) {
+    let best = Infinity, bv = -1; const P = this.P;
+    for (let i = 0; i < this.nv; i++) { if (this.vdead[i] || !this.vt[i].length) continue; const d = (P[i * 3] - c.x) ** 2 + (P[i * 3 + 1] - c.y) ** 2 + (P[i * 3 + 2] - c.z) ** 2; if (d < best) { best = d; bv = i; } }
+    return bv < 0 ? -1 : this.vt[bv][0];
+  }
+  // triangles touching the sphere, found by flooding out from a seed triangle
+  region(seed, c, r) {
+    if (seed == null || seed < 0 || seed >= this.nt || this.tdead[seed]) seed = this.nearestTri(c);
+    if (seed < 0) return [];
+    const st = ++this.stamp, T = this.T, out = [], q = [seed];
+    this.tmark[seed] = st;
+    while (q.length) {
+      const t = q.pop();
+      if (t !== seed && !this.triSphere(t, c, r)) continue;
+      out.push(t);
+      for (let k = 0; k < 3; k++) for (const t2 of this.vt[T[t * 3 + k]]) if (this.tmark[t2] !== st) { this.tmark[t2] = st; q.push(t2); }
+    }
+    return out;
+  }
+  split(a, b, touched) {
+    const ts = this.edgeTris(a, b);
+    if (ts.length < 1 || ts.length > 2) return -1;
+    const P = this.P;
+    const m = this.addVert((P[a * 3] + P[b * 3]) / 2, (P[a * 3 + 1] + P[b * 3 + 1]) / 2, (P[a * 3 + 2] + P[b * 3 + 2]) / 2);
+    for (const t of ts) {
+      let T = this.T, k = 0;
+      while (k < 3 && !((T[t * 3 + k] === a && T[t * 3 + (k + 1) % 3] === b) || (T[t * 3 + k] === b && T[t * 3 + (k + 1) % 3] === a))) k++;
+      const q = T[t * 3 + (k + 1) % 3], cc = T[t * 3 + (k + 2) % 3], p = T[t * 3 + k];
+      T[t * 3 + (k + 1) % 3] = m; this.unlink(q, t); this.vt[m].push(t);
+      this.addTri(m, q, cc);
+      touched.push(p, q, cc);
+    }
+    touched.push(m);
+    return m;
+  }
+  collapse(a, b, touched) {
+    const ts = this.edgeTris(a, b);
+    if (ts.length !== 2 || this.isBoundary(a) || this.isBoundary(b)) return false;
+    const T = this.T, opp = ts.map(t => { for (let k = 0; k < 3; k++) { const v = T[t * 3 + k]; if (v !== a && v !== b) return v; } return -1; });
+    if (opp[0] === opp[1] || this.vt[opp[0]].length <= 3 || this.vt[opp[1]].length <= 3) return false;
+    const na = this.neighbors(a), nb = this.neighbors(b);
+    let common = 0; for (const x of na) if (nb.has(x)) { if (x !== opp[0] && x !== opp[1]) return false; common++; }
+    if (common !== 2) return false;
+    const P = this.P, mx = (P[a * 3] + P[b * 3]) / 2, my = (P[a * 3 + 1] + P[b * 3 + 1]) / 2, mz = (P[a * 3 + 2] + P[b * 3 + 2]) / 2;
+    const n0 = new THREE.Vector3(), n1 = new THREE.Vector3();
+    for (const v of [a, b]) for (const t of this.vt[v]) {
+      if (ts.includes(t)) continue;
+      this.triNormal(t, n0);
+      const pts = [0, 1, 2].map(k => { const w = T[t * 3 + k]; return w === v ? [mx, my, mz] : [P[w * 3], P[w * 3 + 1], P[w * 3 + 2]]; });
+      const ux = pts[1][0] - pts[0][0], uy = pts[1][1] - pts[0][1], uz = pts[1][2] - pts[0][2], wx = pts[2][0] - pts[0][0], wy = pts[2][1] - pts[0][1], wz = pts[2][2] - pts[0][2];
+      n1.set(uy * wz - uz * wy, uz * wx - ux * wz, ux * wy - uy * wx);
+      const l = n1.length(); if (l < 1e-14) return false;
+      if (n1.multiplyScalar(1 / l).dot(n0) < 0.25) return false;
+    }
+    for (const t of ts) this.killTri(t);
+    for (const t of this.vt[b].slice()) { for (let k = 0; k < 3; k++) if (T[t * 3 + k] === b) T[t * 3 + k] = a; this.vt[a].push(t); }
+    this.vt[b] = []; this.vdead[b] = 1;
+    P[a * 3] = mx; P[a * 3 + 1] = my; P[a * 3 + 2] = mz;
+    touched.push(a, ...na);
+    this.topo = true;
+    return true;
+  }
+  // split edges longer than `detail` and collapse ones shorter than 40% of it, inside the brush
+  refine(c, r, detail, seed) {
+    const maxL2 = detail * detail, minL2 = (detail * 0.4) ** 2, touched = [];
+    let budget = 3000;
+    for (let pass = 0; pass < 6 && budget > 0; pass++) {
+      const tris = this.region(seed, c, r), seen = new Set(), long = [], T = this.T;
+      for (const t of tris) for (let k = 0; k < 3; k++) {
+        const a = T[t * 3 + k], b = T[t * 3 + (k + 1) % 3], key = a < b ? a * EKB + b : b * EKB + a;
+        if (seen.has(key)) continue; seen.add(key);
+        const l2 = this.d2(a, b); if (l2 > maxL2) long.push([l2, a, b]);
+      }
+      if (!long.length) break;
+      long.sort((x, y) => y[0] - x[0]);
+      let did = 0;
+      for (const [, a, b] of long) { if (budget <= 0) break; if (this.vdead[a] || this.vdead[b] || this.d2(a, b) <= maxL2) continue; if (this.split(a, b, touched) >= 0) { did++; budget--; } }
+      if (!did) break;
+    }
+    const tris = this.region(seed, c, r), seen = new Set(), short = [], T = this.T;
+    for (const t of tris) for (let k = 0; k < 3; k++) {
+      const a = T[t * 3 + k], b = T[t * 3 + (k + 1) % 3], key = a < b ? a * EKB + b : b * EKB + a;
+      if (seen.has(key)) continue; seen.add(key);
+      const l2 = this.d2(a, b); if (l2 < minL2) short.push([l2, a, b]);
+    }
+    short.sort((x, y) => x[0] - y[0]);
+    for (const [, a, b] of short.slice(0, 1500)) if (!this.vdead[a] && !this.vdead[b] && this.d2(a, b) < minL2) this.collapse(a, b, touched);
+    if (touched.length) { this.updateNormals(touched); for (const v of touched) this.markDirty(v); }
+  }
+  gather(c, r, seed) {
+    const tris = this.region(seed, c, r), st = ++this.stamp, T = this.T, P = this.P, I = this.I, W = this.W, r2 = r * r;
+    let cnt = 0;
+    for (const t of tris) for (let k = 0; k < 3; k++) {
+      const v = T[t * 3 + k]; if (this.vmark[v] === st) continue; this.vmark[v] = st;
+      const d2 = (P[v * 3] - c.x) ** 2 + (P[v * 3 + 1] - c.y) ** 2 + (P[v * 3 + 2] - c.z) ** 2;
+      if (d2 < r2) { const s = 1 - Math.sqrt(d2) / r; I[cnt] = v; W[cnt] = s * s * (3 - 2 * s); cnt++; }
+    }
+    return cnt;
+  }
+  neighborAvg(v, out, o) {
+    const P = this.P, T = this.T; let x = 0, y = 0, z = 0, n = 0;
+    for (const t of this.vt[v]) for (let k = 0; k < 3; k++) { const w = T[t * 3 + k]; if (w === v) continue; x += P[w * 3]; y += P[w * 3 + 1]; z += P[w * 3 + 2]; n++; }
+    if (!n) { out[o] = P[v * 3]; out[o + 1] = P[v * 3 + 1]; out[o + 2] = P[v * 3 + 2]; return; }
+    out[o] = x / n; out[o + 1] = y / n; out[o + 2] = z / n;
+  }
+  rayTri(t, o, d) {
+    const P = this.P, T = this.T, A = T[t * 3] * 3, B = T[t * 3 + 1] * 3, C = T[t * 3 + 2] * 3;
+    const e1x = P[B] - P[A], e1y = P[B + 1] - P[A + 1], e1z = P[B + 2] - P[A + 2], e2x = P[C] - P[A], e2y = P[C + 1] - P[A + 1], e2z = P[C + 2] - P[A + 2];
+    const px = d.y * e2z - d.z * e2y, py = d.z * e2x - d.x * e2z, pz = d.x * e2y - d.y * e2x;
+    const det = e1x * px + e1y * py + e1z * pz; if (Math.abs(det) < 1e-14) return -1;
+    const inv = 1 / det, tx = o.x - P[A], ty = o.y - P[A + 1], tz = o.z - P[A + 2];
+    const u = (tx * px + ty * py + tz * pz) * inv; if (u < 0 || u > 1) return -1;
+    const qx = ty * e1z - tz * e1y, qy = tz * e1x - tx * e1z, qz = tx * e1y - ty * e1x;
+    const v = (d.x * qx + d.y * qy + d.z * qz) * inv; if (v < 0 || u + v > 1) return -1;
+    const dist = (e2x * qx + e2y * qy + e2z * qz) * inv;
+    return dist > 1e-9 ? dist : -1;
+  }
+  flush() {
+    if (this.dirty.length) {
+      const st = ++this.stamp, list = [], T = this.T;
+      for (const v of this.dirty) { if (this.vdead[v]) continue; for (const t of this.vt[v]) for (let k = 0; k < 3; k++) { const w = T[t * 3 + k]; if (this.vmark[w] !== st) { this.vmark[w] = st; list.push(w); } } }
+      this.updateNormals(list);
+      this.dirty = []; this.dstamp++;
+    }
+  }
+  liveTris() { let n = 0; for (let t = 0; t < this.nt; t++) if (!this.tdead[t]) n++; return n; }
+  toCage() {
+    const map = new Int32Array(this.nv).fill(-1), v = [], f = [], P = this.P, T = this.T;
+    for (let t = 0; t < this.nt; t++) {
+      if (this.tdead[t]) continue;
+      const tri = [];
+      for (let k = 0; k < 3; k++) { const x = T[t * 3 + k]; if (map[x] < 0) { map[x] = v.length / 3; v.push(P[x * 3], P[x * 3 + 1], P[x * 3 + 2]); } tri.push(map[x]); }
+      f.push(tri);
+    }
+    return { v, f, cr: new Map() };
+  }
+}
+function packCage(m) {
+  const nf = m.f.length; let n = 0; for (const f of m.f) n += f.length;
+  const fv = new Int32Array(n), fo = new Int32Array(nf + 1); let k = 0;
+  for (let i = 0; i < nf; i++) { fo[i] = k; for (const x of m.f[i]) fv[k++] = x; }
+  fo[nf] = k;
+  return { v: Float32Array.from(m.v), fv, fo, cr: [...m.cr], bytes: m.v.length * 4 + n * 4 + nf * 4 + 64 };
+}
+function unpackCage(p) {
+  const f = new Array(p.fo.length - 1);
+  for (let i = 0; i < f.length; i++) f[i] = Array.from(p.fv.subarray(p.fo[i], p.fo[i + 1]));
+  return { v: Array.from(p.v), f, cr: new Map(p.cr) };
+}
+
 function enterSculpt() {
   const o = sel.obj;
   if (!o || o.userData.kind !== 'mesh') { toast(o && o.userData.kind === 'import' ? 'Convert imported models first: Object › Convert to editable mesh' : 'Select a mesh to sculpt it'); return false; }
-  sculpt.obj = o;
+  sculpt.obj = o; sculpt.packed = null;
+  sculpt.dyn = !!o.userData.dyntopo;
   sculptTopologyChanged();
-  if (cageNV(o.userData.cage) < 3000) toast('Low detail for sculpting. Press Subdivide in the header to add resolution.', '', 4200);
+  if (!sculpt.dyn && cageNV(o.userData.cage) < 3000) toast('Low detail for sculpting. Turn on Dyntopo, or press Subdivide or Remesh in the header.', '', 4500);
   if (o.userData.mods.some(m => m.on && m.type !== 'mirror')) toast('Modifiers are paused while sculpting', '', 3000);
   return true;
 }
 function exitSculpt() {
   const o = sculpt.obj; if (!o) return;
-  sculpt.obj = null; sculpt.P = sculpt.N = null; sculpt.stroke = null;
+  sculpt.obj = null; sculpt.P = sculpt.N = null; sculpt.stroke = null; sculpt.dm = null; sculpt.packed = null;
   $('#brush').hidden = true;
   rebuild(o);
 }
+function setDyntopo(on) {
+  const o = sculpt.obj; if (!o) return;
+  if (on && o.userData.cage.f.some(f => f.length !== 3)) {
+    cageOp('Dynamic topology', m => { const t = []; for (const f of m.f) for (let i = 1; i < f.length - 1; i++) t.push([f[0], f[i], f[i + 1]]); m.f = t; m.cr = new Map(); }, o);
+    toast('Dyntopo sculpts on triangles. Remesh afterwards to get clean quads back.', '', 4500);
+  }
+  sculpt.dyn = !!on; o.userData.dyntopo = sculpt.dyn;
+  sculptTopologyChanged();
+  ui.chrome = true; ui.dirty = true;
+}
 function sculptTopologyChanged() {
-  const o = sculpt.obj, m = o.userData.cage, nv = cageNV(m);
+  const o = sculpt.obj; if (!o) return;
+  sculpt.packed = null;
+  if (sculpt.dyn) {
+    sculpt.dm = new DynMesh(o.userData.cage);
+    sculptRebuildGeometry();
+    return;
+  }
+  sculpt.dm = null;
+  const m = o.userData.cage, nv = cageNV(m);
   let nt = 0; for (const f of m.f) nt += Math.max(0, f.length - 2);
   const idx = new Uint32Array(nt * 3); let t = 0;
   for (const f of m.f) for (let i = 1; i < f.length - 1; i++) { idx[t++] = f[0]; idx[t++] = f[i]; idx[t++] = f[i + 1]; }
@@ -2740,6 +3014,7 @@ function sculptTopologyChanged() {
 }
 function sculptRebuildGeometry() {
   const o = sculpt.obj, m = o.userData.cage;
+  if (sculpt.dyn && sculpt.dm) { dynGeometry(true); return; }
   const g = new THREE.BufferGeometry();
   const P = new Float32Array(m.v);
   g.setAttribute('position', new THREE.BufferAttribute(P, 3));
@@ -2751,20 +3026,58 @@ function sculptRebuildGeometry() {
   o.userData.evalStats = { v: cageNV(m), f: m.f.length, t: sculpt.idx.length / 3 };
   markPT('scene');
 }
-function sculptHit(cx, cy) {
+// Push the dynamic mesh to the GPU. A fresh geometry when the arrays grew, otherwise an in-place update.
+function dynGeometry(full) {
+  const o = sculpt.obj, dm = sculpt.dm;
+  if (full || dm.realloc) {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(dm.P, 3));
+    g.setAttribute('normal', new THREE.BufferAttribute(dm.N, 3));
+    g.setIndex(new THREE.BufferAttribute(dm.T, 1));
+    g.setDrawRange(0, dm.nt * 3);
+    g.computeBoundingSphere(); g.computeBoundingBox();
+    o.geometry.dispose(); o.geometry = g;
+    dm.realloc = false; dm.topo = false;
+    if (full) markPT('scene');
+  } else {
+    const g = o.geometry;
+    g.attributes.position.needsUpdate = true; g.attributes.normal.needsUpdate = true;
+    if (dm.topo) { g.index.needsUpdate = true; dm.topo = false; }
+    g.setDrawRange(0, dm.nt * 3);
+  }
+  sculpt.P = dm.P; sculpt.N = dm.N;
+  o.userData.evalStats = { v: dm.nv, f: dm.nt, t: dm.nt };
+}
+function dynRaycast(cx, cy, near) {
+  const o = sculpt.obj, dm = sculpt.dm;
+  setRay(cx, cy); o.updateMatrixWorld();
+  const inv = o.matrixWorld.clone().invert();
+  const ro = raycaster.ray.origin.clone().applyMatrix4(inv), rd = raycaster.ray.direction.clone().transformDirection(inv);
+  let best = Infinity, bt = -1;
+  const test = t => { const d = dm.rayTri(t, ro, rd); if (d > 0 && d < best) { best = d; bt = t; } };
+  if (near) for (const t of dm.region(near.tri, near.local, near.radius)) test(t);
+  if (bt < 0) for (let t = 0; t < dm.nt; t++) if (!dm.tdead[t]) test(t);
+  if (bt < 0) return null;
+  const local = ro.clone().addScaledVector(rd, best), point = local.clone().applyMatrix4(o.matrixWorld);
+  return { point, local, tri: bt, face: { normal: dm.triNormal(bt) }, distance: point.distanceTo(raycaster.ray.origin) };
+}
+function sculptHit(cx, cy, near) {
+  if (sculpt.dyn && sculpt.dm) return dynRaycast(cx, cy, near);
   const o = sculpt.obj; setRay(cx, cy);
   raycaster.firstHitOnly = true; const h = raycaster.intersectObject(o, false)[0]; raycaster.firstHitOnly = false;
   return h || null;
 }
-function brushRadiusLocal(hit) {
-  const o = sculpt.obj, s = o.getWorldScale(new THREE.Vector3());
-  return sculpt.radius * worldPerPixel(hit.point) / Math.max(1e-6, (s.x + s.y + s.z) / 3);
-}
+const objScale = o => { const s = o.getWorldScale(new THREE.Vector3()); return Math.max(1e-6, (s.x + s.y + s.z) / 3); };
+function brushRadiusLocal(hit) { return sculpt.radius * worldPerPixel(hit.point) / objScale(sculpt.obj); }
+function detailLocal(hit) { return Math.max(1e-5, sculpt.detail * worldPerPixel(hit.point) / objScale(sculpt.obj)); }
 function recordOld(i) {
-  const st = sculpt.stroke; if (!st || sculpt.rmark[i] === st.stamp) return;
+  const st = sculpt.stroke; if (!st || sculpt.dyn || sculpt.rmark[i] === st.stamp) return;
   sculpt.rmark[i] = st.stamp; st.idx.push(i); st.old.push(sculpt.P[i * 3], sculpt.P[i * 3 + 1], sculpt.P[i * 3 + 2]);
 }
-function markDirty(i) { if (sculpt.dmark[i] !== sculpt.stamp) { sculpt.dmark[i] = sculpt.stamp; sculpt.dirty.push(i); } }
+function markDirty(i) {
+  if (sculpt.dyn && sculpt.dm) { sculpt.dm.markDirty(i); return; }
+  if (sculpt.dmark[i] !== sculpt.stamp) { sculpt.dmark[i] = sculpt.stamp; sculpt.dirty.push(i); }
+}
 function gather(cx, cy, cz, r) {
   const P = sculpt.P, n = P.length / 3, I = sculpt.tmpI, W = sculpt.tmpW, r2 = r * r;
   let cnt = 0;
@@ -2777,10 +3090,15 @@ function gather(cx, cy, cz, r) {
   }
   return cnt;
 }
-function dab(c, nrm, r, brush, invert) {
-  const P = sculpt.P, N = sculpt.N, I = sculpt.tmpI, W = sculpt.tmpW;
-  const cnt = gather(c.x, c.y, c.z, r);
+function dab(c, nrm, r, brush, invert, seed, detail) {
+  const dm = sculpt.dyn ? sculpt.dm : null;
+  let cnt, I, W, T;
+  if (dm) {
+    if (brush !== 'grab' && detail) dm.refine(c, r, detail, seed);
+    cnt = dm.gather(c, r, seed); I = dm.I; W = dm.W; T = dm.tmpP;
+  } else { cnt = gather(c.x, c.y, c.z, r); I = sculpt.tmpI; W = sculpt.tmpW; T = sculpt.tmpP; }
   if (!cnt) return;
+  const P = dm ? dm.P : sculpt.P, N = dm ? dm.N : sculpt.N;
   let ax = 0, ay = 0, az = 0, px = 0, py = 0, pz = 0, ws = 0;
   for (let k = 0; k < cnt; k++) { const i = I[k], w = W[k]; ax += N[i * 3] * w; ay += N[i * 3 + 1] * w; az += N[i * 3 + 2] * w; px += P[i * 3] * w; py += P[i * 3 + 1] * w; pz += P[i * 3 + 2] * w; ws += w; }
   let al = Math.hypot(ax, ay, az);
@@ -2791,9 +3109,11 @@ function dab(c, nrm, r, brush, invert) {
   const s = sculpt.strength * (invert ? -1 : 1), as = Math.abs(sculpt.strength);
   for (let k = 0; k < cnt; k++) recordOld(I[k]);
   if (brush === 'smooth') {
-    const T = sculpt.tmpP, { nbO, nbL } = sculpt, f = clamp(as * 1.1, 0, 1);
+    const f = clamp(as * 1.1, 0, 1);
     for (let k = 0; k < cnt; k++) {
-      const i = I[k], a = nbO[i], b = nbO[i + 1];
+      const i = I[k];
+      if (dm) { dm.neighborAvg(i, T, k * 3); continue; }
+      const a = sculpt.nbO[i], b = sculpt.nbO[i + 1], nbL = sculpt.nbL;
       if (b === a) { T[k * 3] = P[i * 3]; T[k * 3 + 1] = P[i * 3 + 1]; T[k * 3 + 2] = P[i * 3 + 2]; continue; }
       let x = 0, y = 0, z = 0; for (let j = a; j < b; j++) { const q = nbL[j] * 3; x += P[q]; y += P[q + 1]; z += P[q + 2]; }
       const inv = 1 / (b - a); T[k * 3] = x * inv; T[k * 3 + 1] = y * inv; T[k * 3 + 2] = z * inv;
@@ -2822,12 +3142,23 @@ function dab(c, nrm, r, brush, invert) {
     markDirty(i);
   }
 }
-function dabSym(c, n, r, brush, invert) {
-  dab(c, n, r, brush, invert);
-  if (sculpt.sym && Math.abs(c.x) > r * 0.05) dab(new THREE.Vector3(-c.x, c.y, c.z), new THREE.Vector3(-n.x, n.y, n.z), r, brush, invert);
+function dabSym(c, n, r, brush, invert, hit) {
+  const detail = sculpt.dyn ? detailLocal(hit) : 0;
+  dab(c, n, r, brush, invert, hit.tri, detail);
+  if (sculpt.sym && Math.abs(c.x) > r * 0.05) {
+    const mc = new THREE.Vector3(-c.x, c.y, c.z);
+    dab(mc, new THREE.Vector3(-n.x, n.y, n.z), r, brush, invert, sculpt.dyn ? sculpt.dm.nearestTri(mc) : null, detail);
+  }
 }
 function sculptFlush() {
-  const d = sculpt.dirty; if (!d.length || !sculpt.P) return;
+  if (!sculpt.obj || !sculpt.P) return;
+  if (sculpt.dyn && sculpt.dm) {
+    const dm = sculpt.dm;
+    if (!dm.dirty.length && !dm.topo && !dm.realloc) return;
+    dm.flush(); dynGeometry(false);
+    return;
+  }
+  const d = sculpt.dirty; if (!d.length) return;
   const { P, N, idx, vtO, vtL, mark } = sculpt;
   const st = ++sculpt.stamp, list = [];
   for (const v of d) for (let j = vtO[v]; j < vtO[v + 1]; j++) { const t = vtL[j] * 3; for (let c = 0; c < 3; c++) { const x = idx[t + c]; if (mark[x] !== st) { mark[x] = st; list.push(x); } } }
@@ -2845,6 +3176,7 @@ function sculptFlush() {
   g.attributes.position.needsUpdate = true; g.attributes.normal.needsUpdate = true;
   if (g.boundsTree) g.boundsTree.refit();
 }
+const sculptNeedsFlush = () => !!sculpt.obj && (sculpt.dirty.length > 0 || (!!sculpt.dm && (sculpt.dm.dirty.length > 0 || sculpt.dm.topo || sculpt.dm.realloc)));
 function sculptDown(e) {
   const hit = sculptHit(e.clientX, e.clientY);
   if (!hit) return false;
@@ -2852,12 +3184,17 @@ function sculptDown(e) {
   const brush = e.shiftKey ? 'smooth' : sculpt.brush;
   const invert = !!(e.ctrlKey || e.metaKey) !== sculpt.invert;
   sculpt.rstamp = (sculpt.rstamp || 0) + 1;
-  sculpt.stroke = { brush, invert, idx: [], old: [], stamp: sculpt.rstamp, last: new THREE.Vector2(e.clientX, e.clientY) };
+  sculpt.stroke = { brush, invert, idx: [], old: [], stamp: sculpt.rstamp, last: new THREE.Vector2(e.clientX, e.clientY), lastHit: hit };
   const st = sculpt.stroke;
+  if (sculpt.dyn) st.before = sculpt.packed || packCage(o.userData.cage);
   if (brush === 'grab') {
     const r = brushRadiusLocal(hit), c = o.worldToLocal(hit.point.clone());
-    const take = cc => { const n = gather(cc.x, cc.y, cc.z, r); return { I: sculpt.tmpI.slice(0, n), W: sculpt.tmpW.slice(0, n) }; };
-    const a = take(c), b = sculpt.sym && Math.abs(c.x) > r * 0.6 ? take(new THREE.Vector3(-c.x, c.y, c.z)) : null;
+    const take = (cc, seed) => {
+      if (sculpt.dyn) { const n = sculpt.dm.gather(cc, r, seed); return { I: sculpt.dm.I.slice(0, n), W: sculpt.dm.W.slice(0, n) }; }
+      const n = gather(cc.x, cc.y, cc.z, r); return { I: sculpt.tmpI.slice(0, n), W: sculpt.tmpW.slice(0, n) };
+    };
+    const mc = new THREE.Vector3(-c.x, c.y, c.z);
+    const a = take(c, hit.tri), b = sculpt.sym && Math.abs(c.x) > r * 0.6 ? take(mc, sculpt.dyn ? sculpt.dm.nearestTri(mc) : null) : null;
     for (const set of [a, b]) if (set) for (const i of set.I) recordOld(i);
     st.grab = { a, b, base: Float32Array.from(sculpt.P), plane: new THREE.Plane().setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), hit.point), start: o.worldToLocal(hit.point.clone()) };
   } else sculptDabAt(hit);
@@ -2865,8 +3202,9 @@ function sculptDown(e) {
 }
 function sculptDabAt(hit) {
   const o = sculpt.obj, st = sculpt.stroke;
-  const c = o.worldToLocal(hit.point.clone()), n = hit.face.normal.clone();
-  dabSym(c, n, brushRadiusLocal(hit), st.brush, st.invert);
+  const c = hit.local ? hit.local.clone() : o.worldToLocal(hit.point.clone()), n = hit.face.normal.clone();
+  dabSym(c, n, brushRadiusLocal(hit), st.brush, st.invert, hit);
+  st.lastHit = hit;
 }
 function sculptMove(e) {
   const st = sculpt.stroke; if (!st) return;
@@ -2885,7 +3223,8 @@ function sculptMove(e) {
   const steps = Math.min(40, Math.floor(dist / spacing));
   for (let s = 1; s <= steps; s++) {
     const p = st.last.clone().lerp(to, s / steps);
-    const hit = sculptHit(p.x, p.y);
+    const lh = st.lastHit;
+    const hit = sculptHit(p.x, p.y, sculpt.dyn && lh && lh.local ? { tri: lh.tri, local: lh.local, radius: brushRadiusLocal(lh) * 3 } : null);
     if (hit) sculptDabAt(hit);
   }
   st.last.copy(to);
@@ -2894,22 +3233,237 @@ function sculptUp() {
   const st = sculpt.stroke; if (!st) return;
   sculpt.stroke = null; sculptFlush();
   const o = sculpt.obj, m = o.userData.cage, P = sculpt.P;
+  const name = BRUSHES.find(b => b.id === st.brush)?.name || 'Sculpt';
+  if (sculpt.dyn) {
+    const cage = sculpt.dm.toCage();
+    o.userData.cage = cage; o.userData.prim = null;
+    const before = st.before, after = packCage(cage), prim = null;
+    History.push({ label: 'Sculpt · ' + name, bytes: before.bytes + after.bytes, undo() { setCage(o, unpackCage(before), null, prim); }, redo() { setCage(o, unpackCage(after), null, null); } });
+    sculptTopologyChanged();
+    sculpt.packed = after;
+    return;
+  }
   if (!st.idx.length) return;
   const idx = Int32Array.from(st.idx), old = Float32Array.from(st.old), neu = new Float32Array(idx.length * 3);
   for (let k = 0; k < idx.length; k++) { const i = idx[k]; neu[k * 3] = P[i * 3]; neu[k * 3 + 1] = P[i * 3 + 1]; neu[k * 3 + 2] = P[i * 3 + 2]; m.v[i * 3] = P[i * 3]; m.v[i * 3 + 1] = P[i * 3 + 1]; m.v[i * 3 + 2] = P[i * 3 + 2]; }
   o.geometry.computeBoundingSphere(); o.userData.prim = null;
   markPT('scene');
-  const name = BRUSHES.find(b => b.id === st.brush)?.name || 'Sculpt';
-  History.push({ label: 'Sculpt · ' + name, undo() { writeSculpt(o, idx, old); }, redo() { writeSculpt(o, idx, neu); } });
+  History.push({ label: 'Sculpt · ' + name, bytes: idx.length * 28, undo() { writeSculpt(o, idx, old); }, redo() { writeSculpt(o, idx, neu); } });
 }
 function writeSculpt(o, idx, vals) {
   const m = o.userData.cage;
   for (let k = 0; k < idx.length; k++) { const i = idx[k]; m.v[i * 3] = vals[k * 3]; m.v[i * 3 + 1] = vals[k * 3 + 1]; m.v[i * 3 + 2] = vals[k * 3 + 2]; }
+  if (sculpt.obj === o && sculpt.dyn) { sculptTopologyChanged(); return; }
   if (sculpt.obj === o && sculpt.P) {
     const P = sculpt.P;
     for (let k = 0; k < idx.length; k++) { const i = idx[k]; P[i * 3] = vals[k * 3]; P[i * 3 + 1] = vals[k * 3 + 1]; P[i * 3 + 2] = vals[k * 3 + 2]; markDirty(i); }
     sculptFlush(); o.geometry.computeBoundingSphere(); markPT('scene');
   } else rebuild(o);
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   Voxel remesh: winding-number voxelization along all three axes, Surface Nets for a quad surface,
+   then tangential relaxation and a snap back onto the original surface.
+   ════════════════════════════════════════════════════════════════════ */
+function cageArea(m) {
+  const n = new THREE.Vector3(); let a = 0;
+  for (const f of m.f) {
+    let x = 0, y = 0, z = 0;
+    for (let i = 0; i < f.length; i++) { const p = f[i] * 3, q = f[(i + 1) % f.length] * 3, v = m.v; x += (v[p + 1] - v[q + 1]) * (v[p + 2] + v[q + 2]); y += (v[p + 2] - v[q + 2]) * (v[p] + v[q]); z += (v[p] - v[q]) * (v[p + 1] + v[q + 1]); }
+    a += Math.hypot(x, y, z) / 2;
+  }
+  return a;
+}
+function cageBounds(m) { const b = new THREE.Box3(), p = new THREE.Vector3(); for (let i = 0; i < m.v.length; i += 3) b.expandByPoint(p.set(m.v[i], m.v[i + 1], m.v[i + 2])); return b; }
+function defaultVoxel(m) {
+  const d = cageBounds(m).getSize(new THREE.Vector3()).length() || 1, v = d / 70, p = 10 ** Math.floor(Math.log10(v));
+  return Math.max(p, Math.round(v / p * 2) / 2 * p);
+}
+function remeshEstimate(m, h) { return Math.round(cageArea(m) / (h * h) * 1.05); }
+function voxelRemesh(m, h) {
+  if (!m.f.length) throw new Error('This mesh has no faces to remesh.');
+  const V = m.v, tri = [];
+  for (const f of m.f) for (let i = 1; i < f.length - 1; i++) tri.push(f[0], f[i], f[i + 1]);
+  const box = cageBounds(m), pad = 2;
+  const org = [box.min.x - pad * h, box.min.y - pad * h, box.min.z - pad * h];
+  const dims = [0, 1, 2].map(a => Math.ceil((box.max.getComponent(a) - box.min.getComponent(a)) / h) + 1 + 2 * pad);
+  const [nx, ny, nz] = dims, nxy = nx * ny, nodes = nx * ny * nz;
+  if (nodes > 70e6) throw new Error('That voxel size is too fine for this mesh. Try a larger value.');
+  const G = new Float64Array(V.length);
+  for (let i = 0; i < V.length; i++) G[i] = (V[i] - org[i % 3]) / h;
+  const stride = [1, nx, nxy], votes = new Uint8Array(nodes), rows = [[], [], []];
+  const E1 = 1.234e-4, E2 = 2.718e-4;
+  for (let a = 0; a < 3; a++) {
+    const b = (a + 1) % 3, c = (a + 2) % 3, nb = dims[b], nc = dims[c], na = dims[a];
+    const lists = new Array(nb * nc);
+    for (let t = 0; t < tri.length; t += 3) {
+      const i0 = tri[t] * 3, i1 = tri[t + 1] * 3, i2 = tri[t + 2] * 3;
+      const b0 = G[i0 + b], c0 = G[i0 + c], b1 = G[i1 + b], c1 = G[i1 + c], b2 = G[i2 + b], c2 = G[i2 + c];
+      const area = (b1 - b0) * (c2 - c0) - (c1 - c0) * (b2 - b0);
+      if (Math.abs(area) < 1e-14) continue;
+      const jb0 = Math.max(0, Math.ceil(Math.min(b0, b1, b2) - E1)), jb1 = Math.min(nb - 1, Math.floor(Math.max(b0, b1, b2) - E1));
+      const jc0 = Math.max(0, Math.ceil(Math.min(c0, c1, c2) - E2)), jc1 = Math.min(nc - 1, Math.floor(Math.max(c0, c1, c2) - E2));
+      const sgn = area > 0 ? -1 : 1, ia = 1 / area;
+      for (let jc = jc0; jc <= jc1; jc++) {
+        const qc = jc + E2;
+        for (let jb = jb0; jb <= jb1; jb++) {
+          const qb = jb + E1;
+          const w0 = ((b1 - qb) * (c2 - qc) - (c1 - qc) * (b2 - qb)) * ia; if (w0 < 0) continue;
+          const w1 = ((b2 - qb) * (c0 - qc) - (c2 - qc) * (b0 - qb)) * ia; if (w1 < 0) continue;
+          const w2 = 1 - w0 - w1; if (w2 < 0) continue;
+          const pos = w0 * G[i0 + a] + w1 * G[i1 + a] + w2 * G[i2 + a];
+          const k = jb + nb * jc; (lists[k] || (lists[k] = [])).push(pos, sgn);
+        }
+      }
+    }
+    const R = rows[a];
+    for (let k = 0; k < lists.length; k++) {
+      const L = lists[k]; if (!L) continue;
+      const n = L.length / 2, ord = Array.from({ length: n }, (_, i) => i).sort((x, y) => L[x * 2] - L[y * 2]);
+      const pos = new Float64Array(n); ord.forEach((o, i) => { pos[i] = L[o * 2]; });
+      R[k] = pos;
+      const jb = k % nb, jc = (k / nb) | 0, base = jb * stride[b] + jc * stride[c], sa = stride[a];
+      let w = 0, q = 0;
+      for (let ia2 = 0; ia2 < na; ia2++) {
+        while (q < n && L[ord[q] * 2] < ia2) { w += L[ord[q] * 2 + 1]; q++; }
+        if (w > 0) votes[base + ia2 * sa]++;
+      }
+    }
+  }
+  const inside = new Uint8Array(nodes);
+  for (let i = 0; i < nodes; i++) inside[i] = votes[i] >= 2 ? 1 : 0;
+  // drop single-voxel specks the three votes disagree on
+  for (let k = 1; k < nz - 1; k++) for (let j = 1; j < ny - 1; j++) for (let i = 1; i < nx - 1; i++) {
+    const n = i + nx * j + nxy * k, v = inside[n];
+    if (inside[n - 1] !== v && inside[n + 1] !== v && inside[n - nx] !== v && inside[n + nx] !== v && inside[n - nxy] !== v && inside[n + nxy] !== v) inside[n] = v ? 0 : 1;
+  }
+  // exact crossing along an axis-aligned grid edge, from that axis' scanline hits
+  const cross = (a, i, j, k) => {
+    const lo = a === 0 ? i : a === 1 ? j : k;
+    const b = (a + 1) % 3, c = (a + 2) % 3, ib = [i, j, k][b], ic = [i, j, k][c];
+    const R = rows[a][ib + dims[b] * ic];
+    if (R) { let l = 0, r = R.length; while (l < r) { const mid = (l + r) >> 1; if (R[mid] < lo) l = mid + 1; else r = mid; } if (l < R.length && R[l] <= lo + 1) return R[l]; }
+    return lo + 0.5;
+  };
+  const cx = nx - 1, cy = ny - 1, cellVert = new Map(), out = [];
+  for (let k = 0; k < nz - 1; k++) for (let j = 0; j < ny - 1; j++) for (let i = 0; i < nx - 1; i++) {
+    const n0 = i + nx * j + nxy * k;
+    const c0 = inside[n0], c1 = inside[n0 + 1], c2 = inside[n0 + nx], c3 = inside[n0 + nx + 1], c4 = inside[n0 + nxy], c5 = inside[n0 + nxy + 1], c6 = inside[n0 + nxy + nx], c7 = inside[n0 + nxy + nx + 1];
+    const sum = c0 + c1 + c2 + c3 + c4 + c5 + c6 + c7;
+    if (sum === 0 || sum === 8) continue;
+    let sx = 0, sy = 0, sz = 0, cnt = 0;
+    const add = (x, y, z) => { sx += x; sy += y; sz += z; cnt++; };
+    if (c0 !== c1) add(cross(0, i, j, k), j, k);
+    if (c2 !== c3) add(cross(0, i, j + 1, k), j + 1, k);
+    if (c4 !== c5) add(cross(0, i, j, k + 1), j, k + 1);
+    if (c6 !== c7) add(cross(0, i, j + 1, k + 1), j + 1, k + 1);
+    if (c0 !== c2) add(i, cross(1, i, j, k), k);
+    if (c1 !== c3) add(i + 1, cross(1, i + 1, j, k), k);
+    if (c4 !== c6) add(i, cross(1, i, j, k + 1), k + 1);
+    if (c5 !== c7) add(i + 1, cross(1, i + 1, j, k + 1), k + 1);
+    if (c0 !== c4) add(i, j, cross(2, i, j, k));
+    if (c1 !== c5) add(i + 1, j, cross(2, i + 1, j, k));
+    if (c2 !== c6) add(i, j + 1, cross(2, i, j + 1, k));
+    if (c3 !== c7) add(i + 1, j + 1, cross(2, i + 1, j + 1, k));
+    cellVert.set(i + cx * (j + cy * k), out.length / 3);
+    out.push(org[0] + sx / cnt * h, org[1] + sy / cnt * h, org[2] + sz / cnt * h);
+  }
+  const faces = [];
+  const cell = (i, j, k) => cellVert.get(i + cx * (j + cy * k));
+  const quad = (q, flip) => { if (q.some(x => x === undefined)) return; faces.push(flip ? [q[3], q[2], q[1], q[0]] : q); };
+  for (let k = 1; k < nz - 1; k++) for (let j = 1; j < ny - 1; j++) for (let i = 1; i < nx - 1; i++) {
+    const n = i + nx * j + nxy * k, v = inside[n];
+    if (i < nx - 1 && v !== inside[n + 1]) quad([cell(i, j - 1, k - 1), cell(i, j, k - 1), cell(i, j, k), cell(i, j - 1, k)], !v);
+    if (j < ny - 1 && v !== inside[n + nx]) quad([cell(i - 1, j, k - 1), cell(i - 1, j, k), cell(i, j, k), cell(i, j, k - 1)], !v);
+    if (k < nz - 1 && v !== inside[n + nxy]) quad([cell(i - 1, j - 1, k), cell(i, j - 1, k), cell(i, j, k), cell(i - 1, j, k)], !v);
+  }
+  if (!faces.length) throw new Error('The voxel size is larger than the mesh. Try a smaller value.');
+  const res = { v: out, f: faces, cr: new Map() };
+  relaxAndProject(res, m, tri, h);
+  return res;
+}
+function relaxAndProject(res, src, tri, h) {
+  const n = res.v.length / 3, P = res.v;
+  const nbO = new Int32Array(n + 1);
+  for (const f of res.f) for (const x of f) nbO[x + 1] += 2;
+  for (let i = 0; i < n; i++) nbO[i + 1] += nbO[i];
+  const nbL = new Int32Array(nbO[n]), fill = nbO.slice(0, n);
+  for (const f of res.f) for (let i = 0; i < f.length; i++) { const a = f[i], b = f[(i + 1) % f.length], c = f[(i + f.length - 1) % f.length]; nbL[fill[a]++] = b; nbL[fill[a]++] = c; }
+  const tmp = new Float64Array(n * 3);
+  for (let it = 0; it < 3; it++) {
+    const N = flatVertexNormals(toFlat(res));
+    for (let i = 0; i < n; i++) {
+      let x = 0, y = 0, z = 0; const a = nbO[i], b = nbO[i + 1];
+      for (let j = a; j < b; j++) { const q = nbL[j] * 3; x += P[q]; y += P[q + 1]; z += P[q + 2]; }
+      const c = b - a || 1; x = x / c - P[i * 3]; y = y / c - P[i * 3 + 1]; z = z / c - P[i * 3 + 2];
+      const d = x * N[i * 3] + y * N[i * 3 + 1] + z * N[i * 3 + 2];
+      tmp[i * 3] = P[i * 3] + (x - N[i * 3] * d) * 0.5; tmp[i * 3 + 1] = P[i * 3 + 1] + (y - N[i * 3 + 1] * d) * 0.5; tmp[i * 3 + 2] = P[i * 3 + 2] + (z - N[i * 3 + 2] * d) * 0.5;
+    }
+    for (let i = 0; i < n * 3; i++) P[i] = tmp[i];
+  }
+  if (n > 600000) return;
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(src.v), 3));
+  g.setIndex(new THREE.BufferAttribute(new Uint32Array(tri), 1));
+  const bvh = new MeshBVH(g), q = new THREE.Vector3(), target = {};
+  for (let i = 0; i < n; i++) {
+    q.set(P[i * 3], P[i * 3 + 1], P[i * 3 + 2]);
+    const r = bvh.closestPointToPoint(q, target, 0, h * 1.5);
+    if (r) { P[i * 3] = r.point.x; P[i * 3 + 1] = r.point.y; P[i * 3 + 2] = r.point.z; }
+  }
+}
+function voxelOf(o) { return o.userData.voxel || defaultVoxel(o.userData.cage); }
+function opRemesh(o = sculpt.obj || sel.obj) {
+  if (!o || o.userData.kind !== 'mesh') { toast('Select a mesh to remesh it'); return; }
+  const h = voxelOf(o), est = remeshEstimate(o.userData.cage, h);
+  if (est > 2_000_000) { toast(`That would make about ${fmtInt(est)} faces. Raise the voxel size first.`, 'err', 5000); return; }
+  if (state.mode === 'edit') setMode('object');
+  busy('Remeshing…', () => {
+    const t0 = performance.now();
+    let n = 0;
+    try {
+      cageOp('Voxel remesh', m => { const r = voxelRemesh(m, h); m.v = r.v; m.f = r.f; m.cr = r.cr; n = r.f.length; }, o);
+    } catch (e) { toast(e.message, 'err', 5000); return; }
+    if (sculpt.obj === o && sculpt.dyn) { sculpt.dyn = false; o.userData.dyntopo = false; sculptTopologyChanged(); ui.chrome = true; }
+    toast(`Remeshed into ${fmtInt(n)} quads in ${((performance.now() - t0) / 1000).toFixed(1)} s`);
+    ui.dirty = true;
+  });
+}
+
+/* Join other meshes into the selected one (their modifiers applied, transforms baked into its space). */
+function joinMeshes(target, sources) {
+  if (!sources.length) return;
+  if (state.mode !== 'object') setMode('object');
+  const before = cloneCage(target.userData.cage), prim = target.userData.prim;
+  const m = cloneCage(target.userData.cage);
+  target.updateMatrixWorld(true);
+  const inv = target.matrixWorld.clone().invert(), p = new THREE.Vector3();
+  for (const s of sources) {
+    s.updateMatrixWorld(true);
+    const M = evaluateCage(s.userData.cage, s.userData.mods, false), X = inv.clone().multiply(s.matrixWorld), off = cageNV(m), flip = X.determinant() < 0;
+    for (let i = 0; i < M.nv; i++) { p.set(M.v[i * 3], M.v[i * 3 + 1], M.v[i * 3 + 2]).applyMatrix4(X); m.v.push(p.x, p.y, p.z); }
+    for (let f = 0; f < M.nf; f++) { const loop = Array.from(M.fv.subarray(M.fo[f], M.fo[f + 1]), x => x + off); m.f.push(flip ? loop.reverse() : loop); }
+    for (const [k, sh] of M.sh) m.cr.set(EK(EKa(k) + off, EKb(k) + off), sharpToCrease(sh));
+  }
+  const after = cloneCage(m), slots = sources.map(s => ({ s, idx: scene.children.indexOf(s) })).sort((a, b) => a.idx - b.idx);
+  const doIt = () => { target.userData.cage = cloneCage(after); target.userData.prim = null; rebuild(target); for (const { s } of slots) s.removeFromParent(); structureChanged(); select(target); };
+  const undoIt = () => { target.userData.cage = cloneCage(before); target.userData.prim = prim; rebuild(target); for (const { s, idx } of slots) insertAt(scene, s, idx); structureChanged(); select(target); };
+  doIt();
+  History.push({ label: `Join ${sources.length} mesh${sources.length === 1 ? '' : 'es'}`, bytes: (before.v.length + after.v.length) * 8 + (before.f.length + after.f.length) * 60, undo: undoIt, redo: doIt });
+  toast(`Joined ${sources.length} mesh${sources.length === 1 ? '' : 'es'} into ${target.name}. Remesh to fuse overlaps into one surface.`, '', 4500);
+}
+function joinDialog() {
+  const t = sel.obj;
+  if (!t || t.userData.kind !== 'mesh') { toast('Select the mesh to join others into'); return; }
+  const others = scene.children.filter(o => o !== t && o.userData.kind === 'mesh' && o.visible);
+  if (!others.length) { toast('There are no other visible meshes to join'); return; }
+  const picked = new Set();
+  const list = h('div', { class: 'grid2' }, ...others.map(o => {
+    const b = h('button', { class: 'chk', role: 'checkbox', 'aria-checked': 'false', onclick: () => { if (picked.has(o)) picked.delete(o); else picked.add(o); b.classList.toggle('on', picked.has(o)); b.setAttribute('aria-checked', String(picked.has(o))); } }, h('span', { class: 'box' }, icon('check')), o.name);
+    return b;
+  }));
+  dialog('Join into ' + t.name, `The meshes you pick become part of ${t.name} and take its material. Their modifiers are applied first. Remesh afterwards to fuse overlapping parts into one surface.`, list,
+    [btn('Cancel', closeDialog), btn('Join', () => { closeDialog(); joinMeshes(t, others.filter(o => picked.has(o))); }, { cls: 'primary' })]);
 }
 function updateBrushCursor(cx, cy) {
   const b = $('#brush');
@@ -3311,7 +3865,11 @@ function buildChrome() {
       h('span', { class: 'sepv' }),
       pillBtn({ ic: 'sym', label: 'X', on: sculpt.sym, title: 'Mirror strokes across X', onClick: () => { sculpt.sym = !sculpt.sym; ui.chrome = true; } }),
       pillBtn({ ic: 'minus', label: 'Invert', on: sculpt.invert, title: 'Invert the brush (or hold Ctrl)', onClick: () => { sculpt.invert = !sculpt.invert; ui.chrome = true; } }),
-      pillBtn({ ic: 'subsurf', label: 'Subdivide', title: 'Add detail (four times the vertices)', onClick: () => run('sculpt.subdivide') })));
+      pillBtn({ ic: 'dyntopo', label: 'Dyntopo', on: sculpt.dyn, title: 'Dynamic topology: add triangles where you sculpt', onClick: () => run('sculpt.dyntopo') }),
+      sculpt.dyn ? h('span', { class: 'lbl' }, 'Detail') : null,
+      sculpt.dyn ? h('div', { class: 'mininf' }, numField({ aria: 'Dyntopo detail size', get: () => sculpt.detail, set: v => { sculpt.detail = v; }, step: 0.25, min: 2, max: 60, prec: 0, unit: ' px' })) : null,
+      pillBtn({ ic: 'remesh', label: 'Remesh', title: 'Voxel remesh: even quads, overlaps fused (Ctrl+R)', onClick: () => run('sculpt.remesh') }),
+      sculpt.dyn ? null : pillBtn({ ic: 'subsurf', label: 'Subdivide', title: 'Add detail (four times the vertices)', onClick: () => run('sculpt.subdivide') })));
   } else {
     L.append(h('div', { class: 'pill' }, pillBtn({ ic: 'magnet', on: state.snap, title: 'Snap to increments (hold Ctrl to flip)', onClick: () => { state.snap = !state.snap; applySnapSettings(); ui.chrome = true; } })));
   }
@@ -3487,6 +4045,7 @@ function propsObject(P, o) {
         h('div', { class: 'note' }, 'These settings stay live until you edit the mesh by hand.'),
       ]));
     }
+    if (state.mode === 'object') P.append(section('Remesh', remeshControls(o), { open: false }));
     const st = ud.evalStats || { v: 0, f: 0, t: 0 }, cg = ud.cage;
     P.append(section('Geometry', [
       h('div', { class: 'stat' }, h('div', null, h('b', null, fmtInt(cageNV(cg))), h('span', null, 'Cage verts')), h('div', null, h('b', null, fmtInt(cg.f.length)), h('span', null, 'Cage faces')), h('div', null, h('b', null, fmtInt(st.t)), h('span', null, 'Triangles'))),
@@ -3506,6 +4065,16 @@ function propsObject(P, o) {
     o.isLight ? btn('Aim at view center', () => run('light.aim')) : btn('Drop to floor', () => run('object.floor')),
     o.userData.kind === 'mesh' ? btn('Apply scale', () => run('object.applyTransform')) : null,
     btn('Delete', () => run('edit.delete'), { cls: 'danger' }))]));
+}
+function remeshControls(o) {
+  const est = h('div', { class: 'note' });
+  const showEst = () => { est.textContent = `About ${fmtInt(remeshEstimate(o.userData.cage, voxelOf(o)))} quads. Detail smaller than the voxel size is smoothed away, and overlapping parts fuse into one surface.`; };
+  showEst(); fieldSyncers.push(showEst);
+  return [
+    row('Voxel size', nf('Voxel size', () => voxelOf(o), v => { o.userData.voxel = v; }, { min: 0.0005, max: 100, step: 0.0005, prec: 4, flags: 'none' })),
+    est,
+    h('div', { class: 'btns' }, btn('Remesh', () => run('sculpt.remesh'), { icon: 'remesh', cls: 'primary' }), state.mode === 'object' ? btn('Join meshes…', () => run('object.join'), { icon: 'merge' }) : null),
+  ];
 }
 function editPanel(o) {
   const m = o.userData.cage, out = [];
@@ -3730,6 +4299,12 @@ function propsSculpt(P) {
       h('button', { class: 'chk' + (sculpt.invert ? ' on' : ''), onclick: () => { sculpt.invert = !sculpt.invert; ui.dirty = true; ui.chrome = true; } }, h('span', { class: 'box' }, icon('check')), 'Invert')),
   ]));
   const o = sculpt.obj, n = o ? cageNV(o.userData.cage) : 0;
+  P.append(section('Dynamic topology', [
+    h('button', { class: 'chk' + (sculpt.dyn ? ' on' : ''), role: 'checkbox', 'aria-checked': String(sculpt.dyn), onclick: () => run('sculpt.dyntopo') }, h('span', { class: 'box' }, icon('check')), 'Add triangles as you sculpt'),
+    sculpt.dyn ? row('Detail size', numField({ aria: 'Dyntopo detail size', get: () => sculpt.detail, set: v => { sculpt.detail = v; ui.chrome = true; }, step: 0.25, min: 2, max: 60, prec: 0, unit: ' px' })) : null,
+    h('div', { class: 'note' }, sculpt.dyn ? 'Edges longer than the detail size split under the brush and very short ones merge. Zoom in for finer detail.' : 'Pull out horns, fingers or spikes without stretching: the mesh grows triangles wherever you sculpt.'),
+  ]));
+  if (o) P.append(section('Remesh', remeshControls(o)));
   P.append(section('Detail', [
     h('div', { class: 'stat' }, h('div', null, h('b', null, fmtInt(n)), h('span', null, 'Vertices')), h('div', null, h('b', null, o ? fmtInt(o.userData.cage.f.length) : 0), h('span', null, 'Faces')), h('div', null, h('b', null, fmtInt(n * 4)), h('span', null, 'After +1'))),
     h('div', { class: 'btns' }, btn('Subdivide (smooth)', () => run('sculpt.subdivide'), { icon: 'subsurf' })),
@@ -3879,6 +4454,9 @@ act('mesh.selectLinked', 'Select linked', () => editSelectLinked([...editSelVert
 act('edit.xray', 'Toggle X-ray', () => { edit.xray = !edit.xray; refreshOverlay(); ui.chrome = true; }, { group: 'View', keys: 'Alt Z', icon: 'xray' });
 act('edit.prop', 'Toggle proportional editing', () => { edit.prop = !edit.prop; ui.chrome = true; ui.dirty = true; toast(edit.prop ? 'Proportional editing on. Scroll while moving to change the falloff.' : 'Proportional editing off', '', 2000); }, { group: 'Mesh', keys: 'O', icon: 'prop', kw: 'soft falloff' });
 act('sculpt.subdivide', 'Subdivide for sculpting', () => { const o = sculpt.obj || sel.obj; if (o && cageNV(o.userData.cage) > 400000) { toast('Already over 400,000 vertices. More would slow sculpting to a crawl.', 'err'); return; } busy('Subdividing…', () => opSubdivide(true, o)); }, { group: 'Sculpt', icon: 'subsurf', when: hasMesh, why: 'Select a mesh' });
+act('sculpt.remesh', 'Voxel remesh', () => opRemesh(), { group: 'Mesh', icon: 'remesh', keys: MOD + 'R (sculpt)', when: () => hasMesh() || !!sculpt.obj, why: 'Select a mesh to remesh it', kw: 'retopology quads voxel fuse union clean' });
+act('sculpt.dyntopo', 'Toggle dynamic topology', () => { if (state.mode !== 'sculpt') setMode('sculpt'); if (state.mode === 'sculpt') setDyntopo(!sculpt.dyn); }, { group: 'Sculpt', icon: 'dyntopo', when: hasMesh, why: 'Select a mesh to sculpt', kw: 'dyntopo detail adaptive triangles' });
+act('object.join', 'Join meshes…', () => joinDialog(), { group: 'Object', icon: 'merge', when: hasMesh, why: 'Select the mesh to join others into', kw: 'combine merge union' });
 for (const b of BRUSHES) act('brush.' + b.id, b.name + ' brush', () => { if (state.mode !== 'sculpt') setMode('sculpt'); sculpt.brush = b.id; ui.chrome = true; ui.dirty = true; }, { group: 'Sculpt', icon: 'b-' + b.id, keys: b.key.toUpperCase(), when: hasMesh, why: 'Select a mesh to sculpt' });
 act('view.frame', 'Frame selected', () => frameObjects(sel.obj ? [sel.obj] : []), { group: 'View', keys: '.', icon: 'frame', kw: 'focus zoom' });
 act('view.frameAll', 'Frame everything', () => frameObjects([]), { group: 'View', keys: 'Home' });
@@ -3894,8 +4472,8 @@ const MENUS = [
   ['File', ['file.new', 'file.newEmpty', '-', 'file.open', 'file.save', '-', 'file.import', '-', '#Export', 'export.glb', 'export.obj', 'export.stl', 'export.usdz', 'export.ply', '-', 'render.image', 'render.snapshot']],
   ['Edit', ['edit.undo', 'edit.redo', '-', 'edit.duplicate', 'edit.delete', 'edit.deselect', '-', 'app.palette']],
   ['Add', ['#Mesh', ...Object.keys(PRIM_DEFS).map(k => 'add.' + k), '-', '#Light', 'add.point', 'add.sun', 'add.spot', 'add.area', '-', 'file.import']],
-  ['Object', ['mode.edit', 'mode.sculpt', '-', 'object.smooth', 'object.auto', 'object.flat', '-', '#Modifiers', 'mod.subsurf', 'mod.mirror', 'mod.array', 'mod.solidify', 'mod.apply', '-', 'object.applyTransform', 'object.origin', 'object.floor', 'object.convert', '-', 'object.hide', 'object.showAll', 'light.aim']],
-  ['Mesh', ['mesh.extrude', 'mesh.inset', 'mesh.loopcut', 'mesh.merge', 'mesh.fill', 'mesh.delete', '-', 'mesh.crease', 'mesh.uncrease', '-', 'mesh.subdivide', 'mesh.subdivideSimple', 'mesh.trisToQuads', 'mesh.weld', '-', 'mesh.flip', 'mesh.recalc', '-', 'mesh.selectAll', 'mesh.selectNone', 'mesh.selectInvert', 'mesh.selectLinked', 'edit.prop', 'edit.xray']],
+  ['Object', ['mode.edit', 'mode.sculpt', '-', 'object.smooth', 'object.auto', 'object.flat', '-', '#Modifiers', 'mod.subsurf', 'mod.mirror', 'mod.array', 'mod.solidify', 'mod.apply', '-', 'object.applyTransform', 'object.origin', 'object.floor', 'object.convert', '-', 'object.join', 'sculpt.remesh', 'sculpt.dyntopo', '-', 'object.hide', 'object.showAll', 'light.aim']],
+  ['Mesh', ['mesh.extrude', 'mesh.inset', 'mesh.loopcut', 'mesh.merge', 'mesh.fill', 'mesh.delete', '-', 'mesh.crease', 'mesh.uncrease', '-', 'mesh.subdivide', 'mesh.subdivideSimple', 'sculpt.remesh', 'mesh.trisToQuads', 'mesh.weld', '-', 'mesh.flip', 'mesh.recalc', '-', 'mesh.selectAll', 'mesh.selectNone', 'mesh.selectInvert', 'mesh.selectLinked', 'edit.prop', 'edit.xray']],
   ['View', ['view.frame', 'view.frameAll', '-', 'view.front', 'view.back', 'view.right', 'view.left', 'view.top', 'view.bottom', '-', 'view.wire', 'view.solid', 'view.material', 'view.render', '-', 'view.overlays']],
   ['Render', ['render.image', 'view.render', 'render.snapshot', '-', 'render.dof', 'render.pickFocus']],
   ['Help', ['help.keys', 'app.palette', 'help.about']],
@@ -3991,7 +4569,7 @@ function shortcutsDialog() {
     G('Everywhere', [[MOD + 'K', 'Search every command'], [MOD + 'Z', 'Undo'], [MOD + '⇧Z', 'Redo'], [MOD + 'S', 'Save project'], ['Tab', 'Edit mode'], ['⇧Tab', 'Sculpt mode'], ['Z / ⇧Z', 'Solid / rendered view'], ['F12', 'Render image'], ['. or Home', 'Frame selected / all'], ['Numpad 1 3 7', 'Front, right, top']]),
     G('Object mode', [['Click', 'Select'], ['G R S', 'Move, rotate, scale'], ['then X Y Z', 'Lock to an axis (twice: local)'], ['then type', 'Exact value, Enter to confirm'], ['⇧A', 'Add menu'], ['⇧D', 'Duplicate'], ['X / Delete', 'Delete'], ['H / Alt H', 'Hide / show all'], ['W', 'Cycle gizmo tool'], [MOD.trim() + ' (held)', 'Snap']]),
     G('Edit mode', [['1 2 3', 'Vertex, edge, face'], ['Drag', 'Box select'], ['⇧ click', 'Add to selection'], ['Alt click', 'Select loop / ring'], ['A / Alt A', 'All / none'], ['E', 'Extrude'], ['I', 'Inset'], [MOD + 'R', 'Loop cut'], ['M', 'Merge'], ['F', 'Fill'], ['⇧E', 'Crease edges'], ['O', 'Proportional editing'], ['Alt Z', 'X-ray']]),
-    G('Sculpt mode', [['Drag on mesh', 'Sculpt'], ['Drag off mesh', 'Orbit'], [MOD.trim() + ' (held)', 'Invert'], ['⇧ (held)', 'Smooth'], ['[ ]', 'Radius'], ['⇧[ ⇧]', 'Strength'], ['D C I S G T P K', 'Brushes'], ['X', 'Mirror on/off']]),
+    G('Sculpt mode', [['Drag on mesh', 'Sculpt'], ['Drag off mesh', 'Orbit'], [MOD.trim() + ' (held)', 'Invert'], ['⇧ (held)', 'Smooth'], ['[ ]', 'Radius'], ['⇧[ ⇧]', 'Strength'], ['D C I S G T P K', 'Brushes'], ['X', 'Mirror on/off'], [MOD + 'R', 'Voxel remesh']]),
   ), [btn('Close', closeDialog, { cls: 'primary' })]);
 }
 function aboutDialog() {
@@ -4048,6 +4626,7 @@ window.addEventListener('keydown', e => {
     return;
   }
   if (state.mode === 'sculpt') {
+    if (mod && k === 'r') { e.preventDefault(); run('sculpt.remesh'); return; }
     const b = !mod && BRUSHES.find(x => x.key === k);
     if (b) { sculpt.brush = b.id; ui.chrome = true; ui.dirty = true; return; }
     if (e.code === 'BracketLeft' || e.code === 'BracketRight') {
@@ -4153,7 +4732,7 @@ const fileStem = () => 'facet-' + new Date().toISOString().slice(0, 16).replace(
 function serializeObj(o) {
   const base = { kind: o.userData.kind, name: o.name, vis: o.visible, p: o.position.toArray(), q: o.quaternion.toArray(), s: o.scale.toArray() };
   const k = o.userData.kind;
-  if (k === 'mesh') return { ...base, cage: cageToJSON(o.userData.cage), mods: o.userData.mods, shading: o.userData.shading, autoAngle: o.userData.autoAngle, prim: o.userData.prim, mat: matParams(o.material), map: o.material.map?.userData?.src || null, cast: o.castShadow, recv: o.receiveShadow };
+  if (k === 'mesh') return { ...base, cage: cageToJSON(o.userData.cage), mods: o.userData.mods, shading: o.userData.shading, autoAngle: o.userData.autoAngle, prim: o.userData.prim, voxel: o.userData.voxel || null, dyntopo: !!o.userData.dyntopo, mat: matParams(o.material), map: o.material.map?.userData?.src || null, cast: o.castShadow, recv: o.receiveShadow };
   if (k === 'light') return { ...base, ltype: o.userData.ltype, props: lightProps(o) };
   if (k === 'import') return { ...base, src: o.userData.src, three: o.children[0] ? o.children[0].toJSON() : null };
   return null;
@@ -4174,6 +4753,7 @@ async function deserializeObj(d) {
     if (d.map) { try { mat.map = await textureFromSrc(d.map); mat.needsUpdate = true; } catch {} }
     o = newMeshObject(d.name, cageFromJSON(d.cage), { material: mat, mods: d.mods || [], shading: d.shading, autoAngle: d.autoAngle, prim: d.prim, keepName: true });
     o.castShadow = d.cast !== false; o.receiveShadow = d.recv !== false;
+    if (d.voxel) o.userData.voxel = d.voxel; if (d.dyntopo) o.userData.dyntopo = true;
   } else if (d.kind === 'light') {
     o = createLight(d.ltype, { name: d.name, keepName: true }); setLightProps(o, d.props || {});
   } else if (d.kind === 'import' && d.three) {
@@ -4529,7 +5109,7 @@ function frame(now) {
   if (ui.chrome) buildChrome();
   if (ui.tree) buildOutliner();
   if (ui.dirty) buildProps(); else if (ui.values) syncValues();
-  if (sculpt.dirty.length) sculptFlush();
+  if (sculptNeedsFlush()) sculptFlush();
   updateLightHelpers(); syncOverlayMatrix();
   gridMat.uniforms.uCam.value.copy(camera.position);
   tcHelper.visible = !!tc.object && !state.renderJob && state.overlays !== false;
@@ -4625,7 +5205,7 @@ async function boot() {
   setTimeout(makeThumbnails, 400);
   if (!restored) setTimeout(() => toast(isTouch ? 'Tap an object to select it. The rightmost view button shows the path-traced render.' : 'Tip: press Ctrl K to search every command, or Shift Z for the path-traced view.', '', 6000), 900);
 }
-window.__facet = { THREE, scene, helpers, camera, controls, renderer, state, world, rset, sel, edit, sculpt, History, actions, run, Prims, PRIM_DEFS, catmullClark, toFlat, flatToCage, evaluateCage, cageEdges, cageEdgeFaces, newMeshObject, addObject, select, setMode, setShading, startModal, modalConfirm, modalCancel, editPick, pickEdge, editLoopSelect, editClick, boxSelect, setSelectMode, editSelVerts, editSelFaces, editSelEdges, edgeRing, cutRing, recalcOutside, serializeProject, loadProject, exportOBJ, zipStore, PT, setTool, sculptDown, sculptMove, sculptUp, frameObjects, get modal() { return modal; } };
+window.__facet = { THREE, scene, helpers, camera, controls, renderer, state, world, rset, sel, edit, sculpt, History, actions, run, Prims, PRIM_DEFS, catmullClark, toFlat, flatToCage, evaluateCage, cageEdges, cageEdgeFaces, newMeshObject, addObject, select, setMode, setShading, startModal, modalConfirm, modalCancel, editPick, pickEdge, editLoopSelect, editClick, boxSelect, setSelectMode, editSelVerts, editSelFaces, editSelEdges, edgeRing, cutRing, recalcOutside, serializeProject, loadProject, exportOBJ, zipStore, PT, setTool, sculptDown, sculptMove, sculptUp, frameObjects, voxelRemesh, joinMeshes, setDyntopo, opRemesh, DynMesh, packCage, unpackCage, sculptHit, get modal() { return modal; } };
 boot().catch(e => { console.error(e); const b = $('#boot'); if (b) b.textContent = 'Facet Studio hit an error while starting: ' + e.message; });
 </script>
 </body>

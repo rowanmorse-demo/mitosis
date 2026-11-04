@@ -1,5 +1,5 @@
 // Headless checks for Facet Studio (studio/index.html): the subdivision kernel, edit-mode operations, keyboard
-// transforms, sculpting with undo, project round-trips and every export format.
+// transforms, sculpting with undo, voxel remesh, dynamic topology, join, project round-trips and every export format.
 // Usage: node tools/studio-test.js            (needs Playwright: npm i -g playwright, about 1 minute)
 //        STUDIO_LIBS=/path/to/node_modules node tools/studio-test.js
 //          serves three, three-mesh-bvh and three-gpu-pathtracer from a local install instead of cdn.jsdelivr.net
@@ -85,6 +85,53 @@ const ok = (c, msg) => { console.log((c ? 'PASS ' : 'FAIL ') + msg); if (!c) fai
   const undone = await page.evaluate(() => Array.from(window.__facet.sel.obj.userData.cage.v));
   ok(undone.every((v, i) => Math.abs(v - before[i]) < 1e-5), 'Undo restores the sculpt');
   await page.keyboard.press('Shift+Tab');
+
+  const rm = await page.evaluate(() => {
+    const F = window.__facet;
+    const check = m => {
+      const d = new Set(); let bad = 0, vol = 0; const v = m.v;
+      for (const f of m.f) for (let i = 0; i < f.length; i++) { const e = f[i] + '>' + f[(i + 1) % f.length]; if (d.has(e)) bad++; d.add(e); }
+      for (const e of d) { const [a, b] = e.split('>'); if (!d.has(b + '>' + a)) bad++; }
+      for (const f of m.f) for (let i = 1; i < f.length - 1; i++) { const p = f[0] * 3, q = f[i] * 3, s = f[i + 1] * 3; vol += (v[p] * (v[q + 1] * v[s + 2] - v[q + 2] * v[s + 1]) - v[p + 1] * (v[q] * v[s + 2] - v[q + 2] * v[s]) + v[p + 2] * (v[q] * v[s + 1] - v[q + 1] * v[s])) / 6; }
+      return { bad, vol, quads: m.f.every(f => f.length === 4) };
+    };
+    const sphere = check(F.voxelRemesh(F.Prims.quadsphere({ radius: 1, level: 4 }), 0.05));
+    const a = F.Prims.quadsphere({ radius: 1, level: 3 }), b = F.Prims.quadsphere({ radius: 1, level: 3 }), off = a.v.length / 3;
+    for (let i = 0; i < b.v.length; i += 3) a.v.push(b.v[i] + 1, b.v[i + 1], b.v[i + 2]);
+    for (const f of b.f) a.f.push(f.map(x => x + off));
+    return { sphere, union: check(F.voxelRemesh(a, 0.05)) };
+  });
+  ok(rm.sphere.bad === 0 && rm.sphere.quads && Math.abs(rm.sphere.vol - 4.18879) / 4.18879 < 0.01, `Voxel remesh: closed quads, sphere volume within 1% (${rm.sphere.vol.toFixed(4)})`);
+  ok(rm.union.bad === 0 && Math.abs(rm.union.vol - (2 * 4.18879 - 5 * Math.PI / 12)) < 0.25, `Remesh fuses overlapping spheres into one solid (${rm.union.vol.toFixed(3)})`);
+
+  await page.evaluate(() => { const F = window.__facet; F.run('add.quadsphere'); F.frameObjects([F.sel.obj]); });
+  await page.waitForTimeout(700);
+  await page.keyboard.press('Shift+Tab');
+  await page.evaluate(() => window.__facet.run('sculpt.dyntopo'));
+  const dynBefore = await page.evaluate(() => JSON.stringify(window.__facet.sel.obj.userData.cage.f));
+  const n0 = await page.evaluate(() => window.__facet.sel.obj.userData.cage.f.length);
+  await page.mouse.move(r.x - 80, r.y); await page.mouse.down();
+  for (let i = 0; i <= 14; i++) await page.mouse.move(r.x - 80 + i * 12, r.y + Math.sin(i / 2) * 15);
+  await page.mouse.up(); await page.waitForTimeout(200);
+  const dyn = await page.evaluate(() => {
+    const m = window.__facet.sel.obj.userData.cage, d = new Set(); let bad = 0;
+    for (const f of m.f) { if (new Set(f).size < 3) bad++; for (let i = 0; i < 3; i++) { const e = f[i] + '>' + f[(i + 1) % 3]; if (d.has(e)) bad++; d.add(e); } }
+    for (const e of d) { const [a, b] = e.split('>'); if (!d.has(b + '>' + a)) bad++; }
+    return { n: m.f.length, bad };
+  });
+  ok(dyn.n > n0 * 1.2 && dyn.bad === 0, `Dyntopo stroke adds triangles and keeps a valid closed mesh (${n0} → ${dyn.n})`);
+  await page.keyboard.press('Control+z');
+  ok(await page.evaluate(() => JSON.stringify(window.__facet.sel.obj.userData.cage.f)) === dynBefore, 'Undo the dyntopo stroke');
+  await page.keyboard.press('Control+r'); await page.waitForTimeout(2500);
+  ok(await page.evaluate(() => window.__facet.sel.obj.userData.cage.f.every(f => f.length === 4) && !window.__facet.sculpt.dyn), 'Ctrl+R in sculpt mode remeshes to quads');
+  await page.keyboard.press('Shift+Tab');
+  const jn = await page.evaluate(() => {
+    const F = window.__facet; F.run('add.cube'); const a = F.sel.obj; F.run('add.cube'); const b = F.sel.obj;
+    const n = () => F.scene.children.filter(c => c.userData.kind).length, before = n();
+    F.joinMeshes(a, [b]); const joined = n(), faces = a.userData.cage.f.length; F.History.undo();
+    return { before, joined, faces, undone: n() };
+  });
+  ok(jn.joined === jn.before - 1 && jn.faces === 12 && jn.undone === jn.before, 'Join meshes merges one cube into another, undo splits them');
 
   const rt = await page.evaluate(async () => { const F = window.__facet, a = F.serializeProject(); await F.loadProject(JSON.parse(JSON.stringify(a))); return JSON.stringify(a.objects) === JSON.stringify(F.serializeProject().objects); });
   ok(rt, 'Project save → open round-trips exactly');
