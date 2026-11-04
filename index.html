@@ -5843,7 +5843,8 @@ function step(dt){
     }
     else human.target={x:cam.x+(pointer.x-W/2)/cam.z,y:cam.y+(pointer.y-H/2)/cam.z};
   }
-  {const r=mode==='play'||multi()?AI_RATE:AI_IDLE;aiTok=Math.min(r*.1,aiTok+r*dt);} // the lobby's backdrop arena gets AI_IDLEaiDue.length=0;
+  {const r=mode==='play'||multi()?AI_RATE:AI_IDLE;aiTok=Math.min(r*.1,aiTok+r*dt);} // the lobby's backdrop arena gets AI_IDLE
+  aiDue.length=0; // the bots due to think this frame (it once sat in the comment above, so the list grew every frame and the game slowed to a crawl)
   for(const p of players){
     if(p.remote)continue;
     for(const k in p.fx)if(p.fx[k]>0)p.fx[k]=Math.max(0,p.fx[k]-dt);
