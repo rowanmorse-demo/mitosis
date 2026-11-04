@@ -1,0 +1,139 @@
+# Android app: builds it and plays it in an emulator.
+# Runs on pushes that change the app or the page, or by hand (Actions › Android › Run workflow).
+#  - Artifact mitosis-android-<version>: the debug APK, and the release AAB UNSIGNED. Sign the AAB with the Play
+#    upload key before uploading it (android/RELEASE.md). The upload key is never used here.
+#  - Artifact emulator-results: screenshots, logcat and results of the emulator test (android/tools/emulator-test.sh).
+# The emulator plays against a game server started on the runner, never the live one. Nothing is deployed.
+name: Android
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'android/**'
+      - 'index.html'
+      - '.github/workflows/android.yml'
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      version: ${{ steps.collect.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Debug APK and unsigned release AAB
+        working-directory: android
+        run: ./gradlew --no-daemon --stacktrace assembleDebug bundleRelease
+
+      - name: Minified release APK for the emulator smoke test (throwaway key, runner's server; NOT for upload)
+        working-directory: android
+        run: |
+          keytool -genkeypair -noprompt -keystore "$RUNNER_TEMP/ci-throwaway.jks" -storepass ci-throwaway -keypass ci-throwaway \
+            -alias ci-throwaway -keyalg RSA -keysize 2048 -validity 3 -dname "CN=CI throwaway key - NOT FOR UPLOAD"
+          MITOSIS_UPLOAD_STORE_FILE="$RUNNER_TEMP/ci-throwaway.jks" MITOSIS_UPLOAD_STORE_PASSWORD=ci-throwaway \
+          MITOSIS_UPLOAD_KEY_ALIAS=ci-throwaway MITOSIS_UPLOAD_KEY_PASSWORD=ci-throwaway \
+            ./gradlew --no-daemon --stacktrace assembleRelease -Pmitosis.serverUrl=http://10.0.2.2:3000
+
+      - name: Collect and check the outputs
+        id: collect
+        run: |
+          set -euo pipefail
+          V=$(sed -n 's/^ *versionName = "\([^"]*\)".*/\1/p' android/app/build.gradle.kts)
+          C=$(sed -n 's/^ *versionCode = \([0-9]*\).*/\1/p' android/app/build.gradle.kts)
+          mkdir -p out ci
+          cp android/app/build/outputs/apk/debug/app-debug.apk "out/mitosis-$V-$C-debug.apk"
+          cp android/app/build/outputs/bundle/release/app-release.aab "out/mitosis-$V-$C-release-UNSIGNED.aab"
+          cp android/app/build/outputs/apk/release/app-release.apk "ci/mitosis-$V-$C-release-CI-THROWAWAY-KEY-NOT-FOR-UPLOAD.apk"
+          AAPT2="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)/aapt2"
+          "$AAPT2" dump badging "out/mitosis-$V-$C-debug.apk" | grep -E "^(package|sdkVersion|targetSdkVersion|launchable-activity)"
+          if unzip -l "out/mitosis-$V-$C-release-UNSIGNED.aab" | grep -qE 'META-INF/.*\.(RSA|DSA|EC|SF)$'; then
+            echo "::error::the release AAB is signed; it should come out of CI unsigned"; exit 1
+          fi
+          ls -l out ci
+          echo "version=$V-$C" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Android $V ($C)"
+            echo
+            echo "| File | Size |"; echo "|---|---|"
+            for f in out/*; do echo "| \`$(basename "$f")\` | $(du -h "$f" | cut -f1) |"; done
+            echo
+            echo "The release AAB is **unsigned**: sign it with the upload key before uploading to Play (android/RELEASE.md)."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mitosis-android-${{ steps.collect.outputs.version }}
+          path: out/
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ci-release-test-apk-NOT-FOR-UPLOAD
+          path: ci/
+          retention-days: 3
+          if-no-files-found: error
+
+  emulator:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Enable KVM for the emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Game server on the runner (the emulator's 10.0.2.2:3000)
+        run: |
+          DATA_DIR="$RUNNER_TEMP/data" nohup node server.js > "$RUNNER_TEMP/server.log" 2>&1 &
+          for i in $(seq 30); do curl -fsS http://localhost:3000/health && exit 0; sleep 1; done
+          cat "$RUNNER_TEMP/server.log"; exit 1
+
+      - name: Play in the emulator (Android 15, Pixel 6)
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-snapshot
+          script: bash android/tools/emulator-test.sh artifacts/*-debug.apk emulator-results artifacts/*-NOT-FOR-UPLOAD.apk
+
+      - name: Keep the server log
+        if: always()
+        run: mkdir -p emulator-results && cp "$RUNNER_TEMP/server.log" emulator-results/ || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: emulator-results
+          path: emulator-results/
