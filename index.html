@@ -4986,8 +4986,22 @@ function drawAvatar(cv=$('avatarCv'),sk=settings.skin|0,st=settings.stain|0){ //
   g.beginPath();g.arc(x,y,r,0,TAU);g.lineWidth=r*.07;g.strokeStyle=o.edge;g.stroke();
 }
 function renderPreviews(live){const vh=innerHeight;for(const cv of document.querySelectorAll('#skins canvas, #ownedSkins canvas')){
+  if(!cv.offsetWidth)continue; // a hidden page: drawn when it opens (warmShop has the art ready by then), not now at a size it won't be shown at
   if(live){const b=cv.getBoundingClientRect();if(!b.width||b.bottom<-40||b.top>vh+40)continue;} // animating: only the tiles on screen
   const S=PREMIUM[+cv.dataset.skin-SKIN_FREE];if(S)drawPreview(cv,S);else if(cv.dataset.def)drawAvatar(cv,settings.pat|0);}}
+// The shop's tiles used to bake every skin's art the moment it opened (half a second on a phone, then they all popped in).
+// The lobby bakes them ahead instead, one skin about every 120 ms while nothing else is going on, at the size the shop's
+// tiles will ask for: a detached canvas as wide as their CSS says (read from a hidden tile), so the bakes land in the same sizes.
+let warmAt=0;const warmCv=document.createElement('canvas');
+function warmShop(){
+  if(warmAt>=PREMIUM.length)return;
+  if(mode==='play'||document.hidden||!$('storeCard').hidden){setTimeout(warmShop,1500);return;}
+  const tile=document.querySelector('#skins .svc canvas'),css=tile&&parseFloat(getComputedStyle(tile).width)||66,d=Math.min(3,window.devicePixelRatio||1);
+  const S=PREMIUM[warmAt++];if(!S.pass){warmCv.width=warmCv.height=Math.max(48,Math.min(960,Math.round(css*d)));drawPreview(warmCv,S);}
+  setTimeout(warmShop,120);
+}
+setTimeout(warmShop,2500);
+addEventListener('resize',()=>{if(warmAt>=PREMIUM.length){warmAt=0;setTimeout(warmShop,1500);}}); // a turned phone changes the tile size: warm again (bakes already made are kept)
 setInterval(()=>{if(document.hidden||RM)return;if(!$('storeCard').hidden||!$('lookCard').hidden)renderPreviews(true);if(!$('startCard').hidden)drawAvatar($('meCv'));if(!$('profileCard').hidden)drawAvatar($('profCv'));},33);
 // Skins page › Collection: the classic cell first, then the premium skins you own, rarest first. Tiles are rebuilt only when
 // what you own changes, so picking one just flips aria-pressed and the selection animates.
@@ -6551,6 +6565,7 @@ const PENTA=[0,2,4,7,9,12,14,16,19,21];const semi=(f,n)=>f*Math.pow(2,n/12);
 const SFX_GAP={eat:.04,eject:.06,hit:.05,merge:.08,power:.08,pop:.06,lysisFar:.12,split:.05,dash:.1};const sfxLast={};let eatStep=0,eatAt=-9;
 function sfx(kind,amt=0){
   if(!actx||muted||actx.state!=='running')return;
+  if(mode==='attract'&&kind!=='ach')return; // after you leave, the world keeps going behind the menus: its pops, bursts and breaches are not yours to hear
   const now=actx.currentTime;if(SFX_GAP[kind]&&now-(sfxLast[kind]||-9)<SFX_GAP[kind])return;sfxLast[kind]=now;
   switch(kind){
     case'eat':{ // a bloop on a pentatonic step that climbs while you keep absorbing; bigger prey is deeper, with a little squish
@@ -7134,7 +7149,7 @@ function syncPlay(){
 }
 // Home feature cards (left column): the season's event, else the newest skin you don't own (achievements live on Profile)
 const lbEvSkin=()=>{const key=Object.keys(SEASONS).find(k=>seasonState(k).open);return key?PREMIUM.find(x=>x.season===key&&!ownsSkin(x.id))||PREMIUM.find(x=>x.season===key):null;};
-const lbFeatSkin=()=>{const a=PREMIUM.filter(x=>!x.season&&!ownsSkin(x.id));return a[a.length-1]||null;};
+const lbFeatSkin=()=>{const a=PREMIUM.filter(x=>!x.season&&!x.pass&&!ownsSkin(x.id));return a[a.length-1]||null;}; // pass skins come from the Battle Pass, not the shop
 function syncFeed(){
   const card=$('lbCard');if(card.dataset.tier!==wallet.tier)card.dataset.tier=wallet.tier;
   const F=$('eventPill').hidden?lbFeatSkin():null,sc=$('lbSkinCard');sc.hidden=!F;
