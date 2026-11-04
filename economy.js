@@ -197,6 +197,10 @@ function buySkin(store, body, p) {
 async function credit(store, p, platform, verified, idForDedupe) {
   const pack = packById(verified.productId);
   if (!pack) throw new ApiError(400, 'unknown product ' + verified.productId);
+  // p was read before the store checked the receipt, which is a network wait: read the wallet again so another
+  // pack or a skin bought meanwhile isn't overwritten, and a duplicate's reply carries today's balance.
+  // From here to setWallet nothing awaits, so no other request can come between.
+  Object.assign(p, store.player(p.id) || {});
   const pid = platform + ':' + idForDedupe;
   if (store.purchase(pid)) return { ...wallet(store, p), credited: 0, duplicate: true };
   const w = { balance: Number(p.balance) + pack.atp, earned: Number(p.earned), hour_at: Number(p.hour_at), hour_sum: Number(p.hour_sum) };

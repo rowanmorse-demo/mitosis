@@ -3591,20 +3591,32 @@ function packArt(i){ // ATP orbs: more of them, and a bigger glow, the bigger th
   else g+=`<g transform="rotate(-14 60 52)"><ellipse cx="60" cy="52" rx="52" ry="13" fill="none" stroke="#ffe7a0" stroke-width="2" opacity=".45"/></g>`+orb(60,50,31)+`<g transform="rotate(-14 60 52)"><path d="M8 52A52 13 0 0 0 112 52" fill="none" stroke="#fff1c2" stroke-width="2.6" opacity=".9"/></g>`+orb(17,62,6)+orb(103,50,5)+spark(18,20,6)+spark(104,16,4.5)+spark(98,86,3.5)+spark(24,90,3);
   return `<svg viewBox="0 0 120 96">${defs}${g}</svg>`;
 }
+let packList=null; // the products the store last returned
 function renderPacks(products,loading){
-  const el=$('packs');let html='';
+  const el=$('packs');let html='';if(!loading)packList=products;
   ATP_PACKS.forEach((P,i)=>{const pr=products&&products.find(x=>x.id===P.id),tg=P.tag?' tg-'+P.tag.toLowerCase().replace(/\W+/g,'-'):'';
     html+=`<button type="button" class="pack sv-pack t${i+1}${tg}" data-id="${P.id}"${pr?'':' disabled'} aria-label="${P.atp.toLocaleString()} ATP, ${escH(P.label)}${pr?', '+escH(pr.price):''}">${P.tag?'<span class="tag">'+escH(P.tag)+'</span>':''}<span class="pk-art" aria-hidden="true">${packArt(i)}</span><span class="pk-amt"><b>${P.atp.toLocaleString()}</b><small>${escH(P.label)}</small></span><span class="pr">${pr?escH(pr.price):loading?'<i class="sv-dots"></i>':products?'—':'In the app'}</span></button>`;});
   el.innerHTML=html;
 }
 let buying=false;
 async function buyPack(id){
-  if(buying)return;buying=true;const btns=[...$('packs').children];btns.forEach(b=>b.disabled=true);
-  try{const r=await Native.call('buy',{productId:id});if(r&&r.purchase)await redeem(r.purchase);}
+  if(buying)return;
+  if(!wallet.online){toast('ATP','Connect to buy ATP','');return;} // the store would take the money before the server could credit it
+  buying=true;[...$('packs').children].forEach(b=>b.disabled=true);
+  try{const r=await Native.call('buy',{productId:id});
+    if(r&&r.pending)toast('ATP','Payment pending','ATP is added when the payment completes');
+    if(r&&r.purchase){try{await redeem(r.purchase);}
+      catch(e){toast('ATP',e.status===0?'Paid: ATP comes when you\'re back online':'Paid: ATP not added yet',e.message);}}}
   catch(e){toast('ATP','Purchase failed',e.message);}
-  finally{buying=false;btns.forEach(b=>b.disabled=false);}
+  finally{buying=false;renderPacks(packList);} // packs without a store price stay disabled
 }
-async function redeem(p){ // server verifies with Apple/Google, credits ATP, then the app finishes the transaction
+// One at a time, and a purchase already on its way to the server isn't sent again: the Android app hands over
+// unfinished purchases on every return to the app, which can be the moment the payment sheet closes
+let redeemQ=Promise.resolve();const redeeming=new Map();
+function redeem(p){const k=p.transactionId||p.purchaseToken||'';if(k&&redeeming.has(k))return redeeming.get(k);
+  const r=redeemQ.then(()=>redeemOne(p));redeemQ=r.catch(()=>{});
+  if(k){redeeming.set(k,r);r.catch(()=>{}).finally(()=>redeeming.delete(k));}return r;}
+async function redeemOne(p){ // server verifies with Apple/Google, credits ATP, then the app finishes the transaction
   const w=await api(p.platform==='ios'?'iap/apple':'iap/google',p);applyWallet(w);
   Native.send({type:'finish',transactionId:p.transactionId||'',purchaseToken:p.purchaseToken||''});
   if(w.credited){toast('ATP','ATP added',`+${w.credited} ATP — ${w.balance} in your wallet`);Native.haptic('success');}
@@ -5560,6 +5572,11 @@ $('nearSheet').addEventListener('click',e=>{if(e.target===e.currentTarget){e.cur
   const key=b.parentElement.dataset.set;near[key]=key==='len'||key==='lives'?+b.dataset.v:b.dataset.v;nearApply();
   settings.nearby={k:near.k,b:near.b,len:near.len,lives:near.lives};saveSettings();nearSheetSync();nearSync();Native.haptic('light');});
 addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('nearSheet').hidden){e.preventDefault();e.stopImmediatePropagation();$('nearSheet').hidden=true;}},true);
+// Escape, which is also Android's back button, closes the page that is open the way its own back button does
+// (the shop, Skins, Rank, Friends, Profile, Settings, also from the pause card, and the delete-account card)
+addEventListener('keydown',e=>{if(e.key!=='Escape'||!['storeCard','lookCard','rankCard','settingsCard','friendsCard','profileCard','deleteCard'].includes(shownCard))return;
+  const c=$(shownCard),b=shownCard==='storeCard'?$('storeBack'):shownCard==='deleteCard'?$('deleteCancel'):c.querySelector('.back');
+  if(c.hidden||!b||b.closest('[hidden]'))return;e.preventDefault();e.stopImmediatePropagation();b.click();},true);
 const syncSkill=()=>{const k=SKILL[settings.botSkill]?settings.botSkill:'normal';const b=$('skillBtn');b.textContent=SKILL[k].label;b.dataset.k=k;[...$('skillSeg').children].forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.k===k)));};
 $('skillBtn').addEventListener('click',()=>{const i=SKILL_LIST.indexOf(settings.botSkill||'normal');settings.botSkill=SKILL_LIST[(i+1)%SKILL_LIST.length];saveSettings();syncSkill();toast('Bots',`${SKILL[settings.botSkill].label} bots`,'Used in practice and offline games');});
 if(settings.maxPing==null){settings.maxPing=settings.highPing?0:100;delete settings.highPing;saveSettings();} // was one Allow high ping switch

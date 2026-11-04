@@ -39,6 +39,7 @@ class Billing(context: Context, private val reply: (JSONObject) -> Unit) : Purch
     private val queue = ArrayList<(Boolean) -> Unit>()
     private var connecting = false
     private var buyRequestId = -1L
+    private val handedOver = HashMap<String, Long>()   // purchase token → when the page was given it
 
     private fun onMain(block: () -> Unit) {
         if (Looper.myLooper() == Looper.getMainLooper()) block() else main.post(block)
@@ -123,7 +124,8 @@ class Billing(context: Context, private val reply: (JSONObject) -> Unit) : Purch
             BillingClient.BillingResponseCode.OK -> {
                 var delivered = false
                 purchases?.forEach { if (deliver(it, if (delivered) -1 else id)) delivered = true }
-                if (!delivered && id >= 0) reply(JSONObject().put("id", id).put("ok", true).put("cancelled", true)) // pending payment: arrives later
+                // a pending payment (cash, bank transfer) arrives later, as a "purchase" event
+                if (!delivered && id >= 0) reply(JSONObject().put("id", id).put("ok", true).put("cancelled", true).put("pending", true))
             }
             BillingClient.BillingResponseCode.USER_CANCELED -> if (id >= 0) reply(JSONObject().put("id", id).put("ok", true).put("cancelled", true))
             // already owned = bought before but never credited: hand that one over again
@@ -135,6 +137,7 @@ class Billing(context: Context, private val reply: (JSONObject) -> Unit) : Purch
     /** Hands a completed purchase to the game: as the reply to a buy request, or as an unsolicited "purchase" event. */
     private fun deliver(p: Purchase, requestId: Long): Boolean {
         if (p.purchaseState != Purchase.PurchaseState.PURCHASED) return false
+        handedOver[p.purchaseToken] = System.currentTimeMillis()
         val obj = JSONObject().put("platform", "android").put("productId", p.products.firstOrNull() ?: "")
             .put("purchaseToken", p.purchaseToken).put("orderId", p.orderId ?: "")
         if (requestId >= 0) reply(JSONObject().put("id", requestId).put("ok", true).put("purchase", obj))
@@ -142,17 +145,25 @@ class Billing(context: Context, private val reply: (JSONObject) -> Unit) : Purch
         return true
     }
 
-    /** Purchases that were paid but never credited (app closed, server down): the game redeems them again. */
+    /**
+     * Purchases that were paid but never credited (app closed, server down): the game redeems them again. One handed
+     * over in the last minute is still on its way to the server (returning from the payment sheet lands here too).
+     */
     fun deliverPending() = whenReady { ok ->
         if (!ok) return@whenReady
         val params = QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.INAPP).build()
         client.queryPurchasesAsync(params) { result, list ->
-            onMain { if (result.responseCode == BillingClient.BillingResponseCode.OK) list.forEach { deliver(it, -1) } }
+            onMain {
+                if (result.responseCode != BillingClient.BillingResponseCode.OK) return@onMain
+                val now = System.currentTimeMillis()
+                list.filter { now - (handedOver[it.purchaseToken] ?: 0L) > 60_000 }.forEach { deliver(it, -1) }
+            }
         }
     }
 
     fun consume(purchaseToken: String) {
         if (purchaseToken.isEmpty()) return
+        handedOver.remove(purchaseToken)
         whenReady { ok -> if (ok) client.consumeAsync(ConsumeParams.newBuilder().setPurchaseToken(purchaseToken).build()) { _, _ -> } }
     }
 

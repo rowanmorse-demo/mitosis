@@ -113,7 +113,10 @@ async function startChrome(url) {
   await cdp.send('Page.navigate', { url });
 }
 
-async function closeCard(card) { // the back button of a page or sheet
+// Android's back button on the device; Esc (what the app turns it into) in desktop Chrome
+const backKey = () => ADB ? adb('shell', 'input', 'keyevent', 'KEYCODE_BACK') : ev(`document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))`);
+async function closeCard(card) { // the back key on the device; the page's own back button in desktop Chrome
+  if (ADB) { await backKey(); return waitFor(`${VIS}('#startCard')`, 6000); }
   const sel = await ev(`(()=>{const c=document.querySelector(${JSON.stringify(card)});if(!c)return null;const b=[...c.querySelectorAll('button')].find(b=>/^back/i.test(b.getAttribute('aria-label')||'')||b.classList.contains('back'));if(!b)return null;b.id||(b.id='__back'+Math.random().toString(36).slice(2,7));return '#'+b.id;})()`);
   if (sel) await tap(sel); else await ev(`document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))`);
   return waitFor(`${VIS}('#startCard')`, 6000);
@@ -188,15 +191,15 @@ async function run() {
   if (ADB && buy.ok !== false && !buy.cancelled) { await shot('billing-sheet'); adb('shell', 'input', 'keyevent', 'KEYCODE_BACK'); await sleep(1500); }
   await post({ type: 'finish', transactionId: '', purchaseToken: 'not-a-real-token' }); await sleep(1500);
   check('billing calls: no crash', await alive());
-  await tap('#storeBack');
-  check('shop closes to the lobby', await waitFor(`${VIS}('#startCard')`, 6000));
+  await backKey();
+  check(ADB ? 'back key closes the shop' : 'Esc closes the shop', await waitFor(`${VIS}('#startCard')`, 6000));
 
   // ---- the menus
   for (const [btn, card, name] of [['#setBtn', '#settingsCard', 'settings'], ['#lookBtn', '#lookCard', 'skins'], ['#rankBtn', '#rankCard', 'rank'], ['#friendsBtn', '#friendsCard', 'friends'], ['#navProf', '#profileCard', 'profile']]) {
     await tap(btn);
     const open = check(`${name} opens`, await waitFor(`${VIS}(${JSON.stringify(card)})`, 6000));
     await sleep(900); await shot(name);
-    if (open) check(`${name} closes to the lobby`, await closeCard(card));
+    if (open) check(`${name} closes to the lobby${ADB ? ' with the back key' : ''}`, await closeCard(card));
   }
 
   // ---- a Casual game
@@ -214,8 +217,7 @@ async function run() {
   await shot('game-later');
 
   // ---- back pauses; leave to the results and the lobby
-  if (ADB) adb('shell', 'input', 'keyevent', 'KEYCODE_BACK');
-  else await ev(`document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))`);
+  await backKey();
   check(ADB ? 'back key pauses the game' : 'Esc pauses the game', await waitFor(`${VIS}('#pauseCard')`, 5000));
   await sleep(500); await shot('paused');
   await tap('#quit');
