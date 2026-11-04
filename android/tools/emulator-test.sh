@@ -22,7 +22,7 @@ adb shell settings put global window_animation_scale 0 >/dev/null 2>&1 || true
 
 # Into the job log as it happens (readable even when the artifact isn't): the app, the WebView and anything that
 # kills processes, plus a heartbeat every 10 s showing that the emulator, adb and the app are still alive.
-("$ADB_BIN" logcat -v time 2>/dev/null | grep --line-buffered -E "/Mitosis|chromium|cr_|AndroidRuntime|FATAL|lowmemorykiller|am_kill|Process .*mitosis|died|ANR" | head -300 | sed -u 's/^/[logcat] /') &
+("$ADB_BIN" logcat -v time 2>/dev/null | grep --line-buffered -E "/Mitosis|chromium|cr_|AndroidRuntime|FATAL|lowmemorykiller|am_kill|Process .*mitosis|died|ANR" | grep --line-buffered -v "\[page\] hitch" | head -300 | sed -u 's/^/[logcat] /') &
 DIAG1=$!
 (while sleep 10; do echo "[heartbeat] $(date +%T) emulator:$(pgrep -f qemu-system >/dev/null && echo up || echo GONE) adb:$(timeout 5 "$ADB_BIN" get-state 2>&1 | tr -d '\r') app-pid:$(timeout 5 "$ADB_BIN" shell pidof $PKG 2>/dev/null | tr -d '\r')"; done) &
 DIAG2=$!

@@ -83,7 +83,8 @@ async function shot(name) {
 const RECORD = `window.__rx=[];(()=>{let B;Object.defineProperty(window,'MitosisBridge',{configurable:true,enumerable:true,get(){return B},
   set(v){if(v&&typeof v.onNative==='function'&&!v.__rec){const o=v.onNative;v.onNative=function(m){try{window.__rx.push(JSON.parse(JSON.stringify(m)))}catch(e){}return o.apply(this,arguments)};v.__rec=true;}B=v;}});})();`;
 // The same, hooked into a page that is already running (the app's page: no reload, so nothing about its load changes)
-const RECORD_NOW = `(()=>{if(window.__rx)return true;const B=window.MitosisBridge;if(!B||typeof B.onNative!=='function')return false;window.__rx=[];const o=B.onNative;
+const RECORD_NOW = `(()=>{if(!window.__escN){window.__escN=0;const d=document.dispatchEvent.bind(document);document.dispatchEvent=e=>{if(e&&e.key==='Escape')window.__escN++;return d(e);};}
+  if(window.__rx)return true;const B=window.MitosisBridge;if(!B||typeof B.onNative!=='function')return false;window.__rx=[];const o=B.onNative;
   B.onNative=function(m){try{window.__rx.push(JSON.parse(JSON.stringify(m)))}catch(e){}return o.apply(this,arguments)};return true;})()`;
 // Our own calls go straight to the app's bridge (ids the page never uses, so the page ignores the replies)
 let callId = 900000;
@@ -115,7 +116,17 @@ async function startChrome(url) {
 }
 
 // Android's back button on the device; Esc (what the app turns it into) in desktop Chrome
-const backKey = () => ADB ? adb('shell', 'input', 'keyevent', 'KEYCODE_BACK') : ev(`document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))`);
+let backDiag = '';
+async function backKey() {
+  if (!ADB) return ev(`document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))`);
+  const esc0 = await ev('window.__escN|0').catch(() => -1);
+  adb('logcat', '-c'); adb('shell', 'input', 'keyevent', 'KEYCODE_BACK'); await sleep(1500);
+  let handler = '?', focus = '?';
+  try { handler = String((adb('logcat', '-d', '-s', 'Mitosis:I').match(/back → Escape/g) || []).length); } catch (e) {}
+  try { focus = (adb('shell', 'dumpsys', 'window').match(/mCurrentFocus=[^\n]*/) || ['?'])[0].trim(); } catch (e) {}
+  const esc = (await ev('window.__escN|0').catch(() => -1)) - esc0;
+  backDiag = `app back handler ran ${handler}x, page got ${esc} Escape, ${focus}`;
+}
 async function closeCard(card) { // the back key on the device; the page's own back button in desktop Chrome
   if (ADB) { await backKey(); if (await waitFor(`${VIS}('#startCard')`, 6000)) return true; } // if the back key failed, the button below still gets the test back to the lobby
   const sel = await ev(`(()=>{const c=document.querySelector(${JSON.stringify(card)});if(!c)return null;const b=[...c.querySelectorAll('button')].find(b=>/^back/i.test(b.getAttribute('aria-label')||'')||b.classList.contains('back'));if(!b)return null;b.id||(b.id='__back'+Math.random().toString(36).slice(2,7));return '#'+b.id;})()`);
@@ -194,14 +205,14 @@ async function run() {
   await post({ type: 'finish', transactionId: '', purchaseToken: 'not-a-real-token' }); await sleep(1500);
   check('billing calls: no crash', await alive());
   await backKey();
-  if (!check(ADB ? 'back key closes the shop' : 'Esc closes the shop', await waitFor(`${VIS}('#startCard')`, 6000))) { await tap('#storeBack'); await waitFor(`${VIS}('#startCard')`, 4000); }
+  if (!check(ADB ? 'back key closes the shop' : 'Esc closes the shop', await waitFor(`${VIS}('#startCard')`, 6000), backDiag)) { await tap('#storeBack'); await waitFor(`${VIS}('#startCard')`, 4000); }
 
   // ---- the menus
   for (const [btn, card, name] of [['#setBtn', '#settingsCard', 'settings'], ['#lookBtn', '#lookCard', 'skins'], ['#rankBtn', '#rankCard', 'rank'], ['#friendsBtn', '#friendsCard', 'friends'], ['#navProf', '#profileCard', 'profile']]) {
     await tap(btn);
     const open = check(`${name} opens`, await waitFor(`${VIS}(${JSON.stringify(card)})`, 6000));
     await sleep(900); await shot(name);
-    if (open) check(`${name} closes to the lobby${ADB ? ' with the back key' : ''}`, await closeCard(card));
+    if (open) check(`${name} closes to the lobby${ADB ? ' with the back key' : ''}`, await closeCard(card), backDiag);
   }
 
   // ---- a Casual game
@@ -220,7 +231,7 @@ async function run() {
 
   // ---- back pauses; leave to the results and the lobby
   await backKey();
-  if (!check(ADB ? 'back key pauses the game' : 'Esc pauses the game', await waitFor(`${VIS}('#pauseCard')`, 5000)))
+  if (!check(ADB ? 'back key pauses the game' : 'Esc pauses the game', await waitFor(`${VIS}('#pauseCard')`, 5000), backDiag))
     await ev(`document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))`), await waitFor(`${VIS}('#pauseCard')`, 4000);
   await sleep(500); await shot('paused');
   await tap('#quit');
@@ -231,7 +242,8 @@ async function run() {
 
   if (ADB) {
     // ---- leaving and returning to the app: the page hears resignActive, background, becomeActive
-    adb('shell', 'input', 'keyevent', 'KEYCODE_HOME'); await sleep(2500);
+    adb('shell', 'input', 'keyevent', 'KEYCODE_HOME');
+    await waitFor(`window.__rx.some(m=>m.type==='app'&&m.text==='background')`, 10000);
     adb('shell', 'am', 'start', '-n', `${PKG}/.MainActivity`); await sleep(3000);
     const apps = await ev(`window.__rx.filter(m=>m.type==='app').map(m=>m.text).join()`);
     check('app events reach the page', /resignActive/.test(apps) && /background/.test(apps) && /becomeActive/.test(apps), apps);
