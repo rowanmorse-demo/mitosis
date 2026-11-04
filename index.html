@@ -851,7 +851,7 @@ body:not(.playing) #tip{display:none}
   border:1px solid rgba(255,255,255,.08);background:radial-gradient(90% 62% at 50% 34%,rgba(var(--rc),.16),transparent 72%),linear-gradient(180deg,rgba(16,34,38,.92),rgba(5,14,16,.94));
   box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 6px 16px rgba(0,0,0,.32);transition:transform .12s,box-shadow .15s,border-color .15s}
 #storeCard .svc.rare{--rc:154,140,255}#storeCard .svc.epic{--rc:242,177,52}#storeCard .svc.legendary{--rc:255,110,70}#storeCard .svc.seasonal{--rc:255,138,42}
-#storeCard .svc canvas{width:66px;height:66px;filter:drop-shadow(0 6px 8px rgba(0,0,0,.5))}
+#storeCard .svc :is(canvas,img){width:66px;height:66px;filter:drop-shadow(0 6px 8px rgba(0,0,0,.5))}
 #storeCard .svc .sn{max-width:100%;box-sizing:border-box;padding:0 4px;font:700 12.5px/1.15 var(--display);letter-spacing:-.01em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere} /* long names take two lines; the price row stays aligned */
 #storeCard .svc .sp{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:22px;padding:0 9px 0 6px;border-radius:999px;background:rgba(0,0,0,.4);box-shadow:inset 0 1px 2px rgba(0,0,0,.35);color:#ffd77a;font:800 12px/1 var(--display);font-variant-numeric:tabular-nums}
 #storeCard .svc .sp .sv-coin{font-size:13px}
@@ -934,7 +934,7 @@ body:not(.playing) #tip{display:none}
   #storeCard .sv-buy .pz{height:36px;font-size:16px;border-radius:11px}
   #storeCard #skins,#storeCard .sv-row{grid-template-columns:repeat(auto-fill,minmax(94px,1fr));gap:8px}
   #storeCard .svc{padding:10px 5px 8px;gap:4px;border-radius:16px}
-  #storeCard .svc canvas{width:58px;height:58px}
+  #storeCard .svc :is(canvas,img){width:58px;height:58px}
   #storeCard .sv-ltd{padding:9px 9px 10px;gap:8px;border-radius:20px}
   #storeCard .sv-atp{gap:10px;padding-top:6px}
   #storeCard .sv-atp:has(#storeNeed:not([hidden])) .pk-art svg{max-height:62px}#storeCard .sv-atp:has(#storeNeed:not([hidden])) #storeHint{display:none}
@@ -961,7 +961,7 @@ body:not(.playing) #tip{display:none}
   #storeCard .sv-ltd{padding:9px 8px 10px;gap:9px}
   #storeCard .sv-ltd .sv-season{gap:7px}#storeCard .sv-ltd .sv-season b{font-size:17px}#storeCard .sv-clock{height:28px;padding:0 9px 0 8px;gap:5px;font-size:12px}
   #storeCard .svc{padding:10px 3px 8px;gap:4px;border-radius:16px}
-  #storeCard .svc canvas{width:54px;height:54px}
+  #storeCard .svc :is(canvas,img){width:54px;height:54px}
   #storeCard .svc .sn{font-size:11.5px;padding:0 2px}
   #storeCard .svc .sp{font-size:11px;padding:0 7px 0 5px}
   #storeCard .sv-atp{grid-row:2/-1;padding-top:14px}#storeCard .sv-atp::before{display:none}
@@ -980,7 +980,7 @@ body:not(.playing) #tip{display:none}
 @media (min-width:1100px){
   .shopview{padding-left:max(48px,calc(50vw - 620px));padding-right:max(48px,calc(50vw - 620px));gap:20px 28px}
   #storeCard #skins,#storeCard .sv-row{grid-template-columns:repeat(auto-fill,minmax(116px,1fr));gap:12px}
-  #storeCard .svc canvas{width:74px;height:74px}
+  #storeCard .svc :is(canvas,img){width:74px;height:74px}
 }
 /* @ui:shop end */
 
@@ -1299,14 +1299,15 @@ body:not(.playing) #tip{display:none}
 #lookCard .lk-tile{appearance:none;position:relative;min-width:0;display:grid;grid-template-rows:auto 1fr auto;justify-items:center;align-items:center;gap:3px;padding:12px 6px 11px;border-radius:18px;cursor:pointer;color:var(--ink);font:inherit;text-align:center;
   border:1px solid rgba(255,255,255,.08);background:radial-gradient(90% 62% at 50% 32%,rgb(var(--rc)/.16),rgb(var(--rc)/0) 72%),linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.01) 55%,rgba(0,0,0,.18)),#081719;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 6px 16px rgba(0,0,0,.3);transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s,border-color .2s,background-color .2s}
-#lookCard .lk-tile canvas{width:64px;height:64px;display:block;margin-bottom:5px;filter:drop-shadow(0 6px 8px rgba(0,0,0,.5));transition:transform .25s cubic-bezier(.2,.9,.3,1.3)}
+#lookCard .lk-tile :is(canvas,img){width:64px;height:64px;display:block;margin-bottom:5px;filter:drop-shadow(0 6px 8px rgba(0,0,0,.5));transition:transform .25s cubic-bezier(.2,.9,.3,1.3)}
 #lookCard .lk-tile b{max-width:100%;font:700 12.5px/1.12 var(--display);letter-spacing:-.01em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
-#lookCard .lk-tile>span:not(.lk-tease){display:none} /* the rarity: kept for the tile's label, shown on the stage */
+#lookCard .lk-tile>span:not(.lk-tease){display:none}
+img.sk-im{display:block;-webkit-user-drag:none;user-select:none;-webkit-touch-callout:none;pointer-events:none} /* the rarity: kept for the tile's label, shown on the stage */
 #lookCard .lk-tile[data-r=legendary]{background:radial-gradient(90% 62% at 50% 32%,rgba(255,110,90,.3),rgba(255,92,138,0) 72%),linear-gradient(160deg,rgba(255,92,138,.16),rgba(255,180,80,.06) 60%,rgba(0,0,0,.18)),#120b10}
 #lookCard .lk-tile[data-r=legendary]::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(105deg,transparent 40%,rgba(255,220,190,.16) 50%,transparent 60%) no-repeat;background-size:250% 100%;animation:lk-sheen 3.8s ease-in-out infinite}
 #lookCard .lk-tile:active{transform:scale(.94)}
 #lookCard .lk-tile[aria-pressed=true]{border-color:rgba(255,92,138,.9);background-color:#1a0d14;box-shadow:0 0 0 1.5px var(--accent),0 0 24px rgba(255,92,138,.32),inset 0 1px 0 rgba(255,255,255,.12)}
-#lookCard .lk-tile[aria-pressed=true] canvas{transform:scale(1.08)}
+#lookCard .lk-tile[aria-pressed=true] :is(canvas,img){transform:scale(1.08)}
 /* nothing owned yet: a wide teaser of three shop skins that opens the Shop */
 #lookCard .lk-tile.lk-get{--rc:255 92 138;grid-column:2/-1;grid-template-rows:auto auto;align-content:center;gap:8px;border:1px solid rgba(255,92,138,.5);
   background:radial-gradient(70% 80% at 50% 30%,rgba(255,92,138,.22),rgba(255,92,138,0) 72%),linear-gradient(180deg,rgba(255,255,255,.06),rgba(0,0,0,.18)),#140b12;
@@ -1366,7 +1367,7 @@ body:not(.playing) #tip{display:none}
   #lookCard #lookName{font-size:22px}#lookCard #lookName.lk-long{font-size:18px}#lookCard .lk-rar{padding:5px 10px 5px 9px;font-size:9.5px}
   #lookCard .lk-side{gap:10px}#lookCard .lk-sec{gap:12px;padding:12px 12px 14px;border-radius:20px}#lookCard .lk-head b{font-size:15px}
   #lookCard .lk-grid{grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px}
-  #lookCard .lk-tile{padding:10px 5px 9px;border-radius:16px}#lookCard .lk-tile canvas{width:56px;height:56px}
+  #lookCard .lk-tile{padding:10px 5px 9px;border-radius:16px}#lookCard .lk-tile :is(canvas,img){width:56px;height:56px}
   #lookCard .swatches{grid-template-columns:repeat(6,minmax(0,44px))}
   #lookCard .pats{gap:8px}#lookCard .pat{border-radius:16px}
   #lookCard #lookShop{min-height:40px;padding:0 15px 0 12px;font-size:13px}
@@ -4991,24 +4992,33 @@ function drawAvatar(cv=$('avatarCv'),sk=settings.skin|0,st=settings.stain|0){ //
   g.beginPath();g.arc(x,y,r,0,TAU);g.lineWidth=r*.07;g.strokeStyle=o.edge;g.stroke();
 }
 function renderPreviews(live){const vh=innerHeight;for(const cv of document.querySelectorAll('#skins canvas, #ownedSkins canvas')){
-  if(!cv.offsetWidth)continue; // a hidden page: warmTiles draws its tiles ahead at the size they will be shown at
+  if(!cv.offsetWidth)continue; // a hidden page: drawn when it opens, not now at a size it won't be shown at (skin tiles are pictures: tileFill)
   if(live){const b=cv.getBoundingClientRect();if(!b.width||b.bottom<-40||b.top>vh+40)continue;} // animating: only the tiles on screen
   const S=PREMIUM[+cv.dataset.skin-SKIN_FREE];if(S)drawPreview(cv,S);else if(cv.dataset.def)drawAvatar(cv,settings.pat|0);}}
-// The Shop's and the Skins page's tiles are drawn ahead, while those pages are hidden: one tile a frame from launch, into the
-// tile's own canvas at the size its CSS gives it (read with getComputedStyle, as a hidden tile has no layout yet). Opening a
-// page then shows every skin at once; before, the tiles baked their skins as the page opened and sat black until each was done.
-function warmTiles(){
-  if(mode!=='play'&&!document.hidden){const d=Math.min(3,window.devicePixelRatio||1),t0=performance.now();
-    for(const cv of document.querySelectorAll('#skins canvas, #ownedSkins canvas')){
-      if(cv._warm||cv.offsetWidth)continue; // drawn already, or on screen (renderPreviews keeps those)
-      const css=parseFloat(getComputedStyle(cv).width);if(!(css>0))continue;
-      const px=Math.max(48,Math.min(960,Math.round(css*d)));if(cv.width!==px||cv.height!==px)cv.width=cv.height=px; // what skinCanvas would make it
-      const S=PREMIUM[+cv.dataset.skin-SKIN_FREE];if(S)drawPreview(cv,S);else if(cv.dataset.def)drawAvatar(cv,settings.pat|0);
-      cv._warm=1;if(performance.now()-t0>10)break;}} // as many as fit in ~10 ms, then the next frame
-  requestAnimationFrame(warmTiles);
+// The Shop's and the Skins page's skin tiles are pictures, made once per skin and size from a canvas drawn off screen. On
+// iPhone a canvas shown for the first time sat black for a second or two after launch while WebKit painted it; a picture
+// shows nothing (so the ball in the skin's colour behind it) until it is ready. They are made from launch, as many as fit
+// in ~10 ms a frame, in page order; the pages' tiles then open already showing them. (The grids no longer animate: the big
+// previews above them do.)
+const TILE_IMG=new Map(),TILE_PX={shop:0,own:0},TILE_BLANK='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'; // 'id@px' -> object URL ('' while being made); each grid's last tile size
+function tileImg(S,where){const px=TILE_PX[where],u=px&&TILE_IMG.get(S.id+'@'+px);
+  return `<img class="sk-im" alt="" data-skin="${S.id}" data-w="${where}" src="${u||TILE_BLANK}"${tilePh(S)}>`;} // blank: no empty-image outline while it waits
+function tileFill(){
+  const t0=performance.now(),d=Math.min(3,window.devicePixelRatio||1);
+  const ims=[...document.querySelectorAll('img.sk-im')];ims.sort((a,b)=>(b.offsetWidth>0)-(a.offsetWidth>0)); // the page that is open first
+  for(const im of ims){
+    if(!im._px){const css=parseFloat(getComputedStyle(im).width);if(!(css>0))continue;im._px=Math.max(48,Math.min(960,Math.round(css*d)));TILE_PX[im.dataset.w]=im._px;}
+    const k=im.dataset.skin+'@'+im._px,u=TILE_IMG.get(k);
+    if(u){if(im._k!==k){im._k=k;im.src=u;}continue;}
+    if(u===''||performance.now()-t0>10)continue; // being made, or this frame's time is used up
+    const S=PREMIUM[+im.dataset.skin-SKIN_FREE];if(!S)continue;
+    TILE_IMG.set(k,'');const cv=document.createElement('canvas');cv.width=cv.height=im._px;drawPreview(cv,S);
+    cv.toBlob(b=>{if(b)TILE_IMG.set(k,URL.createObjectURL(b));else TILE_IMG.delete(k);});
+  }
 }
-requestAnimationFrame(warmTiles);
-addEventListener('resize',()=>{for(const cv of document.querySelectorAll('#skins canvas, #ownedSkins canvas'))cv._warm=0;}); // a turned phone resizes the tiles: draw them again
+function tileLoop(){if(mode!=='play'&&!document.hidden)tileFill();requestAnimationFrame(tileLoop);}
+requestAnimationFrame(tileLoop); // from the first frame (mode and the pages exist by then)
+addEventListener('resize',()=>{for(const im of document.querySelectorAll('img.sk-im'))im._px=0;}); // a turned phone resizes the tiles: pictures at the new size
 setInterval(()=>{if(document.hidden||RM)return;if(!$('storeCard').hidden||!$('lookCard').hidden)renderPreviews(true);if(!$('startCard').hidden)drawAvatar($('meCv'));if(!$('profileCard').hidden)drawAvatar($('profCv'));},33);
 // Skins page › Collection: the classic cell first, then the premium skins you own, rarest first. Tiles are rebuilt only when
 // what you own changes, so picking one just flips aria-pressed and the selection animates.
@@ -5017,8 +5027,8 @@ function renderOwned(){const oe=$('ownedSkins');if(!oe)return;
     mine=PREMIUM.filter(S=>ownsSkin(S.id)).sort((a,b)=>RK[rarOf(b)]-RK[rarOf(a)]||b.price-a.price||a.id-b.id),sig=mine.map(S=>S.id).join();
   $('ownedHint').textContent=mine.length?`${mine.length}/${PREMIUM.length}`:'';
   if(oe.dataset.sig!==sig){oe.dataset.sig=sig;
-    const tile=(id,r,name,rl,cv)=>`<button type="button" class="lk-tile" data-id="${id}" data-r="${r}" aria-pressed="false"><canvas width="192" height="192" ${cv}></canvas><b>${escH(name)}</b><span>${escH(rl)}</span><em class="lk-on" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5.5 12.5l4.2 4.2 8.8-9.2"/></svg></em></button>`;
-    oe.innerHTML=tile('def','classic',cn,'Classic','data-def="1"')+mine.map(S=>tile(S.id,rarOf(S),S.name,S.season?SEASONS[S.season].name:rarOf(S),`data-skin="${S.id}"${tilePh(S)}`)).join('')
+    const tile=(id,r,name,rl,cv)=>`<button type="button" class="lk-tile" data-id="${id}" data-r="${r}" aria-pressed="false">${cv}<b>${escH(name)}</b><span>${escH(rl)}</span><em class="lk-on" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5.5 12.5l4.2 4.2 8.8-9.2"/></svg></em></button>`;
+    oe.innerHTML=tile('def','classic',cn,'Classic','<canvas width="192" height="192" data-def="1"></canvas>')+mine.map(S=>tile(S.id,rarOf(S),S.name,S.season?SEASONS[S.season].name:rarOf(S),tileImg(S,'own'))).join('')
       +(mine.length?'':`<button type="button" class="lk-tile lk-get" data-id="shop"><span class="lk-tease">${[17,22,13].map(id=>`<canvas width="144" height="144" data-skin="${id}"></canvas>`).join('')}</span><b>Get skins<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5.5l6.5 6.5L9 18.5"/></svg></b></button>`);}
   for(const b of oe.children){const id=b.dataset.id;if(id==='shop')continue;const on=id==='def'?sk<SKIN_FREE:+id===sk,nm=b.querySelector('b');
     if(id==='def')nm.textContent=cn;b.setAttribute('aria-pressed',String(on));b.setAttribute('aria-label',`${nm.textContent}, ${b.querySelector('span').textContent}${on?', wearing':''}`);}
@@ -5032,7 +5042,7 @@ $('ownedSkins').addEventListener('click',e=>{const b=e.target.closest('.lk-tile'
 function svIcon(n){return '<svg viewBox="0 0 24 24" aria-hidden="true">'+({check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',plus:'<path d="M12 5.5v13M5.5 12h13"/>'})[n]+'</svg>';}
 function svClock(ms){const s=Math.max(0,Math.floor(ms/1000)),d=Math.floor(s/86400),p=n=>String(n).padStart(2,'0'),hms=`${p(Math.floor(s%86400/3600))}:${p(Math.floor(s%3600/60))}:${p(s%60)}`;return d?`${d}d ${hms}`:hms;}
 function shopCard(S){const own=ownsSkin(S.id),eq=settings.skin===S.id,rar=rarOf(S),px=Math.min(208,Math.max(144,Math.round(70*(window.devicePixelRatio||1))));
-  return `<button type="button" class="svc ${rar}${own?' own':''}${eq?' eq':''}${S.id===shopSel?' sel':''}" data-id="${S.id}" aria-pressed="${S.id===shopSel}" aria-label="${escH(S.name)}, ${rar}${eq?', wearing':own?', owned':', '+S.price+' ATP'}"><canvas width="${px}" height="${px}" data-skin="${S.id}"${tilePh(S)}></canvas><span class="sn">${escH(S.name)}</span><span class="sp">${eq?'Wearing':own?'Owned':'<i class="sv-coin"></i>'+fmtAtp(S.price)}</span></button>`;}
+  return `<button type="button" class="svc ${rar}${own?' own':''}${eq?' eq':''}${S.id===shopSel?' sel':''}" data-id="${S.id}" aria-pressed="${S.id===shopSel}" aria-label="${escH(S.name)}, ${rar}${eq?', wearing':own?', owned':', '+S.price+' ATP'}">${tileImg(S,'shop')}<span class="sn">${escH(S.name)}</span><span class="sp">${eq?'Wearing':own?'Owned':'<i class="sv-coin"></i>'+fmtAtp(S.price)}</span></button>`;}
 function renderShopGrid(el){ // limited seasonal skins lead in their own banner with a live countdown (and are hidden out of season unless owned); the rest run cheapest first
   const byPrice=(a,b)=>a.price-b.price||a.id-b.id,seasonal=PREMIUM.filter(S=>S.season&&seasonState(S.season).open).sort(byPrice),rest=PREMIUM.filter(S=>!S.pass&&(!S.season||(!seasonState(S.season).open&&ownsSkin(S.id)))).sort(byPrice);
   let html='';if(seasonal.length){const st=seasonState(seasonal[0].season);
