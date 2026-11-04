@@ -24,7 +24,7 @@ function check(name, ok, detail = '', required = true) {
   console.log(`${ok ? 'PASS' : required ? 'FAIL' : 'WARN'}  ${name}${detail !== '' ? '  — ' + (typeof detail === 'string' ? detail : JSON.stringify(detail)) : ''}`);
   return !!ok;
 }
-const adb = (...args) => execFileSync('adb', args, { encoding: 'utf8', maxBuffer: 1 << 26 }).trim();
+const adb = (...args) => execFileSync('adb', args, { encoding: 'utf8', maxBuffer: 1 << 26, timeout: 60000 }).trim();
 const pid = () => { try { return adb('shell', 'pidof', PKG); } catch (e) { return ''; } };
 
 class CDP {
@@ -42,6 +42,7 @@ class CDP {
   }
   // every call gets an answer or an error within `ms`: a stuck page must fail the test, not hang the job
   send(method, params = {}, ms = 40000) { const id = ++this.id; return new Promise((res, rej) => {
+    if (this.ws.readyState !== WebSocket.OPEN) { rej(new Error('DevTools connection closed')); return; }
     const t = setTimeout(() => { if (this.w.delete(id)) rej(new Error(`DevTools ${method} got no answer in ${ms / 1000} s`)); }, ms);
     this.w.set(id, { res: v => { clearTimeout(t); res(v); }, rej: e => { clearTimeout(t); rej(e); } }); this.ws.send(JSON.stringify({ id, method, params })); }); }
   async eval(expr) { const r = await this.send('Runtime.evaluate', { expression: expr, awaitPromise: true, returnByValue: true }); if (r.exceptionDetails) throw new Error('page: ' + ((r.exceptionDetails.exception && r.exceptionDetails.exception.description) || r.exceptionDetails.text)); return r.result.value; }
@@ -71,7 +72,7 @@ let shotN = 0;
 async function shot(name) {
   const file = path.join(OUT, `${String(++shotN).padStart(2, '0')}-${name}.png`);
   try {
-    if (ADB) fs.writeFileSync(file, execFileSync('adb', ['exec-out', 'screencap', '-p'], { maxBuffer: 1 << 27 }));
+    if (ADB) fs.writeFileSync(file, execFileSync('adb', ['exec-out', 'screencap', '-p'], { maxBuffer: 1 << 27, timeout: 60000 }));
     else { const png = await cdp.send('Page.captureScreenshot', { format: 'png' }); fs.writeFileSync(file, Buffer.from(png.data, 'base64')); }
     console.log('  shot', path.basename(file));
   } catch (e) { console.log('  shot failed', name, e.message); }

@@ -125,7 +125,8 @@ jobs:
           arch: x86_64
           profile: pixel_6
           disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-snapshot
+          # no guest Vulkan: WebView renders with it when offered, and the emulator's software GPU falls over
+          emulator-options: -no-window -gpu swiftshader_indirect -feature -Vulkan -noaudio -no-boot-anim -camera-back none -no-snapshot
           script: bash android/tools/emulator-test.sh artifacts/*-debug.apk emulator-results artifacts/*-NOT-FOR-UPLOAD.apk
 
       - name: Keep the server log

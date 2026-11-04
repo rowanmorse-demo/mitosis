@@ -12,11 +12,20 @@ set -uo pipefail
 APK=$1 OUT=$2 REL=${3:-}
 PKG=com.mitosisgame.app
 status=0
+ADB_BIN=$(command -v adb)
 mkdir -p "$OUT/debug"
 fail() { echo "FAIL  $*"; status=1; }
+adb() { timeout 60 "$ADB_BIN" "$@"; }   # an emulator that stops answering must fail the test, not hang it
 
 adb wait-for-device
 adb shell settings put global window_animation_scale 0 >/dev/null 2>&1 || true
+
+# Into the job log as it happens (readable even when the artifact isn't): the app, the WebView and anything that
+# kills processes, plus a heartbeat every 10 s showing that the emulator, adb and the app are still alive.
+("$ADB_BIN" logcat -v time 2>/dev/null | grep --line-buffered -E "/Mitosis|chromium|cr_|AndroidRuntime|FATAL|lowmemorykiller|am_kill|Process .*mitosis|died|ANR" | head -300 | sed -u 's/^/[logcat] /') &
+DIAG1=$!
+(while sleep 10; do echo "[heartbeat] $(date +%T) emulator:$(pgrep -f qemu-system >/dev/null && echo up || echo GONE) adb:$(timeout 5 "$ADB_BIN" get-state 2>&1 | tr -d '\r') app-pid:$(timeout 5 "$ADB_BIN" shell pidof $PKG 2>/dev/null | tr -d '\r')"; done) &
+DIAG2=$!
 
 crashes() { # $1 = file. True if the app's own process crashed (Java or native) or hung. The WebView renderer the
   # test crashes on purpose is a process of its own (…webview:sandboxed_process…) and doesn't count.
@@ -27,9 +36,9 @@ crashes() { # $1 = file. True if the app's own process crashed (Java or native) 
 
 # ---------------------------------------------------------------- debug build: the full test
 adb logcat -c || true
-adb logcat -v time > "$OUT/debug/logcat.txt" 2>&1 &
+"$ADB_BIN" logcat -v time > "$OUT/debug/logcat.txt" 2>&1 &   # runs all test long: no timeout
 LOGCAT=$!
-trap 'kill $LOGCAT 2>/dev/null || true' EXIT
+trap 'kill $LOGCAT $DIAG1 $DIAG2 2>/dev/null || true' EXIT
 adb install -r "$APK" || fail "install $APK"
 adb shell am start -W -n "$PKG/.MainActivity" --es server http://10.0.2.2:3000
 SOCK=""
