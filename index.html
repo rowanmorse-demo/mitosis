@@ -4966,9 +4966,12 @@ function skinBall(g,S,c,r,k,stain){ // a premium skin as a lit ball: body, art c
 const TOK_CELL={x:0,y:0,wob:1.3,svx:0,svy:0};
 function tokenArt(q,u,p){const S=PREMIUM[p.skin-SKIN_FREE],k0=PV_K;PV_K=u;q.lineCap=q.lineJoin='butt';skinBall(q,S,TOK_CELL,.96,S.base,STAINS[p.stain|0]);PV_K=k0;}
 function shadeArt(q){disc(q,0,0,1,rgr(q,0,0,1.02,[0,'rgba(0,0,0,0)',.66,'rgba(0,0,0,.03)',.86,'rgba(0,0,0,.12)',1,'rgba(0,0,0,.4)'],-.14,-.18,.4));} // the sphere's shadow over skin art in play
-const tilePh=S=>S&&S.base?` style="background:radial-gradient(circle,hsl(${S.base[0]} ${S.base[1]}% ${S.base[2]}%) 0 39%,transparent 41%)"`:''; // a tile's stand-in until its skin is drawn
+// Behind every skin tile, a soft ball in the skin's colour, just inside where the skin's own ball is drawn (60 of the 144-unit
+// preview, or PV_R for skins with an aura). On iPhone, WebKit paints canvases in its GPU process a moment after the page draws
+// them, and right after launch that can take a second or two: the tile shows this ball until the art lands, not a black square.
+const tilePh=S=>{if(!S||!S.base)return'';const r=(S.aura?PV_R[S.id]||35:60)/144*100-1.5;
+  return ` style="background:radial-gradient(circle at 50% 50%,hsl(${S.base[0]} ${S.base[1]}% ${Math.max(24,Math.min(70,S.base[2]+8))}%) 0,hsl(${S.base[0]} ${S.base[1]}% ${Math.max(13,S.base[2]-14)}%) ${(r*.92).toFixed(1)}%,transparent ${r.toFixed(1)}%)"`;};
 function drawPreview(cv,S){ // a skin on its own (shop, Skins page, lobby and profile), drawn at full resolution with the shared lighting
-  if(cv.style.background)cv.style.background='';
   cv._pv=S;const g=skinCanvas(cv),x=72,y=72,r=S.aura?PV_R[S.id]||35:60,k=S.base||STAINS[settings.stain],c={x,y,wob:1.3,svx:0,svy:0};
   if(S.aura)S.aura(g,c,r,k,Math.max(26,r*PV_SR),true);
   skinBall(g,S,c,r,k,STAINS[settings.stain]);
@@ -4989,7 +4992,6 @@ function drawAvatar(cv=$('avatarCv'),sk=settings.skin|0,st=settings.stain|0){ //
 }
 function renderPreviews(live){const vh=innerHeight;for(const cv of document.querySelectorAll('#skins canvas, #ownedSkins canvas')){
   if(!cv.offsetWidth)continue; // a hidden page: warmTiles draws its tiles ahead at the size they will be shown at
-  if(!live&&cv._warm&&cv._pv)continue; // drawn ahead: already showing its skin
   if(live){const b=cv.getBoundingClientRect();if(!b.width||b.bottom<-40||b.top>vh+40)continue;} // animating: only the tiles on screen
   const S=PREMIUM[+cv.dataset.skin-SKIN_FREE];if(S)drawPreview(cv,S);else if(cv.dataset.def)drawAvatar(cv,settings.pat|0);}}
 // The Shop's and the Skins page's tiles are drawn ahead, while those pages are hidden: one tile a frame from launch, into the
