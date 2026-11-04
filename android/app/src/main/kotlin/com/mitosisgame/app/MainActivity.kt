@@ -7,6 +7,7 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.view.KeyEvent
 import android.view.ViewGroup
 import android.view.View
 import android.view.WindowManager
@@ -67,8 +68,11 @@ class MainActivity : AppCompatActivity() {
         power = Power(this) { low, thermal -> reply(JSONObject().put("type", "power").put("low", low).put("thermal", thermal)) }
         if (BuildConfig.DEBUG) WebView.setWebContentsDebuggingEnabled(true)
 
-        // Android's back button pauses the game, like Esc on a keyboard.
+        // Android's back button is Esc to the page: it closes the open page or sheet, else pauses the game.
+        // On Android 13+ back arrives here through the platform's back callback (enableOnBackInvokedCallback in the
+        // manifest); older versions are caught in dispatchKeyEvent, before the focused WebView can swallow the key.
         onBackPressedDispatcher.addCallback(this) {
+            if (BuildConfig.DEBUG) Log.i(TAG, "back → Escape")
             web?.evaluateJavascript("document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))", null)
         }
 
@@ -148,6 +152,14 @@ class MainActivity : AppCompatActivity() {
     private fun serverUrl(): String {
         if (BuildConfig.DEBUG) intent.getStringExtra("server")?.takeIf { it.startsWith("http") }?.let { return it }
         return BuildConfig.SERVER_URL
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.keyCode == KeyEvent.KEYCODE_BACK) {
+            if (event.action == KeyEvent.ACTION_UP && !event.isCanceled) onBackPressedDispatcher.onBackPressed()
+            return true
+        }
+        return super.dispatchKeyEvent(event)
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {

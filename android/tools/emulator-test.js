@@ -117,10 +117,11 @@ async function startChrome(url) {
 // Android's back button on the device; Esc (what the app turns it into) in desktop Chrome
 const backKey = () => ADB ? adb('shell', 'input', 'keyevent', 'KEYCODE_BACK') : ev(`document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))`);
 async function closeCard(card) { // the back key on the device; the page's own back button in desktop Chrome
-  if (ADB) { await backKey(); return waitFor(`${VIS}('#startCard')`, 6000); }
+  if (ADB) { await backKey(); if (await waitFor(`${VIS}('#startCard')`, 6000)) return true; } // if the back key failed, the button below still gets the test back to the lobby
   const sel = await ev(`(()=>{const c=document.querySelector(${JSON.stringify(card)});if(!c)return null;const b=[...c.querySelectorAll('button')].find(b=>/^back/i.test(b.getAttribute('aria-label')||'')||b.classList.contains('back'));if(!b)return null;b.id||(b.id='__back'+Math.random().toString(36).slice(2,7));return '#'+b.id;})()`);
   if (sel) await tap(sel); else await ev(`document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))`);
-  return waitFor(`${VIS}('#startCard')`, 6000);
+  const back = await waitFor(`${VIS}('#startCard')`, 6000);
+  return back && !ADB; // on the device, getting here means the back key itself failed
 }
 
 async function run() {
@@ -159,9 +160,9 @@ async function run() {
   // ---- battery saver on and off, for real
   if (ADB) {
     adb('shell', 'dumpsys', 'battery', 'unplug');
-    adb('shell', 'settings', 'put', 'global', 'low_power', '1');
+    adb('shell', 'cmd', 'power', 'set-mode', '1');   // battery saver on (settings put global low_power no longer toggles it)
     check('battery saver on reaches the page', await waitFor(`window.__rx.some(m=>m.type==='power'&&m.low===true&&/^(nominal|fair|serious|critical)$/.test(m.thermal))`, 10000), await ev(`JSON.stringify(window.__rx.filter(m=>m.type==='power'))`));
-    adb('shell', 'settings', 'put', 'global', 'low_power', '0');
+    adb('shell', 'cmd', 'power', 'set-mode', '0');
     check('battery saver off reaches the page', await waitFor(`(()=>{const p=window.__rx.filter(m=>m.type==='power');return p.length&&p[p.length-1].low===false&&p.some(m=>m.low===true);})()`, 10000), await ev(`JSON.stringify(window.__rx.filter(m=>m.type==='power'))`));
     adb('shell', 'dumpsys', 'battery', 'reset');
   }
@@ -193,7 +194,7 @@ async function run() {
   await post({ type: 'finish', transactionId: '', purchaseToken: 'not-a-real-token' }); await sleep(1500);
   check('billing calls: no crash', await alive());
   await backKey();
-  check(ADB ? 'back key closes the shop' : 'Esc closes the shop', await waitFor(`${VIS}('#startCard')`, 6000));
+  if (!check(ADB ? 'back key closes the shop' : 'Esc closes the shop', await waitFor(`${VIS}('#startCard')`, 6000))) { await tap('#storeBack'); await waitFor(`${VIS}('#startCard')`, 4000); }
 
   // ---- the menus
   for (const [btn, card, name] of [['#setBtn', '#settingsCard', 'settings'], ['#lookBtn', '#lookCard', 'skins'], ['#rankBtn', '#rankCard', 'rank'], ['#friendsBtn', '#friendsCard', 'friends'], ['#navProf', '#profileCard', 'profile']]) {
@@ -219,7 +220,8 @@ async function run() {
 
   // ---- back pauses; leave to the results and the lobby
   await backKey();
-  check(ADB ? 'back key pauses the game' : 'Esc pauses the game', await waitFor(`${VIS}('#pauseCard')`, 5000));
+  if (!check(ADB ? 'back key pauses the game' : 'Esc pauses the game', await waitFor(`${VIS}('#pauseCard')`, 5000)))
+    await ev(`document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))`), await waitFor(`${VIS}('#pauseCard')`, 4000);
   await sleep(500); await shot('paused');
   await tap('#quit');
   check('Leave shows the results', await waitFor(`${VIS}('#deathCard')`, 6000));
