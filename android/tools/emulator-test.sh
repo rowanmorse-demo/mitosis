@@ -44,11 +44,16 @@ if [ -z "$SOCK" ]; then
   adb exec-out screencap -p > "$OUT/debug/no-devtools.png"
 else
   adb forward tcp:9222 "localabstract:$SOCK"
-  node android/tools/emulator-test.js --adb --out="$OUT/debug" || status=1
+  timeout 900 node android/tools/emulator-test.js --adb --out="$OUT/debug" || status=1
 fi
 crashes "$OUT/debug/crashes.txt" && fail "debug build crashed or hung (see crashes.txt)"
 kill $LOGCAT 2>/dev/null || true
 grep -E " (I|W|E)/Mitosis" "$OUT/debug/logcat.txt" > "$OUT/debug/bridge-log.txt" || true
+if [ $status -ne 0 ]; then # enough in the job log to see what went wrong without downloading the artifact
+  echo "---- app and WebView log (last 80 lines)"
+  grep -E "/Mitosis|chromium|cr_|WebView|AndroidRuntime|FATAL" "$OUT/debug/logcat.txt" | tail -80 || true
+  echo "---- crash buffer"; tail -40 "$OUT/debug/crashes.txt" || true
+fi
 
 # ---------------------------------------------------------------- minified release build: a smoke test
 if [ -n "$REL" ]; then

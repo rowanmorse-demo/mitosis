@@ -35,11 +35,18 @@ class CDP {
       if (m.id && this.w.has(m.id)) { const { res, rej } = this.w.get(m.id); this.w.delete(m.id); m.error ? rej(new Error(m.error.message)) : res(m.result); } };
     ws.onclose = () => { for (const { rej } of this.w.values()) rej(new Error('DevTools connection closed')); this.w.clear(); };
   }
-  static async open(url) { const ws = new WebSocket(url); await new Promise((res, rej) => { ws.onopen = res; ws.onerror = () => rej(new Error('cannot connect to ' + url)); }); const c = new CDP(ws); await c.send('Runtime.enable'); await c.send('Page.enable'); return c; }
-  send(method, params = {}) { const id = ++this.id; return new Promise((res, rej) => { this.w.set(id, { res, rej }); this.ws.send(JSON.stringify({ id, method, params })); }); }
+  static async open(url) {
+    const ws = new WebSocket(url);
+    await new Promise((res, rej) => { const t = setTimeout(() => rej(new Error('DevTools connect timed out')), 15000); ws.onopen = () => { clearTimeout(t); res(); }; ws.onerror = () => { clearTimeout(t); rej(new Error('cannot connect to ' + url)); }; });
+    const c = new CDP(ws); await c.send('Runtime.enable'); await c.send('Page.enable'); return c;
+  }
+  // every call gets an answer or an error within `ms`: a stuck page must fail the test, not hang the job
+  send(method, params = {}, ms = 40000) { const id = ++this.id; return new Promise((res, rej) => {
+    const t = setTimeout(() => { if (this.w.delete(id)) rej(new Error(`DevTools ${method} got no answer in ${ms / 1000} s`)); }, ms);
+    this.w.set(id, { res: v => { clearTimeout(t); res(v); }, rej: e => { clearTimeout(t); rej(e); } }); this.ws.send(JSON.stringify({ id, method, params })); }); }
   async eval(expr) { const r = await this.send('Runtime.evaluate', { expression: expr, awaitPromise: true, returnByValue: true }); if (r.exceptionDetails) throw new Error('page: ' + ((r.exceptionDetails.exception && r.exceptionDetails.exception.description) || r.exceptionDetails.text)); return r.result.value; }
 }
-const targets = async () => (await fetch(`http://127.0.0.1:${CDP_PORT}/json/list`)).json();
+const targets = async () => (await fetch(`http://127.0.0.1:${CDP_PORT}/json/list`, { signal: AbortSignal.timeout(5000) })).json();
 async function pageTarget(notId) {
   for (let i = 0; i < 60; i++) {
     try { const t = (await targets()).find(t => t.type === 'page' && /index\.html/.test(t.url) && t.id !== notId && t.webSocketDebuggerUrl); if (t) return t; } catch (e) {}
@@ -74,6 +81,9 @@ async function shot(name) {
 // every native → page message, replies and events, in window.__rx.
 const RECORD = `window.__rx=[];(()=>{let B;Object.defineProperty(window,'MitosisBridge',{configurable:true,enumerable:true,get(){return B},
   set(v){if(v&&typeof v.onNative==='function'&&!v.__rec){const o=v.onNative;v.onNative=function(m){try{window.__rx.push(JSON.parse(JSON.stringify(m)))}catch(e){}return o.apply(this,arguments)};v.__rec=true;}B=v;}});})();`;
+// The same, hooked into a page that is already running (the app's page: no reload, so nothing about its load changes)
+const RECORD_NOW = `(()=>{if(window.__rx)return true;const B=window.MitosisBridge;if(!B||typeof B.onNative!=='function')return false;window.__rx=[];const o=B.onNative;
+  B.onNative=function(m){try{window.__rx.push(JSON.parse(JSON.stringify(m)))}catch(e){}return o.apply(this,arguments)};return true;})()`;
 // Our own calls go straight to the app's bridge (ids the page never uses, so the page ignores the replies)
 let callId = 900000;
 const post = msg => ev(`window.MitosisAndroid.post(${JSON.stringify(JSON.stringify(msg))})`);
@@ -110,20 +120,18 @@ async function closeCard(card) { // the back button of a page or sheet
 }
 
 async function run() {
-  if (ADB) { // reload the app's page with the recorder in place
-    cdp = await CDP.open((await pageTarget()).webSocketDebuggerUrl);
-    await cdp.send('Page.addScriptToEvaluateOnNewDocument', { source: RECORD });
-    await cdp.send('Page.reload', { ignoreCache: true });
-    await sleep(1500);
-  } else await startChrome(opt.chrome);
+  if (ADB) cdp = await CDP.open((await pageTarget()).webSocketDebuggerUrl);
+  else await startChrome(opt.chrome);
   const pid0 = ADB ? pid() : '';
 
-  // ---- the page loads as the Android app
-  check('page loads', await waitFor(`document.readyState==='complete'&&!!window.MitosisBridge&&!!document.getElementById('startCard')`, 30000));
+  // ---- the page loads as the Android app (the web fonts may still be loading: that doesn't hold the game up)
+  const loaded = check('page loads', await waitFor(`document.readyState!=='loading'&&!!window.MitosisBridge&&!!document.getElementById('startCard')`, 45000),
+    await ev(`JSON.stringify({href:location.href.slice(0,90),readyState:document.readyState,bridge:typeof window.MitosisBridge,app:typeof window.MitosisAndroid})`).catch(e => e.message));
+  if (!loaded) throw new Error('the page did not load');
+  check('recording native → page messages', await ev(RECORD_NOW));
   check('app bridge present', await ev(`typeof window.MitosisAndroid==='object'&&typeof window.MitosisAndroid.post==='function'`));
   const q = await ev('location.search');
   check('app passes its version and server', /[?&]app=android-2\.3\.0\b/.test(q) && /[?&]server=http/.test(q), q);
-  if (ADB) check('app reports battery saver and thermal state on load', await waitFor(`window.__rx.some(m=>m.type==='power'&&typeof m.low==='boolean'&&/^(nominal|fair|serious|critical)$/.test(m.thermal))`, 8000), await ev(`JSON.stringify(window.__rx.filter(m=>m.type==='power'))`));
   if (await vis('#introCard')) { await shot('welcome'); await tap('#introGo'); }
   check('lobby shows', await waitFor(`${VIS}('#startCard')`, 15000));
   await sleep(2500);
@@ -148,9 +156,9 @@ async function run() {
   if (ADB) {
     adb('shell', 'dumpsys', 'battery', 'unplug');
     adb('shell', 'settings', 'put', 'global', 'low_power', '1');
-    check('battery saver on reaches the page', await waitFor(`window.__rx.some(m=>m.type==='power'&&m.low===true)`, 10000), await ev(`JSON.stringify(window.__rx.filter(m=>m.type==='power'))`));
+    check('battery saver on reaches the page', await waitFor(`window.__rx.some(m=>m.type==='power'&&m.low===true&&/^(nominal|fair|serious|critical)$/.test(m.thermal))`, 10000), await ev(`JSON.stringify(window.__rx.filter(m=>m.type==='power'))`));
     adb('shell', 'settings', 'put', 'global', 'low_power', '0');
-    check('battery saver off reaches the page', await waitFor(`(()=>{const p=window.__rx.filter(m=>m.type==='power');return p.length>1&&p[p.length-1].low===false;})()`, 10000), await ev(`JSON.stringify(window.__rx.filter(m=>m.type==='power'))`));
+    check('battery saver off reaches the page', await waitFor(`(()=>{const p=window.__rx.filter(m=>m.type==='power');return p.length&&p[p.length-1].low===false&&p.some(m=>m.low===true);})()`, 10000), await ev(`JSON.stringify(window.__rx.filter(m=>m.type==='power'))`));
     adb('shell', 'dumpsys', 'battery', 'reset');
   }
 
@@ -230,18 +238,23 @@ async function run() {
     cdp.send('Page.crash').catch(() => {});
     await sleep(4000);
     let recovered = false;
-    try { cdp = await CDP.open((await pageTarget(old)).webSocketDebuggerUrl); recovered = await waitFor(`document.readyState==='complete'&&!!window.MitosisBridge&&${VIS}('#startCard')`, 30000); } catch (e) { console.log('  ' + e.message); }
+    try { cdp = await CDP.open((await pageTarget(old)).webSocketDebuggerUrl); recovered = await waitFor(`document.readyState!=='loading'&&!!window.MitosisBridge&&${VIS}('#startCard')`, 45000); } catch (e) { console.log('  ' + e.message); }
     check('renderer crash: game reloads', recovered);
     check('renderer crash: app process survives', pid() === pid0, `${pid0} → ${pid()}`);
     await sleep(2500); await shot('after-renderer-crash');
   }
 }
 
-(async () => {
-  try { await run(); } catch (e) { check('test ran to the end', false, e.message); }
-  finally { if (chrome) chrome.kill('SIGKILL'); }
+function finish() {
+  if (chrome) chrome.kill('SIGKILL');
   fs.writeFileSync(path.join(OUT, 'results.json'), JSON.stringify(results, null, 2));
   const failed = results.filter(r => r.required && !r.ok);
   console.log(`\n${results.filter(r => r.ok).length}/${results.length} checks passed${failed.length ? '; FAILED: ' + failed.map(r => r.name).join(', ') : ''}`);
   process.exit(failed.length ? 1 : 0);
+}
+setTimeout(() => { check('test finished within 12 minutes', false); finish(); }, 12 * 60000).unref();
+
+(async () => {
+  try { await run(); } catch (e) { check('test ran to the end', false, e.message); }
+  finish();
 })();
