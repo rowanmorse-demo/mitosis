@@ -42,6 +42,10 @@ crashes() { # $1 = file. True if the app's own process crashed (Java or native) 
 adb shell "echo '_ --disable-accelerated-2d-canvas --disable-gpu-rasterization' > /data/local/tmp/webview-command-line"
 echo "image build type: $(adb shell getprop ro.build.type | tr -d '\r'); WebView flags: $(adb shell cat /data/local/tmp/webview-command-line | tr -d '\r')"
 
+# Android shows "Viewing full screen: swipe down to exit" the first time an app hides the system bars, and that
+# notice holds the focus (run 10: every back press went to it). A player taps "Got it" once; here it's marked seen.
+adb shell settings put secure immersive_mode_confirmations confirmed
+
 # ---------------------------------------------------------------- debug build: the full test
 adb logcat -c || true
 "$ADB_BIN" logcat -v time > "$OUT/debug/logcat.txt" 2>&1 &   # runs all test long: no timeout

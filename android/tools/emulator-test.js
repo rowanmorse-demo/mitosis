@@ -171,10 +171,12 @@ async function run() {
   // ---- battery saver on and off, for real
   if (ADB) {
     adb('shell', 'dumpsys', 'battery', 'unplug');
-    adb('shell', 'cmd', 'power', 'set-mode', '1');   // battery saver on (settings put global low_power no longer toggles it)
-    check('battery saver on reaches the page', await waitFor(`window.__rx.some(m=>m.type==='power'&&m.low===true&&/^(nominal|fair|serious|critical)$/.test(m.thermal))`, 10000), await ev(`JSON.stringify(window.__rx.filter(m=>m.type==='power'))`));
-    adb('shell', 'cmd', 'power', 'set-mode', '0');
-    check('battery saver off reaches the page', await waitFor(`(()=>{const p=window.__rx.filter(m=>m.type==='power');return p.length&&p[p.length-1].low===false&&p.some(m=>m.low===true);})()`, 10000), await ev(`JSON.stringify(window.__rx.filter(m=>m.type==='power'))`));
+    const on = `window.__rx.some(m=>m.type==='power'&&m.low===true&&/^(nominal|fair|serious|critical)$/.test(m.thermal))`;
+    adb('shell', 'cmd', 'power', 'set-mode', '1');   // battery saver on
+    if (!(await waitFor(on, 8000))) adb('shell', 'settings', 'put', 'global', 'low_power', '1'); // the older switch, if this image wants it
+    check('battery saver on reaches the page', await waitFor(on, 15000), await ev(`JSON.stringify(window.__rx.filter(m=>m.type==='power'))`) + ' low_power=' + adb('shell', 'settings', 'get', 'global', 'low_power'));
+    adb('shell', 'cmd', 'power', 'set-mode', '0'); adb('shell', 'settings', 'put', 'global', 'low_power', '0');
+    check('battery saver off reaches the page', await waitFor(`(()=>{const p=window.__rx.filter(m=>m.type==='power');return p.length&&p[p.length-1].low===false&&p.some(m=>m.low===true);})()`, 15000), await ev(`JSON.stringify(window.__rx.filter(m=>m.type==='power'))`));
     adb('shell', 'dumpsys', 'battery', 'reset');
   }
 
