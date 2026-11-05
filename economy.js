@@ -315,6 +315,23 @@ const GEN_SKINS = [
   [293, 'pancakes', 'Pancakes', 400],
   [294, 'cinnamonroll', 'Cinnamon Roll', 400],
   [295, 'cherrypie', 'Cherry Pie', 500],
+  // lab
+  [296, 'redbloodcell', 'Red Blood Cell', 400],
+  [297, 'bloodstream', 'Bloodstream', 450],
+  [298, 'virus', 'Virus', 600],
+  [299, 'volvox', 'Volvox', 900],
+  [300, 'mitochondrion', 'Mitochondrion', 450],
+  [301, 'chloroplast', 'Chloroplast', 450],
+  [302, 'neuron', 'Neuron', 700],
+  [303, 'fluorescence', 'Fluorescence', 1200],
+  [304, 'slimemould', 'Slime Mould', 500],
+  [305, 'doublehelix', 'Double Helix', 900],
+  [306, 'pollen', 'Pollen', 400],
+  [307, 'petridish', 'Petri Dish', 450],
+  [308, 'morula', 'Morula', 1500],
+  [309, 'yeast', 'Yeast', 350],
+  [310, 'bacilli', 'Bacilli', 350],
+  [311, 'leafcells', 'Leaf Cells', 400],
 ];
 for (const [id, key, name, price] of GEN_SKINS) SKINS.push({ id, key, name, price });
 const PACKS = [
