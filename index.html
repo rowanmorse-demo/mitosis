@@ -916,16 +916,6 @@ body.saver .lb-bg *{animation:none!important}
 #storeCard .sv-clock{margin-left:auto;display:inline-flex;align-items:center;gap:6px;height:30px;box-sizing:border-box;padding:0 12px 0 10px;border-radius:999px;background:rgba(0,0,0,.45);border:1px solid rgba(255,138,42,.4);color:#ffd2a6;font:700 13px/1 var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
 #storeCard .sv-ltd .sv-row{grid-template-columns:repeat(var(--n,4),minmax(0,1fr));max-width:calc(var(--n,4)*150px)}
 #storeCard .sv-ltd .svc:not(.sel){background:radial-gradient(90% 62% at 50% 34%,rgba(255,138,42,.26),transparent 72%),linear-gradient(180deg,rgba(40,20,30,.92),rgba(14,8,18,.95))}
-#storeCard .sv-season.all{grid-column:1/-1;margin-top:10px;gap:8px}
-#storeCard .sv-season.all b{font:800 17px/1 var(--display);letter-spacing:-.02em;background:none;color:var(--ink)}
-#storeCard .sv-season.all span{font:700 11px/1 var(--mono);color:var(--dim)}
-/* skin categories: a floating row of chips that jumps to each shelf, and a heading on each shelf */
-#storeCard .sv-cats{grid-column:1/-1;position:sticky;top:-2px;z-index:3;display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding:4px;border-radius:999px;border:1px solid var(--line);background:rgba(3,10,11,.84);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);box-shadow:0 8px 20px rgba(0,0,0,.35)}
-#storeCard .sv-cats::-webkit-scrollbar{display:none}
-#storeCard .sv-cats button{appearance:none;flex:none;height:32px;padding:0 13px;border:0;border-radius:999px;background:none;color:var(--muted);font:700 13px/1 var(--display);letter-spacing:-.01em;cursor:pointer;transition:background .2s,color .2s,transform .1s}
-#storeCard .sv-cats button:active{transform:scale(.94)}
-#storeCard .sv-cats button.on{background:linear-gradient(180deg,#f7fcfa,#cde8df);color:#06181a;box-shadow:inset 0 1px 0 #fff,0 3px 10px rgba(0,0,0,.35)}
-#storeCard .sv-cat small{flex:1 1 auto;min-width:0;text-align:right;font:500 11.5px/1.2 var(--display);color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #storeCard .svc.sel{border-color:transparent;transform:translateY(-2px);background:radial-gradient(90% 62% at 50% 34%,rgba(var(--rc),.34),transparent 72%),linear-gradient(180deg,rgba(28,50,54,.96),rgba(8,20,22,.96));box-shadow:0 0 0 2px #f2fbf8,0 0 0 6px rgba(var(--rc),.28),0 12px 26px rgba(0,0,0,.45)}
 #storeCard .svc.sel:active{transform:scale(.95)}
 /* ATP packs */
@@ -1031,6 +1021,22 @@ body.saver .lb-bg *{animation:none!important}
   #storeCard #skins,#storeCard .sv-row{grid-template-columns:repeat(auto-fill,minmax(116px,1fr));gap:12px}
   #storeCard .svc canvas{width:74px;height:74px}
 }
+/* every skin on shelves by collection (the shared .ds-sec sections), under filter chips that stay at the top of the list */
+#storeCard #skins.skins{grid-template-columns:minmax(0,1fr);gap:12px}
+#storeCard .sv-filters{position:sticky;top:-6px;z-index:3;margin:-6px -6px 6px;padding:6px 6px 10px;transition:background-color .2s}
+#storeCard .sv-list.stuck .sv-filters{background:linear-gradient(180deg,rgba(3,10,12,.96) 72%,rgba(3,10,12,0))} /* a backdrop only once the shelves scroll under the chips */
+#storeCard .sv-filters:empty{display:none}
+#storeCard .sv-col{gap:12px}
+#storeCard .sv-colt{display:grid;gap:5px;min-width:0}
+#storeCard .sv-colt small{font:500 12px/1.2 var(--display);color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#storeCard .sv-none{margin:24px 0;text-align:center;font:600 14px/1.4 var(--display);color:var(--muted)}
+#storeCard .svc .sp svg{width:12px;height:12px;flex:none;fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+#storeCard .svc.own:not(.eq) .sp{gap:3px;color:#7fe9c0}
+#storeCard .svc.how .sp{padding:0 9px;background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);font:700 9px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
+#storeCard .svc.how.pass .sp{color:#b6abff}#storeCard .svc.how.event .sp{color:#ffb070}
+#storeCard .sv-buy:is(.pass,.event){opacity:1;cursor:default;filter:none;transform:none;font-size:15px;color:var(--muted);background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.04));box-shadow:inset 0 0 0 1px var(--line-strong)}
+#storeCard .sv-buy.pass{color:#c9c1ff;box-shadow:inset 0 0 0 1.5px rgba(154,140,255,.5)}#storeCard .sv-buy.event{color:#ffc58e;box-shadow:inset 0 0 0 1.5px rgba(255,138,42,.5)}
+@media (orientation:landscape) and (max-height:520px){#storeCard .sv-colt small{display:none}#storeCard .sv-filters{padding-bottom:8px}}
 /* @ui:shop end */
 
 /* @ui:pass */
@@ -2785,7 +2791,7 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
         <p class="sv-note" id="featNote"></p>
       </div>
     </section>
-    <section class="sv-list" id="skinSec" role="tabpanel" aria-labelledby="tabSkins"><div class="skins" id="skins"></div><p class="hint" id="skinHint"></p></section>
+    <section class="sv-list" id="skinSec" role="tabpanel" aria-labelledby="tabSkins"><div class="ds-chips sv-filters" id="shopFilters" role="group" aria-label="Show"></div><div class="skins" id="skins"></div><p class="hint" id="skinHint"></p></section>
     <section class="sv-atp" id="packSec" role="tabpanel" aria-labelledby="tabAtp" hidden>
       <p class="sv-need" id="storeNeed" hidden></p>
       <div class="packs" id="packs"></div>
@@ -6872,7 +6878,9 @@ function drawAvatar(cv=$('avatarCv'),sk=settings.skin|0,st=settings.stain|0){ //
 }
 function renderPreviews(live){const vh=innerHeight;for(const cv of document.querySelectorAll('#skins canvas, #ownedSkins canvas')){
   if(!cv.offsetWidth)continue; // a hidden page: drawn when it opens (warmShop has the art ready by then), not now at a size it won't be shown at
-  if(live){const b=cv.getBoundingClientRect();if(!b.width||b.bottom<-40||b.top>vh+40)continue;} // animating: only the tiles on screen
+  const b=cv.getBoundingClientRect();
+  if(live){if(!b.width||b.bottom<-40||b.top>vh+40)continue;} // animating: only the tiles on screen
+  else if(b.bottom<-vh*.5||b.top>vh*1.5){if(cv.width>1&&(b.bottom<-vh*3||b.top>vh*4))cv.width=cv.height=1;continue;} // only near the screen; far-off canvases give their memory back (drawn again as they scroll in)
   const S=PREMIUM[+cv.dataset.skin-SKIN_FREE];if(S)drawPreview(cv,S);else if(cv.dataset.def)drawAvatar(cv,settings.pat|0);}}
 // The shop's tiles used to bake every skin's art the moment it opened (half a second on a phone, then they all popped in).
 // The lobby bakes them ahead instead, one skin about every 120 ms while nothing else is going on, at the size the shop's
@@ -6886,6 +6894,7 @@ function warmShop(){
   setTimeout(warmShop,120);
 }
 setTimeout(warmShop,2500);
+let prvRaf=0;for(const id of['skinSec','lookCard'])$(id).addEventListener('scroll',()=>{if(!RM||prvRaf)return;prvRaf=requestAnimationFrame(()=>{prvRaf=0;renderPreviews();});},{passive:true}); // the live loop draws tiles as they scroll in; with Reduce Motion it is off, so scrolling does
 addEventListener('resize',()=>{if(warmAt>=PREMIUM.length){warmAt=0;setTimeout(warmShop,1500);}}); // a turned phone changes the tile size: warm again (bakes already made are kept)
 setInterval(()=>{if(document.hidden||RM)return;if(!$('storeCard').hidden||!$('lookCard').hidden)renderPreviews(true);if(!$('startCard').hidden)drawAvatar($('meCv'));if(!$('profileCard').hidden)drawAvatar($('profCv'));},33);
 // Inventory › Skins: the classic cell first, then the premium skins you own, rarest first. Tiles are rebuilt only when
@@ -6917,8 +6926,8 @@ $('ownedSkins').addEventListener('click',e=>{const b=e.target.closest('.lk-tile'
 // The shop: tap a skin to show it large, then buy (tap twice to confirm) or wear it from the big button
 function svIcon(n){return '<svg viewBox="0 0 24 24" aria-hidden="true">'+({check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',plus:'<path d="M12 5.5v13M5.5 12h13"/>'})[n]+'</svg>';}
 function svClock(ms){const s=Math.max(0,Math.floor(ms/1000)),d=Math.floor(s/86400),p=n=>String(n).padStart(2,'0'),hms=`${p(Math.floor(s%86400/3600))}:${p(Math.floor(s%3600/60))}:${p(s%60)}`;return d?`${d}d ${hms}`:hms;}
-function shopCard(S){const own=ownsSkin(S.id),eq=settings.skin===S.id,rar=rarOf(S),px=Math.min(208,Math.max(144,Math.round(70*(window.devicePixelRatio||1))));
-  return `<button type="button" class="svc ${rar}${own?' own':''}${eq?' eq':''}${S.id===shopSel?' sel':''}" data-id="${S.id}" aria-pressed="${S.id===shopSel}" aria-label="${escH(S.name)}, ${rar}${eq?', wearing':own?', owned':', '+S.price+' ATP'}"><canvas width="${px}" height="${px}" data-skin="${S.id}"></canvas><span class="sn">${escH(S.name)}</span><span class="sp">${eq?'Wearing':own?'Owned':'<i class="sv-coin"></i>'+fmtAtp(S.price)}</span></button>`;}
+function shopCard(S){const own=ownsSkin(S.id),eq=settings.skin===S.id,rar=rarOf(S),how=skinHow(S),hl=how==='pass'?'Battle Pass':how==='event'?'Back '+seasonFrom(S.season):'',px=Math.min(208,Math.max(144,Math.round(70*(window.devicePixelRatio||1))));
+  return `<button type="button" class="svc ${rar}${own?' own':''}${eq?' eq':''}${how?' how '+how:''}${S.id===shopSel?' sel':''}" data-id="${S.id}" aria-pressed="${S.id===shopSel}" aria-label="${escH(S.name)}, ${rar}${eq?', wearing':own?', owned':hl?', '+hl:', '+S.price+' ATP'}"><canvas width="${px}" height="${px}" data-skin="${S.id}"></canvas><span class="sn">${escH(S.name)}</span><span class="sp">${eq?'Wearing':own?svIcon('check')+'Owned':hl?escH(hl):'<i class="sv-coin"></i>'+fmtAtp(S.price)}</span></button>`;}
 // The shop's shelves, in order, each run cheapest first: [id, name, line, skin ids]. A skin on no shelf (a seasonal one kept after its season) goes on a last one
 const SKIN_CATS=[['space','Space','Stars, worlds and things that swallow light',[5,13,15,22,32,33]],['elements','Elements','Fire, ice, storms and worse',[6,10,11,17,19,34]],
   ['wild','Wild','Fur, fins, wings and blossoms',[7,9,18,21,35]],['sweets','Sweets','Good enough to eat',[36,37,38]],['gadgets','Gadgets','Machines and flashing lights',[8,23,39,40,41]],
@@ -6926,31 +6935,41 @@ const SKIN_CATS=[['space','Space','Stars, worlds and things that swallow light',
 // the showcase skins go on their collection's shelf (a new collection adds one, in GEN_ORDER), and every skin learns its shelf as S.col
 for(const S of PREMIUM)if(S.col){let C=SKIN_CATS.find(c=>c[0]===S.col);if(!C)SKIN_CATS.push(C=[S.col,...GEN_COLS[S.col],[]]);if(!C[3].includes(S.id))C[3].push(S.id);}
 SKIN_CATS.sort((a,b)=>GEN_ORDER.indexOf(a[0])-GEN_ORDER.indexOf(b[0]));for(const C of SKIN_CATS)for(const id of C[3])if(PREMIUM[id-SKIN_FREE])PREMIUM[id-SKIN_FREE].col=C[0];
-function renderShopGrid(el){ // limited seasonal skins lead in their own banner with a live countdown (and are hidden out of season unless owned); the rest sit on shelves by category, under chips that jump to each
-  const byPrice=(a,b)=>a.price-b.price||a.id-b.id,seasonal=PREMIUM.filter(S=>S.season&&seasonState(S.season).open).sort(byPrice),rest=PREMIUM.filter(S=>!S.pass&&(!S.season||(!seasonState(S.season).open&&ownsSkin(S.id)))).sort(byPrice);
-  let html='';if(seasonal.length){const st=seasonState(seasonal[0].season);
-    html=`<section class="sv-ltd" aria-label="${escH(st.name)}, limited time"><div class="sv-season"><svg class="sv-pump" viewBox="0 0 32 32" aria-hidden="true"><defs><radialGradient id="svPumpG" cx=".38" cy=".34" r=".8"><stop offset="0" stop-color="#ffc878"/><stop offset=".55" stop-color="#ff7d1e"/><stop offset="1" stop-color="#a63a00"/></radialGradient></defs><path d="M16 9.5c-.6-3 .4-5.2 2.8-6.3" fill="none" stroke="#6c9a2e" stroke-width="2.6" stroke-linecap="round"/><ellipse cx="10.4" cy="18.5" rx="7.6" ry="9.6" fill="url(#svPumpG)"/><ellipse cx="21.6" cy="18.5" rx="7.6" ry="9.6" fill="url(#svPumpG)"/><ellipse cx="16" cy="18.5" rx="7" ry="10.2" fill="url(#svPumpG)"/><path d="M9.6 16.2l2.6-3.4 2.6 3.4zM17.2 16.2l2.6-3.4 2.6 3.4zM9 20.6q7 5.4 14 0l-1.9 2.6-1.7-1.3-1.6 1.9-1.8-1.6-1.8 1.6-1.6-1.9-1.7 1.3z" fill="#3b1300"/></svg><b>${escH(st.name)}</b><span class="sv-tag">Limited</span><span class="sv-clock" data-ends="${st.ends}">${svIcon('clock')}<span>${svClock(st.ends-Date.now())}</span></span></div><div class="sv-row" style="--n:${seasonal.length}">${seasonal.map(S=>shopCard(S)).join('')}</div></section>`;}
-  const cats=SKIN_CATS.map(([id,name,line,ids])=>[id,name,line,rest.filter(S=>ids.includes(S.id))]),left=rest.filter(S=>!SKIN_CATS.some(C=>C[3].includes(S.id)));
-  if(left.length)cats.push(['more',left.every(S=>S.season===left[0].season&&S.season)?SEASONS[left[0].season].name:'More','',left]);
-  const shown=cats.filter(C=>C[3].length);
-  html+=`<nav class="sv-cats" aria-label="Skin categories">${shown.map(C=>`<button type="button" data-cat="${C[0]}">${escH(C[1])}</button>`).join('')}</nav>`
-    +shown.map(([id,name,line,list])=>`<div class="sv-season all sv-cat" id="svc-${id}"><b>${escH(name)}</b><span>${list.length}</span>${line?`<small>${escH(line)}</small>`:''}</div>`+list.map(S=>shopCard(S)).join('')).join('');
-  el.innerHTML=html;renderFeat();svCatSync();
-}
-function svCatSync(){ // light the chip of the shelf at the top of the list, and keep it in view in the chip row
-  const l=$('skinSec'),bar=l&&l.querySelector('.sv-cats');if(!bar||!bar.children.length)return;const line=l.getBoundingClientRect().top+Math.max(bar.offsetHeight+16,l.clientHeight*.4);let cur=bar.children[0].dataset.cat; // a shelf is current once its heading passes 40% down the list
-  for(const h of l.querySelectorAll('.sv-cat'))if(h.getBoundingClientRect().top<=line)cur=h.id.slice(4);
-  if(l.scrollTop>0&&l.scrollTop+l.clientHeight>=l.scrollHeight-4)cur=bar.lastElementChild.dataset.cat; // at the bottom, the last shelf
-  for(const b of bar.children){const on=b.dataset.cat===cur;if(b.classList.contains('on')===on)continue;b.classList.toggle('on',on);if(on)bar.scrollLeft=b.offsetLeft-(bar.clientWidth-b.offsetWidth)/2;}}
-$('skinSec').addEventListener('scroll',svCatSync,{passive:true});
+let shopFilter='all'; // the Shop's filter: all, own (owned), lock (not owned) or a rarity
+const RAR_ORD={common:1,rare:2,epic:3,legendary:4,seasonal:5},SV_PUMP=`<svg class="sv-pump" viewBox="0 0 32 32" aria-hidden="true"><defs><radialGradient id="svPumpG" cx=".38" cy=".34" r=".8"><stop offset="0" stop-color="#ffc878"/><stop offset=".55" stop-color="#ff7d1e"/><stop offset="1" stop-color="#a63a00"/></radialGradient></defs><path d="M16 9.5c-.6-3 .4-5.2 2.8-6.3" fill="none" stroke="#6c9a2e" stroke-width="2.6" stroke-linecap="round"/><ellipse cx="10.4" cy="18.5" rx="7.6" ry="9.6" fill="url(#svPumpG)"/><ellipse cx="21.6" cy="18.5" rx="7.6" ry="9.6" fill="url(#svPumpG)"/><ellipse cx="16" cy="18.5" rx="7" ry="10.2" fill="url(#svPumpG)"/><path d="M9.6 16.2l2.6-3.4 2.6 3.4zM17.2 16.2l2.6-3.4 2.6 3.4zM9 20.6q7 5.4 14 0l-1.9 2.6-1.7-1.3-1.6 1.9-1.8-1.6-1.8 1.6-1.6-1.9-1.7 1.3z" fill="#3b1300"/></svg>`;
+const seasonFrom=k=>{const d=SEASONS[k].from;return new Date(2000,d[0]-1,d[1]).toLocaleDateString('en-US',{month:'short',day:'numeric'});}; // "Oct 24"
+const skinHow=S=>ownsSkin(S.id)?'':S.pass?'pass':S.season&&!seasonState(S.season).open?'event':''; // a skin the shop doesn't sell right now, and why
+function shopShelves(){ // every skin on one shelf, in the same order every time: an open season, the collections, the battle pass, closed seasons, the rest.
+  const by=(a,b)=>RAR_ORD[rarOf(a)]-RAR_ORD[rarOf(b)]||a.price-b.price||a.id-b.id,seen=new Set(),out=[]; // on a shelf: commonest first, then cheapest
+  const add=(key,name,line,list,o)=>{list=list.filter(S=>!seen.has(S.id)).sort(by);for(const S of list)seen.add(S.id);if(list.length)out.push(Object.assign({key,name,line,list},o));};
+  for(const k in SEASONS){const st=seasonState(k);if(st.open)add('s-'+k,SEASONS[k].name,'Limited time',PREMIUM.filter(S=>S.season===k),{open:st});}
+  for(const [id,name,line,ids] of SKIN_CATS)add(id,name,line,PREMIUM.filter(S=>!S.pass&&!S.season&&(S.col===id||(ids||[]).includes(S.id)))); // a skin's own S.col, or the shelf's list
+  add('pass','Battle Pass','Unlocked on the pass, never sold',PREMIUM.filter(S=>S.pass&&(bpOn()||ownsSkin(S.id)))); // pass skins show while the pass is on (or once yours)
+  for(const k in SEASONS)if(!seasonState(k).open)add('s-'+k,SEASONS[k].name,'Back every year from '+seasonFrom(k),PREMIUM.filter(S=>S.season===k));
+  add('more','More skins','',PREMIUM.filter(S=>!S.pass&&!S.season));
+  return out;}
+function renderShopGrid(el){ // the shelves under filter chips; an open season leads in its banner with a live countdown
+  const shelves=shopShelves(),all=shelves.flatMap(c=>c.list),nOwn=all.filter(S=>ownsSkin(S.id)).length,rars=['legendary','epic','rare','common','seasonal'].filter(r=>all.some(S=>rarOf(S)===r));
+  if(!['all','own','lock',...rars].includes(shopFilter))shopFilter='all';
+  const fit=S=>shopFilter==='all'||(shopFilter==='own'?ownsSkin(S.id):shopFilter==='lock'?!ownsSkin(S.id):rarOf(S)===shopFilter);
+  const chip=(k,label,n,r)=>`<button type="button" class="ds-chip" data-f="${k}"${r?` data-r="${r}"`:''} aria-pressed="${shopFilter===k}">${r?'<i aria-hidden="true"></i>':''}${label}${n!=null?`<em>${n}</em>`:''}</button>`;
+  const fe=$('shopFilters'),sig=[all.length,nOwn,rars].join('|');
+  if(fe.dataset.sig!==sig){fe.dataset.sig=sig;fe.innerHTML=chip('all','All',all.length)+chip('own','Owned',nOwn)+chip('lock','Not owned',all.length-nOwn)+rars.map(r=>chip(r,RAR_NAME[r],all.filter(S=>rarOf(S)===r).length,r)).join('');}
+  for(const c of fe.children)c.setAttribute('aria-pressed',String(c.dataset.f===shopFilter));
+  let html='';for(const c of shelves){const list=c.list.filter(fit);if(!list.length)continue;
+    if(c.open)html+=`<section class="sv-ltd" aria-label="${escH(c.name)}, limited time"><div class="sv-season">${SV_PUMP}<b>${escH(c.name)}</b><span class="sv-tag">Limited</span><span class="sv-clock" data-ends="${c.open.ends}">${svIcon('clock')}<span>${svClock(c.open.ends-Date.now())}</span></span></div><div class="sv-row" style="--n:${list.length}">${list.map(S=>shopCard(S)).join('')}</div></section>`;
+    else html+=`<section class="ds-sec sv-col" data-col="${c.key}" aria-label="${escH(c.name)}"><div class="ds-head"><span class="sv-colt"><b>${escH(c.name)}</b>${c.line?`<small>${escH(c.line)}</small>`:''}</span><span class="ds-pill" aria-label="${c.list.filter(S=>ownsSkin(S.id)).length} of ${c.list.length} owned">${c.list.filter(S=>ownsSkin(S.id)).length}/${c.list.length}</span></div><div class="sv-row">${list.map(S=>shopCard(S)).join('')}</div></section>`;}
+  el.innerHTML=html||`<p class="sv-none">${shopFilter==='own'?'No skins yet. Tap one to see it, then buy it.':'Nothing here yet.'}</p>`;renderFeat();}
+$('skinSec').addEventListener('scroll',e=>{const l=e.currentTarget,on=l.scrollTop>4;if(on!==l.classList.contains('stuck'))l.classList.toggle('stuck',on);},{passive:true});
+$('shopFilters').addEventListener('click',e=>{const c=e.target.closest('.ds-chip');if(!c||c.dataset.f===shopFilter)return;shopFilter=c.dataset.f;renderShopGrid($('skins'));renderPreviews();$('skinSec').scrollTop=0;Native.haptic('light');});
 function renderFeat(){
   const S=PREMIUM.find(x=>x.id===shopSel)||PREMIUM[0],b=$('featBuy');if(!S||!b)return;shopSel=S.id;
   const rar=rarOf(S),own=ownsSkin(S.id),eq=settings.skin===S.id,cf=confirmSkin===S.id&&performance.now()-confirmT<4000,need=S.price-wallet.balance,
-    st=eq?'wearing':own?'own':!wallet.online?'off':need>0?'short':cf?'confirm':'buy',price=`<span class="pz"><i class="sv-coin"></i>${S.price.toLocaleString()}</span>`;
+    how=skinHow(S),st=eq?'wearing':own?'own':how?how:!wallet.online?'off':need>0?'short':cf?'confirm':'buy',price=`<span class="pz"><i class="sv-coin"></i>${S.price.toLocaleString()}</span>`;
   $('storeCard').dataset.r=rar;$('featRar').className='sv-rar '+rar;$('featRar').textContent=S.season?SEASONS[S.season].name:rar;$('featName').textContent=S.name;$('featDesc').textContent=SKIN_DESC[S.id]||'';
   const ss=S.season&&!own?seasonState(S.season):null,fl=$('featLeft');fl.hidden=!(ss&&ss.open);if(ss&&ss.open){fl.dataset.ends=ss.ends;fl.innerHTML=svIcon('clock')+'<span>'+svClock(ss.ends-Date.now())+'</span>';}
-  b.className='primary sv-buy '+st;b.disabled=eq;
-  b.innerHTML=eq?svIcon('check')+'<span>Wearing</span>':own?'<span>Wear</span>':st==='off'?'<span>Connect to buy</span>'+price:st==='short'?svIcon('plus')+'<span>Get ATP</span>':cf?'<span>Confirm</span>'+price:'<span>Buy</span>'+price;
+  b.className='primary sv-buy '+st;b.disabled=eq||!!how;
+  b.innerHTML=how==='pass'?'<span>Unlock it on the Battle Pass</span>':how==='event'?`<span>Back for ${escH(SEASONS[S.season].name)} on ${seasonFrom(S.season)}</span>`:eq?svIcon('check')+'<span>Wearing</span>':own?'<span>Wear</span>':st==='off'?'<span>Connect to buy</span>'+price:st==='short'?svIcon('plus')+'<span>Get ATP</span>':cf?'<span>Confirm</span>'+price:'<span>Buy</span>'+price;
   $('featNote').innerHTML=st==='short'?`<span class="sv-prog"><i style="width:${Math.max(3,Math.min(100,wallet.balance/S.price*100)).toFixed(1)}%"></i></span><span class="sv-of"><i class="sv-coin"></i>${fmtAtp(wallet.balance)} / ${fmtAtp(S.price)}</span>`:'';
   drawFeat();
 }
@@ -6960,7 +6979,7 @@ setInterval(()=>{if($('storeCard').hidden||document.hidden)return; // tick the l
   for(const c of document.querySelectorAll('#storeCard [data-ends]')){if(c.hidden)continue;const ms=+c.dataset.ends-Date.now();if(ms<=0){renderSkins();return;}const s=c.querySelector('span');if(s)s.textContent=svClock(ms);}},1000);
 function shopTab(t){const atp=t==='atp';$('tabSkins').setAttribute('aria-selected',String(!atp));$('tabAtp').setAttribute('aria-selected',String(atp));$('skinFeat').hidden=$('skinSec').hidden=atp;$('packSec').hidden=!atp;$('storeCard').dataset.tab=atp?'atp':'skins';if(!atp)renderFeat();}
 $('tabSkins').addEventListener('click',()=>shopTab('skins'));$('tabAtp').addEventListener('click',()=>shopTab('atp'));$('storeBalBtn').addEventListener('click',()=>shopTab('atp'));
-$('skins').addEventListener('click',e=>{const c=e.target.closest('.sv-cats button');if(c){const h=$('svc-'+c.dataset.cat),l=$('skinSec');if(h)l.scrollBy({top:h.getBoundingClientRect().top-l.getBoundingClientRect().top-50,behavior:RM?'auto':'smooth'});Native.haptic('light');return;}
+$('skins').addEventListener('click',e=>{
   const b=e.target.closest('.svc');if(!b)return;const id=+b.dataset.id;if(id===shopSel||!PREMIUM.some(x=>x.id===id))return;shopSel=id;confirmSkin=0;renderSkins();Native.haptic('light');});
 $('featBuy').addEventListener('click',async()=>{
   const id=shopSel,S=PREMIUM.find(x=>x.id===id),b=$('featBuy');if(!S)return;
