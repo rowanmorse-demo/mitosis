@@ -5416,6 +5416,73 @@ button(q,u,P,R){const C=P.c;fillAll(q,gc(C[3]));disc(q,0,0,1.15,lgr(q,-.8,-.8,.8
   disc(q,0,0,.78,rgr(q,.15,.2,.9,[0,gc(C[2]),.5,gc(C[1]),1,gc(C[0])]));disc(q,0,0,.62,rgr(q,-.12,-.15,.75,[0,gc(gsh(C[1],-.2)),.7,gc(C[1]),1,gc(gsh(C[1],.15))]));
   q.save();q.translate(-.3,-.36);q.rotate(-.7);q.scale(.26,.1);disc(q,0,0,1,rgr(q,0,0,1,[0,'rgba(255,255,255,.85)',1,'rgba(255,255,255,0)']));q.restore();},
 });
+// a wobbly ring: radius r bulging by up to w in n lobes, its phase from R
+function gblob(q,x,y,r,w,n,R,m=48){const ph=[];for(let i=0;i<4;i++)ph.push(R()*TAU);q.beginPath();for(let i=0;i<=m;i++){const a=i/m*TAU,d=r+w*(Math.sin(a*n+ph[0])*.6+Math.sin(a*(n+3)+ph[1])*.4);i?q.lineTo(x+Math.cos(a)*d,y+Math.sin(a)*d):q.moveTo(x+Math.cos(a)*d,y+Math.sin(a)*d);}q.closePath();}
+Object.assign(GF,{
+// A ring doughnut from above: fried dough, the hole, icing with a drippy edge, and toppings. k: 'glaze' (a clear sugar glaze), 'drizzle' (lines of a
+// second icing), 'seeds' (scattered). C: dough dark, dough, dough light, icing, icing light, topping.
+donut(q,u,P,R){const C=P.c,k=P.k;fillAll(q,gc(C[0]));disc(q,0,0,1.15,rgr(q,0,0,1.15,[0,gc(C[0]),.24,gc(C[1]),.6,gc(C[2]),.85,gc(C[1]),1,gc(C[0])]));
+  ggrain(q,u,R,700,gc(C[0],.3),gc(C[2],.3),.004,.01);q.save();q.beginPath();q.rect(-1.2,-1.2,2.4,2.4);q.arc(0,0,.3,0,TAU,true);q.clip();
+  if(k==='glaze'){gblob(q,0,0,.95,.04,7,R);q.fillStyle=rgr(q,-.2,-.3,1.1,[0,'rgba(255,250,235,.55)',.6,'rgba(255,240,210,.3)',1,'rgba(255,240,210,.15)']);q.fill();q.lineWidth=.01;q.strokeStyle='rgba(255,255,255,.5)';q.stroke();}
+  else{gblob(q,0,0,.88,.07,6,R);q.fillStyle=rgr(q,-.15,-.2,1,[0,gc(C[4]),.6,gc(C[3]),1,gc(gsh(C[3],-.2))]);q.fill();q.lineWidth=.012;q.strokeStyle=gc(gsh(C[3],-.3),.5);q.stroke();}
+  q.restore();q.beginPath();q.arc(0,0,.3,0,TAU);q.fillStyle=rgr(q,0,0,.3,[0,'#120a04',.7,gc(gsh(C[0],-.5)),1,gc(C[0])]);q.fill();
+  if(k==='drizzle'){q.lineCap='round';q.beginPath();for(let i=0;i<7;i++){const y=-.8+i*.26;q.moveTo(-.9,y-.1);for(let x=-.9;x<=.9;x+=.1)q.lineTo(x,y+Math.sin(x*9+i)*.05-x*.15);}q.save();q.beginPath();q.arc(0,0,.9,0,TAU);q.arc(0,0,.33,0,TAU,true);q.clip('evenodd');
+    q.lineWidth=.035;q.strokeStyle=gc(C[5]);q.beginPath();for(let i=0;i<7;i++){const y=-.8+i*.26;q.moveTo(-.9,y-.1);for(let x=-.9;x<=.9;x+=.1)q.lineTo(x,y+Math.sin(x*9+i)*.05-x*.15);}q.stroke();q.restore();}
+  if(k==='seeds'){for(let i=0;i<60;i++){const a=R()*TAU,d=.38+R()*.45;gseed(q,Math.cos(a)*d,Math.sin(a)*d,R()*TAU,.025,.014,gc(C[5]),.5);}}
+  ggloss(q,.6);},
+// A macaron from above: a smooth domed shell, the ruffled foot peeping out round its edge. C: foot dark, foot, shell, shell light.
+macaron(q,u,P,R,S){const C=P.c;fillAll(q,gc(gsh(C[0],-.2)));disc(q,0,0,1.06,rgr(q,0,0,1.06,[0,gc(C[1]),.8,gc(C[1]),1,gc(C[0])]));
+  q.beginPath();for(let i=0;i<(u>50?520:200);i++){const a=R()*TAU,d=.8+R()*.24,x=Math.cos(a)*d,y=Math.sin(a)*d;q.moveTo(x+.02,y);q.arc(x,y,.012+R()*.016,0,TAU);}q.fillStyle=gc(C[0],.55);q.fill(); // the ruffled foot
+  q.beginPath();for(let i=0;i<300;i++){const a=R()*TAU,d=.82+R()*.2,x=Math.cos(a)*d,y=Math.sin(a)*d;q.moveTo(x+.01,y);q.arc(x,y,.008+R()*.01,0,TAU);}q.fillStyle=gc(gsh(C[1],.3),.6);q.fill();
+  disc(q,.02,.03,.83,'rgba(0,0,0,.3)');gfield(q,gtex(S.key,u,(x,y,o)=>{const r=Math.hypot(x,y);if(r>.8){o[3]=0;return;}const z=Math.sqrt(Math.max(0,1-r*r/.64)),n=gfbm(x*6+S.id,y*6,3);gramp([C[2],C[3]],.2+z*.6+(n-.5)*.16,o);o[3]=255*gstep(.8,.785,r);}));
+  if(P.top){for(let i=0;i<(P.tn||22);i++){const a=R()*TAU,d=Math.sqrt(R())*.5,x=Math.cos(a)*d,y=Math.sin(a)*d,s=.02+R()*.03;q.beginPath();for(let j=0;j<5;j++){const b=j/5*TAU+R(),l=s*(.6+R()*.6);j?q.lineTo(x+Math.cos(b)*l,y+Math.sin(b)*l):q.moveTo(x+Math.cos(b)*l,y+Math.sin(b)*l);}q.closePath();q.fillStyle=gc(gpal(P.top)[i%gpal(P.top).length]);q.fill();}}
+  ggloss(q,.45,1);},
+// A jawbreaker cut in half: layer on layer of colour round a sugar heart. C: the layers from outside in.
+jawbreaker(q,u,P,R){const C=P.c,n=C.length;fillAll(q,gc(C[0]));for(let i=0;i<n*2;i++){const r=1.12*(1-i/(n*2)),cl=C[i%n];gblob(q,.03,-.02,r,.012,5+i,R);q.fillStyle=rgr(q,-.1,-.1,r,[0,gc(gsh(cl,.15)),1,gc(gsh(cl,-.1))]);q.fill();q.lineWidth=Math.max(.004,.7/u);q.strokeStyle=gc(gsh(cl,.4),.5);q.stroke();}
+  disc(q,.03,-.02,.08,rgr(q,.03,-.02,.08,[0,'#fffaf0',1,'#f0e0c8']));ggrain(q,u,R,500,'rgba(255,255,255,.15)',null,.003,.007);ggloss(q,.7);},
+// A lollipop's swirl: ribbons of colour winding into the middle; it spins. C: the ribbons.
+swirl(q,u,P,R){const C=P.c,n=C.length;fillAll(q,gc(C[0]));for(let k=0;k<n*2;k++){q.beginPath();for(let i=0;i<=60;i++){const t=i/60,a=k/(n*2)*TAU+t*5.5,r=t*1.2;i?q.lineTo(Math.cos(a)*r,Math.sin(a)*r):q.moveTo(0,0);}
+    for(let i=60;i>=0;i--){const t=i/60,a=(k+1)/(n*2)*TAU+t*5.5,r=t*1.2;q.lineTo(Math.cos(a)*r,Math.sin(a)*r);}q.closePath();q.fillStyle=gc(C[k%n]);q.fill();}
+  disc(q,0,0,1.15,rgr(q,-.2,-.25,1.3,[0,'rgba(255,255,255,.2)',.6,'rgba(255,255,255,0)',1,'rgba(0,0,0,.25)']));ggloss(q,1);},
+// A cookie: golden crumb, cracked, studded with chunks. C: dough dark, dough, dough light, chunk, chunk light.
+cookie(q,u,P,R,S){const C=P.c;gfield(q,gtex(S.key,u,(x,y,o)=>{gwi(x,y,GO2);const n=gfbm(GO2[0]*3+S.id,GO2[1]*3,4),cr=Math.pow(gridge(GO2[0]*1.8+5,GO2[1]*1.8,3),12);gramp(C.slice(0,3),.25+n*.6-cr*.5+gstep(.6,1.1,Math.hypot(x,y))*.2,o);}));
+  for(let i=0;i<(P.n||14);i++){const a=R()*TAU,d=Math.sqrt(R())*.9,x=Math.cos(a)*d,y=Math.sin(a)*d,s=.07+R()*.07;q.beginPath();for(let j=0;j<7;j++){const b=j/7*TAU+R()*.3,l=s*(.65+R()*.5);j?q.lineTo(x+Math.cos(b)*l,y+Math.sin(b)*l):q.moveTo(x+Math.cos(b)*l,y+Math.sin(b)*l);}q.closePath();
+    q.fillStyle=rgr(q,x-s*.3,y-s*.3,s*1.2,[0,gc(C[4]),.5,gc(C[3]),1,gc(gsh(C[3],-.3))]);q.fill();}
+  if(P.sug){q.fillStyle='rgba(255,255,255,.8)';for(let i=0;i<120;i++){const a=R()*TAU,d=Math.sqrt(R())*1.05;q.fillRect(Math.cos(a)*d,Math.sin(a)*d,.012,.012);}}},
+// A scoop of ice cream from above: soft ridges where the scoop dragged, bits frozen in. C: cream dark, cream, cream light, bits, bits 2.
+scoop(q,u,P,R,S){const C=P.c;gfield(q,gtex(S.key,u,(x,y,o)=>{const r=Math.hypot(x,y),a=Math.atan2(y,x),z=Math.sqrt(Math.max(0,1-r*r)),rd=Math.sin(a*3+r*9+gfbm(x*2+S.id,y*2,3)*6)*.5+.5,n=gfbm(x*5,y*5,3);
+    gramp(C.slice(0,3),.25+z*.35+rd*.25+(n-.5)*.15,o);}));
+  for(let i=0;i<(P.n||40);i++){const a=R()*TAU,d=Math.sqrt(R())*.95,x=Math.cos(a)*d,y=Math.sin(a)*d,s=.025+R()*.04,cl=C[3+(i%2&&C[4]?1:0)];q.beginPath();for(let j=0;j<5;j++){const b=j/5*TAU+R(),l=s*(.6+R()*.6);j?q.lineTo(x+Math.cos(b)*l,y+Math.sin(b)*l):q.moveTo(x+Math.cos(b)*l,y+Math.sin(b)*l);}q.closePath();q.fillStyle=gc(cl);q.fill();}
+  ggloss(q,.35,1);},
+// A cupcake from above: frosting piped in a rising swirl, sprinkles over it and a cherry on top. C: frosting dark, frosting, frosting light, cherry, sprinkles...
+cupcake(q,u,P,R){const C=P.c;fillAll(q,gc(C[0]));for(let i=0;i<5;i++){const r=1.1-i*.2;q.save();q.rotate(i*.6);for(let j=0;j<14-i*2;j++){const a=j/(14-i*2)*TAU;q.beginPath();q.ellipse(Math.cos(a)*r*.82,Math.sin(a)*r*.82,r*.3,r*.2,a+Math.PI/2,0,TAU);
+      q.fillStyle=rgr(q,Math.cos(a)*r*.82-.05,Math.sin(a)*r*.82-.05,r*.32,[0,gc(C[2]),.6,gc(C[1]),1,gc(C[0])]);q.fill();}q.restore();}
+  for(let i=0;i<40;i++){const a=R()*TAU,d=.15+R()*.85,x=Math.cos(a)*d,y=Math.sin(a)*d,b=R()*TAU;q.save();q.translate(x,y);q.rotate(b);q.fillStyle=gc(C[4+Math.floor(R()*(C.length-4))]);rrect(q,-.035,-.011,.07,.022,.011);q.fill();q.restore();}
+  disc(q,0,0,.2,rgr(q,-.06,-.06,.22,[0,gc(gsh(C[3],.4)),.5,gc(C[3]),1,gc(gsh(C[3],-.4))]));q.beginPath();q.moveTo(.02,-.15);q.quadraticCurveTo(.12,-.4,.3,-.45);q.lineWidth=.02;q.strokeStyle='#4a6a1a';q.stroke();ggloss(q,.4);},
+// A cup of coffee from above: the cup's rim, golden crema and milk poured into a heart or a rosetta. C: cup, crema dark, crema, milk.
+latte(q,u,P,R){const C=P.c;fillAll(q,gc(C[0]));disc(q,0,0,1.15,rgr(q,-.3,-.35,1.4,[0,'#ffffff',1,gc(C[0])]));disc(q,0,0,.86,rgr(q,0,0,.86,[0,gc(C[2]),.8,gc(C[1]),.95,gc(gsh(C[1],-.3)),1,gc(gsh(C[1],-.5))]));
+  q.fillStyle=gc(C[3]);if(P.k==='heart'){q.beginPath();q.moveTo(0,.45);q.bezierCurveTo(-.7,-.05,-.4,-.62,0,-.24);q.bezierCurveTo(.4,-.62,.7,-.05,0,.45);q.fill();q.beginPath();q.moveTo(0,.55);q.lineTo(0,-.24);q.lineWidth=.03;q.strokeStyle=gc(C[2]);q.stroke();}
+  else{for(let i=0;i<7;i++){const y=.5-i*.13,w=.52-i*.06;q.beginPath();q.ellipse(0,y,w,.075,0,Math.PI,0,false);q.ellipse(0,y-.02,w*.85,.05,0,0,Math.PI,true);q.fill();}disc(q,0,-.45,.1,gc(C[3]));q.beginPath();q.moveTo(0,.62);q.lineTo(0,-.45);q.lineWidth=.025;q.strokeStyle=gc(C[2]);q.stroke();}
+  ggrain(q,u,R,500,gc(C[1],.25),gc(C[3],.2),.003,.008,.85);},
+// A chocolate truffle dusted in cocoa: dark velvet, a little lumpy. C: dark, mid, dust.
+truffle(q,u,P,R,S){const C=P.c;gfield(q,gtex(S.key,u,(x,y,o)=>{const r=Math.hypot(x,y),z=Math.sqrt(Math.max(0,1-r*r)),n=gfbm(x*4+S.id,y*4,4);gramp(C,.12+z*.35+n*.25,o);}));
+  q.lineCap='round';q.beginPath();for(let i=0;i<5;i++){const y=-.55+i*.26;q.moveTo(-.7,y+.1);for(let x=-.7;x<=.7;x+=.05)q.lineTo(x,y+Math.sin(x*7+i)*.06-x*.12);}q.lineWidth=.05;q.strokeStyle=gc(gsh(C[2],.2),.9);q.stroke();q.lineWidth=.015;q.strokeStyle='rgba(255,255,255,.25)';q.stroke();
+  for(const [x,y,s] of[[.15,-.2,.07],[-.1,.12,.05]]){q.beginPath();for(let j=0;j<6;j++){const b=j/6*TAU+R(),l=s*(.6+R()*.6);j?q.lineTo(x+Math.cos(b)*l,y+Math.sin(b)*l):q.moveTo(x+Math.cos(b)*l,y+Math.sin(b)*l);}q.closePath();q.fillStyle=lgr(q,x-s,y-s,x+s,y+s,[0,'#fff2b0',.5,'#e0b030',1,'#a87810']);q.fill();}ggloss(q,.7);},
+// A stack of pancakes from above: golden-brown and lacy, a pat of butter melting, syrup pooling. C: dark, golden, light, syrup, butter.
+pancake(q,u,P,R,S){const C=P.c;gfield(q,gtex(S.key,u,(x,y,o)=>{const n=gfbm(x*3+S.id,y*3,4),sp=gvor(x*7,y*7,.9).f1,r=Math.hypot(x,y);gramp(C.slice(0,3),.3+n*.45+gstep(.18,.35,sp)*.2+gstep(.88,1.02,r)*.25,o);}));
+  gblob(q,.05,.08,.62,.08,4,R);q.fillStyle=gc(C[3],.85);q.fill();q.save();q.translate(-.06,-.05);q.rotate(.2);rrect(q,-.17,-.13,.34,.26,.05);q.fillStyle=lgr(q,-.17,-.13,.17,.13,[0,gc(gsh(C[4],.3)),1,gc(C[4])]);q.fill();q.restore();
+  disc(q,-.15,-.15,.2,rgr(q,-.15,-.15,.2,[0,'rgba(255,255,255,.3)',1,'rgba(255,255,255,0)']));ggloss(q,.35,1);},
+// A cinnamon roll from above: dough rolled in a spiral round cinnamon sugar, white icing trickled over. C: dough dark, dough, dough light, cinnamon, icing.
+roll(q,u,P,R){const C=P.c;fillAll(q,gc(C[0]));const sp=t=>.03+t*.19;disc(q,0,0,1.15,rgr(q,0,0,1.15,[0,gc(C[2]),.7,gc(C[1]),1,gc(C[0])]));q.beginPath();for(let t=0;t<6.2;t+=.02){const a=t*TAU,r=sp(t);t?q.lineTo(Math.cos(a)*r,Math.sin(a)*r):q.moveTo(Math.cos(a)*r,Math.sin(a)*r);}q.lineWidth=.07;q.strokeStyle=gc(C[3]);q.stroke();q.lineWidth=.025;q.strokeStyle=gc(gsh(C[3],-.35));q.stroke();
+  q.lineCap='round';q.beginPath();for(let i=0;i<6;i++){const y=-.75+i*.3;q.moveTo(-.95,y);for(let x=-.95;x<=.95;x+=.08)q.lineTo(x,y+Math.sin(x*6+i*2)*.08+x*.25);}q.lineWidth=.035;q.strokeStyle=gc(C[4],.95);q.stroke();ggloss(q,.4);},
+// A cherry pie from above: a lattice of golden pastry over glossy cherries, a crimped rim. C: crust dark, crust, crust light, filling dark, filling.
+pie(q,u,P,R){const C=P.c;fillAll(q,gc(C[3]));disc(q,0,0,.92,rgr(q,0,0,.92,[0,gc(C[4]),1,gc(C[3])]));for(let i=0;i<30;i++){const a=R()*TAU,d=Math.sqrt(R())*.85,x=Math.cos(a)*d,y=Math.sin(a)*d;disc(q,x,y,.08,rgr(q,x-.03,y-.03,.09,[0,gc(gsh(C[4],.35)),1,gc(C[3],0)]));}
+  const strip=(vert,o)=>{q.save();q.rotate(vert?Math.PI/2:0);q.translate(0,o);rrect(q,-1.2,-.075,2.4,.15,.05);q.fillStyle=lgr(q,0,-.075,0,.075,[0,gc(C[2]),.5,gc(C[1]),1,gc(C[0])]);q.fill();q.restore();};
+  for(let i=0;i<5;i++)strip(0,-.8+i*.4);for(let i=0;i<5;i++)strip(1,.8-i*.4);
+  for(let i=0;i<5;i++)for(let j=0;j<5;j++){if((i+j)%2)continue;q.save();q.beginPath();q.rect(-.8+i*.4-.08,-.8+j*.4-.08,.16,.16);q.clip();strip(0,-.8+j*.4);q.restore();} // woven: each strip goes over, then under
+  q.beginPath();for(let i=0;i<28;i++){const a=i/28*TAU;q.moveTo(Math.cos(a)*1.05+.08,Math.sin(a)*1.05);q.arc(Math.cos(a)*1.05,Math.sin(a)*1.05,.08,0,TAU);}q.fillStyle=gc(C[1]);q.fill();q.beginPath();q.arc(0,0,.92,0,TAU);q.lineWidth=.12;q.strokeStyle=gc(C[2]);q.stroke();
+  ggrain(q,u,R,500,'rgba(255,255,255,.2)',null,.003,.006);},
+});
 // a football's 32 panels: the truncated icosahedron's 12 pentagons and 20 hexagons, pushed out onto the sphere
 const GSOC=(()=>{const f=(1+Math.sqrt(5))/2,V=[],E=[],nz=p=>{const l=Math.hypot(p[0],p[1],p[2]);return[p[0]/l,p[1]/l,p[2]/l];},lp=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
   for(const a of[-1,1])for(const b of[-f,f])V.push([0,a,b],[a,b,0],[b,0,a]);
@@ -6207,6 +6274,29 @@ retro:[
 [272,'memphis','Memphis',400,'memphis','fff0e0 141414 ff6a8a 2ac0c0 f6c81a 8a6af0',{m:2},'Squiggles, triangles and dots, very 1986.'],
 [273,'rainbow','Rainbow',400,'rainbow','fff0d8 e8402a f6902a f6d02a 5ac06a 3a8ae0 ffffff',{m:3},'A seventies rainbow rising out of the clouds.'],
 [274,'arcadebutton','Arcade Button',500,'button','6a0408 e8141e ff7a7a 3a3e44 e8ecf0',{},'Press start.'],
+],
+sweets:[
+[275,'glazeddonut','Glazed Doughnut',350,'donut','a85a1a d8902a f0c060 ffffff ffffff 000000',{k:'glaze',m:1},'Golden and glistening with sugar glaze.'],
+[276,'chocdonut','Chocolate Doughnut',400,'donut','a85a1a d8902a f0c060 4a2410 6a3a1a f6f0e6',{k:'drizzle',m:3},'Chocolate icing and a white drizzle.'],
+[277,'matchadonut','Matcha Doughnut',450,'donut','a85a1a d8902a f0c060 6a9a3a 9ac86a 1a1a1a',{k:'seeds',m:3},'Green tea icing with black sesame.'],
+[278,'raspberrymacaron','Raspberry Macaron',400,'macaron','c84a6a f0a0b8 f06a90 ffb8cc',{m:2,top:'c8143a e83a5a 9a0a2a'},'A pink shell and its ruffled foot.'],
+[279,'pistachiomacaron','Pistachio Macaron',400,'macaron','7a9a4a c8dc9a 9ac86a d8f0b0',{m:2,top:'6a9a2a 9ac84a 4a6a1a'},'Pale green and nutty.'],
+[280,'lavendermacaron','Lavender Macaron',400,'macaron','8a6ab0 d8c8f0 b09ae0 e0d4f8',{m:2,top:'f0c840 ffe08a',tn:5},'Lilac, floral, delicate.'],
+[281,'lemonmacaron','Lemon Macaron',400,'macaron','c8a020 fff0a0 f6d84a fff4b0',{m:2,top:'f0b010 ffd030 e89a0a',tn:14},'Sunny yellow and sharp.'],
+[282,'jawbreaker','Jawbreaker',600,'jawbreaker','f02a6a f6d02a 2ad0a0 2a8af0 a04af0 ff8a2a',{},'Cracked in half: layer after layer of colour.'],
+[283,'swirlpop','Swirl Pop',500,'swirl','f02a5a ffffff f6d02a 2ab0f0 7ad04a',{spin:1.5,m:0},'A rainbow lollipop that spins.'],
+[284,'chocchip','Choc Chip Cookie',350,'cookie','8a5a20 d8a050 f0c880 3a1e0a 6a3a1a',{n:14},'Golden, cracked and full of chocolate.'],
+[285,'doublechoc','Double Chocolate',450,'cookie','2a1408 4a2a14 6a4026 e8dcc4 fffaf0',{n:16,m:1},'Dark chocolate cookie, white chocolate chunks.'],
+[286,'mintchip','Mint Choc Chip',400,'scoop','a8e0c0 c8f0d8 e8fff0 3a1e0a 2a1408',{},'A scoop of mint ice cream, chips and all.'],
+[287,'strawberryscoop','Strawberry Scoop',400,'scoop','e890a8 f8b8c8 ffe0e8 c8283a f0f0e0',{n:25},'Pink ice cream with real berries.'],
+[288,'cookiescream','Cookies & Cream',400,'scoop','d8d4cc f0eee8 ffffff 1a1410 2a2420',{n:60},'Vanilla packed with cookie crumbs.'],
+[289,'cupcake','Cupcake',450,'cupcake','e890b0 f8c0d8 fff0f6 d8141e f02a6a 2ab0f0 f6d02a 7ad04a',{m:1},'Piped frosting, sprinkles and a cherry.'],
+[290,'latte','Latte',400,'latte','f4f0ea 6a3a14 b0743a fff4e4',{k:'heart',m:2},'A heart poured into the crema.'],
+[291,'rosetta','Rosetta',450,'latte','f4f0ea 5a3010 a86a30 fff4e4',{k:'rosetta',m:2},'Latte art: a rosetta, poured with care.'],
+[292,'truffle','Truffle',500,'truffle','1a0c06 3a2010 6a4a32',{m:1},'Dark chocolate dusted in cocoa.'],
+[293,'pancakes','Pancakes',400,'pancake','8a4a14 d89040 f0c070 a0500a fff0a0',{m:1},'A golden stack, butter melting into syrup.'],
+[294,'cinnamonroll','Cinnamon Roll',400,'roll','a8682a e0a868 f6d8a0 6a3a14 fffaf0',{m:1},'A swirl of cinnamon under white icing.'],
+[295,'cherrypie','Cherry Pie',500,'pie','a8682a e0a868 f6d8a0 6a0a10 c81e2a',{m:1},'A lattice crust over glossy cherries.'],
 ],
 };
 for(const col in GEN)for(const row of GEN[col]){const S=gskin(row,col);S.tok=STAINS.map(()=>'tok'+S.key);PREMIUM.push(S);}

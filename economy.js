@@ -293,6 +293,28 @@ const GEN_SKINS = [
   [272, 'memphis', 'Memphis', 400],
   [273, 'rainbow', 'Rainbow', 400],
   [274, 'arcadebutton', 'Arcade Button', 500],
+  // sweets
+  [275, 'glazeddonut', 'Glazed Doughnut', 350],
+  [276, 'chocdonut', 'Chocolate Doughnut', 400],
+  [277, 'matchadonut', 'Matcha Doughnut', 450],
+  [278, 'raspberrymacaron', 'Raspberry Macaron', 400],
+  [279, 'pistachiomacaron', 'Pistachio Macaron', 400],
+  [280, 'lavendermacaron', 'Lavender Macaron', 400],
+  [281, 'lemonmacaron', 'Lemon Macaron', 400],
+  [282, 'jawbreaker', 'Jawbreaker', 600],
+  [283, 'swirlpop', 'Swirl Pop', 500],
+  [284, 'chocchip', 'Choc Chip Cookie', 350],
+  [285, 'doublechoc', 'Double Chocolate', 450],
+  [286, 'mintchip', 'Mint Choc Chip', 400],
+  [287, 'strawberryscoop', 'Strawberry Scoop', 400],
+  [288, 'cookiescream', 'Cookies & Cream', 400],
+  [289, 'cupcake', 'Cupcake', 450],
+  [290, 'latte', 'Latte', 400],
+  [291, 'rosetta', 'Rosetta', 450],
+  [292, 'truffle', 'Truffle', 500],
+  [293, 'pancakes', 'Pancakes', 400],
+  [294, 'cinnamonroll', 'Cinnamon Roll', 400],
+  [295, 'cherrypie', 'Cherry Pie', 500],
 ];
 for (const [id, key, name, price] of GEN_SKINS) SKINS.push({ id, key, name, price });
 const PACKS = [
