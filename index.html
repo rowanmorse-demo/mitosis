@@ -1833,7 +1833,12 @@ body.saver .lb-bg *{animation:none!important}
 #friendsCard .fr-msg{margin:-4px 2px 0;font:500 13px/1.35 var(--display);color:var(--muted)}
 #friendsCard .fr-msg:empty{display:none}
 #friendsCard .fr-msg.bad{color:#ff8c96}
-#friendsCard .fr-col{display:grid;gap:20px;min-width:0}
+#friendsCard .fr-col{display:grid;gap:12px;min-width:0}
+/* each list is a section in the shared page style (.ds-sec): the rows sit straight on it, not in a card of their own */
+#friendsCard .fr-sec.ds-sec{gap:8px}
+#friendsCard .ds-sec .fr-list{margin:0 -6px -6px;border:0;border-radius:0;background:none;box-shadow:none;overflow:visible}
+#friendsCard .ds-sec .fr-row{padding-left:6px;padding-right:6px}
+#friendsCard .ds-sec .fr-note{margin:0 2px}
 #friendsCard .fr-sec{display:grid;gap:9px;min-width:0}
 #friendsCard .fr-h{margin:0;padding:0 4px;display:flex;align-items:center;gap:8px;font:800 19px/1 var(--display);letter-spacing:-.025em;color:var(--ink)}
 #friendsCard .fr-h span{padding:4px 8px;border-radius:999px;font:600 11px/1 var(--mono);color:var(--muted);background:rgba(255,255,255,.07)}
@@ -2860,9 +2865,9 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
         <p class="fr-msg" id="frMsg" role="status"></p>
       </section>
       <div class="fr-col">
-        <section class="fr-sec" id="frInvSec" hidden><h3 class="fr-h">Invites</h3><div class="fr-list" id="frInv"></div></section>
-        <section class="fr-sec" id="frPartySec" hidden><h3 class="fr-h">Party</h3><div class="fr-list" id="frParty"></div><p class="fr-note">Press Play and your ally joins the same arena. You can't eat each other, and once you're out of lives you watch your ally.</p></section>
-        <section class="fr-sec"><h3 class="fr-h">Friends<span id="frCount"></span></h3><div class="fr-list" id="frList"></div></section>
+        <section class="fr-sec ds-sec" id="frInvSec" aria-labelledby="frInvT" hidden><div class="ds-head"><b id="frInvT">Invites</b><span class="ds-pill" id="frInvN"></span></div><div class="fr-list" id="frInv"></div></section>
+        <section class="fr-sec ds-sec" id="frPartySec" aria-labelledby="frPartyT" hidden><div class="ds-head"><b id="frPartyT">Party</b><span class="ds-pill">Play together</span></div><div class="fr-list" id="frParty"></div><p class="fr-note">Press Play and your ally joins the same arena. You can't eat each other, and once you're out of lives you watch your ally.</p></section>
+        <section class="fr-sec ds-sec" aria-labelledby="frListT"><div class="ds-head"><b id="frListT">Friends</b><span class="ds-pill" id="frCount"></span></div><div class="fr-list" id="frList"></div></section>
       </div>
     </div>
   </div>
@@ -7197,7 +7202,7 @@ function socRender(){
   if(!v){list.appendChild(socErr?frEmpty('off','Offline',socErr.replace(/^Offline: /,'').replace(/^./,ch=>ch.toUpperCase()),true):frEmpty('wait','Connecting…','Looking up your friends'));return;}
   for(const i of v.invites)inv.appendChild(frRow('party',i.from.name,'invited you to a party',[['Join','hot',()=>socAct('party/join',{party:i.party},`You're in a party with ${i.from.name}`)],['✕','ghost',()=>socAct('party/decline',{party:i.party})]]));
   for(const r of v.incoming)inv.appendChild(frRow(null,r.name,'wants to be friends',[['Accept','hot',()=>socAct('accept',{code:r.code},`You're now friends with ${r.name}`)],['✕','ghost',()=>socAct('remove',{code:r.code})]]));
-  $('frInvSec').hidden=!inv.children.length;
+  $('frInvSec').hidden=!inv.children.length;$('frInvN').textContent=inv.children.length?String(inv.children.length):'';
   if(v.party){
     for(const m of v.party.members)party.appendChild(frRow('party',m.code===v.code?`${m.name} (you)`:m.name,m.code===v.code?'':SOC_ST[m.status]||'',[]));
     for(const c of v.party.invited)party.appendChild(frRow(null,friendName(c),'Invited',[]));
