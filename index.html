@@ -5319,10 +5319,10 @@ soccer(q,u,P,R){const C=P.c,M=gm3(.5,-.45,.2);fillAll(q,gc(C[0]));
   q.save();q.translate(-.006,-.008);q.lineWidth=Math.max(.005,.8/u);q.strokeStyle='rgba(255,255,255,.35)';q.stroke();q.restore();
   ggrain(q,u,R,700,'rgba(0,0,0,.05)','rgba(255,255,255,.07)',.003,.007);ggloss(q,.5);},
 // A pool ball: a solid colour, or white with a band (st), a white spot with its number facing up and left. C: ball colour, ivory, ink.
-pool(q,u,P,R){const C=P.c,ivory=C[1]||[250,246,232],ink=C[2]||[20,16,14],ax=[.28,.9,-.32];fillAll(q,gc(P.st?ivory:C[0]));
+pool(q,u,P,R){const C=P.c,ivory=C[1]||[250,246,232],ink=C[2]||[20,16,14],ax=[.16,.94,.3];fillAll(q,gc(P.st?ivory:C[0]));
   disc(q,0,0,1.15,rgr(q,-.25,-.3,1.4,[0,gc(gsh(P.st?ivory:C[0],.1)),.6,gc(P.st?ivory:C[0]),1,gc(gsh(P.st?ivory:C[0],-.3))]));
   const I=[1,0,0,0,1,0,0,0,1];
-  if(P.st){q.save();q.beginPath();q.rect(-2,-2,4,4);for(const s of[1,-1]){gs3(q,I,gcirc3(ax[0]*s,ax[1]*s,ax[2]*s,.62,64));}q.clip('evenodd');
+  if(P.st){q.save();q.beginPath();q.rect(-2,-2,4,4);for(const s of[1,-1]){gs3(q,I,gcirc3(ax[0]*s,ax[1]*s,ax[2]*s,.95,64));}q.clip('evenodd');
     disc(q,0,0,1.15,rgr(q,-.25,-.3,1.4,[0,gc(gsh(C[0],.12)),.6,gc(C[0]),1,gc(gsh(C[0],-.32))]));q.restore();}
   const n=[-.16,-.2,.966];if(P.n!==undefined){q.beginPath();gs3(q,I,gcirc3(n[0],n[1],n[2],.4,48));q.fillStyle=gc(ivory);q.fill();
     if(P.n!==''){q.save();q.translate(n[0]*.93,n[1]*.93);const a=Math.atan2(n[1],n[0]);q.rotate(a);q.scale(.93,1);q.rotate(-a);q.fillStyle=gc(ink);q.font=`800 ${String(P.n).length>1?.4:.46}px system-ui,-apple-system,"Segoe UI",sans-serif`;q.textAlign='center';q.textBaseline='middle';q.fillText(String(P.n),0,.025);q.restore();}}
@@ -5413,8 +5413,8 @@ coin(q,u,P,R){const C=P.c,O=[0,0,0],mid=C[2],lo=C[0],hi=C[4];fillAll(q,gc(lo));
   emb(()=>{q.beginPath();for(let i=0;i<7;i++){const a=-Math.PI/2+(i-3)*.32;star(Math.cos(a)*.69,Math.sin(a)*.69,.05);}});
   emb(()=>{q.beginPath();for(const s of[-1,1]){for(let i=0;i<8;i++){const a=Math.PI/2+s*(.28+i*.21),x=Math.cos(a)*.62,y=Math.sin(a)*.62;for(const o of[-1,1]){const b=a+s*Math.PI/2*-1+o*.55,lx=x+Math.cos(b)*.06,ly=y+Math.sin(b)*.06;q.moveTo(lx+Math.cos(b)*.05,ly+Math.sin(b)*.05);q.ellipse(lx,ly,.055,.022,b,0,TAU);}}}});
   q.beginPath();for(const s of[-1,1]){const a=Math.PI/2+s*.2;q.moveTo(Math.cos(a)*.62,Math.sin(a)*.62);q.arc(0,0,.62,a,Math.PI/2+s*1.9,s<0);}q.lineWidth=.014;q.strokeStyle=gc(lo,.5);q.stroke();
-  emb(()=>{q.beginPath();star(0,.02,.36);},.02);
-  emb(()=>{q.beginPath();star(0,.02,.2);},.008);
+  if(P.t){q.font=`800 ${P.t.length>1?.4:.62}px system-ui,-apple-system,"Segoe UI",sans-serif`;q.textAlign='center';q.textBaseline='middle';for(const [d,cl] of[[.018,gc(lo,.6)],[-.014,gc(hi,.8)]]){q.fillStyle=cl;q.fillText(P.t,d,.04+d);}q.fillStyle=rgr(q,-.2,-.25,1,[0,gc(C[3]),1,gc(C[1])]);q.fillText(P.t,0,.04);} // a medal's number
+  else{emb(()=>{q.beginPath();star(0,.02,.36);},.02);emb(()=>{q.beginPath();star(0,.02,.2);},.008);}
   ggloss(q,.5);},
 });
 // a crater on the sphere at unit point (x,y,z) facing us, s across: foreshortened toward the limb, its inner wall dark on the light's side
@@ -5478,6 +5478,76 @@ const GSKY={orion:[[-.36,-.56,.05,.3,-.5,.04,0,-.78,.025,-.14,.02,.035,0,-.02,.0
   cassiopeia:[[-.72,-.12,.04,-.36,.22,.045,0,-.1,.04,.36,.24,.045,.72,-.2,.04],[[0,1],[1,2],[2,3],[3,4]]],
   crux:[[0,-.62,.05,0,.56,.055,-.42,-.02,.045,.38,.06,.04,.18,.26,.02],[[0,1],[2,3]]],
   scorpius:[[.62,-.66,.035,.5,-.5,.035,.48,-.3,.035,.3,-.18,.06,.16,-.02,.03,.08,.2,.03,.02,.44,.03,-.16,.62,.03,-.42,.66,.03,-.62,.52,.035,-.66,.32,.035],[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,9],[9,10]]]};
+// the seam of a tennis ball or a baseball: two interlocking lobes round the sphere
+const GSEAM=(()=>{const P=[],a=.62,b=.38,c=2*Math.sqrt(a*b);for(let i=0;i<160;i++){const t=i/160*TAU,x=a*Math.cos(t)+b*Math.cos(3*t),y=a*Math.sin(t)-b*Math.sin(3*t),z=c*Math.sin(2*t),l=Math.hypot(x,y,z);P.push(x/l,y/l,z/l);}return P;})();
+// stitches along a path on the sphere: short slanted strokes either side of it, only where it faces us
+function gstitch(q,M,P,w,step,slant){q.beginPath();const n=P.length/3;for(let i=0;i<n;i+=step){const j=(i+1)%n,p=[P[i*3],P[i*3+1],P[i*3+2]],t=[P[j*3]-p[0],P[j*3+1]-p[1],P[j*3+2]-p[2]],tl=Math.hypot(...t)||1;
+    const N=[p[1]*t[2]-p[2]*t[1],p[2]*t[0]-p[0]*t[2],p[0]*t[1]-p[1]*t[0]],nl=Math.hypot(...N)||1;if(gz3(M,p)<.05)continue;
+    for(const s of[-1,1]){const a=[p[0]+N[0]/nl*w*s*.4,p[1]+N[1]/nl*w*s*.4,p[2]+N[2]/nl*w*s*.4],b=[p[0]+N[0]/nl*w*s+t[0]/tl*w*slant,p[1]+N[1]/nl*w*s+t[1]/tl*w*slant,p[2]+N[2]/nl*w*s+t[2]/tl*w*slant];
+      gp3(M,...a);q.moveTo(GO[0],GO[1]);gp3(M,...b);q.lineTo(GO[0],GO[1]);}}}
+Object.assign(GF,{
+// A basketball: pebbled orange leather and its black channels (two great circles and two curves). C: dark, leather, light, channel.
+basket(q,u,P,R,S){const C=P.c,M=gm3(.55,-.35,.25),sd=S.id%11*4;
+  gfield(q,gtex(S.key,u,(x,y,o)=>{gpi(M,x,y,GO2);const X=GO2[0],Y=GO2[1],Z=GO2[2],p=gn(X*38+sd,Y*38+Z*21)*.6+gn(X*19,Z*19+Y*7)*.4;gramp(C.slice(0,3),.35+p*.45,o);}));
+  q.lineCap='round';for(const [w,cl] of[[.07,gc(C[0],.3)],[.035,gc(C[3])]]){q.beginPath();gs3(q,M,gcirc3(1,0,0,Math.PI/2,64));gs3(q,M,gcirc3(0,1,0,Math.PI/2,64));
+    for(const s of[-1,1])gs3(q,M,gcirc3(0,0,s,.82,64));q.lineWidth=w;q.strokeStyle=cl;q.stroke();}
+  ggrain(q,u,R,900,gc(C[0],.18),gc(C[2],.18),.004,.009);ggloss(q,.3,1);},
+// Felt or leather with the classic seam. k: 'felt' (a tennis ball: fuzzy, the seam a white groove), 'hide' (a baseball: leather and red
+// stitches). C: dark, ground, light, seam, stitches.
+seam(q,u,P,R,S){const C=P.c,M=gm3(.4,.5,-.2),sd=S.id%13*3,felt=P.k==='felt';
+  gfield(q,gtex(S.key,u,(x,y,o)=>{gpi(M,x,y,GO2);const X=GO2[0],Y=GO2[1],Z=GO2[2],n=felt?gn(X*60+sd,Y*60+Z*33)*.5+gfbm(X*9,Y*9+Z*5,3)*.5:gfbm(X*5+sd,Y*5+Z*3,4);gramp(C.slice(0,3),felt?.3+n*.55:.55+n*.4,o);}));
+  q.lineCap=q.lineJoin='round';
+  if(felt){for(const [w,cl] of[[.12,gc(C[0],.25)],[.075,gc(C[3])],[.03,gc(gsh(C[3],-.15),.6)]]){q.beginPath();gs3(q,M,GSEAM,true,.04);q.lineWidth=w;q.strokeStyle=cl;q.stroke();}
+    ggrain(q,u,R,1600,gc(C[2],.25),gc(C[0],.15),.003,.006);}
+  else{q.beginPath();gs3(q,M,GSEAM,true,.04);q.lineWidth=.012;q.strokeStyle=gc(C[0],.6);q.stroke();gstitch(q,M,GSEAM,.055,2,.9);q.lineWidth=.016;q.strokeStyle=gc(C[4]);q.stroke();}
+  ggloss(q,felt?.15:.4,1);},
+// A cricket ball: red leather, the raised seam round its middle in six rows of stitches, a faint quarter seam. C: dark, hide, light, stitch.
+cricket(q,u,P,R,S){const C=P.c,M=gm3(0,.4,.75),sd=S.id%7*5;
+  gfield(q,gtex(S.key,u,(x,y,o)=>{gpi(M,x,y,GO2);const n=gfbm(GO2[0]*6+sd,GO2[1]*6+GO2[2]*4,4);gramp(C.slice(0,3),.3+n*.5,o);}));
+  q.lineCap='round';q.beginPath();for(const a of[-.06,.06])gs3(q,M,gcirc3(0,1,0,Math.PI/2+a,96));q.lineWidth=.012;q.strokeStyle=gc(C[0],.6);q.stroke();
+  for(const a of[-.045,-.02,.02,.045]){const ring=gcirc3(0,1,0,Math.PI/2+a,140);q.beginPath();const n=ring.length/3;for(let i=0;i<n;i+=1){if(i%2)continue;const j=(i+1)%n;if(gz3(M,ring.slice(i*3,i*3+3))<.05)continue;gp3(M,ring[i*3],ring[i*3+1],ring[i*3+2]);q.moveTo(GO[0],GO[1]);gp3(M,ring[j*3],ring[j*3+1],ring[j*3+2]);q.lineTo(GO[0],GO[1]);}
+    q.lineWidth=.014;q.strokeStyle=gc(C[3],.9);q.stroke();}
+  q.beginPath();gs3(q,M,gcirc3(1,0,0,Math.PI/2,96));q.lineWidth=.006;q.strokeStyle=gc(C[0],.35);q.stroke();ggloss(q,.55);},
+// Panelled balls worked out on the sphere. k: 'volley' (three strips on each face of a cube), 'beach' (gores from pole to pole, white caps).
+// C: the panel colours in turn; the last is the seam.
+panel(q,u,P,R,S){const C=P.c,k=P.k,M=k==='beach'?gm3(.3,.75,-.3):gm3(.6,.55,.3),n=C.length-1,sm=C[n];
+  gfield(q,gtex(S.key,u,(x,y,o)=>{gpi(M,x,y,GO2);const X=GO2[0],Y=GO2[1],Z=GO2[2];let ci,e;
+    if(k==='beach'){const lon=Math.atan2(X,Z),g=(lon/TAU+.5)*n,gi=Math.floor(g),f=g-gi;ci=gi%n;e=Math.min(f,1-f)*Math.sqrt(1-Y*Y)*2.4;if(Math.abs(Y)>.9){ci=-1;e=(Math.abs(Y)-.9)*6;}}
+    else{const A=[Math.abs(X),Math.abs(Y),Math.abs(Z)],f=A[0]>A[1]&&A[0]>A[2]?0:A[1]>A[2]?1:2,v=[X,Y,Z][(f+1)%3]/A[f],w=[X,Y,Z][(f+2)%3]/A[f],s=(f%2?w:v),t=(s+1)*1.5,ti=Math.min(2,Math.floor(t));
+      ci=(ti+f)%n;e=Math.min(t-ti,ti+1-t,1-Math.abs(v),1-Math.abs(w))*.9;}
+    const base=ci<0?[250,250,248]:C[ci],sh=gstep(0,.09,e);for(let i=0;i<3;i++)o[i]=sm[i]+(base[i]*(.82+.18*sh)-sm[i])*gstep(.004,.03,e);}));
+  ggloss(q,.85);},
+// A bowling ball: swirled resin, three finger holes, a high gloss. C: the swirl's colours.
+bowl(q,u,P,R,S){const C=P.c,sd=S.id%9*4;
+  gfield(q,gtex(S.key,u,(x,y,o)=>{gwi(x,y,GO2);const X=GO2[0]*1.6+sd,Y=GO2[1]*1.6,w=gfbm(X*.8,Y*.8,4),v=.5+.5*Math.sin((X+Y*.6+w*4.5)*2.2);gramp(C,gstep(.1,.9,v*.75+gfbm(X*2+7,Y*2,3)*.25),o);}));
+  if(P.gl){q.fillStyle='rgba(255,255,255,.85)';for(let i=0;i<60;i++){const a=R()*TAU,d=Math.sqrt(R())*1.05;q.globalAlpha=.3+R()*.7;q.fillRect(Math.cos(a)*d,Math.sin(a)*d,.008,.008);}q.globalAlpha=1;}
+  for(const [x,y,s] of[[.18,-.36,.1],[.42,-.24,.1],[.36,.22,.12]]){const z=Math.sqrt(1-x*x-y*y),a=Math.atan2(y,x);q.save();q.translate(x,y);q.rotate(a);q.scale(z,1);
+    disc(q,0,0,s*1.15,rgr(q,0,0,s*1.15,[0,'rgba(0,0,0,0)',.8,'rgba(0,0,0,0)',.87,'rgba(255,255,255,.35)',1,'rgba(255,255,255,0)']));disc(q,0,0,s,rgr(q,-s*.3,-s*.3,s*1.1,[0,'#000',.6,'#050506',1,'#26262c']));q.restore();}
+  ggloss(q,1);},
+// A golf ball: white, covered in dimples. C: shade, white.
+golf(q,u,P,R){const C=P.c;fillAll(q,gc(C[1]));disc(q,0,0,1.15,rgr(q,-.2,-.25,1.3,[0,gc(C[1]),1,gc(C[0])]));
+  const n=u>60?420:200,dk=gsh(C[0],-.45),lt=[255,255,255];for(let i=0;i<n;i++){const y=1-(i+.5)/n*2,r=Math.sqrt(1-y*y),a=i*2.39996,x=Math.cos(a)*r,z=Math.sin(a)*r;if(z<.08)continue;gcrater(q,u,x,y,z,Math.sqrt(4/n)*.42,dk,lt);}
+  ggloss(q,.5);},
+// A dartboard: twenty segments, the treble and double rings, the bull, thin wire, the numbers round the edge. C: dark, light, red, green, number ring.
+darts(q,u,P,R){const C=P.c;fillAll(q,gc(C[4]));const seg=(r0,r1,a0,a1,cl)=>{q.beginPath();q.arc(0,0,r1,a0,a1);q.arc(0,0,r0,a1,a0,true);q.closePath();q.fillStyle=cl;q.fill();};
+  for(let i=0;i<20;i++){const a0=(i-.5)/20*TAU-Math.PI/2,a1=a0+TAU/20,e=i%2;seg(.04,.86,a0,a1,gc(e?C[1]:C[0]));seg(.5,.55,a0,a1,gc(e?C[3]:C[2]));seg(.81,.86,a0,a1,gc(e?C[3]:C[2]));}
+  disc(q,0,0,.09,gc(C[3]));disc(q,0,0,.04,gc(C[2]));
+  q.beginPath();for(let i=0;i<20;i++){const a=(i-.5)/20*TAU-Math.PI/2;q.moveTo(Math.cos(a)*.09,Math.sin(a)*.09);q.lineTo(Math.cos(a)*.86,Math.sin(a)*.86);}for(const r of[.04,.09,.5,.55,.81,.86]){q.moveTo(r,0);q.arc(0,0,r,0,TAU);}
+  q.lineWidth=Math.max(.006,1/u);q.strokeStyle='rgba(225,228,232,.9)';q.stroke();
+  if(u>40){q.fillStyle='#f4f4f0';q.textAlign='center';q.textBaseline='middle';q.font='700 .09px system-ui,-apple-system,sans-serif';const N=[20,1,18,4,13,6,10,15,2,17,3,19,7,16,8,11,14,9,12,5];
+    for(let i=0;i<20;i++){const a=i/20*TAU-Math.PI/2;q.save();q.translate(Math.cos(a)*.93,Math.sin(a)*.93);q.rotate(a+Math.PI/2);q.fillText(N[i],0,0);q.restore();}}
+  ggrain(q,u,R,900,'rgba(255,255,255,.06)','rgba(0,0,0,.12)',.002,.005,.86);},
+// An archery target face: gold, red, blue, black and white rings, each split by a fine line, and a few arrow holes.
+target(q,u,P,R){const C=P.c;fillAll(q,gc(C[0]));for(let i=0;i<10;i++){const r=1.12-i*.105;disc(q,0,0,r,gc(C[Math.floor(i/2)]));}
+  q.beginPath();for(let i=0;i<10;i++){const r=1.12-i*.105;q.moveTo(r,0);q.arc(0,0,r,0,TAU);}q.lineWidth=Math.max(.004,.8/u);q.strokeStyle='rgba(0,0,0,.4)';q.stroke();
+  q.beginPath();q.moveTo(-.03,0);q.lineTo(.03,0);q.moveTo(0,-.03);q.lineTo(0,.03);q.lineWidth=.008;q.strokeStyle='rgba(0,0,0,.6)';q.stroke();
+  for(let i=0;i<5;i++){const a=R()*TAU,d=Math.sqrt(R())*.35;disc(q,Math.cos(a)*d,Math.sin(a)*d,.018,'rgba(20,10,0,.75)');}
+  ggrain(q,u,R,600,'rgba(255,255,255,.07)','rgba(0,0,0,.07)',.002,.006);},
+// A chequered flag rippling, wrapped round the ball. C: dark, light.
+checker(q,u,P,R){const C=P.c,n=P.n||8,s=3.4/n;fillAll(q,gc(C[1]));q.beginPath();for(let j=0;j<n;j++)for(let i=0;i<n;i++){if((i+j)%2)continue;const x=-1.7+i*s,y=-1.7+j*s,w=(X,Y)=>[X,Y+Math.sin(X*2.2)*.12];
+    const p=[...w(x,y),...w(x+s,y),...w(x+s,y+s),...w(x,y+s)];gpath(q,p,true,.06);}q.fillStyle=gc(C[0]);q.fill();
+  gfield(q,gtex('chq_shade',u,(x,y,o)=>{gwi(x,y,GO2);const v=Math.sin(GO2[0]*2.2+1.2);o[0]=o[1]=o[2]=v>0?255:0;o[3]=Math.abs(v)*40;}));ggloss(q,.3,1);},
+});
 // In play a generated skin is its sprite, still (so its light stays upper left) unless it spins; fx adds one cheap live touch:
 // g a glint hopping between facets, s a sheen sweeping across, e eyes that look where the cell goes
 function gdraw(g,c,r,k){const P=this.p;skinArt(g,this,c,r,P.spin?T*P.spin+c.wob:0);const fx=P.fx;if(!fx||skinPx(g,r)<14)return;
@@ -5558,6 +5628,35 @@ space:[
 [105,'eclipse','Total Eclipse',3000,'eclipse','000000 c8d8ff ffffff ff3a5a',{m:1},'The Moon blots out the Sun: the corona blazes round it.'],
 [106,'pulsar','Pulsar',4000,'pulsar','02030a 0a1440 8ab0ff 9ad8ff',{spin:2.4,m:2},'A spinning neutron star sweeping beams across space.'],
 [107,'wormhole','Wormhole',8000,'wormhole','000000 1a0a3a 5a2aa0 c890ff ffffff',{spin:.5,m:2},'A tunnel through space, starlight pouring down its throat.'],
+],
+sports:[
+[108,'football','Football',400,'soccer','f6f6f2 18181c 2a2a30',{},'The classic: black pentagons, white hexagons.'],
+[109,'goldenball','Golden Ball',2500,'soccer','e8b830 2a1a04 5a3a08',{fx:'s'},'Gold panels, for the best player on the pitch.'],
+[110,'streetball','Street Ball',500,'soccer','1a1c20 b4ff2a 0a0a0c',{m:0},'Black panels, neon pentagons, made for the cage.'],
+[111,'basketball','Basketball',400,'basket','8a3a0c d8691e f29a50 1a0e08',{},'Pebbled orange leather and its black channels.'],
+[112,'tennisball','Tennis Ball',350,'seam','8a9a10 d4e02a f0f87a f8f8f0',{k:'felt'},'Fuzzy yellow felt and its white seam.'],
+[113,'baseball','Baseball',350,'seam','b0a898 ece6da fffcf6 c8c0b0 d01a24',{k:'hide'},'White leather and a hundred and eight red stitches.'],
+[114,'softball','Softball',350,'seam','a8b010 e4ec30 f8ff8a c8cc40 c4141e',{k:'hide'},'Optic yellow, red-stitched, bigger than it looks.'],
+[115,'cricketball','Cricket Ball',450,'cricket','4a0408 9a0c14 c83a3a f4ece0',{},'Polished red leather and a raised seam.'],
+[116,'volleyball','Volleyball',400,'panel','f6f6f0 1a4ab8 f2c41a 6a6a70',{k:'volley'},'Blue, gold and white panels, stitched tight.'],
+[117,'beachball','Beach Ball',350,'panel','e83a3a f6f6f2 2a8ae8 f8d020 3ac06a f08a2a b0b0b0',{k:'beach'},'Six bright panels, ready for the sand.'],
+[118,'poolparty','Pool Party',350,'panel','ff8ab0 fff6c0 8ad8ff c8a8ff a8f0c0 fff0f6 c8c0c8',{k:'beach'},'Pastel stripes for floating about.'],
+[119,'bowlingball','Bowling Ball',500,'bowl','0a1840 1a3a90 3a6ad0 8ab0f0 1a2a6a',{},'Swirled blue resin, three holes, a mirror shine.'],
+[120,'cosmicstrike','Cosmic Strike',1200,'bowl','12041e 3a0a5a 8a2ab0 e05ad0 2a0a40',{gl:1},'Purple galaxy resin, glittering as it rolls.'],
+[121,'golfball','Golf Ball',350,'golf','c8ccd2 fbfbf8',{m:1},'Brilliant white, dimpled all over.'],
+[122,'cueball','Cue Ball',400,'pool','f8f4e6',{dots:[200,30,40]},'The white ball, red spots and all.'],
+[123,'oneball','One Ball',350,'pool','f2c21a',{n:1},'Solid yellow, number one.'],
+[124,'threeball','Three Ball',350,'pool','d4141e',{n:3},'Solid red, number three.'],
+[125,'sixball','Six Ball',350,'pool','0e7a3a',{n:6},'Solid green, number six.'],
+[126,'eightball','Eight Ball',800,'pool','121214',{n:8},'Black, glossy, and the last one to sink.'],
+[127,'nineball','Nine Ball',400,'pool','f2c21a',{n:9,st:1},'The yellow stripe.'],
+[128,'twelveball','Twelve Ball',400,'pool','5a1a8a',{n:12,st:1},'The purple stripe.'],
+[129,'dartboard','Dartboard',600,'darts','141414 f2e6c8 d42a2a 1a8a3a 0e0e0e',{m:2},'Treble twenty, if you can hit it.'],
+[130,'bullseye','Bullseye',450,'target','f4f4f0 141414 2a8ae0 e02a2a f6d01a',{m:4},'An archery face: gold in the middle.'],
+[131,'goldmedal','Gold Medal',3000,'coin','4a2a02 8a5a08 d8a020 f8d860 fff6c0',{t:'1',fx:'s'},'First place, struck in gold.'],
+[132,'silvermedal','Silver Medal',1200,'coin','2a2e34 5a6068 a8b0b8 dce2e8 ffffff',{t:'2',fx:'s'},'Second place, bright silver.'],
+[133,'bronzemedal','Bronze Medal',600,'coin','2e1404 6a3a14 b0703a e0a06a fff0e0',{t:'3',fx:'s'},'Third place, warm bronze.'],
+[134,'chequered','Chequered Flag',450,'checker','121214 f6f6f2',{n:8,m:1},'The flag that ends the race.'],
 ],
 };
 for(const col in GEN)for(const row of GEN[col]){const S=gskin(row,col);S.tok=STAINS.map(()=>'tok'+S.key);PREMIUM.push(S);}
