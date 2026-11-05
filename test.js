@@ -287,7 +287,7 @@ async function post(url, body, secret) {
 
   r = await post('/api/skins/buy', { skinId: 9 }, secret); assert.equal(r.status, 200); assert.deepEqual(r.body.skins, [9]); assert.equal(r.body.balance, 1700);
   r = await post('/api/skins/buy', { skinId: 9 }, secret); assert.equal(r.body.already, true); assert.equal(r.body.balance, 1700, 'owned skins are not sold twice');
-  r = await post('/api/skins/buy', { skinId: 99 }, secret); assert.equal(r.status, 404);
+  r = await post('/api/skins/buy', { skinId: 99999 }, secret); assert.equal(r.status, 404);
 
   r = await post('/api/session', { secret }); assert.equal(r.body.balance, 1700); assert.deepEqual(r.body.skins, [9], 'wallet persists');
   assert.equal(r.body.account, null, 'device-only wallet has no account');
