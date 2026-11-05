@@ -768,6 +768,27 @@ body:not(.playing) #tip{display:none}
 .lobby .lb-ava{position:relative}
 .lobby .lb-lv{position:absolute;right:-6px;bottom:-5px;min-width:21px;height:21px;box-sizing:border-box;padding:0 5px;border-radius:999px;display:grid;place-items:center;font:800 11.5px/1 var(--display);font-style:normal;font-variant-numeric:tabular-nums;color:#03231e;background:linear-gradient(160deg,#fff,var(--xp2) 55%,var(--xp1));box-shadow:0 0 0 2px #071719,0 0 10px rgba(95,224,200,.55)}
 @media (min-width:1100px) and (min-height:700px){.lobby .lb-lv{min-width:24px;height:24px;font-size:13px}}
+/* background: a culture under the microscope. Two canvases painted once per screen size (lbBgPaint: soft far cells; cells
+   with membranes and nuclei, and drifting specks) over a deep teal-to-indigo wash, two big out-of-focus cells at the edges, and an
+   eyepiece vignette. Only CSS transforms move it (the compositor's work, no script per frame). It is opaque, so the arena under the
+   lobby is no longer drawn, and the lobby needs no backdrop blur. Battery saver and Reduce Motion hold it still. */
+.lobby{isolation:isolate;background:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+.lb-bg{position:absolute;inset:0;z-index:-1;overflow:hidden;pointer-events:none;
+  background:radial-gradient(110% 60% at 50% 112%,rgba(24,150,135,.42),rgba(24,150,135,0) 62%),radial-gradient(55% 42% at 50% 50%,rgba(255,92,138,.13),rgba(255,92,138,0) 72%),
+    radial-gradient(70% 55% at -5% -5%,rgba(110,80,230,.3),rgba(110,80,230,0) 70%),radial-gradient(60% 50% at 105% 8%,rgba(40,120,210,.24),rgba(40,120,210,0) 70%),linear-gradient(180deg,#03141a,#04191d 46%,#060f20)}
+.lb-bg canvas{position:absolute;left:-5%;top:-5%;width:110%;height:110%;will-change:transform}
+#lbBgFar{animation:lbDriftA 80s ease-in-out infinite alternate}
+#lbBgMid{animation:lbDriftB 52s ease-in-out infinite alternate}
+@keyframes lbDriftA{from{transform:translate3d(-1.6%,1.1%,0) scale(1.03)}to{transform:translate3d(1.6%,-1.2%,0) scale(1)}}
+@keyframes lbDriftB{from{transform:translate3d(2.2%,-1.2%,0)}to{transform:translate3d(-2.2%,1.6%,0)}}
+.lb-bk{position:absolute;border-radius:50%;will-change:transform}
+.lb-bk1{left:-24vmax;bottom:-30vmax;width:62vmax;height:62vmax;background:radial-gradient(closest-side,rgba(95,224,168,.1),rgba(95,224,168,.05) 78%,rgba(150,255,215,.13) 90%,rgba(95,224,168,0));animation:lbBob1 34s ease-in-out infinite alternate}
+.lb-bk2{right:-20vmax;top:-26vmax;width:50vmax;height:50vmax;background:radial-gradient(closest-side,rgba(154,140,255,.12),rgba(154,140,255,.05) 78%,rgba(200,190,255,.14) 90%,rgba(154,140,255,0));animation:lbBob2 41s ease-in-out infinite alternate}
+@keyframes lbBob1{to{transform:translate3d(4vmax,-3vmax,0) scale(1.06)}}
+@keyframes lbBob2{to{transform:translate3d(-3vmax,3.5vmax,0) scale(.95)}}
+.lb-bg::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 92% 78% at 50% 47%,rgba(1,5,7,0) 48%,rgba(1,5,7,.5) 82%,rgba(1,4,6,.8))}
+body.saver .lb-bg *{animation:none!important}
+@media (prefers-reduced-motion:reduce){.lb-bg *{animation:none!important}}
 /* the name sits under the cell as a nameplate you tap to rename; the chip at the top keeps the portrait, level, tier and rating */
 .lobby .lb-pcard{width:auto}
 .lobby .lb-me{position:relative;inset:auto;width:auto;padding:0 20px 0 7px}
@@ -2470,6 +2491,7 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
 
 <div id="overlay">
   <div class="lobby" id="startCard">
+    <div class="lb-bg" aria-hidden="true"><canvas id="lbBgFar"></canvas><canvas id="lbBgMid"></canvas><i class="lb-bk lb-bk1"></i><i class="lb-bk lb-bk2"></i></div>
     <svg class="lb-sprite" aria-hidden="true" focusable="false"><defs><linearGradient id="lbgGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff2bf"/><stop offset=".45" stop-color="#ffcf5c"/><stop offset="1" stop-color="#c47f0c"/></linearGradient><linearGradient id="lbgMint" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9fff0"/><stop offset=".45" stop-color="#5fe0a8"/><stop offset="1" stop-color="#1b8d61"/></linearGradient><linearGradient id="lbgBlue" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e6f2ff"/><stop offset=".45" stop-color="#6cb8ff"/><stop offset="1" stop-color="#2a63c4"/></linearGradient></defs><symbol id="lbi-ranked" viewBox="0 0 24 24"><path d="M3.5 8.5l4.2 3.3L12 5.5l4.3 6.3 4.2-3.3-1.8 10H5.3z"/><path d="M6 21h12"/></symbol><symbol id="lbi-casual" viewBox="0 0 24 24"><rect x="4.5" y="8" width="15" height="11.5" rx="3.5"/><path d="M12 8V4.5M2 12.5v3M22 12.5v3"/><circle cx="12" cy="3.6" r="1.1"/><circle cx="9.3" cy="13.6" r="1.4" fill="currentColor" stroke="none"/><circle cx="14.7" cy="13.6" r="1.4" fill="currentColor" stroke="none"/></symbol><symbol id="lbi-nearby" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1.9" fill="currentColor" stroke="none"/><path d="M8.6 8.6a4.8 4.8 0 0 0 0 6.8M15.4 8.6a4.8 4.8 0 0 1 0 6.8M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8"/></symbol></svg>
     <header class="lb-top">
       <div class="lb-pcard" id="lbCard" data-tier="Silver">
@@ -2930,6 +2952,7 @@ const $=id=>document.getElementById(id);
 const cv=$('game'),ctx=cv.getContext('2d',{alpha:false});
 const mini=$('mini'),mctx=mini.getContext('2d');
 let W=0,H=0,DPR=1;
+let lobbyAt=0,lbBgKey=''; // when the lobby last opened (its painted background hides the arena), and the size it was painted at
 let saverOn=false; // battery saver (Settings, iOS Low Power Mode or a hot phone): 30 fps, lighter effects, no glass blur, lower resolution
 function resize(){
   DPR=Math.min(saverOn?1.5:2,window.devicePixelRatio||1);W=innerWidth;H=innerHeight;
@@ -6883,6 +6906,7 @@ function init(){
 function removeHuman(){if(!human)return;removePlayer(human);cells=cells.filter(c=>!c.dead);human=null;}
 let shownCard='startCard';
 function showCard(id){
+  if(id==='startCard'&&shownCard!=='startCard'){lobbyAt=performance.now();setTimeout(lbBgPaint,0);}
   // diagnostic: a report of what sends the page from Settings back to the start card (Settings → Account → sign in)
   if(id==='startCard'&&shownCard==='settingsCard')reportHitch('settings->start via '+String(new Error().stack||'').split('\n').slice(1,4).map(s=>s.trim()).join(' | '));
   shownCard=id;if(id)$('tip').classList.remove('show');if(id==='startCard')setTimeout(drawAvatar,0);if(id==='lookCard')setTimeout(()=>drawAvatar($('lookCv')),0);
@@ -7207,6 +7231,30 @@ function syncFeed(){
   if(F&&sc.dataset.id!==String(F.id)){sc.dataset.id=F.id;$('skName').textContent=F.name;$('skPrice').textContent=F.price.toLocaleString();sc.setAttribute('aria-label',`New skin: ${F.name}, ${F.price} ATP`);}
 }
 function lbDrawArt(){for(const [id,S] of [['evCv',lbEvSkin()],['skCv',lbFeatSkin()]]){const cv=$(id);if(S&&cv&&!cv.parentElement.hidden&&cv.clientWidth)drawPreview(cv,S);}} // drawPreview sizes the canvas itself
+// The lobby's background scene, painted once per size: soft out-of-focus cells far back, then cells with a membrane, a nucleus and
+// organelles, and specks of plankton. Seeded, so it is the same picture every time. CSS drifts the two canvases.
+function lbBgCell(g,x,y,r,[R,G,B],a,soft){const c=k=>`rgba(${R},${G},${B},${Math.min(1,a*k).toFixed(3)})`;
+  let gr=g.createRadialGradient(x-r*.22,y-r*.28,r*.05,x,y,r);
+  if(soft){gr.addColorStop(0,c(1.1));gr.addColorStop(.7,c(.6));gr.addColorStop(.86,c(1.5));gr.addColorStop(.95,c(.5));gr.addColorStop(1,c(0));}
+  else{gr.addColorStop(0,c(1.3));gr.addColorStop(.78,c(.7));gr.addColorStop(.92,c(1.7));gr.addColorStop(1,c(0));}
+  g.fillStyle=gr;g.beginPath();g.arc(x,y,r,0,TAU);g.fill();if(soft)return;
+  g.lineWidth=Math.max(1,r*.045);g.strokeStyle=c(2.6);g.beginPath();g.arc(x,y,r*.93,0,TAU);g.stroke(); // membrane
+  g.lineWidth=Math.max(1,r*.05);g.lineCap='round';g.strokeStyle=`rgba(255,255,255,${(a*1.6).toFixed(3)})`;g.beginPath();g.arc(x,y,r*.82,Math.PI*1.05,Math.PI*1.45);g.stroke(); // light on it
+  const nx=x+r*.18,ny=y+r*.12,nr=r*.3,ng=g.createRadialGradient(nx-nr*.3,ny-nr*.3,nr*.1,nx,ny,nr);ng.addColorStop(0,c(3.2));ng.addColorStop(1,c(1.6)); // nucleus
+  g.fillStyle=ng;g.beginPath();g.arc(nx,ny,nr,0,TAU);g.fill();g.fillStyle=c(4);g.beginPath();g.arc(nx+nr*.25,ny-nr*.1,nr*.28,0,TAU);g.fill();
+  for(let i=0;i<4;i++){const t=i*1.9+r,d=r*(.45+.15*Math.sin(t*3));g.fillStyle=c(2.4);g.beginPath();g.arc(x+Math.cos(t)*d,y+Math.sin(t)*d,Math.max(.8,r*.06),0,TAU);g.fill();}} // organelles
+function lbBgPaint(){const far=$('lbBgFar'),mid=$('lbBgMid');if(!far||!mid||$('startCard').hidden)return;
+  const w=far.clientWidth,h=far.clientHeight,dpr=window.devicePixelRatio||1,key=w+'x'+h+'@'+dpr;if(!w||!h||key===lbBgKey)return;lbBgKey=key;
+  let seed=20261105;const rnd=()=>(seed=seed*16807%2147483647)/2147483647,m=Math.min(w,h);
+  const HUE=[[95,224,168],[154,140,255],[255,110,150],[108,184,255],[242,177,52],[95,224,168]];
+  const open=(cv,d)=>{cv.width=Math.round(w*d);cv.height=Math.round(h*d);const g=cv.getContext('2d');g.setTransform(d,0,0,d,0,0);return g;};
+  let g=open(far,Math.min(1,dpr)); // blurry anyway: device pixels would only cost memory
+  for(let i=0;i<10;i++)lbBgCell(g,rnd()*w,rnd()*h,m*(.13+rnd()*.2),HUE[i%6],.05+rnd()*.05,true);
+  g=open(mid,Math.min(2,dpr));const hb=$('avatarBtn').getBoundingClientRect(),fb=mid.getBoundingClientRect(),hx=hb.left+hb.width/2-fb.left,hy=hb.top+hb.height*.6-fb.top,hr=hb.width*.95;
+  for(let i=0,n=0;i<80&&n<11;i++){const x=rnd()*w,y=rnd()*h,r=m*(.03+rnd()*.065);
+    if(Math.hypot(x-hx,y-hy)<hr+r)continue;n++;lbBgCell(g,x,y,r,HUE[(n*5)%6],.06+rnd()*.05,false);} // none round the hero, which has its own light
+  for(let i=0;i<150;i++){const x=rnd()*w,y=rnd()*h,r=.5+rnd()*1.3;g.fillStyle=`rgba(190,255,235,${(.12+rnd()*.3).toFixed(2)})`;g.beginPath();g.arc(x,y,r,0,TAU);g.fill();}} // plankton
+addEventListener('resize',()=>setTimeout(lbBgPaint,120));setTimeout(lbBgPaint,0);
 let lbArtT=0;(function lbArtLoop(now){requestAnimationFrame(lbArtLoop);if(RM||document.hidden||$('startCard').hidden||now-lbArtT<40)return;lbArtT=now;lbDrawArt();})(0);
 function modeSheet(open){const sh=$('modeSheet');if(sh.hidden===!open)return;sh.hidden=!open;syncPlay();
   if(open){const b=sh.querySelector('.lb-mcard[data-on=true] .lb-mpick');if(b)b.focus({preventScroll:true});}else $('modeBtn').focus({preventScroll:true});}
@@ -7427,7 +7475,7 @@ function frame(nowMs){
   // arena nobody else shares stands still there
   const idle=mode!=='play'||paused;
   if((idle||saverOn)&&nowMs-last<30){requestAnimationFrame(frame);return;}
-  const cover=idle&&COVER.has(shownCard);frameN++;
+  const cover=idle&&COVER.has(shownCard),under=idle&&shownCard==='startCard'&&nowMs-lobbyAt>700;frameN++; // under: the lobby's painted background hides the arena (drawn for its first 0.7 s while it fades in)
   const gapMs=nowMs-last,raw=Math.min(.05,Math.max(0,gapMs/1000));last=nowMs;
   if(mode==='play'&&!paused&&!saverOn&&!document.hidden&&gapMs<1000){FG.push(gapMs);if(FG.length>2400)FG.splice(0,600);}
   ema=ema*.95+raw*1000*.05;
@@ -7436,7 +7484,7 @@ function frame(nowMs){
   const run=(!paused||multi())&&!(cover&&!multi());const t0=performance.now();
   if(run){const sub=idle&&!multi()?1/30:1/60;let dt=raw*slow;while(dt>0){const s=Math.min(dt,sub);step(s);dt-=s;}}
   const t1=performance.now();try{netTick(Math.min(1,Math.max(0,gapMs/1000)));}catch(e){}
-  const t2=performance.now();updateCam(raw);if(!BISECT.nocanvas&&!cover)draw();tickMass(raw);const t3=performance.now();
+  const t2=performance.now();updateCam(raw);if(!BISECT.nocanvas&&!cover&&!under)draw();tickMass(raw);const t3=performance.now();
   // watchdog: tell the app shell about long frames so stalls can be read from the device log
   if((t3-t0>180||gapMs>=400)&&nowMs-lastHitchAt>1000){lastHitchAt=nowMs;reportHitch(`hitch gap=${Math.round(gapMs)}ms wsmax=${Math.round(wsMax)}ms sinceTouch=${Math.round(nowMs-lastTouchAt)}ms step=${(t1-t0).toFixed(0)} net=${(t2-t1).toFixed(0)} draw=${(t3-t2).toFixed(0)} cells=${cells.length} players=${players.length} parts=${parts.length} ej=${ejected.length} host=${isHost} peers=${peerCount} mode=${mode} z=${cam.z.toFixed(2)} audio=${liveNodes} tag=${BISECT.tag}`);}
   hudT-=raw;if(hudT<=0){hudT=.12;if(!BISECT.nohud)hud();}
