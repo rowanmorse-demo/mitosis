@@ -5609,6 +5609,81 @@ berry(q,u,P,R,S){const C=P.c,k=P.k,M=gm3(.2,.45,.3),sd=S.id%17*2.1;
     disc(q,0,0,s,rgr(q,-s*.4,-s*.4,s*1.3,[0,gc(gsh(C[2],.3),.9),.4,gc(C[1],.5),1,gc(C[0],.6)]));q.restore();}}
   ggloss(q,k==='peach'?.2:k==='blue'?.25:.7,1);},
 });
+// a leaf as a polar shape: lobes points round it, serrated, the stem at the bottom
+function gleaf(q,x,y,s,a,lobes,ser){q.save();q.translate(x,y);q.rotate(a);if(!lobes)q.scale(.55,1);q.beginPath();for(let i=0;i<=96;i++){const t=i/96*TAU,b=t-Math.PI/2,l=lobes?Math.pow(Math.abs(Math.cos(lobes*b/2)),.7):1,
+    r=s*(lobes?.22+.78*Math.pow(l,2.2):1)*(1-.3*Math.pow(Math.max(0,Math.sin(t)),8))*(1+ser*Math.abs(Math.sin(t*(lobes?18:14))));i?q.lineTo(Math.cos(t)*r,-Math.sin(t)*r*.92):q.moveTo(Math.cos(t)*r,-Math.sin(t)*r*.92);}q.closePath();}
+Object.assign(GF,{
+// A rosette seen from above, petals laid on the golden angle and growing outward. k: 'round' (rose, camellia, echeveria), 'point' (dahlia,
+// lotus, chrysanthemum), 'scale' (pinecone). C: shadow, base, body, tip, heart. n petals; sz petal size; cup how much they curl up.
+rosette(q,u,P,R){const C=P.c,k=P.k,n=P.n||90,sz=P.sz||1,hi=u>70;fillAll(q,gc(C[0]));
+  for(let i=n-1;i>=0;i--){const t=Math.sqrt((i+.6)/n),d=t*1.02,a=i*2.39996,L=(.13+t*.3)*sz,W=L*(k==='point'?.42:k==='scale'?.75:.8),x=Math.cos(a)*d*.86,y=Math.sin(a)*d*.86;
+    q.save();q.translate(x,y);q.rotate(a);q.beginPath();
+    if(k==='point'){q.moveTo(-L*.35,0);q.bezierCurveTo(-L*.2,-W,L*.55,-W*.7,L*.75,0);q.bezierCurveTo(L*.55,W*.7,-L*.2,W,-L*.35,0);}
+    else if(k==='scale'){q.moveTo(-L*.4,-W*.6);q.quadraticCurveTo(L*.35,-W*.85,L*.55,0);q.quadraticCurveTo(L*.35,W*.85,-L*.4,W*.6);q.closePath();}
+    else{q.moveTo(-L*.4,0);q.bezierCurveTo(-L*.3,-W*1.05,L*.75,-W*1.05,L*.62,0);q.bezierCurveTo(L*.75,W*1.05,-L*.3,W*1.05,-L*.4,0);}
+    q.fillStyle=lgr(q,-L*.4,0,L*.7,0,[0,gc(C[1]),.45,gc(C[2]),.85,gc(gmix(C[2],C[3],.6)),1,gc(C[3])]);q.fill();
+    q.lineWidth=Math.max(.003,.7/u);q.strokeStyle=gc(gsh(C[0],-.2),.45);q.stroke();
+    if(hi&&k!=='scale'){q.beginPath();q.moveTo(-L*.2,0);q.lineTo(L*.5,0);q.strokeStyle=gc(gsh(C[2],.3),.25);q.stroke();}
+    if(k==='scale'){q.beginPath();q.moveTo(L*.15,-W*.35);q.quadraticCurveTo(L*.5,0,L*.15,W*.35);q.lineWidth=.008;q.strokeStyle=gc(gsh(C[3],.3),.5);q.stroke();}
+    q.restore();}
+  if(C[4])disc(q,0,0,.09*sz,rgr(q,-.02,-.02,.09*sz,[0,gc(gsh(C[4],.3)),1,gc(C[4])]));
+  disc(q,0,0,1.15,rgr(q,0,0,1.15,[0,'rgba(0,0,0,0)',.6,'rgba(0,0,0,.05)',1,'rgba(0,0,0,.35)']));},
+// A log sawn across: growth rings round a heart a little off centre, checks splitting from it, bark round the edge (birch: white,
+// marked with dark lenticels). C: ring dark, wood, wood light, bark dark, bark.
+wood(q,u,P,R,S){const C=P.c,sd=S.id%23*1.3,f=P.f||16,cx=-.06,cy=.05;
+  gfield(q,gtex(S.key,u,(x,y,o)=>{const dx=x-cx,dy=y-cy,r=Math.hypot(dx,dy),a=Math.atan2(dy,dx),w=gfbm(Math.cos(a)*1.5+sd,Math.sin(a)*1.5+r*.6,3),v=r*f*(1+.08*Math.sin(a*3+sd))+w*2.4,b=v-Math.floor(v),
+    late=gstep(.62,.9,b)*(1-gstep(.95,1,b))*.9,g=gn(x*6+sd,y*90)*.08+gn(x*40,y*40)*.06;gramp(C.slice(0,3),.72-late*.6+g+gstep(.5,0,r)*.08,o);
+    if(r>.9){const e=gstep(.9,.95,r),bk=P.birch?gramp([C[3],C[4]],.7+.3*gn(x*30,y*30),GO):gramp([C[3],C[4]],gridge(a*6+sd,r*30,3),GO);if(P.birch&&gn(a*14+sd,r*5)>.72)for(let i=0;i<3;i++)bk[i]*=.25;for(let i=0;i<3;i++)o[i]+=(bk[i]-o[i])*e;}}));
+  q.lineCap='round';for(let i=0;i<4;i++){const a=R()*TAU,l=.2+R()*.45;q.beginPath();q.moveTo(cx,cy);let x=cx,y=cy,b=a;for(let j=0;j<10;j++){b+=(R()-.5)*.3;x+=Math.cos(b)*l/10;y+=Math.sin(b)*l/10;q.lineTo(x,y);}q.lineWidth=.016*(1-i*.15);q.strokeStyle=gc(gsh(C[0],-.4),.75);q.stroke();}
+  ggrain(q,u,R,400,gc(C[2],.12),gc(C[0],.12),.002,.006,.9);},
+// A toadstool cap from above: glossy red, white warts scattered over it, paler round the rim. C: dark, cap, light, wart.
+toad(q,u,P,R,S){const C=P.c,M=gm3(.15,.3,0);
+  gfield(q,gtex(S.key,u,(x,y,o)=>{gpi(M,x,y,GO2);const n=gfbm(GO2[0]*3+S.id,GO2[1]*3+GO2[2]*2,3),r=Math.hypot(x,y);gramp(C.slice(0,3),.25+n*.5+gstep(.75,1.05,r)*.25,o);}));
+  const n=u>70?60:36;for(let i=0;i<n;i++){const y=1-(i+.5)/n*2,rr=Math.sqrt(1-y*y),a=i*2.39996+R()*.4,x=Math.cos(a)*rr,z=Math.sin(a)*rr;if(z<.15)continue;const s=(.045+R()*.05)*Math.sqrt(z);
+    q.save();q.translate(x,y);q.rotate(Math.atan2(y,x));q.scale(z,1);q.beginPath();for(let j=0;j<7;j++){const b=j/7*TAU,l=s*(.75+R()*.4);j?q.lineTo(Math.cos(b)*l,Math.sin(b)*l):q.moveTo(Math.cos(b)*l,Math.sin(b)*l);}q.closePath();
+    q.fillStyle=rgr(q,-s*.3,-s*.3,s*1.3,[0,'#fffef6',.6,gc(C[3]),1,gc(gsh(C[3],-.3))]);q.fill();q.restore();}
+  ggloss(q,.7);},
+// A dandelion clock: a hundred parachutes on fine stalks round the seed head, against a dusk sky. C: sky dark, sky, sky light, seed, fluff.
+dandelion(q,u,P,R){const C=P.c,hi=u>70;fillAll(q,gc(C[0]));disc(q,0,0,1.15,rgr(q,-.3,-.4,1.5,[0,gc(C[2]),.5,gc(C[1]),1,gc(C[0])]));
+  const n=hi?150:70;q.lineCap='round';q.beginPath();for(let i=0;i<n;i++){const a=i*2.39996,t=.5+.5*((i*.618)%1),L=.55+t*.32;q.moveTo(Math.cos(a)*.12,Math.sin(a)*.12);q.lineTo(Math.cos(a)*L,Math.sin(a)*L);}
+  q.lineWidth=Math.max(.004,.7/u);q.strokeStyle=gc(C[4],.55);q.stroke();
+  q.beginPath();for(let i=0;i<n;i++){const a=i*2.39996,t=.5+.5*((i*.618)%1),L=.55+t*.32,x=Math.cos(a)*L,y=Math.sin(a)*L;for(let j=0;j<9;j++){const b=a+(j-4)*.22;q.moveTo(x,y);q.lineTo(x+Math.cos(b)*.1,y+Math.sin(b)*.1);}}
+  q.lineWidth=Math.max(.003,.5/u);q.strokeStyle=gc(C[4],.8);q.stroke();
+  q.globalCompositeOperation='lighter';disc(q,0,0,1,rgr(q,0,0,1,[0,gc(C[4],.2),.7,gc(C[4],.08),1,gc(C[4],0)]));q.globalCompositeOperation='source-over';
+  disc(q,0,0,.14,rgr(q,-.03,-.03,.14,[0,gc(gsh(C[3],.3)),1,gc(C[3])]));for(let i=0;i<30;i++){const a=R()*TAU,d=R()*.12;disc(q,Math.cos(a)*d,Math.sin(a)*d,.01,gc(gsh(C[3],-.4)));}},
+// A barrel cactus from above: ribs running in from the rim, woolly areoles with star clusters of spines, a ring of flowers on top.
+// C: groove, rib, rib light, spine, flower.
+cactus(q,u,P,R){const C=P.c,n=P.n||18,hi=u>60;fillAll(q,gc(C[0]));
+  for(let i=0;i<n;i++){const a=i/n*TAU,b=a+TAU/n;q.beginPath();q.moveTo(0,0);for(let j=0;j<=12;j++){const t=a+(b-a)*j/12,r=1.15;q.lineTo(Math.cos(t)*r,Math.sin(t)*r);}q.closePath();
+    const m=(a+b)/2,lx=Math.cos(m),ly=Math.sin(m);q.fillStyle=lgr(q,Math.cos(a)*.6,Math.sin(a)*.6,Math.cos(b)*.6,Math.sin(b)*.6,[0,gc(C[0]),.5,gc(lx*GLX+ly*GLY>0?C[2]:C[1]),1,gc(C[0])]);q.fill();}
+  disc(q,0,0,1.15,rgr(q,0,0,1.15,[0,'rgba(0,0,0,.35)',.3,'rgba(0,0,0,0)',1,'rgba(0,0,0,0)']));
+  for(let i=0;i<n;i++){const a=(i+.5)/n*TAU;for(let d=.3;d<1.12;d+=.17){const x=Math.cos(a)*d,y=Math.sin(a)*d;disc(q,x,y,.03,'rgba(245,240,225,.85)');if(!hi)continue;q.beginPath();for(let j=0;j<7;j++){const b=j/7*TAU+a;q.moveTo(x,y);q.lineTo(x+Math.cos(b)*.09,y+Math.sin(b)*.09);}q.lineWidth=Math.max(.004,.7/u);q.strokeStyle=gc(C[3],.9);q.stroke();}}
+  disc(q,0,0,.24,rgr(q,0,0,.24,[0,'rgba(250,245,230,.95)',1,'rgba(250,245,230,.2)']));
+  for(let i=0;i<7;i++){const a=i/7*TAU+.3,x=Math.cos(a)*.2,y=Math.sin(a)*.2;q.save();q.translate(x,y);for(let j=0;j<8;j++){q.rotate(TAU/8);q.beginPath();q.ellipse(.045,0,.045,.016,0,0,TAU);q.fillStyle=gc(C[4],.95);q.fill();}disc(q,0,0,.018,'#ffe066');q.restore();}},
+// Leaves. k: 'pad' (a lily pad on dark water: radial veins, its notch, a bead of water), 'clover' (a four-leaf clover on a bed of three-leaf
+// ones), 'autumn' (fallen maple and oak leaves in reds and golds), 'monstera' (one huge split leaf). C: dark, mid, light, accent, extra.
+leaves(q,u,P,R){const C=P.c,k=P.k;fillAll(q,gc(C[0]));
+  if(k==='pad'){disc(q,0,0,1.15,rgr(q,0,0,1.15,[0,gc(gsh(C[0],.15)),1,gc(C[0])]));q.beginPath();q.moveTo(0,0);q.arc(0,0,.98,-Math.PI/2+.22,-Math.PI/2-.22+TAU);q.closePath();q.fillStyle=rgr(q,-.2,-.25,1.1,[0,gc(C[2]),.7,gc(C[1]),1,gc(gsh(C[1],-.3))]);q.fill();
+    q.beginPath();for(let i=0;i<22;i++){const a=-Math.PI/2+.3+i/21*(TAU-.6);q.moveTo(0,0);q.quadraticCurveTo(Math.cos(a+.08)*.5,Math.sin(a+.08)*.5,Math.cos(a)*.95,Math.sin(a)*.95);}q.lineWidth=.01;q.strokeStyle=gc(gsh(C[2],.25),.5);q.stroke();
+    q.beginPath();q.arc(0,0,.98,0,TAU);q.lineWidth=.03;q.strokeStyle=gc(C[3],.6);q.stroke();
+    const x=.32,y=.25;disc(q,x+.01,y+.02,.1,'rgba(0,30,0,.3)');disc(q,x,y,.09,rgr(q,x+.03,y+.03,.11,[0,'rgba(255,255,255,.25)',.7,'rgba(220,255,230,.2)',1,'rgba(255,255,255,.7)']));disc(q,x-.035,y-.035,.022,'rgba(255,255,255,.95)');}
+  else if(k==='clover'){disc(q,0,0,1.15,gc(C[0]));const lf=(x,y,s,a,n4)=>{for(let i=0;i<(n4?4:3);i++){const b=a+i/(n4?4:3)*TAU;q.save();q.translate(x,y);q.rotate(b);q.beginPath();q.moveTo(0,0);q.bezierCurveTo(s*.1,-s*.35,s*.55,-s*.62,s*.8,-s*.28);q.quadraticCurveTo(s*.86,-s*.06,s*.64,0);q.quadraticCurveTo(s*.86,s*.06,s*.8,s*.28);q.bezierCurveTo(s*.55,s*.62,s*.1,s*.35,0,0);
+      q.fillStyle=lgr(q,0,0,s*.8,0,[0,gc(C[1]),1,gc(C[2])]);q.fill();q.lineWidth=Math.max(.003,.6/u);q.strokeStyle=gc(C[0],.6);q.stroke();q.beginPath();q.moveTo(s*.15,0);q.lineTo(s*.65,0);q.strokeStyle=gc(gsh(C[2],.3),.4);q.stroke();
+      q.beginPath();q.arc(s*.42,0,s*.18,Math.PI*.6,Math.PI*1.4);q.strokeStyle=gc(C[3],.5);q.lineWidth=s*.03;q.stroke();q.restore();}};
+    for(let i=0;i<13;i++){const a=i/13*TAU+R()*.3,d=.72+R()*.3;lf(Math.cos(a)*d,Math.sin(a)*d,.26+R()*.06,R()*TAU,0);}q.fillStyle='rgba(0,0,0,.35)';disc(q,0,0,.62,'rgba(0,20,0,.35)');lf(0,0,.6,.4,1);disc(q,0,0,.04,gc(C[1]));}
+  else if(k==='autumn'){disc(q,0,0,1.15,gc(C[0]));for(let i=0;i<34;i++){const a=R()*TAU,d=Math.sqrt(R())*1.1,x=Math.cos(a)*d,y=Math.sin(a)*d,s=.22+R()*.14,cl=C[1+Math.floor(R()*4)],mp=R()<.65;
+      gleaf(q,x,y,s,R()*TAU,mp?5:0,mp?.06:.03);q.fillStyle=rgr(q,0,0,s,[0,gc(gsh(cl,.2)),1,gc(gsh(cl,-.25))]);q.fill();q.lineWidth=Math.max(.003,.6/u);q.strokeStyle=gc(gsh(cl,-.5),.5);q.stroke();
+      q.beginPath();for(let j=0;j<(mp?5:1);j++){const b=-Math.PI/2+(j-2)*.62*(mp?1:0);q.moveTo(0,s*.1);q.lineTo(Math.cos(b)*s*.85,Math.sin(b)*s*.85);}q.moveTo(0,s*.1);q.lineTo(0,s*.5);q.strokeStyle=gc(gsh(cl,.35),.5);q.stroke();q.restore();}}
+  else{disc(q,0,0,1.15,gc(C[0]));q.save();q.rotate(-.5);q.beginPath();q.ellipse(0,.04,.93,.86,0,0,TAU);q.fillStyle=rgr(q,-.2,-.3,1.2,[0,gc(C[2]),.6,gc(C[1]),1,gc(gsh(C[1],-.25))]);q.fill();
+    q.fillStyle=gc(C[0]);for(const sd of[-1,1])for(let i=0;i<5;i++){const y=-.62+i*.32;q.beginPath();q.moveTo(sd*1.15,y-.1);q.quadraticCurveTo(sd*.75,y-.06,sd*.5,y+.02);q.quadraticCurveTo(sd*.75,y+.02,sd*1.15,y+.06);q.closePath();q.fill();
+      if(i%2){q.beginPath();q.ellipse(sd*.3,y+.12,.07,.035,sd*.3,0,TAU);q.fill();}}
+    q.beginPath();q.moveTo(0,1.1);q.lineTo(0,-1);for(let i=0;i<5;i++){const y=-.66+i*.32;for(const s of[-1,1]){q.moveTo(0,y+.2);q.quadraticCurveTo(s*.3,y+.08,s*1.05,y-.04);}}q.lineWidth=.014;q.strokeStyle=gc(gsh(C[2],.25),.5);q.stroke();q.restore();}
+  ggloss(q,.3,1);},
+// Moss close up: a deep cushion of tiny leaves, spore stalks standing out of it. C: dark, mid, light, stalk.
+moss(q,u,P,R,S){const C=P.c;gfield(q,gtex(S.key,u,(x,y,o)=>{gwi(x,y,GO2);const X=GO2[0],Y=GO2[1],v=gn(X*40+S.id,Y*40)*.5+gfbm(X*4,Y*4,4)*.5;gramp(C.slice(0,3),gstep(.2,.85,v),o);}));
+  if(u>60){q.fillStyle=gc(C[2],.6);for(let i=0;i<900;i++){const a=R()*TAU,d=Math.sqrt(R())*1.1;gspark(q,Math.cos(a)*d,Math.sin(a)*d,.012);}}
+  for(let i=0;i<40;i++){const a=R()*TAU,d=Math.sqrt(R())*.95,x=Math.cos(a)*d,y=Math.sin(a)*d;disc(q,x+.006,y+.008,.02,'rgba(0,0,0,.35)');disc(q,x,y,.018,rgr(q,x-.006,y-.006,.02,[0,gc(gsh(C[3],.4)),1,gc(C[3])]));}},
+});
 // In play a generated skin is its sprite, still (so its light stays upper left) unless it spins; fx adds one cheap live touch:
 // g a glint hopping between facets, s a sheen sweeping across, e eyes that look where the cell goes
 function gdraw(g,c,r,k){const P=this.p;skinArt(g,this,c,r,P.spin?T*P.spin+c.wob:0);const fx=P.fx;if(!fx||skinPx(g,r)<14)return;
@@ -5744,6 +5819,29 @@ fruit:[
 [156,'blueberry','Blueberry',350,'berry','1a1e4a 3a4a8a 6a80b8 2a2a4a 000000',{k:'blue',m:1},'Dusky blue with a starry crown.'],
 [157,'peach','Peach',350,'berry','000000 f6b060 ffe0a0 e8503a 000000',{k:'peach',m:1},'Soft velvet skin, blushing red.'],
 [158,'lychee','Lychee',450,'berry','8a1a2a d8506a f6a0b0 000000 000000',{k:'lychee',m:1},'A bumpy pink shell.'],
+],
+garden:[
+[159,'sunflower','Sunflower',450,'bloom','5a6a1a 2a1406 7a4a1a c87a08 f6b812 ffe066',{pol:1},'Seeds spiralling out to a ring of golden petals.'],
+[160,'daisy','Daisy',300,'bloom','c8a010 e0a010 f8d040 c4c8cc f4f4f0 ffffff',{pr:.3,np:26},'White petals round a sunny heart.'],
+[161,'gerbera','Gerbera',350,'bloom','f0d060 3a2a10 8a6a20 c81a4a f04a7a ff9ab8',{pr:.4,np:24},'A big bright pink daisy.'],
+[162,'coneflower','Coneflower',350,'bloom','7a3a10 4a1a06 a85a14 a83a7a d870a8 f6b8d8',{pr:.46,np:16,m:4},'Soft purple petals round a spiky copper cone.'],
+[163,'rose','Rose',900,'rosette','3a0008 8a0a1e c81a32 f05a6a',{k:'round',n:70,sz:1.1},'A red rose opening, petal over petal.'],
+[164,'dahlia','Dahlia',700,'rosette','2a0418 7a0a4a c8287a f8a8d0 f6e060',{k:'point',n:120},'A magenta dahlia, every petal on the golden angle.'],
+[165,'lotus','Lotus',800,'rosette','2a3a2a e8a8c0 f6d0e0 fff4f8 f6d040',{k:'point',n:30,sz:1.8},'A sacred lotus, pale pink and perfect.'],
+[166,'echeveria','Echeveria',450,'rosette','142424 4a7a86 98c4cc e88aa0',{k:'point',n:44,sz:1.7},'A powder-blue succulent with blushing tips.'],
+[167,'pinecone','Pinecone',350,'rosette','1a0e04 4a2a10 8a5a2a c89a5a',{k:'scale',n:140},'Woody scales in Fibonacci spirals.'],
+[168,'chrysanthemum','Chrysanthemum',500,'rosette','3a2a00 c88a00 f6c020 fff0a0 a86a00',{k:'point',n:160,sz:.9},'A golden pompom of slender petals.'],
+[169,'dandelionclock','Dandelion Clock',1200,'dandelion','0a1430 3a4a80 e8a080 6a5030 ffffff',{m:4},'Make a wish and blow.'],
+[170,'flyagaric','Fly Agaric',600,'toad','5a0404 c81414 f04a2a fff8e8',{},'The red toadstool with white spots. Look, don\'t eat.'],
+[171,'barrelcactus','Barrel Cactus',450,'cactus','0e3a1a 2a7a3a 5aa858 f0e0b0 ff5a8a',{},'Ribs, spines and a crown of pink flowers.'],
+[172,'oaklog','Oak Log',350,'wood','6a3a14 b07a40 d8a868 3a2414 6a4a2a',{},'Sawn oak: a century of growth rings.'],
+[173,'birchlog','Birch Log',400,'wood','8a6a40 e0c090 f4dcb0 1a1a1a f0eee8',{birch:1,f:22},'Pale wood ringed in white bark.'],
+[174,'cherrylog','Cherry Log',400,'wood','6a1a0a b04a2a d8784a 2a1a10 5a3a2a',{f:12},'Warm red cherry wood, cracked from the heart.'],
+[175,'lilypad','Lily Pad',350,'leaves','0a2a3a 2a8a2a 6ac04a c8402a',{k:'pad',m:1},'A floating pad and a bead of water.'],
+[176,'luckyclover','Lucky Clover',1500,'leaves','0a3a0e 2a8a2a 6ac84a e8f0e0',{k:'clover',m:1},'One four-leaf clover in a patch of three.'],
+[177,'autumn','Autumn',450,'leaves','2a1a0e c83a14 e8781a f0b020 8a2a10',{k:'autumn',m:2},'Maple and oak leaves fallen in reds and golds.'],
+[178,'peony','Peony',500,'rosette','4a0a24 d0508a f49ac0 ffe0ec',{k:'round',n:110,sz:.95},'A blowsy pink peony, ruffled to the middle.'],
+[179,'moss','Moss',300,'moss','0a2a08 3a7a18 8ac83a c8902a',{},'A deep cushion of moss with spore stalks.'],
 ],
 };
 for(const col in GEN)for(const row of GEN[col]){const S=gskin(row,col);S.tok=STAINS.map(()=>'tok'+S.key);PREMIUM.push(S);}

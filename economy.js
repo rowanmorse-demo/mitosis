@@ -172,6 +172,28 @@ const GEN_SKINS = [
   [156, 'blueberry', 'Blueberry', 350],
   [157, 'peach', 'Peach', 350],
   [158, 'lychee', 'Lychee', 450],
+  // garden
+  [159, 'sunflower', 'Sunflower', 450],
+  [160, 'daisy', 'Daisy', 300],
+  [161, 'gerbera', 'Gerbera', 350],
+  [162, 'coneflower', 'Coneflower', 350],
+  [163, 'rose', 'Rose', 900],
+  [164, 'dahlia', 'Dahlia', 700],
+  [165, 'lotus', 'Lotus', 800],
+  [166, 'echeveria', 'Echeveria', 450],
+  [167, 'pinecone', 'Pinecone', 350],
+  [168, 'chrysanthemum', 'Chrysanthemum', 500],
+  [169, 'dandelionclock', 'Dandelion Clock', 1200],
+  [170, 'flyagaric', 'Fly Agaric', 600],
+  [171, 'barrelcactus', 'Barrel Cactus', 450],
+  [172, 'oaklog', 'Oak Log', 350],
+  [173, 'birchlog', 'Birch Log', 400],
+  [174, 'cherrylog', 'Cherry Log', 400],
+  [175, 'lilypad', 'Lily Pad', 350],
+  [176, 'luckyclover', 'Lucky Clover', 1500],
+  [177, 'autumn', 'Autumn', 450],
+  [178, 'peony', 'Peony', 500],
+  [179, 'moss', 'Moss', 300],
 ];
 for (const [id, key, name, price] of GEN_SKINS) SKINS.push({ id, key, name, price });
 const PACKS = [
