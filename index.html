@@ -5595,6 +5595,73 @@ raindrops(q,u,P,R){const C=P.c;fillAll(q,gc(C[0]));q.globalCompositeOperation='l
   for(let i=0;i<34;i++){const x=R()*2.3-1.15,y=R()*2.3-1.15,s=.03+Math.pow(R(),2)*.12,e=1+R()*.3;q.save();q.translate(x,y);q.scale(1,e);q.beginPath();q.arc(0,0,s,0,TAU);q.fillStyle=rgr(q,0,s*.3,s,[0,'rgba(255,255,255,.3)',.75,'rgba(255,255,255,.08)',1,'rgba(0,0,0,.55)']);q.fill();
     q.beginPath();q.arc(0,0,s*.75,Math.PI*1.1,Math.PI*1.5);q.lineWidth=s*.18;q.lineCap='round';q.strokeStyle='rgba(255,255,255,.75)';q.stroke();disc(q,s*.25,s*.35,s*.2,'rgba(255,255,255,.25)');q.restore();}},
 });
+// a bezel: a metal ring round the rim, lit from the upper left
+function gbezel(q,r0,c0,c1,w=.15){q.beginPath();q.arc(0,0,r0+w,0,TAU);q.arc(0,0,r0,0,TAU,true);q.fillStyle=lgr(q,-1,-1,1,1,[0,gc(c1),.5,gc(c0),1,gc(gsh(c0,-.4))]);q.fill('evenodd');
+  q.beginPath();q.arc(0,0,r0,0,TAU);q.lineWidth=.015;q.strokeStyle=lgr(q,-1,-1,1,1,[0,gc(gsh(c0,-.5)),1,gc(c1)]);q.stroke();}
+Object.assign(GF,{
+// Screens. k: 'radar' (green rings and blips under a sweeping beam), 'sonar' (rings pinging out from the middle). C: screen dark, screen, line, blip, bezel, bezel light.
+scope(q,u,P,R){const C=P.c,k=P.k;fillAll(q,gc(C[4]));disc(q,0,0,.92,rgr(q,0,0,.92,[0,gc(C[1]),1,gc(C[0])]));q.beginPath();
+  for(let i=1;i<=4;i++){q.moveTo(i*.22,0);q.arc(0,0,i*.22,0,TAU);}q.moveTo(-.92,0);q.lineTo(.92,0);q.moveTo(0,-.92);q.lineTo(0,.92);for(let i=0;i<72;i++){const a=i/72*TAU,l=i%6?.86:.8;q.moveTo(Math.cos(a)*l,Math.sin(a)*l);q.lineTo(Math.cos(a)*.9,Math.sin(a)*.9);}
+  q.lineWidth=Math.max(.006,1/u);q.strokeStyle=gc(C[2],.55);q.stroke();q.globalCompositeOperation='lighter';
+  if(k==='sonar'){for(let i=1;i<=3;i++){q.beginPath();q.arc(0,0,i*.28,0,TAU);q.lineWidth=.03;q.strokeStyle=gc(C[3],.5-i*.12);q.stroke();}}
+  for(let i=0;i<7;i++){const a=R()*TAU,d=.15+R()*.7,x=Math.cos(a)*d,y=Math.sin(a)*d;gglow(q,x,y,.07,C[3],.9);disc(q,x,y,.018,gc(gsh(C[3],.5)));}
+  disc(q,0,0,.92,rgr(q,0,0,.92,[0,gc(C[2],.08),1,gc(C[2],.02)]));q.globalCompositeOperation='source-over';gbezel(q,.92,C[4],C[5],.25);ggloss(q,.6);},
+// A fusion core: blue-white plasma held in a ring of magnet coils, light spilling between them. C: dark, metal, metal light, plasma, plasma hot.
+reactor(q,u,P,R){const C=P.c;fillAll(q,gc(C[0]));disc(q,0,0,1.15,rgr(q,0,0,1.15,[0,gc(gsh(C[1],-.2)),1,gc(C[0])]));q.globalCompositeOperation='lighter';gglow(q,0,0,1,C[3],.5);q.globalCompositeOperation='source-over';
+  for(let i=0;i<12;i++){const a=i/12*TAU;q.save();q.rotate(a);rrect(q,.5,-.11,.42,.22,.04);q.fillStyle=lgr(q,.5,-.11,.5,.11,[0,gc(C[2]),.5,gc(C[1]),1,gc(gsh(C[1],-.4))]);q.fill();q.beginPath();for(let j=1;j<8;j++){q.moveTo(.5+j*.05,-.1);q.lineTo(.5+j*.05,.1);}q.lineWidth=.012;q.strokeStyle=gc(gsh(C[1],-.5),.7);q.stroke();q.restore();}
+  q.globalCompositeOperation='lighter';for(let i=0;i<12;i++){const a=(i+.5)/12*TAU;q.save();q.rotate(a);q.beginPath();q.moveTo(.42,0);q.lineTo(.95,-.06);q.lineTo(.95,.06);q.closePath();q.fillStyle=lgr(q,.42,0,.95,0,[0,gc(C[3],.8),1,gc(C[3],0)]);q.fill();q.restore();}
+  disc(q,0,0,.42,rgr(q,0,0,.42,[0,'#ffffff',.25,gc(C[4]),.7,gc(C[3],.8),1,gc(C[3],.2)]));q.globalCompositeOperation='source-over';q.beginPath();q.arc(0,0,.44,0,TAU);q.lineWidth=.05;q.strokeStyle=gc(C[2]);q.stroke();},
+// A force field: hexagonal cells of light, brightest toward the rim, rippling out from a hit. C: dark, field, edge, hot.
+shield(q,u,P,R){const C=P.c,s=.2,h=s*Math.sqrt(3)/2;fillAll(q,gc(C[0]));disc(q,0,0,1.15,rgr(q,0,0,1.15,[0,gc(C[0]),1,gc(C[1])]));q.globalCompositeOperation='lighter';
+  for(let j=-9;j<=9;j++)for(let i=-7;i<=7;i++){const cx=(i+(j%2?.5:0))*s*1.5/0.866*.866,cy=j*h,d=Math.hypot(cx,cy);if(d>1.7)continue;const V=[];for(let a=0;a<6;a++){const t=a/6*TAU;V.push(cx+Math.cos(t)*s*.92,cy+Math.sin(t)*s*.92);}
+    const hit=Math.exp(-Math.pow(Math.hypot(cx-.35,cy+.3)-.3,2)*20),a=.12+.35*gstep(.4,1.1,d)+hit*.4;q.beginPath();gpath(q,V,true,.05);q.fillStyle=gc(C[1],a*.35);q.fill();q.lineWidth=Math.max(.006,1/u);q.strokeStyle=gc(C[2],Math.min(1,a+.2));q.stroke();}
+  gglow(q,.35,-.3,.35,C[3],.7);q.globalCompositeOperation='source-over';},
+// An atom: three electron orbits tilted round a nucleus of protons and neutrons; it turns. C: dark, orbit, electron, proton, neutron.
+atom(q,u,P,R){const C=P.c;fillAll(q,gc(C[0]));disc(q,0,0,1.15,rgr(q,0,0,1.15,[0,gc(gsh(C[0],.2)),1,gc(C[0])]));q.globalCompositeOperation='lighter';
+  for(let i=0;i<3;i++){q.save();q.rotate(i*Math.PI/3+.3);q.scale(1,.32);q.beginPath();q.arc(0,0,.9,0,TAU);q.restore();q.lineWidth=.05;q.strokeStyle=gc(C[1],.2);q.stroke();q.lineWidth=.016;q.strokeStyle=gc(C[1],.85);q.stroke();
+    const a=i*2.1+.6,b=i*Math.PI/3+.3,ex=Math.cos(a)*.9,ey=Math.sin(a)*.9*.32,x=ex*Math.cos(b)-ey*Math.sin(b),y=ex*Math.sin(b)+ey*Math.cos(b);gglow(q,x,y,.13,C[2],.9);disc(q,x,y,.035,'#fff');}
+  q.globalCompositeOperation='source-over';gglow(q,0,0,.4,C[3],.4);for(let i=11;i>=0;i--){const a=i*2.39996,d=Math.sqrt(i/12)*.13,x=Math.cos(a)*d,y=Math.sin(a)*d,cl=i%2?C[3]:C[4];disc(q,x,y,.065,rgr(q,x-.02,y-.02,.07,[0,gc(gsh(cl,.4)),1,gc(gsh(cl,-.3))]));}},
+// A camera lens from the front: the black barrel and its markings, glass elements glinting with coloured coatings, the iris deep inside. C: barrel, glass dark, coating, coating 2, ink.
+lens(q,u,P,R){const C=P.c;fillAll(q,gc(C[0]));disc(q,0,0,1.15,rgr(q,-.3,-.3,1.5,[0,gc(gsh(C[0],.2)),1,gc(C[0])]));q.beginPath();for(let i=0;i<90;i++){const a=i/90*TAU;q.moveTo(Math.cos(a)*1.0,Math.sin(a)*1.0);q.lineTo(Math.cos(a)*1.12,Math.sin(a)*1.12);}q.lineWidth=.012;q.strokeStyle='rgba(255,255,255,.12)';q.stroke();
+  if(u>50){q.fillStyle=gc(C[4],.8);q.font='600 .06px system-ui,-apple-system,sans-serif';q.textAlign='center';const T2='50 mm  1:1.4  ∞  MACRO';for(let i=0;i<T2.length;i++){const a=-Math.PI*.85+i*.075;q.save();q.rotate(a+Math.PI/2);q.fillText(T2[i],0,-.87);q.restore();}}
+  disc(q,0,0,.8,rgr(q,0,0,.8,[0,gc(gsh(C[1],-.3)),1,gc(C[1])]));for(const [r,c,a] of[[.72,C[2],.3],[.56,C[3],.35],[.4,C[2],.4],[.26,C[3],.3]]){q.beginPath();q.arc(0,0,r,0,TAU);q.lineWidth=.012;q.strokeStyle=gc(c,a);q.stroke();}
+  q.beginPath();for(let i=0;i<8;i++){const a=i/8*TAU;q.lineTo(Math.cos(a)*.16,Math.sin(a)*.16);}q.closePath();q.fillStyle='#000';q.fill();
+  q.globalCompositeOperation='lighter';for(const [x,y,s,c,a] of[[-.3,-.32,.2,C[2],.55],[.25,.3,.14,C[3],.5],[-.1,-.12,.08,'w',.8],[.38,-.12,.06,C[3],.6]]){const cl=c==='w'?[255,255,255]:c;q.save();q.translate(x,y);q.rotate(-.6);q.scale(1,.55);disc(q,0,0,s,rgr(q,0,0,s,[0,gc(cl,a),1,gc(cl,0)]));q.restore();}q.globalCompositeOperation='source-over';},
+// An iris diaphragm: overlapping curved blades closing to a polygon, in brushed metal. C: dark, blade, blade light, rim.
+aperture(q,u,P,R){const C=P.c,n=P.n||8,ap=.38;fillAll(q,gc(C[0]));for(let i=0;i<n;i++){const a=i/n*TAU;q.save();q.rotate(a);q.beginPath();q.moveTo(ap,-.02);q.lineTo(1.2,-.6);q.lineTo(1.3,.4);q.quadraticCurveTo(.9,.4,ap*Math.cos(TAU/n),ap*Math.sin(TAU/n));q.closePath();
+    q.fillStyle=lgr(q,ap,0,1.2,.3,[0,gc(C[2]),.5,gc(C[1]),1,gc(gsh(C[1],-.35))]);q.fill();q.lineWidth=.012;q.strokeStyle=gc(C[0],.8);q.stroke();q.restore();}
+  q.beginPath();for(let i=0;i<n;i++){const a=i/n*TAU;q.lineTo(Math.cos(a)*ap,Math.sin(a)*ap);}q.closePath();q.fillStyle=rgr(q,0,0,ap,[0,'#05070a',1,'#10141a']);q.fill();gglow(q,-.08,-.08,.15,[120,160,255],.25);gbezel(q,.98,C[3],gsh(C[3],.5),.2);},
+// A brass compass: a rose of points, degree ticks, a red and white needle. C: card, ink, red, brass dark, brass light.
+compass(q,u,P,R){const C=P.c;fillAll(q,gc(C[3]));disc(q,0,0,.9,rgr(q,-.2,-.25,1,[0,'#fffaf0',1,gc(C[0])]));q.beginPath();for(let i=0;i<72;i++){const a=i/72*TAU,l=i%9?.82:.76;q.moveTo(Math.cos(a)*l,Math.sin(a)*l);q.lineTo(Math.cos(a)*.88,Math.sin(a)*.88);}q.lineWidth=.008;q.strokeStyle=gc(C[1]);q.stroke();
+  for(let i=0;i<8;i++){const a=i/8*TAU-Math.PI/2,L=i%2?.42:.68,w=i%2?.06:.1;q.save();q.rotate(a);for(const s of[-1,1]){q.beginPath();q.moveTo(0,0);q.lineTo(L,0);q.lineTo(L*.22,s*w);q.closePath();q.fillStyle=s<0?gc(C[1]):gc(gsh(C[1],.6));q.fill();}q.restore();}
+  if(u>40){q.fillStyle=gc(C[1]);q.font='800 .13px system-ui,-apple-system,sans-serif';q.textAlign='center';q.textBaseline='middle';[['N',0,-.6],['E',.6,0],['S',0,.6],['W',-.6,0]].forEach(([t,x,y])=>q.fillText(t,x,y));}
+  q.save();q.rotate(.35);for(const s of[-1,1]){q.beginPath();q.moveTo(0,s*.72);q.lineTo(.06,0);q.lineTo(-.06,0);q.closePath();q.fillStyle=s<0?gc(C[2]):'#f4f4f0';q.fill();q.lineWidth=.008;q.strokeStyle='rgba(0,0,0,.4)';q.stroke();}q.restore();disc(q,0,0,.06,rgr(q,-.02,-.02,.07,[0,gc(C[4]),1,gc(C[3])]));
+  gbezel(q,.9,C[3],C[4],.25);ggloss(q,.7);},
+// A pocket watch face: Roman hours on enamel, a small seconds dial, a gold case. Its hands are drawn live and keep the real time. C: enamel, ink, gold dark, gold light.
+watch(q,u,P,R){const C=P.c;fillAll(q,gc(C[2]));disc(q,0,0,.9,rgr(q,-.2,-.25,1,[0,'#ffffff',1,gc(C[0])]));q.beginPath();for(let i=0;i<60;i++){const a=i/60*TAU,l=i%5?.83:.78;q.moveTo(Math.cos(a)*l,Math.sin(a)*l);q.lineTo(Math.cos(a)*.86,Math.sin(a)*.86);}q.lineWidth=.01;q.strokeStyle=gc(C[1]);q.stroke();
+  if(u>40){q.fillStyle=gc(C[1]);q.font='600 .14px Georgia,"Times New Roman",serif';q.textAlign='center';q.textBaseline='middle';const N=['XII','I','II','III','IIII','V','VI','VII','VIII','IX','X','XI'];N.forEach((t,i)=>{const a=i/12*TAU-Math.PI/2;q.fillText(t,Math.cos(a)*.64,Math.sin(a)*.64);});}
+  q.beginPath();q.arc(0,.4,.14,0,TAU);q.lineWidth=.008;q.stroke();gbezel(q,.9,C[2],C[3],.25);ggloss(q,.6);},
+// A wireframe globe: lines of latitude and longitude glowing on a dark ball, tilted on its axis. C: dark, line, glow.
+globe(q,u,P,R){const C=P.c,M=gm3(.4,.4,.41);fillAll(q,gc(C[0]));disc(q,0,0,1.15,rgr(q,-.2,-.3,1.3,[0,gc(gsh(C[0],.25)),1,gc(C[0])]));q.globalCompositeOperation='lighter';
+  const L=[];for(let i=1;i<6;i++)L.push(gcirc3(0,1,0,i/6*Math.PI,72));for(let i=0;i<6;i++){const a=i/6*Math.PI;L.push(gcirc3(Math.cos(a),0,Math.sin(a),Math.PI/2,72));}
+  for(const back of[1,0]){q.beginPath();for(const p of L){const n=p.length/3;for(let j=0;j<n;j++){const k=(j+1)%n;gp3(M,p[j*3],p[j*3+1],p[j*3+2],GO2);const z0=GO2[2],x0=GO2[0],y0=GO2[1];gp3(M,p[k*3],p[k*3+1],p[k*3+2]);if((z0<0)!==!!back||(GO[2]<0)!==!!back)continue;q.moveTo(x0,y0);q.lineTo(GO[0],GO[1]);}}
+    q.lineWidth=back?.008:.02;q.strokeStyle=gc(C[1],back?.25:.9);q.stroke();if(!back){q.lineWidth=.06;q.strokeStyle=gc(C[2],.15);q.stroke();}}
+  gglow(q,0,0,1.1,C[2],.15);q.globalCompositeOperation='source-over';},
+// A loudspeaker: the paper cone in rings, the dust cap, the rubber surround and the chassis screws. C: chassis, cone dark, cone, cap, surround.
+speaker(q,u,P,R){const C=P.c;fillAll(q,gc(C[0]));disc(q,0,0,1.15,lgr(q,-1,-1,1,1,[0,gc(gsh(C[0],.3)),1,gc(C[0])]));for(let i=0;i<8;i++){const a=i/8*TAU+Math.PI/8;disc(q,Math.cos(a)*1.04,Math.sin(a)*1.04,.04,rgr(q,Math.cos(a)*1.04-.01,Math.sin(a)*1.04-.01,.04,[0,'#e8e8ec',1,'#5a5a60']));}
+  disc(q,0,0,.95,rgr(q,-.2,-.25,1,[0,gc(gsh(C[4],.3)),.5,gc(C[4]),1,gc(gsh(C[4],-.4))]));disc(q,0,0,.82,rgr(q,.15,.18,.85,[0,gc(C[2]),.6,gc(C[1]),1,gc(gsh(C[1],-.3))]));q.beginPath();for(let r=.35;r<.8;r+=.06){q.moveTo(r,0);q.arc(0,0,r,0,TAU);}q.lineWidth=.008;q.strokeStyle='rgba(0,0,0,.3)';q.stroke();
+  disc(q,0,0,.3,rgr(q,-.1,-.12,.32,[0,gc(gsh(C[3],.4)),.6,gc(C[3]),1,gc(gsh(C[3],-.35))]));ggloss(q,.5);},
+// A jet engine from the front: curved fan blades round a pointed spinner, deep in a polished intake; it spins. C: dark, blade, blade light, intake, intake light.
+jet(q,u,P,R){const C=P.c,n=P.n||22;fillAll(q,gc(C[3]));disc(q,0,0,1.15,lgr(q,-1,-1,1,1,[0,gc(C[4]),.5,gc(C[3]),1,gc(gsh(C[3],-.4))]));disc(q,0,0,.94,gc(C[0]));
+  for(let i=0;i<n;i++){const a=i/n*TAU;q.save();q.rotate(a);q.beginPath();q.moveTo(.22,-.02);q.quadraticCurveTo(.55,-.02,.93,-.14);q.lineTo(.93,.08);q.quadraticCurveTo(.55,.08,.22,.06);q.closePath();q.fillStyle=lgr(q,0,-.1,0,.1,[0,gc(C[2]),.5,gc(C[1]),1,gc(gsh(C[1],-.45))]);q.fill();q.lineWidth=.006;q.strokeStyle=gc(C[0],.7);q.stroke();q.restore();}
+  disc(q,0,0,.26,rgr(q,-.08,-.1,.3,[0,'#ffffff',.3,gc(C[2]),1,gc(gsh(C[1],-.4))]));q.beginPath();q.moveTo(0,0);for(let i=0;i<=20;i++){const a=i/20*TAU*1.25;q.lineTo(Math.cos(a)*i/20*.26,Math.sin(a)*i/20*.26);}q.lineWidth=.025;q.strokeStyle=gc(C[0],.9);q.stroke();},
+// A safe's combination dial: numbers round a knurled chrome wheel, the index mark above. C: dark, chrome, chrome light, ink, mark.
+dial(q,u,P,R){const C=P.c;fillAll(q,gc(C[0]));q.beginPath();for(let i=0;i<120;i++){const a=i/120*TAU;q.moveTo(Math.cos(a)*.96,Math.sin(a)*.96);q.lineTo(Math.cos(a)*1.15,Math.sin(a)*1.15);}disc(q,0,0,1.15,lgr(q,-1,-1,1,1,[0,gc(C[2]),.5,gc(C[1]),1,gc(gsh(C[1],-.5))]));q.lineWidth=.014;q.strokeStyle=gc(C[0],.5);q.stroke();
+  disc(q,0,0,.95,rgr(q,-.25,-.3,1.1,[0,gc(C[2]),.6,gc(C[1]),1,gc(gsh(C[1],-.3))]));q.beginPath();for(let i=0;i<100;i++){const a=i/100*TAU-Math.PI/2,l=i%10?.86:i%5?.83:.8;q.moveTo(Math.cos(a)*l,Math.sin(a)*l);q.lineTo(Math.cos(a)*.93,Math.sin(a)*.93);}q.lineWidth=.008;q.strokeStyle=gc(C[3]);q.stroke();
+  if(u>40){q.fillStyle=gc(C[3]);q.font='700 .1px system-ui,-apple-system,sans-serif';q.textAlign='center';q.textBaseline='middle';for(let i=0;i<10;i++){const a=i/10*TAU-Math.PI/2;q.save();q.translate(Math.cos(a)*.7,Math.sin(a)*.7);q.rotate(a+Math.PI/2);q.fillText(i*10,0,0);q.restore();}}
+  disc(q,0,0,.42,rgr(q,-.12,-.14,.5,[0,gc(C[2]),.5,gc(C[1]),1,gc(gsh(C[1],-.5))]));q.beginPath();for(let i=0;i<40;i++){const a=i/40*TAU;q.moveTo(Math.cos(a)*.36,Math.sin(a)*.36);q.lineTo(Math.cos(a)*.42,Math.sin(a)*.42);}q.lineWidth=.012;q.strokeStyle=gc(C[0],.4);q.stroke();
+  q.beginPath();q.moveTo(0,-.97);q.lineTo(-.04,-1.12);q.lineTo(.04,-1.12);q.closePath();q.fillStyle=gc(C[4]);q.fill();ggloss(q,.7);},
+});
 // a football's 32 panels: the truncated icosahedron's 12 pentagons and 20 hexagons, pushed out onto the sphere
 const GSOC=(()=>{const f=(1+Math.sqrt(5))/2,V=[],E=[],nz=p=>{const l=Math.hypot(p[0],p[1],p[2]);return[p[0]/l,p[1]/l,p[2]/l];},lp=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
   for(const a of[-1,1])for(const b of[-f,f])V.push([0,a,b],[a,b,0],[b,0,a]);
@@ -6126,11 +6193,18 @@ chameleon(q,u,P,R,S){const C=P.c,n=C.length-1;gfield(q,gtex(S.key,u,(x,y,o)=>{gw
     lit=.65+.35*(-(v.dx*GLX+v.dy*GLY))*2,ed=gstep(.3,.5,v.f1);gramp(C.slice(0,n),t,o);const st=gstep(.55,.6,gfbm(GO2[0]*.9+20,GO2[1]*.9,2))*.35;for(let i=0;i<3;i++)o[i]=(o[i]+(C[n][i]-o[i])*Math.max(ed*.5,st))*lit;}));ggloss(q,.5,1);},
 });
 // In play a generated skin is its sprite, still (so its light stays upper left) unless it spins; fx adds one cheap live touch:
-// g a glint hopping between facets, s a sheen sweeping across, e eyes that look where the cell goes
+// g a glint hopping between facets, s a sheen sweeping across, r a scope's sweeping beam, c a watch's hands
 function gdraw(g,c,r,k){const P=this.p;skinArt(g,this,c,r,P.spin?T*P.spin+c.wob:0);const fx=P.fx;if(!fx||skinPx(g,r)<14)return;
   if(fx==='g'){const t=T*.5+c.wob*3,i=Math.floor(t),a=i*2.4+c.wob,d=r*(.22+(i%3)*.2);glint(g,c.x+Math.cos(a)*d,c.y+Math.sin(a)*d,r*.17,Math.sin((t%1)*Math.PI)*1.1);}
   else if(fx==='s'){const ph=((T*.16+c.wob*.1)%1)*3.2-1.6;if(Math.abs(ph)<1.15){g.beginPath();g.rect(c.x-r*1.2,c.y-r*1.2,r*2.4,r*2.4);g.save();g.translate(c.x+ph*r,c.y+ph*r);g.scale(r,r);
-    g.fillStyle=grad(g,'ice_sheen',m=>lgr(m,-.5,-.5,.5,.5,[0,'rgba(255,255,255,0)',.42,'rgba(255,255,255,0)',.5,'rgba(255,255,255,.3)',.58,'rgba(255,255,255,0)',1,'rgba(255,255,255,0)']));g.fill();g.restore();}}}
+    g.fillStyle=grad(g,'ice_sheen',m=>lgr(m,-.5,-.5,.5,.5,[0,'rgba(255,255,255,0)',.42,'rgba(255,255,255,0)',.5,'rgba(255,255,255,.3)',.58,'rgba(255,255,255,0)',1,'rgba(255,255,255,0)']));g.fill();g.restore();}}
+  else if(fx==='r'){g.globalCompositeOperation='lighter';blit(g,bake(g,'gsweep'+this.key,skinPx(g,r)*2*SKIN_BR,gsweepArt,SKIN_BR,P.c[3]),c.x,c.y,r,T*1.8+c.wob);g.globalCompositeOperation='source-over';}
+  else if(fx==='c'){const t=Date.now()/1e3-GTZ,s=t%60,m=t/60%60,h=t/3600%12;g.save();g.translate(c.x,c.y);g.lineCap='round';g.strokeStyle='#1a1410'; // a watch keeps the real time
+    for(const [v,L,w] of[[h/12,.42,.055],[m/60,.62,.035]]){const a=v*TAU-Math.PI/2;g.beginPath();g.moveTo(0,0);g.lineTo(Math.cos(a)*r*L,Math.sin(a)*r*L);g.lineWidth=r*w;g.stroke();}
+    const a=Math.floor(s)/60*TAU-Math.PI/2;g.beginPath();g.moveTo(0,r*.4);g.lineTo(Math.cos(a)*r*.12,r*.4+Math.sin(a)*r*.12);g.lineWidth=r*.015;g.strokeStyle='#a01010';g.stroke();g.beginPath();g.arc(0,0,r*.04,0,TAU);g.fillStyle='#1a1410';g.fill();g.restore();}}
+const GTZ=new Date().getTimezoneOffset()*60;
+function gsweepArt(q,u,c){const n=24;for(let i=0;i<n;i++){q.beginPath();q.moveTo(0,0);q.arc(0,0,.92,-1+i/n,-1+(i+1)/n+.01);q.closePath();q.fillStyle=gc(c,.34*Math.pow((i+1)/n,2));q.fill();} // a scope's sweeping beam, its trail fading behind it
+  q.beginPath();q.moveTo(0,0);q.lineTo(.92,0);q.lineWidth=.015;q.strokeStyle=gc(c,.9);q.stroke();}
 const GRAR=p=>p>=7500?'legendary':p>=2000?'epic':p>=700?'rare':'common'; // a generated skin's rarity follows its price
 function gskin([id,key,name,price,f,pal,o,desc],col){const C=gpal(pal),m=C[o&&o.m!==undefined?o.m:C.length>>1];
   const S={id,key,name,price,col,rar:GRAR(price),desc,f,p:Object.assign({c:C},o),base:ghsl(m),edge:gc(gsh(m,-.62)),edge2:gc(gsh(m,.55),.6),draw:gdraw};
@@ -6444,6 +6518,21 @@ elements:[
 [324,'blizzard','Blizzard',400,'blizzard','061428 1a3a6a f6faff',{m:1},'Snow streaking sideways through the dark.'],
 [325,'drought','Drought',350,'drought','2a1408 8a5a30 c8945a e8c090',{m:2},'Sun-baked clay, cracked into plates.'],
 [326,'raindrops','Raindrops',450,'raindrops','060a14 ff8a3a ffd04a 3a8aff ff4a8a 6affd0',{m:3},'Rain on the window, city lights blurred behind.'],
+],
+gadgets:[
+[327,'radar','Radar',1200,'scope','021006 06240e 3aff7a 9affb0 2a2e34 9aa2ac',{k:'radar',fx:'r',m:2},'A radar screen, its beam sweeping round.'],
+[328,'sonar','Sonar',900,'scope','020a14 06203a 3ac0ff 9ae8ff 2a2e34 9aa2ac',{k:'sonar',fx:'r',m:2},'Pings in the deep, a blue beam turning.'],
+[329,'fusioncore','Fusion Core',2500,'reactor','04080e 3a4450 9aa4b0 3aa8ff c8f0ff',{m:3},'Star-hot plasma in a ring of magnets.'],
+[330,'forcefield','Force Field',900,'shield','02060e 2a8aff 8ad0ff ffffff',{m:1},'Hexagons of light, rippling where it was hit.'],
+[331,'atom','Atom',700,'atom','02040a 6ad0ff aaf0ff ff5a4a 6a8aff',{spin:.6,m:1},'Electrons circling a nucleus as it turns.'],
+[332,'cameralens','Camera Lens',800,'lens','0a0a0c 0a0e18 8a4af0 3ae0a0 e8e8e8',{m:1},'Coated glass glinting purple and green.'],
+[333,'aperture','Aperture',600,'aperture','0a0a0c 6a7078 c8ccd2 3a3e44',{n:8,m:1},'Eight steel blades closing to a point.'],
+[334,'compass','Compass',500,'compass','f6ecd0 2a2018 c8141e 8a6a20 f6d880',{m:3},'A brass compass, always pointing north.'],
+[335,'pocketwatch','Pocket Watch',2500,'watch','fffaf0 1a1410 a87a20 f6d880',{fx:'c',m:2},'A gold watch that keeps the real time.'],
+[336,'globe','Globe',600,'globe','02060e 3ad0ff 3a8aff',{spin:.3,m:1},'A wireframe world, turning in the dark.'],
+[337,'speaker','Speaker',400,'speaker','1a1a1e 2a2a2e 4a4a50 1a1a1e 3a3a40',{m:2},'A bass cone ready to shake the room.'],
+[338,'jetengine','Jet Engine',1500,'jet','0a0a0c 6a7078 d8dce0 8a9098 e8ecf0',{spin:6,m:1},'The fan of a jet engine, spinning up.'],
+[339,'safedial','Safe Dial',600,'dial','0a0a0c 8a9098 f0f2f4 1a1a1e d81e1e',{m:1},'Thirty-two, sixteen, eight... click.'],
 ],
 };
 for(const col in GEN)for(const row of GEN[col]){const S=gskin(row,col);S.tok=STAINS.map(()=>'tok'+S.key);PREMIUM.push(S);}
