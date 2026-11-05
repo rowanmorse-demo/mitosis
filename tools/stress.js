@@ -5,8 +5,10 @@
 // reports the server's CPU (share of one core: the relay runs on one thread), its memory, the relay's delay and the
 // bandwidth it sends. On a machine busy with other work, loop busy and the delays include waiting for a CPU; the
 // CPU column does not, so the capacity estimate uses it.
-//   node tools/stress.js                                        4, 8, 12, 16 players: today's arena limit
-//   node tools/stress.js --cap=128 --steps=16,32,48,64,96,128   lifts MAX_PLAYERS in the copy to see where one arena breaks
+// The relay puts games in arena rooms of 16 (ROOM_SIZE), each with its own host; the copy may open as many rooms as
+// the steps need (MAX_ROOMS). On a server from before rooms (one arena, MAX_PLAYERS) the room is the whole server.
+//   node tools/stress.js                                    16, 32, 64, 128, 192, 256 players: rooms of 16
+//   node tools/stress.js --room=64 --steps=16,32,48,64       a bigger room in the copy, to see how far one arena goes
 // Options: --hold=15 (seconds measured per step) --rate=15 (presences a second) --size=450 --host-size=3600 (bytes)
 //          --workers=N (processes simulating the games) --dir=PATH (the server to test; default this repository)
 'use strict';
@@ -65,19 +67,19 @@ if (process.argv[2] === '--worker') {
 
 /* ---------- the parent: the server copy, the steps, the report ---------- */
 const opt = Object.fromEntries(process.argv.slice(2).map(a => { const m = a.match(/^--([\w-]+)(?:=(.*))?$/); return m ? [m[1], m[2] ?? true] : [a, true]; }));
-const cap = opt.cap ? +opt.cap : null, hold = +(opt.hold || 15), rate = +(opt.rate || 15), size = +(opt.size || 450), hostSize = +(opt['host-size'] || 3600);
-const steps = String(opt.steps || (cap ? [16, 32, 48, 64].filter(n => n <= cap).join(',') : '4,8,12,16')).split(',').map(Number).filter(n => n > 0);
+const hold = +(opt.hold || 15), rate = +(opt.rate || 15), size = +(opt.size || 450), hostSize = +(opt['host-size'] || 3600);
+const steps = String(opt.steps || '16,32,64,128,192,256').split(',').map(Number).filter(n => n > 0), most = Math.max(...steps);
 const nWorkers = +(opt.workers || Math.max(2, Math.min(6, os.cpus().length - 2)));
 const dir = path.resolve(opt.dir || path.join(__dirname, '..'));
 
 const work = fs.mkdtempSync(path.join(os.tmpdir(), 'mitosis-stress-')), app = path.join(work, 'app'), data = path.join(work, 'data');
 fs.mkdirSync(app); fs.mkdirSync(data);
 for (const f of fs.readdirSync(dir)) if (/\.(js|json|html)$/.test(f)) fs.copyFileSync(path.join(dir, f), path.join(app, f));
-if (cap) {
-  const src = fs.readFileSync(path.join(app, 'server.js'), 'utf8');
-  if (!/const MAX_PLAYERS = \d+;/.test(src)) { console.error('This server has no `const MAX_PLAYERS = N;` to lift; run without --cap.'); process.exit(2); }
-  fs.writeFileSync(path.join(app, 'server.js'), src.replace(/const MAX_PLAYERS = \d+;/, `const MAX_PLAYERS = ${cap};`));
-}
+// the room size: ROOM_SIZE (rooms), or MAX_PLAYERS on a server from before rooms, which is one room for everybody
+const src = fs.readFileSync(path.join(app, 'server.js'), 'utf8'), sizeRe = /const (ROOM_SIZE|MAX_PLAYERS) = (\d+);/, found = sizeRe.exec(src);
+if (!found) { console.error('This server has neither `const ROOM_SIZE = N;` nor `const MAX_PLAYERS = N;`; the tool needs updating.'); process.exit(2); }
+const rooms = found[1] === 'ROOM_SIZE', roomSize = opt.room ? +opt.room : rooms ? +found[2] : Math.max(+found[2], most);
+fs.writeFileSync(path.join(app, 'server.js'), src.replace(sizeRe, `const ${found[1]} = ${roomSize};`));
 // the server runs inside this small host, which reports its CPU, memory and event loop when asked
 fs.writeFileSync(path.join(app, 'stress-host.js'), `'use strict';
 const { performance, monitorEventLoopDelay } = require('perf_hooks');
@@ -91,7 +93,7 @@ process.on('message', () => {
 require('./server.js');
 `);
 const PORT = 20000 + Math.floor(Math.random() * 20000), base = `http://127.0.0.1:${PORT}`, url = base.replace(/^http/, 'ws') + '/ws';
-const server = fork(path.join(app, 'stress-host.js'), [], { env: { ...process.env, PORT, DATA_DIR: data, ADMIN_TOKEN: 'stress' }, stdio: ['ignore', 'ignore', 'inherit', 'ipc'] });
+const server = fork(path.join(app, 'stress-host.js'), [], { env: { ...process.env, PORT, DATA_DIR: data, ADMIN_TOKEN: 'stress', MAX_ROOMS: String(Math.ceil(most / roomSize) + 1) }, stdio: ['ignore', 'ignore', 'inherit', 'ipc'] });
 const workers = Array.from({ length: nWorkers }, () => fork(__filename, ['--worker'], { stdio: ['ignore', 'inherit', 'inherit', 'ipc'] }));
 const ask = (proc, msg) => new Promise(res => { proc.once('message', res); proc.send(msg); });
 let stopped = false;
@@ -103,6 +105,8 @@ function stop(code) {
 for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => stop(1));
 server.on('exit', c => { if (!stopped) { console.error('the server stopped (exit ' + c + ')'); stop(1); } });
 
+// messages the server should send a second: each presence to the other games in its room, plus the pongs
+function expected(n) { let t = 0; for (let left = n; left > 0; left -= roomSize) { const r = Math.min(roomSize, left); t += r * (r - 1); } return rate * t + n / 4; }
 const pct = (a, p) => { if (!a.length) return NaN; const s = [...a].sort((x, y) => x - y); return s[Math.min(s.length - 1, Math.floor(p / 100 * s.length))]; };
 const f0 = v => Number.isFinite(v) ? String(Math.round(v)) : '–', f1 = v => Number.isFinite(v) ? v.toFixed(1) : '–';
 async function measure(secs) {
@@ -117,24 +121,24 @@ async function measure(secs) {
 (async () => {
   for (let i = 0; i < 100; i++) { try { if ((await fetch(base + '/health')).ok) break; } catch (e) {} await sleep(100); }
   const machine = `${os.cpus()[0].model.trim()}, ${os.cpus().length} cores, ${Math.round(os.totalmem() / 2 ** 30)} GB, Node ${process.version}`;
-  console.log(`Mitosis relay stress test: ${dir}${cap ? ` (MAX_PLAYERS lifted to ${cap})` : ''}\n${machine}; ${nWorkers} worker processes; each game sends ${rate}/s, ${size} B (host ${hostSize} B); ${hold} s per step\n`);
+  console.log(`Mitosis relay stress test: ${dir}${rooms ? `, arena rooms of ${roomSize}` : `, one arena (MAX_PLAYERS ${roomSize} in the copy)`}\n${machine}; ${nWorkers} worker processes; each game sends ${rate}/s, ${size} B (host ${hostSize} B); ${hold} s per step\n`);
   console.log('players  joined  server CPU  loop busy  loop p99   relay p50/p99   ping p50/p99   out msg/s   out Mbit/s  memory  dropped');
   const rows = []; let n = 0;
   for (const want of steps) {
-    const add = []; for (; n < want; n++) add.push({ id: 'stress' + String(n).padStart(4, '0'), name: 'Stress ' + n, host: n === 0, size, hostSize, rate });
+    const add = []; for (; n < want; n++) add.push({ id: 'stress' + String(n).padStart(4, '0'), name: 'Stress ' + n, host: n % roomSize === 0, size, hostSize, rate });
     add.forEach((g, i) => workers[i % nWorkers].send({ cmd: 'add', url, games: [g] }));
     await sleep(2500 + add.length * 15);
-    const m = await measure(hold); m.flow = m.outPerSec / Math.max(1, rate * m.open * (m.open - 1) + m.open / 4); rows.push({ want, ...m }); // presences to every other game, plus pongs
+    const m = await measure(hold); m.flow = m.outPerSec / Math.max(1, expected(m.open)); rows.push({ want, ...m });
     console.log(`${String(want).padStart(7)}  ${String(m.open).padStart(6)}  ${(f0(m.srv.cpu * 100) + '%').padStart(10)}  ${(f0(m.srv.busy * 100) + '%').padStart(9)}  ${(f1(m.srv.lag99) + ' ms').padStart(8)}   ${(f0(m.delay50) + '/' + f0(m.delay99) + ' ms').padStart(13)}   ${(f0(m.rtt50) + '/' + f0(m.rtt99) + ' ms').padStart(12)}   ${f0(m.outPerSec).padStart(9)}   ${f1(m.outMB * 8).padStart(10)}  ${(f0(m.srv.rss / 2 ** 20) + ' MB').padStart(6)}  ${String(m.dropped).padStart(7)}${m.full ? `   (${m.full} turned away: arena full)` : ''}${m.genBusy > .85 ? '   (!) the simulated games are saturated: this row understates the load' : ''}${m.flow < .9 ? `   (!) only ${f0(m.flow * 100)}% of the expected messages flowed: this machine is too busy for a clean reading` : ''}`);
     if (m.srv.cpu > .95 || m.dropped > want / 4) { console.log('\nThe server is saturated; stopping here.'); break; }
   }
-  // the relay passes every presence to every other game in the arena, so one arena's work grows with players squared
-  const per16 = rows.find(r => r.want === 16 && r.open >= 16 && r.dropped === 0);
-  if (per16) {
-    const cpu = per16.srv.cpu / Math.min(1, per16.flow), mbit = per16.outMB * 8 / Math.min(1, per16.flow), rooms = Math.floor(.7 / cpu); // scaled to the full message rate
-    if (per16.flow < .9) console.log(`\nOnly ${f0(per16.flow * 100)}% of the messages flowed at 16 players, so the figures below are scaled up to the full rate; rerun on a quiet machine to confirm.`);
-    console.log(`\nOne full arena of 16 uses ${f0(cpu * 100)}% of one core and sends ${f1(mbit)} Mbit/s.`);
-    console.log(`If the relay ran several arenas of 16, this machine's CPU could carry about ${rooms} of them (${rooms * 16} players) at 70% of one core; they would send about ${f0(rooms * mbit)} Mbit/s, so check the server's bandwidth too.`);
+  // full rooms cost the same per player however many there are, so the busiest clean step gives players per core
+  const best = rows.filter(r => r.open >= r.want && r.dropped === 0 && r.open % roomSize === 0).pop();
+  if (best) {
+    const k = Math.min(1, best.flow), cpu = best.srv.cpu / k / best.open, mbit = best.outMB * 8 / k / best.open, most = Math.floor(.7 / cpu); // scaled to the full message rate
+    if (best.flow < .9) console.log(`\nOnly ${f0(best.flow * 100)}% of the messages flowed at ${best.open} players, so the figures below are scaled up to the full rate; rerun on a quiet machine to confirm.`);
+    console.log(`\nIn rooms of ${roomSize}, each player costs ${f1(cpu * 1000)}‰ of one core and ${f1(mbit * 1000)} kbit/s of upload (from ${best.open} players).`);
+    console.log(`This machine's CPU carries about ${most} players at 70% of one core (the relay runs on one thread); they would send about ${f0(most * mbit)} Mbit/s, so check the server's bandwidth too.`);
   }
   stop(0);
 })().catch(e => { console.error(e); stop(1); });
