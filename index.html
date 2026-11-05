@@ -1289,6 +1289,23 @@ body:not(.playing) #tip{display:none}
 #lookCard .lk-head b{font:800 17px/1 var(--display);letter-spacing:-.025em}
 #lookCard #ownedHint{font:600 11px/1 var(--mono);color:var(--muted);padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px var(--line);font-variant-numeric:tabular-nums}
 #lookCard #ownedHint:empty{display:none}
+#lookCard .lk-pill{font:700 10px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:#7fe9c0;padding:6px 10px;border-radius:999px;background:rgba(95,224,168,.1);box-shadow:inset 0 0 0 1px rgba(95,224,168,.32)}
+#lookCard .lk-row{display:grid;gap:9px}
+#lookCard .lk-sub{padding:0 2px;font:700 10px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+/* rarity filters over the skins: a row of chips, shown once you own more than one rarity */
+#lookCard .lk-filters{display:flex;gap:6px;margin:-4px -14px 0;padding:2px 14px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+#lookCard .lk-filters::-webkit-scrollbar{display:none}
+#lookCard .lk-filters[hidden]{display:none}
+#lookCard .lk-chip{appearance:none;flex:none;display:inline-flex;align-items:center;gap:7px;height:34px;box-sizing:border-box;padding:0 13px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.035);
+  color:var(--muted);font:700 12.5px/1 var(--display);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .15s,background-color .15s,border-color .15s,transform .12s}
+#lookCard .lk-chip i{width:7px;height:7px;flex:none;border-radius:1.5px;transform:rotate(45deg);background:rgb(var(--rc))}
+#lookCard .lk-chip em{font:600 11px/1 var(--mono);font-style:normal;opacity:.65;font-variant-numeric:tabular-nums}
+#lookCard .lk-chip[aria-pressed=true]{color:#fff;border-color:rgb(var(--rc)/.65);background:rgb(var(--rc)/.16);box-shadow:inset 0 1px 0 rgba(255,255,255,.1)} /* no outer glow: the scrolling row would clip it */
+#lookCard .lk-chip:active{transform:scale(.95)}
+/* the stage's tag: this is the skin you play in */
+#lookCard .lk-eq{position:absolute;z-index:3;top:12px;left:12px;display:inline-flex;align-items:center;gap:5px;height:26px;box-sizing:border-box;padding:0 10px 0 7px;border-radius:999px;
+  font:700 10px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink);background:rgba(2,10,12,.62);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+#lookCard .lk-eq svg{width:14px;height:14px;fill:none;stroke:var(--accent);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
 /* the check badge every selected tile wears */
 #lookCard .lk-on{position:absolute;z-index:3;top:6px;right:6px;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:var(--accent);box-shadow:0 2px 8px rgba(255,92,138,.5),inset 0 1px 0 rgba(255,255,255,.35);transform:scale(0);transition:transform .2s}
 #lookCard .lk-on svg{width:13px;height:13px;fill:none;stroke:var(--accent-ink);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
@@ -1301,7 +1318,8 @@ body:not(.playing) #tip{display:none}
   box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 6px 16px rgba(0,0,0,.3);transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s,border-color .2s,background-color .2s}
 #lookCard .lk-tile canvas{width:64px;height:64px;display:block;margin-bottom:5px;filter:drop-shadow(0 6px 8px rgba(0,0,0,.5));transition:transform .25s cubic-bezier(.2,.9,.3,1.3)}
 #lookCard .lk-tile b{max-width:100%;font:700 12.5px/1.12 var(--display);letter-spacing:-.01em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
-#lookCard .lk-tile>span:not(.lk-tease){display:none} /* the rarity: kept for the tile's label, shown on the stage */
+#lookCard .lk-tile>span:not(.lk-tease){max-width:100%;font:700 9px/1.2 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:rgb(var(--rc));white-space:nowrap;overflow:hidden;text-overflow:ellipsis} /* the rarity, in its colour */
+#lookCard .lk-tile[hidden]{display:none}
 #lookCard .lk-tile[data-r=legendary]{background:radial-gradient(90% 62% at 50% 32%,rgba(255,110,90,.3),rgba(255,92,138,0) 72%),linear-gradient(160deg,rgba(255,92,138,.16),rgba(255,180,80,.06) 60%,rgba(0,0,0,.18)),#120b10}
 #lookCard .lk-tile[data-r=legendary]::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(105deg,transparent 40%,rgba(255,220,190,.16) 50%,transparent 60%) no-repeat;background-size:250% 100%;animation:lk-sheen 3.8s ease-in-out infinite}
 #lookCard .lk-tile:active{transform:scale(.94)}
@@ -1367,6 +1385,7 @@ body:not(.playing) #tip{display:none}
   #lookCard .lk-show{width:auto;height:100%;max-height:400px;min-height:0}
   #lookCard #lookName{font-size:22px}#lookCard #lookName.lk-long{font-size:18px}#lookCard .lk-rar{padding:5px 10px 5px 9px;font-size:9.5px}
   #lookCard .lk-side{gap:10px}#lookCard .lk-sec{gap:12px;padding:12px 12px 14px;border-radius:20px}#lookCard .lk-head b{font-size:15px}
+  #lookCard .lk-filters{margin:-4px -12px 0;padding:2px 12px}#lookCard .lk-chip{height:32px;padding:0 12px}
   #lookCard .lk-grid{grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px}
   #lookCard .lk-tile{padding:10px 5px 9px;border-radius:16px}#lookCard .lk-tile canvas{width:56px;height:56px}
   #lookCard .swatches{grid-template-columns:repeat(6,minmax(0,44px))}
@@ -2513,12 +2532,12 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
 
   <div class="card panel page" id="lookCard" hidden>
     <header class="pg-top"><button class="lb-icon back" type="button" aria-label="Back to the lobby"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><h2>Inventory</h2><button class="ghost" id="lookShop" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8.5h14l-1.1 10.6a2 2 0 0 1-2 1.9H8.1a2 2 0 0 1-2-1.9z"/><path d="M9 11V7.5a3 3 0 0 1 6 0V11"/></svg>Shop</button></header>
-    <div class="lk-stage" id="lookStage" data-r="classic"><div class="lk-show"><i class="lk-rays" aria-hidden="true"></i><i class="lk-ped" aria-hidden="true"></i><canvas id="lookCv" width="320" height="320" aria-hidden="true"></canvas></div><b id="lookName">Rose</b><span class="lk-rar" id="lookRar">Classic</span></div>
+    <div class="lk-stage" id="lookStage" data-r="classic"><span class="lk-eq"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 12.5l4.2 4.2 8.8-9.2"/></svg>Equipped</span><div class="lk-show"><i class="lk-rays" aria-hidden="true"></i><i class="lk-ped" aria-hidden="true"></i><canvas id="lookCv" width="320" height="320" aria-hidden="true"></canvas></div><b id="lookName">Rose</b><span class="lk-rar" id="lookRar">Classic</span></div>
     <div class="lk-side">
-      <section class="lk-sec"><div class="lk-head"><b>Skins</b><span id="ownedHint"></span></div><div class="lk-grid" id="ownedSkins"></div></section>
-      <section class="lk-sec"><div class="lk-head"><b>Classic</b></div>
-        <div class="swatches" id="sw" role="group" aria-label="Colour"></div>
-        <div class="pats" id="pats" role="group" aria-label="Pattern"></div></section>
+      <section class="lk-sec"><div class="lk-head"><b>Skins</b><span id="ownedHint"></span></div><div class="lk-filters" id="invFilters" role="group" aria-label="Show by rarity" hidden></div><div class="lk-grid" id="ownedSkins"></div></section>
+      <section class="lk-sec"><div class="lk-head"><b>Classic cell</b><span class="lk-pill">Free</span></div>
+        <div class="lk-row"><span class="lk-sub" aria-hidden="true">Colour</span><div class="swatches" id="sw" role="group" aria-label="Colour"></div></div>
+        <div class="lk-row"><span class="lk-sub" aria-hidden="true">Pattern</span><div class="pats" id="pats" role="group" aria-label="Pattern"></div></div></section>
     </div>
   </div>
 
@@ -6785,6 +6804,8 @@ addEventListener('resize',()=>{if(warmAt>=PREMIUM.length){warmAt=0;setTimeout(wa
 setInterval(()=>{if(document.hidden||RM)return;if(!$('storeCard').hidden||!$('lookCard').hidden)renderPreviews(true);if(!$('startCard').hidden)drawAvatar($('meCv'));if(!$('profileCard').hidden)drawAvatar($('profCv'));},33);
 // Inventory › Skins: the classic cell first, then the premium skins you own, rarest first. Tiles are rebuilt only when
 // what you own changes, so picking one just flips aria-pressed and the selection animates.
+let invFilter='all'; // Inventory's rarity filter
+const RAR_NAME={legendary:'Legendary',seasonal:'Seasonal',epic:'Epic',rare:'Rare',common:'Common'};
 function renderOwned(){const oe=$('ownedSkins');if(!oe)return;
   const RK={legendary:5,seasonal:4,epic:3,rare:2,common:1},sk=settings.skin|0,cn=classicName(),
     mine=PREMIUM.filter(S=>ownsSkin(S.id)).sort((a,b)=>RK[rarOf(b)]-RK[rarOf(a)]||b.price-a.price||a.id-b.id),sig=mine.map(S=>S.id).join();
@@ -6793,10 +6814,16 @@ function renderOwned(){const oe=$('ownedSkins');if(!oe)return;
     const tile=(id,r,name,rl,cv)=>`<button type="button" class="lk-tile" data-id="${id}" data-r="${r}" aria-pressed="false"><canvas width="192" height="192" ${cv}></canvas><b>${escH(name)}</b><span>${escH(rl)}</span><em class="lk-on" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5.5 12.5l4.2 4.2 8.8-9.2"/></svg></em></button>`;
     oe.innerHTML=tile('def','classic',cn,'Classic','data-def="1"')+mine.map(S=>tile(S.id,rarOf(S),S.name,S.season?SEASONS[S.season].name:rarOf(S),`data-skin="${S.id}"`)).join('')
       +(mine.length?'':`<button type="button" class="lk-tile lk-get" data-id="shop" aria-label="No skins yet. Get skins in the Shop"><span class="lk-tease" aria-hidden="true">${[17,22,13].map(id=>`<canvas width="144" height="144" data-skin="${id}"></canvas>`).join('')}</span><b>No skins yet</b><small>Get skins in the Shop<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5.5l6.5 6.5L9 18.5"/></svg></small></button>`);}
-  for(const b of oe.children){const id=b.dataset.id;if(id==='shop')continue;const on=id==='def'?sk<SKIN_FREE:+id===sk,nm=b.querySelector('b');
+  const cats=[...new Set(mine.map(rarOf))],fe=$('invFilters'); // mine runs rarest first, so the chips do too
+  if(!cats.includes(invFilter))invFilter='all';fe.hidden=cats.length<2;
+  if(fe.dataset.sig!==sig){fe.dataset.sig=sig;const chip=(r,name,n)=>`<button type="button" class="lk-chip" data-r="${r}" aria-pressed="false">${r==='all'?'':'<i aria-hidden="true"></i>'}${name}${n?`<em>${n}</em>`:''}</button>`;
+    fe.innerHTML=chip('all','All',0)+cats.map(r=>chip(r,RAR_NAME[r],mine.filter(S=>rarOf(S)===r).length)).join('');}
+  for(const c of fe.children)c.setAttribute('aria-pressed',String(c.dataset.r===invFilter));
+  for(const b of oe.children){const id=b.dataset.id;b.hidden=invFilter!=='all'&&b.dataset.r!==invFilter;if(id==='shop')continue;const on=id==='def'?sk<SKIN_FREE:+id===sk,nm=b.querySelector('b');
     if(id==='def')nm.textContent=cn;b.setAttribute('aria-pressed',String(on));b.setAttribute('aria-label',`${nm.textContent}, ${b.querySelector('span').textContent}${on?', wearing':''}`);}
   lookStage();
 }
+$('invFilters').addEventListener('click',e=>{const c=e.target.closest('.lk-chip');if(!c||c.dataset.r===invFilter)return;invFilter=c.dataset.r;renderOwned();renderPreviews();Native.haptic('light');});
 $('ownedSkins').addEventListener('click',e=>{const b=e.target.closest('.lk-tile');if(!b)return;
   if(b.dataset.id==='shop'){$('lookShop').click();return;}
   const id=b.dataset.id==='def'?settings.pat|0:+b.dataset.id;if(id===(settings.skin|0))return;
