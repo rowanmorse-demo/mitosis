@@ -5171,6 +5171,334 @@ const PREMIUM=[
     if(sick){g.beginPath();g.arc(nx,ny,r*.13,0,TAU);g.fillStyle=col(INF_C,-30,.9);g.fill();}}},
 ];
 for(const S of PREMIUM)S.tok=STAINS.map((_,i)=>'tok'+S.key+(S.tint?i:'')); // the small-cell sprite's bake key per stain (only a tinted skin differs)
+/* ================= showcase skins =================
+   Premium skins drawn one by one, each a small scene painted in layers. Shared here: colour helpers, a sphere to wrap art round (gw, gm3/gp3),
+   fields worked out pixel by pixel once per skin on a small canvas (gtex: three sizes, a bigger bake reusing a smaller one's, a few dozen kept),
+   and small touches (gloss, sparkle, grain, glow). Like any drawn skin, each bakes its still art once into a sprite; what moves is a cached sprite
+   or two turned or scaled each frame. Ids are fixed for good once shipped. */
+const GO=[0,0,0],GO2=[0,0,0];
+const gpal=s=>s.split(' ').map(h=>[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]); // 'rrggbb rrggbb' -> rgb triples
+const gc=(c,a=1)=>`rgba(${c[0]|0},${c[1]|0},${c[2]|0},${a})`;
+const gmix=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
+const gsh=(c,k)=>k>0?gmix(c,[255,255,255],k):gmix(c,[0,0,0],-k); // lighter (k>0) or darker
+function gramp(C,t,o=GO){t=Math.min(1,Math.max(0,t))*(C.length-1);const i=Math.min(C.length-2,t|0),f=t-i,a=C[i],b=C[i+1];o[0]=a[0]+(b[0]-a[0])*f;o[1]=a[1]+(b[1]-a[1])*f;o[2]=a[2]+(b[2]-a[2])*f;return o;}
+function ghsl(c){const r=c[0]/255,g=c[1]/255,b=c[2]/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2,d=mx-mn;let h=0,s=0;
+  if(d){s=d/(1-Math.abs(2*l-1));h=mx===r?((g-b)/d+6)%6:mx===g?(b-r)/d+2:(r-g)/d+4;}return[Math.round(h*60),Math.round(s*100),Math.round(l*100)];}
+const gstops=(C,a=1,t0=0,t1=1)=>{const o=[];C.forEach((c,i)=>o.push(t0+(t1-t0)*i/(C.length-1||1),gc(c,a)));return o;}
+// The sphere: art drawn flat is wrapped round the ball by gw (a flat distance s lands at GW sin(s/GW), so shapes crowd toward the rim);
+// gwi undoes it for fields worked out pixel by pixel. gpath and gring add warped shapes to the path, their edges cut small so they bend.
+const GW=1.2;
+function gw(x,y,o=GO){const s=Math.hypot(x,y),k=s>1e-9?GW*Math.sin(Math.min(s/GW,1.5707))/s:1;o[0]=x*k;o[1]=y*k;return o;}
+function gwi(x,y,o=GO){const r=Math.hypot(x,y),k=r>1e-9?GW*Math.asin(Math.min(1,r/GW))/r:1;o[0]=x*k;o[1]=y*k;return o;}
+function gpath(q,P,close=true,st=.04){const n=P.length/2,m=close?n:n-1;for(let i=0;i<m;i++){const x0=P[i*2],y0=P[i*2+1],j=(i+1)%n,x1=P[j*2],y1=P[j*2+1],k=Math.max(1,Math.ceil(Math.hypot(x1-x0,y1-y0)/st));
+    for(let s=i?1:0;s<=k;s++){gw(x0+(x1-x0)*s/k,y0+(y1-y0)*s/k);if(!i&&!s)q.moveTo(GO[0],GO[1]);else q.lineTo(GO[0],GO[1]);}}if(close)q.closePath();}
+function gring(q,x,y,r,n=0){n=n||Math.max(12,Math.min(64,Math.ceil(r*90)));for(let i=0;i<=n;i++){const a=i/n*TAU;gw(x+Math.cos(a)*r,y+Math.sin(a)*r);i?q.lineTo(GO[0],GO[1]):q.moveTo(GO[0],GO[1]);}q.closePath();}
+// A real sphere, for balls and worlds: points on the unit sphere turned by M; the hemisphere facing away is folded out past the rim
+// (r -> 2-r), which keeps every shape that does not wrap round the far pole a simple path, and the membrane clips what lies outside.
+function gm3(a,b,c){const ca=Math.cos(a),sa=Math.sin(a),cb=Math.cos(b),sb=Math.sin(b),cc=Math.cos(c),sc=Math.sin(c); // turn a about y, then b about x, then c about z
+  const m=[ca,0,sa,0,1,0,-sa,0,ca],n=[1,0,0,0,cb,-sb,0,sb,cb],o=[cc,-sc,0,sc,cc,0,0,0,1],mul=(A,B)=>{const C=[];for(let i=0;i<3;i++)for(let j=0;j<3;j++)C.push(A[i*3]*B[j]+A[i*3+1]*B[3+j]+A[i*3+2]*B[6+j]);return C;};return mul(o,mul(n,m));}
+function gp3(M,x,y,z,o=GO){const X=M[0]*x+M[1]*y+M[2]*z,Y=M[3]*x+M[4]*y+M[5]*z,Z=M[6]*x+M[7]*y+M[8]*z;
+  if(Z>=0){o[0]=X;o[1]=Y;}else{const r=Math.hypot(X,Y)||1e-6,k=(2-r)/r;o[0]=X*k;o[1]=Y*k;}o[2]=Z;return o;}
+function gpi(M,x,y,o=GO){const r2=x*x+y*y;let z;if(r2<=1)z=Math.sqrt(1-r2);else{const r=Math.sqrt(r2),f=Math.max(0,2-r);x*=f/r;y*=f/r;z=-Math.sqrt(Math.max(0,1-f*f));} // screen -> the sphere point under it, in the ball's own frame
+  o[0]=M[0]*x+M[3]*y+M[6]*z;o[1]=M[1]*x+M[4]*y+M[7]*z;o[2]=M[2]*x+M[5]*y+M[8]*z;return o;}
+function gs3(q,M,P,close=true,st=.06){const n=P.length/3,m=close?n:n-1; // a path through points on the sphere, each leg bent along the surface
+  for(let i=0;i<m;i++){const j=(i+1)%n,a=P.slice(i*3,i*3+3),b=P.slice(j*3,j*3+3),k=Math.max(1,Math.ceil(Math.acos(Math.min(1,a[0]*b[0]+a[1]*b[1]+a[2]*b[2]))/st));
+    for(let s=i?1:0;s<=k;s++){const t=s/k,x=a[0]+(b[0]-a[0])*t,y=a[1]+(b[1]-a[1])*t,z=a[2]+(b[2]-a[2])*t,l=Math.hypot(x,y,z)||1;gp3(M,x/l,y/l,z/l);if(!i&&!s)q.moveTo(GO[0],GO[1]);else q.lineTo(GO[0],GO[1]);}}
+  if(close)q.closePath();}
+function gcirc3(ax,ay,az,ang,n=48){const l=Math.hypot(ax,ay,az);ax/=l;ay/=l;az/=l;const t=Math.abs(ay)<.9?[0,1,0]:[1,0,0], // a circle on the sphere round the axis a, ang (radians) from it, as points
+    ux=ay*t[2]-az*t[1],uy=az*t[0]-ax*t[2],uz=ax*t[1]-ay*t[0],ul=Math.hypot(ux,uy,uz),vx=ay*uz/ul-az*uy/ul,vy=az*ux/ul-ax*uz/ul,vz=ax*uy/ul-ay*ux/ul,c=Math.cos(ang),s=Math.sin(ang),P=[];
+  for(let i=0;i<n;i++){const a=i/n*TAU,ca=Math.cos(a)*s,sa=Math.sin(a)*s;P.push(ax*c+ux/ul*ca+vx*sa,ay*c+uy/ul*ca+vy*sa,az*c+uz/ul*ca+vz*sa);}return P;}
+// Fields worked out pixel by pixel: fn(x,y,o) sets o to 0-255 RGB (and o[3] alpha, 255 if left alone) at x,y in unit space. Each skin
+// keeps its own at no more than half its bake's width (smooth fields lose nothing; sharp detail goes on top as paths), the last few dozen kept.
+const GT=new Map();let gtArea=0;
+function gtex(key,u,fn){const N=u>80?(u>160?256:128):96,id=key+N;let c=GT.get(id);if(c){GT.delete(id);GT.set(id,c);return c;} // three sizes, so a bigger bake reuses the field a smaller one made
+  c=document.createElement('canvas');c.width=c.height=N;const q=c.getContext('2d'),im=q.createImageData(N,N),d=im.data,o=[0,0,0,255],e=SKIN_BR;
+  for(let j=0;j<N;j++){const y=((j+.5)/N*2-1)*e;for(let i=0;i<N;i++){const x=((i+.5)/N*2-1)*e;o[3]=255;fn(x,y,o);const k=(j*N+i)<<2;d[k]=o[0];d[k+1]=o[1];d[k+2]=o[2];d[k+3]=o[3];}}
+  q.putImageData(im,0,0);GT.set(id,c);gtArea+=N*N;for(const [k0,v0] of GT){if(gtArea<=1.6e6)break;GT.delete(k0);gtArea-=v0.width*v0.width;}return c;}
+const gfield=(q,tex)=>q.drawImage(tex,-SKIN_BR,-SKIN_BR,2*SKIN_BR,2*SKIN_BR);
+const gn=cosmoNoise,gfbm=cosmoFbm,gstep=cosmoStep;
+function gridge(x,y,o){const v=1-Math.abs(gfbm(x,y,o)*2-1);return v*v;} // sharp creases where the noise crosses its middle
+// small shared touches: the glossy window a polished ball shows, a scatter of sparkle, a speckle of grain
+function ggloss(q,a=1,soft=0){q.save();q.translate(-.4,-.46);q.rotate(-.72);q.scale(.34,.17);disc(q,0,0,1,rgr(q,0,0,1,[0,`rgba(255,255,255,${.8*a})`,.45+soft*.3,`rgba(255,255,255,${.4*a})`,1,'rgba(255,255,255,0)']));q.restore();
+  disc(q,.5,.56,.36,rgr(q,.5,.56,.36,[0,`rgba(255,255,255,${.1*a})`,1,'rgba(255,255,255,0)']));}
+function gspark(q,x,y,s){q.beginPath();q.moveTo(x,y-s);q.quadraticCurveTo(x+s*.08,y-s*.08,x+s,y);q.quadraticCurveTo(x+s*.08,y+s*.08,x,y+s);q.quadraticCurveTo(x-s*.08,y+s*.08,x-s,y);q.quadraticCurveTo(x-s*.08,y-s*.08,x,y-s);q.fill();}
+function ggrain(q,u,R,n,c0,c1,s0=.004,s1=.012,r=1.12){if(u<60)return;n=Math.round(n*Math.min(1,u/220));for(const [cl,k] of[[c0,0],[c1,1]]){if(!cl)continue;q.fillStyle=cl;q.beginPath();
+  for(let i=0;i<n;i++){const a=R()*TAU,d=Math.sqrt(R())*r,s=s0+R()*(s1-s0),x=Math.cos(a)*d,y=Math.sin(a)*d;q.moveTo(x+s,y);q.arc(x,y,s,0,TAU);}q.fill();}}
+// cellular noise: distance to the nearest and second-nearest of a jittered grid of points, and the nearest one's id and offset
+const GV={f1:0,f2:0,id:0,dx:0,dy:0};
+const GVJ=(()=>{const R=prng(4242),a=new Float32Array(2048);for(let i=0;i<2048;i++)a[i]=R();return a;})(); // each grid cell's jitter, looked up rather than hashed
+function gvor(x,y,j=.85){const xi=Math.floor(x),yi=Math.floor(y);let f1=9,f2=9;for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++){const cx=xi+a,cy=yi+b,k=(((cx*73856093)^(cy*19349663))&1023)<<1,h=GVJ[k],px=cx+.5+(h-.5)*j,py=cy+.5+(GVJ[k+1]-.5)*j,dx=x-px,dy=y-py,d=Math.sqrt(dx*dx+dy*dy);
+  if(d<f1){f2=f1;f1=d;GV.id=h;GV.dx=x-px;GV.dy=y-py;}else if(d<f2)f2=d;}GV.f1=f1;GV.f2=f2;return GV;}
+// a wobbly ring: radius r bulging by up to w in n lobes, its phase from R
+function gblobP(x,y,r,w,n,R,m=48){const ph=[];for(let i=0;i<4;i++)ph.push(R()*TAU);const o=[];for(let i=0;i<m;i++){const a=i/m*TAU,d=r+w*(Math.sin(a*n+ph[0])*.6+Math.sin(a*(n+3)+ph[1])*.4);o.push(x+Math.cos(a)*d,y+Math.sin(a)*d);}return o;} // a wobbly ring's points
+function gblob(q,x,y,r,w,n,R,m=48){q.beginPath();natureShape(q,gblobP(x,y,r,w,n,R,m),false);}
+// a seed: a glossy teardrop pointing along a, with a catch light
+function gseed(q,x,y,a,L,w,c,hl=.5){q.save();q.translate(x,y);q.rotate(a);q.beginPath();q.moveTo(L,0);q.bezierCurveTo(L*.5,w*1.1,-L*.9,w*1.1,-L,0);q.bezierCurveTo(-L*.9,-w*1.1,L*.5,-w*1.1,L,0);q.fillStyle=c;q.fill();
+  if(hl){q.beginPath();q.ellipse(-L*.25,-w*.35,L*.35,w*.25,0,0,TAU);q.fillStyle=`rgba(255,255,255,${hl*.6})`;q.fill();}q.restore();}
+// a glowing blob of light for the dark-field and fluorescent skins
+function gglow(q,x,y,s,c,a){disc(q,x,y,s,rgr(q,x,y,s,[0,gc(c,a),.4,gc(c,a*.4),1,gc(c,0)]));}
+// nacre, pixel by pixel: pearly white shot with pink, mint, lavender and gold that slide past each other
+const NACRE=gpal('fbe6ee dff6ec e6defa fcf0da dceaf8 fbe6ee');
+function nacrePx(x,y,o,k=1,sd=0){const v=gfbm(x*2.1+sd,y*2.1,4)*2.2+x*.35-y*.25,f=((v%1)+1)%1,n=NACRE.length-1,i=Math.floor(f*n),t=f*n-i;gramp([NACRE[i],NACRE[i+1]],t*t*(3-2*t),o);
+  const b=(.86+.14*gfbm(x*5+3,y*5,2))*k;for(let j=0;j<3;j++)o[j]*=b;}
+// a sheen sweeping across, as the drawn Glacier has; and a glint that comes and goes at one spot
+function gsheen(g,c,r,sp=.16,a=.3){const ph=((T*sp+c.wob*.1)%1)*3.2-1.6;if(Math.abs(ph)>=1.15)return;g.beginPath();g.rect(c.x-r*1.2,c.y-r*1.2,r*2.4,r*2.4);g.save();g.translate(c.x+ph*r,c.y+ph*r);g.scale(r,r);
+  g.fillStyle=grad(g,'sh_sheen'+a,m=>lgr(m,-.5,-.5,.5,.5,[0,'rgba(255,255,255,0)',.42,'rgba(255,255,255,0)',.5,`rgba(255,255,255,${a})`,.58,'rgba(255,255,255,0)',1,'rgba(255,255,255,0)']));g.fill();g.restore();}
+const GEN_COLS={ocean:['Ocean','Shells, pearls and the life of the sea']};
+const GEN_ORDER=['space','elements','wild','ocean','sweets','gadgets','treasures','mythic'];
+const GEN50=[
+{id:46,key:'nautilus',name:'Nautilus',price:2500,col:'ocean',rar:'epic',base:[34,40,80],edge:'#4a3622',edge2:'rgba(255,246,232,.7)',
+  desc:'A chambered nautilus sawn in half: pearl-lined chambers spiralling out from the heart.',
+  // the shell sawn through its middle: a logarithmic spiral of chambers growing a third wider each turn, each walled by a pearly septum bowed back toward
+  // the heart and threaded by the siphuncle, lined with nacre that shifts pink, mint and gold; the open body chamber deep in shadow; the outer wall cut through
+  // to show its porcelain layer striped like a tiger over the nacre; a glimpse of dark velvet past the lip
+  bake(q,u){const R=prng(46),hi=u>110,b=Math.log(3)/TAU,t1=4.6*Math.PI,a=3.7/Math.exp(b*(t1-1.35*Math.PI)),cx=.06,cy=.03,ph=.9,Sp=t=>a*Math.exp(b*t),P=t=>[cx+Math.cos(t+ph)*Sp(t),cy+Math.sin(t+ph)*Sp(t)],
+      arc=(t0,t2,o=[])=>{const k=Math.max(4,Math.ceil((t2-t0)/.04));for(let i=0;i<=k;i++){const p=P(t0+(t2-t0)*i/k);o.push(p[0],p[1]);}return o;},poly=o=>{q.beginPath();q.moveTo(o[0],o[1]);for(let i=2;i<o.length;i+=2)q.lineTo(o[i],o[i+1]);q.closePath();};
+    fillAll(q,rgr(q,-.3,-.4,1.6,[0,'#1c2236',.6,'#0c1020',1,'#05070e']));ggrain(q,u,R,900,'rgba(255,255,255,.03)','rgba(0,0,0,.2)',.002,.006); // velvet, past the lip
+    const lip=()=>{const o=arc(t1-TAU,t1),e=P(t1),s0=P(t1-TAU),mx=(e[0]+s0[0])/2,my=(e[1]+s0[1])/2,nx=mx-cx,ny=my-cy;o.push(mx+nx*.35,my+ny*.35);return o;};
+    natureSoft(q,u,.06,'rgba(0,0,0,.8)',()=>{q.save();q.translate(.04,.06);natureShape(q,lip(),false);q.fillStyle='#000';q.fill();q.restore();});
+    q.save();q.beginPath();natureShape(q,lip(),false);q.clip();gfield(q,gtex('naut_nacre',u,(x,y,o)=>nacrePx(x*1.1,y*1.1,o,1,4)));
+    const S=[];for(let t=-3.2*Math.PI;t<t1-1.35*Math.PI;t+=.5)S.push(t);const tb=t1-1.35*Math.PI;S.push(tb);
+    for(let k=0;k<S.length-1;k++){const t0=S[k],t2=S[k+1],o=arc(t0,t2),inn=arc(t0-TAU,t2-TAU);for(let i=inn.length-2;i>=0;i-=2)o.push(inn[i],inn[i+1]);poly(o); // each chamber, a hollow lined with nacre
+      const m0=P(t0),m2=P(t2),i2=P(t2-TAU);q.fillStyle=lgr(q,m0[0],m0[1],(m2[0]+i2[0])/2,(m2[1]+i2[1])/2,[0,'rgba(255,252,246,.38)',.35,'rgba(255,240,230,.04)',.75,'rgba(110,70,70,.2)',1,'rgba(50,24,30,.6)']);q.fill(); // a hollow: lit under one wall, shadowed under the next
+      q.globalCompositeOperation='overlay';q.fillStyle=['rgba(255,150,200,.28)','rgba(130,255,210,.24)','rgba(255,215,130,.26)','rgba(160,170,255,.26)'][k%4];q.fill();q.globalCompositeOperation='source-over';
+      const mm=P((t0+t2)/2),mi=P((t0+t2)/2-TAU);q.fillStyle=rgr(q,(mm[0]+mi[0])/2,(mm[1]+mi[1])/2,Sp(t2)*.4,[0,'rgba(255,255,255,.18)',1,'rgba(255,255,255,0)']);q.fill();}
+    {const o=arc(tb,t1),inn=arc(tb-TAU,t1-TAU);for(let i=inn.length-2;i>=0;i-=2)o.push(inn[i],inn[i+1]);const e=P(t1);o.push((e[0]+P(t1-TAU)[0])/2,(e[1]+P(t1-TAU)[1])/2);poly(o); // the body chamber, open and deep
+      const m=P(t1-.55*Math.PI),mi=P(t1-.55*Math.PI-TAU);q.fillStyle=rgr(q,mi[0],mi[1],Sp(t1)*1.1,[0,'rgba(36,20,28,.7)',.45,'rgba(70,40,50,.42)',1,'rgba(255,240,230,0)']);q.fill();
+      q.globalCompositeOperation='lighter';q.fillStyle=rgr(q,(m[0]+mi[0])/2,(m[1]+mi[1])/2,.45,[0,'rgba(160,255,215,.16)',.5,'rgba(255,160,215,.1)',1,'rgba(0,0,0,0)']);q.fill();q.globalCompositeOperation='source-over';}
+    q.lineCap='round';
+    for(let k=0;k<S.length;k++){const t=S[k],p=P(t),i=P(t-TAU),w=Math.max(.006,Sp(t)*.04),nx=Math.cos(t+ph+1.35)*Sp(t)*.14,ny=Math.sin(t+ph+1.35)*Sp(t)*.14,bx=(p[0]+i[0])/2-nx,by=(p[1]+i[1])/2-ny; // the septa, bowed back toward the heart
+      const sep=(d=0)=>{q.beginPath();q.moveTo(p[0]+d,p[1]+d);q.quadraticCurveTo(bx+d,by+d,i[0]+d,i[1]+d);};sep(w*.4);q.lineWidth=w*1.4;q.strokeStyle='rgba(60,34,26,.5)';q.stroke();sep();q.lineWidth=w;q.strokeStyle='#fbf2e4';q.stroke();sep(-w*.25);q.lineWidth=w*.35;q.strokeStyle='#ffffff';q.stroke();
+      if(k){const sx=i[0]+(bx-i[0])*.42,sy=i[1]+(by-i[1])*.42;disc(q,sx,sy,w*.85,'#9a7458');disc(q,sx-w*.2,sy-w*.2,w*.35,'rgba(255,240,220,.8)');}} // the siphuncle, threading each wall
+    {const o=arc(-5*Math.PI,t1-TAU);q.beginPath();q.moveTo(o[0],o[1]);for(let i=2;i<o.length;i+=2)q.lineTo(o[i],o[i+1]);q.lineWidth=.03;q.strokeStyle='rgba(60,36,26,.45)';q.stroke();q.lineWidth=.018;q.strokeStyle='#fff6ea';q.stroke();} // the whorl walls, cut through
+    q.restore();
+    q.save();q.beginPath();natureShape(q,lip(),false);q.clip();{const o=arc(t1-TAU,t1);q.beginPath();q.moveTo(o[0],o[1]);for(let i=2;i<o.length;i+=2)q.lineTo(o[i],o[i+1]);q.lineWidth=.16;q.strokeStyle='#f2e6cf';q.stroke(); // the outer wall's porcelain layer
+      q.beginPath();for(let t=t1-TAU+.05;t<t1;t+=.13+R()*.07){const p=P(t),d=Sp(t),w=.035+R()*.05;q.moveTo(p[0],p[1]);for(let s=1;s<=5;s++){const k=1-s*.016,tt=t+Math.sin(s)*.02;q.lineTo(cx+Math.cos(tt+ph)*d*k,cy+Math.sin(tt+ph)*d*k);}for(let s=5;s>=0;s--){const k=1-s*.016,tt=t+w;q.lineTo(cx+Math.cos(tt+ph)*d*k,cy+Math.sin(tt+ph)*d*k);}q.closePath();}
+      q.fillStyle='rgba(160,72,28,.85)';q.fill();q.beginPath();q.moveTo(o[0],o[1]);for(let i=2;i<o.length;i+=2)q.lineTo(o[i]+(cx-o[i])*.075,o[i+1]+(cy-o[i+1])*.075);q.lineWidth=.022;q.strokeStyle='#fffaf2';q.stroke();}q.restore(); // and its nacre beneath
+    if(hi){q.globalCompositeOperation='lighter';q.lineWidth=.003;q.strokeStyle='rgba(255,255,255,.14)';q.beginPath();for(let t=-3*Math.PI;t<t1-TAU;t+=.045){const p=P(t),i=P(t-.4);q.moveTo(p[0]*.98+cx*.02,p[1]*.98+cy*.02);q.lineTo(i[0]*.96+cx*.04,i[1]*.96+cy*.04);}q.stroke();q.globalCompositeOperation='source-over';} // growth lines
+    ggloss(q,.4,1);},
+  draw(g,c,r,k){skinArt(g,this,c,r,0);if(skinPx(g,r)>14)gsheen(g,c,r,.12,.22);}},
+{id:47,key:'moonjellies',name:'Moon Jellies',price:1200,col:'ocean',rar:'rare',base:[206,62,30],edge:'#08243e',edge2:'rgba(190,230,255,.6)',
+  desc:'Moon jellies drifting through blue water, the nearest one pulsing as you swim.',
+  // looking up through open water: light falling in shafts from the surface, marine snow, two jellies far off and soft with distance; in front, a moon jelly
+  // in glassy detail: its four violet rings, radial canals, the fringe round its rim and its frilled oral arms trailing; it pulses and drifts (a cached sprite)
+  bake(q,u){const R=prng(47),hi=u>110;gfield(q,gtex('mj_water',u,(x,y,o)=>{const d=x*.42+y*.62,rays=Math.pow(.5+.5*Math.sin(Math.atan2(y+1.9,x+1.3)*46+gfbm(x*1.5,y*1.5,2)*4),7)*gstep(1.4,-.6,d),n=gfbm(x*1.6+3,y*1.6,3);
+      gramp(gpal('2a8ab8 1a5e94 0c3468 061a3a 030c1e'),gstep(-1,1.2,d)*.9+(n-.5)*.15,o);const L=[200,240,250];for(let i=0;i<3;i++)o[i]+=(L[i]-o[i])*rays*.3;}));
+    for(const [x,y,s,a] of[[-.55,.45,.22,.5],[.6,.62,.14,.35],[-.15,-.72,.11,.3]]){natureSoft(q,u,s*.25,`rgba(170,215,255,${a})`,()=>{q.fillStyle='#000';q.beginPath();q.ellipse(x,y,s,s*.8,-.3,0,TAU);q.fill();q.beginPath();for(let i=0;i<4;i++){q.moveTo(x+s*.1*(i-1.5),y+s*.5);q.quadraticCurveTo(x+s*.3*(i-1.5),y+s*1.3,x-s*.2+i*s*.15,y+s*1.9);}q.lineWidth=s*.12;q.strokeStyle='#000';q.stroke();}); // far jellies, soft with distance
+      natureSoft(q,u,s*.12,`rgba(220,160,255,${a*.7})`,()=>{q.fillStyle='#000';q.beginPath();for(let i=0;i<4;i++){const b=i/4*TAU+.8;q.moveTo(x+Math.cos(b)*s*.3+s*.12,y+Math.sin(b)*s*.25);q.arc(x+Math.cos(b)*s*.3,y+Math.sin(b)*s*.25,s*.12,0,TAU);}q.fill();});}
+    q.fillStyle='rgba(225,240,255,.7)';q.beginPath();for(let i=0;i<(hi?160:60);i++){const x=R()*2.3-1.15,y=R()*2.3-1.15,s=.002+R()*R()*.01;q.moveTo(x+s,y);q.arc(x,y,s,0,TAU);}q.fill();}, // marine snow
+  bell(q,u){const R=prng(471),hi=u>60;q.lineCap='round';
+    q.save();q.rotate(.55);for(let i=0;i<4;i++){const s=(i-1.5)*.16;q.beginPath();let x=s,y=.1;q.moveTo(x,y);const L=[];for(let j=0;j<=14;j++){const t=j/14;L.push([s*(1-t*.3)+Math.sin(t*7+i*2)*.08*t,.1+t*1.15]);}
+      const w=t=>.07*(1-t*.6);q.beginPath();L.forEach(([x,y],j)=>{const t=j/14,o=w(t)*(1+.35*Math.sin(j*2.1+i));j?q.lineTo(x+o,y):q.moveTo(x+o,y);});for(let j=14;j>=0;j--){const [x,y]=L[j],t=j/14,o=w(t)*(1+.35*Math.cos(j*2.3+i));q.lineTo(x-o,y);}q.closePath();
+      q.fillStyle='rgba(225,200,255,.24)';q.fill();q.lineWidth=.008;q.strokeStyle='rgba(245,230,255,.55)';q.stroke();} // the oral arms, frilled ribbons trailing
+    q.restore();q.globalCompositeOperation='lighter';
+    if(hi){q.beginPath();for(let i=0;i<220;i++){const a=i/220*TAU,l=1.05+.05*Math.sin(i*1.7)+R()*.05;q.moveTo(Math.cos(a)*.99,Math.sin(a)*.97);q.quadraticCurveTo(Math.cos(a+.03)*(l-.03),Math.sin(a+.03)*(l-.03),Math.cos(a+.05)*l,Math.sin(a+.05)*l);}q.lineWidth=.004;q.strokeStyle='rgba(220,240,255,.35)';q.stroke();} // the fringe of fine tentacles
+    disc(q,0,0,1,rgr(q,0,0,1,[0,'rgba(200,230,255,.1)',.6,'rgba(200,230,255,.13)',.9,'rgba(210,235,255,.24)',.97,'rgba(235,248,255,.5)',1,'rgba(235,248,255,0)']));
+    q.beginPath();for(let i=0;i<16;i++){const a=i/16*TAU+.2;q.moveTo(Math.cos(a)*.34,Math.sin(a)*.34);q.lineTo(Math.cos(a)*.95,Math.sin(a)*.95);if(i%2){const b=a+.06;q.moveTo(Math.cos(a)*.75,Math.sin(a)*.75);q.lineTo(Math.cos(b)*.95,Math.sin(b)*.95);}}q.moveTo(.95,0);q.arc(0,0,.95,0,TAU);
+    q.lineWidth=.007;q.strokeStyle='rgba(220,240,255,.42)';q.stroke(); // radial canals and the ring canal
+    for(let i=0;i<4;i++){const a=i/4*TAU+Math.PI/4+.2,x=Math.cos(a)*.3,y=Math.sin(a)*.3;q.beginPath();q.arc(x,y,.19,a+.6,a+TAU-.6);q.lineWidth=.15;q.strokeStyle='rgba(190,110,220,.14)';q.stroke();q.lineWidth=.085;q.strokeStyle='rgba(225,150,240,.26)';q.stroke();
+      q.lineWidth=.03;q.strokeStyle='rgba(255,215,255,.32)';q.stroke();} // the four gonads, glowing violet horseshoes
+    disc(q,0,0,.1,'rgba(240,220,255,.35)');q.globalCompositeOperation='source-over';q.save();q.translate(-.42,-.5);q.rotate(-.7);q.scale(.35,.1);disc(q,0,0,1,rgr(q,0,0,1,[0,'rgba(255,255,255,.55)',1,'rgba(255,255,255,0)']));q.restore();},
+  draw(g,c,r,k){skinArt(g,this,c,r,0);const q=skinPx(g,r),p=Math.sin(T*2.4+c.wob*4),x=c.x+r*(.1+.05*Math.sin(T*.37+c.wob)),y=c.y+r*(-.1+.05*Math.cos(T*.31+c.wob)),s=r*.56; // the near jelly breathes and drifts
+    g.drawImage(bake(g,'mj_bell',q*1.12*1.3,this.bell,1.3),x-s*1.3*(1+.045*p),y-s*1.3*(1-.03*p),s*2.6*(1+.045*p),s*2.6*(1-.03*p));}},
+{id:48,key:'blackpearl',name:'Black Pearl',price:3000,col:'ocean',rar:'epic',base:[210,10,22],edge:'#2e2830',edge2:'rgba(235,225,255,.6)',
+  desc:'A Tahitian pearl, peacock green and aubergine, in its black-lipped oyster.',
+  // a black-lip pearl oyster opened flat: its frilled outer lip in layers of brown, grey and plum, the cup inside lined with nacre that runs silver and rainbow
+  // in the middle and smoky black toward the lip, growth lines, the scar where the muscle held; and the pearl sitting low in the cup, near black with peacock
+  // green and aubergine overtones, the sky and a window reflected in it
+  bake(q,u){const R=prng(48),hi=u>110;fillAll(q,'#1a1418');
+    for(let i=0;i<6;i++){const P0=gblobP(-.04+.015*i,-.02+.01*i,1.2-i*.05,.05,7+i,R,90);q.beginPath();natureShape(q,P0,true);q.fillStyle=gc(gmix([46,36,42],[128,108,104],((i*37)%5)/5));q.fill(); // the frilled lip, growth over growth
+      q.lineWidth=Math.max(.004,.9/u);q.strokeStyle='rgba(16,10,14,.6)';q.stroke();if(hi){q.save();q.clip();q.beginPath();for(let k=0;k<60;k++){const a=R()*TAU;q.moveTo(Math.cos(a)*.6,Math.sin(a)*.6);q.lineTo(Math.cos(a)*1.3,Math.sin(a)*1.3);}q.lineWidth=.004;q.strokeStyle='rgba(220,200,200,.12)';q.stroke();q.restore();}}
+    const cup=gblobP(.0,.02,.86,.04,5,R,96);q.save();q.beginPath();natureShape(q,cup,true);q.clip();
+    gfield(q,gtex('bp_nacre',u,(x,y,o)=>{nacrePx(x*.7,y*.7,o,1,9);const sv=gmix(o,[214,220,226],.35);o[0]=sv[0];o[1]=sv[1];o[2]=sv[2];const d=Math.hypot(x+.08,y+.12),lip=gstep(.38,.86,d+(gfbm(x*3,y*3,2)-.5)*.2),dk=[26,30,32],gl=.5+.5*Math.sin(d*38+gfbm(x*2,y*2,2)*6); // silver and rainbow in the middle, smoky black to the lip
+      for(let i=0;i<3;i++)o[i]=o[i]*(.9+.1*gl)+(dk[i]-o[i])*lip*.92;if(lip>.5){const t=gfbm(x*4+5,y*4,2);o[0]+=t*30*lip;o[1]+=(1-t)*34*lip;o[2]+=40*lip*t;}}));
+    natureSoft(q,u,.08,'rgba(70,40,80,.32)',()=>{q.fillStyle='#000';q.beginPath();q.ellipse(-.22,-.38,.14,.1,-.6,0,TAU);q.fill();}); // the muscle scar
+    q.restore();q.beginPath();natureShape(q,cup,true);q.lineWidth=.03;q.strokeStyle='rgba(10,8,12,.7)';q.stroke();
+    const px=.2,py=.24,pr=.27;natureSoft(q,u,.05,'rgba(10,0,10,.75)',()=>{q.fillStyle='#000';q.beginPath();q.ellipse(px+.06,py+.08,pr*.92,pr*.75,.3,0,TAU);q.fill();}); // its shadow in the cup
+    disc(q,px,py,pr,rgr(q,px-pr*.25,py-pr*.3,pr*1.3,[0,'#6e7886',.3,'#363e4a',.7,'#151920',1,'#07080b']));q.save();q.beginPath();q.arc(px,py,pr,0,TAU);q.clip();q.globalCompositeOperation='lighter';
+    q.fillStyle=lgr(q,px,py-pr,px,py+pr,[0,'rgba(170,190,215,.32)',.35,'rgba(120,140,170,.1)',.5,'rgba(0,0,0,0)',1,'rgba(0,0,0,0)']);q.fillRect(px-pr,py-pr,2*pr,2*pr); // the sky in it
+    disc(q,px-pr*.55,py+pr*.15,pr*.9,rgr(q,px-pr*.55,py+pr*.15,pr*.9,[0,'rgba(40,200,130,.36)',1,'rgba(40,200,130,0)'])); // peacock green
+    disc(q,px+pr*.6,py+pr*.1,pr*.8,rgr(q,px+pr*.6,py+pr*.1,pr*.8,[0,'rgba(190,60,170,.34)',1,'rgba(190,60,170,0)'])); // aubergine
+    disc(q,px+pr*.15,py+pr*.85,pr*.5,rgr(q,px+pr*.15,py+pr*.85,pr*.5,[0,'rgba(255,200,230,.3)',1,'rgba(255,200,230,0)'])); // the nacre's glow caught underneath
+    q.restore();q.save();q.translate(px-pr*.38,py-pr*.4);q.rotate(-.6);rrect(q,-pr*.2,-pr*.12,pr*.4,pr*.24,pr*.08);q.fillStyle=lgr(q,0,-pr*.12,0,pr*.12,[0,'rgba(255,255,255,.95)',1,'rgba(255,255,255,.4)']);q.fill(); // a window
+    q.fillStyle='rgba(20,22,30,.55)';q.fillRect(-pr*.008,-pr*.12,pr*.016,pr*.24);q.fillRect(-pr*.2,-pr*.006,pr*.4,pr*.012);q.restore();disc(q,px-pr*.2,py-pr*.62,pr*.05,'rgba(255,255,255,.8)');
+    q.beginPath();q.arc(px,py,pr*.97,Math.PI*.15,Math.PI*.75);q.lineWidth=pr*.05;q.strokeStyle='rgba(230,200,255,.25)';q.stroke();
+    for(const [x,y,s] of[[-.45,.2,.035],[.5,-.3,.03],[-.1,.62,.025],[.62,.55,.02]]){disc(q,x+s*.3,y+s*.4,s,'rgba(0,0,0,.25)');disc(q,x,y,s,rgr(q,x+s*.3,y+s*.35,s,[0,'rgba(255,255,255,.1)',.8,'rgba(255,255,255,.22)',1,'rgba(255,255,255,.75)']));disc(q,x-s*.35,y-s*.4,s*.3,'rgba(255,255,255,.95)');}},
+  draw(g,c,r,k){skinArt(g,this,c,r,0);if(skinPx(g,r)<14)return;const t=T*.45+c.wob,a=Math.pow(Math.max(0,Math.sin(t*Math.PI)),6);glint(g,c.x+r*.1,c.y+r*.13,r*.12,a*1.1);}},
+{id:49,key:'seaturtle',name:'Sea Turtle',price:1500,col:'ocean',rar:'rare',base:[40,48,46],edge:'#2a3020',edge2:'rgba(240,255,220,.6)',
+  desc:'A green sea turtle sculling over sunlit sand, its shell a mosaic of tortoiseshell.',
+  // a green turtle seen from above over rippled sand: its carapace a mosaic of tortoiseshell scutes, amber flames radiating in each, pale seams and a rim of
+  // marginal plates; a scaled head and hind flippers; its front flippers stroke slowly and its soft shadow follows it over the sand and sunlight
+  bake(q,u){const R=prng(49),hi=u>110;gfield(q,gtex('tt_sand',u,(x,y,o)=>{const w=gfbm(x*1.5,y*1.5,3),rp=.5+.5*Math.sin((x*.5+y*.86)*24+w*7),n=gfbm(x*6,y*6,3);
+      gramp(gpal('6a5a3a a8925e d2b880 ead8a8'),.25+rp*.3+n*.35,o);}));
+    for(let i=0;i<26;i++){const a=R()*TAU,d=Math.sqrt(R())*1.1,x=Math.cos(a)*d,y=Math.sin(a)*d,s=.012+R()*R()*.04;disc(q,x+s*.4,y+s*.5,s,'rgba(60,50,30,.35)');disc(q,x,y,s,rgr(q,x-s*.3,y-s*.3,s*1.2,[0,'#f2ead8',1,R()<.5?'#a89a80':'#c8a890']));} // pebbles and bits of shell
+    for(const [x,y,n] of[[-.9,.5,7],[.85,-.6,6],[.7,.8,5]]){q.lineCap='round';for(let i=0;i<n;i++){const a=-Math.PI/2+(i-n/2)*.25+R()*.2,L=.18+R()*.15;q.beginPath();q.moveTo(x,y);q.quadraticCurveTo(x+Math.cos(a)*L*.5+.04,y+Math.sin(a)*L*.5,x+Math.cos(a)*L+.06,y+Math.sin(a)*L);q.lineWidth=.03;q.strokeStyle='rgba(70,120,50,.8)';q.stroke();q.lineWidth=.008;q.strokeStyle='rgba(170,220,120,.5)';q.stroke();}} // seagrass
+    q.globalCompositeOperation='lighter';q.lineJoin='round';q.save();q.scale(.7,.7);q.beginPath();for(const P of KOI_CAUSTIC)natureShape(q,P,true);q.restore();q.lineWidth=.005;q.strokeStyle=rgr(q,-.4,-.4,1.4,[0,'rgba(255,255,230,.32)',1,'rgba(255,255,230,.08)']);q.stroke();q.globalCompositeOperation='source-over';
+    fillAll(q,rgr(q,-.3,-.35,1.4,[0,'rgba(40,170,170,.18)',.6,'rgba(20,120,140,.34)',1,'rgba(6,50,80,.62)']));}, // the water over the sand
+  shell(){if(this.SH)return this.SH;const R=prng(491),O=[],seeds=[];for(let i=0;i<64;i++){const t=i/64*TAU,x=Math.cos(t)*.5,y=Math.sin(t)*.39*(1-.2*Math.max(0,-Math.cos(t)));O.push(x+(x<0?x*.06*Math.max(0,-Math.cos(t)):0),y);} // the carapace's outline and the seeds of its scutes
+    for(let i=0;i<5;i++)seeds.push([.3-i*.15,0]);for(const s of[-1,1])for(let i=0;i<4;i++)seeds.push([.22-i*.155,s*.2]);const V=natureVoronoi(seeds,.7);return this.SH={O,seeds,V};},
+  body(q,u){const R=prng(492),{O,seeds,V}=this.shell(),hi=u>60,ol=(k)=>{q.beginPath();for(let i=0;i<O.length;i+=2)i?q.lineTo(O[i]*k,O[i+1]*k):q.moveTo(O[i]*k,O[i+1]*k);q.closePath();};
+    for(const s of[-1,1]){q.save();q.translate(-.4,s*.2);q.scale(1,s);q.rotate(.5);q.beginPath();q.ellipse(-.1,.05,.16,.07,.3,0,TAU);q.fillStyle=lgr(q,-.2,0,0,.1,[0,'#5a4a2a',1,'#a89060']);q.fill();q.restore();} // hind flippers
+    q.beginPath();q.moveTo(-.48,-.03);q.lineTo(-.62,0);q.lineTo(-.48,.03);q.fillStyle='#6a5a36';q.fill();
+    q.beginPath();q.moveTo(.42,-.12);q.bezierCurveTo(.56,-.14,.74,-.1,.76,0);q.bezierCurveTo(.74,.1,.56,.14,.42,.12);q.closePath();q.fillStyle=rgr(q,.6,-.03,.2,[0,'#c8b282',1,'#6a5630']);q.fill(); // the head
+    q.save();q.clip();const H=[];for(let i=0;i<14;i++)H.push([.44+R()*.32,(R()-.5)*.24]);q.beginPath();for(const P of natureVoronoi(H,.8))natureShape(q,P,false);q.lineWidth=.008;q.strokeStyle='rgba(50,34,14,.75)';q.stroke();q.restore();
+    for(const s of[-1,1]){disc(q,.64,s*.085,.022,'#140c06');disc(q,.645,s*.085-.008,.007,'rgba(255,255,255,.8)');}
+    natureSoft(q,u,.03,'rgba(0,0,0,.5)',()=>{ol(1);q.fillStyle='#000';q.fill();});
+    ol(1);q.fillStyle='#3a2410';q.fill();q.save();ol(1);q.clip();q.beginPath();for(let i=0;i<O.length;i+=2){const k=.84;q.moveTo(O[i]*k,O[i+1]*k);q.lineTo(O[i]*1.1,O[i+1]*1.1);}q.lineWidth=.009;q.strokeStyle='rgba(230,214,180,.7)';q.stroke();
+    ol(.995);q.fillStyle=rgr(q,-.1,-.15,.55,[0,'rgba(255,200,120,.14)',1,'rgba(0,0,0,.25)']);q.fill();q.restore(); // the marginal plates round the rim
+    q.save();ol(.84);q.clip();V.forEach((P,i)=>{const [sx,sy]=seeds[i];q.beginPath();natureShape(q,P,false);q.fillStyle=rgr(q,sx-.03,sy-.03,.2,[0,'#e2a640',.35,'#a8641e',.75,'#5a3010',1,'#2a160a']);q.fill(); // each scute, tortoiseshell
+      q.save();q.clip();q.beginPath();for(let k=0;k<11;k++){const a=k/11*TAU+R()*.4,w=.08+R()*.12;q.moveTo(sx,sy);q.lineTo(sx+Math.cos(a)*.3,sy+Math.sin(a)*.3);q.lineTo(sx+Math.cos(a+w)*.3,sy+Math.sin(a+w)*.3);q.closePath();}q.fillStyle=R()<.5?'rgba(40,18,6,.35)':'rgba(250,190,90,.22)';q.fill();
+      if(hi){q.beginPath();for(const k of[.75,.5]){const C=[];for(let j=0;j<P.length;j+=2)C.push(sx+(P[j]-sx)*k,sy+(P[j+1]-sy)*k);natureShape(q,C,false);}q.lineWidth=.004;q.strokeStyle='rgba(255,220,160,.25)';q.stroke();}q.restore();});
+    q.beginPath();for(const P of V)natureShape(q,P,false);q.lineWidth=.012;q.strokeStyle='rgba(235,220,185,.85)';q.stroke();q.restore();
+    ol(.84);q.lineWidth=.01;q.strokeStyle='rgba(235,220,185,.85)';q.stroke();ol(1);q.fillStyle=rgr(q,-.12,-.16,.6,[0,'rgba(255,240,210,.22)',.5,'rgba(255,240,210,0)',1,'rgba(0,0,0,.35)']);q.fill(); // its dome, lit from the upper left
+    q.save();q.translate(.05,-.14);q.rotate(-.3);q.scale(.22,.06);disc(q,0,0,1,rgr(q,0,0,1,[0,'rgba(255,255,255,.4)',1,'rgba(255,255,255,0)']));q.restore();},
+  flip(q,u){const R=prng(493);q.beginPath();q.moveTo(.04,-.06);q.bezierCurveTo(.16,.1,.1,.42,-.14,.64);q.bezierCurveTo(-.2,.68,-.27,.62,-.24,.54);q.bezierCurveTo(-.22,.36,-.26,.16,-.16,.02);q.closePath(); // a front flipper, swept back
+    q.fillStyle=lgr(q,-.1,0,.04,.4,[0,'#4a3a1e',.6,'#8a7444',1,'#b49c68']);q.fill();q.save();q.clip();const S=[];for(let i=0;i<16;i++)S.push([(R()-.6)*.3,R()*.62]);q.beginPath();for(const P of natureVoronoi(S,.8))natureShape(q,P,false);q.lineWidth=.007;q.strokeStyle='rgba(40,26,10,.7)';q.stroke();q.restore();
+    q.beginPath();q.moveTo(.04,-.06);q.bezierCurveTo(.16,.1,.1,.42,-.14,.64);q.lineWidth=.014;q.strokeStyle='rgba(240,225,190,.6)';q.stroke();},
+  shadow(q,u){natureSoft(q,u,.07,'rgba(20,40,40,.5)',()=>{q.fillStyle='#000';q.beginPath();q.ellipse(0,0,.55,.42,0,0,TAU);q.fill();for(const s of[-1,1]){q.beginPath();q.ellipse(.15,s*.5,.28,.08,s*.9,0,TAU);q.fill();}q.beginPath();q.ellipse(.6,0,.14,.1,0,0,TAU);q.fill();});},
+  draw(g,c,r,k){skinArt(g,this,c,r,0);const q=skinPx(g,r),s=r*1.02,h=-.62+.07*Math.sin(T*.4+c.wob),x=c.x+r*.04*Math.sin(T*.3+c.wob),y=c.y+r*.04*Math.cos(T*.37+c.wob),st=Math.sin(T*1.5+c.wob*3);
+    g.save();g.translate(x,y);g.rotate(h);const ox=r*.08,oy=r*.13,cs=Math.cos(-h),sn=Math.sin(-h);g.drawImage(bake(g,'tt_sh',skinPx(g,s)*2*.9,this.shadow,.9),ox*cs-oy*sn-s*.9,ox*sn+oy*cs-s*.9,s*1.8,s*1.8); // its shadow, cast down and right whichever way it heads
+    for(const sd of[-1,1]){g.save();g.translate(s*.24,sd*s*.25);g.scale(1,sd);g.rotate(-.15+st*.32);g.drawImage(bake(g,'tt_fl',skinPx(g,s)*2*.7,this.flip,.7),-s*.7,-s*.7,s*1.4,s*1.4);g.restore();} // the front flippers, stroking
+    g.drawImage(bake(g,'tt_body',skinPx(g,s)*2*.8,this.body,.8),-s*.8,-s*.8,s*1.6,s*1.6);g.restore();}},
+{id:50,key:'clownfish',name:'Clownfish',price:900,col:'ocean',rar:'rare',base:[24,92,52],edge:'#5a2a10',edge2:'rgba(255,230,200,.65)',
+  desc:'Two clownfish at home in a bubble-tip anemone.',
+  // a bubble-tip anemone seen from above, hundreds of tentacles crowding round its mouth, each swelling to a bulb ringed in rose at its tip, on dark reef rock;
+  // two clownfish weave through it (cached sprites), its front tentacles in front of them
+  tent(q,u,front){const R=prng(front?502:501),n=front?40:(u>80?300:150);q.lineCap='round';for(let i=0;i<n;i++){const t=front?.55+R()*.4:Math.sqrt(R()),a=R()*TAU,d0=t*.9,L=.15+R()*.08,b=a+(R()-.5)*.8,x0=Math.cos(a)*d0+.04,y0=Math.sin(a)*d0,x1=x0+Math.cos(b)*L,y1=y0+Math.sin(b)*L,w=.045+R()*.015;
+      if(front&&Math.hypot(x0,y0)<.5)continue;q.beginPath();q.moveTo(x0,y0);q.quadraticCurveTo(x0+Math.cos(b+.4)*L*.5,y0+Math.sin(b+.4)*L*.5,x1,y1);q.lineWidth=w*1.25;q.strokeStyle='rgba(30,20,10,.35)';q.stroke();
+      q.lineWidth=w;q.strokeStyle=lgr(q,x0,y0,x1,y1,[0,'#5a6a28',.6,'#a8b464',1,'#d8d090']);q.stroke();q.lineWidth=w*.3;q.strokeStyle='rgba(255,255,220,.3)';q.stroke();
+      const bx=x1+Math.cos(b)*w*.4,by=y1+Math.sin(b)*w*.4;disc(q,bx,by,w*.82,rgr(q,bx-w*.25,by-w*.3,w*.9,[0,'#fff0f4',.4,'#f2a0c0',.8,'#c8406a',1,'#8a1c40']));disc(q,bx-w*.25,by-w*.3,w*.22,'rgba(255,255,255,.75)');}}, // a tentacle: olive to cream, its bulb rose-tipped
+  bake(q,u){const R=prng(50);fillAll(q,'#1a1420');gfield(q,gtex('cf_rock',u,(x,y,o)=>{const n=gfbm(x*3,y*3,4);gramp(gpal('140e18 2e2238 4a3a50 6a4a5a'),n,o);}));
+    for(let i=0;i<8;i++){const a=R()*TAU,d=.85+R()*.25,x=Math.cos(a)*d,y=Math.sin(a)*d;gblob(q,x,y,.12+R()*.1,.03,5,R,24);q.fillStyle=['#8a2a5a','#2a6a8a','#c8641a','#5a8a3a'][i%4];q.fill();} // bits of reef round it
+    natureSoft(q,u,.06,'rgba(0,0,0,.8)',()=>{q.fillStyle='#000';q.beginPath();q.arc(.06,.08,.92,0,TAU);q.fill();});this.tent(q,u,false);
+    disc(q,.04,0,.13,rgr(q,.04,0,.13,[0,'#2a1408',.5,'#8a5a3a',1,'#b08a5a']));q.beginPath();for(let i=0;i<12;i++){const a=i/12*TAU;q.moveTo(.04+Math.cos(a)*.03,Math.sin(a)*.03);q.lineTo(.04+Math.cos(a)*.11,Math.sin(a)*.11);}q.lineWidth=.008;q.strokeStyle='rgba(255,220,180,.4)';q.stroke();}, // its mouth
+  top(q,u){this.tent(q,u,true);},
+  fish(q,u){const body=()=>{q.beginPath();q.moveTo(.5,0);q.bezierCurveTo(.5,-.14,.34,-.2,.12,-.2);q.bezierCurveTo(-.12,-.2,-.3,-.12,-.38,-.06);q.lineTo(-.38,.06);q.bezierCurveTo(-.3,.12,-.12,.2,.12,.2);q.bezierCurveTo(.34,.2,.5,.14,.5,0);q.closePath();}; // a clownfish, side on, heading +x
+    const fin=(path,c0)=>{path();q.fillStyle=c0;q.fill();q.lineWidth=.022;q.strokeStyle='#14100c';q.stroke();};
+    fin(()=>{q.beginPath();q.moveTo(-.36,0);q.bezierCurveTo(-.48,-.2,-.66,-.2,-.66,0);q.bezierCurveTo(-.66,.2,-.48,.2,-.36,0);},'#ff7a1a'); // tail
+    fin(()=>{q.beginPath();q.moveTo(.22,-.18);q.bezierCurveTo(.12,-.3,-.02,-.28,-.06,-.2);q.bezierCurveTo(-.12,-.34,-.3,-.3,-.34,-.09);q.lineTo(0,-.19);q.closePath();},'#ff7a1a'); // dorsal fins
+    fin(()=>{q.beginPath();q.moveTo(-.04,.18);q.bezierCurveTo(-.1,.32,-.26,.3,-.32,.09);q.closePath();q.moveTo(.16,.19);q.bezierCurveTo(.12,.32,.04,.32,.02,.2);q.closePath();},'#ff7a1a'); // belly fins
+    body();q.fillStyle=lgr(q,0,-.2,0,.2,[0,'#d8500a',.35,'#ff8a24',.7,'#ffa246',1,'#e8661a']);q.fill();q.save();body();q.clip();
+    const band=(x,w,bulge)=>{q.beginPath();q.moveTo(x+w,-.3);q.quadraticCurveTo(x+w+bulge,0,x+w,.3);q.lineTo(x-w,.3);q.quadraticCurveTo(x-w+bulge,0,x-w,-.3);q.closePath();};
+    for(const [x,w,b] of[[.27,.05,-.06],[.0,.06,.09],[-.32,.035,0]]){band(x,w+.022,b);q.fillStyle='#14100c';q.fill();band(x,w,b);q.fillStyle=lgr(q,0,-.2,0,.2,[0,'#e8eef0',.4,'#ffffff',1,'#e0e6e8']);q.fill();} // three white bands edged in black
+    q.fillStyle=lgr(q,0,-.2,0,.2,[0,'rgba(80,20,0,.25)',.4,'rgba(0,0,0,0)',1,'rgba(80,20,0,.2)']);q.fillRect(-.5,-.3,1,.6);q.restore();
+    fin(()=>{q.beginPath();q.moveTo(.16,.02);q.bezierCurveTo(.1,-.05,.0,.0,.02,.1);q.closePath();},'#ff9a3a'); // pectoral fin
+    disc(q,.38,-.04,.045,'#ff9a3a');disc(q,.38,-.04,.032,'#0e0a08');disc(q,.39,-.052,.011,'rgba(255,255,255,.9)');q.beginPath();q.arc(.46,.05,.03,.2,1.2);q.lineWidth=.01;q.strokeStyle='#7a2a0a';q.stroke();},
+  draw(g,c,r,k){skinArt(g,this,c,r,0);const q=skinPx(g,r);for(let i=0;i<2;i++){const a=T*(.45+i*.12)+c.wob+i*2.4,x=c.x+Math.cos(a)*r*(.42-i*.06),y=c.y+Math.sin(a)*r*(.3-i*.05),dir=Math.sin(a)>0?1:-1,L=r*(.56-i*.08); // two clownfish weaving round the anemone
+      g.save();g.translate(x,y);g.scale(-dir,1);g.rotate(Math.cos(a)*.2*dir);g.drawImage(bake(g,'cf_fish',skinPx(g,L)*1.4,this.fish,.7),-L*.7,-L*.7,L*1.4,L*1.4);g.restore();}
+    skinArt(g,this,c,r,0,'cf_top',this.top);}},
+{id:51,key:'abyss',name:'Abyss',price:5000,col:'ocean',rar:'epic',base:[214,60,8],edge:'#04101e',edge2:'rgba(120,230,255,.5)',
+  desc:'Deep in the dark an anglerfish waits, its lure pulsing. Don\'t follow the light.',
+  // the midnight zone: black water pricked with blue bioluminescence; an anglerfish looms out of it, lit only by its own lure: the warty dome of its head, a
+  // small cold eye, jaws gaping round a cage of glassy fangs; the lure on its rod pulses and sways (a cached glow)
+  LX:-.36,LY:-.42,
+  bake(q,u){const R=prng(51),hi=u>110,lx=this.LX,ly=this.LY;fillAll(q,rgr(q,lx,ly,1.8,[0,'#0a2234',.35,'#04101c',1,'#010308']));
+    q.globalCompositeOperation='lighter';for(let i=0;i<(hi?70:30);i++){const x=R()*2.3-1.15,y=R()*2.3-1.15,s=.004+R()*R()*.02,b=R();gglow(q,x,y,s*5,b<.7?[60,200,255]:[120,255,200],.25);disc(q,x,y,s,'rgba(200,250,255,.9)');}q.globalCompositeOperation='source-over'; // bioluminescence
+    const head=()=>{q.beginPath();q.moveTo(-.12,-.18);q.bezierCurveTo(.0,-.62,.7,-.66,1.2,-.3);q.lineTo(1.3,.9);q.bezierCurveTo(.8,1.1,.2,.95,-.1,.72);q.bezierCurveTo(-.32,.58,-.42,.42,-.44,.3);q.lineTo(-.06,.3);q.bezierCurveTo(-.02,.12,-.08,-.02,-.12,-.18);q.closePath();};
+    natureSoft(q,u,.08,'rgba(0,0,0,.9)',()=>{head();q.fillStyle='#000';q.fill();});q.save();head();q.clip();gfield(q,gtex('ab_skin',u,(x,y,o)=>{const d=Math.hypot(x-lx,y-ly),L=Math.exp(-d*1.9)*1.5+.04,n=gfbm(x*5+3,y*5,4),w=gvor(x*9,y*9,.9);gramp(gpal('1a1414 3a3436 6a7478 a8c4c8'),Math.min(1,L*(.55+n*.6)+gstep(.25,.05,w.f1)*L*.5),o);}));q.restore(); // its skin, lit only by the lure
+    q.save();head();q.clip();for(let i=0;i<(hi?160:70);i++){const x=-.1+R()*1.4,y=-.6+R()*1.5,d=Math.hypot(x-lx,y-ly),s=.01+R()*.025,a=Math.max(0,.5-d*.32);if(a<.03)continue;disc(q,x,y,s,rgr(q,x-(x-lx)*.1,y-(y-ly)*.1,s,[0,`rgba(150,190,200,${a})`,1,'rgba(0,0,0,0)']));} // warts catching the light
+    q.beginPath();for(let i=0;i<9;i++){const x=.25+i*.1,y=.08+Math.sin(i)*.02;q.moveTo(x+.012,y);q.arc(x,y,.012,0,TAU);}q.fillStyle='rgba(110,220,230,.35)';q.fill();q.restore(); // the lateral line
+    head();q.lineWidth=.03;q.strokeStyle=rgr(q,lx,ly,1.1,[0,'rgba(150,235,255,.7)',.5,'rgba(150,235,255,.15)',1,'rgba(150,235,255,0)']);q.stroke(); // the rim the lure catches
+    q.beginPath();q.moveTo(-.12,.08);q.bezierCurveTo(-.3,.06,-.42,.18,-.44,.3);q.bezierCurveTo(-.3,.34,-.12,.33,-.06,.3);q.closePath();q.fillStyle=rgr(q,-.2,.2,.3,[0,'#000',.7,'#0a0204',1,'#3a0e14']);q.fill(); // the gape, its gums dark red
+    const fang=(x0,y0,x1,y1,L)=>{const a=Math.atan2(y1-y0,x1-x0),nx=Math.cos(a),ny=Math.sin(a);q.beginPath();q.moveTo(x0-ny*L*.12,y0+nx*L*.12);q.quadraticCurveTo(x0+nx*L*.5+ny*L*.15,y0+ny*L*.5-nx*L*.15,x0+nx*L,y0+ny*L);q.lineTo(x0+ny*L*.12,y0-nx*L*.12);q.closePath();
+      const d=Math.hypot(x0-lx,y0-ly),k=Math.max(.25,1-d*.7);q.fillStyle=lgr(q,x0,y0,x0+nx*L,y0+ny*L,[0,`rgba(${(150*k)|0},${(170*k)|0},${(175*k)|0},.85)`,.6,`rgba(${(230*k)|0},${(245*k)|0},${(250*k)|0},.9)`,1,`rgba(255,255,255,${.95*k})`]);q.fill();};
+    const RF=prng(512);for(let i=0;i<10;i++){const t=i/9,x=-.4+t*.32,y=.16-t*.08;fang(x,y,x+.06+(RF()-.5)*.1,y+.4,.05+RF()*.09+Math.sin(t*Math.PI)*.04);} // upper fangs, crooked
+    for(let i=0;i<9;i++){const t=i/8,x=-.44+t*.36,y=.31;fang(x,y,x-.06+(RF()-.5)*.12,y-.4,.06+RF()*.1+Math.sin(t*Math.PI)*.05);} // lower fangs
+    disc(q,.12,-.18,.05,rgr(q,.12,-.18,.05,[0,'#8ad0d8',.4,'#1a4048',1,'#05080a']));disc(q,.105,-.195,.012,'rgba(255,255,255,.85)'); // a small cold eye
+    q.beginPath();q.moveTo(.0,-.42);q.bezierCurveTo(-.06,-.66,-.3,-.7,lx+.03,ly+.05);q.lineWidth=.02;q.strokeStyle='#1a2226';q.stroke();q.lineWidth=.006;q.strokeStyle='rgba(150,210,220,.5)';q.stroke();}, // its rod
+  lure(q,u){q.globalCompositeOperation='lighter';gglow(q,0,0,1,[60,210,255],.55);gglow(q,0,0,.45,[150,255,240],.7);disc(q,0,0,.12,rgr(q,-.03,-.04,.13,[0,'#ffffff',.5,'#c8fff4',1,'rgba(120,240,255,.4)']));},
+  draw(g,c,r,k){skinArt(g,this,c,r,0);const p=.85+.15*Math.sin(T*2.2+c.wob*3)+.08*Math.sin(T*5.3+c.wob),x=c.x+r*(this.LX+.015*Math.sin(T*.9+c.wob)),y=c.y+r*(this.LY+.015*Math.cos(T*.7+c.wob)),s=r*.55*p; // the lure, pulsing
+    g.globalCompositeOperation='lighter';g.globalAlpha=Math.min(1,p);g.drawImage(bake(g,'ab_lure',skinPx(g,s)*2,this.lure,1),x-s,y-s,2*s,2*s);g.globalAlpha=1;g.globalCompositeOperation='source-over';}},
+{id:52,key:'mantaray',name:'Manta Ray',price:2500,col:'ocean',rar:'epic',base:[204,60,38],edge:'#0a2a48',edge2:'rgba(210,240,255,.65)',
+  desc:'A giant manta gliding overhead, the sun breaking through the surface behind it.',
+  // looking up from below: the sun through the surface, its light falling in shafts, a shoal of small fish overhead; a giant manta glides across, its pale
+  // belly freckled, dark margins and gill slits, horn-like cephalic fins; it banks and flaps slowly (a cached sprite)
+  bake(q,u){const R=prng(52),hi=u>110;gfield(q,gtex('mr_water',u,(x,y,o)=>{const d=Math.hypot(x+.15,y+.75),sun=Math.exp(-d*d*6),rays=Math.pow(.5+.5*Math.sin(Math.atan2(y+1.3,x+.2)*34+gfbm(x*2,y*2,2)*3),6)*gstep(1.8,.2,d),n=gfbm(x*2+5,y*2,3);
+      gramp(gpal('d8f6ff 6ad0f0 2a90c8 145a96 0a2a5a'),gstep(-.9,1.1,y+x*.15)+(n-.5)*.1,o);const L=[255,255,240];for(let i=0;i<3;i++)o[i]+=(L[i]-o[i])*Math.min(1,sun*1.2+rays*.22);}));
+    q.globalCompositeOperation='lighter';q.lineWidth=.004;q.strokeStyle='rgba(255,255,255,.25)';q.beginPath();for(let i=0;i<40;i++){const a=R()*TAU,d=.1+R()*.35;q.moveTo(-.15+Math.cos(a)*d,-.75+Math.sin(a)*d*.5);q.lineTo(-.15+Math.cos(a+.2)*(d+.05),-.75+Math.sin(a+.2)*(d+.05)*.5);}q.stroke();q.globalCompositeOperation='source-over'; // the surface's glitter
+    q.fillStyle='rgba(10,40,70,.55)';for(let i=0;i<40;i++){const x=.2+R()*.7+(R()-.5)*.2,y=-.75+R()*.4,s=.018+R()*.01,a=.3+R()*.2;q.save();q.translate(x,y);q.rotate(a);q.beginPath();q.ellipse(0,0,s,s*.32,0,0,TAU);q.moveTo(-s,0);q.lineTo(-s*1.6,-s*.35);q.lineTo(-s*1.6,s*.35);q.closePath();q.fill();q.restore();}}, // a shoal overhead
+  ray(q,u){const R=prng(521),out=k=>{q.beginPath();q.moveTo(.36,-.13*k);q.bezierCurveTo(.3,-.5*k,.06,-.9*k,-.26,-1.06*k);q.bezierCurveTo(-.2,-.7*k,-.34,-.32*k,-.44,-.07*k);q.lineTo(-.5,0);q.lineTo(-.44,.07*k);q.bezierCurveTo(-.34,.32*k,-.2,.7*k,-.26,1.06*k);q.bezierCurveTo(.06,.9*k,.3,.5*k,.36,.13*k);q.closePath();}; // leading edge out to each wingtip, trailing edge back // a manta from below, heading +x
+    q.beginPath();q.moveTo(-.46,0);q.quadraticCurveTo(-.9,.04,-1.2,.0);q.lineWidth=.022;q.strokeStyle='#16283a';q.stroke(); // its tail
+    for(const s of[-1,1]){q.beginPath();q.moveTo(.33,s*.08);q.bezierCurveTo(.42,s*.06,.5,s*.08,.5,s*.13);q.bezierCurveTo(.47,s*.17,.4,s*.17,.34,s*.15);q.closePath();q.fillStyle=lgr(q,.34,0,.56,0,[0,'#2a3e52',1,'#4a6276']);q.fill();q.lineWidth=.006;q.strokeStyle='rgba(180,220,245,.5)';q.stroke();} // the cephalic fins, unrolled to feed
+    out(1);q.fillStyle=lgr(q,0,-1,0,1,[0,'#1a2c3e',.5,'#22384c',1,'#1a2c3e']);q.fill();q.save();out(1);q.clip();
+    q.beginPath();q.moveTo(.3,-.15);q.bezierCurveTo(.22,-.45,0,-.62,-.18,-.66);q.bezierCurveTo(-.28,-.4,-.36,-.2,-.42,-.05);q.lineTo(-.42,.05);q.bezierCurveTo(-.36,.2,-.28,.4,-.18,.66);q.bezierCurveTo(0,.62,.22,.45,.3,.15);q.closePath(); // the pale belly, spreading into the wings
+    q.fillStyle=rgr(q,.02,0,.66,[0,'#f6f9fb',.55,'#e2eaf0',.85,'#a8bccb',1,'#5a7488']);q.fill();
+    for(let i=0;i<16;i++){const x=-.25+R()*.45,y=(R()-.5)*.55,s=.01+R()*R()*.035;disc(q,x,y,s,'rgba(28,38,50,.8)');} // its freckles, unique to each manta
+    q.beginPath();for(const s of[-1,1])for(let i=0;i<5;i++){const x=.18-i*.055;q.moveTo(x,s*.11);q.quadraticCurveTo(x-.025,s*.17,x-.015,s*.24);}q.lineWidth=.009;q.strokeStyle='rgba(40,60,80,.65)';q.stroke(); // gill slits
+    rrect(q,.3,-.12,.07,.24,.03);q.fillStyle='#0e1a26';q.fill(); // its mouth
+    q.fillStyle=lgr(q,0,-1.06,0,1.06,[0,'rgba(140,210,245,.3)',.25,'rgba(0,0,0,0)',.75,'rgba(0,0,0,0)',1,'rgba(140,210,245,.3)']);q.fillRect(-1,-1.2,2,2.4);q.restore(); // light through the thin wingtips
+    out(1);q.lineWidth=.009;q.strokeStyle='rgba(170,220,250,.55)';q.stroke();},
+  draw(g,c,r,k){skinArt(g,this,c,r,0);const t=T*.18+c.wob,x=c.x+r*(.02+.07*Math.sin(t)),y=c.y+r*(.1+.05*Math.cos(t*1.3)),h=-1.1+.15*Math.sin(t*.8),f=Math.sin(T*1.1+c.wob*2),s=r*.82;
+    g.save();g.translate(x,y);g.rotate(h);g.scale(1,1-.07*f);g.drawImage(bake(g,'mr_ray',skinPx(g,s)*2.5,this.ray,1.25),-s*1.25,-s*1.25,s*2.5,s*2.5);g.restore();}},
+{id:53,key:'pufferfish',name:'Pufferfish',price:1200,col:'ocean',rar:'rare',base:[42,70,62],edge:'#5a4a1a',edge2:'rgba(255,250,220,.7)',
+  desc:'A pufferfish blown up into a spiky ball, fins fluttering and eyes wide.',
+  // a porcupine puffer, inflated: a sandy back freckled with dark spots over a white belly, short spines standing out all over the ball, a little beak of
+  // a mouth and big round eyes with golden irises; its tiny pectoral fins flutter (cached sprites)
+  bake(q,u){const R=prng(53),hi=u>110,M=gm3(-.25,.1,0);gfield(q,gtex('pf_skin',u,(x,y,o)=>{gpi(M,x,y,GO2);const X=GO2[0],Y=GO2[1],Z=GO2[2],n=gfbm(X*3+2,Y*3+Z*2,3),sp=gvor(X*5+Z*2+7,Y*5,.9),belly=gstep(.05,.35,Y+(n-.5)*.2);
+      gramp(gpal('7a6a3a c0a868 e8d8a8'),.3+n*.55,o);const W=[248,246,236];for(let i=0;i<3;i++)o[i]+=(W[i]-o[i])*belly;const d=gstep(.22,.12,sp.f1)*(1-belly)*.85;for(let i=0;i<3;i++)o[i]*=1-d*.8; // sandy back, dark spots, white belly
+      const z=Math.max(0,1-x*x-y*y);const L=.7+.3*Math.pow(z,.3);for(let i=0;i<3;i++)o[i]*=L;}));
+    const n=hi?240:120,sp=[];for(let i=0;i<n;i++){const y=1-(i+.5)/n*2,rr=Math.sqrt(1-y*y),a=i*2.39996;sp.push([Math.cos(a)*rr,y,Math.sin(a)*rr]);}
+    for(const [x0,y0,z0] of sp){gp3(M,x0,y0,z0,GO2);const X=GO2[0],Y=GO2[1],Z=GO2[2];if(Z<-.1)continue;const d=Math.hypot(X,Y)||1,L=.11*(.3+.7*Math.sqrt(1-Math.min(1,Z*Z))),a=Math.atan2(Y,X),bx=X,by=Y,tx=X+Math.cos(a)*L*.7+.0,ty=Y+Math.sin(a)*L*.7+L*.25;
+      q.beginPath();q.moveTo(bx+Math.sin(a)*.012,by-Math.cos(a)*.012);q.lineTo(tx,ty);q.lineTo(bx-Math.sin(a)*.012,by+Math.cos(a)*.012);q.closePath();q.fillStyle=lgr(q,bx,by,tx,ty,[0,'rgba(120,100,60,.9)',1,'rgba(250,240,210,.95)']);q.fill();} // spines, laid back toward the tail
+    for(const s of[-1,1]){const ex=-.38+s*.0,ey=-.12+s*.0;}const eye=(x,y,r0)=>{disc(q,x+.02,y+.03,r0*1.15,'rgba(60,40,10,.35)');disc(q,x,y,r0,rgr(q,x-r0*.3,y-r0*.3,r0,[0,'#fffaf0',1,'#c8bfa0']));disc(q,x+r0*.1,y,r0*.72,rgr(q,x+r0*.1,y,r0*.72,[0,'#3a2a08',.45,'#c89a2a',.8,'#f6d060',1,'#6a4a10']));
+      disc(q,x+r0*.14,y,r0*.38,'#06080a');disc(q,x-r0*.12,y-r0*.25,r0*.18,'rgba(255,255,255,.95)');disc(q,x+r0*.3,y+r0*.25,r0*.07,'rgba(255,255,255,.6)');}; // big round eyes, gold-ringed
+    eye(-.52,-.2,.17);eye(-.12,-.3,.14);
+    q.beginPath();q.ellipse(-.8,.14,.08,.06,.3,0,TAU);q.fillStyle=rgr(q,-.82,.12,.09,[0,'#f6ecd8',1,'#a89060']);q.fill();q.beginPath();q.moveTo(-.87,.14);q.lineTo(-.73,.15);q.lineWidth=.012;q.strokeStyle='#3a2a10';q.stroke(); // a little beak of a mouth
+    q.beginPath();q.moveTo(.95,-.12);q.quadraticCurveTo(1.12,-.2,1.15,-.05);q.quadraticCurveTo(1.12,.1,.95,.05);q.closePath();q.fillStyle='rgba(230,210,150,.8)';q.fill(); // its tail fin, peeping out
+    ggloss(q,.55);},
+  fin(q,u){q.beginPath();q.moveTo(0,0);q.bezierCurveTo(.3,-.5,.8,-.4,.9,-.1);q.bezierCurveTo(.85,.1,.5,.2,0,0);q.closePath();q.fillStyle=lgr(q,0,0,.9,0,[0,'rgba(240,220,160,.9)',1,'rgba(250,240,210,.35)']);q.fill();q.beginPath();for(let i=1;i<7;i++){q.moveTo(0,0);q.lineTo(.88*Math.cos(-.55+i*.12),.88*Math.sin(-.55+i*.12));}q.lineWidth=.02;q.strokeStyle='rgba(150,120,60,.5)';q.stroke();},
+  draw(g,c,r,k){skinArt(g,this,c,r,0);if(skinPx(g,r)<12)return;const f=Math.sin(T*9+c.wob*5),s=r*.3;for(const [x,y,ph] of[[-.1,.22,0],[.3,.12,1.6]]){g.save();g.translate(c.x+x*r,c.y+y*r);g.rotate(.5+Math.sin(T*9+c.wob*5+ph)*.35);g.scale(1,.6+.4*Math.abs(Math.sin(T*9+ph)));g.drawImage(bake(g,'pf_fin',skinPx(g,s)*2,this.fin,1),-s,-s,2*s,2*s);g.restore();}}}, // the pectoral fins, fluttering
+{id:54,key:'octopus',name:'Octopus',price:2500,col:'ocean',rar:'epic',base:[12,70,42],edge:'#4a1206',edge2:'rgba(255,220,200,.6)',
+  desc:'A red octopus sprawled over the rocks, arms curling, suckers and all.',
+  // a red octopus seen from above on dark rock: its mantle a warty dome mottled with chromatophores, two gold eyes with bar pupils, and eight arms curling
+  // out across the cell, each tapering and turning over at its tip to show rows of pale suckers
+  bake(q,u){const R=prng(54),hi=u>110;gfield(q,gtex('oc_rock',u,(x,y,o)=>{const n=gfbm(x*3,y*3,4),c=gridge(x*4+2,y*4,3);gramp(gpal('0e1014 22262c 3a3e44 5a5a58'),.15+n*.55+c*.2,o);}));
+    const arm=(a0,len,curl,w0)=>{const C=[];let x=Math.cos(a0)*.18,y=Math.sin(a0)*.18+.1,a=a0;for(let i=0;i<=40;i++){const t=i/40;C.push([x,y,a,w0*(1-t*.92)]);const st=len/40;a+=curl*(.2+t*t*3.2)/40*4;x+=Math.cos(a)*st;y+=Math.sin(a)*st;}return C;};
+    const A=[[-2.6,.95,1.2],[-2.0,1.0,-1.1],[-1.0,.9,1.3],[-.4,1.05,-1.2],[.4,1.0,1.1],[1.1,.95,-1.3],[2.0,.9,1.2],[2.7,1.0,-1.1]].map(([a,l,c])=>arm(a,l,c,.12));
+    const outline=C=>{const L=[],Rr=[];for(const [x,y,a,w] of C){L.push(x-Math.sin(a)*w,y+Math.cos(a)*w);Rr.push(x+Math.sin(a)*w,y-Math.cos(a)*w);}const o=L;for(let i=Rr.length-2;i>=0;i-=2)o.push(Rr[i],Rr[i+1]);return o;};
+    natureSoft(q,u,.05,'rgba(0,0,0,.7)',()=>{q.fillStyle='#000';q.beginPath();for(const C of A)natureShape(q,outline(C),true,.03,.05);q.ellipse(.03,.05,.32,.38,0,0,TAU);q.fill();});
+    for(const C of A){q.beginPath();natureShape(q,outline(C),true);q.fillStyle=lgr(q,C[0][0],C[0][1],C[40][0],C[40][1],[0,'#b8341a',.6,'#d8502a',1,'#f0805a']);q.fill(); // each arm, tapering
+      q.save();q.clip();for(let i=0;i<40;i+=2){const [x,y,a,w]=C[i];disc(q,x+Math.sin(a)*w*.3,y-Math.cos(a)*w*.3,w*.25,'rgba(120,20,10,.35)');}q.restore();
+      for(let i=6;i<41;i+=2){const [x,y,a,w]=C[i],side=Math.sin(i*.5)>.2?1:-1,t=i/40;if(t<.55)continue;const sx=x-Math.sin(a)*w*.55*side,sy=y+Math.cos(a)*w*.55*side,sr=Math.max(.006,w*.38);disc(q,sx,sy,sr,rgr(q,sx-sr*.3,sy-sr*.3,sr,[0,'#fff0e6',.6,'#f2c0b0',1,'#a8604a']));disc(q,sx,sy,sr*.35,'rgba(160,80,60,.6)');} // suckers where it turns over
+      q.beginPath();natureShape(q,outline(C),true);q.lineWidth=.006;q.strokeStyle='rgba(255,190,160,.35)';q.stroke();}
+    q.beginPath();q.ellipse(0,-.08,.3,.38,0,0,TAU);q.fillStyle=rgr(q,-.1,-.22,.45,[0,'#f07a50',.5,'#c83c1c',1,'#7a1a08']);q.fill();q.save();q.clip();for(let i=0;i<(hi?120:60);i++){const a=R()*TAU,d=Math.sqrt(R())*.38,x=Math.cos(a)*d*.8,y=-.08+Math.sin(a)*d,s=.008+R()*.02;disc(q,x,y,s,R()<.5?'rgba(120,20,8,.45)':'rgba(255,170,120,.4)');}q.restore(); // the mantle, warty and mottled
+    for(const s of[-1,1]){const ex=s*.2,ey=.2;disc(q,ex,ey,.07,rgr(q,ex,ey,.07,[0,'#fff0a0',.6,'#d8a020',1,'#7a4a08']));q.fillStyle='#08060a';rrect(q,ex-.045,ey-.012,.09,.024,.012);q.fill();disc(q,ex-.02,ey-.03,.012,'rgba(255,255,255,.85)');} // gold eyes, bar pupils
+    ggloss(q,.4,1);},
+  draw(g,c,r,k){skinArt(g,this,c,r,0);}},
+{id:55,key:'seahorse',name:'Seahorse',price:1500,col:'ocean',rar:'rare',base:[38,88,56],edge:'#5a3a08',edge2:'rgba(255,240,200,.7)',
+  desc:'A golden seahorse holding on to the seagrass, bubbles drifting up past it.',
+  // a seahorse side on in sunlit turquoise water: golden, ringed and knobbed, a crown on its head, a long snout, a see-through fan of a dorsal fin, its tail
+  // wound round a blade of seagrass among others swaying up from the bottom; bubbles rise past (drawn live)
+  bake(q,u){const R=prng(55),hi=u>110;gfield(q,gtex('sh_water',u,(x,y,o)=>{const rays=Math.pow(.5+.5*Math.sin(Math.atan2(y+1.6,x+.4)*30+gfbm(x*2,y*2,2)*3),6)*gstep(1.4,-.8,y),n=gfbm(x*2,y*2,3);
+      gramp(gpal('9af0ea 3ac0c8 1a8aa8 0a4a72'),gstep(-1.1,1.1,y)+(n-.5)*.12,o);const L=[240,255,250];for(let i=0;i<3;i++)o[i]+=(L[i]-o[i])*rays*.28;}));
+    const blade=(x0,lean,h,w,cl,a)=>{q.beginPath();q.moveTo(x0-w,1.2);q.bezierCurveTo(x0-w+lean*.3,.5,x0+lean*.7-w*.5,1.2-h*.7,x0+lean,1.2-h);q.bezierCurveTo(x0+lean*.7+w*.5,1.2-h*.7,x0+w+lean*.3,.5,x0+w,1.2);q.closePath();q.fillStyle=lgr(q,0,1.2,0,1.2-h,[0,gc(gsh(cl,-.3),a),1,gc(gsh(cl,.25),a)]);q.fill();};
+    for(let i=0;i<9;i++)blade(-1+R()*2,(R()-.5)*.6,1+R()*.9,.03+R()*.02,[60,120,90],.45); // far seagrass, hazy
+    for(const [x,l,h] of[[-.62,.2,1.9],[.58,-.25,1.7],[.8,.1,1.3],[-.85,-.1,1.4]])blade(x,l,h,.05,[70,150,70],.95);
+    blade(-.08,.05,2.2,.045,[80,160,70],1); // the blade it holds
+    for(let i=0;i<14;i++){const x=R()*2-1,y=R()*2-1,s=.01+R()*.03;disc(q,x,y,s,rgr(q,x+s*.3,y+s*.3,s,[0,'rgba(255,255,255,.05)',.8,'rgba(255,255,255,.18)',1,'rgba(255,255,255,.6)']));} // bubbles
+    const body=()=>{q.beginPath();q.moveTo(-.04,-.78);q.bezierCurveTo(-.16,-.74,-.22,-.6,-.2,-.46);q.bezierCurveTo(-.15,-.32,-.2,-.16,-.18,0);q.bezierCurveTo(-.16,.16,-.12,.3,-.12,.44);q.lineTo(-.02,.44);q.bezierCurveTo(.02,.3,.14,.22,.22,.06);q.bezierCurveTo(.3,-.1,.28,-.26,.18,-.36);q.bezierCurveTo(.12,-.42,.1,-.46,.12,-.5);
+      q.lineTo(.4,-.46);q.bezierCurveTo(.44,-.46,.44,-.54,.4,-.54);q.lineTo(.12,-.58);q.bezierCurveTo(.12,-.7,.06,-.78,-.04,-.78);q.closePath();}; // back, neck, belly and the long snout
+    q.save();q.translate(.06,0);natureSoft(q,u,.03,'rgba(0,40,40,.4)',()=>{q.save();q.translate(.04,.04);body();q.fillStyle='#000';q.fill();q.restore();});
+    q.beginPath();q.moveTo(-.16,-.1);q.bezierCurveTo(-.36,-.18,-.4,.08,-.15,.12);q.closePath();q.fillStyle='rgba(255,230,170,.35)';q.fill();q.beginPath();for(let i=0;i<8;i++){const t=i/7;q.moveTo(-.16,-.08+t*.18);q.lineTo(-.36+Math.sin(t*Math.PI)*-.03,-.14+t*.24);}q.lineWidth=.006;q.strokeStyle='rgba(200,150,60,.6)';q.stroke(); // the dorsal fin, a see-through fan
+    const TL=[];for(let i=0;i<=40;i++){const t=i/40,a=-2.2-t*3.3*Math.PI,rr=.2*(1-t*.82),w=.052*(1-t*.8);TL.push([.0+Math.cos(a)*rr,.66+Math.sin(a)*rr,a,w]);} // the tail, wound round the blade in a tapering spiral
+    const tail=()=>{const L=[],Rr=[];for(const [x,y,a,w] of TL){L.push(x+Math.cos(a)*w,y+Math.sin(a)*w);Rr.push(x-Math.cos(a)*w,y-Math.sin(a)*w);}q.beginPath();q.moveTo(-.12,.44);for(let i=0;i<L.length;i+=2)q.lineTo(L[i],L[i+1]);for(let i=Rr.length-2;i>=0;i-=2)q.lineTo(Rr[i],Rr[i+1]);q.lineTo(-.02,.44);q.closePath();};
+    tail();q.fillStyle=lgr(q,-.2,.5,.2,.8,[0,'#b8680e',.5,'#e8a020',1,'#c88214']);q.fill();q.beginPath();for(let i=2;i<40;i+=2){const [x,y,a,w]=TL[i];q.moveTo(x+Math.cos(a)*w,y+Math.sin(a)*w);q.lineTo(x-Math.cos(a)*w,y-Math.sin(a)*w);}q.lineWidth=.008;q.strokeStyle='rgba(110,50,0,.5)';q.stroke();
+    body();q.fillStyle=lgr(q,-.2,0,.3,0,[0,'#a85a0a',.35,'#e8a020',.7,'#f6c84a',1,'#c88214']);q.fill();q.save();body();q.clip();
+    q.beginPath();for(let y=-.5;y<.56;y+=.055){q.moveTo(-.3,y);q.quadraticCurveTo(0,y+.035,.35,y-.02);}q.lineWidth=.012;q.strokeStyle='rgba(110,50,0,.45)';q.stroke(); // the rings of its armour
+    q.beginPath();for(let y=-.5;y<.56;y+=.055){q.moveTo(-.3,y-.01);q.quadraticCurveTo(0,y+.025,.35,y-.03);}q.lineWidth=.006;q.strokeStyle='rgba(255,240,180,.35)';q.stroke();
+    for(let i=0;i<60;i++){const x=-.2+R()*.5,y=-.7+R()*1.3,s=.006+R()*.01;disc(q,x,y,s,'rgba(90,40,0,.45)');}q.fillStyle=lgr(q,-.22,0,.3,0,[0,'rgba(60,20,0,.35)',.4,'rgba(0,0,0,0)',.8,'rgba(255,255,220,.15)',1,'rgba(0,0,0,.2)']);q.fillRect(-.4,-.9,.9,1.8);q.restore();
+    for(let i=0;i<16;i++){const t=i/15,y=-.46+t*.88,x=y<0?-.2+(y+.46)*.045:-.18+y*.14;disc(q,x,y,.018,rgr(q,x-.006,y-.006,.02,[0,'#ffe8a0',1,'#b87010']));} // knobs along its back
+    for(const [x,y] of[[-.06,-.8],[.0,-.82],[.05,-.79],[-.1,-.76]]){q.beginPath();q.moveTo(x-.02,y+.04);q.lineTo(x,y-.03);q.lineTo(x+.02,y+.04);q.closePath();q.fillStyle='#d89a28';q.fill();} // its crown
+    disc(q,.04,-.62,.04,rgr(q,.04,-.62,.04,[0,'#2a1400',.6,'#6a3a08',1,'#f6c84a']));disc(q,.03,-.63,.012,'rgba(255,255,255,.9)'); // eye
+    q.restore();},
+  draw(g,c,r,k){skinArt(g,this,c,r,0);if(skinPx(g,r)<16)return;g.lineWidth=r*.008;for(let i=0;i<4;i++){const ph=((T*.12+i*.25+c.wob*.07)%1),x=c.x+r*(.28+.08*Math.sin(T*1.5+i*2)+i*.03),y=c.y+r*(.8-ph*1.7),s=r*(.018+i*.006); // bubbles rising
+    g.globalAlpha=Math.sin(ph*Math.PI)*.8;g.beginPath();g.arc(x,y,s,0,TAU);g.strokeStyle='#e8ffff';g.stroke();g.globalAlpha=1;}}},
+//__NEXT__
+];
+for(const S of GEN50){for(const k in S)if(typeof S[k]==='function'&&k!=='draw')S[k]=S[k].bind(S); // bakes are handed round as plain functions: keep them pointing at their skin
+  S.tok=STAINS.map(()=>'tok'+S.key);PREMIUM.push(S);}
+PREMIUM.sort((a,b)=>a.id-b.id); // ids index the list: skin id n is PREMIUM[n-SKIN_FREE]
+// end of showcase skins
 const SKIN_COUNT=SKIN_FREE+PREMIUM.length,SKIN_V22=17; // 2.2.0 and older clamp any skin id they do not know to their last one (One Cell)
 const wireSkin=k=>k<SKIN_V22?k:0; // so newer skins go out as the plain cell in k, and in full in ks
 function skinColor(stain,skin){const S=skin>=SKIN_FREE?PREMIUM[skin-SKIN_FREE]:null;return (S&&S.base)||STAINS[clamp(stain|0,0,STAINS.length-1)];}
@@ -5610,7 +5938,8 @@ const SKIN_DESC={
   28:'A shell of golden glass, ribbed and pored like the algae it is named after. Battle Pass, free for everyone.',29:'Night sea swirling with glowing plankton that flash brighter the faster you swim. Battle Pass.',
   30:'A glass skeleton: a lattice sphere round an amber heart, and barbed spines through the membrane. Battle Pass.',31:'Teal and magenta light swirling round a glowing heart, with a halo, sparks and trailing tendrils. Battle Pass.'};
 let shopSel=0; // the skin shown large in the shop
-const rarOf=S=>S.season?'seasonal':RARITY[S.id]||'common';
+const rarOf=S=>S.season?'seasonal':RARITY[S.id]||S.rar||'common';
+for(const S of PREMIUM)if(S.desc&&!SKIN_DESC[S.id])SKIN_DESC[S.id]=S.desc; // the showcase skins carry their own
 const fmtLeft=ms=>{const m=Math.max(0,Math.round(ms/60000)),d=Math.floor(m/1440),h=Math.floor(m%1440/60);return d?`${d}d ${h}h`:h?`${h}h ${m%60}m`:`${m%60}m`;};
 const fmtAtp=n=>n>=1e6?(n/1e6).toLocaleString(undefined,{maximumFractionDigits:1})+'M':n.toLocaleString();
 function renderSkins(){
@@ -5698,6 +6027,9 @@ function shopCard(S){const own=ownsSkin(S.id),eq=settings.skin===S.id,rar=rarOf(
 const SKIN_CATS=[['space','Space','Stars, worlds and things that swallow light',[5,13,15,22,32,33]],['elements','Elements','Fire, ice, storms and worse',[6,10,11,17,19,34]],
   ['wild','Wild','Fur, fins, wings and blossoms',[7,9,18,21,35]],['sweets','Sweets','Good enough to eat',[36,37,38]],['gadgets','Gadgets','Machines and flashing lights',[8,23,39,40,41]],
   ['treasures','Treasures','Gold, glass and gemstones',[14,20,42,43]],['mythic','Mythic','Legends to be reckoned with',[12,16,44,45]]];
+// the showcase skins go on their collection's shelf (a new collection adds one, in GEN_ORDER), and every skin learns its shelf as S.col
+for(const S of PREMIUM)if(S.col){let C=SKIN_CATS.find(c=>c[0]===S.col);if(!C)SKIN_CATS.push(C=[S.col,...GEN_COLS[S.col],[]]);if(!C[3].includes(S.id))C[3].push(S.id);}
+SKIN_CATS.sort((a,b)=>GEN_ORDER.indexOf(a[0])-GEN_ORDER.indexOf(b[0]));for(const C of SKIN_CATS)for(const id of C[3])if(PREMIUM[id-SKIN_FREE])PREMIUM[id-SKIN_FREE].col=C[0];
 function renderShopGrid(el){ // limited seasonal skins lead in their own banner with a live countdown (and are hidden out of season unless owned); the rest sit on shelves by category, under chips that jump to each
   const byPrice=(a,b)=>a.price-b.price||a.id-b.id,seasonal=PREMIUM.filter(S=>S.season&&seasonState(S.season).open).sort(byPrice),rest=PREMIUM.filter(S=>!S.pass&&(!S.season||(!seasonState(S.season).open&&ownsSkin(S.id)))).sort(byPrice);
   let html='';if(seasonal.length){const st=seasonState(seasonal[0].season);

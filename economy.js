@@ -52,6 +52,17 @@ const SKINS = [
   { id: 43, key: 'opal', name: 'Opal', price: 900 },
   { id: 44, key: 'dragon', name: 'Dragon', price: 5000 },
   { id: 45, key: 'phoenix', name: 'Phoenix', price: 9000 },
+  // the showcase collections (GEN50 in index.html), one line each
+  { id: 46, key: 'nautilus', name: 'Nautilus', price: 2500 }, // ocean
+  { id: 47, key: 'moonjellies', name: 'Moon Jellies', price: 1200 }, // ocean
+  { id: 48, key: 'blackpearl', name: 'Black Pearl', price: 3000 }, // ocean
+  { id: 49, key: 'seaturtle', name: 'Sea Turtle', price: 1500 }, // ocean
+  { id: 50, key: 'clownfish', name: 'Clownfish', price: 900 }, // ocean
+  { id: 51, key: 'abyss', name: 'Abyss', price: 5000 }, // ocean
+  { id: 52, key: 'mantaray', name: 'Manta Ray', price: 2500 }, // ocean
+  { id: 53, key: 'pufferfish', name: 'Pufferfish', price: 1200 }, // ocean
+  { id: 54, key: 'octopus', name: 'Octopus', price: 2500 }, // ocean
+  { id: 55, key: 'seahorse', name: 'Seahorse', price: 1500 }, // ocean
 ];
 const PACKS = [
   { id: 'atp_500', atp: 500 },
