@@ -194,6 +194,27 @@ const GEN_SKINS = [
   [177, 'autumn', 'Autumn', 450],
   [178, 'peony', 'Peony', 500],
   [179, 'moss', 'Moss', 300],
+  // ocean
+  [180, 'whitepearl', 'White Pearl', 800],
+  [181, 'blackpearl', 'Black Pearl', 2500],
+  [182, 'goldenpearl', 'Golden Pearl', 1500],
+  [183, 'abalone', 'Abalone', 900],
+  [184, 'motherofpearl', 'Mother of Pearl', 600],
+  [185, 'nautilus', 'Nautilus', 1500],
+  [186, 'scallop', 'Scallop', 350],
+  [187, 'sanddollar', 'Sand Dollar', 300],
+  [188, 'starfish', 'Starfish', 350],
+  [189, 'seaurchin', 'Sea Urchin', 400],
+  [190, 'braincoral', 'Brain Coral', 400],
+  [191, 'anemone', 'Anemone', 500],
+  [192, 'moonjelly', 'Moon Jelly', 900],
+  [193, 'swimmingpool', 'Swimming Pool', 350],
+  [194, 'lagoon', 'Lagoon', 400],
+  [195, 'bubbles', 'Bubbles', 350],
+  [196, 'maelstrom', 'Maelstrom', 2500],
+  [197, 'clownfish', 'Clownfish', 400],
+  [198, 'tigercowrie', 'Tiger Cowrie', 450],
+  [199, 'seaglass', 'Sea Glass', 350],
 ];
 for (const [id, key, name, price] of GEN_SKINS) SKINS.push({ id, key, name, price });
 const PACKS = [

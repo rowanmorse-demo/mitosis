@@ -5684,6 +5684,82 @@ moss(q,u,P,R,S){const C=P.c;gfield(q,gtex(S.key,u,(x,y,o)=>{gwi(x,y,GO2);const X
   if(u>60){q.fillStyle=gc(C[2],.6);for(let i=0;i<900;i++){const a=R()*TAU,d=Math.sqrt(R())*1.1;gspark(q,Math.cos(a)*d,Math.sin(a)*d,.012);}}
   for(let i=0;i<40;i++){const a=R()*TAU,d=Math.sqrt(R())*.95,x=Math.cos(a)*d,y=Math.sin(a)*d;disc(q,x+.006,y+.008,.02,'rgba(0,0,0,.35)');disc(q,x,y,.018,rgr(q,x-.006,y-.006,.02,[0,gc(gsh(C[3],.4)),1,gc(C[3])]));}},
 });
+Object.assign(GF,{
+// A pearl: deep lustre, overtones sliding across it with the light, a soft orient near the edge. C: shade, body, light, overtone, overtone 2.
+pearl(q,u,P,R,S){const C=P.c,sd=S.id%9;gfield(q,gtex(S.key,u,(x,y,o)=>{const r2=x*x+y*y,z=Math.sqrt(Math.max(0,1-r2)),n=gfbm(x*2+sd,y*2,3),t=.5+.5*Math.sin((x*1.2-y*.8)*3.2+n*3);
+    gramp(C.slice(0,3),.2+.8*Math.pow(z,.55)+(n-.5)*.15,o);const ov=gmix(C[3],C[4],t),k=.28+.3*gstep(.4,.95,Math.sqrt(r2));for(let i=0;i<3;i++)o[i]+=(ov[i]-o[i])*k;}));
+  q.globalCompositeOperation='lighter';q.save();q.translate(-.36,-.42);q.rotate(-.7);q.scale(.3,.16);disc(q,0,0,1,rgr(q,0,0,1,[0,'rgba(255,255,255,.75)',.5,'rgba(255,255,255,.25)',1,'rgba(255,255,255,0)']));q.restore();
+  disc(q,.35,.42,.45,rgr(q,.35,.42,.45,[0,gc(C[3],.18),1,gc(C[3],0)]));q.globalCompositeOperation='source-over';},
+// Nacre swirled into colour bands with fine growth lines: abalone, mother of pearl. C: the colours round the cycle.
+nacre(q,u,P,R,S){const C=P.c,sd=S.id%13*2,n=C.length;gfield(q,gtex(S.key,u,(x,y,o)=>{gwi(x,y,GO2);const X=GO2[0]*1.3+sd,Y=GO2[1]*1.3,w=gfbm(X*.8,Y*.8,4),v=(w*2.2+gfbm(X*1.7+5,Y*1.7,3)*.8+X*.15)*(P.f||1.6),
+    f=((v%1)+1)%1,i=Math.floor(f*n),t=gstep(0,1,f*n-i);const a=C[i%n],b=C[(i+1)%n];const g=.93+.07*Math.sin(Math.hypot(X-sd-1.5,Y+1.5)*(26+gn(X*2,Y*2)*10)+w*12);for(let j=0;j<3;j++)o[j]=Math.min(255,(a[j]+(b[j]-a[j])*t)*g);}));
+  ggloss(q,.6,1);},
+// A nautilus shell sawn in half: chambers spiralling out from the heart, each walled by a pearly septum. C: wall dark, shell, pearl, chamber shade.
+nautilus(q,u,P,R){const C=P.c,b=Math.log(3)/TAU,t1=4.6*Math.PI,a=1.06/Math.exp(b*t1),cx=-.12,cy=.06,Sp=t=>a*Math.exp(b*t),pt=t=>[cx+Math.cos(t)*Sp(t),cy+Math.sin(t)*Sp(t)];
+  fillAll(q,gc(C[2]));disc(q,0,0,1.15,rgr(q,-.2,-.25,1.3,[0,gc(gsh(C[2],.3)),.7,gc(C[2]),1,gc(C[1])]));
+  const T=[];for(let t=2.2*Math.PI;t<t1-1.2*Math.PI;t+=.42*(1+.02*t))T.push(t);T.push(t1);
+  for(let k=0;k<T.length-1;k++){const t0=T[k],t2=T[k+1],p=[];for(let j=0;j<=10;j++)p.push(...pt(t0+(t2-t0)*j/10));const s0=pt(t2-TAU);const m=pt(t2-.5);p.push((p[p.length-2]+s0[0])/2+(m[0]-cx)*.05,(p[p.length-1]+s0[1])/2+(m[1]-cy)*.05);
+    for(let j=10;j>=0;j--)p.push(...pt(t2-TAU-(t2-t0)*(1-j/10)));q.beginPath();polyPath(q,p);q.closePath();
+    const c=pt((t0+t2)/2-Math.PI*.15);q.fillStyle=rgr(q,c[0],c[1],Sp(t2)*.9,[0,gc(gsh(C[2],.25)),.6,gc(C[3]),1,gc(gsh(C[3],-.25))]);q.fill();q.lineWidth=Math.max(.006,Sp(t0)*.03);q.strokeStyle=gc(C[0],.8);q.stroke();}
+  q.beginPath();for(let t=0;t<=t1;t+=.05){const p=pt(t);t?q.lineTo(p[0],p[1]):q.moveTo(p[0],p[1]);}q.lineWidth=.022;q.strokeStyle=gc(C[1]);q.stroke();q.lineWidth=.008;q.strokeStyle=gc(gsh(C[2],.4),.7);q.stroke();
+  ggloss(q,.4,1);},
+// A scallop: ribs fanning from the hinge low down, bands of colour across them, fine growth lines. C: the bands, the last darkest.
+scallop(q,u,P,R,S){const C=P.c,n=C.length,hx=0,hy=1.2,N=P.n||18;gfield(q,gtex(S.key,u,(x,y,o)=>{const dx=x-hx,dy=hy-y,a=Math.atan2(dx,dy),d=Math.hypot(dx,dy),rb=Math.cos(a*N*1.15),rib=.72+.28*Math.sign(rb)*Math.pow(Math.abs(rb),.6),
+    v=d*2.2+gn(a*4+S.id,d*2)*.8,f=((v%1)+1)%1,i=Math.floor(v)%n;gramp([C[i],C[(i+1)%n]],gstep(.6,1,f),o);const gl=.92+.08*Math.sin(d*90);for(let j=0;j<3;j++)o[j]*=rib*gl;}));ggloss(q,.4,1);},
+// A sand dollar: a pale test fine with pores, a five-petalled flower of slits, the mouth's star at the heart.
+sanddollar(q,u,P,R){const C=P.c;fillAll(q,gc(C[1]));disc(q,0,0,1.15,rgr(q,-.25,-.3,1.4,[0,gc(C[2]),.7,gc(C[1]),1,gc(C[0])]));ggrain(q,u,R,2200,gc(C[0],.35),gc(C[2],.5),.003,.007);
+  for(let i=0;i<5;i++){const a=i/5*TAU-Math.PI/2;q.save();q.rotate(a);for(const s of[-1,1]){q.beginPath();for(let j=1;j<=13;j++){const t=j/14,x=.1+t*.6,y=s*Math.sin(t*Math.PI)*.13;q.moveTo(x,y-s*.02);q.lineTo(x,y+s*.02);}q.lineWidth=.013;q.lineCap='round';q.strokeStyle=gc(C[3],.8);q.stroke();}
+    q.beginPath();q.moveTo(.1,0);q.quadraticCurveTo(.4,.2,.72,0);q.quadraticCurveTo(.4,-.2,.1,0);q.fillStyle=gc(C[0],.12);q.fill();q.restore();}
+  q.beginPath();for(let i=0;i<10;i++){const a=i/10*TAU-Math.PI/2,r=i%2?.03:.07;q.lineTo(Math.cos(a)*r,Math.sin(a)*r);}q.closePath();q.fillStyle=gc(C[3],.85);q.fill();},
+// A starfish on wet sand: five tapering arms covered in bumps, darker down the middle. C: sand, sand light, arm dark, arm, bump.
+starfish(q,u,P,R){const C=P.c;fillAll(q,gc(C[0]));disc(q,0,0,1.15,rgr(q,-.2,-.3,1.3,[0,gc(C[1]),1,gc(C[0])]));ggrain(q,u,R,900,gc(gsh(C[0],-.2),.4),gc(C[1],.6),.003,.008);
+  const arm=a=>{const o=[];for(let i=0;i<=30;i++){const t=i/30,b=a+(t-.5)*TAU/5;const r=.3+.78*Math.pow(Math.cos((t-.5)*Math.PI),6);o.push(Math.cos(b)*r,Math.sin(b)*r);}return o;};
+  q.beginPath();for(let k=0;k<5;k++){const p=arm(k/5*TAU-Math.PI/2);for(let i=0;i<p.length;i+=2)(k||i)?q.lineTo(p[i],p[i+1]):q.moveTo(p[i],p[i+1]);}q.closePath();
+  q.save();q.translate(.03,.04);q.fillStyle='rgba(0,0,0,.35)';q.fill();q.restore();q.fillStyle=rgr(q,-.1,-.12,1.1,[0,gc(gsh(C[3],.15)),.5,gc(C[3]),1,gc(C[2])]);q.fill();
+  q.save();q.clip();for(let i=0;i<(u>70?260:120);i++){const a=R()*TAU,d=Math.sqrt(R())*1.05,x=Math.cos(a)*d,y=Math.sin(a)*d,s=.018+R()*.016;disc(q,x,y,s,rgr(q,x-s*.3,y-s*.3,s,[0,gc(gsh(C[4],.4)),.6,gc(C[4]),1,gc(C[2],.6)]));}q.restore();},
+// A sea urchin from above: a forest of long spines radiating out, each with a sheen, round a small star. C: deep, spine, spine light.
+urchin(q,u,P,R){const C=P.c;fillAll(q,gc(C[0]));disc(q,0,0,1.15,rgr(q,0,0,1.15,[0,gc(gsh(C[1],-.2)),1,gc(C[0])]));q.lineCap='round';
+  const n=u>70?420:180;for(let pass=0;pass<2;pass++){for(let i=0;i<n;i++){const a=i*2.39996+R()*.05,d0=.08+R()*.15,L=.6+R()*.55,b=a+(R()-.5)*.15,x0=Math.cos(a)*d0,y0=Math.sin(a)*d0,x1=x0+Math.cos(b)*L,y1=y0+Math.sin(b)*L;
+    q.beginPath();q.moveTo(x0,y0);q.lineTo(x1,y1);if(pass){q.lineWidth=Math.max(.003,.5/u);q.strokeStyle=gc(C[2],.4+.3*Math.max(0,-Math.cos(b-GL)));}else{q.lineWidth=.022;q.strokeStyle=lgr(q,x0,y0,x1,y1,[0,gc(C[0]),.3,gc(C[1]),1,gc(gsh(C[1],.2))]);}q.stroke();}}
+  disc(q,0,0,.08,gc(C[0]));for(let i=0;i<5;i++){const a=i/5*TAU;disc(q,Math.cos(a)*.035,Math.sin(a)*.035,.015,gc(C[2],.7));}},
+// Brain coral: deep winding grooves between rounded ridges. C: groove, ridge, ridge light, polyp.
+braincoral(q,u,P,R,S){const C=P.c;gfield(q,gtex(S.key,u,(x,y,o)=>{gwi(x,y,GO2);const X=GO2[0],Y=GO2[1],v=gfbm(X*1.7+S.id,Y*1.7,4)*15+gfbm(X*4,Y*4,2)*.8,f=Math.abs((v%1+1)%1-.5)*2,
+    g=gstep(.12,.55,f),hl=gstep(.5,1,f)*.5;gramp(C.slice(0,3),g*.7+hl*.3,o);if(f<.12){const k=1-f/.12;for(let i=0;i<3;i++)o[i]+=(C[3][i]-o[i])*k*.5;}}));ggloss(q,.25,1);},
+// A sea anemone: a crown of soft tentacles round its mouth. C: deep, tentacle base, tentacle, tip, mouth.
+anemone(q,u,P,R){const C=P.c,n=u>70?140:80;fillAll(q,gc(C[0]));q.lineCap='round';
+  for(let i=0;i<n;i++){const a=i*2.39996,t=(i%7)/7,L=.7+t*.45,c=Math.cos(a),s=Math.sin(a),bend=(R()-.5)*.4,x1=c*L+(-s)*bend*.3,y1=s*L+c*bend*.3,w=.055-.02*t;
+    q.beginPath();q.moveTo(c*.18,s*.18);q.quadraticCurveTo(c*L*.6-s*bend*.2,s*L*.6+c*bend*.2,x1,y1);q.lineWidth=w;q.strokeStyle=lgr(q,0,0,x1,y1,[0,gc(C[1]),.6,gc(C[2]),1,gc(C[3])]);q.stroke();
+    disc(q,x1,y1,w*.7,rgr(q,x1-w*.2,y1-w*.2,w*.7,[0,gc(gsh(C[3],.4)),1,gc(C[3])]));}
+  disc(q,0,0,.26,rgr(q,0,0,.26,[0,gc(gsh(C[4],-.4)),.5,gc(C[4]),1,gc(C[1])]));q.beginPath();for(let i=0;i<16;i++){const a=i/16*TAU;q.moveTo(Math.cos(a)*.05,Math.sin(a)*.05);q.lineTo(Math.cos(a)*.24,Math.sin(a)*.24);}q.lineWidth=.008;q.strokeStyle=gc(gsh(C[4],.3),.6);q.stroke();disc(q,0,0,.05,gc(gsh(C[4],-.6)));},
+// A moon jelly from above: a glassy bell, four glowing rings round its middle, radial canals and a fringe of fine tentacles. C: water, water light, bell, gonads.
+jelly(q,u,P,R){const C=P.c;fillAll(q,gc(C[0]));disc(q,0,0,1.15,rgr(q,0,-.2,1.3,[0,gc(C[1]),1,gc(C[0])]));q.globalCompositeOperation='lighter';
+  disc(q,0,0,.98,rgr(q,0,0,.98,[0,gc(C[2],.18),.8,gc(C[2],.12),.95,gc(C[2],.35),1,gc(C[2],0)]));
+  q.beginPath();for(let i=0;i<32;i++){const a=i/32*TAU;q.moveTo(Math.cos(a)*.2,Math.sin(a)*.2);q.lineTo(Math.cos(a)*.95,Math.sin(a)*.95);}q.lineWidth=Math.max(.004,.6/u);q.strokeStyle=gc(C[2],.25);q.stroke();
+  for(let i=0;i<4;i++){const a=i/4*TAU+Math.PI/4,x=Math.cos(a)*.27,y=Math.sin(a)*.27;q.beginPath();q.arc(x,y,.17,a+Math.PI*.25,a+Math.PI*1.75,true);q.lineWidth=.07;q.strokeStyle=gc(C[3],.55);q.stroke();q.lineWidth=.025;q.strokeStyle=gc(gsh(C[3],.4),.6);q.stroke();}
+  q.beginPath();for(let i=0;i<220;i++){const a=i/220*TAU;q.moveTo(Math.cos(a)*.95,Math.sin(a)*.95);q.lineTo(Math.cos(a+.02)*1.12,Math.sin(a+.02)*1.12);}q.lineWidth=Math.max(.002,.4/u);q.strokeStyle=gc(C[2],.5);q.stroke();
+  q.globalCompositeOperation='source-over';},
+// Sunlight through moving water onto the floor below: a web of bright caustics over pool tiles or sand. C: floor dark, floor, floor light, light; tile grid if tl.
+caustic(q,u,P,R,S){const C=P.c,sd=S.id%11*3,tl=P.tl;gfield(q,gtex(S.key,u,(x,y,o)=>{gwi(x,y,GO2);const X=GO2[0]*1.6+sd,Y=GO2[1]*1.6,w=gfbm(X*.6,Y*.6,2)*.6,
+    c1=Math.pow(1-Math.abs(gfbm(X*1.4+w,Y*1.4-w,3)*2-1),9),c2=Math.pow(1-Math.abs(gfbm(X*2.1+3-w,Y*2.1+1,3)*2-1),9),c=Math.min(1,c1*1.1+c2*.8);
+    gramp(C.slice(0,3),.35+gfbm(X*.8+9,Y*.8,3)*.5,o);if(tl){const gx=Math.abs(((GO2[0]*5)%1+1)%1-.5),gy=Math.abs(((GO2[1]*5)%1+1)%1-.5),g=gstep(.47,.5,Math.max(gx,gy));for(let i=0;i<3;i++)o[i]*=1-g*.25;}
+    for(let i=0;i<3;i++)o[i]+=(C[3][i]-o[i])*c*.85;}));},
+// Bubbles rising through blue water, each a thin ring with its bright window. C: deep, water, water light, ring.
+bubbles(q,u,P,R){const C=P.c;fillAll(q,gc(C[0]));disc(q,0,0,1.15,rgr(q,-.1,-.6,1.6,[0,gc(C[2]),.5,gc(C[1]),1,gc(C[0])]));
+  for(let i=0;i<46;i++){const x=(R()*2-1)*1.05,y=(R()*2-1)*1.05,s=.03+Math.pow(R(),2.2)*.22;q.beginPath();q.arc(x,y,s,0,TAU);q.fillStyle=rgr(q,x,y,s,[0,gc(C[3],.02),.8,gc(C[3],.08),1,gc(C[3],.35)]);q.fill();
+    q.lineWidth=Math.max(.004,s*.06);q.strokeStyle=gc(C[3],.6);q.stroke();q.beginPath();q.arc(x,y,s*.72,Math.PI*1.1,Math.PI*1.45);q.lineWidth=s*.12;q.lineCap='round';q.strokeStyle='rgba(255,255,255,.75)';q.stroke();
+    disc(q,x+s*.4,y+s*.45,s*.12,'rgba(255,255,255,.35)');}},
+// A maelstrom: sea water wound into a spiral, white foam streaking along it, dark at the eye. C: eye, deep, water, foam.
+maelstrom(q,u,P,R,S){const C=P.c;gfield(q,gtex(S.key,u,(x,y,o)=>{const r=Math.hypot(x,y)+.01,a=Math.atan2(y,x),t=a+Math.log(r)*2.6,f=gfbm(Math.cos(t)*2+S.id,Math.sin(t)*2+r*1.2,4),
+    st=Math.pow(1-Math.abs(gfbm(Math.cos(t)*3.5+7,Math.sin(t)*3.5+r*3,3)*2-1),6);gramp(C.slice(0,3),gstep(0,.7,r)*.8+f*.3,o);for(let i=0;i<3;i++)o[i]+=(C[3][i]-o[i])*st*gstep(.1,.5,r)*.85;}));},
+// A clownfish's coat: orange, with three white bands edged in black that curve round the body. C: orange dark, orange, white, black.
+clown(q,u,P,R){const C=P.c;fillAll(q,gc(C[1]));disc(q,0,0,1.15,rgr(q,-.2,-.3,1.3,[0,gc(gsh(C[1],.2)),.7,gc(C[1]),1,gc(C[0])]));
+  for(const x0 of[-.78,0,.78]){const band=(w)=>{const p=[];for(let i=0;i<=20;i++){const y=-1.7+i*.17;p.push(x0-w+Math.sin(y*1.4+x0)*.12,y);}for(let i=20;i>=0;i--){const y=-1.7+i*.17;p.push(x0+w+Math.sin(y*1.4+x0)*.12,y);}q.beginPath();gpath(q,p,true,.05);};
+    band(.2);q.fillStyle=gc(C[3]);q.fill();band(.15);q.fillStyle=lgr(q,x0-.15,0,x0+.15,0,[0,gc(gsh(C[2],-.1)),.5,gc(C[2]),1,gc(gsh(C[2],-.12))]);q.fill();}
+  ggrain(q,u,R,500,'rgba(255,255,255,.08)','rgba(0,0,0,.06)',.006,.014);ggloss(q,.5);},
+// A tiger cowrie: polished cream shell crowded with dark spots, a pale line down its back. C: cream, tan, spot, spot dark.
+cowrie(q,u,P,R,S){const C=P.c;gfield(q,gtex(S.key,u,(x,y,o)=>{gwi(x,y,GO2);const X=GO2[0]*3+S.id,Y=GO2[1]*3,n=gfbm(X*.6,Y*.6,3),v=gfbm(X*1.8,Y*1.8,3),sp=gstep(.58,.62,v+gfbm(X*4,Y*4,2)*.15),
+    ln=gstep(.06,0,Math.abs(x*.5+y*.86+.05+(gn(y*4,x)-.5)*.05));gramp([C[0],C[1]],gstep(.3,.8,n),o);const sc=gmix(C[2],C[3],gstep(.6,.75,v));for(let i=0;i<3;i++)o[i]+=(sc[i]-o[i])*sp*(1-ln);for(let i=0;i<3;i++)o[i]+=(255-o[i])*ln*.35;}));ggloss(q,1);},
+});
 // In play a generated skin is its sprite, still (so its light stays upper left) unless it spins; fx adds one cheap live touch:
 // g a glint hopping between facets, s a sheen sweeping across, e eyes that look where the cell goes
 function gdraw(g,c,r,k){const P=this.p;skinArt(g,this,c,r,P.spin?T*P.spin+c.wob:0);const fx=P.fx;if(!fx||skinPx(g,r)<14)return;
@@ -5842,6 +5918,28 @@ garden:[
 [177,'autumn','Autumn',450,'leaves','2a1a0e c83a14 e8781a f0b020 8a2a10',{k:'autumn',m:2},'Maple and oak leaves fallen in reds and golds.'],
 [178,'peony','Peony',500,'rosette','4a0a24 d0508a f49ac0 ffe0ec',{k:'round',n:110,sz:.95},'A blowsy pink peony, ruffled to the middle.'],
 [179,'moss','Moss',300,'moss','0a2a08 3a7a18 8ac83a c8902a',{},'A deep cushion of moss with spore stalks.'],
+],
+ocean:[
+[180,'whitepearl','White Pearl',800,'pearl','a8a49c d8d4cc fbf8f2 f6d8e0 d8e8f6',{m:2},'Deep lustre, rose and silver overtones.'],
+[181,'blackpearl','Black Pearl',2500,'pearl','0a0c10 2a2e36 6a707c 3a7a5a 7a4a8a',{fx:'s'},'A Tahitian pearl: peacock green and aubergine.'],
+[182,'goldenpearl','Golden Pearl',1500,'pearl','6a4a14 c8a050 f8e0a0 f6c8a0 f8f0c0',{m:2},'A South Sea pearl the colour of honey.'],
+[183,'abalone','Abalone',900,'nacre','163a6a 1a6a8c 2a9c90 5ac0a0 2a8a9a 3a5aa0 6a4a98',{f:.75},'Swirling blue, green and violet shell.'],
+[184,'motherofpearl','Mother of Pearl',600,'nacre','e8eef4 d8e8f0 f0e0ea e8f4e8 f4ecd8',{f:1.4},'Soft pastel nacre, shimmering.'],
+[185,'nautilus','Nautilus',1500,'nautilus','6a3a1a c89a6a fff4e6 e8c8a0',{m:3},'A nautilus cut in half: chamber after chamber.'],
+[186,'scallop','Scallop',350,'scallop','f6c8a0 e8885a f0a070 fbe0c8 c8603a',{n:18},'A ribbed scallop, banded coral and cream.'],
+[187,'sanddollar','Sand Dollar',300,'sanddollar','b8a888 e8dcc4 faf4e8 8a7a5a',{m:1},'A bleached sand dollar and its five-petalled flower.'],
+[188,'starfish','Starfish',350,'starfish','c8a878 e8d0a0 a8301a e8602a ffa060',{m:3},'An orange starfish on wet sand.'],
+[189,'seaurchin','Sea Urchin',400,'urchin','120618 4a1a5a b88ad8',{m:1},'A purple pincushion of spines.'],
+[190,'braincoral','Brain Coral',400,'braincoral','5a4020 c8a060 f0d8a0 3a5a2a',{},'Winding ridges, like a brain.'],
+[191,'anemone','Anemone',500,'anemone','0a1a2a c84a8a f08ab8 fff0a0 6a1a4a',{m:2},'A crown of pink tentacles with golden tips.'],
+[192,'moonjelly','Moon Jelly',900,'jelly','020a1a 0a2a5a 9ad0ff e070c0',{m:2},'A glassy bell with four glowing rings.'],
+[193,'swimmingpool','Swimming Pool',350,'caustic','1a6a9a 4ab0d8 8ad8f0 f0fcff',{tl:1},'Sunlight dancing on the tiles.'],
+[194,'lagoon','Lagoon',400,'caustic','4a9a9a 7ac8c0 c8e8d8 f6fffc',{},'Shallow turquoise water over white sand.'],
+[195,'bubbles','Bubbles',350,'bubbles','021a3a 0a4a8a 3a9ad8 d8f4ff',{},'Bubbles rising through blue water.'],
+[196,'maelstrom','Maelstrom',2500,'maelstrom','020a14 0a2a4a 2a6a8a f0faff',{spin:.4,m:2},'A whirlpool that turns as you swim.'],
+[197,'clownfish','Clownfish',400,'clown','c84a04 f87a1a ffffff 101010',{m:1},'Orange and white, edged in black.'],
+[198,'tigercowrie','Tiger Cowrie',450,'cowrie','f6ecdc d8c4a0 6a3a1a 2a1408',{m:1},'A glossy shell crowded with dark spots.'],
+[199,'seaglass','Sea Glass',350,'stone','2a6a4a 5aa080 9ad0b0 d8f0e0',{k:'cloud',s:1.1},'Frosted green glass, worn smooth by the sea.'],
 ],
 };
 for(const col in GEN)for(const row of GEN[col]){const S=gskin(row,col);S.tok=STAINS.map(()=>'tok'+S.key);PREMIUM.push(S);}
