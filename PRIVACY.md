@@ -39,7 +39,7 @@ The Mitosis server stores wallets, accounts, run results, purchase identifiers a
 
 - **Delete account** in the game (Profile › Account › Delete account, or Settings › Account & data) permanently deletes your account from the server straight away: rating, XP and level, ATP, skins, battle pass progress, run history, display name, and any Sign in with Apple or Google link. Records of App Store and Google Play purchases are kept only as anonymous transaction ids, so a purchase cannot be credited twice; they are no longer linked to you. The game then clears its data on your device and starts you fresh.
 - If you signed in with Apple, you can also stop using your Apple Account with the game in iPhone Settings › your name › Sign in with Apple.
-- **Sign out** in the game's Profile tab detaches your device from your account and gives the device a fresh wallet.
+- **Sign out** in the game's Profile (tap your name on the home screen) detaches your device from your account and gives the device a fresh wallet.
 - **Deleting the app** or clearing the website's site data removes the device identity from your device; a new one is created next time you play.
 - If you can no longer open the game, you can ask for deletion by opening an issue at https://github.com/rowanmorse-demo/mitosis/issues or contacting the developer through the App Store listing. Those requests are completed within 30 days.
 
