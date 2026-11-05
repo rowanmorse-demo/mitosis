@@ -5760,6 +5760,71 @@ clown(q,u,P,R){const C=P.c;fillAll(q,gc(C[1]));disc(q,0,0,1.15,rgr(q,-.2,-.3,1.3
 cowrie(q,u,P,R,S){const C=P.c;gfield(q,gtex(S.key,u,(x,y,o)=>{gwi(x,y,GO2);const X=GO2[0]*3+S.id,Y=GO2[1]*3,n=gfbm(X*.6,Y*.6,3),v=gfbm(X*1.8,Y*1.8,3),sp=gstep(.58,.62,v+gfbm(X*4,Y*4,2)*.15),
     ln=gstep(.06,0,Math.abs(x*.5+y*.86+.05+(gn(y*4,x)-.5)*.05));gramp([C[0],C[1]],gstep(.3,.8,n),o);const sc=gmix(C[2],C[3],gstep(.6,.75,v));for(let i=0;i<3;i++)o[i]+=(sc[i]-o[i])*sp*(1-ln);for(let i=0;i<3;i++)o[i]+=(255-o[i])*ln*.35;}));ggloss(q,1);},
 });
+// cellular noise: distance to the nearest and second-nearest of a jittered grid of points, and the nearest one's id and offset
+const GV={f1:0,f2:0,id:0,dx:0,dy:0};
+function gvor(x,y,j=.85){const xi=Math.floor(x),yi=Math.floor(y);let f1=9,f2=9;for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++){const cx=xi+a,cy=yi+b,h=hash(cx*127.1+cy*311.7),px=cx+.5+(h-.5)*j,py=cy+.5+(hash(cx*269.5+cy*183.3)-.5)*j,d=Math.hypot(x-px,y-py);
+  if(d<f1){f2=f1;f1=d;GV.id=h;GV.dx=x-px;GV.dy=y-py;}else if(d<f2)f2=d;}GV.f1=f1;GV.f2=f2;return GV;}
+Object.assign(GF,{
+// Stripes on a coat: tapering bands that fork and break, wrapped round the ball. C: ground dark, ground, ground light, stripe; belly pale low down if bl.
+stripes(q,u,P,R,S){const C=P.c,f=P.f||5,sd=S.id%17*2.3;gfield(q,gtex(S.key,u,(x,y,o)=>{gwi(x,y,GO2);const X=GO2[0],Y=GO2[1],w=gfbm(X*1.3+sd,Y*1.3,4),
+    v=Math.sin((X*.95+Y*.3)*f+w*(P.w||4)+Math.sin(Y*2+sd)*.6),m=gfbm(X*2.6+9,Y*2.6+sd,3),th=(P.th??.3)+(m-.5)*(P.br??1.1),st=gstep(th,th+.07,v);
+    gramp(C.slice(0,3),.35+gfbm(X*2+4,Y*2,3)*.5+(P.bl?gstep(.2,.9,Y)*.5:0),o);const fur=.9+.1*gn(X*60+Y*8,Y*60);for(let i=0;i<3;i++)o[i]=(o[i]+(C[3][i]-o[i])*st)*fur;}));
+  if(u>60){q.lineCap='round';q.lineWidth=Math.max(.003,.5/u);q.strokeStyle=gc(C[2],.18);q.beginPath();for(let i=0;i<500;i++){const x=R()*2.2-1.1,y=R()*2.2-1.1;q.moveTo(x,y);q.lineTo(x+.03,y+.012);}q.stroke();}},
+// Spots and patches from cellular noise. k: 'giraffe' (patches split by pale lines), 'cow' (big black blots), 'dal' (dalmatian), 'cheetah' (small solid
+// spots), 'snow' (open rosettes), 'frog' (a glossy frog's spots). C: ground dark, ground, ground light, spot, spot heart.
+spots(q,u,P,R,S){const C=P.c,k=P.k,sc=P.s||4,sd=S.id%23*3.1;gfield(q,gtex(S.key,u,(x,y,o)=>{gwi(x,y,GO2);const X=GO2[0]*sc+sd,Y=GO2[1]*sc,wx=X+(gfbm(X*.5,Y*.5,3)-.5)*1.4,wy=Y+(gfbm(X*.5+7,Y*.5,3)-.5)*1.4;
+    gramp(C.slice(0,3),.3+gfbm(X*.4+3,Y*.4,3)*.55,o);let m=0,hc=0;
+    if(k==='giraffe'){const v=gvor(wx,wy,.9),e=v.f2-v.f1;m=gstep(.05,.12,e);hc=gstep(.12,.5,e)*.35;}
+    else if(k==='cow'){m=gstep(.5,.53,gfbm(X*.45,Y*.45,4)+.05*gn(X*3,Y*3));}
+    else{const v=gvor(wx*(k==='cheetah'?1.6:1),wy*(k==='cheetah'?1.6:1),.95),r=(k==='dal'?.22:k==='cheetah'?.2:k==='frog'?.28:.36)*(.6+.8*v.id)+(gfbm(X*3,Y*3,2)-.5)*.12;
+      if(k==='snow'){const ring=gstep(r-.14,r-.08,v.f1)*gstep(r+.03,r-.03,v.f1)*gstep(.25,.45,gn(Math.atan2(v.dy,v.dx)*1.6+v.id*20,v.id*9));m=ring;hc=gstep(r-.1,r-.2,v.f1)*.25;}
+      else m=gstep(r+.02,r-.02,v.f1)*(v.id>(k==='dal'?.25:0)?1:0);}
+    for(let i=0;i<3;i++)o[i]+=(C[4][i]-o[i])*hc;for(let i=0;i<3;i++)o[i]+=(C[3][i]-o[i])*m;}));
+  if(k==='frog'){ggloss(q,.9);q.fillStyle='rgba(255,255,255,.6)';for(let i=0;i<14;i++){const a=R()*TAU,d=Math.sqrt(R())*.9;q.beginPath();q.ellipse(Math.cos(a)*d,Math.sin(a)*d,.018,.01,a,0,TAU);q.fill();}}
+  else if(u>60){q.lineWidth=Math.max(.003,.5/u);q.strokeStyle=gc(C[2],.15);q.beginPath();for(let i=0;i<500;i++){const x=R()*2.2-1.1,y=R()*2.2-1.1;q.moveTo(x,y);q.lineTo(x+.025,y+.01);}q.stroke();}},
+// Overlapping scales in rows, each domed and lit, coloured by a pattern beneath. k: 'fish' (round), 'snake' (python blotches), 'croc' (square scutes),
+// 'band' (a coral snake's rings). C: scale dark, scale, scale light, pattern, pattern 2.
+scales(q,u,P,R,S){const C=P.c,k=P.k,n=P.n||9,sd=S.id%19*2;gfield(q,gtex(S.key,u,(x,y,o)=>{gwi(x,y,GO2);const X=GO2[0]*n,Y=GO2[1]*n*(k==='croc'?.8:1.15);let row=Math.floor(Y),fy=Y-row,fx=X+(row%2?.5:0),col=Math.floor(fx),cx=fx-col-.5,cy=fy-.5;
+    if(k!=='croc'){const d=Math.hypot(cx,cy*1.25+.1);if(d>.62){row++;fx=X+(row%2?.5:0);col=Math.floor(fx);cx=fx-col-.5;cy=Y-row-.5;}}
+    const d=k==='croc'?Math.max(Math.abs(cx),Math.abs(cy)):Math.hypot(cx,cy*1.25+.1),lit=.55+.45*(-(cx*GLX+cy*GLY)*1.6)*gstep(.6,.1,d),edge=gstep(.42,.6,d),PX=(col+.5)/n,PY=(row+.5)/n;
+    let pt=0,pt2=0;if(k==='snake'){const b=gfbm(PX*2+sd,PY*2,3);pt=gstep(.52,.58,b);pt2=gstep(.62,.68,b);}else if(k==='band'){const v=((GO2[1]*1.6+GO2[0]*.3+sd)%1+1)%1;pt=v<.42?1:0;pt2=v>.42&&v<.52||v>.9?1:0;}else if(k==='fish'){pt=gstep(.4,.7,gfbm(PX*1.5+sd,PY*1.5,2))*.6;}
+    gramp(C.slice(0,3),Math.max(0,Math.min(1,lit-edge*.4)),o);const pc=pt2?C[4]:C[3],pk=Math.max(pt,pt2);for(let i=0;i<3;i++)o[i]=(o[i]+(pc[i]*(.6+.6*lit)-o[i])*pk)*(1-edge*.45);}));
+  ggloss(q,k==='fish'?.8:.45,1);},
+// Feathers laid in rows like tiles, each with its shaft and barbs. k: 'peacock' (an eye at the heart), 'owl' (barred), 'flamingo', 'macaw' (bands
+// of colour). C: dark, the feather colours.
+feathers(q,u,P,R,S){const C=P.c,k=P.k,n=P.n||7,hi=u>70;fillAll(q,gc(C[0]));const rows=[];for(let j=-n-1;j<=n+1;j++)rows.push(j);
+  for(const j of rows)for(let i=-n-1;i<=n+1;i++){const x=(i+(j%2?.5:0))/n*1.15,y=j/n*1.05,d=Math.hypot(x,y);if(d>1.4)continue;let cl;
+    if(k==='macaw'){const t=(y+1)/2;cl=t<.4?C[1]:t<.62?C[2]:C[3];}else if(k==='peacock'){cl=d<.32?C[4]:d<.48?C[3]:d<.62?C[2]:C[1];}else cl=C[1+((Math.floor(d*3)+(i&1))%Math.max(1,C.length-2))];
+    const L=1.25/n,W=L*.55,a=Math.PI/2+x*.25;q.save();q.translate(x,y-L*.4);q.rotate(a-Math.PI/2);q.beginPath();q.moveTo(0,-L*.2);q.bezierCurveTo(W,-L*.1,W*.9,L*.7,0,L);q.bezierCurveTo(-W*.9,L*.7,-W,-L*.1,0,-L*.2);
+    q.fillStyle=lgr(q,0,-L*.2,0,L,[0,gc(gsh(cl,-.35)),.5,gc(cl),1,gc(gsh(cl,.25))]);q.fill();
+    if(k==='owl'){q.save();q.clip();q.beginPath();for(let b=0;b<3;b++){q.rect(-W,L*(.15+b*.28),2*W,L*.09);}q.fillStyle=gc(C[0],.55);q.fill();q.restore();}
+    if(hi){q.beginPath();q.moveTo(0,-L*.15);q.lineTo(0,L*.95);q.lineWidth=Math.max(.003,L*.04);q.strokeStyle=gc(gsh(cl,.45),.6);q.stroke();q.beginPath();for(let b=1;b<7;b++){const t=b/7*L;q.moveTo(0,t);q.lineTo(W*.75,t+L*.12);q.moveTo(0,t);q.lineTo(-W*.75,t+L*.12);}q.lineWidth=Math.max(.002,.4/u);q.strokeStyle=gc(gsh(cl,-.3),.35);q.stroke();}
+    q.restore();}
+  if(k==='peacock'){disc(q,0,0,.3,rgr(q,0,0,.3,[0,gc(C[5]),.5,gc(C[5]),.6,gc(C[4]),1,gc(C[4],0)]));q.save();q.scale(1,1.25);disc(q,0,-.02,.13,rgr(q,-.03,-.05,.15,[0,gc(gsh(C[6],.3)),1,gc(C[6])]));q.restore();}
+  ggloss(q,.35,1);},
+// A ladybird from above: red wing cases split down the middle, black spots, the black shield with its white marks at the top. C: red dark, red, red light, black, white.
+ladybug(q,u,P,R){const C=P.c;fillAll(q,gc(C[3]));disc(q,0,0,1.15,rgr(q,-.25,-.15,1.3,[0,gc(C[2]),.5,gc(C[1]),1,gc(C[0])]));
+  for(const [x,y,s] of[[-.42,-.05,.17],[.42,-.05,.17],[-.48,.45,.14],[.48,.45,.14],[-.22,.68,.11],[.22,.68,.11],[0,-.38,.15]])disc(q,x,y,s,rgr(q,x-s*.2,y-s*.2,s,[0,gc(gsh(C[3],.15)),1,gc(C[3])]));
+  q.beginPath();q.moveTo(0,-.6);q.lineTo(0,1.2);q.lineWidth=.03;q.strokeStyle=gc(C[3]);q.stroke();
+  q.beginPath();q.ellipse(0,-.92,.72,.42,0,0,TAU);q.fillStyle=gc(C[3]);q.fill();for(const s of[-1,1]){q.beginPath();q.ellipse(s*.34,-.78,.12,.08,s*.4,0,TAU);q.fillStyle=gc(C[4]);q.fill();}
+  ggloss(q,.9);},
+// A bumblebee's fuzz: bands of gold and black, a soft pile of hair over all. C: black, black light, gold, gold light.
+bee(q,u,P,R,S){const C=P.c;gfield(q,gtex(S.key,u,(x,y,o)=>{gwi(x,y,GO2);const v=GO2[1]*1.7+GO2[0]*.25+gfbm(GO2[0]*2+S.id,GO2[1]*2,2)*.25,b=Math.floor(((v%2)+2)%2*2)%2,f=gn(GO2[0]*70,GO2[1]*70)*.5+gn(GO2[0]*30+5,GO2[1]*30)*.5;
+    gramp(b?[C[2],C[3]]:[C[0],C[1]],f,o);}));
+  if(u>50){q.lineCap='round';for(const [cl,n] of[[gc(C[3],.35),900],[gc(C[0],.35),500]]){q.beginPath();for(let i=0;i<n*Math.min(1,u/200);i++){const a=R()*TAU,d=Math.sqrt(R())*1.12,x=Math.cos(a)*d,y=Math.sin(a)*d,b=a+(R()-.5);q.moveTo(x,y);q.lineTo(x+Math.cos(b)*.035,y+Math.sin(b)*.035);}q.lineWidth=Math.max(.003,.6/u);q.strokeStyle=cl;q.stroke();}}},
+// A monarch's wing: orange cells between black veins, a black border dotted white. C: black, orange dark, orange, orange light, white.
+monarch(q,u,P,R){const C=P.c,bx=-1.2,by=1.1;fillAll(q,gc(C[0]));const V=[];for(let i=0;i<9;i++){const a=-1.45+i*.19,p=[];for(let s=0;s<=16;s++){const d=s/16*2.6,b=a+.08*Math.sin(d*1.5)*(i%2?1:-1);p.push(bx+Math.cos(b)*d,by+Math.sin(b)*d);}V.push(p);}
+  disc(q,0,0,1.15,rgr(q,bx,by,2.4,[0,gc(C[1]),.4,gc(C[2]),.7,gc(C[3]),.82,gc(C[2]),.86,gc(C[0])]));
+  q.lineCap=q.lineJoin='round';q.beginPath();for(const p of V){q.moveTo(p[0],p[1]);for(let i=2;i<p.length;i+=2)q.lineTo(p[i],p[i+1]);}for(let i=0;i<V.length-1;i++){const s=10;q.moveTo(V[i][s*2],V[i][s*2+1]);q.lineTo(V[i+1][s*2-2],V[i+1][s*2-1]);}
+  q.lineWidth=.05;q.strokeStyle=gc(C[0]);q.stroke();
+  for(let i=0;i<40;i++){const a=-1.5+i/40*1.75,d=2.15+(i%2)*.12,x=bx+Math.cos(a)*d,y=by+Math.sin(a)*d;if(Math.hypot(x,y)>1.1)continue;disc(q,x,y,.03+(i%2)*.01,gc(C[4]));}ggrain(q,u,R,400,'rgba(255,255,255,.07)',null,.003,.006);},
+// A tortoise's shell from above: hexagonal scutes, each with its growth rings and a pale heart. C: seam, scute dark, scute, heart.
+tortoise(q,u,P,R,S){const C=P.c;gfield(q,gtex(S.key,u,(x,y,o)=>{gwi(x,y,GO2);const v=gvor(GO2[0]*2.2+S.id*.3,GO2[1]*2.2,.5),e=v.f2-v.f1,ring=.5+.5*Math.sin(e*45),hc=gstep(.3,.6,e);
+    gramp(C.slice(1,4),Math.min(1,.25+ring*.2+hc*.7),o);const sm=gstep(.06,0,e);for(let i=0;i<3;i++)o[i]+=(C[0][i]-o[i])*sm;}));ggloss(q,.55,1);},
+// A chameleon's skin: tiny domed bumps, its colours shifting across the body. C: the colour run, bump dark.
+chameleon(q,u,P,R,S){const C=P.c,n=C.length-1;gfield(q,gtex(S.key,u,(x,y,o)=>{gwi(x,y,GO2);const v=gvor(GO2[0]*16,GO2[1]*16,.8),t=gstep(-1,1,GO2[0]*.7-GO2[1]*.5+(gfbm(GO2[0]*1.5+S.id,GO2[1]*1.5,3)-.5)*1.2),
+    lit=.65+.35*(-(v.dx*GLX+v.dy*GLY))*2,ed=gstep(.3,.5,v.f1);gramp(C.slice(0,n),t,o);const st=gstep(.55,.6,gfbm(GO2[0]*.9+20,GO2[1]*.9,2))*.35;for(let i=0;i<3;i++)o[i]=(o[i]+(C[n][i]-o[i])*Math.max(ed*.5,st))*lit;}));ggloss(q,.5,1);},
+});
 // In play a generated skin is its sprite, still (so its light stays upper left) unless it spins; fx adds one cheap live touch:
 // g a glint hopping between facets, s a sheen sweeping across, e eyes that look where the cell goes
 function gdraw(g,c,r,k){const P=this.p;skinArt(g,this,c,r,P.spin?T*P.spin+c.wob:0);const fx=P.fx;if(!fx||skinPx(g,r)<14)return;
@@ -5940,6 +6005,31 @@ ocean:[
 [197,'clownfish','Clownfish',400,'clown','c84a04 f87a1a ffffff 101010',{m:1},'Orange and white, edged in black.'],
 [198,'tigercowrie','Tiger Cowrie',450,'cowrie','f6ecdc d8c4a0 6a3a1a 2a1408',{m:1},'A glossy shell crowded with dark spots.'],
 [199,'seaglass','Sea Glass',350,'stone','2a6a4a 5aa080 9ad0b0 d8f0e0',{k:'cloud',s:1.1},'Frosted green glass, worn smooth by the sea.'],
+],
+wild:[
+[200,'bengaltiger','Bengal Tiger',600,'stripes','b84a08 e8801a f6c890 140a04',{bl:1,f:12,m:1,th:.42,br:1.4},'Fiery orange, black stripes, a pale belly.'],
+[201,'whitetiger','White Tiger',1200,'stripes','c4c0ba eae8e2 fffdf8 2a2018',{f:13,th:.5,br:1.5,bl:1},'The rare white tiger, striped in charcoal.'],
+[202,'zebra','Zebra',450,'stripes','d8d8d8 f6f6f4 ffffff 0e0e10',{f:15,th:.05,br:.5,w:3},'No two zebras share a coat.'],
+[203,'giraffe','Giraffe',450,'spots','e8d8b0 f2e6c8 fff6e0 a8601e 7a4010',{k:'giraffe',s:3},'Chestnut patches netted in cream.'],
+[204,'cow','Cow',300,'spots','d8d8d4 f4f4f2 ffffff 141416 141416',{k:'cow',s:3.2},'Black and white, and proud of it.'],
+[205,'dalmatian','Dalmatian',400,'spots','d8d8d4 f4f4f2 ffffff 141416 141416',{k:'dal',s:5},'White fur, black spots, all different.'],
+[206,'cheetah','Cheetah',600,'spots','b8802a e8b860 f6dca0 1a120a 1a120a',{k:'cheetah',s:5},'Golden fur scattered with solid spots.'],
+[207,'snowleopard','Snow Leopard',900,'spots','a8a8a8 d8d8d4 f4f4f2 2a2a2a 8a8a84',{k:'snow',s:3.5},'Smoky white fur and open rosettes.'],
+[208,'python','Python',500,'scales','3a3020 8a7a50 c8b888 4a2a10 e8d8a0',{k:'snake',n:10},'Scales patterned in brown and gold.'],
+[209,'coralsnake','Coral Snake',450,'scales','1a1210 2a2018 4a3a2a d81e1e f2d020',{k:'band',n:11},'Red, yellow and black rings.'],
+[210,'crocodile','Crocodile',600,'scales','101a08 3e5022 7e9248 2a3418 8a9a5a',{k:'croc',n:6},'Armoured scutes, olive and grim.'],
+[211,'goldfish','Goldfish',400,'scales','a8400a f08a1a ffd060 fff0c0 ffffff',{k:'fish',n:9},'Shining orange scales.'],
+[212,'peacock','Peacock',1500,'feathers','0a1a10 2a8a5a 3aa86a c8a83a 2a8a6a 1a6aa8 0a1a5a',{k:'peacock',n:7},'A peacock\'s eye in a cascade of green feathers.'],
+[213,'owl','Owl',450,'feathers','2a1a0e 8a6a4a b08a60 d8c0a0',{k:'owl',n:8},'Soft barred feathers, brown and cream.'],
+[214,'flamingo','Flamingo',450,'feathers','6a1a2a f07a9a f8a0b8 ffc8d6',{k:'flamingo',n:8},'Feathers pink as a flamingo.'],
+[215,'macaw','Macaw',600,'feathers','1a0a0a d81e1e f2c81a 1a6ad8',{k:'macaw',n:8},'Scarlet, gold and blue feathers.'],
+[216,'ladybird','Ladybird',400,'ladybug','8a0a0a d81e1e ff5a4a 0e0e10 ffffff',{m:1},'Red wing cases and seven black spots.'],
+[217,'bumblebee','Bumblebee',400,'bee','0e0c0a 2a2620 e8a810 ffd860',{m:2},'Fuzzy gold and black.'],
+[218,'monarch','Monarch',700,'monarch','0e0a08 c8500a f08a1a ffb040 ffffff',{m:2},'Orange wings veined in black, edged with white dots.'],
+[219,'tortoise','Tortoise',450,'tortoise','1a120a 4a2a10 8a5a20 e8c070',{},'A shell of scutes, ring inside ring.'],
+[220,'bluefrog','Blue Poison Frog',600,'spots','0a3a8a 1a6ad8 6ab0ff 0a0a14 0a0a14',{k:'frog',s:3},'Electric blue with black spots. Do not lick.'],
+[221,'strawberryfrog','Strawberry Frog',600,'spots','a00a0a e01e1e ff6a4a 1a1a40 1a1a40',{k:'frog',s:5},'Strawberry red, flecked with blue-black.'],
+[222,'chameleon','Chameleon',900,'chameleon','1a8a3a 3ac06a a8e04a f0c83a 2aa8a8 0a2a10',{m:1},'Bumpy skin shifting green to gold.'],
 ],
 };
 for(const col in GEN)for(const row of GEN[col]){const S=gskin(row,col);S.tok=STAINS.map(()=>'tok'+S.key);PREMIUM.push(S);}
