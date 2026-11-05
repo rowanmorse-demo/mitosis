@@ -5548,6 +5548,67 @@ checker(q,u,P,R){const C=P.c,n=P.n||8,s=3.4/n;fillAll(q,gc(C[1]));q.beginPath();
     const p=[...w(x,y),...w(x+s,y),...w(x+s,y+s),...w(x,y+s)];gpath(q,p,true,.06);}q.fillStyle=gc(C[0]);q.fill();
   gfield(q,gtex('chq_shade',u,(x,y,o)=>{gwi(x,y,GO2);const v=Math.sin(GO2[0]*2.2+1.2);o[0]=o[1]=o[2]=v>0?255:0;o[3]=Math.abs(v)*40;}));ggloss(q,.3,1);},
 });
+// a seed: a glossy teardrop pointing along a, with a catch light
+function gseed(q,x,y,a,L,w,c,hl=.5){q.save();q.translate(x,y);q.rotate(a);q.beginPath();q.moveTo(L,0);q.bezierCurveTo(L*.5,w*1.1,-L*.9,w*1.1,-L,0);q.bezierCurveTo(-L*.9,-w*1.1,L*.5,-w*1.1,L,0);q.fillStyle=c;q.fill();
+  if(hl){q.beginPath();q.ellipse(-L*.25,-w*.35,L*.35,w*.25,0,0,TAU);q.fillStyle=`rgba(255,255,255,${hl*.6})`;q.fill();}q.restore();}
+Object.assign(GF,{
+// A fruit cut across. C: skin dark, skin, flesh at the rind, flesh at the heart, core, seed. rw rind width; k picks the middle:
+// kiwi, pitaya, papaya, melon, tomato, cuke, apple, avo, coco, pome, fig, passion, banana
+slice(q,u,P,R){const C=P.c,k=P.k,hi=u>80,rw=P.rw??.07,fr=1-rw,O=[0,0,0];fillAll(q,gc(C[0]));
+  disc(q,0,0,1.02,rgr(q,-.2,-.25,1.25,[0,gc(gsh(C[1],.15)),.7,gc(C[1]),1,gc(C[0])]));
+  if(k==='pitaya'){for(let i=0;i<14;i++){const a=i/14*TAU+R()*.2;q.save();q.rotate(a);q.beginPath();q.moveTo(.82,-.1);q.quadraticCurveTo(1.02,-.02,1.14,.06);q.quadraticCurveTo(.98,.08,.82,.1);q.fillStyle=lgr(q,.82,0,1.14,0,[0,gc(C[1]),1,'#7ac040']);q.fill();q.restore();}} // the bracts' green tips
+  if(k==='coco'&&hi){q.beginPath();for(let i=0;i<500;i++){const a=R()*TAU,d=fr+.02+R()*.12,b=a+(R()-.5)*1.6;q.moveTo(Math.cos(a)*d,Math.sin(a)*d);q.lineTo(Math.cos(a)*d+Math.cos(b)*.05,Math.sin(a)*d+Math.sin(b)*.05);}q.lineWidth=Math.max(.004,.7/u);q.strokeStyle=gc(gsh(C[1],.3),.5);q.stroke();} // husk fibres
+  if(k==='melon'&&hi){q.beginPath();for(let i=0;i<120;i++){const a=R()*TAU;q.moveTo(Math.cos(a)*fr,Math.sin(a)*fr);q.arc(0,0,fr+.03+R()*.05,a,a+.1+R()*.2);}q.lineWidth=Math.max(.005,.8/u);q.strokeStyle='rgba(230,220,190,.6)';q.stroke();} // the net
+  disc(q,0,0,fr,rgr(q,0,0,fr,[0,gc(C[3]),.55,gc(gmix(C[3],C[2],.5)),.94,gc(C[2]),1,gc(gsh(C[2],-.2))]));
+  if(hi&&!['pome','coco','avo'].includes(k)){q.beginPath();for(let i=0;i<180;i++){const a=R()*TAU,d0=.15+R()*.3,d1=d0+.15+R()*.4;q.moveTo(Math.cos(a)*d0,Math.sin(a)*d0);q.lineTo(Math.cos(a)*Math.min(fr,d1),Math.sin(a)*Math.min(fr,d1));}q.lineWidth=Math.max(.004,.7/u);q.strokeStyle=gc(gsh(C[3],.35),.22);q.stroke();} // fibres running out
+  const sd=gc(C[5]),core=C[4];
+  if(k==='kiwi'){q.save();q.scale(1,.8);disc(q,0,0,.24,rgr(q,0,0,.24,[0,gc(gsh(core,.2)),1,gc(core)]));q.restore();q.beginPath();for(let i=0;i<34;i++){const a=i/34*TAU;q.moveTo(Math.cos(a)*.25,Math.sin(a)*.2);q.lineTo(Math.cos(a)*.55,Math.sin(a)*.5);}q.lineWidth=.012;q.strokeStyle=gc(gsh(C[3],.4),.5);q.stroke();
+    for(let i=0;i<(hi?80:40);i++){const a=R()*TAU,d=.33+R()*.13;gseed(q,Math.cos(a)*d,Math.sin(a)*d*.88,a,.032,.014,sd,.4);}}
+  else if(k==='pitaya'){for(let i=0;i<(hi?220:90);i++){const a=R()*TAU,d=Math.sqrt(R())*.86;gseed(q,Math.cos(a)*d,Math.sin(a)*d,R()*TAU,.014,.01,sd,.3);}}
+  else if(k==='papaya'){q.beginPath();for(let i=0;i<5;i++){const a=i/5*TAU-Math.PI/2;q.lineTo(Math.cos(a)*.42,Math.sin(a)*.42);q.lineTo(Math.cos(a+TAU/10)*.3,Math.sin(a+TAU/10)*.3);}q.closePath();q.fillStyle=gc(core);q.fill();
+    for(let i=0;i<(hi?60:30);i++){const a=R()*TAU,d=Math.sqrt(R())*.3,x=Math.cos(a)*d,y=Math.sin(a)*d,s=.035+R()*.012;disc(q,x,y,s,rgr(q,x-s*.3,y-s*.3,s,[0,'#5a5a5a',.5,'#141414',1,'#000']));}}
+  else if(k==='melon'){disc(q,0,0,.42,gc(core));for(let i=0;i<(hi?44:24);i++){const a=R()*TAU,d=.12+R()*.26;gseed(q,Math.cos(a)*d,Math.sin(a)*d,a,.06,.022,sd,.5);}
+    q.beginPath();for(let i=0;i<60;i++){const a=R()*TAU,d=R()*.4;q.moveTo(Math.cos(a)*d,Math.sin(a)*d);q.lineTo(Math.cos(a+.3)*(d+.08),Math.sin(a+.3)*(d+.08));}q.lineWidth=.008;q.strokeStyle=gc(gsh(core,.3),.5);q.stroke();}
+  else if(k==='tomato'){for(let i=0;i<4;i++){const a=i/4*TAU+.4;q.save();q.rotate(a);q.beginPath();q.ellipse(.48,0,.26,.2,0,0,TAU);q.fillStyle=rgr(q,.48,0,.28,[0,gc(gsh(core,.2),.95),1,gc(core,.8)]);q.fill();
+      for(let j=0;j<7;j++)gseed(q,.36+R()*.24,(R()-.5)*.24,R()*TAU,.032,.02,sd,.6);q.restore();}disc(q,0,0,.16,gc(gsh(C[3],.2)));
+    q.beginPath();for(let i=0;i<4;i++){const a=i/4*TAU+.4+Math.PI/4;q.moveTo(Math.cos(a)*.14,Math.sin(a)*.14);q.lineTo(Math.cos(a)*fr,Math.sin(a)*fr);}q.lineWidth=.05;q.strokeStyle=gc(gsh(C[2],.15),.7);q.stroke();}
+  else if(k==='cuke'){disc(q,0,0,.5,gc(core,.8));q.beginPath();for(let i=0;i<3;i++){const a=i/3*TAU-Math.PI/2;q.moveTo(0,0);q.lineTo(Math.cos(a)*.48,Math.sin(a)*.48);}q.lineWidth=.03;q.strokeStyle=gc(gsh(core,.25));q.stroke();
+    for(let i=0;i<3;i++)for(let j=0;j<6;j++){const a=i/3*TAU+Math.PI/6+(j%2?.25:-.25),d=.14+Math.floor(j/2)*.1;gseed(q,Math.cos(a)*d,Math.sin(a)*d,a+Math.PI/2,.05,.022,sd,.5);}}
+  else if(k==='apple'){q.beginPath();for(let i=0;i<10;i++){const a=i/10*TAU-Math.PI/2,r=i%2?.12:.32;q.lineTo(Math.cos(a)*r,Math.sin(a)*r);}q.closePath();q.fillStyle=gc(core);q.fill();q.lineWidth=.012;q.strokeStyle=gc(gsh(core,-.2));q.stroke();
+    for(let i=0;i<5;i++){const a=i/5*TAU-Math.PI/2;gseed(q,Math.cos(a)*.2,Math.sin(a)*.2,a,.07,.035,sd,.6);}
+    q.beginPath();for(let i=0;i<10;i++){const a=i/10*TAU-Math.PI/2+.31;q.moveTo(Math.cos(a)*.5,Math.sin(a)*.5);q.arc(Math.cos(a)*.5,Math.sin(a)*.5,.012,0,TAU);}q.fillStyle=gc(gsh(C[3],-.15),.5);q.fill();}
+  else if(k==='avo'){disc(q,.02,.03,.44,'rgba(0,0,0,.25)');disc(q,0,0,.42,rgr(q,-.12,-.14,.5,[0,gc(gsh(core,.35)),.5,gc(core),1,gc(gsh(core,-.45))]));q.beginPath();q.ellipse(-.15,-.18,.12,.05,-.7,0,TAU);q.fillStyle='rgba(255,255,255,.4)';q.fill();}
+  else if(k==='coco'){disc(q,0,0,fr-.16,rgr(q,0,0,fr-.16,[0,'rgba(240,248,255,.95)',.8,'rgba(225,235,240,.95)',1,'rgba(205,215,220,1)']));disc(q,-.15,-.2,.35,rgr(q,-.15,-.2,.35,[0,'rgba(255,255,255,.6)',1,'rgba(255,255,255,0)']));}
+  else if(k==='pome'){q.save();q.beginPath();q.arc(0,0,fr,0,TAU);q.clip();for(let i=0;i<5;i++){const a=i/5*TAU;q.beginPath();q.moveTo(0,0);q.lineTo(Math.cos(a)*fr,Math.sin(a)*fr);q.lineWidth=.04;q.strokeStyle=gc(core,.9);q.stroke();}
+    const n=hi?190:90;for(let i=0;i<n;i++){const t=Math.sqrt((i+.5)/n),a=i*2.39996,d=t*fr*.97,x=Math.cos(a)*d,y=Math.sin(a)*d,s=.055*(.9+R()*.2);q.save();q.translate(x,y);q.rotate(R()*TAU);q.beginPath();q.ellipse(0,0,s,s*.78,0,0,TAU);
+      q.fillStyle=rgr(q,-s*.3,-s*.3,s*1.1,[0,gc(gsh(C[5],.5)),.45,gc(C[5]),1,gc(gsh(C[5],-.45))]);q.fill();q.beginPath();q.ellipse(-s*.3,-s*.3,s*.25,s*.15,-.7,0,TAU);q.fillStyle='rgba(255,255,255,.75)';q.fill();q.restore();}q.restore();}
+  else if(k==='fig'){q.beginPath();for(let i=0;i<(hi?260:110);i++){const a=R()*TAU,d1=.25+R()*.5;q.moveTo(0,0);q.quadraticCurveTo(Math.cos(a+.2)*d1*.5,Math.sin(a+.2)*d1*.5,Math.cos(a)*d1,Math.sin(a)*d1);}q.lineWidth=Math.max(.006,1/u);q.strokeStyle=gc(C[3],.6);q.stroke();
+    disc(q,0,0,.6,rgr(q,0,0,.6,[0,gc(core,.0),.6,gc(core,.15),1,gc(core,0)]));for(let i=0;i<(hi?120:50);i++){const a=R()*TAU,d=.15+R()*.5;disc(q,Math.cos(a)*d,Math.sin(a)*d,.012,gc(C[5],.85));}}
+  else if(k==='passion'){for(let i=0;i<(hi?55:30);i++){const a=R()*TAU,d=Math.sqrt(R())*.7,x=Math.cos(a)*d,y=Math.sin(a)*d,s=.07+R()*.03;disc(q,x,y,s,rgr(q,x-s*.3,y-s*.3,s,[0,gc(gsh(core,.4),.9),1,gc(core,.6)]));gseed(q,x,y,R()*TAU,.038,.026,sd,.5);}}
+  else if(k==='banana'){disc(q,0,0,.42,rgr(q,0,0,.42,[0,gc(core,.9),1,gc(core,0)]));for(let i=0;i<3;i++){const a=i/3*TAU-Math.PI/2;q.save();q.rotate(a);q.beginPath();q.ellipse(.16,0,.17,.07,0,0,TAU);q.fillStyle=gc(gsh(core,-.12),.9);q.fill();
+      for(let j=0;j<4;j++)disc(q,.06+j*.07,(R()-.5)*.04,.016,gc(C[5],.85));q.restore();}}
+  q.fillStyle='rgba(255,255,255,.8)';for(let i=0;i<(hi?8:3);i++){const a=R()*TAU,d=.2+R()*.55;q.beginPath();q.ellipse(Math.cos(a)*d,Math.sin(a)*d,.016+R()*.016,.007+R()*.006,a,0,TAU);q.fill();}}, // beads of juice
+// A whole fruit on the sphere. k: 'straw' (seeds in their dimples, a green crown of sepals), 'blue' (dusky bloom and a star crown),
+// 'peach' (velvet blush and its crease), 'lychee' (a rind of little points). C: dark, body, light, accent, seed/leaf.
+berry(q,u,P,R,S){const C=P.c,k=P.k,M=gm3(.2,.45,.3),sd=S.id%17*2.1;
+  gfield(q,gtex(S.key,u,(x,y,o)=>{gpi(M,x,y,GO2);const X=GO2[0],Y=GO2[1],Z=GO2[2],n=gfbm(X*3+sd,Y*3+Z*2,3);
+    if(k==='peach'){const t=gstep(-.6,.7,X*.6-Y*.5+(n-.5)*.8);gramp([C[3],C[1],C[2]],1-t,o);const cr=Math.abs(X*.9+Z*.4);for(let i=0;i<3;i++)o[i]*=1-.25*gstep(.06,0,cr)*gstep(-.2,.3,Y+.5);}
+    else if(k==='lychee'){const b=gridge(X*7+sd,Y*7+Z*5,2);gramp(C.slice(0,3),.3+n*.4+b*.3,o);}
+    else gramp(C.slice(0,3),.3+n*.55,o);}));
+  const I=[1,0,0,0,1,0,0,0,1],cw=[-.12,-.34,.93]; // the crown faces us, a little up and left
+  if(k==='straw'){const n=u>70?420:200;for(let i=0;i<n;i++){const y=1-(i+.5)/n*2,r=Math.sqrt(1-y*y),a=i*2.39996,p=[Math.cos(a)*r,y,Math.sin(a)*r];if(p[2]<.1||p[0]*cw[0]+p[1]*cw[1]+p[2]*cw[2]>.9)continue;const X=p[0],Y=p[1],z=p[2],b=Math.atan2(Y,X);
+      q.save();q.translate(X,Y);q.rotate(b);q.scale(z,1);disc(q,0,0,.045,rgr(q,0,0,.045,[0,gc(gsh(C[0],-.3),.55),1,gc(C[0],0)]));q.restore();gseed(q,X,Y,b+Math.PI/2,.024*Math.max(.5,z),.014,gc(C[4]),.6);}}
+  if(k==='straw'||k==='blue'){const cx=cw[0],cy=cw[1],z=cw[2];q.save();q.translate(cx,cy);q.rotate(Math.atan2(cy,cx));q.scale(z,1);
+    if(k==='straw'){for(let i=0;i<8;i++){const a=i/8*TAU+R()*.2;q.save();q.rotate(a);q.beginPath();q.moveTo(0,-.05);q.quadraticCurveTo(.25,-.13,.44,0);q.quadraticCurveTo(.25,.13,0,.05);q.fillStyle=lgr(q,0,0,.44,0,[0,gc(gsh(C[3],-.35)),1,gc(gsh(C[3],.15))]);q.fill();q.lineWidth=.006;q.strokeStyle=gc(gsh(C[3],-.45),.6);q.stroke();q.restore();}
+      disc(q,0,0,.07,gc(gsh(C[3],-.25)));}
+    else{q.scale(1.7,1.7);disc(q,0,0,.2,rgr(q,0,0,.2,[0,gc(gsh(C[0],-.3)),1,gc(C[0],0)]));for(let i=0;i<5;i++){const a=i/5*TAU;q.beginPath();q.moveTo(0,0);q.lineTo(Math.cos(a-.28)*.12,Math.sin(a-.28)*.12);q.lineTo(Math.cos(a)*.17,Math.sin(a)*.17);q.lineTo(Math.cos(a+.28)*.12,Math.sin(a+.28)*.12);q.closePath();q.fillStyle=gc(C[2]);q.fill();}disc(q,0,0,.06,gc(gsh(C[3],-.4)));}
+    q.restore();}
+  if(k==='blue'){disc(q,0,0,1.15,rgr(q,.1,.1,1.2,[0,'rgba(200,215,240,.25)',1,'rgba(200,215,240,.05)']));ggrain(q,u,R,700,'rgba(220,230,250,.2)',null,.004,.01);}
+  if(k==='peach')ggrain(q,u,R,1600,'rgba(255,240,230,.18)',null,.002,.004);
+  if(k==='lychee'){const n=u>70?320:160;for(let i=0;i<n;i++){const y=1-(i+.5)/n*2,r=Math.sqrt(Math.max(0,1-y*y)),a=i*2.39996,z=Math.sin(a)*r;if(z<.12)continue;const X=Math.cos(a)*r,s=Math.sqrt(4/n)*.5;q.save();q.translate(X,y);q.rotate(Math.atan2(y,X));q.scale(z,1);
+    disc(q,0,0,s,rgr(q,-s*.4,-s*.4,s*1.3,[0,gc(gsh(C[2],.3),.9),.4,gc(C[1],.5),1,gc(C[0],.6)]));q.restore();}}
+  ggloss(q,k==='peach'?.2:k==='blue'?.25:.7,1);},
+});
 // In play a generated skin is its sprite, still (so its light stays upper left) unless it spins; fx adds one cheap live touch:
 // g a glint hopping between facets, s a sheen sweeping across, e eyes that look where the cell goes
 function gdraw(g,c,r,k){const P=this.p;skinArt(g,this,c,r,P.spin?T*P.spin+c.wob:0);const fx=P.fx;if(!fx||skinPx(g,r)<14)return;
@@ -5657,6 +5718,32 @@ sports:[
 [132,'silvermedal','Silver Medal',1200,'coin','2a2e34 5a6068 a8b0b8 dce2e8 ffffff',{t:'2',fx:'s'},'Second place, bright silver.'],
 [133,'bronzemedal','Bronze Medal',600,'coin','2e1404 6a3a14 b0703a e0a06a fff0e0',{t:'3',fx:'s'},'Third place, warm bronze.'],
 [134,'chequered','Chequered Flag',450,'checker','121214 f6f6f2',{n:8,m:1},'The flag that ends the race.'],
+],
+fruit:[
+[135,'orange','Orange',300,'citrus','b24a06 f08a1a fff2dc f07a10 ffa22e ffd27a',{n:10,sd:.25},'A juicy orange cut across.'],
+[136,'lemon','Lemon',300,'citrus','9a7a04 f2d22a fffbe6 f0cc2a f8e266 fff6b0',{n:10,sd:.3},'A bright lemon slice, sharp enough to sting.'],
+[137,'lime','Lime',300,'citrus','2e5a0c 5a9a1c f4f8dc 7ab828 a8d84a e2f6a0',{n:9},'A slice of lime, green and zesty.'],
+[138,'grapefruit','Pink Grapefruit',350,'citrus','b4582a f0a058 fff0e0 e04a4a f87a6e ffc0b0',{n:12,sd:.2},'Ruby grapefruit, glistening.'],
+[139,'bloodorange','Blood Orange',700,'citrus','a0300a e0601a fff0e0 7a0610 c01c2a f0605a',{n:10,sd:.2},'Deep crimson flesh in an orange rind.'],
+[140,'kiwi','Kiwi',350,'slice','4a3418 7a5a30 6aa820 c4e47a f6f8e8 141008',{k:'kiwi',rw:.05},'Emerald flesh, a ring of black seeds.'],
+[141,'goldenkiwi','Golden Kiwi',750,'slice','5a4020 8a6a38 e0c42a f4ea90 fffbe6 1a1408',{k:'kiwi',rw:.05},'The sweet golden kind.'],
+[142,'dragonfruit','Dragon Fruit',800,'slice','8a0a4a e0287a f6f0ec ffffff f0eae6 101010',{k:'pitaya',rw:.09},'Snow-white flesh speckled black, in a magenta skin.'],
+[143,'redpitaya','Red Pitaya',900,'slice','8a0a4a e0287a b0105a e0308a d02070 101010',{k:'pitaya',rw:.09},'Dragon fruit with flesh the colour of fuchsia.'],
+[144,'passionfruit','Passion Fruit',700,'slice','2a0a2a 5a1a4a f0b020 f8d040 f8c030 1a1004',{k:'passion',rw:.11},'Golden pulp and crunchy seeds in a purple shell.'],
+[145,'fig','Fig',450,'slice','3a1430 6a3060 d8c088 e85a6a c82a4a f6e0b0',{k:'fig',rw:.08},'A ripe fig, pink and full of tiny seeds.'],
+[146,'papaya','Papaya',400,'slice','6a8a20 a8b030 f08a2a f6a040 c84a1a 101010',{k:'papaya',rw:.04},'Sunset flesh round a nest of black seeds.'],
+[147,'cantaloupe','Cantaloupe',350,'slice','8a8060 c8c098 a8c870 f6a050 f0b060 f6ecd0',{k:'melon',rw:.1},'Netted rind, peach-orange melon.'],
+[148,'tomato','Tomato',300,'slice','8a0a06 d8281a e0301e f05a40 f8a090 f6e0a0',{k:'tomato',rw:.04},'A sliced tomato, seeds in their jelly.'],
+[149,'cucumber','Cucumber',300,'slice','0a300a 1e5a16 b8d890 e0f0c0 a8cc80 f8fbea',{k:'cuke',rw:.06},'Cool as a cucumber, because it is one.'],
+[150,'apple','Apple',300,'slice','7a0a0a d42a2a f6ecd0 fff8e8 e8d8a8 4a2a10',{k:'apple',rw:.04},'Cut across, so the seeds make a star.'],
+[151,'avocado','Avocado',450,'slice','1a2a0a 2e4a14 7ab830 e8f0a0 8a5030 000000',{k:'avo',rw:.06},'Buttery green flesh and a glossy stone.'],
+[152,'coconut','Coconut',400,'slice','3a2414 6a4428 f8f6f2 fffffc ffffff 000000',{k:'coco',rw:.24},'A hairy shell, white meat and the milk inside.'],
+[153,'pomegranate','Pomegranate',900,'slice','6a0a0a b81c1c f0e0c0 f6e8d0 f2e2c0 c8102a',{k:'pome',rw:.08},'Hundreds of ruby seeds packed in tight.'],
+[154,'banana','Banana',250,'slice','c8a020 f0d850 fff2d0 fff8e4 e8d8a0 5a4428',{k:'banana',rw:.03},'A banana slice, its little star of seeds.'],
+[155,'strawberry','Strawberry',350,'berry','a00e14 e02a2a ff6a5a 3a9a2a f6e070',{k:'straw',m:1},'Ripe red, seeds in every dimple, leaves on top.'],
+[156,'blueberry','Blueberry',350,'berry','1a1e4a 3a4a8a 6a80b8 2a2a4a 000000',{k:'blue',m:1},'Dusky blue with a starry crown.'],
+[157,'peach','Peach',350,'berry','000000 f6b060 ffe0a0 e8503a 000000',{k:'peach',m:1},'Soft velvet skin, blushing red.'],
+[158,'lychee','Lychee',450,'berry','8a1a2a d8506a f6a0b0 000000 000000',{k:'lychee',m:1},'A bumpy pink shell.'],
 ],
 };
 for(const col in GEN)for(const row of GEN[col]){const S=gskin(row,col);S.tok=STAINS.map(()=>'tok'+S.key);PREMIUM.push(S);}
