@@ -6876,12 +6876,16 @@ function drawAvatar(cv=$('avatarCv'),sk=settings.skin|0,st=settings.stain|0){ //
   skinLight(g,x,y,r,k);
   g.beginPath();g.arc(x,y,r,0,TAU);g.lineWidth=r*.07;g.strokeStyle=o.edge;g.stroke();
 }
-function renderPreviews(live){const vh=innerHeight;for(const cv of document.querySelectorAll('#skins canvas, #ownedSkins canvas')){
+let prvMore=0;
+function renderPreviews(live){const vh=innerHeight,t0=performance.now();let wait=false;for(const cv of document.querySelectorAll('#skins canvas, #ownedSkins canvas')){
   if(!cv.offsetWidth)continue; // a hidden page: drawn when it opens (warmShop has the art ready by then), not now at a size it won't be shown at
   const b=cv.getBoundingClientRect();
   if(live){if(!b.width||b.bottom<-40||b.top>vh+40)continue;} // animating: only the tiles on screen
   else if(b.bottom<-vh*.5||b.top>vh*1.5){if(cv.width>1&&(b.bottom<-vh*3||b.top>vh*4))cv.width=cv.height=1;continue;} // only near the screen; far-off canvases give their memory back (drawn again as they scroll in)
-  const S=PREMIUM[+cv.dataset.skin-SKIN_FREE];if(S)drawPreview(cv,S);else if(cv.dataset.def)drawAvatar(cv,settings.pat|0);}}
+  const S=PREMIUM[+cv.dataset.skin-SKIN_FREE];
+  if(S&&cv._pv!==S&&performance.now()-t0>12){wait=true;continue;} // a budget: a tile not drawn yet (its first bake can take tens of ms) waits a frame once this one has spent 12 ms
+  if(S)drawPreview(cv,S);else if(cv.dataset.def)drawAvatar(cv,settings.pat|0);}
+  if(wait&&!live&&!prvMore)prvMore=requestAnimationFrame(()=>{prvMore=0;renderPreviews();});} // the live loop picks the rest up on its next tick anyway
 // The shop's tiles used to bake every skin's art the moment it opened (half a second on a phone, then they all popped in).
 // The lobby bakes them ahead instead, one skin about every 120 ms while nothing else is going on, at the size the shop's
 // tiles will ask for: a detached canvas as wide as their CSS says (read from a hidden tile), so the bakes land in the same sizes.
