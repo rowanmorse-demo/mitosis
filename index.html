@@ -5662,6 +5662,47 @@ dial(q,u,P,R){const C=P.c;fillAll(q,gc(C[0]));q.beginPath();for(let i=0;i<120;i+
   disc(q,0,0,.42,rgr(q,-.12,-.14,.5,[0,gc(C[2]),.5,gc(C[1]),1,gc(gsh(C[1],-.5))]));q.beginPath();for(let i=0;i<40;i++){const a=i/40*TAU;q.moveTo(Math.cos(a)*.36,Math.sin(a)*.36);q.lineTo(Math.cos(a)*.42,Math.sin(a)*.42);}q.lineWidth=.012;q.strokeStyle=gc(C[0],.4);q.stroke();
   q.beginPath();q.moveTo(0,-.97);q.lineTo(-.04,-1.12);q.lineTo(.04,-1.12);q.closePath();q.fillStyle=gc(C[4]);q.fill();ggloss(q,.7);},
 });
+// The Mythic showcase: a few generated skins drawn with more care, each a family of its own.
+Object.assign(GF,{
+// A crystal ball: deep violet mist wound round a glowing heart inside clear glass, stars caught in it, a gold claw stand below. C: dark, mist, mist light, heart, gold, gold light.
+crystal(q,u,P,R,S){const C=P.c;fillAll(q,gc(C[0]));gfield(q,gtex(S.key,u,(x,y,o)=>{const r=Math.hypot(x,y)+.01,a=Math.atan2(y,x),t=a+r*3.4,f=gfbm(Math.cos(t)*1.8+S.id,Math.sin(t)*1.8+r*1.5,5),w=Math.pow(1-Math.abs(gfbm(Math.cos(t)*3+4,Math.sin(t)*3+r*2,3)*2-1),5);
+    gramp(C.slice(0,3),Math.min(1,f*.9*gstep(1.05,.4,r)+w*.6+gstep(.45,0,r)*.6),o);}));
+  q.globalCompositeOperation='lighter';gglow(q,0,0,.5,C[3],.9);for(let i=0;i<40;i++){const a=R()*TAU,d=Math.sqrt(R())*.85,x=Math.cos(a)*d,y=Math.sin(a)*d,s=.004+R()*R()*.02;disc(q,x,y,s*3,rgr(q,x,y,s*3,[0,'rgba(255,255,255,.9)',.3,gc(C[3],.4),1,gc(C[3],0)]));}q.globalCompositeOperation='source-over';
+  for(const s of[-1,1]){q.save();q.translate(s*.42,.88);q.rotate(s*.5);q.beginPath();q.moveTo(-.1,.3);q.quadraticCurveTo(-.12,0,0,-.18);q.quadraticCurveTo(.12,0,.1,.3);q.closePath();q.fillStyle=lgr(q,-.1,0,.1,0,[0,gc(C[5]),.5,gc(C[4]),1,gc(gsh(C[4],-.4))]);q.fill();q.restore();}
+  q.beginPath();q.ellipse(0,1.02,.62,.12,0,0,TAU);q.fillStyle=lgr(q,-.6,0,.6,0,[0,gc(gsh(C[4],-.3)),.4,gc(C[5]),1,gc(gsh(C[4],-.4))]);q.fill();
+  q.save();q.translate(-.38,-.44);q.rotate(-.7);q.scale(.36,.16);disc(q,0,0,1,rgr(q,0,0,1,[0,'rgba(255,255,255,.85)',.5,'rgba(255,255,255,.3)',1,'rgba(255,255,255,0)']));q.restore();
+  q.beginPath();q.arc(0,0,.97,Math.PI*.2,Math.PI*.8);q.lineWidth=.03;q.strokeStyle='rgba(255,255,255,.18)';q.stroke();},
+// An orrery: brass rings of an armillary sphere round a blazing sun, a little planet riding on each; it turns. C: dark, brass dark, brass, brass light, sun, planets.
+orrery(q,u,P,R){const C=P.c;fillAll(q,gc(C[0]));disc(q,0,0,1.15,rgr(q,0,0,1.15,[0,gc(gsh(C[0],.25)),1,gc(C[0])]));q.fillStyle='#fff';for(let i=0;i<70;i++){q.globalAlpha=.2+R()*.6;q.fillRect(R()*2.3-1.15,R()*2.3-1.15,.007,.007);}q.globalAlpha=1;
+  const rings=[[.98,.3,.2],[.78,-.5,.55],[.6,.9,.35],[.42,-.1,.7]],ring=(r,a,f,front)=>{q.save();q.rotate(a);q.beginPath();q.ellipse(0,0,r,r*f,0,front?0:Math.PI,front?Math.PI:TAU);q.lineWidth=.045;q.strokeStyle=gc(C[1]);q.stroke();q.lineWidth=.025;q.strokeStyle=lgr(q,-r,0,r,0,[0,gc(C[3]),.5,gc(C[2]),1,gc(C[3])]);q.stroke();q.restore();};
+  for(const [r,a,f] of rings)ring(r,a,f,false);q.globalCompositeOperation='lighter';gglow(q,0,0,.6,C[4],.8);q.globalCompositeOperation='source-over';disc(q,0,0,.2,rgr(q,-.05,-.05,.22,[0,'#fffbe8',.4,gc(C[4]),1,gc(gsh(C[4],-.3))]));
+  for(const [r,a,f] of rings)ring(r,a,f,true);rings.forEach(([r,a,f],i)=>{const t=.6+i*1.3,ex=Math.cos(t)*r,ey=Math.sin(t)*r*f,x=ex*Math.cos(a)-ey*Math.sin(a),y=ex*Math.sin(a)+ey*Math.cos(a),cl=C[5+i%(C.length-5)];disc(q,x,y,.06,rgr(q,x-.02,y-.02,.07,[0,gc(gsh(cl,.4)),1,gc(gsh(cl,-.35))]));});
+  q.beginPath();q.arc(0,0,1.05,0,TAU);q.lineWidth=.06;q.strokeStyle=gc(C[2]);q.stroke();},
+// Celestial: day and night curled round each other, a gold sun with flame rays and a silver crescent among stars, in a gold ring. C: night, night light, day, day light, sun, moon, gold.
+celestial(q,u,P,R){const C=P.c,S1=()=>{q.beginPath();q.arc(0,0,1.15,-Math.PI/2,Math.PI/2);q.arc(0,.575,.575,Math.PI/2,-Math.PI/2,true);q.arc(0,-.575,.575,Math.PI/2,-Math.PI/2);q.closePath();};
+  fillAll(q,gc(C[0]));disc(q,0,0,1.15,rgr(q,-.3,.3,1.3,[0,gc(C[1]),1,gc(C[0])]));q.fillStyle='#fff';for(let i=0;i<60;i++){const x=-R()*1.1,y=R()*2.2-1.1;q.globalAlpha=.3+R()*.7;gspark(q,x,y,.006+R()*R()*.03);}q.globalAlpha=1;
+  q.save();S1();q.clip();disc(q,0,0,1.15,rgr(q,.4,-.4,1.3,[0,gc(C[3]),1,gc(C[2])]));q.restore();
+  q.save();q.translate(0,-.575);for(let i=0;i<16;i++){const a=i/16*TAU;q.save();q.rotate(a);q.beginPath();q.moveTo(.2,-.05);q.quadraticCurveTo(.3,0,.36+(i%2)*.06,0);q.quadraticCurveTo(.3,0,.2,.05);q.closePath();q.fillStyle=gc(C[6]);q.fill();q.restore();}
+  disc(q,0,0,.22,rgr(q,-.06,-.06,.24,[0,'#fffbe0',.5,gc(C[4]),1,gc(gsh(C[4],-.3))]));q.restore();
+  q.save();q.translate(0,.575);q.beginPath();q.arc(0,0,.27,0,TAU);q.arc(.11,-.06,.24,0,TAU,true);q.fillStyle=rgr(q,-.1,0,.3,[0,'#ffffff',1,gc(C[5])]);q.fill('evenodd');q.restore();
+  S1();q.lineWidth=.025;q.strokeStyle=gc(C[6]);q.stroke();q.beginPath();q.arc(0,0,1.02,0,TAU);q.lineWidth=.05;q.strokeStyle=lgr(q,-1,-1,1,1,[0,gc(gsh(C[6],.4)),.5,gc(C[6]),1,gc(gsh(C[6],-.3))]);q.stroke();},
+// A golden mandala: rings of petals and beads in gold filigree on deep blue, jewels set round it. C: ground, gold dark, gold, gold light, jewel, jewel 2.
+mandala(q,u,P,R){const C=P.c;fillAll(q,gc(C[0]));disc(q,0,0,1.15,rgr(q,0,0,1.15,[0,gc(gsh(C[0],.3)),1,gc(C[0])]));const G=lgr(q,-1,-1,1,1,[0,gc(C[3]),.5,gc(C[2]),1,gc(C[1])]);q.lineJoin='round';
+  const ringP=(n,r0,r1,w,fill)=>{for(let i=0;i<n;i++){q.save();q.rotate(i/n*TAU);q.beginPath();q.moveTo(r0,0);q.bezierCurveTo(r0+(r1-r0)*.3,-w,r1-(r1-r0)*.2,-w*.6,r1,0);q.bezierCurveTo(r1-(r1-r0)*.2,w*.6,r0+(r1-r0)*.3,w,r0,0);
+    if(fill){q.fillStyle=gc(fill,.85);q.fill();}q.lineWidth=Math.max(.008,1.2/u);q.strokeStyle=G;q.stroke();q.beginPath();q.moveTo(r0+(r1-r0)*.15,0);q.lineTo(r1-(r1-r0)*.15,0);q.stroke();q.restore();}};
+  ringP(24,.72,1.1,.13,gsh(C[0],.15));ringP(16,.5,.84,.14,C[4]);ringP(12,.28,.58,.12,gsh(C[0],.2));ringP(8,.1,.34,.1,C[5]);
+  for(const [r,n] of[[.7,32],[.48,24],[.27,16]]){q.beginPath();for(let i=0;i<n;i++){const a=(i+.5)/n*TAU;q.moveTo(Math.cos(a)*r+.016,Math.sin(a)*r);q.arc(Math.cos(a)*r,Math.sin(a)*r,.016,0,TAU);}q.fillStyle=G;q.fill();}
+  for(const r of[.72,.5,.28]){q.beginPath();q.arc(0,0,r,0,TAU);q.lineWidth=.012;q.strokeStyle=G;q.stroke();}disc(q,0,0,.1,rgr(q,-.03,-.03,.11,[0,'#ffffff',.3,gc(C[4]),1,gc(gsh(C[4],-.4))]));
+  for(let i=0;i<8;i++){const a=i/8*TAU+Math.PI/8,x=Math.cos(a)*.92,y=Math.sin(a)*.92;disc(q,x,y,.05,rgr(q,x-.015,y-.015,.055,[0,'#ffffff',.3,gc(C[5]),1,gc(gsh(C[5],-.4))]));}},
+// The philosopher's stone: a blood-red crystal cut with an alchemist's seal of circle, square and triangle, glowing gold. C: dark, stone, stone light, glow, glow hot.
+alchemy(q,u,P,R,S){const C=P.c;gfield(q,gtex(S.key,u,(x,y,o)=>{const n=gfbm(x*2.5+S.id,y*2.5,4),r=Math.hypot(x,y);gramp(C.slice(0,3),Math.min(1,.15+n*.55+gstep(.6,0,r)*.35),o);}));
+  q.globalCompositeOperation='lighter';const seal=(w,a)=>{q.beginPath();q.arc(0,0,.86,0,TAU);q.moveTo(.6,0);q.arc(0,0,.6,0,TAU);q.rect(-.42,-.42,.84,.84);for(let i=0;i<3;i++){const t=-Math.PI/2+i/3*TAU;i?q.lineTo(Math.cos(t)*.6,Math.sin(t)*.6):q.moveTo(Math.cos(t)*.6,Math.sin(t)*.6);}q.closePath();q.moveTo(.27,0);q.arc(0,0,.27,0,TAU);q.lineWidth=w;q.strokeStyle=gc(C[3],a);q.stroke();};
+  seal(.08,.15);seal(.035,.4);seal(.012,1);q.beginPath();for(let i=0;i<8;i++){const a=i/8*TAU-Math.PI/2,x=Math.cos(a)*.73,y=Math.sin(a)*.73,s=.045,k=i%4; // the seven metals' signs, more or less
+    if(k===0){q.moveTo(x+s,y);q.arc(x,y,s,0,TAU);q.moveTo(x+s*.25,y);q.arc(x,y,s*.25,0,TAU);}else if(k===1){q.moveTo(x,y-s);q.lineTo(x+s,y+s*.8);q.lineTo(x-s,y+s*.8);q.closePath();}
+    else if(k===2){q.moveTo(x+s,y);q.arc(x,y,s,0,TAU);q.moveTo(x-s,y);q.lineTo(x+s,y);q.moveTo(x,y-s);q.lineTo(x,y+s);}else{q.moveTo(x,y+s);q.lineTo(x+s,y-s*.8);q.lineTo(x-s,y-s*.8);q.closePath();q.moveTo(x-s*.6,y-s*.1);q.lineTo(x+s*.6,y-s*.1);}}
+  q.lineWidth=.014;q.strokeStyle=gc(C[4],.95);q.stroke();
+  gglow(q,0,0,.35,C[4],.8);q.globalCompositeOperation='source-over';ggloss(q,.8);},
+});
 // a football's 32 panels: the truncated icosahedron's 12 pentagons and 20 hexagons, pushed out onto the sphere
 const GSOC=(()=>{const f=(1+Math.sqrt(5))/2,V=[],E=[],nz=p=>{const l=Math.hypot(p[0],p[1],p[2]);return[p[0]/l,p[1]/l,p[2]/l];},lp=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
   for(const a of[-1,1])for(const b of[-f,f])V.push([0,a,b],[a,b,0],[b,0,a]);
@@ -6205,9 +6246,9 @@ function gdraw(g,c,r,k){const P=this.p;skinArt(g,this,c,r,P.spin?T*P.spin+c.wob:
 const GTZ=new Date().getTimezoneOffset()*60;
 function gsweepArt(q,u,c){const n=24;for(let i=0;i<n;i++){q.beginPath();q.moveTo(0,0);q.arc(0,0,.92,-1+i/n,-1+(i+1)/n+.01);q.closePath();q.fillStyle=gc(c,.34*Math.pow((i+1)/n,2));q.fill();} // a scope's sweeping beam, its trail fading behind it
   q.beginPath();q.moveTo(0,0);q.lineTo(.92,0);q.lineWidth=.015;q.strokeStyle=gc(c,.9);q.stroke();}
-const GRAR=p=>p>=7500?'legendary':p>=2000?'epic':p>=700?'rare':'common'; // a generated skin's rarity follows its price
+const GRAR=(p,o)=>o&&o.rar||(p>=2500?'epic':p>=600?'rare':'common'); // a generated skin's rarity follows its price, on the shop's scale; a row may name it (the Mythic showcase is legendary)
 function gskin([id,key,name,price,f,pal,o,desc],col){const C=gpal(pal),m=C[o&&o.m!==undefined?o.m:C.length>>1];
-  const S={id,key,name,price,col,rar:GRAR(price),desc,f,p:Object.assign({c:C},o),base:ghsl(m),edge:gc(gsh(m,-.62)),edge2:gc(gsh(m,.55),.6),draw:gdraw};
+  const S={id,key,name,price,col,rar:GRAR(price,o),desc,f,p:Object.assign({c:C},o),base:ghsl(m),edge:gc(gsh(m,-.62)),edge2:gc(gsh(m,.55),.6),draw:gdraw};
   S.bake=(q,u)=>GF[f](q,u,S.p,prng(id*7919+13),S);return S;}
 // The collections: [id, key, name, price, family, palette, parameters, shop description]. Price sets rarity (GRAR).
 const GEN_COLS={ocean:['Ocean','Shells, pearls and the glow of the deep'],garden:['Garden','Petals, seeds and rings of wood'],fruit:['Fruit','Cut open, juicy side up'],
@@ -6533,6 +6574,14 @@ gadgets:[
 [337,'speaker','Speaker',400,'speaker','1a1a1e 2a2a2e 4a4a50 1a1a1e 3a3a40',{m:2},'A bass cone ready to shake the room.'],
 [338,'jetengine','Jet Engine',1500,'jet','0a0a0c 6a7078 d8dce0 8a9098 e8ecf0',{spin:6,m:1},'The fan of a jet engine, spinning up.'],
 [339,'safedial','Safe Dial',600,'dial','0a0a0c 8a9098 f0f2f4 1a1a1e d81e1e',{m:1},'Thirty-two, sixteen, eight... click.'],
+],
+mythic:[
+[340,'crystalball','Crystal Ball',9000,'crystal','0a0418 3a1a6a b06af0 ff9aff c89a3a f6e0a0',{rar:'legendary',fx:'g',m:2},'Violet mist swirling round a glowing heart. What do you see?'],
+[341,'orrery','Orrery',10000,'orrery','04060e 6a4a14 c8963a f6d88a ffd04a 4a8aff c84a3a 8ad06a',{rar:'legendary',spin:.25,m:2},'Brass rings round a blazing sun, the heavens turning.'],
+[342,'celestial','Celestial',8000,'celestial','0a0e2a 1a2a5a f0a01a ffd86a ffe04a d8e0f0 e8c050',{rar:'legendary',m:6},'Sun and moon, day and night, curled round each other.'],
+[343,'goldenmandala','Golden Mandala',12000,'mandala','061030 8a5a10 e0b040 fff0b0 c8143a 1a8aff',{rar:'legendary',spin:.12,m:2},'Gold filigree and jewels, ring within ring, slowly turning.'],
+[344,'philosophersstone','Philosopher’s Stone',15000,'alchemy','1a0204 6a0a10 c8203a ffd06a fff0c0',{rar:'legendary',m:2},'A blood-red stone burning with an alchemist’s seal.'],
+[345,'midas','Midas',6000,'flow','2a1a04 8a6010 f8e0a0 c8962a 4a3008 f0d080 fffbe0',{k:'chrome',s:1.1,fx:'g',m:2},'Liquid gold. Everything it touches.'],
 ],
 };
 for(const col in GEN)for(const row of GEN[col]){const S=gskin(row,col);S.tok=STAINS.map(()=>'tok'+S.key);PREMIUM.push(S);}

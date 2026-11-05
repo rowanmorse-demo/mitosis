@@ -362,6 +362,13 @@ const GEN_SKINS = [
   [337, 'speaker', 'Speaker', 400],
   [338, 'jetengine', 'Jet Engine', 1500],
   [339, 'safedial', 'Safe Dial', 600],
+  // mythic
+  [340, 'crystalball', 'Crystal Ball', 9000],
+  [341, 'orrery', 'Orrery', 10000],
+  [342, 'celestial', 'Celestial', 8000],
+  [343, 'goldenmandala', 'Golden Mandala', 12000],
+  [344, 'philosophersstone', 'Philosopher’s Stone', 15000],
+  [345, 'midas', 'Midas', 6000],
 ];
 for (const [id, key, name, price] of GEN_SKINS) SKINS.push({ id, key, name, price });
 const PACKS = [
