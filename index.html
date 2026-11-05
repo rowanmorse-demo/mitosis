@@ -1615,6 +1615,24 @@ body.saver .lb-bg *{animation:none!important}
 /* @ui:profile end */
 
 /* @ui:ranks-settings */
+/* page parts shared by the tab pages (Inventory's look): a section card, its heading row with a count pill, small caps labels,
+   and filter chips (--rc: the chip's colour, r g b) */
+.ds-sec{display:grid;gap:14px;min-width:0;box-sizing:border-box;padding:14px 14px 16px;border-radius:22px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.014));box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.ds-head{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:24px;padding:0 2px;min-width:0}
+.ds-head b{min-width:0;font:800 17px/1 var(--display);letter-spacing:-.025em;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ds-pill{flex:none;font:600 11px/1 var(--mono);color:var(--muted);padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px var(--line);font-variant-numeric:tabular-nums;white-space:nowrap}
+.ds-pill:empty{display:none}
+.ds-sub{padding:0 2px;font:700 10px/1.2 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.ds-chips{display:flex;gap:6px;min-width:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.ds-chips::-webkit-scrollbar{display:none}
+.ds-chip{--rc:196 214 210;appearance:none;flex:none;display:inline-flex;align-items:center;gap:7px;height:34px;box-sizing:border-box;padding:0 13px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.035);
+  color:var(--muted);font:700 12.5px/1 var(--display);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .15s,background-color .15s,border-color .15s,transform .12s}
+.ds-chip i{width:7px;height:7px;flex:none;border-radius:1.5px;transform:rotate(45deg);background:rgb(var(--rc))}
+.ds-chip em{font:600 11px/1 var(--mono);font-style:normal;opacity:.65;font-variant-numeric:tabular-nums}
+.ds-chip[aria-pressed=true]{color:#fff;border-color:rgb(var(--rc)/.65);background:rgb(var(--rc)/.16);box-shadow:inset 0 1px 0 rgba(255,255,255,.1)}
+.ds-chip:active{transform:scale(.95)}
+.ds-chip[data-r=common]{--rc:118 226 196}.ds-chip[data-r=rare]{--rc:154 140 255}.ds-chip[data-r=epic]{--rc:242 177 52}.ds-chip[data-r=legendary]{--rc:255 108 92}.ds-chip[data-r=seasonal]{--rc:255 138 42}
+@media (orientation:landscape) and (max-height:520px){.ds-sec{gap:12px;padding:12px 12px 14px;border-radius:20px}.ds-head b{font-size:15px}.ds-chip{height:32px;padding:0 12px}}
 /* both pages: one full-width column under the top bar (the shared landscape rule splits pages in two) */
 #overlay>#rankCard.page,#overlay>:is(#settingsCard,#friendsCard).page{grid-template-columns:minmax(0,1fr)}
 #rankCard .rk-wrap,:is(#settingsCard,#friendsCard) .sg-wrap{grid-column:1/-1;min-width:0}
@@ -1720,6 +1738,15 @@ body.saver .lb-bg *{animation:none!important}
 @keyframes rkIn{from{opacity:0;transform:translateX(8px)}}
 @keyframes rkSh{from{background-position:100% 0}to{background-position:-100% 0}}
 @media (orientation:landscape) and (max-height:520px){#rankCard .rk-side{top:52px}#rankCard .rk-me-t b{font-size:34px}}
+/* sections: Tiers (the ladder, and what raises your rating) and Leaderboard (podium and list), without cards inside cards */
+#rankCard .rk-tiers .rk-ladder{background:none;border-color:transparent;box-shadow:none;margin:-6px 0 -2px}
+#rankCard .rk-howrow{display:grid;gap:9px}
+#rankCard .rk-how::before{display:none}
+#rankCard .rk-board .rk-podium{padding-top:26px}
+#rankCard .rk-board .rk-list{padding:0;background:none;border:0;box-shadow:none}
+#rankCard .rk-board .rk-empty{padding:22px 12px 14px;background:none;border:0;box-shadow:none}
+#rankCard .rk-board[data-state=offline] .ds-pill,#rankCard .rk-board[data-state=empty] .ds-pill{display:none}
+@media (orientation:landscape) and (max-height:520px){#rankCard .rk-side{position:static}#rankCard .rk-board .rk-podium{padding-top:22px}}
 @media (orientation:landscape) and (max-width:900px){#rankCard .rk-wrap{grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);gap:16px}}
 @media (orientation:portrait),(max-width:640px){
   #rankCard .rk-wrap{grid-template-columns:minmax(0,1fr);gap:14px}
@@ -2592,14 +2619,17 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
       <aside class="rk-side">
         <div class="rk-me" id="rkMe"></div>
         <div class="rk-ai" id="rkAi"></div>
+        <section class="ds-sec rk-tiers" aria-labelledby="rkTiersT"><div class="ds-head"><b id="rkTiersT">Tiers</b><span class="ds-pill">vs players</span></div>
         <ol class="rk-ladder" id="tierLegend" aria-label="Tiers"></ol>
+        <div class="rk-howrow"><span class="ds-sub" aria-hidden="true">Rating rises when you</span>
         <ul class="rk-how" id="rankHint" aria-label="Rating rises when you">
           <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9.5 2.5h5"/></svg>Survive</li>
           <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="12" r="6.5"/><circle cx="18.5" cy="7.5" r="2.5"/><circle cx="18" cy="17" r="1.6"/></svg>Absorb</li>
           <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3M12 14v4M8 20h8"/></svg>Place high</li>
-        </ul>
+        </ul></div></section>
       </aside>
-      <section class="rk-board" id="rkBoard" data-state="loading" aria-label="Top players">
+      <section class="rk-board ds-sec" id="rkBoard" data-state="loading" aria-labelledby="rkBoardT">
+        <div class="ds-head"><b id="rkBoardT">Leaderboard</b><span class="ds-pill">Top 10</span></div>
         <div class="rk-podium" id="rkPodium"></div>
         <ol class="rk-list" id="topList"></ol>
         <div class="rk-empty" id="rkEmpty" hidden><i id="rkEmptyIco"></i><b id="rkEmptyT"></b><span id="rkEmptyS"></span><button type="button" class="rk-retry" id="rkRetry">Retry</button></div>
