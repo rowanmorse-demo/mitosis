@@ -14,7 +14,7 @@ A multiplayer cell-eating arena set in a giant petri well. Absorb anything small
 - **Hunter phages** that breach the rim and inject cells; the cell bursts into up to 16 pieces 8–10 s later
 - **ATP and skins**: earn ATP by placing well (or buy it in the apps) and spend it in a full-screen shop on nineteen premium skins, up to the 12,000,000 ATP One Cell to Rule Them All
 - **Levels**: every ranked life earns XP for how long you stay alive and where you place, and XP adds up into a profile level. The lobby and the Profile show your level with a bar toward the next one; the results screen counts the XP in, shows where it came from and celebrates a level-up
-- **A lobby that knows you**: a live portrait of your cell, your level and your rating with progress to the next tier, who is in the room and the round clock. First launch shows a three-step welcome card (Settings can bring it back). The Profile keeps your last runs with placement, time, peak mass and rating change
+- **A lobby that knows you**: a live portrait of your cell, your level and your rating with progress to the next tier, who is in the room and the round clock. First launch shows a three-step welcome card (Settings can bring it back). The tab bar along the bottom holds Inventory, Shop, Ranks and Friends; tapping your name card at the top opens the Profile, which keeps your last runs with placement, time, peak mass and rating change
 - **Background** in Settings: a black dish (the default) or a white one
 - **Effects toggle** in Settings (Full or Reduced) for older phones; the game also drops to reduced effects on its own when frames run long
 - **Rounds of ten minutes**: the arena is full size for the first minute, then closes in to 3% of the dish by 9:30. Anything caught outside dissolves. Bots stop respawning at 7:00, and the round ends as soon as one player's cells are all that is left: the last cell standing wins
@@ -133,7 +133,7 @@ Practice and Nearby games pay nothing. There is no hourly cap, but the amounts a
 
 Prices are set in App Store Connect and the Play Console; the apps show them from there. Packs can only be bought inside the iOS and Android apps. The website earns ATP but does not sell it.
 
-**Skins** (Nebula, Magma, Honeycomb, Circuit, Leopard, Glacier, Toxic, Eyeball, Galaxy, Gilded, Black Hole, One Cell to Rule Them All) are picked on the start card next to the free patterns. Owned skins are visible to every other player. The list, with prices, lives in two places that must match: `PREMIUM` in `index.html` (how each skin is drawn) and `SKINS` in `economy.js` (what the server charges).
+**Skins** (Nebula, Magma, Honeycomb, Circuit, Leopard, Glacier, Toxic, Eyeball, Galaxy, Gilded, Black Hole, One Cell to Rule Them All) are picked in Inventory (the first tab on the home screen), which shows only the skins you own next to the free colours and patterns; skins you don't own are in the Shop. Owned skins are visible to every other player. The list, with prices, lives in two places that must match: `PREMIUM` in `index.html` (how each skin is drawn) and `SKINS` in `economy.js` (what the server charges).
 
 **Where it lives.** The server owns every wallet. The page only reports "this run ended", "buy this skin" and "credit this purchase"; the server decides the payout, caps it, checks the price and verifies receipts with Apple or Google. A player starts as a random device secret stored in the browser or app, so there is no sign-up. Clearing site data or deleting the app starts a fresh wallet.
 
