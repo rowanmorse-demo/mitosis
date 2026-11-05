@@ -37,6 +37,21 @@ const SKINS = [
   { id: 29, key: 'seasparkle', name: 'Sea Sparkle', price: 0, pass: 's1' },
   { id: 30, key: 'radiolarian', name: 'Radiolarian', price: 0, pass: 's1' },
   { id: 31, key: 'bloom', name: 'Bloom', price: 0, pass: 's1' },
+  // the November additions, shown in the shop by category (SKIN_CATS in index.html)
+  { id: 32, key: 'lunar', name: 'Lunar', price: 400 },
+  { id: 33, key: 'terra', name: 'Terra', price: 900 },
+  { id: 34, key: 'storm', name: 'Tempest', price: 1200 },
+  { id: 35, key: 'morpho', name: 'Morpho', price: 700 },
+  { id: 36, key: 'watermelon', name: 'Watermelon', price: 300 },
+  { id: 37, key: 'peppermint', name: 'Peppermint', price: 350 },
+  { id: 38, key: 'sprinkles', name: 'Sprinkles', price: 450 },
+  { id: 39, key: 'clockwork', name: 'Clockwork', price: 2500 },
+  { id: 40, key: 'disco', name: 'Disco', price: 1100 },
+  { id: 41, key: 'lavalamp', name: 'Lava Lamp', price: 800 },
+  { id: 42, key: 'stainedglass', name: 'Stained Glass', price: 1500 },
+  { id: 43, key: 'opal', name: 'Opal', price: 900 },
+  { id: 44, key: 'dragon', name: 'Dragon', price: 5000 },
+  { id: 45, key: 'phoenix', name: 'Phoenix', price: 9000 },
 ];
 const PACKS = [
   { id: 'atp_500', atp: 500 },
