@@ -5550,6 +5550,51 @@ petri(q,u,P,R){const C=P.c;fillAll(q,gc(C[0]));disc(q,0,0,1.02,rgr(q,-.1,-.15,1.
     if(s>.08){q.beginPath();q.arc(x,y,s*.6,0,TAU);q.lineWidth=s*.08;q.strokeStyle=gc(gsh(cl,-.2),.5);q.stroke();}}
   ggloss(q,.9);},
 });
+Object.assign(GF,{
+// Elemental fields worked out pixel by pixel from warped noise. k: 'fire' (flames licking upward), 'ember' (charcoal split by glowing cracks),
+// 'smoke' (wisps), 'swirl' (sand, sea, venom: bands wound by the warp), 'chrome' (liquid metal), 'ink' (ink blooming in water). C: the ramp, dark to light.
+flow(q,u,P,R,S){const C=P.c,k=P.k,sd=S.id%31*2.7,sc=P.s||1.4;gfield(q,gtex(S.key,u,(x,y,o)=>{gwi(x,y,GO2);const X=GO2[0]*sc+sd,Y=GO2[1]*sc,wx=gfbm(X*.8,Y*.8+5,4),wy=gfbm(X*.8+9,Y*.8,4);let v;
+    if(k==='fire'){const f=gfbm(X*1.6+wx*1.5,Y*1.1+wy*2+sd,5);v=Math.min(1,Math.max(0,f*1.5-.35+(.3-y*.35)));v=Math.pow(v,1.3);}
+    else if(k==='ember'){const c=Math.pow(gridge(X*1.5+wx*.8,Y*1.5+wy*.8,4),5),g=gfbm(X*3,Y*3,3);v=Math.min(1,c*1.4+g*.12);}
+    else if(k==='smoke'){v=Math.pow(gfbm(X+wx*2.2,Y+wy*2.2,5),2.2)*1.9;}
+    else if(k==='chrome'){const t=Math.sin((X*.7+Y*.5+wx*2.6+wy*1.2)*3.2);v=.5+.5*t;}
+    else if(k==='ink'){const f=gfbm(X*1.2+wx*2.6,Y*1.2+wy*2.6,5);v=gstep(.35,.62,f)*.85+Math.pow(gridge(X*2+wx*2,Y*2+wy*2,3),8)*.4;}
+    else{v=.5+.5*Math.sin((X*.6+Y*.4+wx*4.2+wy*1.8)*7.5);v=Math.pow(v,1.4)*.85+gfbm(X*3+2,Y*3,3)*.15;}
+    gramp(C,Math.min(1,Math.max(0,v)),o);}));
+  if(k==='ember'||k==='fire'){q.globalCompositeOperation='lighter';for(let i=0;i<(u>70?50:20);i++){const a=R()*TAU,d=Math.sqrt(R())*1.05,x=Math.cos(a)*d,y=Math.sin(a)*d,s=.008+R()*.018;disc(q,x,y,s*3,rgr(q,x,y,s*3,[0,gc(C[C.length-1],.9),.3,gc(C[C.length-2],.5),1,gc(C[C.length-2],0)]));}q.globalCompositeOperation='source-over';}
+  if(k==='chrome')ggloss(q,1);},
+// A snowflake: a six-fold dendrite of ice on a winter sky, every arm branching the same way. C: sky dark, sky, ice, ice light.
+snowflake(q,u,P,R){const C=P.c;fillAll(q,gc(C[0]));disc(q,0,0,1.15,rgr(q,-.2,-.3,1.4,[0,gc(C[1]),1,gc(C[0])]));const br=[];for(let i=0;i<5;i++)br.push([.18+i*.15+R()*.04,.12+R()*.22*(1-i*.12),.9+R()*.3]);
+  const arm=()=>{q.beginPath();q.moveTo(0,0);q.lineTo(.92,0);for(const [t,L,a] of br)for(const s of[-1,1]){q.moveTo(t,0);q.lineTo(t+Math.cos(a)*L,s*Math.sin(a)*L);q.moveTo(t+Math.cos(a)*L*.5,s*Math.sin(a)*L*.5);q.lineTo(t+Math.cos(a)*L*.5+Math.cos(a*.5)*L*.35,s*(Math.sin(a)*L*.5+Math.sin(a*.5)*L*.35));}};
+  q.lineCap=q.lineJoin='round';for(const [w,cl] of[[.09,gc(C[2],.18)],[.05,gc(C[2],.65)],[.018,gc(C[3])]]){q.save();for(let i=0;i<6;i++){q.rotate(Math.PI/3);arm();q.lineWidth=w;q.strokeStyle=cl;q.stroke();}q.restore();}
+  q.beginPath();for(let i=0;i<6;i++){const a=i/6*TAU;q.lineTo(Math.cos(a)*.14,Math.sin(a)*.14);}q.closePath();q.fillStyle=gc(C[3],.85);q.fill();
+  q.fillStyle='#fff';for(let i=0;i<6;i++){const a=i/6*TAU+.2;gspark(q,Math.cos(a)*.5,Math.sin(a)*.5,.05);}},
+// Hoarfrost: frost ferns grown across dark glass from the rim. C: glass dark, glass, frost.
+hoarfrost(q,u,P,R){const C=P.c;fillAll(q,gc(C[0]));disc(q,0,0,1.15,rgr(q,.1,.1,1.3,[0,gc(C[0]),1,gc(C[1])]));q.lineCap='round';
+  const fern=(x,y,a,L,d)=>{const st=.03;for(let s=0;s*st<L;s++){const nx=x+Math.cos(a)*st,ny=y+Math.sin(a)*st;q.moveTo(x,y);q.lineTo(nx,ny);if(d<3&&s%2===1)for(const g of[-1,1])fern(nx,ny,a+g*(.9+R()*.3),(L-s*st)*(.35+R()*.25),d+1);x=nx;y=ny;a+=(R()-.5)*.18;}};
+  q.beginPath();for(let i=0;i<14;i++){const a=i/14*TAU+R()*.3,d=1.1;fern(Math.cos(a)*d,Math.sin(a)*d,a+Math.PI+(R()-.5)*.6,.5+R()*.4,u>70?0:1);}q.lineWidth=.022;q.strokeStyle=gc(C[2],.15);q.stroke();q.lineWidth=Math.max(.005,.8/u);q.strokeStyle=gc(C[2],.85);q.stroke();
+  ggloss(q,.4,1);},
+// A tornado seen from above: cloud and dust wound into a funnel round a dark eye. C: eye, dark, cloud, light.
+tornado(q,u,P,R,S){const C=P.c;gfield(q,gtex(S.key,u,(x,y,o)=>{const r=Math.hypot(x,y)+.01,a=Math.atan2(y,x),t=a-Math.log(r)*1.8,f=gfbm(Math.cos(t)*2.2+S.id,Math.sin(t)*2.2+r*2,5),b=Math.pow(1-Math.abs(gfbm(Math.cos(t)*4,Math.sin(t)*4+r*4,3)*2-1),4);
+    gramp(C,Math.min(1,gstep(.03,.35,r)*(.35+f*.5)+b*.25*gstep(.1,.4,r)),o);}));},
+// A sunset: the sun sinking into the sea, layered clouds lit pink and gold from beneath, its glitter on the water. C: sky top, sky middle, horizon, sun, sea, cloud.
+sunset(q,u,P,R){const C=P.c,hz=.25;q.fillStyle=lgr(q,0,-1.15,0,hz,[0,gc(C[0]),.55,gc(C[1]),1,gc(C[2])]);q.fillRect(-1.2,-1.2,2.4,1.2+hz);q.fillStyle=lgr(q,0,hz,0,1.15,[0,gc(gsh(C[4],.15)),1,gc(gsh(C[4],-.4))]);q.fillRect(-1.2,hz,2.4,1);
+  q.globalCompositeOperation='lighter';disc(q,0,hz,.8,rgr(q,0,hz,.8,[0,gc(C[3],.6),.3,gc(C[3],.2),1,gc(C[3],0)]));q.globalCompositeOperation='source-over';
+  q.save();q.beginPath();q.rect(-1.2,-1.2,2.4,1.2+hz);q.clip();disc(q,0,hz+.02,.24,rgr(q,0,hz,.24,[0,'#fffbe8',.6,gc(C[3]),1,gc(gsh(C[3],-.1))]));q.restore();
+  for(let i=0;i<6;i++){const y=-.7+i*.13+R()*.05,x=(R()-.5)*1.2,w=.4+R()*.5;q.beginPath();q.ellipse(x,y,w,.035+R()*.02,0,0,TAU);q.fillStyle=lgr(q,0,y-.04,0,y+.04,[0,gc(gsh(C[5],-.2),.85),1,gc(C[5],.95)]);q.fill();}
+  q.globalCompositeOperation='lighter';for(let i=0;i<26;i++){const y=hz+.03+Math.pow(R(),1.5)*.8,w=(.05+R()*.12)*(1-(y-hz)*.5);q.fillStyle=gc(C[3],.5*(1-(y-hz)));q.fillRect(-w/2+(R()-.5)*.15*(y-hz)*3,y,w,.012);}q.globalCompositeOperation='source-over';},
+// A blizzard: snow streaking sideways through blue dark, near flakes big and soft, far ones fine. C: dark, mid, snow.
+blizzard(q,u,P,R){const C=P.c;fillAll(q,gc(C[0]));disc(q,0,0,1.15,rgr(q,-.3,-.2,1.5,[0,gc(C[1]),1,gc(C[0])]));q.lineCap='round';
+  for(const [n,L,w,a] of[[160,.08,.006,.4],[80,.14,.012,.6],[30,.22,.02,.85]]){q.beginPath();for(let i=0;i<n;i++){const x=R()*2.4-1.2,y=R()*2.4-1.2;q.moveTo(x,y);q.lineTo(x+L,y+L*.35);}q.lineWidth=w;q.strokeStyle=gc(C[2],a);q.stroke();}
+  q.globalCompositeOperation='lighter';disc(q,-.4,-.3,.9,rgr(q,-.4,-.3,.9,[0,gc(C[2],.12),1,gc(C[2],0)]));q.globalCompositeOperation='source-over';},
+// Drought: sun-baked clay split into curling plates. C: crack, clay dark, clay, clay light.
+drought(q,u,P,R,S){const C=P.c;gfield(q,gtex(S.key,u,(x,y,o)=>{gwi(x,y,GO2);const X=GO2[0]*3.2+S.id,Y=GO2[1]*3.2,v=gvor(X+(gfbm(X*.6,Y*.6,2)-.5)*.6,Y+(gfbm(X*.6+5,Y*.6,2)-.5)*.6,.9),e=v.f2-v.f1,
+    lit=.55+.45*(-(v.dx*GLX+v.dy*GLY))*1.4*gstep(.05,.3,e),n=gfbm(X*3,Y*3,3);gramp(C.slice(1),Math.min(1,Math.max(0,lit*.7+n*.3)),o);const ck=gstep(.07,.02,e);for(let i=0;i<3;i++)o[i]+=(C[0][i]-o[i])*ck;}));},
+// Raindrops on a window, the city lights blurred behind them, each drop a little lens with its highlight. C: dark, then the blurred lights.
+raindrops(q,u,P,R){const C=P.c;fillAll(q,gc(C[0]));q.globalCompositeOperation='lighter';for(let i=0;i<24;i++){const x=R()*2.4-1.2,y=R()*2.4-1.2,s=.14+R()*.3,cl=C[1+Math.floor(R()*(C.length-1))];disc(q,x,y,s,rgr(q,x,y,s,[0,gc(cl,.85),.55,gc(cl,.55),.8,gc(cl,.2),1,gc(cl,0)]));}q.globalCompositeOperation='source-over';
+  for(let i=0;i<34;i++){const x=R()*2.3-1.15,y=R()*2.3-1.15,s=.03+Math.pow(R(),2)*.12,e=1+R()*.3;q.save();q.translate(x,y);q.scale(1,e);q.beginPath();q.arc(0,0,s,0,TAU);q.fillStyle=rgr(q,0,s*.3,s,[0,'rgba(255,255,255,.3)',.75,'rgba(255,255,255,.08)',1,'rgba(0,0,0,.55)']);q.fill();
+    q.beginPath();q.arc(0,0,s*.75,Math.PI*1.1,Math.PI*1.5);q.lineWidth=s*.18;q.lineCap='round';q.strokeStyle='rgba(255,255,255,.75)';q.stroke();disc(q,s*.25,s*.35,s*.2,'rgba(255,255,255,.25)');q.restore();}},
+});
 // a football's 32 panels: the truncated icosahedron's 12 pentagons and 20 hexagons, pushed out onto the sphere
 const GSOC=(()=>{const f=(1+Math.sqrt(5))/2,V=[],E=[],nz=p=>{const l=Math.hypot(p[0],p[1],p[2]);return[p[0]/l,p[1]/l,p[2]/l];},lp=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
   for(const a of[-1,1])for(const b of[-f,f])V.push([0,a,b],[a,b,0],[b,0,a]);
@@ -6382,6 +6427,23 @@ lab:[
 [309,'yeast','Yeast',350,'micro','1a1a10 3a3a28 b8a870 e8d8a0 fff6d8 8a7a4a',{k:'yeast',m:3},'Budding yeast, making more of itself.'],
 [310,'bacilli','Bacilli',350,'micro','0a1a0a 1a3a1a 2a6a2a 5ac05a aaf0aa 000000',{k:'bacilli',m:3},'Rod-shaped bacteria in a crowd.'],
 [311,'leafcells','Leaf Cells',400,'micro','0a2a0a 6ab040 2a5a1a 2a8a2a 9ad86a 3a6a8a',{k:'leaf',m:1},'Plant cells in their walls, full of chloroplasts.'],
+],
+elements:[
+[312,'inferno','Inferno',900,'flow','1a0200 6a0a02 d8360a f8901a ffd84a fffbe0',{k:'fire',m:3},'Flames licking up from a white-hot heart.'],
+[313,'embers','Embers',600,'flow','080404 1e0c06 6a1a04 e8500a ffb02a fff0a0',{k:'ember',m:3},'Charcoal glowing through its cracks.'],
+[314,'smoke','Smoke',400,'flow','0a0c0e 2a2e34 6a7078 c8ccd2 f2f4f6',{k:'smoke',m:1},'Wisps of grey smoke curling in the dark.'],
+[315,'sandstorm','Sandstorm',400,'flow','7a4a1a b8803a e0b070 f6e0b0',{m:2},'Desert sand whipped into swirls.'],
+[316,'riptide','Riptide',500,'flow','04182a 0a3a5a 1a7a8a 6ac8c8 e8fafa',{m:2},'Deep water churned into foam.'],
+[317,'quicksilver','Quicksilver',1500,'flow','20242a 7a828c f8fafc a8b0b8 3a3e46 dfe4ea ffffff',{k:'chrome',s:1.1,fx:'s',m:3},'Liquid mercury, mirror-bright.'],
+[318,'venom','Venom',500,'flow','020a04 0a2a0a 2a8a1a 8af03a e8ffb0',{m:2},'Green and black, swirled like poison.'],
+[319,'ink','Ink',400,'flow','f6f4f0 c8ccd4 4a5a7a 1a2440 05080f',{k:'ink',m:3},'Indigo ink blooming through water.'],
+[320,'snowflake','Snowflake',600,'snowflake','0a1a3a 2a5a9a c8e8ff ffffff',{m:2},'Six arms of ice, each one the same.'],
+[321,'hoarfrost','Hoarfrost',500,'hoarfrost','06101e 1a3450 e8f6ff',{m:1},'Frost ferns creeping in across dark glass.'],
+[322,'tornado','Tornado',900,'tornado','0a0a0c 3a3a40 8a8a90 d8d8dc',{spin:-1.2,m:2},'A twister seen from above, turning.'],
+[323,'sunset','Sunset',450,'sunset','2a1a5a e05a8a ffb060 fff0b0 1a2a5a 5a2a5a',{m:2},'The sun sinking into the sea.'],
+[324,'blizzard','Blizzard',400,'blizzard','061428 1a3a6a f6faff',{m:1},'Snow streaking sideways through the dark.'],
+[325,'drought','Drought',350,'drought','2a1408 8a5a30 c8945a e8c090',{m:2},'Sun-baked clay, cracked into plates.'],
+[326,'raindrops','Raindrops',450,'raindrops','060a14 ff8a3a ffd04a 3a8aff ff4a8a 6affd0',{m:3},'Rain on the window, city lights blurred behind.'],
 ],
 };
 for(const col in GEN)for(const row of GEN[col]){const S=gskin(row,col);S.tok=STAINS.map(()=>'tok'+S.key);PREMIUM.push(S);}
