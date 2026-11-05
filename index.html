@@ -5344,6 +5344,78 @@ kaleido(q,u,P,R){const C=P.c,n=P.n||12,w=TAU/n,sh=[];fillAll(q,gc(C[0]));for(let
       if(ring){q.lineWidth=s*.25;q.strokeStyle=gc(cl,.9);q.stroke();}else{q.fillStyle=rgr(q,x,y,s,[0,gc(gsh(cl,.3),.9),1,gc(cl,.75)]);q.fill();q.lineWidth=Math.max(.004,.7/u);q.strokeStyle=gc(gsh(cl,-.5),.6);q.stroke();}}q.restore();}
   q.globalCompositeOperation='lighter';disc(q,0,0,1.15,rgr(q,0,0,1.15,[0,'rgba(255,255,255,.15)',.5,'rgba(255,255,255,0)',1,'rgba(255,255,255,0)']));q.globalCompositeOperation='source-over';},
 });
+// pixel sprites, 12 by 12, row by row: '.' clear, a digit indexes the palette
+const GPIX={heart:'..............11....11...1221..1221.122221122221123222222221122222222221122222222221.1222222221...12222221.....122221.......1221.........11.....',skull:'...111111.....12222221...1222222221..1233223321..1233223321..1222112221..1222222221...12222221.....121212......122221.......1111................',slime:'.................11.........1221.......122221.....12222221...1223223221..1223223221.122222222221122224422221122222222221.1111111111.............',crown:'.........................1...11...1.121.1221.121122112211221122222222221123223322321122222222221144444444441111111111111........................'};
+Object.assign(GF,{
+// A record: fine grooves catching the light in two bright wedges, a printed label, the spindle hole; it spins. k: 'black', 'clear' (coloured
+// vinyl you can see light through), 'splat' (colour splatter), 'gold'. C: disc dark, disc, label, label print, splatter colours.
+vinyl(q,u,P,R){const C=P.c,k=P.k,hi=u>60;fillAll(q,gc(C[0]));disc(q,0,0,1.15,gc(C[1]));
+  if(k==='clear')disc(q,0,0,1.15,rgr(q,-.3,-.3,1.4,[0,gc(gsh(C[1],.35),.9),1,gc(C[0],.9)]));
+  if(k==='splat'){for(let i=0;i<26;i++){const a=R()*TAU,d=.38+R()*.7,x=Math.cos(a)*d,y=Math.sin(a)*d,s=.04+R()*.12,cl=C[4+Math.floor(R()*(C.length-4))];q.beginPath();for(let j=0;j<11;j++){const b=j/11*TAU,l=s*(.6+R()*.7);j?q.lineTo(x+Math.cos(b)*l,y+Math.sin(b)*l):q.moveTo(x+Math.cos(b)*l,y+Math.sin(b)*l);}q.closePath();q.fillStyle=gc(cl,.92);q.fill();}}
+  if(hi){q.beginPath();for(let r=.4;r<1.13;r+=.011){q.moveTo(r,0);q.arc(0,0,r,0,TAU);}q.lineWidth=Math.max(.0025,.5/u);q.strokeStyle=k==='gold'?'rgba(90,60,0,.35)':'rgba(0,0,0,.4)';q.stroke();}
+  for(const a of[-2.4,.74]){q.save();q.rotate(a);q.beginPath();q.moveTo(0,0);q.arc(0,0,1.15,-.28,.28);q.closePath();q.fillStyle=rgr(q,0,0,1.15,[0,'rgba(255,255,255,0)',.36,'rgba(255,255,255,0)',.4,'rgba(255,255,255,.22)',1,'rgba(255,255,255,.08)']);q.fill();q.restore();}
+  q.beginPath();q.arc(0,0,.4,0,TAU);q.lineWidth=.02;q.strokeStyle='rgba(0,0,0,.4)';q.stroke();
+  disc(q,0,0,.34,rgr(q,-.08,-.1,.4,[0,gc(gsh(C[2],.15)),1,gc(C[2])]));q.beginPath();q.arc(0,0,.29,0,TAU);q.lineWidth=.012;q.strokeStyle=gc(C[3],.7);q.stroke();q.fillStyle=gc(C[3],.85);q.fillRect(-.2,-.17,.4,.05);q.fillRect(-.14,-.09,.28,.022);
+  for(const [y,w] of[[.08,.3],[.13,.22],[.18,.26]])q.fillRect(-w/2,y,w,.018);disc(q,0,0,.035,'#0a0a0a');},
+// A synthwave sunset: a striped sun sinking behind neon mountains above a glowing grid that runs to the horizon. C: sky top, sky low, sun top, sun low, grid, ground.
+synth(q,u,P,R){const C=P.c,hz=.12;fillAll(q,gc(C[5]));q.fillStyle=lgr(q,0,-1.15,0,hz,[0,gc(C[0]),1,gc(C[1])]);q.fillRect(-1.2,-1.2,2.4,1.2+hz);
+  q.fillStyle='#fff';for(let i=0;i<40;i++){q.globalAlpha=.3+R()*.6;q.fillRect(R()*2.3-1.15,-1.15+R()*.8,.008,.008);}q.globalAlpha=1;
+  q.save();q.beginPath();q.rect(-1.2,-1.2,2.4,1.2+hz);q.clip();const sr=.62,sy=hz-.1;q.beginPath();q.arc(0,sy,sr,0,TAU);for(let i=0;i<6;i++){const y=sy-.02+i*.075,h=.012+i*.01;q.rect(-1,y,2,h);}q.fillStyle=lgr(q,0,sy-sr,0,sy+sr*.3,[0,gc(C[2]),1,gc(C[3])]);q.fill('evenodd');
+  q.globalCompositeOperation='lighter';disc(q,0,sy,sr*1.6,rgr(q,0,sy,sr*1.6,[0,gc(C[3],.25),.6,gc(C[3],.08),1,gc(C[3],0)]));q.globalCompositeOperation='source-over';
+  q.beginPath();q.moveTo(-1.2,hz);for(let x=-1.2;x<=1.2;x+=.1)q.lineTo(x,hz-.04-Math.abs(Math.sin(x*3.1)+Math.sin(x*7.3)*.4)*.18*(1-Math.abs(x)*.2));q.lineTo(1.2,hz);q.closePath();q.fillStyle=gc(gsh(C[5],.05));q.fill();q.lineWidth=.008;q.strokeStyle=gc(C[4],.8);q.stroke();q.restore();
+  q.save();q.beginPath();q.rect(-1.2,hz,2.4,1.2);q.clip();q.fillStyle=lgr(q,0,hz,0,1.15,[0,gc(gsh(C[4],-.6)),.15,gc(C[5]),1,gc(C[5])]);q.fillRect(-1.2,hz,2.4,1.2);q.beginPath();
+  for(let i=-12;i<=12;i++){q.moveTo(i*.04,hz);q.lineTo(i*.4,1.2);}for(let j=1;j<14;j++){const y=hz+Math.pow(j/13,2.2)*1.1;q.moveTo(-1.2,y);q.lineTo(1.2,y);}q.lineWidth=.01;q.strokeStyle=gc(C[4],.9);q.stroke();q.lineWidth=.03;q.strokeStyle=gc(C[4],.2);q.stroke();q.restore();},
+// Tie-dye, pixel by pixel: colours wound in a spiral (k 'spiral'), in rings ('rings') or crumpled ('crumple'), white where the dye did not take.
+// C: the dyes, round the cycle; the last is the cloth.
+tiedye(q,u,P,R,S){const C=P.c,n=C.length-1,k=P.k;gfield(q,gtex(S.key,u,(x,y,o)=>{gwi(x,y,GO2);const X=GO2[0],Y=GO2[1],r=Math.hypot(X,Y),a=Math.atan2(Y,X),w=gfbm(X*2.5+S.id,Y*2.5,4);
+    let v=k==='spiral'?a/TAU*3+r*1.4+w*.5:k==='rings'?r*3.2+w*.7+Math.sin(a*8)*.04:gfbm(X*1.2+3,Y*1.2,4)*5+w*.6;v=((v%1)+1)%1;const f=v*n,i=Math.floor(f),t=f-i,wh=gstep(.45,.5,Math.abs(t-.5))*.0+Math.pow(gstep(.08,0,Math.min(t,1-t)),1.5)*.55;
+    gramp([C[i%n],C[(i+1)%n]],gstep(.6,1,t),o);for(let j=0;j<3;j++)o[j]+=(C[n][j]-o[j])*wh*(.6+.4*gn(X*30,Y*30));}));if(u>60)gtwill(q,.35);},
+// A smiley: a yellow face, two eyes and a big grin. C: dark, face, light, ink.
+smiley(q,u,P,R){const C=P.c;fillAll(q,gc(C[1]));disc(q,0,0,1.15,rgr(q,-.25,-.3,1.4,[0,gc(C[2]),.6,gc(C[1]),1,gc(C[0])]));q.fillStyle=gc(C[3]);
+  for(const s of[-1,1]){q.beginPath();q.ellipse(s*.28,-.24,.09,.19,0,0,TAU);q.fill();}q.beginPath();q.arc(0,.02,.55,.25,Math.PI-.25);q.lineWidth=.09;q.lineCap='round';q.strokeStyle=gc(C[3]);q.stroke();
+  q.beginPath();for(const s of[-1,1]){q.moveTo(s*.6,.13);q.lineTo(s*.47,.24);}q.lineWidth=.06;q.stroke();ggloss(q,.6);},
+// Pixel art: a 12 by 12 sprite on a dark screen, every pixel a little lit square with gaps between. C: screen, ink, colour, accent, extra.
+pixel(q,u,P,R){const C=P.c,G=GPIX[P.k],n=12,s=1.9/n;fillAll(q,gc(C[0]));disc(q,0,0,1.15,rgr(q,0,0,1.15,[0,gc(gsh(C[0],.12)),1,gc(C[0])]));
+  q.fillStyle=gc(gsh(C[0],.08));for(let j=0;j<n;j++)for(let i=0;i<n;i++)q.fillRect(-.95+i*s+s*.08,-.95+j*s+s*.08,s*.84,s*.84);
+  for(let j=0;j<n;j++)for(let i=0;i<n;i++){const ch=G[j*n+i];if(ch==='.'||ch===undefined)continue;const cl=C[+ch],x=-.95+i*s,y=-.95+j*s;q.fillStyle=gc(cl);q.fillRect(x+s*.06,y+s*.06,s*.88,s*.88);q.fillStyle=gc(gsh(cl,.35),.6);q.fillRect(x+s*.06,y+s*.06,s*.88,s*.16);}
+  q.globalCompositeOperation='lighter';disc(q,0,0,1.15,rgr(q,0,0,1.15,[0,gc(C[2],.18),.7,gc(C[2],.05),1,gc(C[2],0)]));q.globalCompositeOperation='source-over';
+  q.fillStyle='rgba(0,0,0,.18)';for(let y=-1.15;y<1.15;y+=.02)q.fillRect(-1.2,y,2.4,.008);},
+// A television test card: colour bars, a grey grid, and the circle in the middle with its boxes and bars. C: unused.
+testcard(q,u,P,R){const B=['c0c0c0','c0c000','00c0c0','00c000','c000c0','c00000','0000c0'];fillAll(q,'#3a3a3a');q.beginPath();for(let i=-6;i<=6;i++){q.moveTo(i*.2,-1.2);q.lineTo(i*.2,1.2);q.moveTo(-1.2,i*.2);q.lineTo(1.2,i*.2);}q.lineWidth=.012;q.strokeStyle='#e8e8e8';q.stroke();
+  q.save();q.beginPath();q.arc(0,0,.78,0,TAU);q.clip();q.fillStyle='#202020';q.fillRect(-1,-1,2,2);for(let i=0;i<7;i++){q.fillStyle='#'+B[i];q.fillRect(-.78+i*.223,-.5,.224,.62);}
+  for(let i=0;i<8;i++){const g=Math.round(i/7*255);q.fillStyle=`rgb(${g},${g},${g})`;q.fillRect(-.78+i*.195,.12,.196,.2);}q.fillStyle='#000';q.fillRect(-.78,.32,1.56,.22);q.fillStyle='#fff';for(let i=0;i<10;i++)q.fillRect(-.6+i*.12,.34,.04+i*.004,.18);
+  q.fillStyle='#e8e8e8';q.fillRect(-.78,-.78,1.56,.28);q.fillStyle='#202020';q.fillRect(-.3,-.72,.6,.16);q.restore();
+  q.beginPath();q.arc(0,0,.78,0,TAU);q.lineWidth=.025;q.strokeStyle='#f0f0f0';q.stroke();q.beginPath();q.moveTo(-.78,0);q.lineTo(.78,0);q.moveTo(0,-.78);q.lineTo(0,.78);q.lineWidth=.008;q.strokeStyle='rgba(255,255,255,.7)';q.stroke();
+  q.fillStyle='rgba(0,0,0,.12)';for(let y=-1.15;y<1.15;y+=.016)q.fillRect(-1.2,y,2.4,.006);},
+// A neon sign on a dark brick wall: glass tubing bent into a shape, glowing. k: 'heart', 'bolt', 'star'. C: wall, mortar, tube, glow.
+neon(q,u,P,R){const C=P.c,k=P.k;fillAll(q,gc(C[0]));q.fillStyle=gc(C[1]);for(let j=0;j<16;j++){const y=-1.2+j*.15;q.fillRect(-1.2,y,2.4,.012);for(let i=0;i<9;i++)q.fillRect(-1.2+i*.32+(j%2?.16:0),y,.012,.15);}
+  for(let j=0;j<16;j++)for(let i=0;i<9;i++){const x=-1.2+i*.32+(j%2?.16:0),y=-1.2+j*.15;q.fillStyle=`rgba(255,255,255,${(R()*.05).toFixed(3)})`;q.fillRect(x+.012,y+.012,.308,.138);}
+  const path=()=>{q.beginPath();if(k==='heart'){q.moveTo(0,.5);q.bezierCurveTo(-.85,-.05,-.55,-.75,0,-.32);q.bezierCurveTo(.55,-.75,.85,-.05,0,.5);}
+    else if(k==='bolt'){q.moveTo(.12,-.72);q.lineTo(-.34,.06);q.lineTo(-.02,.06);q.lineTo(-.14,.72);q.lineTo(.36,-.12);q.lineTo(.04,-.12);q.closePath();}
+    else{for(let i=0;i<10;i++){const a=-Math.PI/2+i/10*TAU,r=i%2?.27:.66;i?q.lineTo(Math.cos(a)*r,Math.sin(a)*r):q.moveTo(Math.cos(a)*r,Math.sin(a)*r);}q.closePath();}};
+  q.globalCompositeOperation='lighter';disc(q,0,0,1.1,rgr(q,0,0,1.1,[0,gc(C[3],.35),.6,gc(C[3],.12),1,gc(C[3],0)]));
+  q.lineJoin=q.lineCap='round';for(const [w,a] of[[.2,.12],[.11,.3],[.055,.7]]){path();q.lineWidth=w;q.strokeStyle=gc(C[3],a);q.stroke();}q.globalCompositeOperation='source-over';path();q.lineWidth=.03;q.strokeStyle=gc(C[2]);q.stroke();path();q.lineWidth=.01;q.strokeStyle='rgba(255,255,255,.9)';q.stroke();},
+// Groovy seventies waves: fat bands in burnt orange, mustard and brown, wobbling round off-centre. C: the bands.
+groovy(q,u,P,R,S){const C=P.c,n=C.length;gfield(q,gtex(S.key,u,(x,y,o)=>{const a=Math.atan2(y-.3,x+.2),r=Math.hypot(x+.2,y-.3),v=r*4.2+Math.sin(a*5+r*3)*.25,i=Math.floor(v),t=v-i,c=C[((i%n)+n)%n],e=gstep(.0,.04,Math.min(t,1-t));
+    for(let j=0;j<3;j++)o[j]=c[j]*(.75+.25*e)*(.92+.08*Math.sin(t*Math.PI));}));if(u>60)gtwill(q,.3);},
+// Memphis: an eighties scatter of squiggles, triangles, dots and stripes on a pastel ground. C: ground, ink, then the colours.
+memphis(q,u,P,R){const C=P.c;fillAll(q,gc(C[0]));q.lineCap=q.lineJoin='round';for(let i=0;i<34;i++){const x=R()*2.4-1.2,y=R()*2.4-1.2,t=Math.floor(R()*5),cl=C[2+Math.floor(R()*(C.length-2))],s=.09+R()*.1,a=R()*TAU;q.save();q.translate(x,y);q.rotate(a);q.beginPath();
+    if(t===0){q.moveTo(-s*1.5,0);for(let j=1;j<=6;j++)q.lineTo(-s*1.5+j*s*.5,j%2?-s*.4:s*.4);q.lineWidth=.035;q.strokeStyle=gc(cl);q.stroke();}
+    else if(t===1){q.moveTo(0,-s);q.lineTo(s,s*.8);q.lineTo(-s,s*.8);q.closePath();q.fillStyle=gc(cl);q.fill();q.lineWidth=.016;q.strokeStyle=gc(C[1]);q.stroke();}
+    else if(t===2){q.arc(0,0,s*.6,0,TAU);q.fillStyle=gc(cl);q.fill();q.lineWidth=.016;q.strokeStyle=gc(C[1]);q.stroke();}
+    else if(t===3){for(let j=0;j<3;j++){q.moveTo(-s,j*s*.35-s*.35);q.lineTo(s,j*s*.35-s*.35);}q.lineWidth=.025;q.strokeStyle=gc(C[1]);q.stroke();}
+    else{q.arc(0,0,s*.8,0,Math.PI);q.lineWidth=.04;q.strokeStyle=gc(cl);q.stroke();}q.restore();}
+  q.fillStyle=gc(C[1]);for(let i=0;i<60;i++){const x=R()*2.4-1.2,y=R()*2.4-1.2;disc(q,x,y,.012,gc(C[1]));}},
+// A seventies rainbow: fat arcs of colour rising from a cloud, on cream. C: ground, then the bands from outside in, the cloud last.
+rainbow(q,u,P,R){const C=P.c,n=C.length-2,cy=.55;fillAll(q,gc(C[0]));disc(q,0,0,1.15,rgr(q,-.2,-.3,1.4,[0,gc(gsh(C[0],.1)),1,gc(gsh(C[0],-.1))]));
+  for(let i=0;i<n;i++){const r=1.02-i*.14;q.beginPath();q.arc(0,cy,r,Math.PI,0);q.arc(0,cy,r-.13,0,Math.PI,true);q.closePath();q.fillStyle=gc(C[1+i]);q.fill();q.lineWidth=.012;q.strokeStyle=gc(gsh(C[1+i],-.25),.6);q.stroke();}
+  for(const s of[-1,1]){q.beginPath();for(const [x,y,r] of[[.55,.62,.17],[.75,.6,.2],[.95,.66,.15],[.68,.75,.18],[.88,.78,.15]])q.moveTo(s*x+r,y),q.arc(s*x,y,r,0,TAU);q.fillStyle=gc(C[n+1]);q.fill();q.lineWidth=.014;q.strokeStyle=gc(gsh(C[n+1],-.2),.7);q.stroke();}
+  if(u>60)gtwill(q,.25);},
+// An arcade button: a candy-coloured dished button in a chrome bezel. C: shade, button, light, bezel dark, bezel light.
+button(q,u,P,R){const C=P.c;fillAll(q,gc(C[3]));disc(q,0,0,1.15,lgr(q,-.8,-.8,.8,.8,[0,gc(C[4]),.5,gc(gsh(C[3],.3)),1,gc(C[3])]));disc(q,0,0,.86,lgr(q,-.6,-.6,.6,.6,[0,gc(C[3]),1,gc(C[4])]));
+  disc(q,0,0,.78,rgr(q,.15,.2,.9,[0,gc(C[2]),.5,gc(C[1]),1,gc(C[0])]));disc(q,0,0,.62,rgr(q,-.12,-.15,.75,[0,gc(gsh(C[1],-.2)),.7,gc(C[1]),1,gc(gsh(C[1],.15))]));
+  q.save();q.translate(-.3,-.36);q.rotate(-.7);q.scale(.26,.1);disc(q,0,0,1,rgr(q,0,0,1,[0,'rgba(255,255,255,.85)',1,'rgba(255,255,255,0)']));q.restore();},
+});
 // a football's 32 panels: the truncated icosahedron's 12 pentagons and 20 hexagons, pushed out onto the sphere
 const GSOC=(()=>{const f=(1+Math.sqrt(5))/2,V=[],E=[],nz=p=>{const l=Math.hypot(p[0],p[1],p[2]);return[p[0]/l,p[1]/l,p[2]/l];},lp=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
   for(const a of[-1,1])for(const b of[-f,f])V.push([0,a,b],[a,b,0],[b,0,a]);
@@ -6111,6 +6183,30 @@ patterns:[
 [250,'nightterrazzo','Midnight Terrazzo',500,'terrazzo','1a1c22 f2ece4 c8a050 8a9aa8 e86a5a',{m:0},'Bright chips in a charcoal ground.'],
 [251,'kaleidoscope','Kaleidoscope',900,'kaleido','0a0a1a f02a6a 2ad0f0 f6d02a 8a3af0 2af0a0',{spin:.25},'Coloured glass mirrored twelve times, turning slowly.'],
 [252,'prism','Prism',900,'kaleido','1a0a2a ff8a2a ffd02a 2ae0c0 c84af0 f0f0ff',{n:16,spin:-.25},'A sixteen-fold kaleidoscope in sunset glass.'],
+],
+retro:[
+[253,'blackvinyl','Black Vinyl',400,'vinyl','060606 141416 d8141e f6f0e0',{k:'black',spin:2,m:1},'A long-player spinning on the deck.'],
+[254,'redvinyl','Red Vinyl',600,'vinyl','4a0408 c8141e f6f0e0 1a1a1a',{k:'clear',spin:2,m:1},'See-through cherry vinyl, a limited pressing.'],
+[255,'splattervinyl','Splatter Vinyl',900,'vinyl','0a0a0a 18181c f2ece0 101010 f04a8a 2ad0f0 f6d02a ffffff',{k:'splat',spin:2,m:6},'A collector\'s splatter pressing.'],
+[256,'goldrecord','Gold Record',3000,'vinyl','6a4a08 d8a828 141414 f2d060',{k:'gold',spin:1.5,fx:'s',m:1},'A million sold. Frame it.'],
+[257,'synthwave','Synthwave',900,'synth','0a0420 6a0a5a ffe03a ff3a8a 2ae0ff 0a0418',{m:3},'A striped sun sinking behind a neon grid.'],
+[258,'vaporwave','Vaporwave',900,'synth','1a1a5a ff8ad8 8affff ff8ad8 ff6ae0 14143a',{m:1},'Pastel pink and teal, forever 1995.'],
+[259,'tiedye','Tie-Dye',450,'tiedye','f02a3a f8a02a f6e02a 3ac06a 2a8af0 8a3af0 ffffff',{k:'spiral'},'A rainbow spiral, dyed by hand.'],
+[260,'bullseyedye','Bullseye Dye',400,'tiedye','2a3af0 2ac0f0 f02a8a f6d02a ffffff',{k:'rings'},'Rings of dye bleeding outward.'],
+[261,'icedye','Ice Dye',450,'tiedye','f6a0c8 a0c8f6 c8a0f6 a0f0d0 fff8fc',{k:'crumple'},'Soft pastel crumple dye.'],
+[262,'smiley','Smiley',350,'smiley','c88a00 f6d01a fff07a 141414',{m:1},'Have a nice day.'],
+[263,'pixelheart','Pixel Heart',400,'pixel','0a0a14 4a0a14 f0283a ffa0b0',{k:'heart',m:2},'One more life.'],
+[264,'pixelskull','Pixel Skull',400,'pixel','0a0a10 1a1a24 f0ece0 0a0a10',{k:'skull',m:2},'Game over, man.'],
+[265,'pixelslime','Pixel Slime',400,'pixel','061006 0a3a0a 3ae05a f6fff6 0a3a0a',{k:'slime',m:2},'A friendly green blob.'],
+[266,'pixelcrown','Pixel Crown',500,'pixel','0a0610 4a2a04 f6c81a e8283a 8a4a08',{k:'crown',m:2},'For the king of the arena.'],
+[267,'testcard','Test Card',600,'testcard','808080',{},'Please stand by.'],
+[268,'neonheart','Neon Heart',700,'neon','1a0a10 0a0406 ffd0e0 ff2a7a',{k:'heart',m:3},'Pink neon on an old brick wall.'],
+[269,'neonbolt','Neon Bolt',700,'neon','0a0e1a 04060a e0f8ff 2ad0ff',{k:'bolt',m:3},'A crackling blue lightning sign.'],
+[270,'neonstar','Neon Star',700,'neon','140e04 060402 fff4c0 ffc01a',{k:'star',m:3},'A gold star in buzzing neon.'],
+[271,'groovy','Groovy',350,'groovy','e86a1a f6b81a 7a3a10 c84a10 f6d88a',{},'Far out: orange, mustard and brown.'],
+[272,'memphis','Memphis',400,'memphis','fff0e0 141414 ff6a8a 2ac0c0 f6c81a 8a6af0',{m:2},'Squiggles, triangles and dots, very 1986.'],
+[273,'rainbow','Rainbow',400,'rainbow','fff0d8 e8402a f6902a f6d02a 5ac06a 3a8ae0 ffffff',{m:3},'A seventies rainbow rising out of the clouds.'],
+[274,'arcadebutton','Arcade Button',500,'button','6a0408 e8141e ff7a7a 3a3e44 e8ecf0',{},'Press start.'],
 ],
 };
 for(const col in GEN)for(const row of GEN[col]){const S=gskin(row,col);S.tok=STAINS.map(()=>'tok'+S.key);PREMIUM.push(S);}
