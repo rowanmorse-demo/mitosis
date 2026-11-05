@@ -355,9 +355,6 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
 .hero-cell{appearance:none;position:relative;border:0;padding:0;background:none;cursor:pointer;width:clamp(150px,30vh,230px);aspect-ratio:1;display:grid;place-items:center;animation:bob 4.5s ease-in-out infinite}
 .hero-cell::before{content:"";position:absolute;inset:-14%;border-radius:50%;background:radial-gradient(circle,rgba(255,92,138,.22),rgba(255,92,138,0) 65%);pointer-events:none}
 .hero-cell canvas{position:relative;width:100%;height:100%;display:block}
-.hero-edit{position:absolute;bottom:-4%;left:50%;transform:translateX(-50%);display:inline-flex;align-items:center;gap:7px;font:700 13.5px/1 var(--display);letter-spacing:-.01em;color:var(--accent-ink);background:var(--ink);border-radius:999px;padding:9px 16px 9px 12px;white-space:nowrap;box-shadow:0 8px 22px rgba(0,0,0,.5),0 0 0 4px rgba(2,8,9,.6);transition:transform .15s}
-.hero-edit svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.hero-cell:hover .hero-edit{background:#fff}.hero-cell:active .hero-edit{transform:translateX(-50%) scale(.95)}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 .hero-id{display:grid;gap:7px;min-width:0;max-width:340px}
 .hero-id input[type=text]{background:transparent;border:0;border-bottom:1.5px solid var(--line-strong);border-radius:0;padding:4px 0 6px;font:800 30px/1.1 var(--display);letter-spacing:-.03em;color:var(--ink);width:100%;box-sizing:border-box;outline:none;user-select:text;-webkit-user-select:text}
@@ -594,21 +591,18 @@ body:not(.playing) #tip{display:none}
 .lb-medal svg{width:21px;height:21px;fill:#3d2600}
 .lb-achtx{display:grid;gap:4px;min-width:0;padding-bottom:4px}.lb-achtx b{font:800 17px/1 var(--display);font-variant-numeric:tabular-nums}.lb-achtx small{font:600 10px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lb-achbar{position:absolute;left:61px;right:14px;bottom:9px;height:3px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden}.lb-achbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#c98a12,#ffe58f)}
-/* centre: the cell on a lit pedestal */
+/* centre: the cell standing in a pool of light */
 .lobby .lb-hero{grid-area:hero;display:grid;grid-template-columns:minmax(0,1fr);place-items:center;min-width:0;min-height:0}
-.lobby .lb-hero::before{content:"";position:absolute;left:50%;top:calc(50% - var(--cell)*1.02);height:calc(var(--cell)*1.62);width:calc(var(--cell)*1.7);transform:translateX(-50%);pointer-events:none;background:linear-gradient(180deg,rgba(255,190,210,0),rgba(255,150,185,.055) 48%,rgba(255,92,138,.11) 82%,rgba(255,92,138,0));clip-path:polygon(42% 0,58% 0,100% 100%,0 100%);filter:blur(14px)}
+.lobby .lb-hero::before{content:"";position:absolute;left:50%;top:calc(50% - var(--cell)*.47);height:calc(var(--cell)*1.7);width:calc(var(--cell)*1.6);transform:translateX(-50%);pointer-events:none;background:radial-gradient(closest-side,rgba(255,120,165,.14),rgba(255,110,160,.05) 55%,rgba(255,92,138,0) 100%)} /* a glow centred on the cell's feet, fading out every way */
 .lobby .lb-hero{position:relative}
 .lobby{--cell:min(48vh,26vw,330px)}
 .lobby .hero-cell{width:var(--cell);animation:none;margin:0 0 6%}
 .lobby .hero-cell::before{inset:-30%;background:radial-gradient(circle,rgba(255,92,138,.34),rgba(255,92,138,.1) 40%,rgba(255,92,138,0) 66%)}
-.lobby .hero-cell::after{content:"";position:absolute;z-index:-1;left:-16%;right:-16%;bottom:-11%;height:26%;border-radius:50%;pointer-events:none;
-  background:radial-gradient(36% 40% at 50% 46%,rgba(0,0,0,.5),rgba(0,0,0,0) 100%),radial-gradient(closest-side,rgba(255,92,138,.24),rgba(255,92,138,.08) 70%,rgba(255,150,180,.45) 94%,rgba(255,92,138,0) 100%);
-  box-shadow:0 0 0 6px rgba(255,92,138,.06),0 0 0 14px rgba(255,92,138,.03),0 0 60px -4px rgba(255,92,138,.55)}
-.lobby .hero-cell canvas,.lobby .hero-edit{animation:lbBob 4.5s ease-in-out infinite}
+.lobby .hero-cell::after{content:"";position:absolute;z-index:-1;left:-6%;right:-6%;bottom:-3%;height:21%;border-radius:50%;pointer-events:none; /* centred where the cell's edge meets the floor */
+  background:radial-gradient(38% 42% at 50% 50%,rgba(0,0,0,.38),rgba(0,0,0,0) 100%),radial-gradient(closest-side,rgba(255,120,165,.46),rgba(255,92,138,.17) 60%,rgba(255,92,138,0) 100%)}
+.lobby .hero-cell canvas{animation:lbBob 4.5s ease-in-out infinite}
 @keyframes lbBob{50%{translate:0 -8px}}
-.lobby .hero-edit{left:auto;right:2%;bottom:5%;transform:none;z-index:2;width:42px;height:42px;padding:0;gap:0;justify-content:center;border-radius:50%;background:linear-gradient(180deg,#fff,#cde5de);color:#0a1a1c;box-shadow:inset 0 -2px 0 rgba(0,0,0,.12),0 6px 16px rgba(0,0,0,.5),0 0 0 3px rgba(2,8,9,.7);transition:transform .12s}
-.lobby .hero-edit svg{width:19px;height:19px;stroke-width:2.1}
-.lobby .hero-cell:active .hero-edit{transform:scale(.9)}
+.lobby .hero-cell{transition:transform .12s}.lobby .hero-cell:active{transform:scale(.96)}
 /* bottom tab bar */
 .lb-nav{grid-area:nav;justify-self:start;align-self:end;display:flex;gap:2px;padding:5px;border-radius:24px}
 .lb-tab{appearance:none;border:0;background:none;width:70px;height:56px;border-radius:19px;display:grid;place-items:center;align-content:center;gap:5px;color:var(--ink);font:700 11px/1 var(--display);letter-spacing:.01em;cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -763,7 +757,7 @@ body:not(.playing) #tip{display:none}
   .lb-modebtn{height:54px;font-size:16px}.lb-modebtn .ic{width:38px;height:38px}.lb-switch{height:54px;width:66px}
   .lobby .lb-go{height:86px;font-size:38px;border-radius:26px}.lobby .lb-go::before{width:44px;height:44px;background-size:18px}
   .lb-cards{align-self:center;height:min(100%,520px)}.lb-mpick b{font-size:28px}
-  .lobby .lb-me-sub .tier{font-size:11px}.lb-rt{font-size:16px}.lb-crest{width:19px;height:21px}.lobby .hero-edit{width:50px;height:50px}.lobby .hero-edit svg{width:22px;height:22px}
+  .lobby .lb-me-sub .tier{font-size:11px}.lb-rt{font-size:16px}.lb-crest{width:19px;height:21px}
 }
 /* level: a badge on the portrait in the profile card */
 .lobby .lb-ava{position:relative}
@@ -2443,7 +2437,7 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
       <button class="lb-feat lb-ach lb-bp" id="passBtn" type="button" aria-label="Battle Pass" hidden><span class="lb-medal" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2.6l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8z"/></svg></span><span class="lb-achtx"><b id="lbBpTier">Tier 1</b><small>Battle Pass</small></span><span class="lb-achbar" aria-hidden="true"><i id="lbBpFill"></i></span><i class="bp-badge" id="passBadge" aria-hidden="true" hidden></i></button>
     </aside>
     <section class="lb-hero">
-      <button type="button" class="hero-cell" id="avatarBtn" aria-label="Change your skin"><canvas id="avatarCv" width="320" height="320" aria-hidden="true"></canvas><span class="hero-edit" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M19.5 3.5a2.1 2.1 0 0 1 3 3L12 17l-3-3z"/><path d="M9 14c-2.2 0-4 1.7-4 3.9 0 1.3-.8 2.2-2.5 2.6 1.2.9 2.8 1.5 4.5 1.5 3.3 0 5-2 5-5"/></svg></span></button>
+      <button type="button" class="hero-cell" id="avatarBtn" aria-label="Change your skin"><canvas id="avatarCv" width="320" height="320" aria-hidden="true"></canvas></button>
     </section>
     <nav class="lb-nav" aria-label="Menu">
       <button class="lb-tab" id="lookBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1 0 1.7-.8 1.7-1.7 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.9.8-1.7 1.7-1.7h2A4.4 4.4 0 0 0 21 11c0-4.4-4-8-9-8z"/><circle cx="7.5" cy="11.5" r="1.4" fill="currentColor" stroke="none"/><circle cx="10.5" cy="7.3" r="1.4" fill="currentColor" stroke="none"/><circle cx="15.5" cy="7.8" r="1.4" fill="currentColor" stroke="none"/></svg><span>Skins</span></button>
@@ -5216,6 +5210,7 @@ const showStoreHint=()=>{const nd=$('storeNeed');nd.hidden=!storeNote;nd.innerHT
 async function openStore(note){
   storeNote=note||'';{const sel=PREMIUM.find(x=>x.id===shopSel);if(!sel||sel.pass){const w=PREMIUM.find(x=>x.id===settings.skin);shopSel=w&&!w.pass?w.id:PREMIUM[0].id;}}confirmSkin=0;
   showCard('storeCard');shopTab(note?'atp':'skins');renderSkins();renderEarn();renderPacks([],true);
+  $('skinSec').scrollTop=0; // every visit starts at the top, not where the last one was left
   if(!Native.platform){renderPacks(null);storeMsg='Packs are sold in the iPhone and Android app';showStoreHint();return;}
   storeMsg='';showStoreHint();
   try{const r=await Native.call('products',{ids:ATP_PACKS.map(p=>p.id)});const ps=r.products||[];renderPacks(ps);
