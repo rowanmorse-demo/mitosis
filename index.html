@@ -5171,6 +5171,307 @@ const PREMIUM=[
     if(sick){g.beginPath();g.arc(nx,ny,r*.13,0,TAU);g.fillStyle=col(INF_C,-30,.9);g.fill();}}},
 ];
 for(const S of PREMIUM)S.tok=STAINS.map((_,i)=>'tok'+S.key+(S.tint?i:'')); // the small-cell sprite's bake key per stain (only a tinted skin differs)
+/* ================= generated skins =================
+   Most of the collections are generated rather than drawn one by one: each skin is a compact row naming a family (how it is drawn)
+   and its parameters (a palette, a seed, a few knobs), so hundreds of skins cost a few kilobytes of rows. A family paints its art once
+   into a sprite at bake time, exactly like a hand-drawn skin, so in play a generated skin is one blit (a few add a glint or a sheen).
+   Fields worked out pixel by pixel are computed once per skin on a small canvas (gtex, a few hundred at most kept), never per bake.
+   Ids are fixed for good once shipped: add rows at the end of a collection's list only with the next free id. */
+const GO=[0,0,0],GO2=[0,0,0];
+const gpal=s=>s.split(' ').map(h=>[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]); // 'rrggbb rrggbb' -> rgb triples
+const gc=(c,a=1)=>`rgba(${c[0]|0},${c[1]|0},${c[2]|0},${a})`;
+const gmix=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
+const gsh=(c,k)=>k>0?gmix(c,[255,255,255],k):gmix(c,[0,0,0],-k); // lighter (k>0) or darker
+function gramp(C,t,o=GO){t=Math.min(1,Math.max(0,t))*(C.length-1);const i=Math.min(C.length-2,t|0),f=t-i,a=C[i],b=C[i+1];o[0]=a[0]+(b[0]-a[0])*f;o[1]=a[1]+(b[1]-a[1])*f;o[2]=a[2]+(b[2]-a[2])*f;return o;}
+function ghsl(c){const r=c[0]/255,g=c[1]/255,b=c[2]/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2,d=mx-mn;let h=0,s=0;
+  if(d){s=d/(1-Math.abs(2*l-1));h=mx===r?((g-b)/d+6)%6:mx===g?(b-r)/d+2:(r-g)/d+4;}return[Math.round(h*60),Math.round(s*100),Math.round(l*100)];}
+const gstops=(C,a=1,t0=0,t1=1)=>{const o=[];C.forEach((c,i)=>o.push(t0+(t1-t0)*i/(C.length-1||1),gc(c,a)));return o;}
+// The sphere: art drawn flat is wrapped round the ball by gw (a flat distance s lands at GW sin(s/GW), so shapes crowd toward the rim);
+// gwi undoes it for fields worked out pixel by pixel. gpath and gring add warped shapes to the path, their edges cut small so they bend.
+const GW=1.2;
+function gw(x,y,o=GO){const s=Math.hypot(x,y),k=s>1e-9?GW*Math.sin(Math.min(s/GW,1.5707))/s:1;o[0]=x*k;o[1]=y*k;return o;}
+function gwi(x,y,o=GO){const r=Math.hypot(x,y),k=r>1e-9?GW*Math.asin(Math.min(1,r/GW))/r:1;o[0]=x*k;o[1]=y*k;return o;}
+function gpath(q,P,close=true,st=.04){const n=P.length/2,m=close?n:n-1;for(let i=0;i<m;i++){const x0=P[i*2],y0=P[i*2+1],j=(i+1)%n,x1=P[j*2],y1=P[j*2+1],k=Math.max(1,Math.ceil(Math.hypot(x1-x0,y1-y0)/st));
+    for(let s=i?1:0;s<=k;s++){gw(x0+(x1-x0)*s/k,y0+(y1-y0)*s/k);if(!i&&!s)q.moveTo(GO[0],GO[1]);else q.lineTo(GO[0],GO[1]);}}if(close)q.closePath();}
+function gring(q,x,y,r,n=0){n=n||Math.max(12,Math.min(64,Math.ceil(r*90)));for(let i=0;i<=n;i++){const a=i/n*TAU;gw(x+Math.cos(a)*r,y+Math.sin(a)*r);i?q.lineTo(GO[0],GO[1]):q.moveTo(GO[0],GO[1]);}q.closePath();}
+// A real sphere, for balls and worlds: points on the unit sphere turned by M; the hemisphere facing away is folded out past the rim
+// (r -> 2-r), which keeps every shape that does not wrap round the far pole a simple path, and the membrane clips what lies outside.
+function gm3(a,b,c){const ca=Math.cos(a),sa=Math.sin(a),cb=Math.cos(b),sb=Math.sin(b),cc=Math.cos(c),sc=Math.sin(c); // turn a about y, then b about x, then c about z
+  const m=[ca,0,sa,0,1,0,-sa,0,ca],n=[1,0,0,0,cb,-sb,0,sb,cb],o=[cc,-sc,0,sc,cc,0,0,0,1],mul=(A,B)=>{const C=[];for(let i=0;i<3;i++)for(let j=0;j<3;j++)C.push(A[i*3]*B[j]+A[i*3+1]*B[3+j]+A[i*3+2]*B[6+j]);return C;};return mul(o,mul(n,m));}
+function gp3(M,x,y,z,o=GO){const X=M[0]*x+M[1]*y+M[2]*z,Y=M[3]*x+M[4]*y+M[5]*z,Z=M[6]*x+M[7]*y+M[8]*z;
+  if(Z>=0){o[0]=X;o[1]=Y;}else{const r=Math.hypot(X,Y)||1e-6,k=(2-r)/r;o[0]=X*k;o[1]=Y*k;}o[2]=Z;return o;}
+function gpi(M,x,y,o=GO){const r2=x*x+y*y;let z;if(r2<=1)z=Math.sqrt(1-r2);else{const r=Math.sqrt(r2),f=Math.max(0,2-r);x*=f/r;y*=f/r;z=-Math.sqrt(Math.max(0,1-f*f));} // screen -> the sphere point under it, in the ball's own frame
+  o[0]=M[0]*x+M[3]*y+M[6]*z;o[1]=M[1]*x+M[4]*y+M[7]*z;o[2]=M[2]*x+M[5]*y+M[8]*z;return o;}
+function gs3(q,M,P,close=true,st=.06){const n=P.length/3,m=close?n:n-1; // a path through points on the sphere, each leg bent along the surface
+  for(let i=0;i<m;i++){const j=(i+1)%n,a=P.slice(i*3,i*3+3),b=P.slice(j*3,j*3+3),k=Math.max(1,Math.ceil(Math.acos(Math.min(1,a[0]*b[0]+a[1]*b[1]+a[2]*b[2]))/st));
+    for(let s=i?1:0;s<=k;s++){const t=s/k,x=a[0]+(b[0]-a[0])*t,y=a[1]+(b[1]-a[1])*t,z=a[2]+(b[2]-a[2])*t,l=Math.hypot(x,y,z)||1;gp3(M,x/l,y/l,z/l);if(!i&&!s)q.moveTo(GO[0],GO[1]);else q.lineTo(GO[0],GO[1]);}}
+  if(close)q.closePath();}
+function gcirc3(ax,ay,az,ang,n=48){const l=Math.hypot(ax,ay,az);ax/=l;ay/=l;az/=l;const t=Math.abs(ay)<.9?[0,1,0]:[1,0,0], // a circle on the sphere round the axis a, ang (radians) from it, as points
+    ux=ay*t[2]-az*t[1],uy=az*t[0]-ax*t[2],uz=ax*t[1]-ay*t[0],ul=Math.hypot(ux,uy,uz),vx=ay*uz/ul-az*uy/ul,vy=az*ux/ul-ax*uz/ul,vz=ax*uy/ul-ay*ux/ul,c=Math.cos(ang),s=Math.sin(ang),P=[];
+  for(let i=0;i<n;i++){const a=i/n*TAU,ca=Math.cos(a)*s,sa=Math.sin(a)*s;P.push(ax*c+ux/ul*ca+vx*sa,ay*c+uy/ul*ca+vy*sa,az*c+uz/ul*ca+vz*sa);}return P;}
+// Fields worked out pixel by pixel: fn(x,y,o) sets o to 0-255 RGB (and o[3] alpha, 255 if left alone) at x,y in unit space. Each skin
+// keeps its own at about half its bake's width (smooth fields lose nothing; sharp detail goes on top as paths), the last few dozen kept.
+const GT=new Map();let gtArea=0;
+function gtex(key,u,fn){const N=Math.min(320,Math.max(96,Math.round(u*1.15/32)*32)),id=key+N;let c=GT.get(id);if(c){GT.delete(id);GT.set(id,c);return c;}
+  c=document.createElement('canvas');c.width=c.height=N;const q=c.getContext('2d'),im=q.createImageData(N,N),d=im.data,o=[0,0,0,255],e=SKIN_BR;
+  for(let j=0;j<N;j++){const y=((j+.5)/N*2-1)*e;for(let i=0;i<N;i++){const x=((i+.5)/N*2-1)*e;o[3]=255;fn(x,y,o);const k=(j*N+i)<<2;d[k]=o[0];d[k+1]=o[1];d[k+2]=o[2];d[k+3]=o[3];}}
+  q.putImageData(im,0,0);GT.set(id,c);gtArea+=N*N;for(const [k0,v0] of GT){if(gtArea<=1.6e6)break;GT.delete(k0);gtArea-=v0.width*v0.width;}return c;}
+const gfield=(q,tex)=>q.drawImage(tex,-SKIN_BR,-SKIN_BR,2*SKIN_BR,2*SKIN_BR);
+const gn=cosmoNoise,gfbm=cosmoFbm,gstep=cosmoStep;
+function gridge(x,y,o){const v=1-Math.abs(gfbm(x,y,o)*2-1);return v*v;} // sharp creases where the noise crosses its middle
+// small shared touches: the glossy window a polished ball shows, a scatter of sparkle, a speckle of grain
+function ggloss(q,a=1,soft=0){q.save();q.translate(-.4,-.46);q.rotate(-.72);q.scale(.34,.17);disc(q,0,0,1,rgr(q,0,0,1,[0,`rgba(255,255,255,${.8*a})`,.45+soft*.3,`rgba(255,255,255,${.4*a})`,1,'rgba(255,255,255,0)']));q.restore();
+  disc(q,.5,.56,.36,rgr(q,.5,.56,.36,[0,`rgba(255,255,255,${.1*a})`,1,'rgba(255,255,255,0)']));}
+function gspark(q,x,y,s){q.beginPath();q.moveTo(x,y-s);q.quadraticCurveTo(x+s*.08,y-s*.08,x+s,y);q.quadraticCurveTo(x+s*.08,y+s*.08,x,y+s);q.quadraticCurveTo(x-s*.08,y+s*.08,x-s,y);q.quadraticCurveTo(x-s*.08,y-s*.08,x,y-s);q.fill();}
+function ggrain(q,u,R,n,c0,c1,s0=.004,s1=.012,r=1.12){if(u<60)return;n=Math.round(n*Math.min(1,u/220));for(const [cl,k] of[[c0,0],[c1,1]]){if(!cl)continue;q.fillStyle=cl;q.beginPath();
+  for(let i=0;i<n;i++){const a=R()*TAU,d=Math.sqrt(R())*r,s=s0+R()*(s1-s0),x=Math.cos(a)*d,y=Math.sin(a)*d;q.moveTo(x+s,y);q.arc(x,y,s,0,TAU);}q.fill();}}
+// The families. Each paints a skin's art at bake time: fam(q,u,P,R,S) with q in unit space (the membrane at radius 1, the sprite out to
+// 1.15), u device px per unit (detail scales with it), P the row's parameters (P.c its palette), R a random stream seeded by the skin.
+const GL=-2.36,GLX=Math.cos(GL),GLY=Math.sin(GL); // the light, from the upper left
+const GF={
+// A cut gem seen from above. k: 'b' round brilliant (table, star, kite and girdle facets, the pavilion's arrows seen through the table),
+// 'r' rose cut (rings of triangles to a point), 's' step cut (octagonal steps and a hall of mirrors in the table). C runs dark to light; f is fire.
+gem(q,u,P,R){const C=P.c,k=P.k||'b',fire=P.f??.4,O=[0,0,0],T=[];fillAll(q,gc(C[0]));
+  const C2=P.c2&&(P.C2||(P.C2=gpal(P.c2))),fc=(p,b,lw)=>{let cx=0,cy=0;const n=p.length/2;for(let i=0;i<n;i++){cx+=p[i*2]/n;cy+=p[i*2+1]/n;}const s=.18,t=C2?gstep(-.7,.7,cx*.8+cy*.6):0,K=v=>t?gc(gmix(gramp(C,v,[0,0,0]),gramp(C2,v,O),t)):gc(gramp(C,v,O));polyPath(q,p);q.closePath(); // a colour-change stone turns to its second colour across the face
+    q.fillStyle=lgr(q,cx+GLX*s,cy+GLY*s,cx-GLX*s,cy-GLY*s,[0,K(b+.16),.55,K(b),1,K(b-.2)]);q.fill();T.push(p);};
+  const pt=(a,r)=>[Math.cos(a)*r,Math.sin(a)*r],lit=(a,j=.16)=>.42+(P.x||.3)*Math.cos(a-GL)+(R()-.5)*j*(P.j||1);
+  if(k==='s'){const rs=[.44,.6,.75,.88,1.02],oc=r=>{const p=[];for(let i=0;i<8;i++)p.push(...pt(i*Math.PI/4+Math.PI/8,r/Math.cos(Math.PI/8)));return p;};
+    for(let j=rs.length-1;j>0;j--)for(let i=0;i<8;i++){const a=i*Math.PI/4+Math.PI/8,b=a+Math.PI/4,A=oc(rs[j]),B=oc(rs[j-1]),i2=(i+1)%8;fc([A[i*2],A[i*2+1],A[i2*2],A[i2*2+1],B[i2*2],B[i2*2+1],B[i*2],B[i*2+1]],lit(a+Math.PI/8)+(j%2?.1:-.12));}
+    for(let j=0;j<4;j++){const r=.44*(1-j*.24);fc(oc(r),j%2?.75:.32);} // the table, a hall of mirrors
+  }else if(k==='r'){for(let i=0;i<6;i++){const a=i/6*TAU;fc([0,0,...pt(a,.38),...pt(a+TAU/6,.38)],lit(a+TAU/12,.3)+.1);}
+    for(const [r0,r1,n0] of[[.38,.72,6],[.72,1.04,12]])for(let i=0;i<n0;i++){const A=pt(i/n0*TAU,r0),A1=pt((i+1)/n0*TAU,r0),B0=pt(i/n0*TAU,r1),B1=pt((i+.5)/n0*TAU,r1),B2=pt((i+1)/n0*TAU,r1),am=(i+.5)/n0*TAU;
+      fc([...A,...B0,...B1],lit(am-.1,.3)-.06);fc([...A,...B1,...A1],lit(am,.3)+.1);fc([...A1,...B1,...B2],lit(am+.1,.3)-.02);}
+  }else{const t=.5,s=.75,Tv=[],Sv=[],G=a=>pt(a,1.03);for(let i=0;i<8;i++){Tv.push(pt(i*Math.PI/4,t));Sv.push(pt(i*Math.PI/4+Math.PI/8,s));}
+    for(let i=0;i<8;i++){const a=i*Math.PI/4,i1=(i+1)%8,i0=(i+7)%8;
+      fc([...Sv[i],...G(a),...G(a+Math.PI/8)],lit(a+Math.PI/16,.3)-.04);fc([...Sv[i],...G(a+Math.PI/8),...G(a+Math.PI/4)],lit(a+Math.PI*3/16,.3)+.04); // upper girdle facets
+      fc([...Tv[i],...Sv[i0],...G(a),...Sv[i]],lit(a)+.06); // kites
+      fc([...Tv[i],...Tv[i1],...Sv[i]],lit(a+Math.PI/8,.24)+.14);} // stars
+    for(let i=0;i<8;i++){const a=i*Math.PI/4,M=pt(a+Math.PI/8,t*Math.cos(Math.PI/8)),i1=(i+1)%8; // the table: the pavilion's facets reflected, arrows dark
+      fc([0,0,...Tv[i],...M],(i%2?.62:.4)+.18*Math.cos(a-GL));fc([0,0,...M,...Tv[i1]],(i%2?.5:.7)+.18*Math.cos(a+.8-GL));}
+    q.beginPath();for(let i=0;i<8;i++){const p=pt(i*Math.PI/4,t*.07);i?q.lineTo(p[0],p[1]):q.moveTo(p[0],p[1]);}q.closePath();q.fillStyle=gc(gramp(C,.3,O));q.fill();}
+  q.beginPath();for(const p of T){polyPath(q,p);q.closePath();}q.lineJoin='round';q.lineWidth=Math.max(.006,1.1/u);q.strokeStyle=gc(gsh(C[C.length-1],.5),.42);q.stroke(); // every facet edge catches the light
+  q.save();q.translate(.004,.006);q.lineWidth=Math.max(.004,.8/u);q.strokeStyle=gc(C[0],.35);q.stroke();q.restore();
+  q.globalCompositeOperation='lighter';const FC=['255,60,60','255,200,40','60,255,120','60,140,255','200,80,255'];
+  for(let i=0;i<Math.round(46*fire);i++){const a=R()*TAU,d=.15+Math.sqrt(R())*.85,x=Math.cos(a)*d,y=Math.sin(a)*d,s=.025+R()*.05;disc(q,x,y,s,rgr(q,x,y,s,[0,`rgba(${FC[i%5]},${.5*fire+.15})`,1,`rgba(${FC[i%5]},0)`]));} // fire: light split into colour
+  q.globalCompositeOperation='source-over';q.fillStyle='#fff';for(let i=0;i<5;i++){const a=R()*TAU,d=.2+R()*.6;gspark(q,Math.cos(a)*d,Math.sin(a)*d,.04+R()*.05);}
+  disc(q,0,0,1.15,rgr(q,0,0,1.15,[0,'rgba(0,0,0,0)',.82,'rgba(0,0,0,0)',.9,gc(C[0],.3),1,gc(C[0],.7)]));}, // the girdle sinks into shadow
+// Polished stone: a cloudy ground crossed by veins that thicken and fade. C: ground light, ground dark, vein, and a second vein colour.
+// s scale, v vein strength, g gold (the last colour runs beside the main veins).
+marble(q,u,P,R,S){const C=P.c,sc=P.s||1.5,vs=P.v??1,wb=P.w??1,sd=S.id*1.37%50;
+  gfield(q,gtex(S.key,u,(x,y,o)=>{gwi(x,y,GO2);const X=GO2[0]*sc+sd,Y=GO2[1]*sc+3,w=gfbm(X*.55,Y*.55,4),t=(X*.75+Y*.42)*1.3+w*5,s1=Math.abs(Math.sin(t)),
+      m=gstep(.32,.56,gfbm(X*.7+3,Y*.7+1,2)),v1=Math.pow(1-s1,22)*m+Math.pow(1-s1,5)*m*.12, // the main veins, fading in and out along their length
+      r2=1-Math.abs(gfbm(X*1.9+7,Y*1.9+3,4)*2-1),v2=Math.pow(r2,14)*.85*wb, // a web of cracks between them
+      r3=1-Math.abs(gfbm(X*4.2+1,Y*4.2+9,3)*2-1),v3=Math.pow(r3,18)*.45*wb, // and hairlines
+      cl=gfbm(X*1.1+5,Y*1.1+2,4);
+    gramp([C[0],C[1]],gstep(.3,.8,cl),o);const hz=Math.pow(1-s1,4)*m*.18;for(let i=0;i<3;i++)o[i]+=(C[2][i]-o[i])*hz;
+    const g0=Math.min(1,(v1+v2+v3)*vs),vc=C[3]&&P.g?gmix(C[2],C[3],gstep(.35,.65,gfbm(X*2.5,Y*2.5,2))):C[2];for(let i=0;i<3;i++)o[i]+=(vc[i]-o[i])*g0;}));
+  ggloss(q,.35,1);},
+// A gas giant: belts and zones in the palette, sheared into eddies, a great storm, haze at the limb. C: zone and belt colours in order.
+// t axial tilt, sp storm [lon, lat, size], st storm colour index, ring: rings crossing in front.
+giant(q,u,P,R,S){const C=P.c,M=gm3(.3,.32,P.t??.12),sd=S.id%17*3.3,O=[0,0,0],nb=P.n||13,sp=P.sp||[.5,.35,.22],B=[];
+  for(let i=0;i<nb;i++)B.push(R());
+  gfield(q,gtex(S.key,u,(x,y,o)=>{gpi(M,x,y,GO2);const lat=Math.asin(Math.max(-1,Math.min(1,GO2[1]))),lon=Math.atan2(GO2[0],GO2[2]),z=Math.max(0,1-x*x-y*y);
+    let dl=lon-sp[0],dt=lat-sp[1];const e=Math.hypot(dl/sp[2]/1.7,dt/sp[2]);let sw=0;if(e<1.6){const a=(1.6-e)*2.2;const c=Math.cos(a),s=Math.sin(a);const l2=dl*c-dt*s*1.7,t2=dl*c/1.7*0+dl*s/1.7+dt*c;dl=l2;dt=t2;sw=gstep(1.6,.6,e);}
+    const tb=(gfbm(lon*2+sd,lat*9,3)-.5)*.16,lt=sp[1]+dt+tb+Math.sin((sp[0]+dl)*4+lat*30)*.012,f=(lt/Math.PI+.5)*nb,i=Math.max(0,Math.min(nb-1,f|0)),fr=f-i,
+      v=B[i]+(B[Math.min(nb-1,i+1)]-B[i])*gstep(.7,1,fr)+(gn((sp[0]+dl)*.8+sd,lt*60)-.5)*.18;
+    gramp(C,v,o);if(sw){const sc=C[P.st??C.length-1],k=sw*gstep(.2,1,1-e*.8);for(let j=0;j<3;j++)o[j]+=(sc[j]-o[j])*k;}
+    const lm=.62+.38*Math.pow(z,.35);for(let j=0;j<3;j++)o[j]*=lm;}));
+  if(P.ring){q.save();q.rotate(-.32);q.scale(1,.24);for(const [r0,r1,a] of[[1.18,1.42,.75],[1.46,1.62,.45],[1.66,1.74,.3]]){q.beginPath();q.arc(0,0,r1,0,Math.PI);q.arc(0,0,r0,Math.PI,0,true);q.fillStyle=gc(gsh(C[0],.2),a);q.fill();}q.restore();}
+  disc(q,0,0,1.15,rgr(q,0,0,1.15,[0,'rgba(0,0,0,0)',.8,'rgba(0,0,0,0)',.92,gc(gsh(C[0],.3),.18),1,gc(gsh(C[0],.3),.35)]));}, // haze at the limb
+// A fruit cut across: rind with pores, pith, juicy segments packed with vesicles, the odd seed. C: rind dark, rind, pith, flesh dark, flesh, flesh light.
+citrus(q,u,P,R){const C=P.c,n=P.n||10,o=R()*TAU,hi=u>90;fillAll(q,gc(C[0]));
+  disc(q,0,0,1.02,rgr(q,-.2,-.25,1.2,[0,gc(gsh(C[1],.25)),.6,gc(C[1]),1,gc(C[0])]));
+  if(hi){q.fillStyle=gc(gsh(C[0],-.2),.35);q.beginPath();for(let i=0;i<260;i++){const a=R()*TAU,d=.92+R()*.09,s=.004+R()*.006;q.moveTo(Math.cos(a)*d+s,Math.sin(a)*d);q.arc(Math.cos(a)*d,Math.sin(a)*d,s,0,TAU);}q.fill();}
+  disc(q,0,0,.9,rgr(q,0,0,.9,[0,gc(C[2]),.9,gc(C[2]),1,gc(gsh(C[2],-.12))]));
+  const wedge=(a0,a1,r0,r1,g)=>{const p=[];for(let j=0;j<=8;j++){const a=a0+g/r1+(a1-a0-2*g/r1)*j/8;p.push(Math.cos(a)*r1,Math.sin(a)*r1);}for(let j=8;j>=0;j--){const a=a0+g/r0*.5+(a1-a0-g/r0)*j/8;p.push(Math.cos(a)*r0,Math.sin(a)*r0);}return p;};
+  for(let i=0;i<n;i++){const a0=o+i/n*TAU,a1=a0+TAU/n,p=wedge(a0,a1,.075,.83,.018);q.beginPath();natureShape(q,p,true);
+    q.fillStyle=rgr(q,0,0,.85,[0,gc(C[5]),.45,gc(C[4]),.9,gc(C[4]),1,gc(C[3])]);q.fill();
+    q.save();q.clip();const m=hi?46:18;for(let j=0;j<m;j++){const t=Math.sqrt(R()),d=.1+t*.72,a=a0+(.12+R()*.76)*(a1-a0),x=Math.cos(a)*d,y=Math.sin(a)*d,L=.05+R()*.07,w=.012+R()*.012; // juice vesicles, long and thin, pointing out
+      q.save();q.translate(x,y);q.rotate(a);q.beginPath();q.ellipse(0,0,L,w,0,0,TAU);q.fillStyle=gc(gsh(C[5],.25),.32);q.fill();q.lineWidth=Math.max(.003,.6/u);q.strokeStyle=gc(C[3],.4);q.stroke();q.restore();}
+    if(P.sd&&R()<P.sd){const a=(a0+a1)/2+(R()-.5)*.1,d=.22+R()*.12;q.save();q.translate(Math.cos(a)*d,Math.sin(a)*d);q.rotate(a);q.beginPath();q.ellipse(0,0,.07,.032,0,0,TAU);q.fillStyle=rgr(q,-.02,-.01,.08,[0,'#fffbe8',1,'#e6d6a0']);q.fill();q.lineWidth=.004;q.strokeStyle='rgba(120,100,40,.5)';q.stroke();q.restore();}
+    q.restore();}
+  disc(q,0,0,.1,rgr(q,0,0,.1,[0,gc(C[2]),1,gc(gsh(C[2],-.08))]));
+  q.fillStyle='rgba(255,255,255,.8)';for(let i=0;i<(hi?9:4);i++){const a=R()*TAU,d=.2+R()*.55;q.beginPath();q.ellipse(Math.cos(a)*d,Math.sin(a)*d,.018+R()*.02,.008+R()*.008,a,0,TAU);q.fill();}}, // beads of juice catching the light
+};
+// a football's 32 panels: the truncated icosahedron's 12 pentagons and 20 hexagons, pushed out onto the sphere
+const GSOC=(()=>{const f=(1+Math.sqrt(5))/2,V=[],E=[],nz=p=>{const l=Math.hypot(p[0],p[1],p[2]);return[p[0]/l,p[1]/l,p[2]/l];},lp=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
+  for(const a of[-1,1])for(const b of[-f,f])V.push([0,a,b],[a,b,0],[b,0,a]);
+  for(let i=0;i<12;i++)for(let j=i+1;j<12;j++)if(Math.abs(Math.hypot(V[i][0]-V[j][0],V[i][1]-V[j][1],V[i][2]-V[j][2])-2)<.01)E.push([i,j]);
+  const ad=(i,j)=>E.some(e=>e[0]===Math.min(i,j)&&e[1]===Math.max(i,j)),srt=(c,P)=>{const t=Math.abs(c[1])<.9?[0,1,0]:[1,0,0],U=nz([c[1]*t[2]-c[2]*t[1],c[2]*t[0]-c[0]*t[2],c[0]*t[1]-c[1]*t[0]]),W=[c[1]*U[2]-c[2]*U[1],c[2]*U[0]-c[0]*U[2],c[0]*U[1]-c[1]*U[0]];
+    return P.map(p=>[Math.atan2(p[0]*W[0]+p[1]*W[1]+p[2]*W[2],p[0]*U[0]+p[1]*U[1]+p[2]*U[2]),p]).sort((a,b)=>a[0]-b[0]).flatMap(x=>x[1]);};
+  const F=V.map((v,i)=>{const P=[];for(const [a,b] of E)if(a===i||b===i)P.push(nz(lp(V[i],V[a===i?b:a],1/3)));return{c:nz(v),p:srt(nz(v),P),n:5};});
+  for(let i=0;i<12;i++)for(let j=i+1;j<12;j++)for(let k=j+1;k<12;k++)if(ad(i,j)&&ad(j,k)&&ad(i,k)){const P=[];for(const [a,b] of[[i,j],[j,k],[i,k]])P.push(nz(lp(V[a],V[b],1/3)),nz(lp(V[a],V[b],2/3)));
+    const c=nz(lp(lp(V[i],V[j],.5),V[k],1/3));F.push({c,p:srt(c,P),n:6});}
+  return F;})();
+const gz3=(M,c)=>M[6]*c[0]+M[7]*c[1]+M[8]*c[2];
+// Tartan setts: palette index and thread count, mirrored at each end
+const gsett=s=>{const a=s.split(' ').map(t=>t.split(':').map(Number));return a.concat(a.slice(1,-1).reverse());};
+let GTWILL=null;
+Object.assign(GF,{
+// A football: k 0 classic black pentagons on white; the panels puff up between the seams. C: panel, pentagon, seam.
+soccer(q,u,P,R){const C=P.c,M=gm3(.5,-.45,.2);fillAll(q,gc(C[0]));
+  for(const F of GSOC){const z=gz3(M,F.c);if(z<-.5)continue;q.beginPath();gs3(q,M,F.p);const pc=F.n===5?C[1]:C[0];gp3(M,F.c[0],F.c[1],F.c[2],GO2);
+    q.fillStyle=rgr(q,GO2[0]-.08,GO2[1]-.1,.62,[0,gc(gsh(pc,.12)),.6,gc(pc),1,gc(gsh(pc,-.25))]);q.fill();}
+  q.beginPath();for(const F of GSOC)if(gz3(M,F.c)>-.5)gs3(q,M,F.p);q.lineJoin='round';q.lineWidth=.05;q.strokeStyle=gc(C[2],.2);q.stroke();q.lineWidth=Math.max(.01,1.2/u);q.strokeStyle=gc(C[2],.85);q.stroke();
+  q.save();q.translate(-.006,-.008);q.lineWidth=Math.max(.005,.8/u);q.strokeStyle='rgba(255,255,255,.35)';q.stroke();q.restore();
+  ggrain(q,u,R,700,'rgba(0,0,0,.05)','rgba(255,255,255,.07)',.003,.007);ggloss(q,.5);},
+// A pool ball: a solid colour, or white with a band (st), a white spot with its number facing up and left. C: ball colour, ivory, ink.
+pool(q,u,P,R){const C=P.c,ivory=C[1]||[250,246,232],ink=C[2]||[20,16,14],ax=[.28,.9,-.32];fillAll(q,gc(P.st?ivory:C[0]));
+  disc(q,0,0,1.15,rgr(q,-.25,-.3,1.4,[0,gc(gsh(P.st?ivory:C[0],.1)),.6,gc(P.st?ivory:C[0]),1,gc(gsh(P.st?ivory:C[0],-.3))]));
+  const I=[1,0,0,0,1,0,0,0,1];
+  if(P.st){q.save();q.beginPath();q.rect(-2,-2,4,4);for(const s of[1,-1]){gs3(q,I,gcirc3(ax[0]*s,ax[1]*s,ax[2]*s,.62,64));}q.clip('evenodd');
+    disc(q,0,0,1.15,rgr(q,-.25,-.3,1.4,[0,gc(gsh(C[0],.12)),.6,gc(C[0]),1,gc(gsh(C[0],-.32))]));q.restore();}
+  const n=[-.16,-.2,.966];if(P.n!==undefined){q.beginPath();gs3(q,I,gcirc3(n[0],n[1],n[2],.4,48));q.fillStyle=gc(ivory);q.fill();
+    if(P.n!==''){q.save();q.translate(n[0]*.93,n[1]*.93);const a=Math.atan2(n[1],n[0]);q.rotate(a);q.scale(.93,1);q.rotate(-a);q.fillStyle=gc(ink);q.font=`800 ${String(P.n).length>1?.4:.46}px system-ui,-apple-system,"Segoe UI",sans-serif`;q.textAlign='center';q.textBaseline='middle';q.fillText(String(P.n),0,.025);q.restore();}}
+  if(P.dots){for(const [x,y,z] of[[.5,.1,.86],[-.6,.45,.66],[.1,.72,.69]]){q.beginPath();gs3(q,I,gcirc3(x,y,z,.07,20));q.fillStyle=gc(P.dots);q.fill();}}
+  ggloss(q,1);q.globalCompositeOperation='lighter';disc(q,-.42,-.48,.12,rgr(q,-.42,-.48,.12,[0,'rgba(255,255,255,.9)',1,'rgba(255,255,255,0)']));q.globalCompositeOperation='source-over';},
+// A flower head of florets on the golden angle with petals round it (a sunflower, a daisy, a gerbera). C: heart, seeds dark, seeds light,
+// petal dark, petal, petal light. pr: where the petals start; np: petals per ring.
+bloom(q,u,P,R){const C=P.c,pr=P.pr||.64,np=P.np||21,hi=u>80;fillAll(q,gc(C[3]));
+  for(const [ring,off,len,w,sh] of[[0,.5,.6,.13,-.18],[1,0,.56,.12,0]]){for(let i=0;i<np;i++){const a=(i+off)/np*TAU+(R()-.5)*.08,L=len*(.9+R()*.2),r0=pr-.06;q.save();q.rotate(a);q.translate(r0,0);
+      q.beginPath();q.moveTo(0,-w*.4);q.bezierCurveTo(L*.35,-w*1.1,L*.85,-w*.9,L,0);q.bezierCurveTo(L*.85,w*.9,L*.35,w*1.1,0,w*.4);q.closePath();
+      q.fillStyle=lgr(q,0,0,L,0,[0,gc(gsh(C[3],sh-.1)),.35,gc(gsh(C[4],sh)),1,gc(gsh(C[5],sh))]);q.fill();q.lineWidth=Math.max(.003,.6/u);q.strokeStyle=gc(C[3],.5);q.stroke();
+      if(hi){q.beginPath();for(const s of[-.3,0,.3]){q.moveTo(.04,s*w*.5);q.quadraticCurveTo(L*.5,s*w*.9,L*.92,s*w*.25);}q.strokeStyle=gc(C[3],.28);q.stroke();}q.restore();}}
+  disc(q,0,0,pr+.02,rgr(q,0,0,pr+.02,[0,gc(C[0]),.25,gc(C[1]),.85,gc(C[1]),1,gc(gsh(C[1],-.3))]));
+  const n=hi?620:240,s0=pr*1.75/Math.sqrt(n);for(let i=0;i<n;i++){const t=Math.sqrt((i+.5)/n),d=t*pr,a=i*2.39996,x=Math.cos(a)*d,y=Math.sin(a)*d,s=s0*(.75+t*.45),cl=t<.18?gmix(C[0],C[2],t/.18):gmix(C[1],C[2],(Math.sin(t*9)*.5+.5)*.6+.2*R());
+    q.save();q.translate(x,y);q.rotate(a+.6);q.beginPath();q.moveTo(-s,0);q.quadraticCurveTo(0,-s*.75,s,0);q.quadraticCurveTo(0,s*.75,-s,0);q.fillStyle=gc(cl);q.fill();
+    if(hi&&t>.18){q.beginPath();q.arc(-s*.15,-s*.12,s*.28,0,TAU);q.fillStyle=gc(gsh(cl,.35),.55);q.fill();}q.restore();}
+  if(P.pol){q.fillStyle=gc(P.pol==1?[255,214,70]:P.pol,.9);q.beginPath();for(let i=0;i<(hi?140:50);i++){const a=R()*TAU,d=pr*(.84+R()*.2),s=.008+R()*.01;q.moveTo(Math.cos(a)*d+s,Math.sin(a)*d);q.arc(Math.cos(a)*d,Math.sin(a)*d,s,0,TAU);}q.fill();}},
+// Woven tartan: the sett's stripes laid warp then weft at half strength, so crossings mix, under a fine twill. P.t the sett, s its scale.
+tartan(q,u,P,R){const C=P.c,S=gsett(P.t),sc=P.s||.012,W=S.reduce((a,b)=>a+b[1],0)*sc,o=-W*.25;fillAll(q,gc(C[S[0][0]]));
+  for(const pass of[0,1]){q.globalAlpha=pass?.5:1;let x=o-W*Math.ceil((1.8+o)/W);while(x<1.8){for(const [ci,w] of S){const x1=x+w*sc;if(x1>-1.8&&x<1.8){q.beginPath();gpath(q,pass?[-1.8,x,1.8,x,1.8,x1,-1.8,x1]:[x,-1.8,x1,-1.8,x1,1.8,x,1.8],true,.05);q.fillStyle=gc(C[ci]);q.fill();}x=x1;}}}
+  q.globalAlpha=1;if(!GTWILL){GTWILL=document.createElement('canvas');GTWILL.width=GTWILL.height=4;const t=GTWILL.getContext('2d');for(let i=0;i<4;i++){t.fillStyle='rgba(0,0,0,.22)';t.fillRect(i,(i+1)%4,1,1);t.fillRect(i,(i+2)%4,1,1);t.fillStyle='rgba(255,255,255,.12)';t.fillRect(i,i,1,1);}}
+  q.save();q.setTransform(1,0,0,1,0,0);q.fillStyle=q.createPattern(GTWILL,'repeat');q.fillRect(0,0,q.canvas.width,q.canvas.height);q.restore();
+  ggrain(q,u,R,500,'rgba(255,255,255,.08)','rgba(0,0,0,.08)',.002,.005);},
+});
+// fine parallel silk in three directions, for cabochons and satin
+function gsilk(q,u,R,a0,n,cl,w=.0025){if(u<70)return;q.beginPath();for(let d=0;d<3;d++){const a=a0+d*Math.PI/3,ca=Math.cos(a),sa=Math.sin(a);for(let i=0;i<n;i++){const o=(R()*2-1)*1.1,L=.15+R()*.5,c=(R()*2-1)*.9;q.moveTo(ca*(c-L)-sa*o,sa*(c-L)+ca*o);q.lineTo(ca*(c+L)-sa*o,sa*(c+L)+ca*o);}}q.lineWidth=Math.max(w,.6/u);q.strokeStyle=cl;q.stroke();}
+Object.assign(GF,{
+// A polished cabochon: a dome of colour lit through from behind, light pooling low right. k: 'star' (asterism, six rays of silk),
+// 'eye' (one bright band across), 'glow' (moonstone's floating blue sheen). C runs dark to light; the last is the light's colour.
+cab(q,u,P,R){const C=P.c,L=C[C.length-1],k=P.k;fillAll(q,gc(C[0]));
+  disc(q,0,0,1.06,rgr(q,.22,.3,1.25,[0,gc(C[3]),.35,gc(C[2]),.75,gc(C[1]),1,gc(C[0])],.25,.32,0));
+  if(k!=='glow')gsilk(q,u,R,.3,90,gc(L,.07));
+  q.globalCompositeOperation='lighter';
+  if(k==='star'){const x=-.12,y=-.16;for(let i=0;i<3;i++){q.save();q.translate(x,y);q.rotate(.3+i*Math.PI/3);q.scale(1.25,.035);disc(q,0,0,1,rgr(q,0,0,1,[0,gc(L,.75),.25,gc(L,.3),1,gc(L,0)]));q.restore();}
+    disc(q,x,y,.28,rgr(q,x,y,.28,[0,gc(L,.65),.35,gc(L,.18),1,gc(L,0)]));}
+  else if(k==='eye'){q.save();q.rotate(.5);q.scale(.06,1.2);disc(q,0,0,1,rgr(q,0,0,1,[0,gc(L,.95),.4,gc(L,.4),1,gc(L,0)]));q.restore();q.save();q.rotate(.5);q.scale(.22,1.1);disc(q,0,0,1,rgr(q,0,0,1,[0,gc(L,.3),1,gc(L,0)]));q.restore();}
+  else if(k==='glow'){gsilk(q,u,R,1.2,40,'rgba(255,255,255,.12)',.004);q.save();q.translate(-.05,-.2);q.rotate(-.35);q.scale(.85,.42);disc(q,0,0,1,rgr(q,0,0,1,[0,gc(L,.85),.45,gc(L,.4),1,gc(L,0)]));q.restore();disc(q,.3,.35,.4,rgr(q,.3,.35,.4,[0,gc(L,.25),1,gc(L,0)]));}
+  q.globalCompositeOperation='source-over';
+  disc(q,0,0,1.15,rgr(q,0,0,1.15,[0,'rgba(0,0,0,0)',.78,'rgba(0,0,0,0)',.95,gc(C[0],.5),1,gc(C[0],.8)]));ggloss(q,.9);},
+// Stone polished flat, worked out pixel by pixel. k: 'lapis' (blue with calcite streaks and pyrite), 'turq' (blue-green cut by a dark web),
+// 'jade' (cloudy, deep), 'labra' (grey with patches that flash blue and gold), 'obsid' (black with white snowflakes), 'cloud' (milky, as rose quartz)
+stone(q,u,P,R,S){const C=P.c,k=P.k,sc=P.s||1.6,sd=S.id%23*2.1;
+  gfield(q,gtex(S.key,u,(x,y,o)=>{gwi(x,y,GO2);const X=GO2[0]*sc+sd,Y=GO2[1]*sc,n=gfbm(X*1.3,Y*1.3,4);
+    if(k==='lapis'){gramp(C.slice(0,3),gstep(.25,.75,n),o);const w=Math.pow(gridge(X*.9+5,Y*.9,3),6)*gstep(.45,.6,gfbm(X+2,Y+8,2));for(let i=0;i<3;i++)o[i]+=(C[3][i]-o[i])*w*.8;}
+    else if(k==='turq'){gramp(C.slice(0,3),gstep(.3,.7,n),o);const w=Math.pow(gridge(X*1.6+5,Y*1.6+1,4),9)*1.4+Math.pow(gridge(X*3.4,Y*3.4+4,3),14)*.6;for(let i=0;i<3;i++)o[i]+=(C[3][i]-o[i])*Math.min(1,w);}
+    else if(k==='labra'){gramp(C.slice(0,2),n,o);const f=gfbm(X*1.3+11,Y*1.3+3,4);
+      const fc=gramp(C.slice(2),gstep(.2,.8,gfbm(X*.8+30,Y*.8,3)+(X-Y)*.12),GO),m2=gstep(.42,.66,f)*(.86+.14*Math.sin((X*.8-Y*.6)*60+n*10));for(let i=0;i<3;i++)o[i]+=(fc[i]-o[i])*m2*.95;}
+    else if(k==='obsid'){gramp(C.slice(0,2),n*.6,o);}
+    else{gramp(C,gstep(.2,.8,n*.7+gfbm(X*3+4,Y*3,3)*.3),o);}}));
+  if(k==='lapis'&&u>40){for(let i=0;i<(u>110?70:30);i++){const a=R()*TAU,d=Math.sqrt(R())*1.05,x=Math.cos(a)*d,y=Math.sin(a)*d,s=.006+R()*R()*.03; // pyrite: golden flecks
+    disc(q,x,y,s,rgr(q,x-s*.3,y-s*.3,s,[0,'#fff6c8',.4,'#e2bc4a',1,'#7a5a14']));}}
+  if(k==='obsid'){for(let i=0;i<14;i++){const a=R()*TAU,d=Math.sqrt(R())*.95,x=Math.cos(a)*d,y=Math.sin(a)*d,s=.06+R()*.08; // snowflakes of cristobalite
+    q.save();q.translate(x,y);q.rotate(R()*TAU);q.beginPath();for(let j=0;j<9;j++){const b=j/9*TAU,l=s*(.5+R()*.6);q.moveTo(0,0);q.lineTo(Math.cos(b)*l,Math.sin(b)*l);}q.lineWidth=s*.22;q.strokeStyle=gc(C[2],.5);q.stroke();q.lineWidth=s*.08;q.strokeStyle=gc(C[2],.85);q.stroke();disc(q,0,0,s*.3,gc(C[2],.8));q.restore();}}
+  if(P.sp&&u>40){for(let i=0;i<26;i++){const a=R()*TAU,d=Math.sqrt(R())*.95,x=Math.cos(a)*d,y=Math.sin(a)*d,s=.008+R()*R()*.04;if(i%3){q.beginPath();q.arc(x,y,s,0,TAU);q.fillStyle='rgba(255,240,200,.25)';q.fill();q.lineWidth=Math.max(.003,.6/u);q.strokeStyle='rgba(255,250,230,.6)';q.stroke();}else disc(q,x,y,s*.6,'rgba(60,24,0,.55)');}} // bubbles and specks caught inside
+  if(k==='jade'||k==='cloud')disc(q,.2,.28,.8,rgr(q,.2,.28,.8,[0,gc(gsh(C[C.length-1],.3),.25),1,gc(C[C.length-1],0)])); // light caught inside
+  ggloss(q,.55,1);},
+// Banded mineral, pixel by pixel. k: 'mal' (malachite's concentric eyes), 'tiger' (wavy golden fibres that shine), 'agate' (rings round
+// one heart), 'rhodo' (rhodochrosite's zigzag rings). C: the band colours in order; f bands per unit.
+bands(q,u,P,R,S){const C=P.c,k=P.k,f=P.f||9,sd=S.id%19*1.7,E=[];for(let i=0;i<5;i++)E.push([(R()*2-1)*.9,(R()*2-1)*.9,.6+R()*.6]);
+  gfield(q,gtex(S.key,u,(x,y,o)=>{gwi(x,y,GO2);const X=GO2[0],Y=GO2[1],w=gfbm(X*1.6+sd,Y*1.6,3)-.5;let v,lit=1;
+    if(k==='mal'){v=9;for(const e of E)v=Math.min(v,Math.hypot(X-e[0],Y-e[1])*e[2]);v=v*f+w*3.2;}
+    else if(k==='tiger'){v=(Y+.18*Math.sin(X*2.3+w*4)+w*.5)*f;lit=.55+.75*Math.pow(.5+.5*Math.sin(v*.5+X*1.5+w*3),2.4);}
+    else if(k==='rhodo'){const a=Math.atan2(Y,X),d=Math.hypot(X,Y);v=(d+.03*Math.abs(Math.sin(a*14+d*8))+w*.25)*f;}
+    else v=(Math.hypot(X*.9+.1,Y*1.1-.05)+w*.6)*f;
+    const b=v-Math.floor(v),j=Math.floor(v),t=(b+.13*Math.sin(j*1.7))*(.6+.4*gn(j*.7,3.1)),c0=C[((j%C.length)+C.length)%C.length],c1=C[(((j+1)%C.length)+C.length)%C.length],sh=gstep(.75,1,b);
+    for(let i=0;i<3;i++)o[i]=(c0[i]+(c1[i]-c0[i])*sh)*(.82+.3*t)*lit;
+    if(k==='tiger'){const fib=.92+.08*gn(X*3+Y*60,Y*3);for(let i=0;i<3;i++)o[i]=Math.min(255,o[i]*fib);}}));
+  ggloss(q,.55,1);},
+// Metal. k: 'spun' (turned in fine circles: the light falls in a bow tie), 'ham' (hand-hammered dimples), 'dam' (Damascus folds).
+// C runs dark to light.
+metal(q,u,P,R,S){const C=P.c,k=P.k,sd=S.id%13*3.7;
+  if(k==='ham'){const N=P.n||7,G=[];for(let j=-N;j<=N;j++)for(let i=-N;i<=N;i++){const h=hash(i*73+j*151+sd);G.push([(i+.5+(h-.5)*.8)/N*1.25,(j+.5+(hash(i*91+j*37+sd)-.5)*.8)/N*1.25]);}
+    gfield(q,gtex(S.key,u,(x,y,o)=>{gwi(x,y,GO2);const X=GO2[0],Y=GO2[1],cx=Math.floor((X/1.25)*N+N),cy=Math.floor((Y/1.25)*N+N);let b1=9,b2=9,bx=0,by=0;
+      for(let j=cy-1;j<=cy+1;j++)for(let i=cx-1;i<=cx+1;i++){if(i<0||j<0||i>2*N||j>2*N)continue;const g=G[j*(2*N+1)+i],d=Math.hypot(X-g[0],Y-g[1]);if(d<b1){b2=b1;b1=d;bx=X-g[0];by=Y-g[1];}else if(d<b2)b2=d;}
+      const s=1.25/N*.75,l=Math.max(-1,Math.min(1,-(bx*GLX+by*GLY)/s)),edge=gstep(.0,.05,b2-b1),v=.5+.38*l*edge+(gn(X*9,Y*9)-.5)*.12;gramp(C,v,o);}));}
+  else gfield(q,gtex(S.key,u,(x,y,o)=>{gwi(x,y,GO2);const X=GO2[0],Y=GO2[1];
+    if(k==='dam'){const w=gfbm(X*.9+sd,Y*.9,4),v=Math.sin((X*.55+Y*.83)*70+w*22+gfbm(X*3+5,Y*3,2)*9),b=.5+.5*v;gramp(C,.25+.5*Math.pow(b,1.6)+(gn(X*30,Y*30)-.5)*.08,o);}
+    else{const r=Math.hypot(X,Y),a=Math.atan2(Y,X),ring=gn(r*260,sd)*.5+gn(r*60,sd+3)*.5,bow=Math.pow(Math.abs(Math.cos(a-GL+.35)),3);gramp(C,.16+.66*bow+(ring-.5)*.34,o);}}));
+  ggloss(q,.6);},
+// A gold coin struck with the Mitosis cell: a reeded rim, a ring of stars and a laurel, two daughter cells pinching apart at the middle.
+coin(q,u,P,R){const C=P.c,O=[0,0,0],mid=C[2],lo=C[0],hi=C[4];fillAll(q,gc(lo));
+  disc(q,0,0,1.15,rgr(q,-.3,-.35,1.5,[0,gc(C[3]),.5,gc(C[2]),1,gc(C[1])]));
+  const emb=(path,d=.016)=>{q.save();q.translate(d,d);path();q.fillStyle=gc(lo,.55);q.fill();q.restore();q.save();q.translate(-d*.8,-d*.8);path();q.fillStyle=gc(hi,.75);q.fill();q.restore();path();q.fillStyle=rgr(q,-.2,-.25,1.2,[0,gc(C[3]),1,gc(C[1])]);q.fill();};
+  q.beginPath();for(let i=0;i<120;i++){const a=i/120*TAU;q.moveTo(Math.cos(a)*.96,Math.sin(a)*.96);q.lineTo(Math.cos(a)*1.15,Math.sin(a)*1.15);}q.lineWidth=.012;q.strokeStyle=gc(lo,.5);q.stroke(); // reeding
+  emb(()=>{q.beginPath();q.arc(0,0,.93,0,TAU);q.arc(0,0,.82,0,TAU,true);},.012);
+  disc(q,0,0,.8,rgr(q,.1,.12,.9,[0,gc(C[2]),1,gc(C[1])]));
+  const star=(x,y,s,a=-Math.PI/2)=>{for(let j=0;j<10;j++){const b=a+j/10*TAU,rr=j%2?s*.4:s;j?q.lineTo(x+Math.cos(b)*rr,y+Math.sin(b)*rr):q.moveTo(x+Math.cos(b)*rr,y+Math.sin(b)*rr);}q.closePath();};
+  emb(()=>{q.beginPath();for(let i=0;i<7;i++){const a=-Math.PI/2+(i-3)*.32;star(Math.cos(a)*.69,Math.sin(a)*.69,.05);}});
+  emb(()=>{q.beginPath();for(const s of[-1,1]){for(let i=0;i<8;i++){const a=Math.PI/2+s*(.28+i*.21),x=Math.cos(a)*.62,y=Math.sin(a)*.62;for(const o of[-1,1]){const b=a+s*Math.PI/2*-1+o*.55,lx=x+Math.cos(b)*.06,ly=y+Math.sin(b)*.06;q.moveTo(lx+Math.cos(b)*.05,ly+Math.sin(b)*.05);q.ellipse(lx,ly,.055,.022,b,0,TAU);}}}});
+  q.beginPath();for(const s of[-1,1]){const a=Math.PI/2+s*.2;q.moveTo(Math.cos(a)*.62,Math.sin(a)*.62);q.arc(0,0,.62,a,Math.PI/2+s*1.9,s<0);}q.lineWidth=.014;q.strokeStyle=gc(lo,.5);q.stroke();
+  emb(()=>{q.beginPath();star(0,.02,.36);},.02);
+  emb(()=>{q.beginPath();star(0,.02,.2);},.008);
+  ggloss(q,.5);},
+});
+// In play a generated skin is its sprite, still (so its light stays upper left) unless it spins; fx adds one cheap live touch:
+// g a glint hopping between facets, s a sheen sweeping across, e eyes that look where the cell goes
+function gdraw(g,c,r,k){const P=this.p;skinArt(g,this,c,r,P.spin?T*P.spin+c.wob:0);const fx=P.fx;if(!fx||skinPx(g,r)<14)return;
+  if(fx==='g'){const t=T*.5+c.wob*3,i=Math.floor(t),a=i*2.4+c.wob,d=r*(.22+(i%3)*.2);glint(g,c.x+Math.cos(a)*d,c.y+Math.sin(a)*d,r*.17,Math.sin((t%1)*Math.PI)*1.1);}
+  else if(fx==='s'){const ph=((T*.16+c.wob*.1)%1)*3.2-1.6;if(Math.abs(ph)<1.15){g.beginPath();g.rect(c.x-r*1.2,c.y-r*1.2,r*2.4,r*2.4);g.save();g.translate(c.x+ph*r,c.y+ph*r);g.scale(r,r);
+    g.fillStyle=grad(g,'ice_sheen',m=>lgr(m,-.5,-.5,.5,.5,[0,'rgba(255,255,255,0)',.42,'rgba(255,255,255,0)',.5,'rgba(255,255,255,.3)',.58,'rgba(255,255,255,0)',1,'rgba(255,255,255,0)']));g.fill();g.restore();}}}
+const GRAR=p=>p>=7500?'legendary':p>=2000?'epic':p>=700?'rare':'common'; // a generated skin's rarity follows its price
+function gskin([id,key,name,price,f,pal,o,desc],col){const C=gpal(pal),m=C[o&&o.m!==undefined?o.m:C.length>>1];
+  const S={id,key,name,price,col,rar:GRAR(price),desc,f,p:Object.assign({c:C},o),base:ghsl(m),edge:gc(gsh(m,-.62)),edge2:gc(gsh(m,.55),.6),draw:gdraw};
+  S.bake=(q,u)=>GF[f](q,u,S.p,prng(id*7919+13),S);return S;}
+// The collections: [id, key, name, price, family, palette, parameters, shop description]. Price sets rarity (GRAR).
+const GEN_COLS={ocean:['Ocean','Shells, pearls and the glow of the deep'],garden:['Garden','Petals, seeds and rings of wood'],fruit:['Fruit','Cut open, juicy side up'],
+  sports:['Sports','Every ball worth chasing'],retro:['Retro','Records, neon and pixels'],patterns:['Patterns','Tartan, camo, marble and print'],lab:['Lab','Life under the microscope']};
+const GEN_ORDER=['space','elements','wild','ocean','garden','fruit','sweets','sports','retro','patterns','lab','gadgets','treasures','mythic'];
+const GEN={
+treasures:[
+[46,'diamond','Diamond',4000,'gem','0b0e14 39414f 8e99a8 dde5ee ffffff',{f:1,fx:'g',m:3,x:.42,j:1.4},'A round brilliant, throwing fire from every facet.'],
+[47,'ruby','Ruby',1200,'gem','2a0008 6e0418 c40d33 f0446a ffc2cf',{f:.25,fx:'g'},'A pigeon-blood ruby, brilliant cut.'],
+[48,'sapphire','Sapphire',1200,'gem','020a2e 0a1f6e 1840c0 4a7cf0 c4d8ff',{f:.25,fx:'g'},'Cornflower-blue sapphire, brilliant cut.'],
+[49,'emerald','Emerald',1500,'gem','02210f 064d24 0f8a45 3fcf7e c8ffe0',{k:'s',f:.15,fx:'g'},'Step-cut emerald: a hall of green mirrors.'],
+[50,'amethyst','Amethyst',500,'gem','1a0630 3e1270 7a32c0 b07ae8 ecd8ff',{f:.2},'Royal purple quartz, brilliant cut.'],
+[51,'bluetopaz','Blue Topaz',450,'gem','06283a 0e5a80 2aa0d0 7ad6f2 e0f8ff',{f:.25},'Swiss-blue topaz, bright as a pool.'],
+[52,'citrine','Citrine',400,'gem','3a1e02 8a4e06 e09a1a f6c84a fff0c0',{k:'s',f:.2},'Step-cut citrine, the colour of honey.'],
+[53,'aquamarine','Aquamarine',500,'gem','0a2e3a 1a6070 4aaec0 98e0e8 eafcff',{k:'s',f:.15},'Sea-blue aquamarine in a step cut.'],
+[54,'peridot','Peridot',400,'gem','1c2a02 4a6a08 8ab81c c4e85a f2ffd0',{f:.2},'Lime-green peridot, born in lava.'],
+[55,'garnet','Garnet',350,'gem','1c0206 4e0a14 8e1a26 c94a52 f2a6a8',{k:'r',f:.15},'A rose-cut garnet, dark as wine.'],
+[56,'tanzanite','Tanzanite',900,'gem','0e0630 2a1a80 5a3ac8 9a80f0 e4dcff',{f:.25,fx:'g'},'Violet-blue tanzanite from one hill in Africa.'],
+[57,'rubellite','Rubellite',600,'gem','3a0420 8a0e4a d82a7a f272b0 ffd6ec',{k:'r',f:.2},'Hot pink tourmaline in an old rose cut.'],
+[58,'morganite','Morganite',500,'gem','4a2018 9a5040 e09a84 f6c8b8 fff0ea',{f:.25},'Peach-pink morganite, soft and warm.'],
+[59,'imperialtopaz','Imperial Topaz',700,'gem','3a1200 8a3a06 e0761a f6aa5a ffe4c4',{k:'s',f:.2},'Sherry-orange topaz, once kept for the tsars.'],
+[60,'paraiba','Paraíba',1500,'gem','00303a 006a7a 00b8c8 40f0e8 d8ffff',{f:.35,fx:'g'},'Neon blue-green tourmaline, glowing from within.'],
+[61,'blackdiamond','Black Diamond',2500,'gem','000000 0c0c10 26282e 50545c b0b4bc',{f:.6,fx:'g',x:.4,j:1.4,m:2},'Jet-black diamond with flashes of fire.'],
+[62,'canary','Canary Diamond',3000,'gem','3a2a00 8a6a00 e8c010 ffe45a fffbe0',{f:.8,fx:'g',x:.42,j:1.2},'A fancy yellow diamond, blazing.'],
+[63,'alexandrite','Alexandrite',2500,'gem','06221e 0e4a42 1a8a76 52c8b0 d0fff4',{c2:'2a0420 64104a a82a7a d870a8 ffd8ee',f:.3,fx:'g'},'Teal by day, raspberry by lamplight.'],
+[64,'starsapphire','Star Sapphire',2000,'cab','050a2a 0c1a5a 1c3a9a 3a64c8 dfe8ff',{k:'star',fx:'s'},'A six-rayed star floating in a blue dome.'],
+[65,'catseye','Cat’s Eye',1200,'cab','2a1c02 6a4a08 b8901a e0c050 fff4c8',{k:'eye',fx:'s'},'Honey chrysoberyl with a slit of light down the middle.'],
+[66,'moonstone','Moonstone',800,'cab','2e3644 5a6476 98a4b8 ccd4e2 6ab0ff',{k:'glow',m:3},'Milky moonstone with a blue light drifting inside.'],
+[67,'lapis','Lapis Lazuli',450,'stone','0a1a5a 1a3aa0 2e5ad0 d8dce8',{k:'lapis'},'Ultramarine stone flecked with gold.'],
+[68,'turquoise','Turquoise',400,'stone','3aa8a8 5ac8c0 8ae0d4 3a2a1a',{k:'turq'},'Sky-blue turquoise in its dark spiderweb.'],
+[69,'jade','Jade',500,'stone','0a3a1e 1a6a38 3aa060 8ad8a0',{k:'jade',s:1.2},'Deep imperial jade, cool and cloudy.'],
+[70,'rosequartz','Rose Quartz',350,'stone','e8a8b8 f2c4d0 fae0e8 fff4f8',{k:'cloud',s:1.2},'Soft pink quartz, milky as a cloud.'],
+[71,'amber','Amber',600,'stone','8a3a04 c86a0c ec9a26 ffcf6a',{k:'cloud',s:1.3,sp:1},'Honey-gold amber, bubbles and specks caught inside.'],
+[72,'obsidian','Snowflake Obsidian',500,'stone','050506 1a1a1e d8dce0',{k:'obsid',m:1},'Volcanic glass scattered with white snowflakes.'],
+[73,'malachite','Malachite',450,'bands','0a3a1e 1a7a44 0a5a30 3ab070 0e4a28 8ae0a8',{k:'mal',f:10},'Green rings on rings, polished to a gloss.'],
+[74,'tigerseye','Tiger’s Eye',450,'bands','3a1e04 8a5a14 c88a2a e8b850 6a3c0a',{k:'tiger',f:8},'Golden fibres that ripple with light.'],
+[75,'agate','Blue Lace Agate',400,'bands','dfe6ee 8aa8c8 4a6a98 f2f4f8 6a88b0 c8d6e6',{k:'agate',f:9},'Pale blue lace, ring inside ring.'],
+[76,'rhodochrosite','Rhodochrosite',600,'bands','f2b8c4 d8607a fae0e6 b8405a f6c8d0',{k:'rhodo',f:12},'Raspberry and cream bands, zigzag rings.'],
+[77,'gold','Solid Gold',2500,'metal','5a3a04 a87810 e8c040 fff0a0',{k:'spun',fx:'s'},'Spun 24-carat gold, the light caught in its rings.'],
+[78,'sterling','Sterling',800,'metal','3a3e44 7a8088 c8ccd2 f6f8fa',{k:'spun',fx:'s'},'Turned sterling silver, cool and bright.'],
+[79,'rosegold','Rose Gold',1200,'metal','5a2a20 a8604a e8a088 fff0e6',{k:'spun',fx:'s'},'Spun rose gold, warm as a blush.'],
+[80,'copper','Hammered Copper',500,'metal','3a1404 8a3a14 d07040 f8c0a0',{k:'ham'},'Copper beaten by hand, every dimple catching light.'],
+[81,'wateredsteel','Watered Steel',1500,'metal','16181c 3a3e44 8a9098 e0e4e8',{k:'dam'},'Steel folded and etched until it ripples like water.'],
+[82,'doubloon','Doubloon',2000,'coin','4a2a02 8a5a08 d8a020 f8d860 fff6c0',{fx:'s'},'A pirate’s gold coin: a star, laurels and a milled edge.'],
+],
+};
+for(const col in GEN)for(const row of GEN[col]){const S=gskin(row,col);S.tok=STAINS.map(()=>'tok'+S.key);PREMIUM.push(S);}
+PREMIUM.sort((a,b)=>a.id-b.id); // ids index the list: skin id n is PREMIUM[n-SKIN_FREE]
+// end of generated skins
 const SKIN_COUNT=SKIN_FREE+PREMIUM.length,SKIN_V22=17; // 2.2.0 and older clamp any skin id they do not know to their last one (One Cell)
 const wireSkin=k=>k<SKIN_V22?k:0; // so newer skins go out as the plain cell in k, and in full in ks
 function skinColor(stain,skin){const S=skin>=SKIN_FREE?PREMIUM[skin-SKIN_FREE]:null;return (S&&S.base)||STAINS[clamp(stain|0,0,STAINS.length-1)];}
@@ -5610,7 +5911,8 @@ const SKIN_DESC={
   28:'A shell of golden glass, ribbed and pored like the algae it is named after. Battle Pass, free for everyone.',29:'Night sea swirling with glowing plankton that flash brighter the faster you swim. Battle Pass.',
   30:'A glass skeleton: a lattice sphere round an amber heart, and barbed spines through the membrane. Battle Pass.',31:'Teal and magenta light swirling round a glowing heart, with a halo, sparks and trailing tendrils. Battle Pass.'};
 let shopSel=0; // the skin shown large in the shop
-const rarOf=S=>S.season?'seasonal':RARITY[S.id]||'common';
+const rarOf=S=>S.season?'seasonal':RARITY[S.id]||S.rar||'common';
+for(const S of PREMIUM)if(S.desc&&!SKIN_DESC[S.id])SKIN_DESC[S.id]=S.desc; // generated skins carry their own
 const fmtLeft=ms=>{const m=Math.max(0,Math.round(ms/60000)),d=Math.floor(m/1440),h=Math.floor(m%1440/60);return d?`${d}d ${h}h`:h?`${h}h ${m%60}m`:`${m%60}m`;};
 const fmtAtp=n=>n>=1e6?(n/1e6).toLocaleString(undefined,{maximumFractionDigits:1})+'M':n.toLocaleString();
 function renderSkins(){
@@ -5653,23 +5955,25 @@ function drawAvatar(cv=$('avatarCv'),sk=settings.skin|0,st=settings.stain|0){ //
   skinLight(g,x,y,r,k);
   g.beginPath();g.arc(x,y,r,0,TAU);g.lineWidth=r*.07;g.strokeStyle=o.edge;g.stroke();
 }
-function renderPreviews(live){const vh=innerHeight;for(const cv of document.querySelectorAll('#skins canvas, #ownedSkins canvas')){
+function renderPreviews(live){const vh=innerHeight,t0=performance.now();for(const cv of document.querySelectorAll('#skins canvas, #ownedSkins canvas')){
   if(!cv.offsetWidth)continue; // a hidden page: drawn when it opens (warmShop has the art ready by then), not now at a size it won't be shown at
-  if(live){const b=cv.getBoundingClientRect();if(!b.width||b.bottom<-40||b.top>vh+40)continue;} // animating: only the tiles on screen
-  const S=PREMIUM[+cv.dataset.skin-SKIN_FREE];if(S)drawPreview(cv,S);else if(cv.dataset.def)drawAvatar(cv,settings.pat|0);}}
+  const b=cv.getBoundingClientRect();if(!b.width||b.bottom<-40||b.top>vh+40)continue; // only the tiles on screen: the rest are drawn as they scroll in
+  const S=PREMIUM[+cv.dataset.skin-SKIN_FREE];if(S){if(cv._pv!==S&&performance.now()-t0>12)continue;drawPreview(cv,S);}else if(cv.dataset.def)drawAvatar(cv,settings.pat|0);}} // a tile seen for the first time waits a frame once this one has spent 12 ms
 // The shop's tiles used to bake every skin's art the moment it opened (half a second on a phone, then they all popped in).
 // The lobby bakes them ahead instead, one skin about every 120 ms while nothing else is going on, at the size the shop's
 // tiles will ask for: a detached canvas as wide as their CSS says (read from a hidden tile), so the bakes land in the same sizes.
-let warmAt=0;const warmCv=document.createElement('canvas');
+// Generated skins bake in a few ms as their tiles scroll in, so only the first few dozen (in shelf order) are warmed with the drawn ones.
+let warmAt=0,warmList=null;const warmCv=document.createElement('canvas');
 function warmShop(){
-  if(warmAt>=PREMIUM.length)return;
+  if(!warmList){let n=0;warmList=SKIN_CATS.flatMap(C=>C[3]).map(id=>PREMIUM[id-SKIN_FREE]).filter(S=>S&&(!S.f||n++<36));for(const S of PREMIUM)if(!S.f&&!warmList.includes(S))warmList.push(S);}
+  if(warmAt>=warmList.length)return;
   if(mode==='play'||document.hidden||!$('storeCard').hidden){setTimeout(warmShop,1500);return;}
   const tile=document.querySelector('#skins .svc canvas'),css=tile&&parseFloat(getComputedStyle(tile).width)||66,d=Math.min(3,window.devicePixelRatio||1);
-  const S=PREMIUM[warmAt++];if(!S.pass){warmCv.width=warmCv.height=Math.max(48,Math.min(960,Math.round(css*d)));drawPreview(warmCv,S);}
+  const S=warmList[warmAt++];if(!S.pass){warmCv.width=warmCv.height=Math.max(48,Math.min(960,Math.round(css*d)));drawPreview(warmCv,S);}
   setTimeout(warmShop,120);
 }
 setTimeout(warmShop,2500);
-addEventListener('resize',()=>{if(warmAt>=PREMIUM.length){warmAt=0;setTimeout(warmShop,1500);}}); // a turned phone changes the tile size: warm again (bakes already made are kept)
+addEventListener('resize',()=>{if(warmList&&warmAt>=warmList.length){warmAt=0;setTimeout(warmShop,1500);}}); // a turned phone changes the tile size: warm again (bakes already made are kept)
 setInterval(()=>{if(document.hidden||RM)return;if(!$('storeCard').hidden||!$('lookCard').hidden)renderPreviews(true);if(!$('startCard').hidden)drawAvatar($('meCv'));if(!$('profileCard').hidden)drawAvatar($('profCv'));},33);
 // Skins page › Collection: the classic cell first, then the premium skins you own, rarest first. Tiles are rebuilt only when
 // what you own changes, so picking one just flips aria-pressed and the selection animates.
@@ -5698,6 +6002,9 @@ function shopCard(S){const own=ownsSkin(S.id),eq=settings.skin===S.id,rar=rarOf(
 const SKIN_CATS=[['space','Space','Stars, worlds and things that swallow light',[5,13,15,22,32,33]],['elements','Elements','Fire, ice, storms and worse',[6,10,11,17,19,34]],
   ['wild','Wild','Fur, fins, wings and blossoms',[7,9,18,21,35]],['sweets','Sweets','Good enough to eat',[36,37,38]],['gadgets','Gadgets','Machines and flashing lights',[8,23,39,40,41]],
   ['treasures','Treasures','Gold, glass and gemstones',[14,20,42,43]],['mythic','Mythic','Legends to be reckoned with',[12,16,44,45]]];
+// generated skins go on their collection's shelf (a new collection adds one, in GEN_ORDER), and every skin learns its shelf as S.col
+for(const S of PREMIUM)if(S.col){let C=SKIN_CATS.find(c=>c[0]===S.col);if(!C)SKIN_CATS.push(C=[S.col,...GEN_COLS[S.col],[]]);if(!C[3].includes(S.id))C[3].push(S.id);}
+SKIN_CATS.sort((a,b)=>GEN_ORDER.indexOf(a[0])-GEN_ORDER.indexOf(b[0]));for(const C of SKIN_CATS)for(const id of C[3])if(PREMIUM[id-SKIN_FREE])PREMIUM[id-SKIN_FREE].col=C[0];
 function renderShopGrid(el){ // limited seasonal skins lead in their own banner with a live countdown (and are hidden out of season unless owned); the rest sit on shelves by category, under chips that jump to each
   const byPrice=(a,b)=>a.price-b.price||a.id-b.id,seasonal=PREMIUM.filter(S=>S.season&&seasonState(S.season).open).sort(byPrice),rest=PREMIUM.filter(S=>!S.pass&&(!S.season||(!seasonState(S.season).open&&ownsSkin(S.id)))).sort(byPrice);
   let html='';if(seasonal.length){const st=seasonState(seasonal[0].season);
