@@ -63,6 +63,16 @@ const SKINS = [
   { id: 53, key: 'pufferfish', name: 'Pufferfish', price: 1200 }, // ocean
   { id: 54, key: 'octopus', name: 'Octopus', price: 2500 }, // ocean
   { id: 55, key: 'seahorse', name: 'Seahorse', price: 1500 }, // ocean
+  { id: 56, key: 'saturn', name: 'Saturn', price: 3000 }, // space
+  { id: 57, key: 'jupiter', name: 'Jupiter', price: 1500 }, // space
+  { id: 58, key: 'totaleclipse', name: 'Total Eclipse', price: 4000 }, // space
+  { id: 59, key: 'spacewalk', name: 'Spacewalk', price: 5000 }, // space
+  { id: 60, key: 'comet', name: 'Comet', price: 1200 }, // space
+  { id: 61, key: 'redplanet', name: 'Red Planet', price: 1500 }, // space
+  { id: 62, key: 'nightearth', name: 'Night Earth', price: 3000 }, // space
+  { id: 63, key: 'pulsar', name: 'Pulsar', price: 2500 }, // space
+  { id: 64, key: 'wormhole', name: 'Wormhole', price: 6000 }, // space
+  { id: 65, key: 'astrolabe', name: 'Astrolabe', price: 1800 }, // space
 ];
 const PACKS = [
   { id: 'atp_500', atp: 500 },
