@@ -5662,6 +5662,217 @@ GEN50.push(
   top(q,u){q.save();q.rotate(-.5);rrect(q,-1.05,-.04,2.1,.08,.04);q.fillStyle=lgr(q,0,-.04,0,.04,[0,'#fff2b8',.5,'#c8922a',1,'#5a3a08']);q.fill();q.restore();disc(q,0,0,.07,rgr(q,-.02,-.02,.08,[0,'#fff6d0',1,'#7a520e']));ggloss(q,.35,1);},
   draw(g,c,r,k){skinArt(g,this,c,r,0);blit(g,bake(g,'as_rete',skinPx(g,r)*2,this.rete,1),c.x,c.y,r,T*.05+c.wob,1);skinArt(g,this,c,r,0,'as_top',this.top);}},
 );
+// fur: n short strokes laid along a flow field (fl(x,y) gives the angle), each pass in one colour where ok(x,y) holds, inside the current clip
+function gfur(q,u,R,n,fl,passes,L=.05,w=.008){if(u<50)n=n>>2;q.lineCap='round';for(const [cl,ok,k] of passes){q.beginPath();for(let i=0;i<n*(k||1);i++){const x=R()*2.3-1.15,y=R()*2.3-1.15;if(!ok(x,y))continue;const a=fl(x,y),l=L*(.6+R()*.8),c=Math.cos(a),s=Math.sin(a);
+    q.moveTo(x,y);q.quadraticCurveTo(x+c*l*.5-s*l*.12,y+s*l*.5+c*l*.12,x+c*l,y+s*l);}q.lineWidth=Math.max(w,.5/u);q.strokeStyle=cl;q.stroke();}}
+// the python's neck: from beyond the rim over its coils to its head (segments: x, y, dx, dy, length, length so far), the head's place and heading, its snout tip
+const PYN=(()=>{const P=[];for(let i=0;i<=40;i++){const t=i/40,m=1-t;P.push([m*m*m*1.32+3*m*m*t*.86+3*m*t*t*.42+t*t*t*.1,m*m*m*.74+3*m*m*t*.8+3*m*t*t*.4+t*t*t*.08]);}
+  const S=[];let c=0;for(let i=0;i<40;i++){const [x,y]=P[i],[x2,y2]=P[i+1],dx=x2-x,dy=y2-y,l=Math.hypot(dx,dy);S.push([x,y,dx,dy,l,c]);c+=l;}
+  const [ax,ay]=P[37],[bx,by]=P[40],a=Math.atan2(by-ay,bx-ax),hx=bx+Math.cos(a)*.15,hy=by+Math.sin(a)*.15;return {S,L:c,hx,hy,ha:a,tx:hx+Math.cos(a)*.29,ty:hy+Math.sin(a)*.29};})();
+GEN50.push(
+{id:66,key:'tigereye',name:'Tiger Eye',price:3000,col:'wild',rar:'epic',base:[30,90,52],edge:'#3a1a04',edge2:'rgba(255,230,180,.6)',
+  desc:'A tiger\'s eye up close, amber and watchful. It follows you.',
+  // a tiger's eye filling the cell: amber iris shot with fibres round a round black pupil (it looks where you swim), rimmed in black, wet and bright; the fur
+  // round it orange, combed outward, with black stripes curving away and the white patch above the eye
+  EY:(q,keep)=>{if(!keep)q.beginPath();q.moveTo(-.62,.04);q.bezierCurveTo(-.36,-.36,.32,-.4,.66,-.06);q.bezierCurveTo(.36,.3,-.32,.34,-.62,.04);q.closePath();},
+  bake(q,u){const R=prng(66),fl=(x,y)=>Math.atan2(y*1.6,x)+.25;gfield(q,gtex('te_fur',u,(x,y,o)=>{const a=Math.atan2(y*1.5,x),d=Math.hypot(x,y*1.5),st=Math.sin(a*5+d*6+gfbm(x*2,y*2,3)*3),wh=gstep(.5,.3,Math.hypot(x+.05,y+.62)),wh2=gstep(.35,.2,Math.hypot(x+.3,y-.5));
+      gramp(gpal('8a3a06 d8701a f0a040 f8d090'),.5+gfbm(x*4,y*4,3)*.4,o);const blk=gstep(.55,.7,st)*gstep(.3,.5,d);for(let i=0;i<3;i++)o[i]*=1-blk*.9;const W=[250,245,236];for(let i=0;i<3;i++)o[i]+=(W[i]-o[i])*Math.max(wh,wh2)*.9;}));
+    gfur(q,u,R,7000,fl,[['rgba(255,190,110,.3)',(x,y)=>true],['rgba(120,50,6,.3)',(x,y)=>true,.5],['rgba(20,8,0,.5)',(x,y)=>Math.sin(Math.atan2(y*1.5,x)*5+Math.hypot(x,y*1.5)*6+gfbm(x*2,y*2,3)*3)>.55],['rgba(255,255,255,.55)',(x,y)=>Math.hypot(x+.05,y+.62)<.45||Math.hypot(x+.3,y-.5)<.3]],.035,.004); // fine fur, combed out from the eye
+    this.EY(q);q.save();q.scale(1.08,1.25);q.translate(0,-.01);q.lineWidth=.08;q.strokeStyle='#120804';q.stroke();q.restore();this.EY(q);q.fillStyle='#2a1404';q.fill();}, // the black rim, and the socket behind the iris
+  iris(q,u){const R=prng(661);disc(q,0,0,1,rgr(q,0,0,1,[0,'#6a3a04',.3,'#e09a1a',.7,'#f6c440',.92,'#a86a10',1,'#2a1404']));q.beginPath();for(let i=0;i<140;i++){const a=R()*TAU,r0=.35+R()*.1,r1=.7+R()*.28;q.moveTo(Math.cos(a)*r0,Math.sin(a)*r0);q.lineTo(Math.cos(a+(R()-.5)*.1)*r1,Math.sin(a+(R()-.5)*.1)*r1);}
+    q.lineWidth=.012;q.strokeStyle='rgba(255,230,140,.4)';q.stroke();disc(q,0,0,.36,'#050302');},
+  top(q,u){q.save();q.beginPath();q.rect(-1.2,-1.2,2.4,2.4);this.EY(q,1);q.clip('evenodd');q.drawImage(bake(q,'te_base0',u*2.3,this.bake,SKIN_BR),-SKIN_BR,-SKIN_BR,2*SKIN_BR,2*SKIN_BR);q.restore(); // the fur over the edge of the eye
+    q.save();this.EY(q);q.clip();q.beginPath();q.ellipse(-.1,-.22,.6,.16,-.05,0,TAU);q.fillStyle='rgba(0,0,0,.35)';q.fill();q.restore(); // the lid's shadow on the eye
+    this.EY(q);q.lineWidth=.05;q.strokeStyle='#0c0603';q.stroke();q.save();q.translate(-.2,-.12);q.rotate(-.3);q.scale(.12,.05);disc(q,0,0,1,'rgba(255,255,255,.9)');q.restore();disc(q,.18,-.08,.03,'rgba(255,255,255,.7)');}, // and the wet shine
+  draw(g,c,r,k){skinArt(g,this,c,r,0,'te_base',this.bake);const mv=Math.hypot(c.svx,c.svy)+1,dx=c.svx/mv,dy=c.svy/mv,s=r*.34;g.drawImage(bake(g,'te_iris',skinPx(g,s)*2,this.iris,1),c.x+dx*r*.1-s,c.y+dy*r*.06-s,2*s,2*s);skinArt(g,this,c,r,0,'te_top',this.top);}},
+{id:67,key:'sleepyfox',name:'Sleeping Fox',price:2000,col:'wild',rar:'rare',base:[22,80,52],edge:'#4a1a04',edge2:'rgba(255,230,200,.65)',
+  desc:'A red fox curled up asleep in the autumn leaves, its tail over its nose. Shh.',
+  // a red fox seen from above, curled nose to tail in a bed of fallen leaves: russet back, cream belly fur, the white tip of its brush tucked by its face,
+  // black-backed ears, eyes shut; it breathes slowly
+  bake(q,u){const R=prng(67);fillAll(q,'#4a2a10');for(let i=0;i<40;i++){const a=R()*TAU,d=.7+R()*.5,x=Math.cos(a)*d,y=Math.sin(a)*d;gleafL(q,x,y,.14+R()*.08,R()*TAU,['#c8501a','#e8a020','#8a3010','#d87a20'][i%4]);} // fallen leaves round it
+    natureSoft(q,u,.06,'rgba(20,8,0,.7)',()=>{q.fillStyle='#000';q.beginPath();q.arc(.04,.06,.9,0,TAU);q.fill();});
+    const body=()=>{q.beginPath();q.arc(0,0,.88,0,TAU);};body();q.fillStyle=rgr(q,-.25,-.3,1,[0,'#e88a3a',.5,'#c8601e',1,'#7a3008']);q.fill();q.save();body();q.clip();
+    const fl=(x,y)=>Math.atan2(y,x)+Math.PI/2+.25;gfur(q,u,R,2600,fl,[['rgba(255,170,90,.4)',()=>true],['rgba(110,40,8,.45)',(x,y)=>Math.hypot(x,y)>.62],['rgba(255,240,220,.6)',(x,y)=>Math.hypot(x-.25,y-.25)<.32]],.09,.008); // fur combed round the curl
+    q.restore();
+    q.save();q.rotate(.4);const tail=()=>{q.beginPath();q.moveTo(-.84,.05);q.bezierCurveTo(-.8,.62,-.12,.92,.46,.7);q.bezierCurveTo(.3,.48,-.24,.46,-.46,.06);q.closePath();}; // the brush, wrapped round, its tip white
+    natureSoft(q,u,.03,'rgba(40,10,0,.5)',()=>{tail();q.fillStyle='#000';q.fill();});tail();q.fillStyle=lgr(q,-.84,.3,.46,.7,[0,'#b8501a',.55,'#d87a34',.78,'#eab07a',.86,'#fbf2e8',1,'#ffffff']);q.fill();
+    q.save();tail();q.clip();gfur(q,u,R,1500,(x,y)=>Math.atan2(.7-y,.46-x)*0+Math.atan2(y-.0,x+.84)+.6,[['rgba(255,190,120,.4)',()=>true],['rgba(120,40,8,.35)',(x,y)=>x<.05],['rgba(255,255,255,.7)',(x,y)=>x>.18]],.07,.007);q.restore();q.restore();
+    const hx=.06,hy=-.04;q.save();q.translate(hx,hy);q.rotate(-.55);q.scale(1.45,1.45);const head=()=>{q.beginPath();q.moveTo(-.26,-.02);q.bezierCurveTo(-.26,-.2,-.06,-.24,.08,-.18);q.bezierCurveTo(.2,-.12,.34,-.06,.42,0);q.bezierCurveTo(.34,.06,.2,.12,.08,.18);q.bezierCurveTo(-.06,.24,-.26,.2,-.26,-.02);q.closePath();}; // the head, chin on its tail, snout +x
+    for(const s of[-1,1]){q.save();q.translate(-.1,s*.12);q.rotate(s*.35);q.beginPath();q.moveTo(-.07,0);q.lineTo(-.16,s*.2);q.lineTo(.06,s*.04);q.closePath();q.fillStyle=lgr(q,0,0,-.16,s*.2,[0,'#d06a26',.55,'#7a3008',1,'#1a0804']);q.fill(); // ears pricked up even in sleep, black-backed
+      q.beginPath();q.moveTo(-.05,s*.02);q.lineTo(-.12,s*.14);q.lineTo(.02,s*.04);q.closePath();q.fillStyle='rgba(255,230,210,.55)';q.fill();q.restore();}
+    natureSoft(q,u,.03,'rgba(40,10,0,.45)',()=>{head();q.fillStyle='#000';q.fill();});head();q.fillStyle=rgr(q,-.04,-.06,.42,[0,'#f2a050',.55,'#d26c26',1,'#9a4410']);q.fill();
+    q.save();head();q.clip();gfur(q,u,R,700,(x,y)=>0,[['rgba(255,190,120,.35)',()=>true]],.04,.006);q.beginPath();q.moveTo(.0,.06);q.bezierCurveTo(.16,.1,.32,.06,.42,.0);q.lineTo(.42,.3);q.lineTo(.0,.3);q.closePath();q.fillStyle='rgba(255,246,236,.92)';q.fill();q.restore(); // its white cheek and chin
+    q.lineCap='round';for(const s of[-1,1]){q.beginPath();q.moveTo(.04,s*.075);q.quadraticCurveTo(.1,s*.105,.17,s*.07);q.lineWidth=.02;q.strokeStyle='#1a0a02';q.stroke();q.beginPath();q.moveTo(.06,s*.09);q.lineTo(.05,s*.12);q.moveTo(.1,s*.1);q.lineTo(.1,s*.13);q.moveTo(.14,s*.09);q.lineTo(.15,s*.12);q.lineWidth=.008;q.stroke();} // eyes shut, lashes down
+    disc(q,.42,0,.035,'#140804');disc(q,.41,-.01,.01,'rgba(255,255,255,.55)');q.restore(); // the nose
+    ggloss(q,.25,1);},
+  draw(g,c,r,k){const b=1+.012*Math.sin(T*1.1+c.wob*3);blit(g,bake(g,this.key,skinPx(g,r*b)*2*SKIN_BR,this.bake,SKIN_BR,this),c.x,c.y,r*b,0);}},
+{id:68,key:'barnowl',name:'Barn Owl',price:1500,col:'wild',rar:'rare',base:[36,60,70],edge:'#5a3a14',edge2:'rgba(255,248,230,.7)',
+  desc:'A barn owl\'s pale heart-shaped face and dark eyes. It blinks.',
+  // a barn owl face on: the white heart-shaped facial disc of fine radiating feathers inside a golden ruff, two deep dark eyes, a pale hooked beak, the golden
+  // buff crown speckled grey and white; now and then it blinks (drawn live)
+  bake(q,u){const R=prng(68);fillAll(q,'#c8964a');gfield(q,gtex('bo_crown',u,(x,y,o)=>{const n=gfbm(x*5,y*5,3);gramp(gpal('8a6a3a c8a060 e8c890 bcb8b0'),.3+n*.6,o);}));gfur(q,u,R,1200,(x,y)=>Math.atan2(y+.6,x)*.2+Math.PI/2,[['rgba(120,100,80,.4)',()=>true],['rgba(255,250,240,.6)',()=>true,.3]],.04,.008);
+    for(let i=0;i<120;i++){const x=R()*2.2-1.1,y=R()*2.2-1.1;disc(q,x,y,.008,'rgba(255,255,255,.75)');disc(q,x+.006,y+.01,.008,'rgba(40,30,20,.5)');} // speckles
+    const disc2=k=>{q.beginPath();q.moveTo(0,-.62*k);q.bezierCurveTo(.22*k,-.86*k,.82*k,-.72*k,.8*k,-.1*k);q.bezierCurveTo(.78*k,.4*k,.32*k,.78*k,0,.86*k);q.bezierCurveTo(-.32*k,.78*k,-.78*k,.4*k,-.8*k,-.1*k);q.bezierCurveTo(-.82*k,-.72*k,-.22*k,-.86*k,0,-.62*k);q.closePath();};
+    disc2(1.08);q.fillStyle='#b07a3a';q.fill();disc2(1);q.fillStyle=rgr(q,0,0,.9,[0,'#fffaf4',.7,'#f6ece0',1,'#e2cfba']);q.fill();q.save();disc2(1);q.clip(); // the heart-shaped facial disc
+    gfur(q,u,R,1800,(x,y)=>Math.atan2(y+.08,x-(x<0?-.3:.3)),[['rgba(170,140,110,.22)',()=>true],['rgba(255,255,255,.6)',()=>true,.5]],.06,.004);q.restore(); // its fine radiating feathers
+    disc2(1);q.lineWidth=.05;q.strokeStyle='rgba(140,90,40,.7)';q.stroke();
+    for(const s of[-1,1]){const x=s*.3,y=-.08;disc(q,x,y,.17,rgr(q,x,y,.17,[0,'rgba(120,80,60,.3)',1,'rgba(120,80,60,0)']));disc(q,x,y,.12,rgr(q,x-.03,y-.03,.13,[0,'#2a1a14',.6,'#0c0604',1,'#000']));disc(q,x-.04,y-.045,.03,'rgba(255,255,255,.9)');disc(q,x+.04,y+.04,.012,'rgba(255,255,255,.4)');} // deep dark eyes
+    q.beginPath();q.moveTo(0,.0);q.bezierCurveTo(.06,.04,.05,.2,0,.28);q.bezierCurveTo(-.05,.2,-.06,.04,0,0);q.fillStyle=lgr(q,0,0,0,.28,[0,'#f2dcc8',1,'#c8a088']);q.fill(); // the beak
+    ggloss(q,.2,1);},
+  draw(g,c,r,k){skinArt(g,this,c,r,0);const t=(T*.4+c.wob*3)%5;if(t<.18&&skinPx(g,r)>10){const f=Math.sin(t/.18*Math.PI);g.fillStyle='#d8c0a0';for(const s of[-1,1]){g.beginPath();g.ellipse(c.x+s*r*.3,c.y-r*.08-r*.12*(1-f),r*.13,r*.13*f,0,0,TAU);g.fill();}}}}, // a slow blink
+{id:69,key:'peacock',name:'Peacock',price:2500,col:'wild',rar:'epic',base:[180,70,30],edge:'#0a2a20',edge2:'rgba(200,255,230,.6)',
+  desc:'A peacock’s tail fanned out, every feather’s eye shimmering.',
+  // a peacock's train fanned wide: shafts radiating from below, dense green-gold barbs, and row on row of eyespots (bronze halo, green ring, a blue heart
+  // with a navy core); a sheen passes over it
+  bake(q,u){const R=prng(69),bx=0,by=1.5,hi=u>80;fillAll(q,'#0a2a1a');q.lineCap='round';
+    q.beginPath();for(let i=0;i<(hi?1400:600);i++){const a=-Math.PI/2+(R()-.5)*2.2,d=.4+R()*2.4,x=bx+Math.cos(a)*d,y=by+Math.sin(a)*d,b=a+(R()-.5)*.6;q.moveTo(x,y);q.lineTo(x+Math.cos(b)*.08,y+Math.sin(b)*.08);}q.lineWidth=.008;q.strokeStyle='rgba(120,180,80,.35)';q.stroke(); // barbs
+    q.beginPath();for(let i=0;i<(hi?900:400);i++){const a=-Math.PI/2+(R()-.5)*2.2,d=.4+R()*2.4,x=bx+Math.cos(a)*d,y=by+Math.sin(a)*d,b=a+(R()-.5)*.6;q.moveTo(x,y);q.lineTo(x+Math.cos(b)*.07,y+Math.sin(b)*.07);}q.lineWidth=.006;q.strokeStyle='rgba(220,190,80,.3)';q.stroke();
+    const E=[];for(const [d,n,s] of[[2.55,16,.13],[2.15,14,.13],[1.78,12,.12],[1.45,10,.11],[1.15,8,.1]])for(let i=0;i<n;i++){const a=-Math.PI/2+(i-(n-1)/2)*(1.9/n)+(R()-.5)*.04+(d*3%1)*.05;E.push([bx+Math.cos(a)*d,by+Math.sin(a)*d,s*(1+(R()-.5)*.1),a]);}
+    q.beginPath();for(const [x,y,,a] of E){q.moveTo(bx,by);q.lineTo(x,y);}q.lineWidth=.006;q.strokeStyle='rgba(230,220,170,.35)';q.stroke(); // the shafts
+    for(const [x,y,s,a] of E){q.save();q.translate(x,y);q.rotate(a+Math.PI/2);const ov=(k,c)=>{q.beginPath();q.ellipse(0,0,s*k*.78,s*k,0,0,TAU);q.fillStyle=c;q.fill();};
+      ov(1.55,'rgba(150,120,40,.5)');ov(1.3,lgr(q,0,-s*1.3,0,s*1.3,[0,'#e8c060',1,'#8a6a1a']));ov(1.0,lgr(q,0,-s,0,s,[0,'#4ad07a',1,'#1a7a4a']));ov(.75,lgr(q,0,-s,0,s,[0,'#8ad0ff',1,'#2a5ad0']));
+      q.beginPath();q.moveTo(0,-s*.62);q.bezierCurveTo(s*.52,-s*.6,s*.5,s*.24,0,s*.42);q.bezierCurveTo(-s*.5,s*.24,-s*.52,-s*.6,0,-s*.62);q.fillStyle=rgr(q,0,-s*.1,s*.5,[0,'#0a1450',.7,'#081040',1,'#2a5ad0']);q.fill(); // the blue heart, its navy core
+      disc(q,-s*.12,-s*.2,s*.12,'rgba(160,230,255,.6)');q.restore();}},
+  draw(g,c,r,k){skinArt(g,this,c,r,0);if(skinPx(g,r)>14)gsheen(g,c,r,.1,.25);}},
+{id:70,key:'monarch',name:'Monarch',price:1200,col:'wild',rar:'rare',base:[26,90,52],edge:'#3a1a04',edge2:'rgba(255,230,180,.65)',
+  desc:'A monarch butterfly resting on a flower, slowly opening and closing its wings.',
+  // a monarch from above on a soft purple flowerhead: orange wings veined and bordered in black, rows of white dots, a black body spotted white and fine
+  // antennae; it opens and closes its wings slowly (a sprite squeezed each frame)
+  bake(q,u){const R=prng(70);fillAll(q,'#2a4a2a');ghostBlur(q,SKIN_BR,t=>{for(let i=0;i<30;i++){const a=R()*TAU,d=Math.sqrt(R())*1.1;t.fillStyle=['#8a5ab0','#b07ad0','#5a8a3a','#3a6a2a'][i%4];t.beginPath();t.arc(Math.cos(a)*d,Math.sin(a)*d,.12+R()*.15,0,TAU);t.fill();}});
+    for(let i=0;i<70;i++){const a=R()*TAU,d=Math.sqrt(R())*.55,x=Math.cos(a)*d,y=Math.sin(a)*d+.05;q.save();q.translate(x,y);q.rotate(R()*TAU);for(let j=0;j<5;j++){q.rotate(TAU/5);q.beginPath();q.ellipse(.025,0,.025,.012,0,0,TAU);q.fillStyle='#c890e8';q.fill();}disc(q,0,0,.01,'#f6e0ff');q.restore();}}, // the flowerhead
+  wing(q,u){const R=prng(701);const fore=()=>{q.beginPath();q.moveTo(0,-.04);q.bezierCurveTo(.2,-.5,.7,-.62,.96,-.5);q.bezierCurveTo(.9,-.2,.6,.0,.06,.02);q.closePath();},hind=()=>{q.beginPath();q.moveTo(.02,.02);q.bezierCurveTo(.4,.0,.78,.2,.7,.5);q.bezierCurveTo(.5,.72,.2,.6,.02,.16);q.closePath();};
+    for(const w of[hind,fore]){w();q.fillStyle='#14100c';q.fill();q.save();w();q.clip();q.scale(.86,.86);q.translate(.03,0);w();q.fillStyle=rgr(q,.3,-.1,.9,[0,'#ffb040',.5,'#f08a1a',1,'#c85a08']);q.fill();q.restore(); // orange inside a black border
+      q.save();w();q.clip();q.beginPath();for(let i=0;i<7;i++){const a=-1.2+i*.32;q.moveTo(.02,0);q.quadraticCurveTo(Math.cos(a)*.4,Math.sin(a)*.4+.05,Math.cos(a)*1.1,Math.sin(a)*1.1);}q.lineWidth=.03;q.strokeStyle='#14100c';q.stroke();q.restore(); // the veins
+      q.save();w();q.clip();for(let i=0;i<40;i++){const t=i/40,a=-1.3+t*2.6,x=Math.cos(a)*(.78+R()*.06),y=Math.sin(a)*(.72+R()*.06);disc(q,x,y,.014+R()*.01,'#fffaf0');}q.restore();}}, // white dots round the border
+  draw(g,c,r,k){skinArt(g,this,c,r,0);const f=.55+.45*Math.abs(Math.cos(T*.9+c.wob*2)),s=r*.62,x=c.x+r*.02,y=c.y-r*.02;
+    for(const sd of[-1,1]){g.save();g.translate(x,y);g.rotate(-.15);g.scale(sd*f,1);g.drawImage(bake(g,'mo_wing',skinPx(g,s)*2,this.wing,1),-s,-s,s*2,s*2);g.restore();} // the wings, opening and closing
+    g.save();g.translate(x,y);g.rotate(-.15);g.fillStyle='#14100c';g.beginPath();g.ellipse(0,s*.1,s*.05,s*.42,0,0,TAU);g.fill();g.beginPath();g.arc(0,-s*.36,s*.06,0,TAU);g.fill();g.lineWidth=s*.012;g.strokeStyle='#14100c';g.beginPath();g.moveTo(-s*.02,-s*.4);g.quadraticCurveTo(-s*.12,-s*.6,-s*.2,-s*.7);g.moveTo(s*.02,-s*.4);g.quadraticCurveTo(s*.12,-s*.6,s*.2,-s*.7);g.stroke();g.restore();}}, // its body and antennae
+{id:71,key:'moonhowl',name:'Moon Howl',price:1500,col:'wild',rar:'rare',base:[220,40,20],edge:'#0a1428',edge2:'rgba(220,235,255,.6)',
+  desc:'A lone wolf howling at the full moon above the pines.',
+  // a full moon filling the sky, its seas and craters pale grey, mist and stars round it; black against it a wolf on a rock, muzzle raised to howl, and the
+  // ragged tops of a pine forest below
+  bake(q,u){const R=prng(71);fillAll(q,lgr(q,0,-1.2,0,1.2,[0,'#0a1430',.6,'#1a2a50',1,'#2a3a60']));gstars(q,u,R,80,2);const mx=.08,my=-.12,mr=.72;
+    q.globalCompositeOperation='lighter';gglow(q,mx,my,mr*1.6,[180,200,255],.35);q.globalCompositeOperation='source-over';q.save();q.beginPath();q.arc(mx,my,mr,0,TAU);q.clip();
+    gfield(q,gtex('mh_moon',u,(x,y,o)=>{const X=(x-mx)/mr,Y=(y-my)/mr,n=gfbm(X*2+3,Y*2,4),m=gstep(.52,.6,gfbm(X*1.3+7,Y*1.3,3));gramp(gpal('8a909a c8ccd2 eef0f2'),.5+n*.5-m*.4,o);}));
+    for(let i=0;i<14;i++){const a=R()*TAU,d=Math.sqrt(R())*mr*.9,x=mx+Math.cos(a)*d,y=my+Math.sin(a)*d,s=.015+R()*R()*.06;disc(q,x,y,s,lgr(q,x-s,y-s,x+s,y+s,[0,'rgba(80,90,100,.35)',1,'rgba(255,255,255,.3)']));}q.restore();
+    q.globalCompositeOperation='lighter';ghostBlur(q,SKIN_BR,t=>{t.fillStyle='rgba(180,200,230,.25)';for(let i=0;i<5;i++){t.beginPath();t.ellipse(-.8+i*.4,.6+R()*.1,.5,.06,0,0,TAU);t.fill();}});q.globalCompositeOperation='source-over'; // mist
+    q.fillStyle='#04060c';q.beginPath();q.moveTo(-1.2,1.2);for(let x=-1.2;x<=1.2;x+=.09){const h=.62+R()*.2-(Math.abs(x+.1)<.3?.12:0);q.lineTo(x,h);q.lineTo(x+.045,h-.12-R()*.12);q.lineTo(x+.09,h);}q.lineTo(1.2,1.2);q.closePath();q.fill(); // the pines
+    q.beginPath();q.moveTo(-.55,.75);q.quadraticCurveTo(-.2,.48,.25,.56);q.lineTo(.4,.8);q.lineTo(-.55,.85);q.closePath();q.fill(); // the rock
+    q.beginPath();q.moveTo(-.18,.56);q.bezierCurveTo(-.22,.4,-.16,.26,-.1,.18);q.bezierCurveTo(-.08,.08,-.06,-.02,-.02,-.08);q.lineTo(.02,-.2);q.lineTo(.08,-.26);q.lineTo(.07,-.18);q.lineTo(.12,-.24);q.lineTo(.12,-.15); // the wolf: haunches, chest, raised head and ears
+      q.lineTo(.22,-.27);q.lineTo(.26,-.25);q.lineTo(.16,-.1);q.bezierCurveTo(.16,-.02,.14,.08,.16,.18);q.bezierCurveTo(.2,.3,.24,.44,.22,.56);q.lineTo(.12,.56);q.lineTo(.1,.44);q.lineTo(.04,.56);q.lineTo(-.04,.56);q.lineTo(-.02,.44);q.bezierCurveTo(-.08,.46,-.12,.52,-.18,.56);q.closePath();q.fill();
+    q.beginPath();q.moveTo(-.18,.5);q.quadraticCurveTo(-.36,.48,-.42,.38);q.quadraticCurveTo(-.3,.44,-.16,.44);q.fill();}, // its tail
+  draw(g,c,r,k){skinArt(g,this,c,r,0);}},
+{id:72,key:'fireflies',name:'Fireflies',price:900,col:'wild',rar:'rare',base:[200,50,20],edge:'#0a1a20',edge2:'rgba(230,255,180,.6)',
+  desc:'Fireflies rising over a summer meadow at dusk.',
+  // a meadow at dusk: the last light low on the horizon, a tree line in silhouette, tall grass and seed heads black against the sky, and fireflies everywhere,
+  // some drifting, some blinking (a few drawn live)
+  bake(q,u){const R=prng(72);fillAll(q,lgr(q,0,-1.2,0,1.2,[0,'#0a1230',.55,'#1a3a5a',.8,'#5a7a6a',1,'#c8a060']));gstars(q,u,R,40,0);
+    q.fillStyle='#08100c';q.beginPath();q.moveTo(-1.2,.5);for(let x=-1.2;x<=1.2;x+=.05)q.lineTo(x,.42-gfbm(x*3,1,3)*.3);q.lineTo(1.2,1.2);q.lineTo(-1.2,1.2);q.closePath();q.fill(); // the tree line
+    q.lineCap='round';for(let i=0;i<160;i++){const x=R()*2.4-1.2,h=.3+R()*.8,b=(R()-.5)*.3;q.beginPath();q.moveTo(x,1.2);q.quadraticCurveTo(x+b*.3,1.2-h*.5,x+b,1.2-h);q.lineWidth=.008+R()*.008;q.strokeStyle='#050a08';q.stroke();if(R()<.15){q.beginPath();q.ellipse(x+b,1.2-h,.012,.04,b,0,TAU);q.fillStyle='#050a08';q.fill();}} // tall grass
+    q.globalCompositeOperation='lighter';for(let i=0;i<34;i++){const x=R()*2.2-1.1,y=-.2+R()*1.2,s=.006+R()*.01;gglow(q,x,y,s*7,[200,255,90],.4);disc(q,x,y,s,'#f4ffc0');}q.globalCompositeOperation='source-over';},
+  draw(g,c,r,k){skinArt(g,this,c,r,0);if(skinPx(g,r)<14)return;for(let i=0;i<6;i++){const ph=T*(.3+i*.05)+i*2.1+c.wob,a=Math.max(0,Math.sin(ph*2.2))**3,x=c.x+r*(Math.sin(i*1.7+ph*.3)*.6),y=c.y+r*(.1+Math.cos(i*2.3+ph*.25)*.4);soft(g,x,y,r*.09,'210,255,110',a*.8);dot(g,x,y,r*.03,'240,255,190',a);}}}, // fireflies blinking
+{id:73,key:'ladybird',name:'Ladybird',price:900,col:'wild',rar:'rare',base:[0,80,46],edge:'#2a0a04',edge2:'rgba(255,220,210,.65)',
+  desc:'A ladybird crossing a dewy leaf, close enough to see its shine.',
+  // macro: a ladybird walking across a green leaf beaded with dew, its glossy red wing cases and seven black spots, the black shield with its white marks,
+  // legs and feelers; the leaf's veins, the drops magnifying them
+  bake(q,u){const R=prng(73),hi=u>80;fillAll(q,'#1a3a10');gfield(q,gtex('lb_leaf',u,(x,y,o)=>{const v=Math.abs(Math.sin((x*.8-y*.6)*3.5+gfbm(x,y,2)))*.0,n=gfbm(x*3,y*3,3),mv=gstep(.025,0,Math.abs(x*.6+y*.8+.1)),side=Math.abs(((x*.8-y*.6)*2.6%1+1)%1-.5)<.02&&(x*.6+y*.8)>-.1?1:0;
+      gramp(gpal('1e4a10 3a7a1e 6aa83a 9ad06a'),.3+n*.45+mv*.35,o);if(side)for(let i=0;i<3;i++)o[i]=o[i]*.9+20;}));
+    q.beginPath();for(let i=-6;i<=6;i++){const t=i*.18;q.moveTo(-.06-t*.8,-.08+t*.6);q.quadraticCurveTo(-.06-t*.8+.3,-.08+t*.6+.25,-.06-t*.8+.7,-.08+t*.6+.45);}q.lineWidth=.008;q.strokeStyle='rgba(200,250,150,.35)';q.stroke(); // side veins
+    for(let i=0;i<(hi?14:8);i++){const a=R()*TAU,d=.35+R()*.6,x=Math.cos(a)*d,y=Math.sin(a)*d,s=.03+R()*R()*.08;natureSoft(q,u,s*.3,'rgba(0,30,0,.45)',()=>{q.fillStyle='#000';q.beginPath();q.arc(x+s*.25,y+s*.3,s,0,TAU);q.fill();}); // dew drops, each a little lens
+      disc(q,x,y,s,rgr(q,x+s*.3,y+s*.35,s*1.1,[0,'rgba(220,255,200,.35)',.7,'rgba(120,200,90,.15)',1,'rgba(255,255,255,.65)']));disc(q,x-s*.35,y-s*.4,s*.25,'rgba(255,255,255,.95)');}
+    q.save();q.translate(.05,.05);q.rotate(-.5);q.lineCap='round';q.lineWidth=.018;q.strokeStyle='#120806';q.beginPath();for(const s of[-1,1])for(const [x,a] of[[.12,.6],[0,.0],[-.12,-.5]]){q.moveTo(x,s*.18);q.quadraticCurveTo(x+.1*Math.cos(a),s*(.36+.02),x+.2*Math.cos(a)-.05,s*.44);}q.stroke(); // legs
+    q.beginPath();for(const s of[-1,1]){q.moveTo(.42,s*.06);q.quadraticCurveTo(.55,s*.12,.6,s*.24);}q.lineWidth=.01;q.stroke(); // feelers
+    natureSoft(q,u,.03,'rgba(0,20,0,.6)',()=>{q.fillStyle='#000';q.beginPath();q.ellipse(.02,.05,.4,.33,0,0,TAU);q.fill();});
+    q.beginPath();q.ellipse(-.04,0,.38,.33,0,0,TAU);q.fillStyle=rgr(q,-.16,-.12,.46,[0,'#ff6a4a',.45,'#e0201a',1,'#7a0806']);q.fill();
+    q.save();q.beginPath();q.ellipse(-.04,0,.38,.33,0,0,TAU);q.clip();for(const [x,y,s] of[[.08,-.18,.075],[.08,.18,.075],[-.14,-.2,.065],[-.14,.2,.065],[-.3,-.08,.055],[-.3,.08,.055],[.22,0,.06]])disc(q,x,y,s,rgr(q,x-s*.3,y-s*.3,s,[0,'#2a2222',1,'#0a0606']));q.restore(); // seven spots
+    q.beginPath();q.moveTo(.3,0);q.lineTo(-.42,0);q.lineWidth=.012;q.strokeStyle='#1a0604';q.stroke();
+    q.beginPath();q.ellipse(.36,0,.1,.15,0,0,TAU);q.fillStyle='#0e0a0a';q.fill();for(const s of[-1,1])disc(q,.37,s*.09,.035,'#f6f2ea');disc(q,.45,0,.04,'#0a0606'); // the shield, white-marked, and head
+    q.save();q.translate(-.18,-.14);q.rotate(.3);q.scale(.14,.06);disc(q,0,0,1,'rgba(255,255,255,.75)');q.restore();q.restore();},
+  draw(g,c,r,k){skinArt(g,this,c,r,0);}},
+{id:74,key:'python',name:'Python',price:2500,col:'wild',rar:'epic',base:[36,50,40],edge:'#2a1a08',edge2:'rgba(255,240,210,.55)',
+  desc:'A royal python coiled up tight, its head resting on top.',
+  // a ball python coiled in a tight spiral, worked out pixel by pixel as a round glossy body: the saddle pattern of chocolate and gold blotches rising from
+  // its flanks, fine scales, deep creases between the coils; its neck crosses over the pile to the head resting on top (gold eyes, the pale stripes of
+  // its face), and its tongue flickers now and then (drawn live)
+  bake(q,u){const r0=.02,p0=.13,p1=.012,rad=t=>r0+p0*t+p1*t*t/2,wid=t=>p0+p1*t,arc=t=>TAU*(r0*t+p0*t*t/2+p1*t*t*t/6),fine=u>160,
+      Lk=1/Math.hypot(.6,.75),Lx=GLX*.6*Lk,Ly=GLY*.6*Lk,Lz=.75*Lk,Hk=1/Math.hypot(Lx,Ly,Lz+1),Hx=Lx*Hk,Hy=Ly*Hk,Hz=(Lz+1)*Hk,N=PYN.S,NL=PYN.L,C=[0,0,0];
+    const pat=(S,v,sd)=>{const av=Math.abs(v),w=.5+.5*Math.sin(S*TAU/2.3+(v>0?0:2.4)+gn(S*.6+sd,v*1.2+sd)*3.2),reach=w*(.32+.8*av)+gn(S*1.6+sd*3,v*2.4)*.16, // blotches rise from the flanks
+        tan=gstep(.34,.5,reach),rim=gstep(.26,.36,reach)*(1-tan),spot=tan*gstep(.78,.92,w)*gstep(.4,.72,av),n=gn(S*3,v*2+sd);
+      gmix([42+n*10,25+n*6,11],[200+n*20,150+n*18,78],tan).forEach((x,i)=>C[i]=x);for(let i=0;i<3;i++)C[i]+=([236,210,156][i]-C[i])*rim*.7+([66,38,16][i]-C[i])*spot*.9;
+      if(fine){const a=S*4+v*2.5,b=S*4-v*2.5,fa=a-Math.floor(a),fb=b-Math.floor(b),e=Math.min(fa,1-fa,fb,1-fb);for(let i=0;i<3;i++)C[i]*=.86+.14*gstep(0,.14,e);}}; // and its scales
+    const HS=1.3,ca=Math.cos(PYN.ha),sa=Math.sin(PYN.ha),HL=[0,0],hwid=x=>x<-.2||x>.23?0:x<-.06?.065+.065*gstep(-.2,-.06,x):x<.12?.13-.03*((x+.06)/.18)**2:.1*Math.sqrt(Math.max(0,1-((x-.12)/.11)**2)), // the head's half-width along it
+      hloc=(x,y)=>{const dx=x-PYN.hx,dy=y-PYN.hy;HL[0]=(dx*ca+dy*sa)/HS;HL[1]=(-dx*sa+dy*ca)/HS;const w=hwid(HL[0]);return w>.002?HL[1]/w:9;}; // a point in the head's frame; across it, -1 to 1
+    gfield(q,gtex('py_body',u,(x,y,o)=>{const rho=Math.hypot(x,y),hv=hloc(x,y);let v=9,nx=0,ny=0,S=0,sd=0,sh=1,top=0,NX=0,NY=0;
+      if(Math.abs(hv)<1){const lx=HL[0],av=Math.abs(hv),fw=lx>.06?Math.min(.8,(lx-.06)/.17*.8):lx<-.15?-(-.15-lx)/.05*.25:0,n=gn(lx*12,hv*3), // the head, on top of it all: a dark crown, pale sides,
+          cw=.5-.28*gstep(.02,.2,lx)+.08*gstep(-.08,-.18,lx),cr=gstep(cw+.1,cw-.04,av),ed=gstep(.76,.92,av)*gstep(-.19,-.12,lx),P=[214+n*14,178+n*12,118],D=[70+n*12,42+n*8,18]; // dark again at its lips
+        for(let i=0;i<3;i++){C[i]=P[i]+(D[i]-P[i])*cr;C[i]+=([52,30,12][i]-C[i])*ed*.85;}
+        NX=fw*ca-hv*sa;NY=fw*sa+hv*ca;const m=Math.hypot(NX,NY);if(m>.97){NX*=.97/m;NY*=.97/m;}v=hv;top=2;}
+      else{const hs=hloc(x-.07,y-.09);if(Math.abs(hs)<1.3)sh=1-.66*gstep(1.3,.7,Math.abs(hs)); // the head's shadow
+        if(x>-.12&&y>-.14&&y<.98){let bd=9,bi=0,bt=0,sdd=9,si=0;const sx=x-.07,sy=y-.09; // the neck on top, and its shadow
+          for(let i=0;i<N.length;i++){const [ax,ay,dx,dy,l]=N[i],ll=l*l;let t=Math.max(0,Math.min(1,((x-ax)*dx+(y-ay)*dy)/ll)),px=x-ax-dx*t,py=y-ay-dy*t,d=px*px+py*py;if(d<bd){bd=d;bi=i;bt=t;}
+            t=Math.max(0,Math.min(1,((sx-ax)*dx+(sy-ay)*dy)/ll));px=sx-ax-dx*t;py=sy-ay-dy*t;d=px*px+py*py;if(d<sdd){sdd=d;si=i;}}
+          const s01=(N[bi][5]+bt*N[bi][4])/NL,w=.098-.034*Math.pow(s01,1.4);
+          if(Math.sqrt(bd)<w){const [ax,ay,dx,dy,l]=N[bi];nx=-dy/l;ny=dx/l;v=((x-ax)*nx+(y-ay)*ny)/w;S=(N[bi][5]+bt*l)/.19+7;sd=9;top=1;}
+          else{const ws=.098-.034*Math.pow(N[si][5]/NL,1.4);sh*=1-.72*gstep(ws+.05,ws-.02,Math.sqrt(sdd));}}
+        if(!top){const A=Math.atan2(y,x),ph=(A/TAU+1)%1;for(let n=0;n<8;n++){const t=ph+n,hw=wid(t)/2*(t<.8?Math.sqrt(t/.8):1),d=rho-rad(t);if(Math.abs(d)<hw&&Math.abs(d/hw)<Math.abs(v)){v=d/hw;nx=Math.cos(A);ny=Math.sin(A);S=arc(t)/wid(t);sd=n*1.7;}}}
+        if(v>1){const n=gn(x*6,y*6);o[0]=(14+n*8)*sh;o[1]=(9+n*5)*sh;o[2]=4;return;} // the dark between the coils
+        pat(S,v,sd);NX=v*nx;NY=v*ny;}
+      const nz=Math.sqrt(Math.max(0,1-NX*NX-NY*NY)),df=Math.max(0,NX*Lx+NY*Ly+nz*Lz),sp=Math.pow(Math.max(0,NX*Hx+NY*Hy+nz*Hz),36),
+        k=(.2+.95*df)*(1-.62*gstep(.68,1,Math.abs(v)))*sh*(top?1.05:1-.22*gstep(.55,1.1,rho));
+      for(let i=0;i<3;i++)o[i]=Math.min(255,C[i]*k+[255,238,205][i]*sp*.55*sh);}));
+    q.save();q.translate(PYN.hx,PYN.hy);q.rotate(PYN.ha);q.scale(HS,HS);q.beginPath();for(let i=0;i<=40;i++){const x=-.2+i/40*.43;q.lineTo(x,-hwid(x));}for(let i=40;i>=0;i--){const x=-.2+i/40*.43;q.lineTo(x,hwid(x));}
+    q.lineWidth=.006;q.strokeStyle='rgba(28,14,4,.5)';q.stroke(); // the head's edge, crisp
+    for(const s of[-1,1]){disc(q,.07,s*.105,.036,'#24140a');disc(q,.07,s*.105,.028,rgr(q,.076,s*.1,.031,[0,'#f8dc70',.6,'#c08a18',1,'#4a2c06']));q.beginPath();q.ellipse(.07,s*.105,.021,.006,0,0,TAU);q.fillStyle='#050302';q.fill(); // gold eyes at its sides, slit pupils
+      disc(q,.08,s*.096,.007,'rgba(255,255,255,.85)');q.beginPath();q.ellipse(.205,s*.03,.011,.006,s*.4,0,TAU);q.fillStyle='#1a0e06';q.fill(); // nostrils
+      for(const x of[.17,.14,.11])disc(q,x,s*(hwid(x)-.012),.0065,'rgba(30,16,6,.7)');} // and the heat pits along its lips
+    q.restore();},
+  draw(g,c,r,k){skinArt(g,this,c,r,0);if(skinPx(g,r)<16)return;const t=(T*.8+c.wob*2)%3;if(t<.5){const f=Math.sin(t/.5*Math.PI);g.save();g.translate(c.x+r*PYN.tx,c.y+r*PYN.ty);g.rotate(PYN.ha);
+    g.beginPath();g.moveTo(0,0);g.lineTo(r*.12*f,0);g.lineTo(r*.17*f,-r*.03*f);g.moveTo(r*.12*f,0);g.lineTo(r*.17*f,r*.03*f);g.lineWidth=r*.014;g.lineCap='round';g.strokeStyle='#c8203a';g.stroke();g.restore();}}}, // its tongue, flickering
+{id:75,key:'hummingbird',name:'Hummingbird',price:2000,col:'wild',rar:'rare',base:[150,60,36],edge:'#0a2a1a',edge2:'rgba(220,255,230,.6)',
+  desc:'A hummingbird sipping from a fuchsia, wings a blur and its throat flashing rose.',
+  // a soft green garden out of focus, a fuchsia hanging from above (crimson sepals flared, a violet skirt, stamens dangling); a hummingbird hovering at it,
+  // bill deep in the flower: emerald back, grey breast, a rose crown and throat. Live: its near wing beats, it bobs as it hovers, its throat flashes
+  bake(q,u){const R=prng(75),hi=u>80;fillAll(q,lgr(q,-1,-1,1,1,[0,'#1e4a2c',.55,'#123a26',1,'#0a2418']));
+    ghostBlur(q,SKIN_BR,t=>{for(let i=0;i<26;i++){const a=R()*TAU,d=Math.sqrt(R())*1.2;t.fillStyle=['#3a7a3a','#5a9a3a','#2a5a34','#7ab04a','#1e4a2a'][i%5];t.globalAlpha=.6;t.beginPath();t.arc(Math.cos(a)*d,Math.sin(a)*d,.12+R()*.22,0,TAU);t.fill();} // the garden, far out of focus
+      t.globalAlpha=.5;for(const [x,y,s] of[[.75,.62,.14],[.95,.3,.1],[-.85,.75,.12]]){t.fillStyle='#b0306a';t.beginPath();t.ellipse(x,y,s*.7,s,0,0,TAU);t.fill();t.fillStyle='#6a2a8a';t.beginPath();t.ellipse(x,y+s*.8,s*.6,s*.6,0,0,TAU);t.fill();}t.globalAlpha=1;});
+    q.globalCompositeOperation='lighter';for(let i=0;i<9;i++){const a=R()*TAU,d=.4+R()*.7,x=Math.cos(a)*d,y=Math.sin(a)*d,s=.04+R()*.06;disc(q,x,y,s,rgr(q,x,y,s,[0,'rgba(220,255,170,.05)',.85,'rgba(220,255,170,.1)',1,'rgba(220,255,170,0)']));}q.globalCompositeOperation='source-over'; // bokeh
+    disc(q,0,0,1.3,rgr(q,-.1,-.1,1.3,[0,'rgba(0,0,0,0)',.6,'rgba(0,0,0,.05)',1,'rgba(0,10,4,.5)'])); // darker toward the rim
+    q.lineCap='round';q.beginPath();q.moveTo(.75,-1.2);q.bezierCurveTo(.66,-1,.56,-.95,.57,-.74);q.lineWidth=.026;q.strokeStyle='#8a3a2a';q.stroke(); // the fuchsia's stem
+    const fx=.57;disc(q,fx,-.73,.03,rgr(q,fx-.01,-.74,.035,[0,'#6a8a3a',1,'#2a4a1a']));q.beginPath();q.moveTo(fx-.02,-.71);q.lineTo(fx+.02,-.71);q.lineTo(fx+.03,-.6);q.lineTo(fx-.03,-.6);q.closePath();q.fillStyle='#c8183a';q.fill(); // its ovary and tube
+    const sep=(tx,ty,w,c0,c1)=>{q.beginPath();q.moveTo(fx-.03,-.6);q.quadraticCurveTo((fx+tx)/2-w,(-.6+ty)/2-w*1.5,tx,ty);q.quadraticCurveTo((fx+tx)/2+w,(-.6+ty)/2+w*.5,fx+.03,-.6);q.closePath();q.fillStyle=lgr(q,fx,-.6,tx,ty,[0,c0,1,c1]);q.fill();};
+    natureSoft(q,u,.03,'rgba(0,10,0,.45)',()=>{q.fillStyle='#000';q.beginPath();q.ellipse(fx+.02,-.44,.13,.17,0,0,TAU);q.fill();});
+    sep(fx-.27,-.66,.065,'#b0102e','#ff6a86');sep(fx+.27,-.62,-.065,'#b0102e','#ff7a90'); // the sepals flared back
+    q.beginPath();q.moveTo(fx-.07,-.6);q.bezierCurveTo(fx-.12,-.5,fx-.12,-.38,fx-.1,-.31);q.quadraticCurveTo(fx-.07,-.27,fx-.04,-.31);q.quadraticCurveTo(fx-.01,-.26,fx+.02,-.3);q.quadraticCurveTo(fx+.06,-.26,fx+.08,-.31);q.quadraticCurveTo(fx+.12,-.28,fx+.12,-.33); // the violet skirt
+    q.bezierCurveTo(fx+.13,-.42,fx+.11,-.52,fx+.07,-.6);q.closePath();q.fillStyle=lgr(q,fx-.12,0,fx+.12,0,[0,'#4a1a6a',.35,'#8a3ab0',.6,'#b06ad0',1,'#4a1a6a']);q.fill();
+    q.beginPath();for(const x of[-.06,-.02,.03,.07]){q.moveTo(fx+x,-.56);q.quadraticCurveTo(fx+x*1.3,-.44,fx+x*1.4,-.32);}q.lineWidth=.008;q.strokeStyle='rgba(40,8,60,.5)';q.stroke(); // its folds
+    sep(fx-.05,-.4,.02,'#c8183a','#ff5a7a');sep(fx+.14,-.42,-.02,'#c8183a','#ff5a7a'); // and the two sepals in front
+    q.beginPath();for(let i=0;i<6;i++){const x=fx-.05+i*.02;q.moveTo(x,-.32);q.quadraticCurveTo(x+(i-2.5)*.01,-.2,x+(i-2.5)*.03,-.12+(i%2)*.04);}q.lineWidth=.007;q.strokeStyle='#e0306a';q.stroke();for(let i=0;i<6;i++){const x=fx-.05+i*.02;disc(q,x+(i-2.5)*.03,-.12+(i%2)*.04,.012,'#f0e0d0');} // stamens
+    q.beginPath();q.moveTo(fx,-.32);q.quadraticCurveTo(fx+.01,-.15,fx-.01,-.02);q.lineWidth=.008;q.stroke();disc(q,fx-.01,-.02,.018,'#f6eee0');
+    ghostBlur(q,SKIN_BR,t=>{t.translate(.12,.02);t.rotate(-1.55);t.fillStyle='rgba(150,170,165,.35)';t.beginPath();t.moveTo(0,-.04);t.bezierCurveTo(.2,-.12,.45,-.12,.6,-.05);t.bezierCurveTo(.62,0,.5,.05,.3,.06);t.lineTo(0,.04);t.closePath();t.fill();});}, // the far wing, behind and out of focus
+  bird(q,u){const hi=u>80,R=prng(751);q.save();q.translate(.12,.34);q.rotate(.95);for(let i=-2;i<=2;i++){q.save();q.rotate(i*.17);q.beginPath();q.moveTo(0,-.025);q.quadraticCurveTo(.18,-.045,.3,-.012);q.quadraticCurveTo(.31,0,.3,.012);q.quadraticCurveTo(.18,.045,0,.025);q.closePath(); // the tail, fanned
+      q.fillStyle=lgr(q,0,0,.3,0,[0,'#2a7a4a',.4,'#3a5a3a',.75,'#2a2a22',1,'#16140f']);q.fill();q.beginPath();q.moveTo(.02,0);q.lineTo(.28,0);q.lineWidth=.005;q.strokeStyle='rgba(200,230,190,.25)';q.stroke();if(Math.abs(i)===2){q.beginPath();q.ellipse(.28,0,.02,.011,0,0,TAU);q.fillStyle='rgba(245,245,240,.75)';q.fill();}q.restore();}q.restore(); // its outer feathers white-tipped
+    const body=()=>{q.beginPath();q.moveTo(.13,-.12);q.bezierCurveTo(.02,-.08,-.05,.06,-.03,.2);q.bezierCurveTo(-.01,.3,.08,.38,.17,.4);q.bezierCurveTo(.25,.36,.31,.24,.3,.1);q.bezierCurveTo(.29,-.02,.25,-.1,.2,-.14);q.closePath();};
+    natureSoft(q,u,.05,'rgba(0,10,0,.4)',()=>{q.fillStyle='#000';q.save();q.translate(.03,.04);body();q.fill();q.restore();});
+    body();q.fillStyle=rgr(q,.04,.02,.4,[0,'#58c070',.35,'#249050',.75,'#0e5a32',1,'#073a20']);q.fill(); // emerald, lit from above
+    q.save();body();q.clip();q.beginPath();q.moveTo(.32,-.14);q.bezierCurveTo(.12,.0,.06,.18,.08,.42);q.lineTo(.4,.42);q.closePath();q.fillStyle=lgr(q,.08,.05,.3,0,[0,'rgba(214,222,206,0)',.5,'rgba(214,222,206,.55)',.8,'rgba(222,228,214,.92)',1,'#a8b0a2']);q.fill(); // its pale grey breast
+      if(hi){for(let i=0;i<90;i++){const x=-.03+R()*.24,y=-.06+R()*.44;q.save();q.translate(x,y);q.rotate(1.2+(R()-.5)*.3);q.beginPath();q.ellipse(0,0,.011,.006,0,0,TAU);q.fillStyle=`rgba(${R()<.5?'150,240,160':'200,230,120'},${.12+R()*.18})`;q.fill();q.restore();}} // glinting feathers
+      disc(q,.06,.04,.14,rgr(q,.06,.04,.14,[0,'rgba(230,255,200,.3)',1,'rgba(230,255,200,0)']));q.restore();
+    disc(q,.2,-.08,.105,rgr(q,.16,-.12,.13,[0,'#3aa060',.55,'#14603a',1,'#0a3a22'])); // the head
+    const gor=()=>{q.beginPath();q.moveTo(.1,-.17);q.quadraticCurveTo(.2,-.21,.31,-.14);q.quadraticCurveTo(.33,-.06,.31,.02);q.lineTo(.34,.07);q.lineTo(.28,.06);q.lineTo(.25,.1);q.lineTo(.21,.05);q.lineTo(.16,.07);q.lineTo(.16,.0);q.quadraticCurveTo(.21,-.06,.17,-.1);q.quadraticCurveTo(.13,-.12,.1,-.17);q.closePath();};
+    gor();q.fillStyle=rgr(q,.24,-.1,.2,[0,'#b02a62',.55,'#7a0e40',1,'#3a0420']);q.fill(); // the rose crown and throat, dark until it catches the light
+    if(hi){q.save();gor();q.clip();q.beginPath();for(let i=0;i<40;i++){const x=.12+R()*.2,y=-.18+R()*.26;q.moveTo(x-.012,y);q.quadraticCurveTo(x,y+.012,x+.012,y);}q.lineWidth=.005;q.strokeStyle='rgba(255,150,200,.3)';q.stroke();q.restore();}
+    q.beginPath();q.moveTo(.27,-.115);q.lineTo(.53,-.31);q.lineTo(.29,-.085);q.closePath();q.fillStyle='#14100e';q.fill(); // the bill, deep in the flower
+    disc(q,.225,-.1,.024,'#050505');disc(q,.217,-.108,.008,'rgba(255,255,255,.9)');disc(q,.17,-.085,.011,'rgba(255,255,255,.8)');}, // its eye, the white spot behind it
+  flash(q,u){q.save();q.beginPath();q.moveTo(.1,-.17);q.quadraticCurveTo(.2,-.21,.31,-.14);q.quadraticCurveTo(.33,-.06,.31,.02);q.lineTo(.34,.07);q.lineTo(.28,.06);q.lineTo(.25,.1);q.lineTo(.21,.05);q.lineTo(.16,.07);q.lineTo(.16,.0);q.quadraticCurveTo(.21,-.06,.17,-.1);q.quadraticCurveTo(.13,-.12,.1,-.17);q.closePath();
+    q.fillStyle=rgr(q,.24,-.06,.18,[0,'#fff0f6',.25,'#ff7ab8',.7,'#ff2a8a',1,'#c0106a']);q.fill();q.restore();disc(q,.225,-.1,.024,'#050505');disc(q,.217,-.108,.008,'rgba(255,255,255,.9)');}, // the throat catching the light
+  wing(q,u){q.beginPath();q.moveTo(0,-.05);q.bezierCurveTo(.3,-.17,.72,-.17,.97,-.07);q.bezierCurveTo(.99,-.02,.94,.03,.84,.05);q.lineTo(.74,.03);q.lineTo(.66,.07);q.lineTo(.56,.05);q.lineTo(.46,.08);q.bezierCurveTo(.3,.09,.1,.08,0,.05);q.closePath();
+    q.fillStyle=lgr(q,0,0,.97,0,[0,'rgba(30,50,40,.92)',.5,'rgba(70,80,80,.7)',1,'rgba(150,160,160,.45)']);q.fill();q.beginPath();for(const y of[-.07,-.02,.03])q.moveTo(.08,y*.6),q.quadraticCurveTo(.5,y-.02,.9,y-.02);q.lineWidth=.008;q.strokeStyle='rgba(220,240,230,.3)';q.stroke();
+    q.beginPath();q.moveTo(0,-.05);q.bezierCurveTo(.3,-.17,.72,-.17,.97,-.07);q.lineWidth=.012;q.strokeStyle='rgba(230,250,240,.5)';q.stroke();},
+  draw(g,c,r,k){skinArt(g,this,c,r,0);const bob=Math.sin(T*2.4+c.wob*3)*r*.012,big=skinPx(g,r)>14,bp=skinPx(g,r)*2*SKIN_BR;blit(g,bake(g,'hb_bird',bp,this.bird),c.x,c.y+bob,r,0); // the bird, bobbing as it hovers
+    if(!big)return;const f=Math.max(0,Math.sin(T*1.1+c.wob*2));if(f>.05){g.globalAlpha=f*f;blit(g,bake(g,'hb_flash',bp,this.flash),c.x,c.y+bob,r,0);g.globalAlpha=1;} // its throat flashing rose
+    const s=r*.64,a=-2.15+Math.sin(T*38+c.wob)*.62;g.save();g.translate(c.x+r*.08,c.y+r*.04+bob);g.rotate(a);g.globalAlpha=.85;g.drawImage(bake(g,'hb_wing',skinPx(g,s)*2,this.wing,1),-s,-s,2*s,2*s);g.restore();g.globalAlpha=1;}}, // and its near wing beating
+);
+function gleafL(q,x,y,s,a,c){q.save();q.translate(x,y);q.rotate(a);q.beginPath();q.moveTo(0,-s);q.bezierCurveTo(s*.7,-s*.5,s*.6,s*.5,0,s);q.bezierCurveTo(-s*.6,s*.5,-s*.7,-s*.5,0,-s);q.fillStyle=c;q.fill();q.beginPath();q.moveTo(0,-s);q.lineTo(0,s);q.lineWidth=s*.06;q.strokeStyle='rgba(60,20,0,.4)';q.stroke();q.restore();} // a fallen leaf
 for(const S of GEN50){for(const k in S)if(typeof S[k]==='function'&&k!=='draw')S[k]=S[k].bind(S); // bakes are handed round as plain functions: keep them pointing at their skin
   S.tok=STAINS.map(()=>'tok'+S.key);PREMIUM.push(S);}
 PREMIUM.sort((a,b)=>a.id-b.id); // ids index the list: skin id n is PREMIUM[n-SKIN_FREE]

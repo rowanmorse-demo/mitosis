@@ -73,6 +73,16 @@ const SKINS = [
   { id: 63, key: 'pulsar', name: 'Pulsar', price: 2500 }, // space
   { id: 64, key: 'wormhole', name: 'Wormhole', price: 6000 }, // space
   { id: 65, key: 'astrolabe', name: 'Astrolabe', price: 1800 }, // space
+  { id: 66, key: 'tigereye', name: 'Tiger Eye', price: 3000 }, // wild
+  { id: 67, key: 'sleepyfox', name: 'Sleeping Fox', price: 2000 }, // wild
+  { id: 68, key: 'barnowl', name: 'Barn Owl', price: 1500 }, // wild
+  { id: 69, key: 'peacock', name: 'Peacock', price: 2500 }, // wild
+  { id: 70, key: 'monarch', name: 'Monarch', price: 1200 }, // wild
+  { id: 71, key: 'moonhowl', name: 'Moon Howl', price: 1500 }, // wild
+  { id: 72, key: 'fireflies', name: 'Fireflies', price: 900 }, // wild
+  { id: 73, key: 'ladybird', name: 'Ladybird', price: 900 }, // wild
+  { id: 74, key: 'python', name: 'Python', price: 2500 }, // wild
+  { id: 75, key: 'hummingbird', name: 'Hummingbird', price: 2000 }, // wild
 ];
 const PACKS = [
   { id: 'atp_500', atp: 500 },
