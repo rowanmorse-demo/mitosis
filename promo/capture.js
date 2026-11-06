@@ -10,7 +10,7 @@
 const fs = require('fs'), path = require('path');
 const { launch } = require('./lib/chrome'), clock = require('./lib/clock'), { buildGamePage, ROOT } = require('./lib/game'), { ensureFonts } = require('./lib/fonts');
 const econ = require(path.join(ROOT, 'economy.js'));
-const TAKES = require('./takes');
+const TAKES = require('./takes'), world = require('./lib/world');
 
 const arg = Object.fromEntries(process.argv.slice(2).map(a => { const m = a.match(/^--(\w+)(?:=(.*))?$/); return m ? [m[1], m[2] === undefined ? true : m[2]] : [a, true]; }));
 const PREVIEW = !!arg.preview, EVERY = +arg.every || 1, MAXF = +arg.frames || Infinity;
@@ -22,9 +22,13 @@ const PILOT = fs.readFileSync(path.join(__dirname, 'pilot.js'), 'utf8');
 
 // what the economy API answers (the server's own catalog, a wallet that owns the skins on show)
 function fakeApi(tk) {
+  if (tk.menu) { // the menus: a real account made by the game's own server code (see lib/world.js)
+    const W = world(ROOT, { secret: 'promo0capture0secret0000000000', name: tk.name || 'Juno', skins: tk.owns || [], balance: tk.balance || 4850 });
+    return { ...W, 'run/start': { runId: 'promo-run' } };
+  }
   const catalog = JSON.parse(JSON.stringify(econ.catalog()));
   for (const k in catalog.seasons) catalog.seasons[k].open = true;
-  const w = { playerId: 'promo0000000000', balance: 4850, earned: 31200, skins: [13, 15, 17, 18, 21, 22, 23, 24, 25, 26, 27], rating: 1388, tier: 'Gold', runs: 214, account: null };
+  const w = { playerId: 'promo0000000000', balance: 4850, earned: 31200, skins: [11, 13, 14, 15, 16, 17, 18, 21, 22, 23, 24, 25, 26, 27], rating: 1388, tier: 'Gold', runs: 214, account: null };
   const end = tk.result || { payout: 25, rating: 1412, ratingDelta: 24 };
   return {
     session: { ...w, catalog },
@@ -53,7 +57,7 @@ async function film(browser, tk) {
     await s.send('Emulation.setDeviceMetricsOverride', { width: VIEW.w, height: VIEW.h, deviceScaleFactor: DSF, mobile: true, screenOrientation: { type: 'landscapePrimary', angle: 90 } });
     await s.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
     await s.send('Emulation.setEmulatedMedia', { features: [{ name: 'pointer', value: 'coarse' }, { name: 'hover', value: 'none' }, { name: 'prefers-reduced-motion', value: 'no-preference' }] });
-    await s.send('Page.addScriptToEvaluateOnNewDocument', { source: clock({ seed: tk.seed, epoch: EPOCH, api: fakeApi(tk) }) });
+    await s.send('Page.addScriptToEvaluateOnNewDocument', { source: clock({ seed: tk.seed, epoch: tk.epoch ? Date.parse(tk.epoch) : EPOCH, api: fakeApi(tk) }) });
     await s.send('Page.addScriptToEvaluateOnNewDocument', { source: storage(tk) });
     await s.send('Page.navigate', { url: 'file://' + GAME + '?server=http://127.0.0.1:9&debug=1' });
     for (let i = 0; ; i++) {
@@ -64,12 +68,13 @@ async function film(browser, tk) {
       '400 12px "IBM Plex Mono"','500 12px "IBM Plex Mono"','600 12px "IBM Plex Mono"'].map(f=>document.fonts.load(f).catch(()=>[]))).then(()=>document.fonts.check('800 16px "Bricolage Grotesque"')&&document.fonts.check('500 12px "IBM Plex Mono"'))`);
     if (!fonts) console.warn('  warning: the game fonts did not load (no network?)');
     await s.eval(PILOT);
-    await s.eval(`__promo.setTake({id:${JSON.stringify(tk.id)},brain:${fnSrc(tk.brain)}})`);
+    await s.eval(`__promo.setTake({id:${JSON.stringify(tk.id)},brain:${fnSrc(tk.brain)},ui:${fnSrc(tk.ui)}})`);
     for (let i = 0; i < 90; i++) { // lobby: wait until the live room has given up (offline) and the wallet has loaded
       await s.eval('__promo.frame()');
       if (i > 5 && await s.eval("__mitosisNet.state==='offline'&&__promo.G.wallet.online")) break;
     }
-    await s.eval(`(()=>{const {G,P,S}=__promo;G.startLocal('auto');S.calm();S.dressBots(${tk.seed | 0});S.clearToasts();S.clearFeed();${fnSrc(tk.setup)}(G,P,S);return 1})()`);
+    if (tk.menu) await s.eval(`(()=>{const {G,P,S}=__promo;S.clearToasts();${tk.setup ? fnSrc(tk.setup) + '(G,P,S);' : ''}return 1})()`); // stays in the lobby: ui() taps through the pages
+    else await s.eval(`(()=>{const {G,P,S}=__promo;G.startLocal('auto');S.calm();S.dressBots(${tk.seed | 0});S.clearToasts();S.clearFeed();${fnSrc(tk.setup)}(G,P,S);return 1})()`);
     for (let i = 0; i < (tk.preroll || 0); i++) await s.eval('__promo.frame()');
     await s.eval('__promo.resetLog()');
     const track = [], total = Math.min(tk.frames, MAXF), writes = [];
