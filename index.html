@@ -6079,6 +6079,211 @@ GEN50.push(
   draw(g,c,r,k){skinArt(g,this,c,r,0);if(skinPx(g,r)<16)return;const t=T*1.3+c.wob*4,x=c.x+r*(.05+Math.sin(t)*.42),y=c.y+r*(-.45+Math.sin(t*2)*.16),s=r*.06;g.save();g.translate(x+Math.sin(T*40)*r*.004,y);g.rotate(Math.cos(t)>0?.5:-.5);
     g.drawImage(bake(g,'vf_fly',skinPx(g,s)*2,this.fly,1),-s,-s,2*s,2*s);g.restore();}}, // a fly buzzing round it
 );
+// a small round brilliant in a gold setting: eight facets round a table, alternately lit and dark, and a catch light
+function ggem(q,x,y,s,c,a=0){q.save();q.translate(x,y);q.rotate(a);disc(q,0,0,s*1.18,'#5a3a08');disc(q,0,0,s*1.06,'#e8c050');
+  for(let k=0;k<8;k++){const a0=k*Math.PI/4,a1=a0+Math.PI/4;q.beginPath();q.moveTo(0,0);q.lineTo(Math.cos(a0)*s,Math.sin(a0)*s);q.lineTo(Math.cos(a1)*s,Math.sin(a1)*s);q.closePath();q.fillStyle=gc(gsh(c,[.45,-.35,.2,-.5,.35,-.2,.55,-.4][k]));q.fill();}
+  q.beginPath();for(let k=0;k<8;k++){const t=k*Math.PI/4+Math.PI/8;q.lineTo(Math.cos(t)*s*.52,Math.sin(t)*s*.52);}q.closePath();q.fillStyle=gc(gsh(c,.25));q.fill();disc(q,-s*.28,-s*.3,s*.2,'rgba(255,255,255,.9)');q.restore();}
+const GOLD=[0,'#fff4c0',.35,'#f0c84a',.7,'#b8841c',1,'#6a4608'];
+GEN50.push(
+{id:86,key:'faberge',name:'Imperial Egg',price:8000,col:'treasures',rar:'legendary',base:[225,70,40],edge:'#2a1a04',edge2:'rgba(255,240,190,.7)',
+  desc:'Royal blue guilloché enamel in a gold trellis set with diamonds and pearls, fit for a tsar.',
+  // a jeweller's egg up close: translucent royal blue enamel over engine-turned waves that catch the light through it, a gold trellis bent round the
+  // curve with a diamond at every crossing and a pearl in every panel; a sheen passes and the diamonds twinkle (drawn live)
+  TW:(()=>{const o=[];for(let i=-4;i<=4;i++)for(let j=-4;j<=4;j++){const fx=(i+j)*.29,fy=(i-j)*.29;if(Math.hypot(fx,fy)<1.6){gw(fx,fy);if(Math.hypot(GO[0],GO[1])<.95)o.push([GO[0],GO[1]]);}}return o;})(),
+  bake(q,u){const R=prng(86),hi=u>80;gfield(q,gtex('fb_enamel',u,(x,y,o)=>{gwi(x,y);const X=GO[0],Y=GO[1],r=Math.hypot(X,Y),a=Math.atan2(Y,X),g=Math.sin(r*64+Math.sin(a*16+r*3)*2.4),e=.5+.5*g, // the engine-turned waves under it
+        l=Math.max(0,1-(x*x+y*y)/1.32),z=Math.sqrt(l),lt=.5+.5*(-x*.6-y*.6)/1.1;gramp(gpal('060c3a 12288e 2a54cc 6a98f4 c8dcff'),.12+e*.3*z+lt*.35+.15*z,o);}));
+    const band=(x0,y0,x1,y1)=>{q.beginPath();gpath(q,[x0,y0,x1,y1],false,.03);};const L=[];for(let c=-6;c<=6;c++)L.push(c*.58);
+    for(const [w,cl] of[[.085,'rgba(30,16,0,.55)'],[.06,'#6a4608'],[.05,'#d8a838'],[.024,'#ffe890'],[.008,'rgba(255,255,240,.8)']]){q.lineWidth=w;q.strokeStyle=cl;q.lineCap='butt'; // the gold trellis, bent round the egg
+      for(const d of L){band(-1.6,-1.6+d,1.6,1.6+d);q.stroke();band(-1.6,1.6+d,1.6,-1.6+d);q.stroke();}}
+    for(let i=-4;i<=4;i++)for(let j=-4;j<=4;j++){const fx=(i+j)*.29,fy=(i-j)*.29,s=Math.hypot(fx,fy);if(s>1.75)continue;const k=Math.cos(Math.min(1.57,s/GW));gw(fx,fy);const x=GO[0],y=GO[1];ggem(q,x,y,.045*k+.008,[200,215,235],R()); // a diamond at every crossing
+      gw(fx+.29,fy);const px=GO[0],py=GO[1],k2=Math.cos(Math.min(1.57,Math.hypot(fx+.29,fy)/GW));if(Math.hypot(fx+.29,fy)<1.75){disc(q,px+.01,py+.015,.05*k2,'rgba(0,0,30,.45)');disc(q,px,py,.048*k2,rgr(q,px-.015*k2,py-.018*k2,.06*k2,[0,'#ffffff',.5,'#f2ece2',1,'#a89c90']));disc(q,px-.016*k2,py-.018*k2,.012*k2,'rgba(255,255,255,.95)');}} // a pearl in every panel
+    disc(q,0,0,1.25,rgr(q,-.38,-.42,1.3,[0,'rgba(255,255,255,.1)',.4,'rgba(0,0,0,0)',1,'rgba(0,0,20,.4)']));ggloss(q,.35,1);},
+  draw(g,c,r,k){skinArt(g,this,c,r,0);if(skinPx(g,r)<14)return;gsheen(g,c,r,.12,.28);for(let i=0;i<4;i++){const p=this.TW[(i*7+((T*.4+c.wob*5)|0)*3)%this.TW.length],f=Math.sin(((T*.4+c.wob*5)%1)*Math.PI);soft(g,c.x+p[0]*r,c.y+p[1]*r,r*.07,'255,255,255',f*.85);}}}, // diamonds twinkling
+{id:87,key:'hoard',name:'Hoard',price:4000,col:'treasures',rar:'epic',base:[44,90,55],edge:'#4a3004',edge2:'rgba(255,245,200,.7)',
+  desc:'A dragon’s hoard of gold coins, gems and pearls, glittering.',
+  // a heap of gold coins from above, every one tipped at its own angle, the ones beneath in the dark; rubies, emeralds, sapphires and pearls among
+  // them, a gold chain draped over; glints come and go across it (drawn live)
+  bake(q,u){const R=prng(87),hi=u>80;fillAll(q,'#3a2404');const coin=(x,y,s,a,tl,d)=>{const th=s*.16*Math.sqrt(1-tl*tl)+.008;q.save();q.translate(x,y);q.rotate(a);
+      q.beginPath();q.ellipse(.015,th+.02,s,s*tl,0,0,TAU);q.fillStyle=`rgba(20,10,0,${.45})`;q.fill(); // its shadow
+      q.beginPath();q.ellipse(0,th,s,s*tl,0,0,TAU);q.fillStyle=gc(gsh([150,96,20],-d*.4));q.fill(); // its edge
+      q.beginPath();q.ellipse(0,0,s,s*tl,0,0,TAU);q.fillStyle=lgr(q,-s,-s,s,s,[0,gc(gsh([255,236,150],-d*.5)),.45,gc(gsh([236,184,52],-d*.5)),1,gc(gsh([150,96,20],-d*.5))]);q.fill();
+      q.save();q.scale(1,tl);q.beginPath();q.arc(0,0,s*.84,0,TAU);q.lineWidth=s*.06;q.strokeStyle=gc(gsh([120,76,10],-d*.5),.7);q.stroke();
+      if(u>60&&s*u>6){q.beginPath();for(let i=0;i<10;i++){const t=i/10*TAU-Math.PI/2,rr=i%2?s*.22:s*.5;q.lineTo(Math.cos(t)*rr,Math.sin(t)*rr);}q.closePath();q.fillStyle=gc(gsh([255,244,190],-d*.5),.75);q.fill();q.lineWidth=s*.03;q.strokeStyle=gc(gsh([120,76,10],-d*.5),.6);q.stroke();} // a star struck on it
+      q.restore();q.restore();};
+    for(let gy=-1.25;gy<=1.3;gy+=.2)for(let gx=-1.25;gx<=1.3;gx+=.2)coin(gx+(R()-.5)*.12,gy+(R()-.5)*.12,.14+R()*.04,R()*TAU,.5+R()*.5,.95); // the heap beneath, in the dark
+    const n=hi?130:80;for(let i=0;i<n;i++){const d=1-i/n,a=R()*TAU,rr=Math.pow(R(),.4)*1.3;coin(Math.cos(a)*rr,Math.sin(a)*rr,.13+R()*.07,R()*TAU,.55+R()*.45,d*.8);}
+    q.lineCap='round';const C=[];for(let i=0;i<=60;i++){const t=i/60;C.push([-1.2+t*2.4,-.5+Math.sin(t*3.4)*.35+t*.6]);} // a gold chain draped over
+    for(let i=0;i<60;i++){const [x,y]=C[i],[x2,y2]=C[i+1],a=Math.atan2(y2-y,x2-x);q.save();q.translate((x+x2)/2,(y+y2)/2);q.rotate(a);q.beginPath();q.ellipse(0,0,.03,i%2?.012:.02,0,0,TAU);q.lineWidth=.012;q.strokeStyle=i%2?'#a8781a':'#f0c84a';q.stroke();q.restore();}
+    for(const [x,y,s,c] of[[-.35,.2,.09,[200,20,40]],[.42,-.3,.08,[20,160,80]],[.1,.6,.07,[40,70,220]],[-.62,-.45,.07,[200,20,40]],[.7,.35,.06,[150,40,200]],[-.1,-.7,.06,[20,160,80]]])ggem(q,x,y,s,c,R()); // gems among them
+    for(const [x,y] of[[.25,.1],[-.75,.55],[.55,-.75],[-.4,-.05]]){disc(q,x+.012,y+.016,.05,'rgba(30,15,0,.5)');disc(q,x,y,.048,rgr(q,x-.015,y-.018,.06,[0,'#ffffff',.5,'#f2ece2',1,'#a89c90']));disc(q,x-.016,y-.018,.012,'#fff');} // and pearls
+    disc(q,0,0,1.25,rgr(q,-.3,-.35,1.3,[0,'rgba(255,240,180,.12)',.5,'rgba(0,0,0,0)',1,'rgba(30,15,0,.45)']));},
+  draw(g,c,r,k){skinArt(g,this,c,r,0);if(skinPx(g,r)<14)return;for(let i=0;i<3;i++){const ph=T*.5+i*2.1+c.wob*3,f=Math.max(0,Math.sin(ph*2))**3,a=i*2.4+Math.floor(ph/Math.PI)*1.7,d=.25+((i*.37+Math.floor(ph/Math.PI)*.29)%1)*.6;soft(g,c.x+Math.cos(a)*d*r,c.y+Math.sin(a)*d*r,r*.09,'255,250,220',f);}}}, // glints
+{id:88,key:'scarab',name:'Scarab',price:2500,col:'treasures',rar:'epic',base:[225,70,35],edge:'#2a1a04',edge2:'rgba(255,230,160,.7)',
+  desc:'A winged scarab of gold, lapis and carnelian, lifting the sun.',
+  // a pharaoh's pectoral: a scarab of lapis lazuli flecked with gold, wings spread in bands of lapis, turquoise and carnelian set in gold cloisons,
+  // lifting a carnelian sun and holding a gold ring beneath; dark stone behind; a sheen passes over the gold (drawn live)
+  bake(q,u){const R=prng(88),hi=u>80;fillAll(q,rgr(q,0,-.1,1.3,[0,'#2a2018',1,'#0a0806']));if(hi)for(let i=0;i<120;i++)disc(q,R()*2.4-1.2,R()*2.4-1.2,.004,'rgba(255,220,140,.25)');
+    const lapis=gtex('sc_lapis',u,(x,y,o)=>{const n=gfbm(x*5,y*5,3),f=gn(x*60,y*60);gramp(gpal('0a1460 1a2c96 2e48c0'),.3+n*.7,o);const fk=gstep(.78,.9,f);for(let i=0;i<3;i++)o[i]+=([230,200,120][i]-o[i])*fk;}),gold=(x0,y0,x1,y1)=>lgr(q,x0,y0,x1,y1,GOLD);
+    const wing=sd=>{q.save();q.scale(sd,1);const top=x=>-.22-.3*(x-.24),bot=x=>.2+.02*(x-.24),xs=[];for(let i=0;i<=9;i++)xs.push(.24+i*.095); // a wing, bands of feathers in gold cloisons
+      const out=()=>{q.beginPath();q.moveTo(.24,top(.24));q.lineTo(1.1,top(1.1));q.quadraticCurveTo(1.18,top(1.1)+.1,1.12,top(1.1)+.2);for(let i=9;i>0;i--){const xa=xs[i],xb=xs[i-1];q.lineTo(xa,bot(xa));q.quadraticCurveTo((xa+xb)/2,bot(xa)+.07,xb,bot(xb));}q.closePath();};
+      natureSoft(q,u,.04,'rgba(0,0,0,.6)',()=>{q.save();q.translate(.02*sd,.03);out();q.fillStyle='#000';q.fill();q.restore();});
+      out();q.fillStyle=gold(0,-.6,0,.4);q.fill();q.save();out();q.clip();
+      const bandP=(o0,o1)=>{q.beginPath();q.moveTo(.24,top(.24)+o0);q.lineTo(1.14,top(1.14)+o0);q.lineTo(1.14,top(1.14)+o1);q.lineTo(.24,top(.24)+o1);q.closePath();};
+      bandP(.035,.14);q.save();q.clip();gfield(q,lapis);q.restore();bandP(.17,.27);q.fillStyle=lgr(q,0,-.5,0,.1,[0,'#6ae0d0',1,'#1a9a90']);q.fill();
+      for(let i=0;i<9;i++){const xa=xs[i]+.012,xb=xs[i+1]-.012;q.beginPath();q.moveTo(xa,top(xa)+.3);q.lineTo(xb,top(xb)+.3);q.lineTo(xb,bot(xb)+.05);q.quadraticCurveTo((xa+xb)/2,bot(xb)+.1,xa,bot(xa)+.05);q.closePath();if(i%2){q.save();q.clip();gfield(q,lapis);q.restore();}else{q.fillStyle=lgr(q,0,-.2,0,.3,[0,'#ff9a6a',.5,'#d8481e',1,'#7a1a08']);q.fill();}} // long feathers, carnelian and lapis
+      q.restore();out();q.lineWidth=.02;q.strokeStyle='#5a3a08';q.stroke();q.restore();};
+    wing(1);wing(-1);
+    natureSoft(q,u,.05,'rgba(0,0,0,.65)',()=>{q.fillStyle='#000';q.beginPath();q.ellipse(.03,.12,.3,.38,0,0,TAU);q.fill();disc(q,.03,-.58,.2,'#000');});
+    q.lineCap='round';q.beginPath();for(const s of[-1,1]){q.moveTo(s*.08,-.42);q.quadraticCurveTo(s*.2,-.48,s*.15,-.58);q.moveTo(s*.2,.0);q.quadraticCurveTo(s*.34,.12,s*.28,.24);q.moveTo(s*.12,.38);q.quadraticCurveTo(s*.16,.5,s*.1,.58);}q.lineWidth=.035;q.strokeStyle='#8a5a10';q.stroke();q.lineWidth=.02;q.strokeStyle='#f0c84a';q.stroke(); // its legs
+    disc(q,0,-.62,.21,gold(-.2,-.82,.2,-.42));disc(q,0,-.62,.17,rgr(q,-.06,-.68,.2,[0,'#ffb080',.45,'#e0501e',1,'#7a1808']));disc(q,-.06,-.69,.04,'rgba(255,240,220,.6)'); // the sun it lifts
+    q.beginPath();q.arc(0,.66,.1,0,TAU);q.lineWidth=.04;q.strokeStyle=gold(-.1,.56,.1,.76);q.stroke();q.fillStyle=gold(-.1,.76,.1,.8);q.fillRect(-.13,.75,.26,.04); // the ring it holds
+    q.beginPath();q.ellipse(0,.12,.27,.35,0,0,TAU);q.fillStyle=gold(-.3,-.2,.3,.5);q.fill();q.save();q.beginPath();q.ellipse(0,.13,.23,.31,0,0,TAU);q.clip();gfield(q,lapis);q.fillStyle=rgr(q,-.08,0,.4,[0,'rgba(255,255,255,.18)',.6,'rgba(0,0,0,0)',1,'rgba(0,0,30,.5)']);q.fillRect(-.3,-.3,.6,.8);q.restore(); // its lapis wing cases
+    q.beginPath();q.moveTo(0,-.18);q.lineTo(0,.44);q.lineWidth=.02;q.strokeStyle='#f0c84a';q.stroke();
+    q.beginPath();q.ellipse(0,-.27,.2,.1,0,0,TAU);q.fillStyle=gold(-.2,-.37,.2,-.17);q.fill();q.beginPath();for(let i=-3;i<=3;i++){q.moveTo(i*.05,-.35);q.lineTo(i*.055,-.19);}q.lineWidth=.008;q.strokeStyle='rgba(90,58,8,.6)';q.stroke(); // its ridged thorax
+    q.beginPath();q.moveTo(-.12,-.36);q.quadraticCurveTo(0,-.48,.12,-.36);q.closePath();q.fillStyle=gold(-.12,-.46,.12,-.36);q.fill();for(let i=-2;i<=2;i++){q.beginPath();q.moveTo(i*.04-.015,-.43+Math.abs(i)*.02);q.lineTo(i*.04,-.47+Math.abs(i)*.02);q.lineTo(i*.04+.015,-.43+Math.abs(i)*.02);q.fill();} // and toothed head
+    ggloss(q,.18,1);},
+  draw(g,c,r,k){skinArt(g,this,c,r,0);if(skinPx(g,r)>14)gsheen(g,c,r,.1,.3);}},
+{id:89,key:'diamond',name:'Diamond',price:6000,col:'treasures',rar:'epic',base:[210,20,80],edge:'#2a3040',edge2:'rgba(255,255,255,.75)',
+  desc:'A flawless brilliant-cut diamond seen through its table, throwing fire.',
+  // a round brilliant seen from above, filling the cell: the octagonal table, star facets, kites and the sixteen upper girdle facets in the pattern of
+  // light and dark a good cut gives, flecks of spectral fire in it; the fire turns as you move and a star flares (drawn live)
+  bake(q,u){const R=prng(89),P=(r,a)=>[Math.cos(a)*r,Math.sin(a)*r],o=Math.PI/8,tone=t=>gramp(gpal('04060e 1a2438 5a6a84 b8c8dc f4f8ff ffffff'),t,[0,0,0]),
+      face=(pts,t,dt=.18)=>{q.beginPath();pts.forEach((p,i)=>i?q.lineTo(p[0],p[1]):q.moveTo(p[0],p[1]));q.closePath();const a=pts[0],b=pts[pts.length-1];q.fillStyle=lgr(q,a[0],a[1],b[0],b[1],[0,gc(tone(t+dt)),1,gc(tone(t-dt))]);q.fill();q.lineWidth=.005;q.strokeStyle='rgba(255,255,255,.35)';q.stroke();};
+    fillAll(q,'#0a0c14');const TB=[],S=[],G=[],M=[];for(let k=0;k<8;k++){TB.push(P(.42,k*Math.PI/4+o));S.push(P(.66,k*Math.PI/4+2*o));G.push(P(1.02,k*Math.PI/4+o));M.push(P(1.02,k*Math.PI/4+2*o));}
+    const ts=[.95,.3,.8,.15,.9,.35,.7,.2],tk=[.15,.85,.35,.95,.2,.75,.4,.9],tg=[.25,.75,.85,.2,.4,.95,.7,.15,.3,.8,.9,.25,.5,.85,.6,.1];
+    for(let k=0;k<8;k++){const k1=(k+1)%8,k7=(k+7)%8;face([TB[k],S[k7],G[k],S[k]],tk[k]);face([S[k],G[k],M[k]],tg[k*2]);face([S[k],M[k],G[k1]],tg[k*2+1]);face([TB[k],TB[k1],S[k]],ts[k]);} // kites, girdle facets, stars
+    q.beginPath();TB.forEach((p,i)=>i?q.lineTo(p[0],p[1]):q.moveTo(p[0],p[1]));q.closePath();q.fillStyle=rgr(q,-.1,-.12,.5,[0,'#f4f8ff',.4,'#9aaac0',.75,'#4a5a74',1,'#1a2234']);q.fill();q.lineWidth=.006;q.strokeStyle='rgba(255,255,255,.5)';q.stroke(); // the table
+    q.save();q.beginPath();TB.forEach((p,i)=>i?q.lineTo(p[0],p[1]):q.moveTo(p[0],p[1]));q.clip();for(let k=0;k<8;k++){const a=k*Math.PI/4+o,b=a+Math.PI/4;q.beginPath();q.moveTo(0,0);q.lineTo(Math.cos(a)*.42,Math.sin(a)*.42);q.lineTo(Math.cos(b)*.42,Math.sin(b)*.42);q.closePath();q.fillStyle=`rgba(${k%2?'0,0,20,.28':'255,255,255,.12'})`;q.fill();}q.restore(); // the pavilion seen through it
+    q.globalCompositeOperation='lighter';const F=[];for(let k=0;k<8;k++){const k1=(k+1)%8,k7=(k+7)%8;F.push([TB[k],S[k7],G[k],S[k]],[S[k],G[k],M[k]],[S[k],M[k],G[k1]],[TB[k],TB[k1],S[k]]);}
+    for(let i=0;i<11;i++){const f=F[(i*7+3)%F.length],a=f[0],b=f[f.length-1],h=R()*360;q.save();q.beginPath();f.forEach((p,j)=>j?q.lineTo(p[0],p[1]):q.moveTo(p[0],p[1]));q.closePath();q.clip(); // spectral fire, a wash across a facet
+      q.fillStyle=lgr(q,a[0],a[1],b[0],b[1],[0,'rgba(0,0,0,0)',.35,`hsla(${h},100%,55%,.35)`,.55,`hsla(${h+50},100%,55%,.4)`,.75,`hsla(${h+100},100%,55%,.3)`,1,'rgba(0,0,0,0)']);q.fillRect(-1.2,-1.2,2.4,2.4);q.restore();}q.globalCompositeOperation='source-over';
+    q.beginPath();q.arc(0,0,1.02,0,TAU);q.lineWidth=.03;q.strokeStyle='rgba(220,230,245,.5)';q.stroke();},
+  fire(q,u){const R=prng(891);q.globalCompositeOperation='lighter';for(let i=0;i<9;i++){const a=R()*TAU,d=.25+R()*.65,x=Math.cos(a)*d,y=Math.sin(a)*d,s=.07+R()*.08,h=R()*360;disc(q,x,y,s,rgr(q,x,y,s,[0,`hsla(${h},100%,70%,.55)`,.5,`hsla(${h},100%,55%,.2)`,1,`hsla(${h},100%,50%,0)`]));}
+    q.fillStyle='rgba(255,255,255,.9)';for(let i=0;i<4;i++){const a=R()*TAU,d=.3+R()*.6;gspark(q,Math.cos(a)*d,Math.sin(a)*d,.035);}},
+  draw(g,c,r,k){skinArt(g,this,c,r,0);if(skinPx(g,r)<14)return;g.save();g.translate(c.x,c.y);g.rotate(T*.15+c.wob+(c.svx||0)*.002);g.globalAlpha=.85;const e=r*1.05;g.drawImage(bake(g,'dm_fire',skinPx(g,r)*2,this.fire,1),-e,-e,2*e,2*e);g.restore();g.globalAlpha=1; // the fire turning
+    const f=Math.max(0,Math.sin(T*.8+c.wob*3))**4;soft(g,c.x-r*.28,c.y-r*.3,r*.22,'255,255,255',f*.9);dot(g,c.x-r*.28,c.y-r*.3,r*.04,'255,255,255',f);}}, // and a star flaring
+{id:90,key:'kintsugi',name:'Kintsugi',price:1500,col:'treasures',rar:'rare',base:[30,10,14],edge:'#3a2a1a',edge2:'rgba(255,230,170,.6)',
+  desc:'A black tea bowl, broken once and mended with gold.',
+  // looking into a black tea bowl: an oil-spot glaze of silver and blue speckle that deepens toward the foot, the raw clay lip, the light on the far
+  // wall; it was broken once and mended with gold, the seams branching across it and one lost piece filled solid; a sheen runs along the gold (drawn live)
+  bake(q,u){const R=prng(90),hi=u>80;gfield(q,gtex('ki_glaze',u,(x,y,o)=>{const r=Math.hypot(x,y),a=Math.atan2(y,x),hf=gstep(.35,.9,r)*gstep(.45,.75,gn(a*38,r*3))*.9,lt=gstep(.3,1,r)*Math.max(0,(x+y)*.6+.2), // hare's fur streaks running down from the lip, the far wall lit
+        n=gfbm(x*3,y*3,3),v=gvor(x*16+n*2,y*16),sp=gstep(.16,.06,v.f1)*gstep(.5,.9,v.id)*gstep(.2,.6,r)*.5;gramp(gpal('050506 0e1012 1c1e22 30343a'),.25+n*.3+lt*.6,o);for(let i=0;i<3;i++)o[i]+=([120,62,24][i]-o[i])*hf*(1-r*.3)+[140,160,180][i]*sp;if(r>.95){const t=gstep(.95,1.0,r);gramp(gpal('5a4030 8a6a4a a8885e'),.4+n*.5,GO2);for(let i=0;i<3;i++)o[i]+=(GO2[i]-o[i])*t;}}));
+    q.beginPath();q.arc(0,0,.3,0,TAU);q.lineWidth=.02;q.strokeStyle='rgba(0,0,0,.4)';q.stroke();q.beginPath();q.arc(-.005,-.008,.3,Math.PI*.9,Math.PI*1.6);q.lineWidth=.008;q.strokeStyle='rgba(200,210,220,.15)';q.stroke(); // the foot ring within
+    const cracks=[];const walk=(x,y,a,L,w,dep)=>{const P=[[x,y]];for(let i=0;i<L;i++){a+=(R()-.5)*.25+(R()<.14?(R()<.5?-1:1)*(.5+R()*.4):0);x+=Math.cos(a)*.07;y+=Math.sin(a)*.07;if(Math.hypot(x,y)>1.08)break;P.push([x,y]);if(!dep&&i>3&&R()<.12)walk(x,y,a+(R()<.5?-1:1)*(.7+R()*.5),L*.45|0,w*.75,1);}cracks.push([P,w]);}; // fractures: long runs, sharp turns
+    for(const a of[-2.5,-.3,1.5]){walk(Math.cos(a)*1.08,Math.sin(a)*1.08,a+Math.PI+(R()-.5)*.5,22,.034,0);}
+    const shard=[[.5,.62],[.58,.38],[.78,.3],[.92,.52],[.8,.72]];q.beginPath();shard.forEach((p,i)=>i?q.lineTo(p[0],p[1]):q.moveTo(p[0],p[1]));q.closePath();q.fillStyle=lgr(q,.6,.35,1,.7,GOLD);q.fill();q.lineWidth=.012;q.strokeStyle='#8a5a10';q.stroke(); // a lost piece, filled with gold
+    q.lineCap=q.lineJoin='round';for(const [w,cl] of[[1.6,'rgba(0,0,0,.5)'],[1,'#b8841c'],[.7,'#f0c84a'],[.3,'rgba(255,250,210,.85)']])for(const [P,cw] of cracks){q.beginPath();P.forEach((p,i)=>i?q.lineTo(p[0],p[1]):q.moveTo(p[0],p[1]));q.lineWidth=cw*w;q.strokeStyle=cl;q.stroke();} // the gold seams
+    ggloss(q,.22,1);},
+  draw(g,c,r,k){skinArt(g,this,c,r,0);if(skinPx(g,r)>14)gsheen(g,c,r,.1,.22);}},
+);
+GEN50.push(
+{id:91,key:'crystalball',name:'Crystal Ball',price:3000,col:'mythic',rar:'epic',base:[270,60,30],edge:'#1a0a30',edge2:'rgba(230,210,255,.7)',
+  desc:'A seer’s crystal ball on its gold stand, mist turning slowly inside.',
+  // the cell is the ball: deep violet within, stars far down in it, a glow at its heart and the candle that lights it seen upside down; mist curls through
+  // it and turns slowly (a sprite turned each frame); its gold stand glows through the glass below; the glass shines at its rim and in a window of light
+  bake(q,u){const R=prng(91),hi=u>80;fillAll(q,rgr(q,0,0,1.15,[0,'#3a1a6a',.55,'#1e0c44',.9,'#0c0420',1,'#06020e']));gstars(q,u,R,hi?90:40,2);
+    q.globalCompositeOperation='lighter';gglow(q,0,0,.75,[150,90,255],.35);gglow(q,.02,.5,.2,[255,170,80],.4);q.globalCompositeOperation='source-over'; // its heart aglow; the candle, upside down in it
+    q.save();q.translate(.02,.5);q.scale(1,-1);q.beginPath();q.moveTo(0,-.07);q.quadraticCurveTo(.028,0,0,.04);q.quadraticCurveTo(-.028,0,0,-.07);q.fillStyle='rgba(255,226,160,.8)';q.fill();q.restore();},
+  mist(q,u){gfield(q,gtex('cb_mist',u,(x,y,o)=>{const r=Math.hypot(x,y),a=Math.atan2(y,x)+2.4*(1-r),f=gfbm(Math.cos(a)*r*2.2+3,Math.sin(a)*r*2.2,4),c=gfbm(x*1.5+9,y*1.5,2);
+    gramp(gpal('6a3ad8 c060e0 ff9ad8 8ae0ff'),c*1.2-.1,o);o[3]=255*gstep(.42,.8,f)*(1-gstep(.78,1,r))*.75;}));},
+  top(q,u){q.beginPath();q.arc(0,0,.985,0,TAU);q.lineWidth=.05;q.strokeStyle=rgr(q,0,0,1.01,[0,'rgba(255,255,255,0)',.9,'rgba(220,200,255,0)',.97,'rgba(230,215,255,.35)',1,'rgba(255,255,255,0)']);q.stroke(); // the glass at its rim
+    q.globalCompositeOperation='lighter';ghostBlur(q,SKIN_BR,t=>{t.lineCap='round';t.beginPath();t.arc(0,1.62,.82,Math.PI*1.28,Math.PI*1.72);t.lineWidth=.1;t.strokeStyle='rgba(255,190,90,.55)';t.stroke();}); // the gold stand it sits on, seen through the glass
+    q.beginPath();q.arc(0,1.62,.8,Math.PI*1.3,Math.PI*1.7);q.lineWidth=.012;q.strokeStyle='rgba(255,230,160,.5)';q.stroke();q.globalCompositeOperation='source-over';
+    ggloss(q,.75,0);q.save();q.translate(.42,.36);q.rotate(-.7);q.scale(.12,.05);disc(q,0,0,1,'rgba(255,255,255,.18)');q.restore();},
+  draw(g,c,r,k){skinArt(g,this,c,r,0);const bp=skinPx(g,r)*2*SKIN_BR;if(skinPx(g,r)>12)blit(g,bake(g,'cb_mist',bp,this.mist),c.x,c.y,r,T*.12+c.wob*6); // the mist, turning
+    skinArt(g,this,c,r,0,'cb_top',this.top);}},
+{id:92,key:'excalibur',name:'Excalibur',price:4000,col:'mythic',rar:'epic',base:[200,30,45],edge:'#141e28',edge2:'rgba(240,245,255,.7)',
+  desc:'The sword in the stone, waiting in a misty glade for its true heir.',
+  // a misty glade at night: trees far off, light falling in shafts on a mossy boulder, a sword driven deep into it: a bright steel blade with runes in
+  // its fuller, a gold cross guard set with a ruby, a leather grip bound in gold wire, a sapphire in its pommel; a glint runs up the blade and motes rise
+  // through the light (drawn live)
+  bake(q,u){const R=prng(92),hi=u>80;fillAll(q,lgr(q,0,-1.2,0,1.2,[0,'#06101e',.55,'#14303c',1,'#081014']));
+    ghostBlur(q,SKIN_BR,t=>{for(const [c,n,y0,h] of[['#102630',14,.32,.9],['#0a1a22',10,.36,1.2]])for(let i=0;i<n;i++){const x=-1.3+i*2.6/n+(R()-.5)*.12,hh=h*(.7+R()*.4);t.fillStyle=c;t.beginPath();t.moveTo(x,y0-hh);for(let k=0;k<5;k++){const yy=y0-hh+hh*(k+1)/5,ww=.05+.16*(k+1)/5;t.lineTo(x+ww,yy);t.lineTo(x+ww*.45,yy);}t.lineTo(x-.06,y0);for(let k=4;k>=0;k--){const yy=y0-hh+hh*(k+1)/5,ww=.05+.16*(k+1)/5;t.lineTo(x-ww*.45,yy);t.lineTo(x-ww,yy);}t.closePath();t.fill();}}); // a pine wood in the mist
+    q.globalCompositeOperation='lighter';for(let i=0;i<5;i++){const x=-.5+i*.25+(R()-.5)*.1;q.beginPath();q.moveTo(x-.04,-1.3);q.lineTo(x+.04,-1.3);q.lineTo(x*1.8+.22,1.2);q.lineTo(x*1.8-.1,1.2);q.closePath();q.fillStyle=lgr(q,0,-1.2,0,.6,[0,'rgba(220,240,255,.12)',1,'rgba(220,240,255,0)']);q.fill();} // light in shafts
+    gglow(q,0,-.3,.75,[230,240,255],.32);ghostBlur(q,SKIN_BR,t=>{t.fillStyle='rgba(200,225,235,.18)';for(let i=0;i<6;i++){t.beginPath();t.ellipse(-1+i*.4,.2+R()*.12,.45,.07,0,0,TAU);t.fill();}});q.globalCompositeOperation='source-over'; // its glow, mist
+    const st=()=>{q.beginPath();q.moveTo(-1.3,1.3);q.lineTo(-1.3,.6);q.bezierCurveTo(-1,.32,-.5,.12,0,.15);q.bezierCurveTo(.5,.12,1,.32,1.3,.62);q.lineTo(1.3,1.3);q.closePath();};
+    q.save();st();q.clip();gfield(q,gtex('ex_rock',u,(x,y,o)=>{const n=gfbm(x*3,y*3,4),c=gridge(x*5,y*5,3),top=gstep(.5,.15,y-.12-Math.abs(x)*.25),m=gstep(.55,.7,gfbm(x*4+5,y*4,3))*top;
+      gramp(gpal('1a1e22 3a4248 6a7278 a8b0b4'),.25+n*.45+top*.35-c*.25-(y-.15)*.3,o);for(let i=0;i<3;i++)o[i]+=([70,110,40][i]-o[i])*m*.8;}));q.restore(); // the boulder, moss on its crown
+    q.beginPath();q.moveTo(0,.16);q.lineTo(-.05,.24);q.lineTo(-.04,.3);q.moveTo(.02,.16);q.lineTo(.08,.21);q.lineWidth=.006;q.strokeStyle='rgba(10,14,18,.55)';q.stroke(); // split where the sword went in
+    q.save();q.translate(0,.16);q.scale(1.15,1.15);q.translate(0,-.16);
+    q.beginPath();q.ellipse(0,.16,.06,.015,0,0,TAU);q.fillStyle='#050608';q.fill();
+    const bl=()=>{q.beginPath();q.moveTo(-.046,-.24);q.lineTo(.046,-.24);q.lineTo(.04,.16);q.lineTo(-.04,.16);q.closePath();};
+    natureSoft(q,u,.03,'rgba(0,0,0,.5)',()=>{q.save();q.translate(.04,.02);bl();q.fillStyle='#000';q.fill();q.restore();});
+    bl();q.fillStyle=lgr(q,-.046,0,.046,0,[0,'#4a5460',.25,'#c8d4e0',.48,'#ffffff',.52,'#8a96a4',.75,'#b8c4d0',1,'#2e3640']);q.fill(); // the blade
+    q.beginPath();q.moveTo(0,-.22);q.lineTo(0,.15);q.lineWidth=.006;q.strokeStyle='rgba(40,50,60,.45)';q.stroke();if(hi){q.beginPath();for(let i=0;i<7;i++){const y=-.18+i*.045;q.moveTo(-.012,y);q.lineTo(.008,y+.012);q.moveTo(.008,y);q.lineTo(-.006,y+.02);}q.lineWidth=.004;q.strokeStyle='rgba(120,180,255,.5)';q.stroke();} // runes in its fuller
+    const gd=()=>{q.beginPath();q.moveTo(-.38,-.18);q.quadraticCurveTo(-.2,-.28,0,-.27);q.quadraticCurveTo(.2,-.28,.38,-.18);q.lineTo(.4,-.22);q.quadraticCurveTo(.2,-.34,0,-.33);q.quadraticCurveTo(-.2,-.34,-.4,-.22);q.closePath();};
+    natureSoft(q,u,.03,'rgba(0,0,0,.5)',()=>{q.save();q.translate(.03,.03);gd();q.fillStyle='#000';q.fill();q.restore();});gd();q.fillStyle=lgr(q,0,-.34,0,-.18,GOLD);q.fill();q.lineWidth=.008;q.strokeStyle='#5a3a06';q.stroke(); // the cross guard
+    for(const s of[-1,1])disc(q,s*.4,-.2,.03,lgr(q,s*.4-.03,-.23,s*.4+.03,-.17,GOLD));
+    q.beginPath();q.moveTo(-.03,-.33);q.lineTo(.03,-.33);q.lineTo(.026,-.62);q.lineTo(-.026,-.62);q.closePath();q.fillStyle=lgr(q,-.03,0,.03,0,[0,'#2a1408',.5,'#6a3a1a',1,'#1a0a04']);q.fill(); // the grip, bound in gold wire
+    q.beginPath();for(let y=-.6;y<-.34;y+=.024){q.moveTo(-.028,y);q.lineTo(.028,y+.014);}q.lineWidth=.006;q.strokeStyle='#e8c060';q.stroke();
+    ggem(q,0,-.295,.032,[200,20,40]);disc(q,0,-.67,.065,lgr(q,-.06,-.73,.06,-.6,GOLD));ggem(q,0,-.67,.035,[30,70,220]); // a ruby in the guard, a sapphire in the pommel
+    q.beginPath();q.moveTo(-.035,-.24);q.lineTo(-.03,.14);q.lineWidth=.006;q.strokeStyle='rgba(255,255,255,.5)';q.stroke();q.restore();},
+  draw(g,c,r,k){skinArt(g,this,c,r,0);if(skinPx(g,r)<14)return;const t=(T*.35+c.wob*3)%1.8;if(t<1)soft(g,c.x,c.y+r*(.14-t*.44),r*.1,'255,255,255',Math.sin(t*Math.PI)*.9); // a glint running up the blade
+    for(let i=0;i<4;i++){const p=(T*.05+i/4+c.wob)%1;soft(g,c.x+r*(-.35+i*.22+Math.sin(T*.6+i)*.05),c.y+r*(.2-p*1.1),r*.025,'230,240,255',Math.sin(p*Math.PI)*.7);}}}, // motes rising
+{id:93,key:'kitsune',name:'Kitsune',price:2000,col:'mythic',rar:'rare',base:[0,10,94],edge:'#3a0610',edge2:'rgba(255,220,220,.7)',
+  desc:'A fox spirit’s lacquered mask, foxfire drifting round it in the dark.',
+  // a white lacquered fox mask face on, against a dark crimson night: tall ears red within, slanted eye holes lined in red with flicks swept up, flame
+  // brows, a jewel on its brow, whisker marks, gold edging and red cords with tassels at its sides; blue foxfire drifts round it (drawn live)
+  bake(q,u){const R=prng(93),hi=u>80;fillAll(q,rgr(q,0,-.1,1.3,[0,'#4a0c18',.6,'#22060e',1,'#0c0206']));
+    ghostBlur(q,SKIN_BR,t=>{for(let i=0;i<10;i++){t.fillStyle=i%2?'rgba(255,150,170,.5)':'rgba(255,200,210,.4)';t.beginPath();t.ellipse(-1.1+R()*2.2,-1.1+R()*2.2,.04,.025,R()*3,0,TAU);t.fill();}}); // petals in the dark
+    for(const s of[-1,1]){q.beginPath();q.moveTo(s*.78,.02);q.bezierCurveTo(s*.96,.2,s*.92,.5,s*.98,.72);q.lineWidth=.03;q.strokeStyle='#a8101e';q.stroke();q.beginPath();for(let i=-4;i<=4;i++){q.moveTo(s*.98+i*.012,.7);q.lineTo(s*.98+i*.016,.98);}q.lineWidth=.012;q.strokeStyle='#c8182a';q.stroke();disc(q,s*.98,.72,.035,lgr(q,s*.95,.69,s*1.01,.75,GOLD));} // cords and tassels
+    const M=()=>{q.beginPath();q.moveTo(0,-.44);q.quadraticCurveTo(.16,-.5,.3,-.62);q.lineTo(.56,-.97);q.quadraticCurveTo(.68,-.62,.74,-.36);q.bezierCurveTo(.86,-.18,.84,.06,.72,.2);q.bezierCurveTo(.56,.38,.32,.5,.16,.66);q.quadraticCurveTo(0,.8,-.16,.66);
+      q.bezierCurveTo(-.32,.5,-.56,.38,-.72,.2);q.bezierCurveTo(-.84,.06,-.86,-.18,-.74,-.36);q.quadraticCurveTo(-.68,-.62,-.56,-.97);q.lineTo(-.3,-.62);q.quadraticCurveTo(-.16,-.5,0,-.44);q.closePath();};
+    natureSoft(q,u,.07,'rgba(0,0,0,.7)',()=>{q.save();q.translate(.04,.06);M();q.fillStyle='#000';q.fill();q.restore();});
+    M();q.fillStyle=rgr(q,-.25,-.3,1.15,[0,'#ffffff',.45,'#f6f2ec',.8,'#dcd4ca',1,'#a8a096']);q.fill();M();q.lineWidth=.016;q.strokeStyle='#d8a838';q.stroke(); // white lacquer, gold-edged
+    q.save();M();q.clip();
+    for(const s of[-1,1]){q.beginPath();q.moveTo(s*.34,-.58);q.lineTo(s*.54,-.88);q.quadraticCurveTo(s*.62,-.6,s*.66,-.42);q.quadraticCurveTo(s*.5,-.46,s*.34,-.58);q.fillStyle=lgr(q,s*.5,-.88,s*.5,-.45,[0,'#8a0612',.5,'#d8203a',1,'#ff9aa8']);q.fill(); // ears red within
+      q.beginPath();q.moveTo(s*.1,-.02);q.quadraticCurveTo(s*.3,-.22,s*.52,-.2);q.quadraticCurveTo(s*.34,.04,s*.1,-.02);q.fillStyle='#0a0204';q.fill(); // eye holes
+      q.beginPath();q.moveTo(s*.08,-.03);q.quadraticCurveTo(s*.3,-.25,s*.56,-.22);q.quadraticCurveTo(s*.62,-.26,s*.68,-.36);q.quadraticCurveTo(s*.56,-.28,s*.5,-.25);q.quadraticCurveTo(s*.3,-.27,s*.08,-.03);q.fillStyle='#c8102a';q.fill(); // lined in red, swept up
+      q.beginPath();q.moveTo(s*.1,-.3);q.bezierCurveTo(s*.2,-.42,s*.38,-.44,s*.5,-.38);q.bezierCurveTo(s*.42,-.36,s*.34,-.36,s*.28,-.33);q.quadraticCurveTo(s*.36,-.42,s*.22,-.36);q.quadraticCurveTo(s*.14,-.34,s*.1,-.3);q.fillStyle='#d01830';q.fill(); // flame brows
+      q.beginPath();for(let i=0;i<3;i++){q.moveTo(s*(.42+i*.03),.08+i*.08);q.quadraticCurveTo(s*(.56+i*.03),.06+i*.08,s*(.66+i*.02),.1+i*.09);}q.lineWidth=.022;q.lineCap='round';q.strokeStyle='#c8102a';q.stroke(); // whisker marks
+      q.beginPath();q.moveTo(s*.14,.34);q.quadraticCurveTo(s*.3,.3,s*.42,.2);q.lineWidth=.008;q.strokeStyle='#d8a838';q.stroke();}
+    q.beginPath();q.moveTo(0,-.4);q.quadraticCurveTo(.07,-.3,0,-.18);q.quadraticCurveTo(-.07,-.3,0,-.4);q.fillStyle=lgr(q,0,-.4,0,-.18,[0,'#ff5a6a',1,'#a00818']);q.fill();q.lineWidth=.01;q.strokeStyle='#e8c050';q.stroke(); // the jewel on its brow
+    disc(q,0,-.3,.018,'rgba(255,255,255,.7)');q.beginPath();q.ellipse(-.02,.2,.05,.3,0,0,TAU);q.fillStyle='rgba(255,255,255,.4)';q.fill(); // the ridge of its snout lit
+    q.beginPath();q.moveTo(-.07,.64);q.quadraticCurveTo(0,.6,.07,.64);q.quadraticCurveTo(0,.74,-.07,.64);q.fillStyle='#120406';q.fill();q.beginPath();q.moveTo(-.16,.58);q.quadraticCurveTo(0,.7,.16,.58);q.lineWidth=.012;q.strokeStyle='#b8102a';q.stroke();q.restore(); // its nose, its smile
+    ggloss(q,.3,1);},
+  draw(g,c,r,k){skinArt(g,this,c,r,0);if(skinPx(g,r)<14)return;for(let i=0;i<3;i++){const a=T*.35+i*2.1+c.wob*2,x=c.x+Math.cos(a)*r*.82,y=c.y+Math.sin(a)*r*.62-r*.05,f=.7+.3*Math.sin(T*9+i*3);soft(g,x,y,r*.14,'80,150,255',.75*f);dot(g,x,y,r*.04,'210,235,255',f);}}}, // foxfire drifting
+{id:94,key:'philstone',name:'Philosopher’s Stone',price:1800,col:'mythic',rar:'rare',base:[0,85,40],edge:'#1a1004',edge2:'rgba(255,220,160,.65)',
+  desc:'The alchemists’ blood-red stone at the heart of its sigil, the circle squared.',
+  // a sigil cut in black slate and inlaid with gold: the squared circle (circle, square, triangle, circle), the old planet signs at its corners, a ring
+  // of alchemical glyphs turning slowly round it (drawn live); at its heart the stone itself, blood red and glowing, its glow breathing (drawn live)
+  bake(q,u){const R=prng(94),hi=u>80;gfield(q,gtex('ps_slate',u,(x,y,o)=>{const n=gfbm(x*3,y*3,4),s=gstep(.94,.99,Math.abs(Math.sin(x*40+y*13+gn(x*3,y*3)*4)));gramp(gpal('0a0c10 16181e 22262e'),n,o);for(let i=0;i<3;i++)o[i]+=s*14;}));
+    const ln=(f,w=.014)=>{q.save();q.translate(.006,.008);f();q.lineWidth=w;q.strokeStyle='rgba(0,0,0,.7)';q.stroke();q.restore();f();q.lineWidth=w;q.strokeStyle=lgr(q,-1,-1,1,1,[0,'#fff0a8',.5,'#d8a838',1,'#8a5a10']);q.stroke();}; // each line cut and inlaid
+    ln(()=>{q.beginPath();q.arc(0,0,.95,0,TAU);});ln(()=>{q.beginPath();q.arc(0,0,.78,0,TAU);},.01);
+    ln(()=>{q.beginPath();for(let k=0;k<4;k++){const a=k*Math.PI/2+Math.PI/4;q.lineTo(Math.cos(a)*.78,Math.sin(a)*.78);}q.closePath();}); // the square
+    const tr=.55;ln(()=>{q.beginPath();for(let k=0;k<3;k++){const a=-Math.PI/2+k*TAU/3;q.lineTo(Math.cos(a)*tr*1.0,Math.sin(a)*tr);}q.closePath();}); // the triangle
+    ln(()=>{q.beginPath();q.arc(0,0,.55,0,TAU);},.01);ln(()=>{q.beginPath();q.arc(0,0,tr/2,0,TAU);}); // and the circles
+    for(let k=0;k<4;k++){const a=k*Math.PI/2+Math.PI/4,x=Math.cos(a)*.78,y=Math.sin(a)*.78;disc(q,x,y,.07,'#0e1014');ln(()=>{q.beginPath();q.arc(x,y,.06,0,TAU);},.008); // the planets' signs at its corners
+      ln(()=>{q.beginPath();if(k===0){q.arc(x,y,.025,0,TAU);}else if(k===1){q.arc(x,y,.03,-1,1);q.moveTo(x-.02,y-.03);q.lineTo(x-.02,y+.03);}else if(k===2){q.arc(x,y-.01,.02,0,TAU);q.moveTo(x,y+.01);q.lineTo(x,y+.04);q.moveTo(x-.015,y+.025);q.lineTo(x+.015,y+.025);}else{q.moveTo(x-.03,y+.02);q.lineTo(x,y-.03);q.lineTo(x+.03,y+.02);q.closePath();}},.008);}
+    q.globalCompositeOperation='lighter';gglow(q,0,0,.5,[255,40,30],.45);q.globalCompositeOperation='source-over';
+    natureSoft(q,u,.05,'rgba(0,0,0,.8)',()=>{disc(q,.03,.04,.17,'#000');});disc(q,0,0,.17,lgr(q,-.17,-.17,.17,.17,GOLD)); // the stone in its gold setting
+    q.beginPath();for(let k=0;k<10;k++){const a=k/10*TAU,r0=k%2?.13:.15;q.lineTo(Math.cos(a)*r0,Math.sin(a)*r0);}q.closePath();q.fillStyle=rgr(q,-.04,-.05,.16,[0,'#ff8a7a',.35,'#e0101e',.8,'#7a0008',1,'#2a0004']);q.fill();
+    q.beginPath();for(let k=0;k<5;k++){const a=k/5*TAU-.3;q.moveTo(0,0);q.lineTo(Math.cos(a)*.13,Math.sin(a)*.13);}q.lineWidth=.004;q.strokeStyle='rgba(255,200,190,.3)';q.stroke();disc(q,-.045,-.05,.03,'rgba(255,255,255,.8)');},
+  ring(q,u){const R=prng(941);q.lineCap='round';q.lineWidth=.012;q.strokeStyle='#e8c060';for(let k=0;k<20;k++){const a=k/20*TAU;q.save();q.rotate(a);q.translate(.865,0);q.rotate(Math.PI/2);q.beginPath(); // a ring of glyphs
+      const p=R()*5|0;if(p===0){q.arc(0,0,.025,0,TAU);q.moveTo(0,.025);q.lineTo(0,.05);}else if(p===1){q.arc(0,-.01,.022,Math.PI*.2,Math.PI*1.8);q.moveTo(-.02,.03);q.lineTo(.02,.03);}else if(p===2){q.moveTo(-.025,.025);q.lineTo(0,-.025);q.lineTo(.025,.025);q.closePath();q.moveTo(-.02,.005);q.lineTo(.02,.005);}
+      else if(p===3){q.moveTo(0,-.03);q.lineTo(0,.03);q.moveTo(-.025,-.01);q.lineTo(.025,-.01);q.arc(0,.02,.012,0,TAU);}else{q.arc(-.008,0,.022,-1.2,1.2);q.moveTo(.012,-.025);q.lineTo(.012,.025);}q.stroke();q.restore();}},
+  draw(g,c,r,k){skinArt(g,this,c,r,0);if(skinPx(g,r)<12)return;blit(g,bake(g,'ps_ring',skinPx(g,r)*2,this.ring,1),c.x,c.y,r,T*.06+c.wob,1); // the glyphs turning
+    soft(g,c.x,c.y,r*.42,'255,40,30',.25+.2*Math.sin(T*1.6+c.wob*3));}}, // the stone's glow breathing
+{id:95,key:'worldtree',name:'World Tree',price:3000,col:'mythic',rar:'epic',base:[160,50,30],edge:'#0a1e1a',edge2:'rgba(255,235,170,.65)',
+  desc:'The great tree that holds up the sky, its roots in the deep, its leaves among the stars.',
+  // the world tree: a golden trunk with branches spreading into a crown that fills the starry sky and roots spreading as wide through the dark earth below
+  // a glowing horizon; its leaves glow gold-green and among them a few twinkle (drawn live)
+  bake(q,u){const R=prng(95),hi=u>80,hz=.24;fillAll(q,lgr(q,0,-1.2,0,hz,[0,'#040a20',.7,'#0e2a44',1,'#2a5a5a']));q.fillStyle=lgr(q,0,hz,0,1.2,[0,'#0e1a14',1,'#040806']);q.fillRect(-1.3,hz,2.6,1.1);gstars(q,u,R,hi?80:35,2);
+    q.globalCompositeOperation='lighter';gglow(q,0,hz,1.1,[120,220,180],.25);gglow(q,0,hz,.5,[255,220,140],.3);q.globalCompositeOperation='source-over';q.fillStyle='rgba(255,230,160,.5)';q.fillRect(-1.3,hz-.003,2.6,.006); // a glowing horizon
+    const tips=[],SG=[];q.lineCap='round';const br=(x,y,a,L,w,d,up)=>{const ex=x+Math.cos(a)*L,ey=y+Math.sin(a)*L,mx=(x+ex)/2+Math.cos(a+1.57)*L*(R()-.5)*.25,my=(y+ey)/2+Math.sin(a+1.57)*L*(R()-.5)*.25;SG.push([x,y,mx,my,ex,ey,w,up]); // gather the limbs
+      if(d>0&&Math.hypot(ex,ey)<1.05){const n=d>3&&R()<.35?3:2;for(let i=0;i<n;i++){const da=n===2?(i?1:-1)*(.32+R()*.25):(i-1)*.45+(R()-.5)*.15;br(ex,ey,a+da+(up?(-Math.PI/2-a)*.12:(Math.PI/2-a)*.1),L*(.74+R()*.1),w*.66,d-1,up);}}else if(up&&Math.hypot(ex,ey)<.95)tips.push([ex,ey]);};
+    natureSoft(q,u,.05,'rgba(0,0,0,.6)',()=>{q.fillStyle='#000';q.beginPath();q.moveTo(-.16,hz+.1);q.quadraticCurveTo(-.05,.1,-.1,.0);q.lineTo(.1,.0);q.quadraticCurveTo(.05,.1,.16,hz+.1);q.fill();});
+    q.beginPath();q.moveTo(-.2,hz+.14);q.bezierCurveTo(-.09,hz+.06,-.08,.1,-.12,-.02);q.quadraticCurveTo(0,.02,.12,-.02);q.bezierCurveTo(.08,.1,.09,hz+.06,.2,hz+.14);q.closePath();q.fillStyle=lgr(q,-.13,0,.13,0,[0,'#5a3a12',.35,'#d8a848',.6,'#8a5a1e',1,'#3a2408']);q.fill(); // the trunk
+    if(hi){q.beginPath();for(let i=0;i<8;i++){const x=-.08+i*.022;q.moveTo(x*1.4,hz+.1);q.quadraticCurveTo(x+(R()-.5)*.04,.1,x*1.3,.0);}q.lineWidth=.004;q.strokeStyle='rgba(40,20,0,.4)';q.stroke();} // its bark
+    for(const a of[-.75,-1.25,-1.57,-1.9,-2.4])br(0,.0,a,.26,.075,hi?7:6,1); // the crown
+    for(const a of[1.0,1.57,2.14])br(0,hz+.1,a,.22,.085,hi?6:5,0); // and the roots
+    for(const [k,f] of[[1.3,S=>S[7]?'#4a2e0c':'#2e1c06'],[1,S=>{const t=Math.min(1,S[6]/.09);return S[7]?gc(gmix([236,196,104],[150,100,36],t)):gc(gmix([150,110,50],[96,64,22],t));}],[.35,S=>S[7]?'rgba(255,240,180,.55)':'rgba(220,180,110,.35)']]) // each limb: a dark edge, its body, the light along it
+      for(const S of SG){const [x,y,mx,my,ex,ey,w]=S,o=k<1?w*.25:0;q.beginPath();q.moveTo(x-o,y-o*.6);q.quadraticCurveTo(mx-o,my-o*.6,ex-o,ey-o*.6);q.lineWidth=w*k;q.strokeStyle=f(S);q.stroke();}
+    q.globalCompositeOperation='lighter';for(const [x,y] of tips)gglow(q,x,y,.09,[180,255,140],.12);q.globalCompositeOperation='source-over';for(const [x,y] of tips)for(let i=0;i<(hi?6:3);i++)disc(q,x+(R()-.5)*.12,y+(R()-.5)*.12,.01+R()*.012,R()<.5?'rgba(255,220,100,.85)':'rgba(150,240,130,.8)'); // its leaves aglow
+    q.beginPath();q.arc(0,0,.97,0,TAU);q.lineWidth=.012;q.strokeStyle='rgba(232,192,96,.6)';q.stroke();},
+  draw(g,c,r,k){skinArt(g,this,c,r,0);if(skinPx(g,r)<14)return;for(let i=0;i<5;i++){const ph=T*.7+i*1.3+c.wob*4,f=Math.max(0,Math.sin(ph))**3,a=-1.57+Math.sin(i*2.3+Math.floor(ph/TAU))*1.1,d=.45+((i*.31+Math.floor(ph/TAU)*.17)%1)*.4;
+    soft(g,c.x+Math.cos(a)*d*r,c.y+Math.sin(a)*d*r-r*.08,r*.07,'230,255,170',f*.9);}}}, // leaves twinkling
+);
 for(const S of GEN50){for(const k in S)if(typeof S[k]==='function'&&k!=='draw')S[k]=S[k].bind(S); // bakes are handed round as plain functions: keep them pointing at their skin
   S.tok=STAINS.map(()=>'tok'+S.key);PREMIUM.push(S);}
 PREMIUM.sort((a,b)=>a.id-b.id); // ids index the list: skin id n is PREMIUM[n-SKIN_FREE]

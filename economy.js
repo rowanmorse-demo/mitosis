@@ -93,6 +93,16 @@ const SKINS = [
   { id: 83, key: 'toadstool', name: 'Toadstool', price: 900 }, // garden
   { id: 84, key: 'fiddlehead', name: 'Fiddlehead', price: 1500 }, // garden
   { id: 85, key: 'flytrap', name: 'Venus Flytrap', price: 1200 }, // garden
+  { id: 86, key: 'faberge', name: 'Imperial Egg', price: 8000 }, // treasures
+  { id: 87, key: 'hoard', name: 'Hoard', price: 4000 }, // treasures
+  { id: 88, key: 'scarab', name: 'Scarab', price: 2500 }, // treasures
+  { id: 89, key: 'diamond', name: 'Diamond', price: 6000 }, // treasures
+  { id: 90, key: 'kintsugi', name: 'Kintsugi', price: 1500 }, // treasures
+  { id: 91, key: 'crystalball', name: 'Crystal Ball', price: 3000 }, // mythic
+  { id: 92, key: 'excalibur', name: 'Excalibur', price: 4000 }, // mythic
+  { id: 93, key: 'kitsune', name: 'Kitsune', price: 2000 }, // mythic
+  { id: 94, key: 'philstone', name: 'Philosopher’s Stone', price: 1800 }, // mythic
+  { id: 95, key: 'worldtree', name: 'World Tree', price: 3000 }, // mythic
 ];
 const PACKS = [
   { id: 'atp_500', atp: 500 },
