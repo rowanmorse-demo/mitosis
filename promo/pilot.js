@@ -163,8 +163,44 @@
   };
 
   // ---------- S: staging ----------
+  // ---------- the camera: the game's own, or a cinematographer's ----------
+  // P.cam(o) takes the camera over (after the game's updateCam each frame, so the world renders sharp at any zoom):
+  //   span   world units across the frame's short side (smaller = closer)
+  //   mix    0 frames the hero, 1 what the hero is going for (P.interest), in between both
+  //   lead   [dx, dy] shifts the subject, as a fraction of the short side (room for a title)
+  //   at     [x, y] a fixed point in the world instead
+  //   ease   how fast it settles (1/s); snap: true jumps there this frame
+  // P.cam(null) hands the camera back to the game.
+  const D = { want: null, x: 0, y: 0, z: 0, on: false };
+  window.__camHook = dt => {
+    const w = D.want; if (!w) { D.on = false; return; }
+    const s = me(), short = Math.min(G.W, G.H), tz = short / (w.span || 1400);
+    let tx, ty;
+    if (w.at) { tx = w.at[0]; ty = w.at[1]; }
+    else {
+      const h = s || { x: G.cam.x, y: G.cam.y }, q = interest || h, k = w.mix || 0;
+      tx = h.x + (q.x - h.x) * k; ty = h.y + (q.y - h.y) * k;
+    }
+    if (w.lead) { tx -= w.lead[0] * short / tz; ty -= w.lead[1] * short / tz; }
+    if (!D.on || w.snap) { D.x = tx; D.y = ty; D.z = tz; D.on = true; w.snap = false; }
+    else { const e = 1 - Math.exp(-dt * (w.ease || 5)), ez = 1 - Math.exp(-dt * (w.zease || w.ease || 3)); D.x += (tx - D.x) * e; D.y += (ty - D.y) * e; D.z += (tz - D.z) * ez; }
+    G.cam.x = D.x; G.cam.y = D.y; G.cam.z = D.z;
+  };
+  G.ex('updateCam=(function(o){return function(dt){o(dt);try{window.__camHook&&window.__camHook(dt)}catch(e){}}})(updateCam)');
+  P.cam = o => { D.want = o ? { ...D.want, ...o } : null; if (o && o.snap) D.want.snap = true; };
+
+  // ---------- the HUD: all of it, the world only ('clean'), the world and the leaderboard ('board'), or the world and
+  // the touch controls with the mass ('controls': how it looks to play, without the clutter) ----------
+  const HUD_ALL = ['#stats', '#board', '#feed', '#roundClock', '#scale', '#mini', '#banner', '#toasts', '#tip', '#evolve', '#actions', '#joyZone', '#joy', '#perfHud', '#specBar', '#livesRow', '#fx'];
+  function setHud(mode) {
+    let st = $('promoHud'); if (!st) { st = document.createElement('style'); st.id = 'promoHud'; document.head.appendChild(st); }
+    const keep = { clean: [], board: ['#board'], controls: ['#stats', '#actions', '#joyZone', '#joy'] }[mode], hide = keep ? HUD_ALL.filter(s => !keep.includes(s)) : [];
+    st.textContent = hide.length ? hide.join(',') + '{opacity:0!important;transition:none!important}' : ''; // still there for the thumbs
+  }
+
   const HUMAN_NAMES = ['jules', 'Mateo', 'nova', 'Lukas', 'pixelpanda', 'Aiyana', 'zoe.', 'Ravi', 'Ines', 'bubbletea', 'Theo', 'mika', 'Sora', 'leo_92', 'Ana', 'Yuki', 'frankie', 'Nadia', 'ollie', 'cellmate', 'Priya', 'Jonas', 'lil amoeba', 'Marta', 'Kenji', 'dani', 'Hugo', 'Camila', 'sam', 'Emre', 'tofu', 'Freya', 'mo', 'Noah', 'kiki', 'Elif', 'quinn', 'Rafa', 'zara', 'Oskar', 'mochi', 'Lena', 'Diego', 'ash', 'Maya', 'Finn', 'ivy', 'Tomás', 'Hana', 'blob', 'Arjun', 'Chloe', 'wren', 'Malik', 'Sofi', 'gus', 'Amara', 'Nico', 'pip', 'Isla', 'Kai', 'June', 'Vik', 'Lou', 'Remy', 'Bea', 'olive', 'Zain', 'Cleo', 'Milo'];
-  const PREMIUM_IDS = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27];
+  let PREMIUM_IDS = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27];
+  let SKIN_MAP = {}; // a take can swap skins its setup asks for (an out-of-season look for one on sale)
   const S = {
     names: HUMAN_NAMES,
     // every microbe gets a person's name and a look: about a third wear a premium skin, Halloween ones included
@@ -173,13 +209,19 @@
       if (seed != null) S.dressN = seed;
       for (const p of G.players) {
         if (!p.bot || p.boss || p._dressed) continue; p._dressed = true; const k = S.dressN++;
-        p.name = HUMAN_NAMES[(k * 7 + 3) % HUMAN_NAMES.length];
+        p.name = S.freeName((k * 7 + 3) % HUMAN_NAMES.length);
         const roll = ((k * 2654435761) >>> 0) % 100;
-        if (roll < 36) { const sk = PREMIUM_IDS[(k * 5 + 1) % PREMIUM_IDS.length]; S.skin(p, sk); }
+        if (roll < (S.premiumShare || 36)) { const sk = PREMIUM_IDS[(k * 5 + 1) % PREMIUM_IDS.length]; S.skin(p, sk); }
         else if (roll < 70) { p.skin = 1 + (k % 4); p.stain = k % 6; }
       }
     },
-    skin(p, id, stain = 0) { p.skin = id; p.stain = stain; p.color = G.skinColor(stain, id); },
+    // a name nobody in the room has yet (two "Kenji"s on one leaderboard looks fake), starting from HUMAN_NAMES[i]
+    freeName(i, except) {
+      const used = new Set(G.players.filter(q => q !== except && q.alive !== false).map(q => q.name));
+      for (let j = 0; j < HUMAN_NAMES.length; j++) { const n = HUMAN_NAMES[(i + j * 7) % HUMAN_NAMES.length]; if (!used.has(n)) return n; }
+      return HUMAN_NAMES[i % HUMAN_NAMES.length];
+    },
+    skin(p, id, stain = 0) { if (SKIN_MAP[id] != null) id = SKIN_MAP[id]; p.skin = id; p.stain = stain; p.color = G.skinColor(stain, id); },
     // put a player's cells in one place: one cell of the given mass (or several, given as [{dx,dy,m}])
     place(p, x, y, mass, parts) {
       for (const c of p.cells) c.dead = true; p.cells = [];
@@ -195,14 +237,16 @@
       h.stats.born = G.T - aliveFor; h.stats.eaten = eaten; h.hist = [25, 60, 140, 260, m * .6, m * .8, m];
       // camera already where the game would have it (no zoom settling in the first frames)
       let r2 = 0; for (const c of h.cells) r2 += c.r * c.r;
-      G.cam.x = x; G.cam.y = y; G.cam.z = clamp(Math.sqrt(G.W * G.H) / 1100, .45, 1.6) * Math.pow(Math.min(1, 55 / Math.sqrt(r2)), .5); return h;
+      G.cam.x = x; G.cam.y = y; G.cam.z = clamp(Math.sqrt(G.W * G.H) / 1100, .45, 1.6) * Math.pow(Math.min(1, 55 / Math.sqrt(r2)), .5);
+      if (D.want) D.want.snap = true; // a directed camera starts on the hero too
+      return h;
     },
     // a bot from the pool (the one farthest from x,y, so nothing on screen pops), placed and dressed
     bot({ x, y, mass, name, skin, stain = 0, pers, aggr, think, parts, color }) {
       let best = null, bd = -1;
       for (const p of G.players) { if (!p.bot || p.boss || p._staged || p === G.human) continue; const c = p.cells[0]; const d = c ? hyp(c.x - x, c.y - y) : 1e9; if (d > bd) { bd = d; best = p; } }
       const p = best; p._staged = true; S.place(p, x, y, mass, parts);
-      if (name) p.name = name; if (skin != null) S.skin(p, skin, stain); if (color) p.color = color;
+      if (name) { p.name = name; for (const q of G.players) if (q !== p && q.name === name) q.name = S.freeName(S.dressN++, q); } if (skin != null) S.skin(p, skin, stain); if (color) p.color = color;
       if (pers) p.ai.pers = G.PERS[pers]; if (aggr != null) p.ai.aggr = aggr; if (think != null) p.ai.t = G.T + think;
       p.pk = 0; p.evo = 6; return p;
     },
@@ -215,6 +259,11 @@
       for (const v of G.viruses) if (hyp(v.x - x, v.y - y) < rad * .6) { const a = rnd() * TAU, d = rad + 400; v.x = v.tx = x + Math.cos(a) * d; v.y = v.ty = y + Math.sin(a) * d; }
       for (const u of G.powerups) if (hyp(u.x - x, u.y - y) < rad) u.dead = true;
     },
+    // takes written for either shape of frame: "ahead" is +x in a landscape frame and up the screen in a portrait one.
+    // S.at(x, y, dx, dy): the point dx ahead and dy to the side of (x, y); S.ang(a): a heading turned the same way
+    get port() { return G.H > G.W; },
+    at(x, y, dx, dy) { return G.H > G.W ? [x + dy, y - dx] : [x + dx, y + dy]; },
+    ang(a) { return G.H > G.W ? a - Math.PI / 2 : a; },
     virusNear(x, y) { let b = null, bd = 1e18; for (const v of G.vslots) { if (!v.alive) continue; const d = hyp(v.x - x, v.y - y); if (d < bd) { bd = d; b = v; } } return b; },
     moveVirus(v, x, y) { v.x = v.tx = x; v.y = v.ty = y; v.feed = 0; G.setVM(v); G.rebuildViruses(); return v; },
     roundAt(sec) { G.round.start = G.T - sec; },
@@ -232,7 +281,10 @@
 
   window.__promo = {
     G, P, S,
-    setTake(tk) { take = tk; },
+    setTake(tk) {
+      take = tk; if (tk.skins) PREMIUM_IDS = tk.skins; if (tk.skinMap) SKIN_MAP = tk.skinMap; if (tk.premiumShare) S.premiumShare = tk.premiumShare;
+      setHud(tk.hud); if (tk.cam) P.cam({ ...tk.cam, snap: true });
+    },
     async frame(record) {
       if (record && recT0 == null) recT0 = t;
       const sp = speedAt(wall); speed = sp; const dt = sp / 60;

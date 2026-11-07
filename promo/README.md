@@ -1,5 +1,43 @@
 # Promo trailers
 
+## The November cuts (hook-first, `hd/`)
+
+Made for the feed, where most people leave in the first five seconds: the first frame is already the best moment in the
+game, with huge words on it, and a new moment lands every second (a giant swallows a crowd, a split-and-swallow, a
+phage blast). No logo until the end card. Then the redrawn premium skins up close, one a beat; the climb to #1 on the
+leaderboard; the Victory screen counting the Elo up to a promotion; and "Download now".
+
+| File (in `promo/out/`, not committed) | |
+| --- | --- |
+| `mitosis-15s-9x16.mp4` | 1080×1920, 60 fps, 15 s: TikTok, Reels, Shorts |
+| `mitosis-6s-hook-9x16.mp4` | 1080×1920, 60 fps, 6 s: the hook and the end card, for ads |
+| `mitosis-appstore-30s-1920x886.mp4` | App Store app preview for current iPhones: 1920×886, 30 fps, H.264 High 4.0 at 11 Mbps, AAC 256k stereo, 29.9 s, no prices on screen |
+| `…-nomusic.mp4` | the same picture with the game sounds only |
+
+```bash
+node promo/capture.js --takes=hd --set=v        # film hd/takes.js in portrait (9:16) into promo/.work/v/
+node promo/capture.js --takes=hd --set=h        # and in iPhone landscape for the App Store into promo/.work/h/
+node promo/edit.js --cuts=hd                    # cut all three from them
+node promo/edit.js --cuts=hd --only=mitosis-15s-9x16 --stills=0,.5,1,2,3,4   # single frames into out/stills/
+node promo/edit.js --cuts=hd --only=mitosis-15s-9x16 --secs=5                # just the opening, as -first5s.mp4
+```
+
+Add `--preview` to capture and edit for a fast low-resolution pass. Each set is about 1–2 GB of JPEG frames: delete
+`promo/.work/v` and `promo/.work/h` when the MP4s are done.
+
+What is new for these, all usable by the October cuts too:
+- **A directed camera** (`cam` in a take, `P.cam()` in a brain): the game itself renders the close-ups at full
+  sharpness, instead of the editor blowing up a crop. `span` is how much of the world fits across the short side.
+- **Clean frames**: `hud: 'clean'` hides the stick, buttons and HUD (the thumbs still press them); `'board'` keeps the
+  leaderboard.
+- **Sets**: the same take filmed in portrait for the feed and in iPhone landscape for the App Store; takes use
+  `S.at`/`S.ang` so "ahead" runs along the long side of either frame.
+- **Edit**: per-cut fps and encoder (`enc: 'appstore'`), BT.709 colour tagged properly, zoom and whip transitions,
+  a vignette, the `hook` / `tag` / `end` title styles, `--stills` and `--secs`.
+- Takes are filmed on Nov 10 (after Halloween, before the Battle Pass): no Halloween or pass skins on screen.
+
+## The October trailers
+
 Two trailers cut from real gameplay of the current `index.html`, filmed in headless Chrome and played through the
 touch controls by a scripted "pilot" that steers like a thumb.
 
