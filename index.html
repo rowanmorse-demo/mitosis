@@ -6207,8 +6207,8 @@ const RES_ICO={
 let resS={mode:'',earn:null,rank:null,xp:null,at:0,t:0,t2:0,t3:0}; // at: when the screen appeared, so the count-ups start once it is in view
 function resPrep(unranked,off){ // a run just ended (econRunEnd): reset the rating and reward panels for it. unranked: '' | 'practice' | 'nearby'; off: not reported
   clearTimeout(resS.t);clearTimeout(resS.t2);clearTimeout(resS.t3);cancelAnimationFrame(rankAnim);cancelAnimationFrame(xpAnim);resS={mode:unranked,earn:null,rank:null,xp:null,at:0,t:0,t2:0,t3:0};
-  xpPrep(!unranked);
-  const el=$('dRank');el.hidden=!!off;el.classList.remove('promo','dn');const chip=el.querySelector('.rr-delta');chip.className='rr-delta';chip.textContent='';el.querySelector('.rr-next').textContent='';el.querySelector('.rr-num').classList.remove('bump','go');
+  xpPrep(!unranked||unranked==='classic'&&!off); // Classic earns XP (and ATP), but moves no rating
+  const el=$('dRank');el.hidden=!!off||unranked==='classic';el.classList.remove('promo','dn');const chip=el.querySelector('.rr-delta');chip.className='rr-delta';chip.textContent='';el.querySelector('.rr-next').textContent='';el.querySelector('.rr-num').classList.remove('bump','go');
   const ai=!!unranked||!!local;rrKind(ai);const r=ai?wallet.aiRating:wallet.rating;rrSet(r,tierAtRating(r));showEarn(off?null:{k:'wait'}); // until the server says, bot games on this device move the AI rating
 }
 function rrKind(ai){const k=$('dRank').querySelector('.rr-k');k.textContent=ai?'vs AI':'vs players';$('dRank').classList.toggle('ai',ai);} // which rating the card shows
@@ -6466,7 +6466,7 @@ async function flushRuns(){ // report finished runs; keep them queued while the 
   if(flushing)return;flushing=true;
   try{let a=loadPending();while(a.length){const rep=a[0];
     try{const w=await api('run/end',rep);applyWallet(w);if(rep.show){const R=(wallet.catalog&&wallet.catalog.rules)||{};const W=wallet.catalog&&wallet.catalog.wins,cas=w.kind==='casual',pl=rep.place|0;
-      showEarn(w.payout?{k:'atp',n:w.payout,tag:w.winCapped?'capped':w.winBonus>0?(pl===1?'Win':'Top 3'):''}:{k:'none',why:w.winCapped?'Daily cap':cas?(W&&rep.survived<W.minSec?`Survive ${Math.round(W.minSec/60)} min`:'Top 3 only'):rep.survived<(R.minSec||20)?`Survive ${R.minSec||20}s`:`Top ${(R.byRank||[[30]]).slice(-1)[0][0]} only`});showRank(w);showXp(w);
+      showEarn(w.payout?{k:'atp',n:w.payout,tag:w.winCapped?'capped':w.winBonus>0?(pl===1?'Win':'Top 3'):''}:{k:'none',why:w.winCapped?'Daily cap':w.kind==='classic'&&rep.survived<((wallet.catalog&&wallet.catalog.classic&&wallet.catalog.classic.minSec)||60)?`Survive ${Math.round(((wallet.catalog&&wallet.catalog.classic&&wallet.catalog.classic.minSec)||60)/60)} min`:cas?(W&&rep.survived<W.minSec?`Survive ${Math.round(W.minSec/60)} min`:'Top 3 only'):rep.survived<(R.minSec||20)?`Survive ${R.minSec||20}s`:`Top ${(R.byRank||[[30]]).slice(-1)[0][0]} only`});showRank(w);showXp(w);
       const qd=Array.isArray(w.questsDone)?w.questsDone:[],up=w.passUp>0&&bpOn()?`Tier ${w.pass.level}, +${w.passUp*wallet.catalog.pass.stars} Battle Stars`:'';
       if(qd.length&&bpOn()){for(const q of qd)bqJust.add(q.id);toast('Battle Pass',`${qd.length>1?qd.length+' quests':'Quest'} complete · +${(w.questXp|0).toLocaleString()} XP`,up||(qd.length>1?qd.map(q=>q.text).join(' · '):qd[0].text));} // phones show only the title
       else if(up)toast('Battle Pass',`Tier ${w.pass.level}`,`+${w.passUp*wallet.catalog.pass.stars} Battle Stars to spend`);}}
