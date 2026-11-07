@@ -50,13 +50,16 @@ function create({ file, nameBlocked = () => false, now = () => Date.now() }) {
   }
   const without = (list, id) => { const i = list.indexOf(id); if (i >= 0) list.splice(i, 1); return i >= 0; };
   function online(id) { const s = seen.get(id); return s && now() - s.at < ONLINE_MS ? s.status : null; }
-  function card(id) { const r = d.players[id]; return { code: r.code, name: r.name || 'Player ' + r.code.slice(0, 3) }; }
+  function card(id) { const r = d.players[id]; return { code: r.code, name: r.name || 'Player ' + r.code.slice(0, 3), font: r.font || 0 }; }
 
   function setName(p, r, body) {
     // the account's name (checked when a run ends) wins; otherwise the name the game sends, if it passes the same filter
     let name = p.name || String(body.name || '').replace(/[^\p{L}\p{N} _.-]/gu, '').replace(/\s+/g, ' ').trim().slice(0, 16) || null;
     if (name && nameBlocked(name)) name = null;
     if (name && name !== r.name) { r.name = name; save(); }
+    // the name's font (economy.js FONT_LOCKS): the account's, or the game's own for a store without the field; old games send none
+    const font = p.name_font != null ? Number(p.name_font) : Number(body.font);
+    if (Number.isInteger(font) && font >= 0 && font <= 255 && font !== (r.font || 0)) { r.font = font; save(); }
   }
   function view(id) {
     const r = d.players[id], t = now(), pid = partyOf.get(id), party = pid && parties.get(pid);

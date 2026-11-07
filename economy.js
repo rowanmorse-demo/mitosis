@@ -177,6 +177,15 @@ function nameBlocked(s) {
   if (NAME_BAD_ANY.some(w => flat.includes(w) || squash.includes(squashName(w))) || NAME_BAD_WORD.includes(flat) || NAME_BAD_WORD.includes(squash)) return true;
   return low.split(/[^a-z]+/).some(w => w && (NAME_BAD_WORD.includes(w) || NAME_BAD_WORD.includes(squashName(w))));
 }
+// Name fonts: a style for your name. The faces are bundled in index.html (NAME_FONTS, fonts/README.md has their licences);
+// the server only keeps the id. It travels with your name in play (presence nf), in the leaderboard and among friends.
+// 0 is the game's own font, and a game that doesn't know an id shows the plain name. Every font is free unless FONT_LOCKS
+// gives it a rule: lv (reach that profile level), price (buy it once with ATP) or pass (a battle pass reward { font: id }
+// unlocks it). The catalogue sends the rules, so the picker shows the locks.
+const FONT_MAX = 255;
+const FONT_LOCKS = {}; // for example { 47: { lv: 10 }, 60: { price: 1500 }, 69: { pass: 's1' } }
+const fontId = v => Number.isInteger(v) && v >= 0 && v <= FONT_MAX ? v : null; // a number: null, '' and true are not fonts
+const fontOpen = (store, p, id) => { const L = FONT_LOCKS[id]; return !L || (L.lv > 0 && levelOf(p.xp).level >= L.lv) || store.fonts(p.id).includes(id); };
 const cleanName = s => { const n = String(s || '').replace(/[^\p{L}\p{N} _.\-'!?]/gu, '').trim().slice(0, 16); return n && !nameBlocked(n) ? n : null; };
 
 const skinById = id => SKINS.find(s => s.id === id);
@@ -338,7 +347,7 @@ function questsTick(store, p, life, t = now()) {
   return out;
 }
 const packById = id => PACKS.find(p => p.id === id);
-const catalog = (store, p = null) => ({ skins: SKINS, seasons: Object.fromEntries(Object.entries(SEASONS).map(([k, s]) => [k, { ...s, open: seasonOpen(k) }])), pass: passCatalog(passLive(store, now(), p)), packs: PACKS, rules: RULES, rating: RATING, ratingAi: RATING_AI, wins: WINS, xp: XP, tiers: TIERS.map(t => t[1]), tierAt: TIERS.map(t => t[0]), iap: iap.status(), auth: signin.status() });
+const catalog = (store, p = null) => ({ skins: SKINS, seasons: Object.fromEntries(Object.entries(SEASONS).map(([k, s]) => [k, { ...s, open: seasonOpen(k) }])), pass: passCatalog(passLive(store, now(), p)), packs: PACKS, rules: RULES, rating: RATING, ratingAi: RATING_AI, wins: WINS, xp: XP, tiers: TIERS.map(t => t[1]), tierAt: TIERS.map(t => t[0]), iap: iap.status(), auth: signin.status(), fonts: { max: FONT_MAX, locks: FONT_LOCKS } });
 
 function payoutFor({ survived, bestRank, place }) {
   const sec = Math.max(0, Math.min(RULES.maxRunSec, +survived || 0));
@@ -353,7 +362,7 @@ const hash = s => crypto.createHash('sha256').update(String(s)).digest('hex');
 // The sign-in a wallet belongs to (Apple or Google), or null for a device-only wallet.
 const accountOf = (store, p) => { const i = store.identities(p.id)[0]; return i ? { provider: i.provider, email: i.email || null, since: Number(i.at) } : null; };
 const wallet = (store, p) => ({ playerId: p.id, balance: Number(p.balance), earned: Number(p.earned), skins: store.skins(p.id), rating: Number(p.rating ?? RATING.base), tier: tierOf(Number(p.rating ?? RATING.base)), runs: Number(p.runs || 0),
-  aiRating: Number(p.ai_rating ?? RATING.base), aiTier: tierOf(Number(p.ai_rating ?? RATING.base)), aiRuns: Number(p.ai_runs || 0), ...levelOf(p.xp), pass: passOf(store, p), quests: questsOf(store, p), account: accountOf(store, p) });
+  aiRating: Number(p.ai_rating ?? RATING.base), aiTier: tierOf(Number(p.ai_rating ?? RATING.base)), aiRuns: Number(p.ai_runs || 0), ...levelOf(p.xp), pass: passOf(store, p), quests: questsOf(store, p), account: accountOf(store, p), nameFont: Number(p.name_font || 0), fonts: store.fonts(p.id) });
 
 /* ---------- handlers: each gets (store, body, player?) and returns a JSON-able object ---------- */
 function session(store, body) {
@@ -454,6 +463,23 @@ function runEnd(store, body, p, ctx = {}) {
   return { payout, kind, winBonus: bonus, winCapped: capped, ratingDelta: vsBots ? 0 : delta, aiDelta: vsBots ? delta : 0, xpGained: xp.total, xpParts: { time: xp.time, place: xp.place, win: xp.win }, levelUp: out.level - level,
     passUp: passUp + (passMid && out.pass ? out.pass.level - passMid.level : 0), questXp: q.xp, questsDone: q.done, ...out };
 }
+function setFont(store, body, p) {
+  const id = fontId(body.font);
+  if (id == null) throw new ApiError(400, `font must be 0-${FONT_MAX}`);
+  const L = FONT_LOCKS[id];
+  if (!fontOpen(store, p, id)) throw new ApiError(403, L.lv ? `that font opens at level ${L.lv}` : L.price ? 'buy that font first' : 'that font comes from the battle pass');
+  store.setFont(p.id, id); p.name_font = id;
+  return wallet(store, p);
+}
+function buyFont(store, body, p) {
+  const id = fontId(body.font), L = id ? FONT_LOCKS[id] : null;
+  if (!L || !(L.price > 0)) throw new ApiError(404, 'that font is not for sale');
+  if (store.fonts(p.id).includes(id)) return { ...wallet(store, p), already: true };
+  if (Number(p.balance) < L.price) throw new ApiError(402, `need ${L.price - Number(p.balance)} more ATP`);
+  const w = { balance: Number(p.balance) - L.price, earned: Number(p.earned), hour_at: Number(p.hour_at), hour_sum: Number(p.hour_sum) };
+  store.setWallet(p.id, w); store.addFont(p.id, id, Date.now()); Object.assign(p, w);
+  return { ...wallet(store, p), boughtFont: id };
+}
 function buySkin(store, body, p) {
   const skin = skinById(body.skinId | 0);
   if (!skin) throw new ApiError(404, 'no such skin');
@@ -514,6 +540,7 @@ function passClaim(store, body, p) {
   let atp = r.atp || 0, skin = r.skin || null, refund = 0;
   if (skin && store.skins(p.id).includes(skin)) { refund = (skinById(skin) || {}).price || 0; atp += refund; skin = null; } // owned already: its shop price instead
   if (skin) store.addSkin(p.id, skin, now);
+  if (fontId(r.font)) store.addFont(p.id, r.font, now); // a font reward (FONT_LOCKS pass)
   if (atp) { const w = { balance: Number(p.balance) + atp, earned: Number(p.earned) + atp, hour_at: Number(p.hour_at), hour_sum: Number(p.hour_sum) }; store.setWallet(p.id, w); Object.assign(p, w); }
   return { ...wallet(store, p), claimed: { reward: r.id, atp, skin, refund } };
 }
@@ -529,6 +556,6 @@ function passAdmin(store, on, tester) {
   return { on: store.flag('pass') === 'on', live: !!passLive(store), season: passCatalog(s), next: next ? { key: next.key, name: next.name, starts: Date.parse(next.from) } : null, stats: s ? { ...store.passStats(s.key), quests } : null, testers, recent };
 }
 
-function leaderboard(store) { return { top: store.top(10).map((r, i) => ({ rank: i + 1, name: (r.name && !nameBlocked(r.name) && r.name) || 'Unnamed cell', rating: r.rating, tier: tierOf(r.rating), runs: r.runs })) }; }
+function leaderboard(store) { return { top: store.top(10).map((r, i) => ({ rank: i + 1, name: (r.name && !nameBlocked(r.name) && r.name) || 'Unnamed cell', rating: r.rating, tier: tierOf(r.rating), runs: r.runs, font: r.font || 0 })) }; }
 
-module.exports = { SKINS, PACKS, RULES, RATING, RATING_AI, WINS, winBonus, runKind, XP, SEASONS, seasonOpen, PASS, PASS_SEASONS, passSeason, passLive, passAdmin, QUESTS, QUEST_SLOTS, questsAt, questsOf, questsTick, isoWeekOf, catalog, payoutFor, ratingDelta, xpFor, levelOf, xpAtLevel, xpToNext, tierOf, nameBlocked, ApiError, auth, handlers: { deleteAccount, session, runStart, runEnd, buySkin, iapApple, iapGoogle, leaderboard, signInApple, signInGoogle, signOut, passView, passPremium, passClaim } };
+module.exports = { SKINS, PACKS, RULES, RATING, RATING_AI, WINS, winBonus, runKind, XP, SEASONS, seasonOpen, PASS, PASS_SEASONS, passSeason, passLive, passAdmin, QUESTS, QUEST_SLOTS, questsAt, questsOf, questsTick, isoWeekOf, catalog, payoutFor, ratingDelta, xpFor, levelOf, xpAtLevel, xpToNext, tierOf, nameBlocked, FONT_MAX, FONT_LOCKS, fontId, ApiError, auth, handlers: { deleteAccount, session, runStart, runEnd, buySkin, iapApple, iapGoogle, leaderboard, signInApple, signInGoogle, signOut, passView, passPremium, passClaim, setFont, buyFont } };

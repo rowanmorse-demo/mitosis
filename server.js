@@ -47,6 +47,8 @@ const ROUTES = {
   'POST /api/auth/apple': { fn: signIn(economy.handlers.signInApple), auth: true },
   'POST /api/auth/google': { fn: signIn(economy.handlers.signInGoogle), auth: true },
   'POST /api/auth/signout': { fn: economy.handlers.signOut, auth: true },
+  'POST /api/font': { fn: economy.handlers.setFont, auth: true },          // the font your name is shown in (economy.js FONT_LOCKS)
+  'POST /api/font/buy': { fn: economy.handlers.buyFont, auth: true },
   'POST /api/account/delete': { fn: (store, body, p) => { const r = economy.handlers.deleteAccount(store, body, p); friends.forget(p.id); return r; }, auth: true },
   'POST /api/pass': { fn: economy.handlers.passView, auth: true },
   'POST /api/pass/premium': { fn: economy.handlers.passPremium, auth: true },

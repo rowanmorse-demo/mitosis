@@ -248,6 +248,17 @@ async function post(url, body, secret) {
   // a refused name never reaches the leaderboard: the player keeps their last good one
   r = await post('/api/run/start', {}, secret); r = await post('/api/run/end', { runId: r.body.runId, survived: 30, eaten: 0, peak: 25, name: 'sh1t head' }, secret); assert.equal(r.status, 200);
   { const lb2 = await (await fetch(base + '/api/leaderboard')).json(); assert.equal(lb2.top[0].name, 'Tester', 'blocked names are not stored'); }
+  { // name fonts: the account keeps its font; the leaderboard and friends send it with the name
+    r = await post('/api/session', { secret }); assert.deepEqual([r.body.nameFont, r.body.fonts], [0, []], "no font yet: the game's own");
+    assert.deepEqual(r.body.catalog.fonts, { max: 255, locks: {} }, 'the catalogue has the rules: every font free for now');
+    for (const font of [-1, 256, 2.5, 'big', null]) assert.equal((await post('/api/font', { font }, secret)).status, 400, 'font ' + font + ' is refused');
+    assert.equal((await post('/api/font', { font: 1 })).status, 401, 'it needs the player');
+    r = await post('/api/font', { font: 200 }, secret); assert.deepEqual([r.status, r.body.nameFont], [200, 200], 'an id with no rule here is kept: newer apps add fonts');
+    r = await post('/api/font', { font: 12 }, secret); assert.equal(r.body.nameFont, 12);
+    r = await post('/api/session', { secret }); assert.equal(r.body.nameFont, 12, 'the session brings it back');
+    const lb3 = await (await fetch(base + '/api/leaderboard')).json(); assert.deepEqual([lb3.top[0].name, lb3.top[0].font], ['Tester', 12], 'the leaderboard sends the font');
+    r = await post('/api/social/me', { name: 'Tester', font: 3 }, secret); assert.equal(r.body.font, 12, "friends see the account's font, not one a game claims");
+  }
   { // XP over real server time: lives are backdated in the database, as if the time had passed
     const sec4 = 'xpsecret' + 'd'.repeat(24), store = (await (await fetch(base + '/health')).json()).store;
     r = await post('/api/session', { secret: sec4 }); assert.deepEqual([r.body.xp, r.body.level, r.body.levelXp, r.body.levelNeed], [0, 1, 0, 100], 'a new player is level 1 with no XP');
@@ -308,9 +319,10 @@ async function post(url, body, secret) {
   r = await post('/api/session', { secret: secret2 }); assert.equal(r.body.balance, 0); assert.equal(r.body.account, null);
   r = await post('/api/iap/google', { purchaseToken: 'tok3', productId: 'atp_500', orderId: 'GPA.3' }, secret2); assert.equal(r.body.balance, 500);
   r = await post('/api/run/start', {}, secret2); r = await post('/api/run/end', { runId: r.body.runId, survived: 9999, eaten: 0, peak: 25, bestRank: 999 }, secret2); assert.equal(r.body.xp, 2);
+  r = await post('/api/font', { font: 30 }, secret2); assert.equal(r.body.nameFont, 30);
   r = await post('/api/auth/apple', { identityToken: apple(), nonce: 'n1' }, secret2);
   assert.equal(r.status, 200); assert.equal(r.body.merged, true); assert.equal(r.body.balance, 2200, 'the two wallets merge'); assert.equal(r.body.xp, acctXp + 2, 'and so does their XP'); assert.deepEqual(r.body.skins, [9]); assert.equal(r.body.account.provider, 'apple');
-  r = await post('/api/session', { secret: secret2 }); assert.equal(r.body.balance, 2200, 'the second device now opens the account');
+  r = await post('/api/session', { secret: secret2 }); assert.equal(r.body.balance, 2200, 'the second device now opens the account'); assert.equal(r.body.nameFont, 12, 'the account keeps its own font');
   r = await post('/api/session', { secret }); assert.equal(r.body.balance, 2200, 'and so does the first');
   r = await post('/api/skins/buy', { skinId: 10 }, secret2); assert.equal(r.status, 200); assert.equal(r.body.balance, 1850, 'the joined device can spend');
   r = await post('/api/session', { secret }); assert.deepEqual(r.body.skins, [9, 10], 'both devices see the same skins');
@@ -715,6 +727,42 @@ async function post(url, body, secret) {
       assert.equal(Number(st.player('b2').xp), 7, kind + ': adding XP saves it');
       if (kind === 'sqlite') st.db.close();
     }
+  }
+
+  { // name fonts with locks (none in the game yet): a level, ATP, the battle pass; both stores keep, merge and drop them, and old databases gain the column
+    const E = require('./economy'), H = E.handlers, { SqliteStore, JsonStore } = require('./store'), dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mitosis-fonts-'));
+    let sqlite = null; try { sqlite = require('node:sqlite'); } catch (e) {}
+    if (sqlite) { const old = new sqlite.DatabaseSync(path.join(dir, 'f.sqlite')); old.exec(`CREATE TABLE players(id TEXT PRIMARY KEY, secret TEXT UNIQUE NOT NULL, created INTEGER, seen INTEGER, balance INTEGER NOT NULL DEFAULT 0, earned INTEGER NOT NULL DEFAULT 0, hour_at INTEGER NOT NULL DEFAULT 0, hour_sum INTEGER NOT NULL DEFAULT 0);
+      INSERT INTO players(id, secret, created, seen) VALUES('old', 'hold', 1, 1);`); old.close(); }
+    const status = f => { try { f(); return 200; } catch (e) { return e.status; } };
+    Object.assign(E.FONT_LOCKS, { 40: { lv: 3 }, 41: { price: 300 }, 42: { pass: 's1' } });
+    try {
+      for (const kind of sqlite ? ['sqlite', 'json'] : ['json']) {
+        const st = kind === 'json' ? new JsonStore(path.join(dir, 'f.json')) : new SqliteStore(sqlite, path.join(dir, 'f.sqlite')), me = () => st.player('fa');
+        if (kind === 'sqlite') assert.equal(Number(st.player('old').name_font), 0, 'a database from before name fonts gains the column');
+        st.createPlayer('fa', 'hfa', 1);
+        assert.deepEqual([H.setFont(st, { font: 7 }, me()).nameFont, Number(me().name_font)], [7, 7], kind + ': a free font is set at once');
+        assert.equal(status(() => H.setFont(st, { font: 40 }, me())), 403, kind + ': a level font waits for the level');
+        st.addXp('fa', E.xpAtLevel(3)); assert.equal(H.setFont(st, { font: 40 }, me()).nameFont, 40, kind + ': and opens at it');
+        assert.equal(status(() => H.setFont(st, { font: 41 }, me())), 403, kind + ': an ATP font must be bought first');
+        assert.equal(status(() => H.buyFont(st, { font: 41 }, me())), 402, kind + ': with enough ATP');
+        st.setWallet('fa', { balance: 500, earned: 500, hour_at: 0, hour_sum: 0 });
+        const w = H.buyFont(st, { font: 41 }, me()); assert.deepEqual([w.balance, w.fonts, w.boughtFont], [200, [41], 41], kind + ': it costs its price');
+        assert.equal(H.buyFont(st, { font: 41 }, me()).already, true); assert.equal(Number(me().balance), 200, kind + ': once');
+        assert.equal(status(() => H.buyFont(st, { font: 7 }, me())), 404, kind + ': a free font is not for sale');
+        assert.equal(H.setFont(st, { font: 41 }, me()).nameFont, 41, kind + ': a bought font can be used');
+        assert.equal(status(() => H.setFont(st, { font: 42 }, me())), 403, kind + ': a pass font waits for the pass');
+        st.addFont('fa', 42, 2); assert.equal(H.setFont(st, { font: 42 }, me()).nameFont, 42, kind + ': and opens once the pass gave it');
+        assert.deepEqual(E.catalog(st).fonts.locks[41], { price: 300 }, kind + ': the catalogue sends the locks');
+        st.createPlayer('fb', 'hfb', 1); st.setFont('fb', 9); st.addFont('fb', 44, 1); st.mergePlayers('fb', 'fa');
+        assert.deepEqual([Number(me().name_font), st.fonts('fa')], [42, [41, 42, 44]], kind + ': a merge keeps the account\'s font and joins the unlocks');
+        st.createPlayer('fc', 'hfc', 1); st.createPlayer('fd', 'hfd', 1); st.setFont('fc', 5); st.mergePlayers('fc', 'fd');
+        assert.equal(Number(st.player('fd').name_font), 5, kind + ': an account without a font takes the joining one\'s');
+        st.setRating('fa', 1500, 'Fonty'); assert.deepEqual([st.top(1)[0].name, st.top(1)[0].font], ['Fonty', 42], kind + ': top() has the font');
+        st.deletePlayer('fa'); assert.deepEqual(st.fonts('fa'), [], kind + ': deleting the player drops its unlocks');
+        if (kind === 'sqlite') st.db.close();
+      }
+    } finally { for (const k of [40, 41, 42]) delete E.FONT_LOCKS[k]; }
   }
 
   const h = await (await fetch(base + '/health')).json(); assert.equal(h.accounts, 2, 'the signed-out device and the fresh one that signed in after the deletion');
