@@ -48,10 +48,16 @@ node promo/record.js --skin=22           # wear Supernova (default 15, Black Hol
 
 The game opens in its own window. Start a match, press **R** to start a take and **R** again to stop it. The mouse
 steers, Space splits, W shoots, Shift boosts. Each take is the game's own canvas (no cursor, browser or HUD in the
-video, though you see the HUD while playing) with the game's sound, saved as `promo/rec/<date-time>.mp4` at 60 fps. The
+video, though you see the HUD while playing) with a log of its sounds, saved as `promo/rec/<date-time>.mp4` at 60 fps. The
 terminal says if any frames came late; retake if it warns of a hitch. Offline by default: the game fills the room
 with its own bots on this Mac, so ship Wi-Fi can't make it lag, and the wallet owns every skin on sale. `--online` plays
-on the live server instead. `--selftest=4` checks the plumbing headless (4 s of the lobby, no sound).
+on the live server instead. `--selftest=4` checks the plumbing headless.
+
+The sound isn't captured live (that can stall the recorder): every sound the game plays is logged with its time in
+`<take>.json`, and edit.js plays the log back through the game's own sound code, in sync. To cut a take, give a shot
+`rec: '<take name>'` and `t:` (the second of the take its first frame shows) in a cuts file, e.g.
+`{ from: 0, to: 4, rec: '2026-11-07T15-02-11', t: 31.5, focus: 'center', zoom: [[0, 1], [4, 1.05]] }`, then
+`node promo/edit.js --cuts=hd` (or `--cuts=/path/to/cuts.js`).
 
 ## The October trailers
 
