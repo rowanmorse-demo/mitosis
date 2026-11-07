@@ -2487,7 +2487,7 @@ body:not(.playing) #toasts .toast:has(.td:empty){grid-template-areas:"i t" "i t"
 #helpSec #introAgain{justify-self:start;display:inline-flex;align-items:center;gap:8px;min-height:44px;border-radius:14px;padding:0 16px;color:var(--ink)}
 #helpSec #introAgain::before{content:"";width:14px;height:14px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 4.6v14.8c0 .9 1 1.4 1.7.9l11-7.4c.6-.4.6-1.3 0-1.7l-11-7.4C8 3.3 7 3.8 7 4.6z'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 4.6v14.8c0 .9 1 1.4 1.7.9l11-7.4c.6-.4.6-1.3 0-1.7l-11-7.4C8 3.3 7 3.8 7 4.6z'/%3E%3C/svg%3E") center/contain no-repeat}
 @media (prefers-reduced-motion:reduce){.ov-status.live i,#fx .chip.netchip.lost{animation:none!important}}
-body:not(.playing) #toasts .toast .tt{display:contents}body:not(.playing) #toasts .toast .ti{display:none} /* the in-game icon; menus draw their own */
+body:not(.playing) #toasts .toast .tt{display:contents!important}body:not(.playing) #toasts .toast .ti{display:none} /* !important: #toasts .toast .tt is display:grid!important, which put the title and line in one cell on desktop */ /* the in-game icon; menus draw their own */
 /* @ui:overlays end */
 
 /* @ui:skin-art */
@@ -2583,6 +2583,24 @@ body:not(.playing) #toasts .toast .tt{display:contents}body:not(.playing) #toast
 @media (hover:hover){.lobby .lb-hero .lb-name:hover{background:rgba(255,255,255,.04)}}
 @media (orientation:landscape) and (max-height:520px){.lobby .lb-hero .lb-name{font-size:20px;padding:4px 4px 9px 10px}.lobby .lb-hero .lb-name.long{font-size:17px}.lobby .lb-hero .lb-name svg{width:24px;height:24px;padding:6px}}
 .lobby .hero-edit::after{content:"";position:absolute;inset:-12px;border-radius:50%} /* a finger-sized target round the + */
+/* the arena switch at the top of the mode sheet: Battle Royale first and wider (the default), Classic the alternative */
+#modeSheet:has(#gmSwitch:not([hidden])){grid-template-rows:auto auto minmax(0,1fr)}
+.gm-sw{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:8px;width:100%;max-width:1060px;justify-self:center}
+.gm-sw button{appearance:none;display:flex;align-items:center;gap:11px;min-width:0;min-height:62px;padding:10px 14px;border:0;border-radius:18px;text-align:left;cursor:pointer;color:var(--ink);font:inherit;
+  background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02)),rgba(8,19,23,.85);box-shadow:inset 0 0 0 1px rgba(255,255,255,.09);transition:box-shadow .2s,background-color .2s,transform .12s}
+.gm-sw button:active{transform:scale(.97)}
+.gm-sw svg{flex:none;width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;color:rgba(222,238,234,.7)}
+.gm-sw span{display:grid;gap:4px;min-width:0}
+.gm-sw b{font:800 16px/1.05 var(--display);letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gm-sw small{font:500 11.5px/1.25 var(--display);color:rgba(222,238,234,.62);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.gm-sw button[aria-checked=true]{background:radial-gradient(120% 140% at 0% 0%,rgba(255,92,138,.22),transparent 60%),linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.02)),rgba(20,10,16,.9);box-shadow:inset 0 0 0 1.5px rgba(255,92,138,.75),0 10px 24px -14px rgba(255,92,138,.7)}
+.gm-sw button[aria-checked=true] svg{color:var(--accent)}
+.gm-sw button[data-gm=br] b{font-size:18px}
+.lb-modebtn .lb-gm{flex:none;font:700 10px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:rgba(222,238,234,.55);white-space:nowrap}
+.lb-modebtn .lb-gm::before{content:"·";margin-right:6px}
+@media (max-width:380px){.lb-modebtn .lb-gm{font-size:9px;letter-spacing:.06em}}
+@media (max-width:460px) and (orientation:portrait){.gm-sw{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}.gm-sw button{gap:8px;padding:10px 11px}.gm-sw svg{width:22px;height:22px}.gm-sw button[data-gm=br] b{font-size:17px}}
+@media (orientation:landscape) and (max-height:520px){.gm-sw button{min-height:50px;padding:7px 12px}.gm-sw small{-webkit-line-clamp:1}}
 /* @ui:lobby-look end */
 /* battery: the arena redraws under the HUD every frame, so glass blur there costs the GPU every frame; phones show the HUD
    without it, and battery saver drops blur everywhere */
@@ -2655,7 +2673,7 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
     </nav>
     <section class="lb-play" id="lbPlay" data-mode="ranked" data-net="wait" data-k="normal">
       <div class="lb-moderow">
-        <button type="button" class="lb-modebtn" id="modeBtn" aria-haspopup="dialog" aria-controls="modeSheet"><span class="ic"><svg class="m-ranked"><use href="#lbi-ranked"/></svg><svg class="m-casual"><use href="#lbi-casual"/></svg><svg class="m-nearby"><use href="#lbi-nearby"/></svg><i class="lb-netdot"></i></span><b id="modeName">Ranked</b><span class="lb-pips" aria-hidden="true"><i></i><i></i><i></i><i></i></span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 15l5-5 5 5"/></svg></button>
+        <button type="button" class="lb-modebtn" id="modeBtn" aria-haspopup="dialog" aria-controls="modeSheet"><span class="ic"><svg class="m-ranked"><use href="#lbi-ranked"/></svg><svg class="m-casual"><use href="#lbi-casual"/></svg><svg class="m-nearby"><use href="#lbi-nearby"/></svg><i class="lb-netdot"></i></span><b id="modeName">Ranked</b><small class="lb-gm" id="gmName" hidden>Battle Royale</small><span class="lb-pips" aria-hidden="true"><i></i><i></i><i></i><i></i></span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 15l5-5 5 5"/></svg></button>
         <button type="button" class="lb-switch" id="lbToCasual" aria-label="Switch to Casual" title="Casual"><svg aria-hidden="true"><use href="#lbi-casual"/></svg><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
       </div>
       <div class="lb-near" id="lbNear"><div class="lb-near-top"><b class="lb-near-who" id="nearWho">Looking for phones…</b><button type="button" class="lb-near-set" id="nearSetBtn" aria-haspopup="dialog" aria-controls="nearSheet">Settings</button></div><p class="lb-near-sum" id="nearSum"></p></div>
@@ -2667,6 +2685,7 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
     </section>
     <div class="lb-msel" id="modeSheet" role="dialog" aria-modal="true" aria-labelledby="modeTitle" hidden>
       <header class="lb-msel-top"><button type="button" class="lb-icon" id="modeClose" aria-label="Back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><h2 id="modeTitle">Select mode</h2></header>
+      <div class="gm-sw" id="gmSwitch" role="radiogroup" aria-label="Arena" hidden><button type="button" role="radio" data-gm="br" aria-checked="true"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5" stroke-dasharray="2.4 2.2"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/></svg><span><b>Battle Royale</b><small>10-min rounds · last cell wins</small></span></button><button type="button" role="radio" data-gm="classic" aria-checked="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12h8M12 8v8" opacity=".55"/></svg><span><b>Classic</b><small>Endless · respawn anytime</small></span></button></div>
       <div class="lb-cards" id="modeSeg" role="radiogroup" aria-label="Game mode">
         <div class="lb-mcard" data-m="ranked"><button type="button" class="lb-mpick" role="radio" data-m="ranked" aria-checked="true"><span class="lb-mart"><svg viewBox="0 0 200 120" aria-hidden="true"><g stroke="#ffcf5c" stroke-width="2" stroke-linecap="round" stroke-dasharray="2 6" opacity=".45"><path d="M100 64L34 18M100 64L166 18M100 64L18 64M100 64L182 64M100 64L66 4M100 64L134 4"/></g><circle cx="38" cy="90" r="10" fill="#ff5c8a" opacity=".55"/><circle cx="164" cy="34" r="6" fill="#9a8cff" opacity=".7"/><circle cx="160" cy="96" r="13" fill="#5fe0a8" opacity=".3"/><circle cx="46" cy="30" r="4" fill="#ffcf5c" opacity=".8"/><path d="M63 50l17 16 20-29 20 29 17-16-6 42H69z" fill="url(#lbgGold)" stroke="#6e4304" stroke-width="2.5" stroke-linejoin="round"/><rect x="67" y="96" width="66" height="10" rx="4" fill="url(#lbgGold)" stroke="#6e4304" stroke-width="2.5"/><circle cx="100" cy="34" r="5.5" fill="#fff6d6" stroke="#6e4304" stroke-width="2"/><circle cx="61" cy="47" r="4.5" fill="#fff6d6" stroke="#6e4304" stroke-width="2"/><circle cx="139" cy="47" r="4.5" fill="#fff6d6" stroke="#6e4304" stroke-width="2"/><circle cx="100" cy="78" r="7" fill="#ff5c8a" stroke="#6e4304" stroke-width="2"/></svg></span><b>Ranked</b><small>Online · rated</small></button>
           <div class="lb-mstat" id="lbRankStat"><p id="netLine" class="lb-netline"><i></i><span>Connecting…</span></p><p id="roundLine" hidden></p><p class="lb-need" id="lbNeed">Needs Wi-Fi or cellular</p></div></div>
@@ -8803,12 +8822,22 @@ function specStart(hist){const a=allyOf();if(!a)return false;specOn=true;specHis
 function specEnd(show){if(!specOn)return;specOn=false;$('specBar').hidden=true;if(show&&mode==='dead')resShow(specHist);}
 setInterval(()=>{if(specOn&&(mode!=='dead'||!allyOf()))specEnd(true);},300); // the ally died or left, or a new game began
 $('specRes').addEventListener('click',()=>specEnd(true));
+$('gmSwitch').addEventListener('click',e=>{const b=e.target.closest('[data-gm]');if(!b||typeof setGameMode!=='function')return;const m=b.dataset.gm;if(m===gmOf())return;
+  if(setGameMode(m)===false){toast('Mode','Finish this match first','Switch between Battle Royale and Classic from the lobby.');return;} // the game refuses mid-match
+  syncGameMode();Native.haptic('light');});
 function fitName(){ // the name field is as wide as the name, so the pencil sits right after it
   const inp=$('nameIn'),m=$('nameMeasure');if(!inp||!m||$('startCard').hidden)return;
   const k=inp.value+'|'+innerWidth+'|'+innerHeight+'|'+(document.fonts?document.fonts.status:'');if(k===lbFit)return;
   const lb=inp.closest('.lb-name');if(lb){lb.classList.toggle('long',inp.value.length>11);lb.classList.toggle('empty',!inp.value);} // a long name a size smaller; no name: the invitation look
   m.textContent=inp.value||inp.placeholder;const w=m.getBoundingClientRect().width;if(!w)return;lbFit=k;inp.style.width=Math.ceil(w)+3+'px';}
 function lbSharp(cv){if(cv&&cv.clientWidth)drawAvatar(cv);} // the skin code (skinCanvas) sizes the backing store to CSS size x DPR; this just repaints
+// Battle Royale (the default) or Classic: the arena type, in settings.mode. The switch in the mode sheet and the line on the mode
+// button show only once the game can switch arenas (setGameMode, from the gameplay branch); until then every game is Battle Royale.
+const gmOf=()=>settings.mode==='classic'?'classic':'br';
+function syncGameMode(){const can=typeof setGameMode==='function',m=gmOf(),sw=$('gmSwitch'),nm=$('gmName');if(!sw||!nm)return;
+  if(sw.hidden===can)sw.hidden=!can;if(nm.hidden===can)nm.hidden=!can;if(!can)return;
+  for(const b of sw.children){const on=String(b.dataset.gm===m);if(b.getAttribute('aria-checked')!==on)b.setAttribute('aria-checked',on);}
+  const t=m==='classic'?'Classic':'Battle Royale';if(nm.textContent!==t)nm.textContent=t;}
 function syncPlay(){
   const box=$('lbPlay');if(!box)return;const net=lbNet(),ios=Native.platform==='ios',home=!$('startCard').hidden,sheet=$('modeSheet');
   if(lbBoot){if(lbMode!=='ranked'||net==='live')lbBoot=false;else if(net==='off'||net==='full'||performance.now()-lbT0>6000){lbBoot=false;lbMode='casual';}} // no server at launch: Casual
@@ -8818,7 +8847,8 @@ function syncPlay(){
   const ds={mode:lbMode,net,k,peers:peerCount>1?'1':'0',slow:lbWaitAt&&performance.now()-lbWaitAt>2000?'1':'0'}; // slow: still connecting after 2 s
   for(const n in ds){if(box.dataset[n]!==ds[n])box.dataset[n]=ds[n];if(sheet.dataset[n]!==ds[n])sheet.dataset[n]=ds[n];}
   const nm=lbMode==='casual'?'Casual':lbMode==='nearby'?'Nearby':'Ranked';if($('modeName').textContent!==nm)$('modeName').textContent=nm;
-  set($('modeBtn'),'aria-label',`Mode: ${nm}${lbMode==='casual'?', '+SKILL[k].label+' bots':''}. Change mode`);
+  syncGameMode();
+  set($('modeBtn'),'aria-label',`Mode: ${nm}${lbMode==='casual'?', '+SKILL[k].label+' bots':''}${typeof setGameMode==='function'?', '+(gmOf()==='classic'?'Classic':'Battle Royale'):''}. Change mode`);
   const wt=net==='full'?'Server full':net==='wait'?'Connecting…':'No connection',w=$('lbWait');if(w.textContent!==wt)w.textContent=wt;
   const nt=net==='full'?'Arena full · 16 max':'Needs Wi-Fi or cellular',ne=$('lbNeed');if(ne.textContent!==nt)ne.textContent=nt;
   const cards=[...$('modeSeg').children];cards[2].hidden=!ios;$('modeSeg').style.setProperty('--n',cards.filter(c=>!c.hidden).length);
