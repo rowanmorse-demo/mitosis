@@ -1766,78 +1766,95 @@ img.sk-im{display:block;-webkit-user-drag:none;user-select:none;-webkit-touch-ca
   #rankCard .rk-side{position:static}
 }
 
-/* ---------- Settings: the tab pages' section cards (.ds-sec), each a title and a list of rows, label on the left and the control
-   on the right. One quiet look: monochrome line icons, a neutral segmented control, pink only for a switch that's on.
-   Two columns (.st-col) side by side on wide screens; Delete account sits alone at the very bottom (.st-end) ---------- */
-#settingsCard{--st-rule:rgba(170,235,225,.08);--st-ico:#7c9e99}
-#settingsCard .sg-wrap{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-items:start}
-#settingsCard .st-col{display:grid;gap:14px;min-width:0}
-@media (min-width:700px){#settingsCard .sg-wrap{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}#settingsCard .st-col{gap:16px}}
-#settingsCard .st-sec.ds-sec{gap:6px;padding:16px 0 6px}
-#settingsCard .st-sec .ds-head{padding:0 18px}
-#settingsCard .st-list{display:grid;grid-template-columns:minmax(0,1fr)}
-#settingsCard .srow{position:relative;box-sizing:border-box;width:100%;min-height:54px;margin:0;padding:8px 14px 8px 18px;display:flex;align-items:center;gap:14px;border:0;border-radius:0;background:none;color:var(--ink);font:400 15.5px/1.2 var(--display);letter-spacing:-.01em;text-align:left;cursor:default;-webkit-tap-highlight-color:transparent;transition:background-color .15s}
-/* hairlines between rows start at the label, past the icon */
-#settingsCard .srow+.srow::before,#settingsCard .srow-d+.srow::before,#settingsCard .srow+.srow-d>.srow::before{content:"";position:absolute;top:0;left:52px;right:0;height:1px;background:var(--st-rule)}
-#settingsCard .si{flex:none;width:20px;height:20px;color:var(--st-ico)}
-#settingsCard .si svg{display:block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
-#settingsCard .sl{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-/* segmented controls: a sunken track, the choice a lighter raised segment */
-#settingsCard .seg{position:relative;flex:none;min-width:0;display:flex;gap:2px;padding:3px;border:0;border-radius:11px;overflow:visible;background:rgba(0,0,0,.3);box-shadow:inset 0 0 0 1px rgba(255,255,255,.055)}
-#settingsCard .seg button{position:relative;flex:1 0 auto;min-width:44px;min-height:0;height:30px;padding:0 12px;display:flex;align-items:center;justify-content:center;border:0;border-radius:8px;background:transparent;color:var(--muted);font:600 13px/1 var(--display);letter-spacing:-.005em;white-space:nowrap;text-shadow:none;box-shadow:none;cursor:pointer;transition:color .2s,background-color .2s,box-shadow .2s,transform .12s}
+/* ---------- Settings, laid out like a competitive shooter's: category tabs under the title (Game, Controls, Video, Audio, Account),
+   one panel at a time; thin section headers over dense rows, label on the left and the control on the right; Reset to defaults
+   at the foot of each settings tab (buttons marked data-def); Delete account alone at the bottom of Account (.st-end) ---------- */
+#settingsCard{--st-card:rgba(5,17,19,.66);--st-edge:rgba(170,235,225,.11);--st-rule:rgba(170,235,225,.075)}
+/* the tabs ride in the sticky header, under the title (beside it in a short landscape) */
+#settingsCard .pg-top{padding-bottom:0;row-gap:10px}
+#settingsCard .pg-top>.st-tabs{grid-row:2;grid-column:1/-1!important}
+#settingsCard .st-tabs{display:flex;gap:4px;min-width:0;border-bottom:1px solid var(--st-rule);overflow-x:auto;scrollbar-width:none}
+#settingsCard .st-tabs::-webkit-scrollbar{display:none}
+#settingsCard .st-tabs button{appearance:none;position:relative;flex:none;height:42px;margin:0;padding:0 14px;border:0;background:none;color:var(--muted);font:600 12.5px/1 var(--display);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .15s}
+#settingsCard .st-tabs button::after{content:"";position:absolute;left:14px;right:14px;bottom:0;height:2px;border-radius:2px 2px 0 0;background:var(--accent);transform:scaleX(0);transition:transform .2s}
+#settingsCard .st-tabs button[aria-selected=true]{color:#fff}
+#settingsCard .st-tabs button[aria-selected=true]::after{transform:none}
+#settingsCard .st-tabs button:focus-visible{outline:none;color:#fff;background:rgba(255,255,255,.05)}
+@media (hover:hover){#settingsCard .st-tabs button:not([aria-selected=true]):hover{color:var(--ink)}}
+@media (max-width:520px){#settingsCard .st-tabs{gap:0}#settingsCard .st-tabs button{flex:1 1 auto;padding:0 6px;font-size:12px;letter-spacing:.05em}#settingsCard .st-tabs button::after{left:6px;right:6px}}
+@media (orientation:landscape) and (max-height:520px){#settingsCard .pg-top{padding-bottom:10px}#settingsCard .pg-top>.st-tabs{grid-row:1;grid-column:3!important;border:0}#settingsCard .st-tabs button{height:38px}}
+/* a panel: groups, each a thin header with a rule running to the edge, then its rows in one dark card */
+#settingsCard .st-panels{grid-column:1/-1;min-width:0;padding:2px 0 6px}
+#settingsCard .st-panel{display:grid;min-width:0;animation:stIn .2s ease-out}
+@keyframes stIn{from{opacity:0;transform:translateY(4px)}}
+#settingsCard .st-grp{display:grid;gap:8px;min-width:0;margin-top:22px}
+#settingsCard .st-grp:first-child{margin-top:8px}
+#settingsCard .st-grp:has(#inviteRow[hidden]){display:none}
+#settingsCard .st-h{display:flex;align-items:center;gap:12px;margin:0;padding:0 2px;font:500 10.5px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+#settingsCard .st-h::after{content:"";flex:1;height:1px;background:var(--st-rule)}
+#settingsCard .st-list{display:grid;grid-template-columns:minmax(0,1fr);border-radius:12px;overflow:hidden;background:var(--st-card);border:1px solid var(--st-edge);box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
+#settingsCard .st-note{margin:0;padding:0 2px;font:400 12px/1.45 var(--display);color:var(--dim)}
+#settingsCard .st-note b{color:var(--muted);font-weight:600}
+#settingsCard .srow{position:relative;box-sizing:border-box;width:100%;min-height:50px;margin:0;padding:7px 10px 7px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;border:0;border-radius:0;background:none;color:var(--ink);font:400 15px/1.2 var(--display);letter-spacing:-.005em;text-align:left;cursor:default;-webkit-tap-highlight-color:transparent;transition:background-color .15s}
+#settingsCard .srow+.srow::before,#settingsCard .srow-d+.srow::before,#settingsCard .srow+.srow-d>.srow::before{content:"";position:absolute;top:0;left:16px;right:0;height:1px;background:var(--st-rule)}
+#settingsCard .sl{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* segmented choices: a sunken track, the pick a lighter raised segment; too wide for the row, they drop under the label */
+#settingsCard .seg{position:relative;flex:none;min-width:0;margin-left:auto;display:flex;gap:2px;padding:3px;border:0;border-radius:9px;overflow:visible;background:rgba(0,0,0,.34);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05)}
+#settingsCard .seg button{position:relative;flex:1 0 auto;min-width:40px;min-height:0;height:30px;padding:0 11px;display:flex;align-items:center;justify-content:center;border:0;border-radius:6px;background:transparent;color:var(--muted);font:600 13px/1 var(--display);letter-spacing:-.005em;white-space:nowrap;text-shadow:none;box-shadow:none;cursor:pointer;transition:color .2s,background-color .2s,box-shadow .2s,transform .12s}
 #settingsCard .seg button::after{content:"";position:absolute;inset:-10px -1px}
-#settingsCard .seg button[aria-pressed=true]{color:#fff;background:rgba(255,255,255,.13);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 1px 2px rgba(0,0,0,.45)}
-#settingsCard .srow.wide{flex-wrap:wrap;row-gap:10px;padding-top:13px;padding-bottom:12px}
-#settingsCard .srow.wide .seg{flex:1 1 calc(100% - 34px);margin-left:34px}
-#settingsCard .srow.wide .seg button{flex:1 1 0;min-width:0;padding:0 4px}
-/* on/off: a switch; the whole row flips it */
+#settingsCard .seg button[aria-pressed=true]{color:#fff;background:rgba(255,255,255,.13);box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 1px 2px rgba(0,0,0,.45)}
+/* on/off: a squared switch; the whole row flips it */
 #settingsCard .srow.tg{cursor:pointer}
-#settingsCard .seg.sw2{display:block;width:50px;height:30px;padding:0;border-radius:999px;background:rgba(255,255,255,.13);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05);transition:background-color .25s}
-#settingsCard .seg.sw2::before{content:"";position:absolute;pointer-events:none;z-index:2;top:2px;left:2px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.35);transition:transform .26s cubic-bezier(.3,1.3,.5,1)}
-#settingsCard .seg.sw2:has(>button:last-child[aria-pressed=true]){background:linear-gradient(180deg,#ff6b95,#f24f7f)}
-#settingsCard .seg.sw2:has(>button:last-child[aria-pressed=true])::before{transform:translateX(20px)}
+#settingsCard .seg.sw2{display:block;width:46px;height:26px;padding:0;border-radius:7px;background:rgba(255,255,255,.12);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05);transition:background-color .2s}
+#settingsCard .seg.sw2::before{content:"";position:absolute;pointer-events:none;z-index:2;top:3px;left:3px;width:20px;height:20px;border-radius:5px;background:#f2faf8;box-shadow:0 1px 3px rgba(0,0,0,.4);transition:transform .22s cubic-bezier(.3,1.2,.5,1)}
+#settingsCard .seg.sw2:has(>button:last-child[aria-pressed=true]){background:var(--accent)}
+#settingsCard .seg.sw2:has(>button:last-child[aria-pressed=true])::before{transform:translateX(20px);background:#fff}
 #settingsCard .seg.sw2 button{position:absolute;top:0;bottom:0;width:50%;min-width:0;height:auto;padding:0;font-size:0;color:transparent;background:none;box-shadow:none}
 #settingsCard .seg.sw2 button:first-child{left:0}#settingsCard .seg.sw2 button:last-child{right:0}
 #settingsCard .seg.sw2 button::after{inset:-12px -4px}
 #settingsCard .seg.sw2 button:active{transform:none}
-/* rows that open something: a chevron */
+/* rows that open something: a chevron; a row can show its current value (.st-val) before it */
 #settingsCard .srow.nav{cursor:pointer}
-#settingsCard .srow.nav::after{content:"";flex:none;width:7px;height:7px;margin:0 6px 0 0;border-top:1.75px solid var(--dim);border-right:1.75px solid var(--dim);transform:rotate(45deg);transition:transform .2s}
+#settingsCard .srow.nav::after{content:"";flex:none;width:7px;height:7px;margin:0 8px 0 0;border-top:1.75px solid var(--dim);border-right:1.75px solid var(--dim);transform:rotate(45deg);transition:transform .2s}
+#settingsCard .st-val{flex:none;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
 #settingsCard summary.srow{list-style:none}#settingsCard summary.srow::-webkit-details-marker{display:none}
 #settingsCard details[open]>summary.srow::after{transform:rotate(135deg)}
 #settingsCard :is(.srow.tg,.srow.nav,.srow.inv):active{background:rgba(255,255,255,.04)}
 @media (hover:hover){#settingsCard .seg button:not([aria-pressed=true]):hover{color:var(--ink)}#settingsCard :is(.srow.tg,.srow.nav,.srow.inv):hover{background:rgba(255,255,255,.025)}}
 /* invite */
-#settingsCard .srow.inv{cursor:pointer}
+#settingsCard .srow.inv{cursor:pointer;flex-wrap:nowrap}
 #settingsCard .srow.inv .sl{display:grid;gap:3px}
 #settingsCard #inviteUrl{appearance:none;display:block;width:100%;box-sizing:border-box;margin:0;padding:0;border:0;border-radius:0;background:none;color:var(--dim);font:400 11px/1.25 var(--mono);text-overflow:ellipsis;cursor:text}
 #settingsCard #inviteUrl:focus{outline:none;color:var(--muted)}
-#settingsCard .s-act{position:relative;flex:none;appearance:none;min-height:32px;padding:0 15px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.07);color:var(--ink);font:600 13px/1 var(--display);cursor:pointer;transition:transform .12s,background-color .15s}
+#settingsCard .s-act{position:relative;flex:none;appearance:none;min-height:32px;padding:0 15px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.07);color:var(--ink);font:600 13px/1 var(--display);cursor:pointer;transition:transform .12s,background-color .15s}
 #settingsCard .s-act::after{content:"";position:absolute;inset:-10px -6px}
 #settingsCard .s-act:active{transform:scale(.95);background:rgba(255,255,255,.12)}
-#settingsCard .st-sec:has(#inviteRow[hidden]){display:none}
-#settingsCard .sg-foot{margin:2px 0 10px;padding:0 18px;font:400 12px/1.45 var(--display);color:var(--dim)}
-#settingsCard .sg-foot b{color:var(--muted);font-weight:600}
-@media (pointer:coarse){#settingsCard .sg-foot{display:none}}
 /* how to play */
 #settingsCard .srow-d{display:block;position:relative}
-#settingsCard #helpSec .body{display:grid;gap:14px;max-height:none;overflow:visible;padding:2px 18px 18px 52px}
+#settingsCard #helpSec .body{display:grid;gap:14px;max-height:none;overflow:visible;padding:2px 16px 16px}
 #settingsCard #helpSec .keys{margin:0;display:grid;grid-template-columns:76px minmax(0,1fr);align-items:center;gap:9px 12px;font:400 13.5px/1.3 var(--display);color:var(--muted)}
-#settingsCard #helpSec .keys dt{justify-self:start;font:500 10px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink);padding:5px 7px 4px;border-radius:6px;background:rgba(255,255,255,.06);box-shadow:inset 0 -1px 0 rgba(0,0,0,.4),inset 0 0 0 1px rgba(255,255,255,.08)}
+#settingsCard #helpSec .keys dt{justify-self:start;font:500 10px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink);padding:5px 7px 4px;border-radius:5px;background:rgba(255,255,255,.06);box-shadow:inset 0 -1px 0 rgba(0,0,0,.4),inset 0 0 0 1px rgba(255,255,255,.08)}
 #settingsCard #helpSec .keys dd{margin:0}
 #settingsCard #helpSec .facts{padding-top:14px;border-top:1px solid var(--st-rule)}
 #settingsCard #helpSec .facts dt{padding:0;background:none;box-shadow:none;letter-spacing:.12em}
 #settingsCard #achLine{display:none}
-/* the end of the page: Delete account on its own, apart from the settings and quiet until tapped; it opens the #deleteCard confirm */
-#settingsCard .st-end{grid-column:1/-1;display:grid;justify-items:center;margin:8px 0 0;padding:24px 0 6px;border-top:1px solid var(--st-rule)}
-#settingsCard .st-del{appearance:none;box-sizing:border-box;width:100%;max-width:520px;min-height:64px;margin:0;padding:10px 16px 10px 18px;display:flex;align-items:center;gap:14px;border-radius:20px;border:1px solid rgba(255,107,120,.18);background:linear-gradient(180deg,rgba(255,107,120,.06),rgba(255,107,120,.025));color:#ff8f98;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background-color .15s,border-color .15s,transform .12s}
-#settingsCard .st-del .si{color:currentColor}
-#settingsCard .st-del .sl{display:grid;gap:4px;font:600 15.5px/1.2 var(--display);letter-spacing:-.01em;white-space:normal}
-#settingsCard .st-del small{font:400 12.5px/1.35 var(--display);letter-spacing:0;color:var(--dim)}
-#settingsCard .st-del::after{content:"";flex:none;width:7px;height:7px;margin:0 6px 0 0;border-top:1.75px solid currentColor;border-right:1.75px solid currentColor;transform:rotate(45deg);opacity:.7}
-#settingsCard .st-del:active{transform:scale(.985);background:rgba(255,107,120,.1)}
+/* Reset to defaults: the first tap arms it, a second within 3 s puts the tab's data-def choices back */
+#settingsCard .st-foot{display:flex;justify-content:flex-end;margin-top:16px}
+#settingsCard .st-reset{appearance:none;display:inline-flex;align-items:center;gap:7px;min-height:36px;margin:0;padding:0 14px;border-radius:9px;border:1px solid var(--st-edge);background:rgba(255,255,255,.03);color:var(--muted);font:600 12.5px/1 var(--display);letter-spacing:.02em;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .15s,border-color .15s,background-color .15s}
+#settingsCard .st-reset svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#settingsCard .st-reset.arm{color:#fff;border-color:rgba(255,92,138,.55);background:rgba(255,92,138,.1)}
+@media (hover:hover){#settingsCard .st-reset:not(.arm):hover{color:var(--ink);border-color:rgba(170,235,225,.24)}}
+/* the bottom of Account: Delete account on its own, quiet until tapped; it opens the #deleteCard confirm */
+#settingsCard .st-end{margin-top:30px;padding-top:22px;border-top:1px solid var(--st-rule)}
+#settingsCard .st-del{appearance:none;box-sizing:border-box;width:100%;min-height:58px;margin:0;padding:9px 12px 9px 16px;display:flex;align-items:center;gap:12px;border-radius:12px;border:1px solid rgba(255,107,120,.2);background:rgba(255,107,120,.045);color:#ff8f98;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background-color .15s,border-color .15s,transform .12s}
+#settingsCard .st-del svg{flex:none;width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+#settingsCard .st-del span{flex:1;min-width:0;display:grid;gap:4px;font:600 15px/1.2 var(--display);letter-spacing:-.005em}
+#settingsCard .st-del small{font:400 12px/1.35 var(--display);letter-spacing:0;color:var(--dim)}
+#settingsCard .st-del::after{content:"";flex:none;width:7px;height:7px;margin:0 8px 0 0;border-top:1.75px solid currentColor;border-right:1.75px solid currentColor;transform:rotate(45deg);opacity:.7}
+#settingsCard .st-del:active{transform:scale(.99);background:rgba(255,107,120,.1)}
 @media (hover:hover){#settingsCard .st-del:hover{border-color:rgba(255,107,120,.34);background:rgba(255,107,120,.08)}}
-@media (max-width:420px){#settingsCard .seg button{padding:0 10px;font-size:12.5px}#settingsCard .srow{padding-left:16px;gap:12px}#settingsCard .st-sec .ds-head{padding:0 16px}#settingsCard .sg-foot{padding:0 16px}#settingsCard .srow+.srow::before,#settingsCard .srow-d+.srow::before,#settingsCard .srow+.srow-d>.srow::before{left:48px}#settingsCard .srow.wide .seg{flex-basis:calc(100% - 32px);margin-left:32px}#settingsCard #helpSec .body{padding-left:48px}}
+@media (min-width:700px){#settingsCard .srow{min-height:48px;font-size:14.5px}}
+@media (max-width:420px){#settingsCard .seg button{padding:0 8px;font-size:12px;min-width:36px}}
 /* Friends page, its own look: your code card (in landscape a sticky left column), then invites, party and friends */
 #overlay>#friendsCard.page .fr-wrap{grid-column:1/-1}
 #friendsCard .fr-wrap{min-width:0;width:100%;max-width:980px;margin:0 auto;display:grid;gap:18px;align-items:start;padding-bottom:max(18px,env(safe-area-inset-bottom))}
@@ -2713,82 +2730,99 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
   </div>
 
   <div class="card panel page" id="settingsCard" hidden>
-    <header class="pg-top"><button class="lb-icon back" type="button" aria-label="Back to the lobby"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><h2>Settings</h2></header>
-    <div class="sg-wrap">
-      <div class="st-col">
-        <section class="ds-sec st-sec"><div class="ds-head"><b>Game</b></div><div class="st-list">
-            <div class="srow"><i class="si"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8.5" cy="9" r="4.5"/><circle cx="16.5" cy="16" r="4"/><circle cx="17.5" cy="5.5" r="1.8"/></svg></i><span class="sl">Density</span>
-              <div class="seg" id="diff"><button type="button" data-d="calm">Calm</button><button type="button" data-d="standard">Normal</button><button type="button" data-d="hostile">Hostile</button></div></div>
-            <div class="srow wide"><i class="si"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="8" width="15" height="11.5" rx="3.5"/><path d="M12 8V5"/><circle cx="12" cy="3.6" r="1.2"/><path d="M9.3 13.2v.6M14.7 13.2v.6"/></svg></i><span class="sl">Bots</span>
-              <div class="seg five" id="skillSeg"><button type="button" data-k="easy">Easy</button><button type="button" data-k="normal">Normal</button><button type="button" data-k="hard">Hard</button><button type="button" data-k="expert">Expert</button><button type="button" data-k="master">Master</button></div></div>
-            <div class="srow wide" title="With a ping over this, Play in Ranked starts a bot game"><i class="si"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 9a14 14 0 0 1 19 0M5.5 12.3a9.5 9.5 0 0 1 13 0M8.6 15.6a5 5 0 0 1 6.8 0"/><circle cx="12" cy="19" r="1.3" fill="currentColor" stroke="none"/></svg></i><span class="sl">Max ping</span>
-              <div class="seg four" id="pingSeg"><button type="button" data-ms="100">100 ms</button><button type="button" data-ms="150">150 ms</button><button type="button" data-ms="250">250 ms</button><button type="button" data-ms="0">Any</button></div></div>
-          </div><p class="sg-foot">With a ping over your <b>Max ping</b>, Ranked plays bots instead, unless you're in a party.</p></section>
-        <section class="ds-sec st-sec"><div class="ds-head"><b>Display</b></div><div class="st-list">
-            <div class="srow"><i class="si"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 0 0 16z" fill="currentColor" stroke="none"/></svg></i><span class="sl">Background</span>
-              <div class="seg two" id="bgSeg"><button type="button" data-bg="black">Black</button><button type="button" data-bg="white">White</button></div></div>
-            <div class="srow"><i class="si"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3.5l1.9 4.9 4.9 1.9-4.9 1.9L11 17.1l-1.9-4.9-4.9-1.9 4.9-1.9z"/><path d="M18.5 14.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg></i><span class="sl">Effects</span>
-              <div class="seg two" id="fxSeg"><button type="button" data-fx="0">Full</button><button type="button" data-fx="1">Lite</button></div></div>
-            <div class="srow"><i class="si"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M6.5 8.7h4.5M16 8.7h1.5M10 15.5h4"/></svg></i><span class="sl">HUD</span>
-              <div class="seg two" id="infoSeg"><button type="button" data-i="0">Full</button><button type="button" data-i="1">Compact</button></div></div>
-            <div class="srow tg"><i class="si"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12.5h4l2.5-6 4.5 12 2.5-6H21"/></svg></i><span class="sl">FPS &amp; ping</span>
-              <div class="seg two sw2" id="perfSeg"><button type="button" data-p="0">Off</button><button type="button" data-p="1">On</button></div></div>
-            <div class="srow tg"><i class="si"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="16" height="10" rx="2.5"/><path d="M21 10.5v3M7 10v4M10.5 10v4"/></svg></i><span class="sl">Battery saver</span>
-              <div class="seg two sw2" id="saverSeg"><button type="button" data-sv="0">Off</button><button type="button" data-sv="1">On</button></div></div>
-            <div class="srow tg" id="recField" hidden><i class="si"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.6" fill="currentColor"/></svg></i><span class="sl">Record games</span>
-              <div class="seg two sw2" id="recSeg"><button type="button" data-rec="0">Off</button><button type="button" data-rec="1">On</button></div></div>
-          </div></section>
-      </div>
-      <div class="st-col">
-        <section class="ds-sec st-sec touch-only"><div class="ds-head"><b>Controls</b></div><div class="st-list">
-            <div class="srow"><i class="si"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7.5" r="3.5"/><path d="M12 11v4.5"/><rect x="4" y="15.5" width="16" height="5" rx="2"/></svg></i><span class="sl">Joystick</span>
-              <div class="seg two" id="joySeg"><button type="button" data-j="fixed">Fixed</button><button type="button" data-j="float">Floating</button></div></div>
-            <div class="srow"><i class="si"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="3"/><circle cx="16" cy="12" r="2.4"/><circle cx="7.5" cy="12" r="1.2"/></svg></i><span class="sl">Buttons</span>
-              <div class="seg two" id="handSeg"><button type="button" data-l="1">Left</button><button type="button" data-l="0">Right</button></div></div>
-          </div></section>
-        <section class="ds-sec st-sec"><div class="ds-head"><b>Sound</b></div><div class="st-list">
-            <div class="srow tg"><i class="si"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18.2 6.5a7.5 7.5 0 0 1 0 11"/></svg></i><span class="sl">Sound</span>
-              <div class="seg two sw2" id="sndSeg"><button type="button" data-s="0">Off</button><button type="button" data-s="1">On</button></div></div>
-            <div class="srow tg"><i class="si"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="4" width="8" height="16" rx="2.2"/><path d="M4.6 9v6M19.4 9v6M2 10.6v2.8M22 10.6v2.8"/></svg></i><span class="sl">Vibration</span>
-              <div class="seg two sw2" id="hapSeg"><button type="button" data-h="0">Off</button><button type="button" data-h="1">On</button></div></div>
-          </div></section>
-        <section class="ds-sec st-sec"><div class="ds-head"><b>Friends</b></div><div class="st-list">
-            <div class="srow inv" id="inviteRow"><i class="si"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9.5" cy="8.5" r="3.5"/><path d="M3 19.5a6.5 6.5 0 0 1 13 0M19 8v6M16 11h6"/></svg></i><span class="sl">Invite friends<input id="inviteUrl" type="text" readonly aria-label="Invite link" value=""></span><button id="copyInvite" class="s-act" type="button">Share</button></div>
-          </div><p class="sg-foot" id="inviteHelp">Send this link to a friend on the same Wi-Fi. For friends elsewhere, run <b>share-online.bat</b> and send the https link it prints.</p></section>
-        <section class="ds-sec st-sec"><div class="ds-head"><b>Help</b></div><div class="st-list">
-            <details class="srow-d" id="helpSec"><summary class="srow nav"><i class="si"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.6a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .9-1 1.6v.4"/><path d="M12 17.1v.1"/></svg></i><span class="sl">How to play</span></summary><div class="body">
-              <dl class="keys kbd-only">
-                <dt>Mouse</dt><dd>Steer</dd>
-                <dt>Space</dt><dd>Split</dd>
-                <dt>W</dt><dd>Eject mass</dd>
-                <dt>Shift</dt><dd>Dash · costs 4% mass</dd>
-                <dt>Esc</dt><dd>Pause</dd>
-              </dl>
-              <dl class="keys touch-only">
-                <dt>Stick</dt><dd>Steer · push further to go faster</dd>
-                <dt>Buttons</dt><dd>Split · Shoot · Boost</dd>
-                <dt>Mass</dt><dd>Tap to pause</dd>
-              </dl>
-              <dl class="keys facts">
-                <dt>Rounds</dt><dd>10 min · 2 lives · last cell wins</dd>
-                <dt>Arena</dt><dd>Shrinks from 1:00 · stay inside</dd>
-                <dt>Mutate</dt><dd>New trait at mass milestones</dd>
-                <dt>Events</dt><dd>Blooms, tides, swarms, Leviathan</dd>
-                <dt>Hunters</dt><dd>Burst any cell · 3 blobs kill one</dd>
-                <dt>Crown</dt><dd>The leader pays a bounty</dd>
-                <dt>ATP</dt><dd>25 for a win, down to 1 for 30th</dd>
-                <dt>XP</dt><dd>Time alive + placing · ranked only</dd>
-              </dl>
-              <p class="achline" id="achLine"></p>
-            </div></details>
-            <button type="button" class="srow nav" id="introAgain"><i class="si"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 18h5M10.5 21h3"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.1 1 1.8v.4h5.2v-.4c0-.7.4-1.3 1-1.8A6 6 0 0 0 12 3z"/></svg></i><span class="sl">Welcome tips</span></button>
-          </div></section>
-      </div>
-    </div>
-    <div class="st-end">
-      <button type="button" class="st-del" id="deleteAcctBtn2"><i class="si"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 7h15M10 4h4M6.5 7l1 13h9l1-13M10 11v5M14 11v5"/></svg></i><span class="sl">Delete account<small>Erases your rating, ATP, skins and runs, after you confirm.</small></span></button>
+    <header class="pg-top"><button class="lb-icon back" type="button" aria-label="Back to the lobby"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><h2>Settings</h2>
+      <div class="st-tabs" id="stTabs" role="tablist" aria-label="Settings"><button type="button" role="tab" id="stTabGame" aria-controls="stGame" aria-selected="true">Game</button><button type="button" role="tab" id="stTabControls" aria-controls="stControls" aria-selected="false" tabindex="-1" class="touch-only">Controls</button><button type="button" role="tab" id="stTabVideo" aria-controls="stVideo" aria-selected="false" tabindex="-1">Video</button><button type="button" role="tab" id="stTabAudio" aria-controls="stAudio" aria-selected="false" tabindex="-1">Audio</button><button type="button" role="tab" id="stTabAccount" aria-controls="stAccount" aria-selected="false" tabindex="-1">Account</button></div></header>
+    <div class="st-panels">
+      <section class="st-panel" id="stGame" role="tabpanel" aria-labelledby="stTabGame">
+        <div class="st-grp"><h3 class="st-h">Match</h3><div class="st-list">
+          <div class="srow"><span class="sl">Density</span>
+            <div class="seg" id="diff"><button type="button" data-d="calm">Calm</button><button type="button" data-d="standard" data-def>Normal</button><button type="button" data-d="hostile">Hostile</button></div></div>
+          <div class="srow"><span class="sl">Bots</span>
+            <div class="seg five" id="skillSeg"><button type="button" data-k="easy">Easy</button><button type="button" data-k="normal" data-def>Normal</button><button type="button" data-k="hard">Hard</button><button type="button" data-k="expert">Expert</button><button type="button" data-k="master">Master</button></div></div>
+        </div></div>
+        <div class="st-grp"><h3 class="st-h">Online</h3><div class="st-list">
+          <div class="srow" title="With a ping over this, Play in Ranked starts a bot game"><span class="sl">Max ping</span>
+            <div class="seg four" id="pingSeg"><button type="button" data-ms="100" data-def>100 ms</button><button type="button" data-ms="150">150 ms</button><button type="button" data-ms="250">250 ms</button><button type="button" data-ms="0">Any</button></div></div>
+        </div>
+        <p class="st-note">With a ping over your <b>Max ping</b>, Ranked plays bots instead, unless you're in a party.</p></div>
+        <div class="st-grp"><h3 class="st-h">Help</h3><div class="st-list">
+          <details class="srow-d" id="helpSec"><summary class="srow nav"><span class="sl">How to play</span></summary><div class="body">
+            <dl class="keys kbd-only">
+              <dt>Mouse</dt><dd>Steer</dd>
+              <dt>Space</dt><dd>Split</dd>
+              <dt>W</dt><dd>Eject mass</dd>
+              <dt>Shift</dt><dd>Dash · costs 4% mass</dd>
+              <dt>Esc</dt><dd>Pause</dd>
+            </dl>
+            <dl class="keys touch-only">
+              <dt>Stick</dt><dd>Steer · push further to go faster</dd>
+              <dt>Buttons</dt><dd>Split · Shoot · Boost</dd>
+              <dt>Mass</dt><dd>Tap to pause</dd>
+            </dl>
+            <dl class="keys facts">
+              <dt>Rounds</dt><dd>10 min · 2 lives · last cell wins</dd>
+              <dt>Arena</dt><dd>Shrinks from 1:00 · stay inside</dd>
+              <dt>Mutate</dt><dd>New trait at mass milestones</dd>
+              <dt>Events</dt><dd>Blooms, tides, swarms, Leviathan</dd>
+              <dt>Hunters</dt><dd>Burst any cell · 3 blobs kill one</dd>
+              <dt>Crown</dt><dd>The leader pays a bounty</dd>
+              <dt>ATP</dt><dd>25 for a win, down to 1 for 30th</dd>
+              <dt>XP</dt><dd>Time alive + placing · ranked only</dd>
+            </dl>
+            <p class="achline" id="achLine"></p>
+          </div></details>
+          <button type="button" class="srow nav" id="introAgain"><span class="sl">Welcome tips</span></button>
+        </div></div>
+        <div class="st-foot"><button type="button" class="st-reset"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5v5h5"/><path d="M4.6 14.5A8 8 0 1 0 6.3 6.3L4 10"/></svg>Reset to defaults</button></div>
+      </section>
+      <section class="st-panel touch-only" id="stControls" role="tabpanel" aria-labelledby="stTabControls" hidden>
+        <div class="st-grp"><h3 class="st-h">Touch</h3><div class="st-list">
+          <div class="srow"><span class="sl">Joystick</span>
+            <div class="seg two" id="joySeg"><button type="button" data-j="fixed" data-def>Fixed</button><button type="button" data-j="float">Floating</button></div></div>
+          <div class="srow"><span class="sl">Buttons</span>
+            <div class="seg two" id="handSeg"><button type="button" data-l="1">Left</button><button type="button" data-l="0" data-def>Right</button></div></div>
+        </div></div>
+        <div class="st-foot"><button type="button" class="st-reset"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5v5h5"/><path d="M4.6 14.5A8 8 0 1 0 6.3 6.3L4 10"/></svg>Reset to defaults</button></div>
+      </section>
+      <section class="st-panel" id="stVideo" role="tabpanel" aria-labelledby="stTabVideo" hidden>
+        <div class="st-grp"><h3 class="st-h">Display</h3><div class="st-list">
+          <div class="srow"><span class="sl">Background</span>
+            <div class="seg two" id="bgSeg"><button type="button" data-bg="black" data-def>Black</button><button type="button" data-bg="white">White</button></div></div>
+          <div class="srow"><span class="sl">Effects</span>
+            <div class="seg two" id="fxSeg"><button type="button" data-fx="0" data-def>Full</button><button type="button" data-fx="1">Lite</button></div></div>
+          <div class="srow"><span class="sl">HUD</span>
+            <div class="seg two" id="infoSeg"><button type="button" data-i="0" data-def>Full</button><button type="button" data-i="1">Compact</button></div></div>
+        </div></div>
+        <div class="st-grp"><h3 class="st-h">Performance</h3><div class="st-list">
+          <div class="srow tg"><span class="sl">FPS &amp; ping</span>
+            <div class="seg two sw2" id="perfSeg"><button type="button" data-p="0" data-def>Off</button><button type="button" data-p="1">On</button></div></div>
+          <div class="srow tg"><span class="sl">Battery saver</span>
+            <div class="seg two sw2" id="saverSeg"><button type="button" data-sv="0" data-def>Off</button><button type="button" data-sv="1">On</button></div></div>
+          <div class="srow tg" id="recField" hidden><span class="sl">Record games</span>
+            <div class="seg two sw2" id="recSeg"><button type="button" data-rec="0" data-def>Off</button><button type="button" data-rec="1">On</button></div></div>
+        </div></div>
+        <div class="st-foot"><button type="button" class="st-reset"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5v5h5"/><path d="M4.6 14.5A8 8 0 1 0 6.3 6.3L4 10"/></svg>Reset to defaults</button></div>
+      </section>
+      <section class="st-panel" id="stAudio" role="tabpanel" aria-labelledby="stTabAudio" hidden>
+        <div class="st-grp"><h3 class="st-h">Sound &amp; haptics</h3><div class="st-list">
+          <div class="srow tg"><span class="sl">Sound</span>
+            <div class="seg two sw2" id="sndSeg"><button type="button" data-s="0">Off</button><button type="button" data-s="1" data-def>On</button></div></div>
+          <div class="srow tg"><span class="sl">Vibration</span>
+            <div class="seg two sw2" id="hapSeg"><button type="button" data-h="0">Off</button><button type="button" data-h="1" data-def>On</button></div></div>
+        </div></div>
+        <div class="st-foot"><button type="button" class="st-reset"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5v5h5"/><path d="M4.6 14.5A8 8 0 1 0 6.3 6.3L4 10"/></svg>Reset to defaults</button></div>
+      </section>
+      <section class="st-panel" id="stAccount" role="tabpanel" aria-labelledby="stTabAccount" hidden>
+        <!-- Name style (custom name fonts) goes first here: a group "Profile" with a .srow.nav row and its .st-val preview -->
+        <div class="st-grp"><h3 class="st-h">Friends</h3><div class="st-list">
+          <div class="srow inv" id="inviteRow"><span class="sl">Invite friends<input id="inviteUrl" type="text" readonly aria-label="Invite link" value=""></span><button id="copyInvite" class="s-act" type="button">Share</button></div>
+        </div>
+        <p class="st-note" id="inviteHelp">Send this link to a friend on the same Wi-Fi. For friends elsewhere, run <b>share-online.bat</b> and send the https link it prints.</p></div>
+        <div class="st-end"><button type="button" class="st-del" id="deleteAcctBtn2"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 7h15M10 4h4M6.5 7l1 13h9l1-13M10 11v5M14 11v5"/></svg><span>Delete account<small>Erases your rating, ATP, skins and runs, after you confirm.</small></span></button></div>
+      </section>
     </div>
   </div>
+
 
 
   <div class="shopview" id="storeCard" hidden>
@@ -6323,6 +6357,17 @@ $('setBtn').addEventListener('click',()=>showCard('settingsCard'));
 // Settings: an on/off row flips from a tap anywhere on it, the switch included; the invite row shares from anywhere but the link
 for(const r of document.querySelectorAll('#settingsCard .srow.tg'))r.addEventListener('click',e=>{const b=e.target.closest('.seg button');if(b&&b.getAttribute('aria-pressed')!=='true')return;e.stopPropagation();const o=r.querySelector('.seg button:not([aria-pressed="true"])');if(o)o.click();},true);
 $('inviteRow').addEventListener('click',e=>{if(!e.target.closest('input,button'))$('copyInvite').click();});
+// Settings tabs: one panel at a time (Controls only on touch screens); arrow keys move between the tabs
+const stTabs=[...$('stTabs').children];
+function stTab(t){for(const x of stTabs){const on=x===t;x.setAttribute('aria-selected',String(on));x.tabIndex=on?0:-1;$(x.getAttribute('aria-controls')).hidden=!on;}$('settingsCard').scrollTop=0;}
+$('stTabs').addEventListener('click',e=>{const t=e.target.closest('[role=tab]');if(t&&t.getAttribute('aria-selected')!=='true')stTab(t);});
+$('stTabs').addEventListener('keydown',e=>{const d=e.key==='ArrowRight'?1:e.key==='ArrowLeft'?-1:0;if(!d)return;const v=stTabs.filter(x=>x.offsetParent),i=v.indexOf(document.activeElement);if(i<0)return;const t=v[(i+d+v.length)%v.length];e.preventDefault();stTab(t);t.focus();});
+// Reset to defaults: the first tap arms it, a second within 3 s taps each of the tab's data-def choices that isn't picked
+for(const b of document.querySelectorAll('#settingsCard .st-reset')){const label=b.lastChild;let t=0;
+  b.addEventListener('click',()=>{clearTimeout(t);
+    if(!b.classList.contains('arm')){b.classList.add('arm');label.textContent='Tap again to reset';t=setTimeout(()=>{b.classList.remove('arm');label.textContent='Reset to defaults';},3000);return;}
+    b.classList.remove('arm');for(const d of b.closest('.st-panel').querySelectorAll('.seg [data-def]'))if(d.getAttribute('aria-pressed')!=='true')d.click();
+    label.textContent='Back to defaults';t=setTimeout(()=>{label.textContent='Reset to defaults';},1600);Native.haptic('light');});}
 // account deletion (App Store guideline 5.1.1(v)): Profile › Account, or the last button on Settings; both open the #deleteCard confirm
 let delFrom='profileCard';const DEL_BODY=$('delBody').textContent;
 function openDelete(from){delFrom=from;$('deleteCard').classList.remove('done');$('delTitle').textContent='Delete account?';$('delBody').textContent=DEL_BODY;$('delBody').hidden=false;$('delApple').hidden=false;$('delRow').hidden=false;$('deleteDone').hidden=true;$('deleteMsg').hidden=true;$('deleteGo').disabled=false;$('deleteGo').textContent='Delete forever';showCard('deleteCard');}
