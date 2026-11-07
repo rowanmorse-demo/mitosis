@@ -4403,7 +4403,7 @@ const PREMIUM=[
   draw(g,c,r,k){const q=skinPx(g,r);skinArt(g,this,c,r,0);if(q<14)return; // not turned: the facets stay lit from the upper left
     const ph=((T*.16+c.wob*.1)%1)*3.2-1.6;if(Math.abs(ph)<1.15){g.beginPath();g.rect(c.x-r*1.2,c.y-r*1.2,r*2.4,r*2.4);g.save();g.translate(c.x+ph*r,c.y+ph*r);g.scale(r,r);g.fillStyle=grad(g,'ice_sheen',m=>lgr(m,-.5,-.5,.5,.5,[0,'rgba(255,255,255,0)',.42,'rgba(255,255,255,0)',.5,'rgba(255,255,255,.3)',.58,'rgba(255,255,255,0)',1,'rgba(255,255,255,0)']));g.fill();g.restore();}
     const t=T*.45+c.wob,i=Math.floor(t)%5,a=i*2.1+c.wob,d=r*(.3+(i%3)*.18);glint(g,c.x+Math.cos(a)*d,c.y+Math.sin(a)*d,r*.13,Math.sin((t%1)*Math.PI)*1.1);}},
-{id:11,key:'toxic',name:'Toxic',price:400,base:[96,90,44],edge:'#1c5406',edge2:'rgba(220,255,120,.55)',
+{id:11,key:'toxic',name:'Toxic',price:4000,base:[96,90,44],edge:'#1c5406',edge2:'rgba(220,255,120,.55)',
   // a ball of radioactive slime: thick glossy goo heaped in lumps and swirls, darker and murkier toward the edge, glowing round a sunken hazard sign
   // (a glossy black trefoil on a disc of light, goo oozing over it), glossy bubbles on the surface, drips hanging from the top, and bubbles rising
   bake(q,u){const R=prng(11),hi=u>110;q.lineJoin='round';q.lineCap='round';
@@ -7361,7 +7361,7 @@ async function flushRuns(){ // report finished runs; keep them queued while the 
 }
 // Skins grid on the start card
 let confirmSkin=0,confirmT=0;
-const RARITY={12:'rare',13:'rare',14:'rare',15:'epic',16:'mythic',17:'rare',19:'rare',20:'epic',22:'epic',23:'rare',28:'rare',29:'rare',30:'epic',31:'legendary',33:'rare',34:'rare',35:'rare',39:'epic',40:'rare',41:'rare',42:'rare',43:'rare',44:'epic',45:'epic'};
+const RARITY={11:'legendary',12:'rare',13:'rare',14:'rare',15:'epic',16:'mythic',17:'rare',19:'rare',20:'epic',22:'epic',23:'rare',28:'rare',29:'rare',30:'epic',31:'legendary',33:'rare',34:'rare',35:'rare',39:'epic',40:'rare',41:'rare',42:'rare',43:'rare',44:'epic',45:'epic'};
 const SKIN_DESC={
   32:'The Moon up close: grey seas, bright rayed craters and a dusting of starlight.',33:'A whole world: oceans, green and desert continents, ice caps and clouds drifting round it.',34:'The heart of a storm cloud, rain sheeting through it and lightning flaring inside.',35:'A blue morpho\'s wing: scales that shimmer electric blue, edged in black and white.',36:'A juicy slice, seeds and all, inside a striped green rind.',37:'A glossy peppermint swirl that spins as you swim.',38:'A ring doughnut, pink icing and a fistful of sprinkles.',39:'An open watch movement: brass and steel gears turning, ruby jewels and a ticking balance wheel.',40:'A mirror ball throwing coloured light as it turns.',41:'Glowing wax rising, splitting and sinking through warm liquid.',42:'A rose window of jewel-coloured glass, lit from behind.',43:'Black opal, flashing green, blue and fire as the light moves.',44:'Emerald scales and a molten eye that follows you, slit pupil and all.',45:'A bird of fire: feathers of flame, burning wings beyond the membrane and embers in its wake.',
   5:'A star-forming nebula: glowing gas, dust pillars and newborn stars.',6:'Basalt plates split by lava that flares as it pulses.',7:'Wax cells brimming with honey, and a bee at work.',8:'A circuit board with a chip at its heart: traces, parts, and data pulsing along the lines.',
