@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		21AD5C52C1E458E6BBA27D00 /* Recorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E21F94BA3D6992C3A52C086 /* Recorder.swift */; };
 		2B4B79A44744FFFECEFEAA39 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9530BC88744AE81130065B91 /* Assets.xcassets */; };
+		2D8D6F1065A6B78B8B69438D /* Push.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB460533409A813E03B3EA61 /* Push.swift */; };
 		2F61960C85A3C3A2778616A3 /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = D22E25D1E8F242C73B91AC1C /* Store.swift */; };
 		3A661457A5E8B40927BA4F6A /* Products.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 288647F01627982FF8E5C854 /* Products.storekit */; };
 		3EFF471C12CFE60617A0A5AB /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC78B5F1AA3365E3D30A6A33 /* AppDelegate.swift */; };
@@ -47,6 +48,7 @@
 		9810CDBF06BB4874ED519410 /* CrashReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashReporter.swift; sourceTree = "<group>"; };
 		BC78B5F1AA3365E3D30A6A33 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		D22E25D1E8F242C73B91AC1C /* Store.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
+		EB460533409A813E03B3EA61 /* Push.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Push.swift; sourceTree = "<group>"; };
 		F40391A8EC0E4ED8BE6CA2B7 /* SignIn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignIn.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -98,6 +100,7 @@
 				418F5E7346F45CBFB7231490 /* Nearby.swift */,
 				5300C570CC8E1655F0D01065 /* PageUpdates.swift */,
 				288647F01627982FF8E5C854 /* Products.storekit */,
+				EB460533409A813E03B3EA61 /* Push.swift */,
 				2E21F94BA3D6992C3A52C086 /* Recorder.swift */,
 				F40391A8EC0E4ED8BE6CA2B7 /* SignIn.swift */,
 				D22E25D1E8F242C73B91AC1C /* Store.swift */,
@@ -215,6 +218,7 @@
 				D7AF4C1BE590B4EE61B9643F /* GameViewController.swift in Sources */,
 				FC858C209911773134917AC3 /* Nearby.swift in Sources */,
 				DFAF0C81457B27F9F6FDB79C /* PageUpdates.swift in Sources */,
+				2D8D6F1065A6B78B8B69438D /* Push.swift in Sources */,
 				21AD5C52C1E458E6BBA27D00 /* Recorder.swift in Sources */,
 				D18435CC2C316056C895EF16 /* SignIn.swift in Sources */,
 				2F61960C85A3C3A2778616A3 /* Store.swift in Sources */,

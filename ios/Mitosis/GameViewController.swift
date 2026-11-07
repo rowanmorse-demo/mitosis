@@ -85,6 +85,7 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
         let index = PageUpdates.shared.pageToLoad() ?? bundled
         let update = PageUpdates.shared.loaded
         booted = false
+        Push.shared.onEvent = nil              // push events wait for the new page to boot
         pageLoaded = false
         bootTimer?.invalidate()
         resolveServerURL { server in
@@ -165,6 +166,7 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
     func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
         NSLog("[Mitosis] web content process terminated; reloading")
         CrashReporter.shared.note("webkit-terminated", "the web content process was terminated (memory pressure or a WebKit crash); the game reloaded")
+        Push.shared.onEvent = nil
         webView.reload()
     }
 
@@ -225,6 +227,8 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
             booted = true
             bootTimer?.invalidate()
             PageUpdates.shared.booted()
+            // push notifications: the token, taps (also the one that launched the app) and notifications while open
+            Push.shared.onEvent = { [weak self] e in var m = e; m["type"] = "push"; self?.reply(m) }
         case "ready":
             Store.shared.onPurchase = { [weak self] purchase in self?.reply(["type": "purchase", "purchase": purchase]) }
             Task { await Store.shared.deliverUnfinished() }
@@ -275,6 +279,16 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
                 self?.reply(error.map { ["id": id as Any, "ok": false, "error": $0] } ?? ["id": id as Any, "ok": true])
             }
             if msg["cmd"] as? String == "start" { Recorder.shared.start(done) } else { Recorder.shared.stop(done) }
+        case "push":
+            // the page asks for permission when it makes sense (never at launch), reads the state, or opens iOS Settings
+            let answer: (String) -> Void = { [weak self] s in
+                self?.reply(["id": id as Any, "ok": true, "status": s, "token": Push.shared.token ?? "", "env": Push.environment])
+            }
+            switch msg["cmd"] as? String ?? "" {
+            case "ask": Push.shared.ask(answer)
+            case "settings": Push.shared.openSettings(); reply(["id": id as Any, "ok": true])
+            default: Push.shared.status(answer)
+            }
         case "review":
             // the page asks after a strong finish; iOS decides whether to show the prompt (at most 3 times a year)
             if let scene = view.window?.windowScene { AppStore.requestReview(in: scene) }

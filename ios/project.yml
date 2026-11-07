@@ -61,6 +61,7 @@ targets:
       path: Mitosis/Mitosis.entitlements
       properties:
         com.apple.developer.applesignin: [Default]     # Sign in with Apple
+        aps-environment: development                   # Push Notifications (Push.swift). Xcode makes it production for App Store / TestFlight exports
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.mitosisgame.app
