@@ -7063,12 +7063,28 @@ function dash(p){
     for(let k=0;k<6&&parts.length<600;k++){const a=Math.atan2(-ny,-nx)+rand(-.5,.5),s=rand(80,220);parts.push({x:c.x-nx*c.r,y:c.y-ny*c.r,vx:Math.cos(a)*s,vy:Math.sin(a)*s,t:0,life:rand(.3,.6),color:col(p.color,10),r:rand(2,5)});}}
   if(p===human){sfx('dash');flash('dashBtn');Native.haptic('light');}
 }
-function pop(c){ // burst on a phage: half the mass sprays out
+// Bursting on a phage works like an agar virus: the cell (the phage's mass added) shatters into as many pieces as it has
+// free slots, up to MAX_CELLS in all. A small cell breaks into equal pieces; a bigger one keeps half, and the other half
+// flies off as a half of that, then a quarter, and so on while each slot left could still get POP_MIN, the rest shared
+// equally. Every piece leaves like a split (SPLIT_SPEED), fanned around the cell, so they scatter about a lunge away, and
+// each may fuse after the merge time for its own size. (It was half the mass in at most 10 equal pieces at 420-640 units/s,
+// which stayed within about one radius of the cell.)
+const POP_MIN=36;
+function popMasses(m,slots){ // the masses that fly off; the cell keeps the rest
+  const out=[];if(slots<1)return out;
+  if(m/slots<POP_MIN){let n=2;while(m/n>POP_MIN&&n*2<slots)n*=2;n=Math.min(n,slots);for(let i=0;i<n;i++)out.push(m/(n+1));return out;}
+  let left=m/2,n=slots;
+  while(n>1&&left/n>=POP_MIN){out.push(left/2);left/=2;n--;}
+  for(let i=0;i<n;i++)out.push(left/n);
+  return out;
+}
+function pop(c){ // burst on a phage
   const p=c.owner;const slots=MAX_CELLS-p.cells.filter(x=>!x.dead).length;if(slots<=0)return;
-  const give=c.mass*.5;const n=Math.min(slots,Math.floor(give/14),10);if(n<1)return;
-  const each=give/n;c.mass-=give;c.r=radius(c.mass);const md=T+mdel(p,c.mass+give);c.mergeAt=md;kick(c,3);
-  for(let i=0;i<n;i++){const a=i/n*TAU+Math.random()*.4,sp=rand(420,640);
-    const k=addCell(p,c.x+Math.cos(a)*c.r*.4,c.y+Math.sin(a)*c.r*.4,each,Math.cos(a)*sp,Math.sin(a)*sp);k.mergeAt=md;k.dr=k.r*.5;k.inf=c.inf;kick(k,2);}
+  const ms=popMasses(c.mass,slots);if(!ms.length)return;
+  for(const m of ms)c.mass-=m;c.r=radius(c.mass);c.mergeAt=T+mdel(p,c.mass*2);kick(c,3);
+  const a0=rand(0,TAU);
+  for(let i=0;i<ms.length;i++){const a=a0+i/ms.length*TAU+rand(-.3,.3),sp=SPLIT_SPEED*rand(.8,1);
+    const k=addCell(p,c.x+Math.cos(a)*c.r*.4,c.y+Math.sin(a)*c.r*.4,ms[i],Math.cos(a)*sp,Math.sin(a)*sp);k.mergeAt=T+mdel(p,ms[i]*2);k.dr=k.r*.5;k.inf=c.inf;kick(k,2);}
   if(p===human){sfx('pop');Native.haptic('heavy');cam.shake=Math.max(cam.shake,16);floatText(c.x,c.y-c.r,'Burst',PU.surge.c,22);}
 }
 function lyse(c){ // the infection's payoff: the whole cell ruptures into up to 16 pieces
