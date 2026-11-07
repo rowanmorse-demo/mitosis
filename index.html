@@ -3023,10 +3023,13 @@ const MAX_HUNTERS=6,HUNTER_R=42,INF_MIN=8,INF_MAX=10,PROTO=6,SEED=90210; // PROT
 let ROUND_SEC=+((location.search.match(/[?&]round=(\d+)/)||[])[1])||600,ROUND_GRACE=Math.round(ROUND_SEC*.1),ROUND_HOLD=Math.round(ROUND_SEC*.05),BOT_CUTOFF=Math.round(ROUND_SEC*.7);const R_MIN=R*.03,ROUND_GAP=6; // arena full for the first minute, closed to 3% by 9:30; bots stop respawning at 7:00
 let round={id:1,start:0,n:0,synced:false,over:false};
 // Balance: a cell is absorbed once EAT_COVER of its diameter is inside a cell at least 10% heavier (see need()).
-// Ejecting costs EJECT_COST and makes a blob of EJECT_MASS, at most once every EJECT_GAP seconds. The blob leaves at
-// EJECT_SPEED and slows by EJECT_DRAG per second, so it flies EJECT_SPEED/EJECT_DRAG ≈ 480 units: about 7.5 radii of a
-// mass-100 cell, as far as agar.io shoots (it was 172, short of the phages bots aim at from 460 out).
-const EAT_COVER=.3,EJECT_COST=16,EJECT_MASS=15,EJECT_GAP=.06,EJECT_SPEED=1450,EJECT_DRAG=3,BOTS_PER_PLAYER=5,SKIN_FREE=5;
+// Ejecting works like the classic agar-style servers (Ogar / MultiOgar defaults): a shot costs EJECT_COST and makes a
+// blob of EJECT_MASS, so feeding passes on 72% of what you spend, and holding it fires once every EJECT_GAP s (about 8 a
+// second; it was 16). The blob leaves at EJECT_SPEED, up to EJECT_SPREAD rad either side of the aim (the servers use .3;
+// half of that keeps phages and hunters hittable from a few radii out), and slows by EJECT_DRAG per second, so it flies
+// EJECT_SPEED/EJECT_DRAG ≈ 480 units: about 7.5 radii of a mass-100 cell, as far as agar shoots. EJECT_R is its drawn size:
+// a third of a mass-100 cell's radius, like agar's blobs (it was 14, a fifth).
+const EAT_COVER=.3,EJECT_COST=18,EJECT_MASS=13,EJECT_GAP=.12,EJECT_SPEED=1450,EJECT_DRAG=3,EJECT_SPREAD=.15,EJECT_R=21,BOTS_PER_PLAYER=5,SKIN_FREE=5;
 const COS=new Float32Array(NP),SIN=new Float32Array(NP);for(let i=0;i<NP;i++){COS[i]=Math.cos(i/NP*TAU);SIN[i]=Math.sin(i/NP*TAU);}
 const PX=new Float32Array(NP),PY=new Float32Array(NP),TMP=new Float32Array(NP);
 const rand=(a,b)=>a+Math.random()*(b-a);
@@ -7024,15 +7027,16 @@ function split(p){
   if(did&&p===human){sfx('split');flash('splitBtn');Native.haptic('medium');cam.shake=Math.max(cam.shake,3);}
 }
 function eject(p){
-  if(!p||!p.alive||T-(p.ejectAt||-9)<EJECT_GAP)return;let did=false; // holding W repeats the key ~30×/s; cap it
+  if(!p||!p.alive)return;const since=T-(p.ejectAt??-9);if(since<EJECT_GAP-.005)return;let did=false; // held down, it's called every frame or so; cap it
   for(const c of p.cells){
-    if(c.dead||c.mass<35)continue;const[nx,ny]=aim(p,c);
+    if(c.dead||c.mass<35)continue;const[nx,ny]=aim(p,c),a=rand(-EJECT_SPREAD,EJECT_SPREAD),ca=Math.cos(a),sa=Math.sin(a),vx=nx*ca-ny*sa,vy=nx*sa+ny*ca;
     c.mass-=EJECT_COST;c.r=radius(c.mass);
-    ejected.push({x:c.x+nx*(c.r+10),y:c.y+ny*(c.r+10),vx:nx*EJECT_SPEED,vy:ny*EJECT_SPEED,dx:nx,dy:ny,mass:EJECT_MASS,r:14,color:p.color,owner:p,born:T,dead:false});
+    // dx,dy: the aim itself, which a phage fed by this blob fires along
+    ejected.push({x:c.x+nx*(c.r+10),y:c.y+ny*(c.r+10),vx:vx*EJECT_SPEED,vy:vy*EJECT_SPEED,dx:nx,dy:ny,mass:EJECT_MASS,r:EJECT_R,color:p.color,owner:p,born:T,dead:false});
     for(let i=0;i<NP;i++){const d=COS[i]*nx+SIN[i]*ny;if(d>.7)c.pv[i]+=1.6*d;}
     did=true;
   }
-  if(did)p.ejectAt=T;
+  if(did)p.ejectAt=since<EJECT_GAP*1.5?p.ejectAt+EJECT_GAP:T; // held: an even beat, not one lost frame per shot
   if(did&&p===human){sfx('eject');flash('ejectBtn');}
 }
 function dash(p){
@@ -7896,7 +7900,7 @@ function draw(){
       ctx.drawImage(PSPR[pl.h],pl.x-s/2,pl.y-s/2,s,s);}}
   }
   if(!SKIP.has('ej'))for(const e of ejected)if(e.x>x0-30&&e.x<x1+30&&e.y>y0-30&&e.y<y1+30)drawEj(e.x,e.y,e.r,e.color,e.vx,e.vy);
-  if(!SKIP.has('ej'))for(const [,list] of remoteEj)for(const e of list)if(e.x>x0-30&&e.x<x1+30&&e.y>y0-30&&e.y<y1+30)drawEj(e.x,e.y,14,e.color);
+  if(!SKIP.has('ej'))for(const [,list] of remoteEj)for(const e of list)if(e.x>x0-30&&e.x<x1+30&&e.y>y0-30&&e.y<y1+30)drawEj(e.x,e.y,EJECT_R,e.color);
   if(!SKIP.has('ent'))for(const u of powerups)if(u.x>x0-80&&u.x<x1+80&&u.y>y0-80&&u.y<y1+80)drawPU(u);
   const list=[];for(const c of cells)if(c.x+c.dr*1.3>x0&&c.x-c.dr*1.3<x1&&c.y+c.dr*1.3>y0&&c.y-c.dr*1.3<y1)list.push(c);
   for(const v of viruses)if(v.x+v.r*2>x0&&v.x-v.r*2<x1&&v.y+v.r*2>y0&&v.y-v.r*2<y1)list.push(v);
@@ -8894,12 +8898,12 @@ cv.addEventListener('contextmenu',e=>e.preventDefault());
 const bindAct=(id,fn)=>$(id).addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();if(mode==='play'&&!paused)fn(human);});
 $('evOpts').addEventListener('pointerdown',e=>{const b=e.target.closest('.evo');if(!b)return;e.preventDefault();e.stopPropagation();takeEvo(+b.dataset.i);});
 bindAct('splitBtn',split);bindAct('dashBtn',dash);
-{ // Shoot: a tap fires once; holding keeps firing, faster and faster (180 ms down to 70 ms between shots)
-  const b=$('ejectBtn');let timer=null,held=0;
-  const stop=e=>{if(e&&e.type==='pointercancel')reportHitch('shoot pointercancel');if(timer){clearTimeout(timer);timer=null;}};
-  const fire=()=>{if(mode!=='play'||paused||!human){stop();return;}eject(human);held++;timer=setTimeout(fire,65);};
-  b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();try{b.setPointerCapture(e.pointerId);}catch(_){}stop();held=0;fire();});
-  for(const ev of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(ev,stop);
+// Shoot (the button or W): a tap fires once; holding keeps firing. This only asks often; eject() keeps the beat (EJECT_GAP).
+const ejHold={timer:null,stop(e){if(e&&e.type==='pointercancel')reportHitch('shoot pointercancel');if(ejHold.timer){clearTimeout(ejHold.timer);ejHold.timer=null;}},
+  fire(){if(mode!=='play'||paused||!human){ejHold.stop();return;}eject(human);ejHold.timer=setTimeout(ejHold.fire,25);},start(){ejHold.stop();ejHold.fire();}};
+{ const b=$('ejectBtn');
+  b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();try{b.setPointerCapture(e.pointerId);}catch(_){}ejHold.start();});
+  for(const ev of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(ev,ejHold.stop);
 }
 // virtual joystick
 const joyEl=$('joy'),joyKnob=joyEl.querySelector('.knob');
@@ -8931,10 +8935,11 @@ addEventListener('keydown',e=>{
   if(mode==='play'&&(e.key==='Escape'||e.code==='KeyP')){e.preventDefault();setPaused(!paused);return;}
   if(mode!=='play'||paused){if(e.key==='Enter'&&tag!=='BUTTON'&&!$('startCard').hidden)startGame();return;}
   if(e.code==='Space'){e.preventDefault();if(!e.repeat)split(human);}
-  else if(e.code==='KeyW')eject(human);
+  else if(e.code==='KeyW'){if(!e.repeat)ejHold.start();}
   else if(e.key==='Shift'||e.code==='KeyE'){if(!e.repeat)dash(human);}
   else if(/^Digit[123]$/.test(e.code)&&evoOffer){takeEvo(+e.code.slice(5)-1);}
 });
+addEventListener('keyup',e=>{if(e.code==='KeyW')ejHold.stop();});addEventListener('blur',()=>ejHold.stop());
 document.addEventListener('visibilitychange',()=>{reportHitch('visibility '+(document.hidden?'hidden':'visible'));
   if(document.hidden){
     if(mode==='play'&&!paused)setPaused(true);
