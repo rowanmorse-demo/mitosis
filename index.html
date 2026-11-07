@@ -6970,7 +6970,7 @@ let players=[],cells=[],pellets=[],ejected=[],freeV=[],viruses=[],powerups=[],hu
 const vslots=[];
 let ev={type:0,id:0,end:0,x:0,y:0},evNext=40,evIdC=1,evoOffer=null,runAch=[],lysedAt=0,emSeq=0;
 let achGot=new Set();try{const a=JSON.parse(localStorage.getItem('mitosis.ach')||'[]');if(Array.isArray(a))achGot=new Set(a);}catch(e){}
-let T=0,nextId=1,nidC=1,vidC=1,puC=1,hidC=1,human=null,mode='attract',leader=null,paused=false,lowFx=!!settings.lowFx,histT=0,hunterT=12,slow=1;
+let T=0,nextId=1,nidC=1,vidC=1,puC=1,hidC=1,human=null,mode='attract',leader=null,paused=false,lowFx=!!settings.lowFx||CL,histT=0,hunterT=12,slow=1;
 const cam={x:0,y:0,z:.6,shake:0};
 const pointer={x:innerWidth/2,y:innerHeight/2};
 // Touch devices steer with the on-screen joystick (bottom left) instead of the finger position.
@@ -7129,7 +7129,7 @@ function infect(c,delay){
 }
 
 /* ================= effects ================= */
-function burst(x,y,color,n,sp=260){for(let i=0;i<n&&parts.length<700;i++){const a=Math.random()*TAU,s=rand(sp*.25,sp);parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,t:0,life:rand(.35,.85),color,r:rand(2.5,8)});}}
+function burst(x,y,color,n,sp=260){if(CL)return;for(let i=0;i<n&&parts.length<700;i++){const a=Math.random()*TAU,s=rand(sp*.25,sp);parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,t:0,life:rand(.35,.85),color,r:rand(2.5,8)});}}
 function floatText(x,y,text,c,size=18){const z=cam.z||1;let n=0;for(const f of floats)if(f.t<.9&&Math.abs(f.x-x)<90/z&&Math.abs(f.y-y)<90/z)n++;y-=n*size*1.9/z; // a burst of announcements stacks upward instead of overprinting
   floats.push({x,y,text,c,size,t:0,life:1.2});}
 function pushFeed(html,you){feed.unshift({html,you,t:T});if(feed.length>5)feed.pop();renderFeed();}
@@ -7245,7 +7245,7 @@ function setGameMode(m){
   m=m==='classic'?'classic':'br';if(mode==='play'&&human&&human.alive)return false;
   settings.mode=m;saveSettings();const cl=m==='classic',N=window.__mitosisNet;if(N&&N.setGameMode)N.setGameMode(m);
   if(cl===CL)return true;
-  CL=cl;document.body.dataset.mode=m;document.body.classList.toggle('classic',CL);
+  CL=cl;document.body.dataset.mode=m;document.body.classList.toggle('classic',CL);lowFx=!!settings.lowFx||saverOn||CL;
   if(local)leaveLocal();removeHuman();isHost=true;claimReady=false;yielded=false;lastPeerCount=-1;
   for(const p of players.filter(p=>!p.remote))removePlayer(p);cells=cells.filter(c=>!c.dead);
   for(const pl of pellets)placePellet(pl);
@@ -7659,7 +7659,7 @@ function step(dt){
   if(human&&human.alive){const m=human.cells.reduce((s,c)=>s+c.mass,0);if(m>=500)unlock('m500');if(m>=2000)unlock('m2000');
     if(T-human.stats.born>300)unlock('surv5');if(lysedAt&&T-lysedAt>20){lysedAt=0;unlock('lysis');}}
   if(human&&human.alive){histT+=dt;if(histT>=.5){histT=0;human.hist.push(human.cells.reduce((s,c)=>s+c.mass,0));}}
-  membranes(dt);
+  if(!CL)membranes(dt); // Classic cells stay plain circles: no soft-body pass
   for(const pt of parts){pt.t+=dt;pt.x+=pt.vx*dt;pt.y+=pt.vy*dt;pt.vx*=.92;pt.vy*=.92;}
   parts=parts.filter(pt=>pt.t<pt.life);
   for(const g of ghosts)g.t+=dt;ghosts=ghosts.filter(g=>g.t<g.life);
@@ -7798,7 +7798,7 @@ function drawCell(c){
     fillUnit(ctx,grad(ctx,'shadow',g=>{const q=g.createRadialGradient(0,0,.75,0,0,1.28);q.addColorStop(0,'rgba(0,0,0,.36)');q.addColorStop(1,'rgba(0,0,0,0)');return q;}),sx,sy,r);
   }
   const sk=p.skin|0,SK=sk>=SKIN_FREE?PREMIUM[sk-SKIN_FREE]:null;if(SK&&SK.aura&&sr>12&&!lowFx)SK.aura(ctx,c,r,k,sr,c===p.cells[0]); // skins that burn past the membrane; the full show only on the lead cell
-  const pulse=sick?(.5+.5*Math.sin(T*(5+sick*16))):0,tok=SK&&!sick&&(sr<=14||lowFx&&p!==human&&sr<=48);
+  const pulse=sick?(.5+.5*Math.sin(T*(5+sick*16))):0,tok=SK&&!sick&&(sr<=14||CL||lowFx&&p!==human&&sr<=48); // Classic: every skin from its cached sprite
   if(tok){const e=r/.96;ctx.drawImage(bake(ctx,SK.tok[p.stain|0],sr*DPR*2/.96,tokenArt,1,p),c.x-e,c.y-e,2*e,2*e);}else{
   ctx.beginPath();membranePath(c,r,1);
   fillUnit(ctx,bodyGrad(k),c.x,c.y,r);
@@ -8010,8 +8010,8 @@ function draw(){
   ctx.globalAlpha=1;
   ctx.setTransform(DPR,0,0,DPR,0,0);
   if(!lowFx&&!SKIP.has('bokeh'))drawBokeh(BOK_FRONT);
-  const vg=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*.4,W/2,H/2,Math.hypot(W,H)*.6);
-  vg.addColorStop(0,'rgba(2,8,9,0)');vg.addColorStop(1,'rgba(2,8,9,.6)');if(!SKIP.has('vig')){ctx.fillStyle=vg;ctx.fillRect(0,0,W,H);}
+  if(!SKIP.has('vig')&&!CL){const vg=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*.4,W/2,H/2,Math.hypot(W,H)*.6); // Classic: no vignette
+  vg.addColorStop(0,'rgba(2,8,9,0)');vg.addColorStop(1,'rgba(2,8,9,.6)');ctx.fillStyle=vg;ctx.fillRect(0,0,W,H);}
   if(!SKIP.has('tags')){drawHunterArrows();drawAllyArrow();drawTags();}
   if(touchId!==null&&mode==='play'){ctx.beginPath();ctx.arc(pointer.x,pointer.y,26,0,TAU);ctx.lineWidth=1.5;ctx.strokeStyle='rgba(220,239,233,.35)';ctx.stroke();
     ctx.beginPath();ctx.arc(pointer.x,pointer.y,4,0,TAU);ctx.fillStyle='rgba(220,239,233,.6)';ctx.fill();}
@@ -8629,13 +8629,13 @@ achLine();
 const diffEl=$('diff');const syncDiff=()=>{[...diffEl.children].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.d===settings.diff)));};
 diffEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.diff=b.dataset.d;syncDiff();});syncDiff();
 const fxSegEl=$('fxSeg'),syncFxSeg=()=>[...fxSegEl.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.fx==='1')===!!settings.lowFx)));
-fxSegEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.lowFx=b.dataset.fx==='1';lowFx=settings.lowFx||saverOn;saveSettings();syncFxSeg();});syncFxSeg();
+fxSegEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.lowFx=b.dataset.fx==='1';lowFx=settings.lowFx||saverOn||CL;saveSettings();syncFxSeg();});syncFxSeg();
 /* battery saver: Settings, or the app reporting Low Power Mode or a hot phone: 30 fps in play, lighter effects, no glass
    blur and a lower canvas resolution */
 const power={low:false,thermal:0},saverEl=$('saverSeg');
 function syncSaver(){const on=!!settings.saver||power.low||power.thermal>=2;
   [...saverEl.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.sv==='1')===!!settings.saver)));
-  if(on===saverOn)return;saverOn=on;document.body.classList.toggle('saver',on);lowFx=!!settings.lowFx||on;resize();}
+  if(on===saverOn)return;saverOn=on;document.body.classList.toggle('saver',on);lowFx=!!settings.lowFx||on||CL;resize();}
 saverEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.saver=b.dataset.sv==='1';saveSettings();syncSaver();});
 window.__onPower=m=>{power.low=!!m.low;power.thermal=m.thermal|0;syncSaver();};syncSaver(); // the app sends {low, thermal 0-3} on load and on change
 const bgSegEl=$('bgSeg'),syncBgSeg=()=>{BG=BGS[settings.bg]||BGS.black;document.body.dataset.bg=BG===BGS.white?'white':'black';[...bgSegEl.children].forEach(b=>b.setAttribute('aria-pressed',String(BGS[b.dataset.bg]===BG)));};
