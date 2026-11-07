@@ -6996,16 +6996,22 @@ function placePellet(pl){const k=(pl.i*7919+pl.g*104729+SEED)|0,s=hpos(k,14);pl.
 function eatPellet(pl){peLog.push({i:pl.i,g:pl.g,t:T,x:pl.x,y:pl.y});pl.g=(pl.g+1)%262143;placePellet(pl);}
 // phage slots: deterministic positions from (slot, generation)
 function placeSlot(v){const k=(v.slot*15485863+v.g*32452843+SEED*7)|0,s=hpos(k,300);v.x=v.tx=s.x;v.y=v.ty=s.y;}
-function setVM(v){v.mass=VIRUS_M+v.feed*4;v.r=radius(v.mass);}
-// Viruses replicate on their own: the ring inside one closes a sixth at a time, as if fed (feedVirus), and when it
+// Feeding a phage works like an agar virus: each blob that hits one adds its mass (VIRUS_M 100 + 13 a feed, so it visibly
+// swells, up to 178), and the VIRUS_FEEDS-th fires a new phage along the shooter's aim while the fed one shrinks back.
+// The shot leaves the parent's centre at VSHOT_SPEED and slows by VSHOT_DRAG per second: VSHOT_SPEED/VSHOT_DRAG = 500
+// units, 7.8 phage radii, as far as agar-style servers fire one (it was 6 feeds of 4 mass, and 1140 with drag 5 from two
+// radii ahead: 228 units of flight, 3.6 radii). Since popping goes by mass, a swollen phage takes a bigger cell to burst.
+const VIRUS_FEEDS=7,VSHOT_SPEED=1500,VSHOT_DRAG=3;
+function setVM(v){v.mass=VIRUS_M+v.feed*EJECT_MASS;v.r=radius(v.mass);}
+// Viruses replicate on their own: the ring inside one closes a seventh at a time, as if fed (feedVirus), and when it
 // closes the virus splits off a copy. A full ring takes VREP_T s, and every copy makes that virus and its offspring
 // VREP_SLOW× slower. Host only: other players see the ring in whole sixths through the synced feed count.
 const VREP_T=45,VREP_SLOW=1.15,VREP_WAIT=30; // a new virus first waits up to VREP_WAIT s, so the 140 slots don't all split at once
-const vStep=v=>VREP_T*VREP_SLOW**(v.gen||0)/6;
-const vFill=v=>(v.feed+clamp((v.ft||0)/vStep(v),0,1))/6; // how far the ring has closed, 0..1
+const vStep=v=>VREP_T*VREP_SLOW**(v.gen||0)/VIRUS_FEEDS;
+const vFill=v=>(v.feed+clamp((v.ft||0)/vStep(v),0,1))/VIRUS_FEEDS; // how far the ring has closed, 0..1
 function growVirus(v,dt){
   v.ft=(v.ft||0)+dt;const step=vStep(v);
-  if(v.feed>=5&&freeV.length>=MAX_FREEV){v.ft=Math.min(v.ft,step*.97);return;} // no room for a copy: hold just short of closing
+  if(v.feed>=VIRUS_FEEDS-1&&freeV.length>=MAX_FREEV){v.ft=Math.min(v.ft,step*.97);return;} // no room for a copy: hold just short of closing
   if(v.ft>=step){v.ft-=step;const a=rand(0,TAU);feedVirus(v,Math.cos(a),Math.sin(a),null);}
 }
 function makeSlot(i){const v={kind:'s',slot:i,g:0,feed:0,gen:0,ft:-rand(0,VREP_WAIT),alive:true,respawnAt:0,x:0,y:0,tx:0,ty:0,vx:0,vy:0,mass:VIRUS_M,r:radius(VIRUS_M),spin:h32(i*31+5)*TAU,dead:false};placeSlot(v);return v;}
@@ -7425,8 +7431,8 @@ function think(p){
 /* ================= simulation ================= */
 function feedVirus(v,dx,dy,owner){
   v.feed++;
-  if(v.feed>=6){v.feed=0;v.ft=0;v.gen=(v.gen||0)+1;if(freeV.length>=MAX_FREEV)freeV.shift(); // the new phage flies off along the last shot (range ~ speed / drag of 5)
-    const nv={kind:'f',id:(vidC++%4095)+1,x:v.x+dx*v.r*2,y:v.y+dy*v.r*2,vx:dx*1140,vy:dy*1140,feed:0,gen:v.gen,ft:0,spin:rand(0,TAU),dead:false,alive:true};nv.tx=nv.x;nv.ty=nv.y;setVM(nv);freeV.push(nv);
+  if(v.feed>=VIRUS_FEEDS){v.feed=0;v.ft=0;v.gen=(v.gen||0)+1;if(freeV.length>=MAX_FREEV)freeV.shift(); // the new phage flies off along the last shot
+    const nv={kind:'f',id:(vidC++%4095)+1,x:v.x,y:v.y,vx:dx*VSHOT_SPEED,vy:dy*VSHOT_SPEED,feed:0,gen:v.gen,ft:0,spin:rand(0,TAU),dead:false,alive:true};nv.tx=nv.x;nv.ty=nv.y;setVM(nv);freeV.push(nv);
     burst(v.x,v.y,'hsl(40,90%,62%)',10);if(owner===human){sfx('power');Native.haptic('light');}}
   setVM(v);
 }
@@ -7501,7 +7507,7 @@ function step(dt){
   }
   // ejected mass (ours). A Magnet pulls in other players' blobs as it does food: whoever shot a blob moves it, toward
   // local or remote magnets alike (remote players' fx bits carry the magnet), and the eat check below credits the catcher.
-  const ke=Math.exp(-5*dt),kj=Math.exp(-EJECT_DRAG*dt),mags=cells.filter(c=>!c.dead&&c.owner.fx.magnet>0);
+  const kv=Math.exp(-VSHOT_DRAG*dt),kj=Math.exp(-EJECT_DRAG*dt),mags=cells.filter(c=>!c.dead&&c.owner.fx.magnet>0);
   for(const e of ejected){
     e.x+=e.vx*dt;e.y+=e.vy*dt;e.vx*=kj;e.vy*=kj;
     for(const c of mags){if(c.owner===e.owner)continue;const dx=c.x-e.x,dy=c.y-e.y,d=Math.hypot(dx,dy);if(d<c.r+300&&d>1){const m=Math.min(d,560*dt);e.x+=dx/d*m;e.y+=dy/d*m;break;}}
@@ -7512,7 +7518,7 @@ function step(dt){
     if(e.dead)continue;
     for(const v of viruses){if(Math.abs(v.x-e.x)>v.r||Math.abs(v.y-e.y)>v.r)continue;if(Math.hypot(v.x-e.x,v.y-e.y)<v.r){e.dead=true;
         if(isHost)feedVirus(v,e.dx,e.dy,e.owner);
-        else if(v.kind==='s'){rec(['f',v.slot,v.g,Math.round(e.dx*100),Math.round(e.dy*100)]);v.feed=Math.min(5,v.feed+1);setVM(v);}
+        else if(v.kind==='s'){rec(['f',v.slot,v.g,Math.round(e.dx*100),Math.round(e.dy*100)]);v.feed=Math.min(VIRUS_FEEDS-1,v.feed+1);setVM(v);}
         break;}}
     if(e.dead)continue;
     for(const c of cells){if(c.dead||c.mass<e.mass*1.1)continue;if(c.owner===e.owner&&T-e.born<.4)continue;
@@ -7524,7 +7530,7 @@ function step(dt){
   // phages
   if(isHost){
     for(const v of vslots)if(!v.alive&&T>=v.respawnAt){v.g=(v.g+1)%256;v.feed=0;v.gen=0;v.ft=-rand(0,VREP_WAIT);setVM(v);placeSlot(v);v.alive=true;}
-    for(const v of freeV){v.x+=v.vx*dt;v.y+=v.vy*dt;v.vx*=ke;v.vy*=ke;
+    for(const v of freeV){v.x+=v.vx*dt;v.y+=v.vy*dt;v.vx*=kv;v.vy*=kv;
       const dc=Math.hypot(v.x,v.y);if(dc>R-v.r){v.x*=(R-v.r)/dc;v.y*=(R-v.r)/dc;v.vx*=-.5;v.vy*=-.5;}}
     for(const v of vslots)if(v.alive)growVirus(v,dt);
     for(const v of freeV.slice())if(!v.dead)growVirus(v,dt);
@@ -8282,7 +8288,7 @@ function ingestWorld(P,sT){
   if(typeof P.vs==='string'){for(let i=0;i<VSLOTS&&i*2+2<=P.vs.length;i++){const code=dec(P.vs,i*2,2);if(Number.isNaN(code))break;
       const v=vslots[i],g=code>>4,feed=(code>>1)&7;let alive=!!(code&1);
       if(v.g!==g){v.g=g;placeSlot(v);}const sup=vSup.get(i+':'+g);if(sup!==undefined&&T-sup<3)alive=false;
-      v.alive=alive;v.feed=Math.min(5,feed);setVM(v);}}
+      v.alive=alive;v.feed=Math.min(VIRUS_FEEDS-1,feed);setVM(v);}}
   if(typeof P.vw==='string'){const m=new Map(freeV.map(v=>[v.id,v])),out=[];
     for(let o=0;o+8<=P.vw.length;o+=8){const id=dec(P.vw,o,2),x=dec(P.vw,o+2,3)-OFF,y=dec(P.vw,o+5,3)-OFF;if(Number.isNaN(id+x+y))break;
       const sup=wSup.get(id);if(sup!==undefined&&T-sup<3)continue;
@@ -8337,7 +8343,7 @@ function send(){
       const cs=b.cells.slice().sort((a,c)=>c.mass-a.mass).slice(0,perCell);s+=enc(b.bid,2)+enc(fxBits(b),3)+enc(cs.length,1)+cs.map(encCell).join('');}return s;};
   if(host){
     P.b=nv?bots(2,b=>(b.bid+near.tx)%4===0||b.cells.some(c=>inView(nv,c.x,c.y,c.r))):bots(4);if(nv)P.bp=1; // bp: only the bots near the other phones, and a quarter of the rest in turn
-    P.vs=vslots.map(v=>enc(v.g*16+Math.min(5,v.feed)*2+(v.alive?1:0),2)).join('');
+    P.vs=vslots.map(v=>enc(v.g*16+Math.min(VIRUS_FEEDS-1,v.feed)*2+(v.alive?1:0),2)).join(''); // 3 bits of feed; games before VIRUS_FEEDS 7 read at most 5
     P.vw=freeV.map(v=>enc(v.id,2)+enc(v.x+OFF,3)+enc(v.y+OFF,3)).join('');
     P.pu=powerups.map(u=>enc(u.id,2)+enc(u.x+OFF,3)+enc(u.y+OFF,3)+enc(PUK.indexOf(u.type),1)).join('');
     P.ev=ev.type?enc(ev.type,1)+enc(ev.id,2)+enc(Math.max(0,ev.end-T)*10,2)+enc(ev.x+OFF,3)+enc(ev.y+OFF,3):'';
