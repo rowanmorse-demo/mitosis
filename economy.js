@@ -289,7 +289,7 @@ const PERMANENT = [
   { id: 'lives', stat: 'lives', tiers: [10, 100, 1000, 10000], text: n => `Play ${big(n)} ranked lives` },
   { id: 'time', stat: 'time', tiers: [3600, 36000, 180000, 720000], text: n => `Stay alive ${big(n / 3600)} hour${n === 3600 ? '' : 's'} in all` },
   { id: 'wins', stat: 'wins', tiers: [1, 10, 100, 1000], text: n => (n === 1 ? 'Win a round' : `Win ${big(n)} rounds`) },
-  { id: 'top3', stat: 'top3', tiers: [10, 100, 1000, 5000], text: n => `Finish in the top 3 ${big(n)} times` },
+  { id: 'top3', stat: 'top3', tiers: [10, 100, 1000, 5000], text: n => `Finish in the top 3 in ${big(n)} lives` },
   { id: 'dailies', stat: 'dailies', tiers: [10, 50, 200, 1000], text: n => `Finish ${big(n)} daily quests` },
 ];
 const times = n => (n === 1 ? '' : n === 2 ? ' twice' : ` in ${n} lives`);
