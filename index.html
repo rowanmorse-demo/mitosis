@@ -3068,6 +3068,7 @@ const mergeDelay=m=>MERGE_BASE+m*MERGE_PER_MASS;
 // each other (pushed apart at SIB_STIFF per second) until they may fuse, except in a new piece's first SPLIT_GRACE s, so a half
 // flies clear of its parent instead of shoving it back, as on those servers (13 ticks there).
 const SPLIT_SPEED=1550,CELL_DRAG=3.2,SPLIT_GRACE=.5,SIB_STIFF=30;
+const SPLIT_KILL_SEC=1.2; // a cell a just-launched piece absorbs within this long counts as a split-kill (the lunge is 90% done by 0.72 s)
 const splitReach=m=>SPLIT_SPEED/CELL_DRAG*.4+.75*radius(m/2); // how far past its edge the bots reckon a mass-m cell's split can catch something
 function randInDish(margin=0,rad=arenaR()){if(CL){const L=Math.max(150,CL_HALF-margin);return{x:(Math.random()*2-1)*L,y:(Math.random()*2-1)*L};}const rr=Math.max(150,rad-margin)*Math.sqrt(Math.random()),t=Math.random()*TAU;return{x:Math.cos(t)*rr,y:Math.sin(t)*rr};}
 const col=(c,dl=0,a=1)=>`hsla(${c[0]},${c[1]}%,${clamp(c[2]+dl,0,100)}%,${a})`;
@@ -6188,7 +6189,7 @@ const runOff=()=>isNearby()||(CL?!classicRated():local==='practice'&&!casualRate
 function econRunStart(){runId=null;if(runOff()){runPromise=null;return;}runPromise=api('run/start',{mode:runMode(),relay:relayKey()}).then(r=>{runId=r.runId;return r.runId;}).catch(()=>null);}
 async function econRunEnd(){
   if(!human)return;const unranked=CL?'classic':isNearby()?'nearby':local==='practice'?'practice':'',off=runOff();resPrep(unranked,off);if(off)return;
-  const s=human.stats,rep={survived:Math.max(0,T-s.born),eaten:s.eaten|0,peak:Math.round(s.peak),bestRank:s.bestRank||999,place:s.place|0,of:s.of|0,life:Math.max(0,livesUsed()-1),show:1,relay:relayKey()};
+  const s=human.stats,rep={survived:Math.max(0,T-s.born),eaten:s.eaten|0,splitKills:s.splitKills|0,peak:Math.round(s.peak),bestRank:s.bestRank||999,place:s.place|0,of:s.of|0,life:Math.max(0,livesUsed()-1),show:1,relay:relayKey()};
   if(unranked&&!CL)rep.skill=settings.botSkill||'normal'; // Casual: the bots' skill scales AI rating gains
   rep.name=human.name;const rid=runId||(runPromise?await runPromise:null);runId=null;runPromise=null;
   if(!rid){showEarn(wallet.online?null:{k:'offline'});showXp(null);return;}
@@ -7011,7 +7012,7 @@ function spawn(p,mass){
   }
   p.cells=[];const c=addCell(p,bestS.x,bestS.y,mass);c.dr=3;
   p.alive=true;p.fx={magnet:0,shield:CL?0:2.5,surge:0};p.dashCd=CL?Infinity:0;p.combo=0;p.hist=[mass];p.pk=0;p.evo=0;p.bloomEats=0;
-  p.stats={eaten:0,peak:mass,born:T,killer:'',killerRef:null};p.target={x:bestS.x,y:bestS.y};
+  p.stats={eaten:0,splitKills:0,peak:mass,born:T,killer:'',killerRef:null};p.target={x:bestS.x,y:bestS.y};
 }
 // food: deterministic positions from (index, generation) so every player sees the same pellets
 function placePellet(pl){const k=(pl.i*7919+pl.g*104729+SEED)|0,s=hpos(k,14);pl.x=s.x;pl.y=s.y;pl.m=h32(k+2)<.07?3:1;pl.r=pl.m===3?8:5;pl.h=Math.floor(h32(k+3)*PH);pl.born=T;if(pl.gk!==undefined)gridMove(pl);}
@@ -7061,7 +7062,7 @@ function split(p){
   for(const c of list){
     if(count>=MAX_CELLS)break;if(c.mass<36)continue;
     const[nx,ny]=aim(p,c);const half=c.mass/2;c.mass=half;c.r=radius(half);
-    const n=addCell(p,c.x+nx*c.r*.4,c.y+ny*c.r*.4,half,nx*SPLIT_SPEED,ny*SPLIT_SPEED);n.dr=c.dr*.78;n.org=c.org.map(o=>({...o,a:o.a+rand(-.5,.5)}));n.inf=c.inf;
+    const n=addCell(p,c.x+nx*c.r*.4,c.y+ny*c.r*.4,half,nx*SPLIT_SPEED,ny*SPLIT_SPEED);n.dr=c.dr*.78;n.org=c.org.map(o=>({...o,a:o.a+rand(-.5,.5)}));n.inf=c.inf;n.splitAt=T;
     c.mergeAt=n.mergeAt=T+mdel(p,half*2);kick(c,1.6);kick(n,2);count++;did=true;
   }
   if(did&&p===human){sfx('split');flash('splitBtn');Native.haptic('medium');cam.shake=Math.max(cam.shake,3);}
@@ -7140,7 +7141,7 @@ function creditCell(c,mass,x,y,vcolor,vr,infRem=0,counts=true,bounty=false,boss=
   const bp=c.owner;c.mass=Math.min(MAX_MASS,c.mass+mass);c.r=radius(c.mass);
   if(infRem>0&&!has(bp,'lysozyme'))infect(c,Math.max(4,infRem));
   if(!counts){kick(c,.4);return;}
-  bp.stats.eaten++;
+  bp.stats.eaten++;if(c.splitAt!=null&&T-c.splitAt<SPLIT_KILL_SEC)bp.stats.splitKills=(bp.stats.splitKills|0)+1;
   ghosts.push({x,y,r:vr,color:vcolor,to:c,t:0,life:.2});
   kick(c,.5+Math.min(1.6,vr/c.r*2.2));
   burst(x,y,col(vcolor,8),Math.min(14,3+vr/10|0),180);
