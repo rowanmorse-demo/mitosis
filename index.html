@@ -7493,7 +7493,7 @@ function shopCard(S){const own=ownsSkin(S.id),eq=settings.skin===S.id,rar=rarOf(
 // The shop's shelves, in order, each run cheapest first: [id, name, line, skin ids]. A skin on no shelf (a seasonal one kept after its season) goes on a last one
 const SKIN_CATS=[['space','Space','Stars, worlds and things that swallow light',[5,13,15,22,32,33]],['elements','Elements','Fire, ice, storms and worse',[6,10,11,17,19,34]],
   ['wild','Wild','Fur, fins, wings and blossoms',[7,9,18,21,35]],['sweets','Sweets','Good enough to eat',[36,37,38]],['gadgets','Gadgets','Machines and flashing lights',[8,23,39,40,41]],
-  ['treasures','Treasures','Gold, glass and gemstones',[14,20,42,43]],['mythic','Mythic','Legends to be reckoned with',[12,16,44,45]]];
+  ['treasures','Treasures','Gold, glass and gemstones',[14,20,42,43]],['mythic','Fabled','Beasts, blades and old magic',[12,16,44,45]]];
 // the showcase skins go on their collection's shelf (a new collection adds one, in GEN_ORDER), and every skin learns its shelf as S.col
 for(const S of PREMIUM)if(S.col){let C=SKIN_CATS.find(c=>c[0]===S.col);if(!C)SKIN_CATS.push(C=[S.col,...GEN_COLS[S.col],[]]);if(!C[3].includes(S.id))C[3].push(S.id);}
 SKIN_CATS.sort((a,b)=>GEN_ORDER.indexOf(a[0])-GEN_ORDER.indexOf(b[0]));for(const C of SKIN_CATS)for(const id of C[3])if(PREMIUM[id-SKIN_FREE])PREMIUM[id-SKIN_FREE].col=C[0];
