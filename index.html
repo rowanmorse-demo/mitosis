@@ -6522,14 +6522,16 @@ $('invOpen').addEventListener('click',()=>$('lookBtn').click());
 const NF_CATS=[['all','All'],['bold','Bold'],['round','Rounded'],['pixel','Pixel'],['hand','Handwritten'],['tech','Tech'],['elegant','Elegant'],['wild','Wild']],NF_CAT=Object.fromEntries(NF_CATS);
 const NF_LOCK_ICO='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
 let nfCat='all',nfFrom=null,nfObs=null,nfBusy=false,nfBuyId=0;
-// Where it opens from (one hook): Settings › Account › Name style (#nameStyleBtn, its .st-val shows your name in your font), or any
-// element with data-nf-open (and data-nf-preview for a preview). The markup belongs to those pages; this wires it.
-const NF_OPEN='#nameStyleBtn,[data-nf-open]',NF_PREVIEW='#nameStyleBtn .st-val,[data-nf-preview]';
+// Where it opens from: Settings › Account › Name style (#nameStyleBtn, branch settings-look) calls openNameFonts('settingsCard')
+// itself. Any other page can add data-nf-open (opens it over that page) and data-nf-preview (your name in your font). A change
+// fires 'namefont' on document (detail: the font id), so those pages can redraw their previews.
+const NF_OPEN='[data-nf-open]',NF_PREVIEW='[data-nf-preview]';
 const nfName=()=>cleanName($('nameIn').value)||settings.name||'Unnamed cell',nfLabel=id=>NF.has(id)?NF.get(id).n:'Classic';
 const nfLockText=L=>L.lv?`Level ${L.lv}`:L.price?`${(L.price|0).toLocaleString()} ATP`:'Battle Pass';
 function nfApply(){ // your name wherever it is on screen: the lobby plate and name field, the Profile, the entry rows' previews, the picker
   const id=myFont();for(const k of['meName','nameIn','nameMeasure','profName'])nfEl($(k),id);
   for(const el of document.querySelectorAll(NF_PREVIEW)){el.textContent=nfName();nfEl(el,id);}lbFit='';fitName();
+  try{document.dispatchEvent(new CustomEvent('namefont',{detail:id}));}catch(e){}
   if(!$('fontCard').hidden)nfStage();}
 function nfStage(){ // your cell with your name on it, sized as in play (labelSprite): a third of the radius, narrower than 1.72 radii
   const id=myFont(),F=NF.get(id),n=$('nfCellName');n.textContent=nfName();nfEl(n,id);
