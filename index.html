@@ -2602,6 +2602,194 @@ body:not(.playing) #toasts .toast .tt{display:contents!important}body:not(.playi
 @media (max-width:460px) and (orientation:portrait){.gm-sw{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}.gm-sw button{gap:8px;padding:10px 11px}.gm-sw svg{width:22px;height:22px}.gm-sw button[data-gm=br] b{font-size:17px}}
 @media (orientation:landscape) and (max-height:520px){.gm-sw button{min-height:50px;padding:7px 12px}.gm-sw small{-webkit-line-clamp:1}}
 /* @ui:lobby-look end */
+/* @ui:shop2 */
+/* The Shop as a store you browse: one scrolling page under the top bar (search, Featured, rarity, Collections, picks), a
+   collection / rarity / Owned page, search results, and the buy panel as a sheet over it. Calm: the art carries the colour, each
+   skin on a backplate lit in its own colour; rarity is a small gem (a thin edge for Legendary and Mythic); pink only for state and
+   the main action; one type scale. Overrides the @ui:shop layout above. */
+#storeCard.shopview{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);grid-template-areas:"top" "list";gap:10px;
+  background:radial-gradient(90% 45% at 50% -5%,rgba(255,92,138,.07),transparent 70%),radial-gradient(100% 55% at 50% 110%,rgba(32,150,140,.1),transparent 70%),linear-gradient(180deg,#05151a,#040d10 55%,#050a12);-webkit-backdrop-filter:none;backdrop-filter:none}
+#storeCard .sv-list{grid-area:list;margin:0 -18px;padding:0 18px 40px;-webkit-mask-image:none;mask-image:none}
+#storeCard #skins.skins{display:block}
+#storeCard [data-r=common]{--gem:#7fd8c0}#storeCard [data-r=rare]{--gem:#a99cff}#storeCard [data-r=epic]{--gem:#f2b84a}#storeCard [data-r=legendary]{--gem:#ff7a5c}#storeCard [data-r=seasonal]{--gem:#ff9a3c}
+#storeCard [data-r=mythic]{--gem:linear-gradient(135deg,#5ee0ff,#b48cff 50%,#ff6ad5)}
+/* search: stays at the top of the page */
+#storeCard .st-find{position:sticky;top:0;z-index:5;margin:0 -18px;padding:2px 18px 12px;background:linear-gradient(180deg,#05141a 76%,rgba(5,20,26,0))}
+#storeCard .st-search{display:flex;align-items:center;gap:10px;height:46px;padding:0 6px 0 14px;border-radius:16px;background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px rgba(255,255,255,.07);transition:box-shadow .2s,background-color .2s}
+#storeCard .st-search:focus-within{background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1.5px rgba(255,92,138,.7),0 0 0 4px rgba(255,92,138,.12)}
+#storeCard .st-search>svg{flex:none;width:19px;height:19px;fill:none;stroke:rgba(222,238,234,.6);stroke-width:2.2;stroke-linecap:round}
+#storeCard #shopQ{flex:1;min-width:0;height:100%;border:0;background:none;padding:0;color:var(--ink);font:500 16px/1 var(--display);outline:none;-webkit-user-select:text;user-select:text;-webkit-appearance:none;appearance:none}
+#storeCard #shopQ::placeholder{color:rgba(222,238,234,.45)}
+#storeCard #shopQ::-webkit-search-cancel-button{display:none}
+#storeCard .st-clear{flex:none;width:34px;height:34px;border:0;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.1);color:var(--ink);cursor:pointer}
+#storeCard .st-clear svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
+/* Featured: full-bleed slides, the skin large and floating in light rays, a sheen crossing it */
+#storeCard .st-hero{position:relative;margin:2px -18px 0}
+#storeCard .st-hs{display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+#storeCard .st-hs::-webkit-scrollbar{display:none}
+#storeCard .st-slide{appearance:none;border:0;padding:0;margin:0;font:inherit;color:var(--ink);text-align:left;cursor:pointer;position:relative;flex:0 0 100%;scroll-snap-align:center;scroll-snap-stop:always;height:252px;overflow:hidden;isolation:isolate;-webkit-tap-highlight-color:transparent;
+  background:radial-gradient(58% 78% at 74% 50%,hsl(var(--h) var(--s) 58% / .5),hsl(var(--h) var(--s) 40% / .12) 55%,transparent 75%),radial-gradient(80% 90% at 0% 100%,hsl(var(--h) var(--s) 35% / .3),transparent 70%),linear-gradient(155deg,hsl(var(--h) 38% 15%),#060a11 78%)}
+#storeCard .st-slide::after{content:"";position:absolute;left:0;right:0;bottom:0;height:34%;z-index:0;pointer-events:none;background:linear-gradient(180deg,rgba(5,14,18,0),rgba(5,14,18,.7))}
+#storeCard .st-art{position:absolute;z-index:1;right:-3%;top:50%;width:min(58vw,250px);aspect-ratio:1;transform:translateY(-50%)}
+#storeCard .st-art img{position:relative;z-index:1;display:block;width:100%;height:100%;filter:drop-shadow(0 22px 26px rgba(0,0,0,.55));animation:stFloat 6s ease-in-out infinite}
+#storeCard .st-rays{position:absolute;inset:-28%;z-index:0;border-radius:50%;background:repeating-conic-gradient(from 0deg,hsl(var(--h) 90% 82% / .13) 0 4deg,transparent 7deg 17deg);
+  -webkit-mask:radial-gradient(closest-side,#000 25%,transparent 72%);mask:radial-gradient(closest-side,#000 25%,transparent 72%);animation:svspin 70s linear infinite}
+#storeCard .st-sheen{position:absolute;z-index:2;inset:9%;border-radius:50%;overflow:hidden;pointer-events:none;animation:stFloat 6s ease-in-out infinite}
+#storeCard .st-sheen::before{content:"";position:absolute;top:-25%;bottom:-25%;left:-60%;width:38%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.26),transparent);transform:rotate(14deg);animation:stSheen 6s ease-in-out infinite}
+@keyframes stFloat{50%{transform:translateY(-7px)}}
+@keyframes stSheen{0%,55%{transform:rotate(14deg) translateX(0)}100%{transform:rotate(14deg) translateX(560%)}}
+#storeCard .st-tx{position:absolute;z-index:3;left:20px;top:20px;bottom:24px;width:min(52%,230px);display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+#storeCard .st-tag{display:inline-flex;align-items:center;gap:8px;height:26px;padding:0 11px;border-radius:999px;background:rgba(255,255,255,.93);color:#0a1416;font:800 12.5px/1 var(--display)}
+#storeCard .st-clk{font:700 12px/1 var(--mono);font-variant-numeric:tabular-nums;color:#8a3d00}
+#storeCard .st-hn{margin-top:auto;font:800 32px/1 var(--display);letter-spacing:-.045em;color:#fff;text-shadow:0 2px 20px rgba(0,0,0,.55);text-wrap:balance}
+#storeCard .st-rar{display:inline-flex;align-items:center;gap:8px;font:600 13.5px/1 var(--display);color:rgba(240,250,247,.8)}
+#storeCard :is(.st-rar,.st-chip) i,#storeCard .st-g{display:block;width:8px;height:8px;flex:none;border-radius:2px;transform:rotate(45deg);background:var(--gem,#8fd8c6)}
+#storeCard .st-cta{margin-top:4px;display:inline-flex;align-items:center;gap:8px;height:46px;padding:0 20px 0 14px;border-radius:15px;font:800 19px/1 var(--display);letter-spacing:-.01em;color:#2a0614;transition:transform .1s;
+  background:linear-gradient(180deg,#ff8eae,#ff5c8a 52%,#e8417a);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -2px 0 rgba(140,10,55,.3),0 3px 0 #9b1a4b,0 14px 26px -12px rgba(255,80,140,.8)}
+#storeCard .st-cta .sv-coin{font-size:20px}
+#storeCard .st-cta.how{padding:0 18px;color:#fff;background:rgba(255,255,255,.14);box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}
+#storeCard .st-slide:active .st-cta{transform:translateY(2px)}
+#storeCard .st-dots{position:absolute;z-index:4;right:22px;bottom:14px;display:flex;gap:6px;pointer-events:none}
+#storeCard .st-dots i{width:6px;height:6px;border-radius:3px;background:rgba(255,255,255,.32);transition:width .3s,background-color .3s}
+#storeCard .st-dots i.on{width:18px;background:#fff}
+/* browse by rarity */
+#storeCard .st-chips{display:flex;gap:8px;margin:16px -18px 0;padding:0 18px;overflow-x:auto;scrollbar-width:none}
+#storeCard .st-chips::-webkit-scrollbar{display:none}
+#storeCard .st-chip{appearance:none;flex:none;display:inline-flex;align-items:center;gap:9px;height:38px;padding:0 15px 0 14px;border:0;border-radius:999px;background:rgba(255,255,255,.055);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);color:rgba(240,250,247,.88);font:700 14px/1 var(--display);cursor:pointer;transition:transform .12s,background-color .15s}
+#storeCard .st-chip:active{transform:scale(.95);background:rgba(255,255,255,.1)}
+#storeCard .st-chip em{font-style:normal;font-weight:600;color:rgba(222,238,234,.5)}
+/* section headings */
+#storeCard .st-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:30px 2px 13px}
+#storeCard .st-h h4{margin:0;font:800 21px/1 var(--display);letter-spacing:-.035em;color:#fff}
+#storeCard .st-h>span{font:600 13px/1 var(--display);color:rgba(222,238,234,.5)}
+#storeCard .st-more{appearance:none;display:inline-flex;align-items:center;gap:2px;border:0;background:none;padding:6px 0;color:rgba(240,250,247,.72);font:700 14px/1 var(--display);cursor:pointer}
+#storeCard .st-more svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+/* collections: cards you browse into, three of their best skins as the art */
+#storeCard .st-cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#storeCard .st-c{appearance:none;border:0;font:inherit;color:var(--ink);cursor:pointer;position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:5px;min-width:0;height:178px;box-sizing:border-box;padding:0 16px 22px;border-radius:24px;overflow:hidden;text-align:left;-webkit-tap-highlight-color:transparent;
+  background:radial-gradient(85% 70% at 50% 18%,hsl(var(--h) var(--s) 55% / .42),transparent 72%),linear-gradient(170deg,hsl(var(--h) var(--sd) 19% / .92),hsl(var(--h) var(--sd) 8% / .96));box-shadow:inset 0 1px 0 rgba(255,255,255,.08);transition:transform .15s cubic-bezier(.3,.7,.4,1)}
+#storeCard .st-c:active{transform:scale(.97)}
+#storeCard .st-cols>.st-c:last-child:nth-child(odd){grid-column:1/-1}
+#storeCard .st-cols>.st-c:last-child:nth-child(odd) .st-ca i.l{left:calc(50% - 96px)}#storeCard .st-cols>.st-c:last-child:nth-child(odd) .st-ca i.r{left:calc(50% + 36px)}
+#storeCard .st-ca{position:relative;display:block;width:100%;height:112px;flex:none;margin-bottom:auto}
+#storeCard .st-ca i{position:absolute;top:34px;width:60px;height:60px}
+#storeCard .st-ca i.l{left:calc(50% - 76px);transform:rotate(-8deg)}#storeCard .st-ca i.r{left:calc(50% + 16px);transform:rotate(8deg)}
+#storeCard .st-ca i.m{left:calc(50% - 30px);top:22px;z-index:2;transform:scale(1.32)}
+#storeCard .st-ca img{display:block;width:100%;height:100%;filter:drop-shadow(0 8px 10px rgba(0,0,0,.55))}
+#storeCard .st-c b{max-width:100%;font:800 17px/1.05 var(--display);letter-spacing:-.025em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#storeCard .st-c small{font:600 13px/1 var(--display);color:rgba(222,238,234,.55)}
+#storeCard .st-cbar{position:absolute;left:16px;right:16px;bottom:11px;height:3px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden}
+#storeCard .st-cbar i{display:block;height:100%;border-radius:2px;background:rgba(255,255,255,.7)}
+/* skin tiles: the skin fills a backplate lit in its own colour; name and price under it */
+#storeCard .st-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px 12px}
+#storeCard .st-grid.two{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 14px}
+#storeCard .st{appearance:none;border:0;background:none;padding:0;font:inherit;color:var(--ink);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:7px;min-width:0;text-align:center;-webkit-tap-highlight-color:transparent}
+#storeCard .st-p{position:relative;display:grid;place-items:center;width:100%;aspect-ratio:1;box-sizing:border-box;border-radius:22px;transition:transform .16s cubic-bezier(.3,.7,.4,1),box-shadow .2s;
+  background:radial-gradient(circle at 50% 46%,hsl(var(--h) var(--s) 55% / .34),hsl(var(--h) var(--s) 35% / .1) 52%,transparent 74%),rgba(255,255,255,.035);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05)}
+#storeCard .st-p img{display:block;width:88%;height:88%;filter:drop-shadow(0 10px 12px rgba(0,0,0,.5))}
+#storeCard .st:active .st-p{transform:scale(.95)}
+#storeCard .st-p .st-g{position:absolute;top:11px;left:11px}
+#storeCard .st[data-r=legendary] .st-p{box-shadow:inset 0 0 0 1px rgba(255,122,92,.55),0 0 24px -10px rgba(255,110,80,.6)}
+#storeCard .st[data-r=mythic] .st-p{box-shadow:inset 0 0 0 1px rgba(170,150,255,.65),0 0 26px -10px rgba(140,120,255,.7)}
+#storeCard .st.eq .st-p{box-shadow:inset 0 0 0 2px var(--accent),0 0 22px -6px rgba(255,92,138,.6)}
+#storeCard .st b{max-width:100%;font:700 14px/1.15 var(--display);letter-spacing:-.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#storeCard :is(.st,.st-row) b mark{background:none;color:#ff9dbb}
+#storeCard .st-m{display:inline-flex;align-items:center;gap:5px;margin-top:-2px;font:700 13px/1 var(--display);color:rgba(222,238,234,.55);white-space:nowrap}
+#storeCard .st-m.pr{color:#ffd77a}#storeCard .st-m .sv-coin{font-size:14px}#storeCard .st-m.on{color:#ff9dbb}
+#storeCard .st-m svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+#storeCard .st-grid.two .st b{font-size:16px}#storeCard .st-grid.two .st-m{font-size:14px}#storeCard .st-grid.two .st-p{border-radius:26px}
+/* a collection, rarity or Owned page: a banner, then a sorted grid */
+#storeCard .st-ban{position:relative;display:flex;align-items:center;min-height:164px;box-sizing:border-box;margin:2px 0 0;padding:18px;border-radius:26px;overflow:hidden;isolation:isolate;
+  background:radial-gradient(60% 95% at 80% 40%,hsl(var(--h) var(--s) 55% / .44),transparent 72%),linear-gradient(150deg,hsl(var(--h) 35% 15%),#070b12 80%)}
+#storeCard .st-back{position:absolute;z-index:3;left:12px;top:12px;width:40px;height:40px;border:0;border-radius:50%;display:grid;place-items:center;background:rgba(3,10,12,.5);color:#fff;cursor:pointer}
+#storeCard .st-back:active{transform:scale(.92)}
+#storeCard .st-back svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+#storeCard .st-ba{position:absolute;z-index:1;right:4px;top:50%;width:52%;max-width:220px;height:auto;aspect-ratio:1.5;margin:0;transform:translateY(-58%) scale(1.12)}
+#storeCard .st-bt{position:relative;z-index:2;display:grid;justify-items:start;gap:7px;max-width:56%}
+#storeCard .st-bt b{font:800 30px/1 var(--display);letter-spacing:-.045em;color:#fff;text-shadow:0 2px 16px rgba(0,0,0,.5)}
+#storeCard .st-bt small{font:500 14px/1.3 var(--display);color:rgba(240,250,247,.72)}
+#storeCard .st-ltd{gap:7px;height:24px;font-size:11.5px}
+#storeCard .st-own{display:flex;align-items:center;gap:10px;margin-top:4px;font:600 13px/1 var(--display);color:rgba(240,250,247,.7);white-space:nowrap}
+#storeCard .st-own>i{display:block;width:64px;height:4px;border-radius:2px;background:rgba(255,255,255,.14);overflow:hidden}#storeCard .st-own>i>i{display:block;height:100%;background:#fff}
+#storeCard .st-sortrow{display:flex;align-items:center;justify-content:space-between;margin:18px 2px 14px}
+#storeCard .st-sortrow>span{font:600 14px/1 var(--display);color:rgba(222,238,234,.6)}
+#storeCard .st-sort{display:flex;gap:2px;padding:3px;border-radius:999px;background:rgba(255,255,255,.055)}
+#storeCard .st-sort button{appearance:none;border:0;background:none;height:32px;padding:0 13px;border-radius:999px;color:rgba(222,238,234,.6);font:700 13px/1 var(--display);cursor:pointer}
+#storeCard .st-sort button[aria-pressed=true]{background:rgba(255,255,255,.14);color:#fff}
+/* search results */
+#storeCard .st-rows{display:grid;gap:8px}
+#storeCard .st-row{appearance:none;border:0;font:inherit;color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:14px;padding:8px 14px 8px 8px;border-radius:18px;text-align:left;background:rgba(255,255,255,.04)}
+#storeCard .st-row:active{background:rgba(255,255,255,.08)}
+#storeCard .st-row .st-p{width:54px;flex:none;border-radius:15px}
+#storeCard .st-rt{flex:1;display:grid;gap:5px;min-width:0}
+#storeCard .st-row b{font:700 16px/1.1 var(--display)}#storeCard .st-row small{font:500 13px/1 var(--display);color:rgba(222,238,234,.55)}
+#storeCard .st-row>svg{flex:none;width:18px;height:18px;fill:none;stroke:rgba(222,238,234,.5);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+#storeCard .st-empty{display:grid;justify-items:center;gap:8px;padding:56px 20px;text-align:center}
+#storeCard .st-empty b{font:800 19px/1.2 var(--display)}#storeCard .st-empty span{font:500 14px/1.45 var(--display);color:rgba(222,238,234,.6);max-width:280px}
+/* motion: a new page's pieces ease in, one after another */
+@keyframes stIn{from{opacity:0;transform:translateY(14px)}}
+#storeCard .st-anim :is(.st,.st-c,.st-row){animation:stIn .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*35ms + 80ms)}
+#storeCard .st-anim :is(.st-hero,.st-ban,.st-chips){animation:stIn .5s cubic-bezier(.2,.8,.2,1) both}
+/* the detail sheet: the buy panel slides up on a spring (a side panel in landscape) */
+#storeCard .sv-scrim{position:absolute;inset:0;z-index:19;background:rgba(1,5,7,.62);opacity:0;pointer-events:none;transition:opacity .35s}
+#storeCard[data-sheet=open] .sv-scrim{opacity:1;pointer-events:auto}
+#storeCard .sv-feat{position:absolute;z-index:20;left:0;right:0;top:auto;bottom:-48px;grid-area:auto;max-height:calc(100% + 20px);min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:none;
+  display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-auto-rows:auto;align-items:start;justify-items:center;align-content:start;gap:4px;
+  padding:12px 22px calc(48px + max(22px,env(safe-area-inset-bottom)));border:0;border-radius:30px 30px 0 0;text-align:center;
+  background:radial-gradient(75% 40% at 50% 22%,hsl(var(--fh,170) var(--fs,45%) 52% / .32),transparent 72%),linear-gradient(180deg,#13212a,#081115 60%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 -24px 60px rgba(0,0,0,.65);
+  transform:translateY(105%);visibility:hidden;transition:transform .55s cubic-bezier(.2,1.1,.3,1),visibility 0s linear .55s}
+#storeCard[data-sheet=open] .sv-feat{transform:none;visibility:visible;transition:transform .55s cubic-bezier(.2,1.1,.3,1),visibility 0s}
+#storeCard .sv-feat::-webkit-scrollbar{display:none}
+#storeCard .sv-grab{display:block;width:42px;height:5px;border-radius:3px;background:rgba(255,255,255,.22)}
+#storeCard .sv-x{position:absolute;top:14px;right:14px;z-index:3;width:38px;height:38px;border:0;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.08);color:var(--ink);cursor:pointer}
+#storeCard .sv-x:active{transform:scale(.92)}
+#storeCard .sv-x svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
+#storeCard .sv-stage{grid-column:auto;grid-row:auto;align-self:auto;width:min(64vw,264px);height:auto;max-width:100%;max-height:none;aspect-ratio:1}
+#storeCard .sv-info{display:grid;gap:9px;justify-items:center;width:100%;max-width:380px}
+#storeCard .sv-info>*,#storeCard .sv-info h3,#storeCard #featDesc{grid-column:auto;grid-row:auto}
+#storeCard .sv-badges{justify-content:center;align-self:auto;margin:0}
+#storeCard .sv-rar{height:auto;padding:0;border:0;background:none;box-shadow:none;gap:8px;font:600 14px/1 var(--display);letter-spacing:0;text-transform:none;color:rgba(240,250,247,.72)}
+#storeCard .sv-rar::before{width:9px;height:9px;border-radius:2px;background:var(--gem,#8fd8c6);box-shadow:none}
+#storeCard .sv-rar.common{--gem:#7fd8c0}#storeCard .sv-rar.rare{--gem:#a99cff}#storeCard .sv-rar.epic{--gem:#f2b84a}#storeCard .sv-rar.legendary{--gem:#ff7a5c}#storeCard .sv-rar.seasonal{--gem:#ff9a3c}#storeCard .sv-rar.mythic{--gem:linear-gradient(135deg,#5ee0ff,#b48cff,#ff6ad5)}
+#storeCard .sv-info h3{margin:0;font-size:32px}
+#storeCard #featDesc{display:-webkit-box;margin:0 0 6px;max-width:330px;font:500 14.5px/1.45 var(--display);color:rgba(222,238,234,.68);-webkit-line-clamp:3}
+#storeCard .sv-buy{max-width:none;width:100%;height:58px;margin-top:6px;border-radius:18px;font-size:20px}
+#storeCard .sv-note{max-width:none}
+#storeCard .sv-buy.own{color:#08161a;background:linear-gradient(180deg,#ffffff,#d3e7e1);box-shadow:inset 0 1px 0 #fff,inset 0 -3px 0 rgba(0,40,40,.16),0 10px 24px -10px rgba(0,0,0,.6)} /* Wear: the plain white action */
+#storeCard .sv-buy.wearing{color:#ff9dbb;background:rgba(255,92,138,.09);box-shadow:inset 0 0 0 1.5px rgba(255,92,138,.6)} /* Wearing: pink, as on its tile */
+/* the top bar: the Skins / ATP switch a size smaller, so the page starts sooner */
+@media (orientation:portrait){#storeCard .sv-tabs{padding:3px}#storeCard .sv-tabs button{height:36px;font-size:14.5px}#storeCard .sv-top{row-gap:10px}}
+/* landscape and big screens: more per row; the sheet comes in from the right */
+@media (orientation:landscape){
+  #storeCard .sv-list{margin:0;padding:0 2px 32px}#storeCard .st-find{margin:0 -2px;padding:2px 2px 12px}
+  #storeCard .st-hero{margin:2px 0 0;border-radius:26px;overflow:hidden}#storeCard .st-chips{margin:16px 0 0;padding:0}
+  #storeCard .st-hero{border-radius:0;overflow:visible}#storeCard .st-hs{gap:12px;border-radius:24px}
+  #storeCard .st-slide{flex:0 0 calc(50% - 6px);height:232px;border-radius:24px}#storeCard .st-art{width:min(56%,230px);right:-2%}#storeCard .st-tx{width:min(56%,240px)}
+  #storeCard .st-dots{display:none}
+  #storeCard .st-cols{grid-template-columns:repeat(auto-fill,minmax(176px,1fr))}
+  #storeCard .st-grid{grid-template-columns:repeat(auto-fill,minmax(112px,1fr))}
+  #storeCard .st-grid.two{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+  #storeCard .sv-feat{left:auto;top:0;bottom:0;right:-48px;width:min(460px,50vw);max-height:none;align-content:center;gap:6px;
+    padding:22px calc(48px + max(22px,env(safe-area-inset-right))) 22px 24px;border-radius:30px 0 0 30px;transform:translateX(105%)}
+  #storeCard .sv-grab{display:none}
+  #storeCard .sv-x{right:calc(48px + 14px)}
+  #storeCard .sv-stage{width:min(76%,300px)}
+}
+@media (orientation:landscape) and (max-height:520px){
+  #storeCard .st-slide{height:206px}#storeCard .st-art{width:200px}#storeCard .st-hn{font-size:28px}
+  #storeCard .st-h{margin-top:24px}
+  #storeCard .st-ban{min-height:120px;padding:14px 20px}#storeCard .st-ba{max-width:170px}#storeCard .st-bt b{font-size:26px}
+  #storeCard .sv-feat{grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);align-items:center;gap:0 16px;width:min(580px,66vw);padding:16px calc(48px + max(18px,env(safe-area-inset-right))) 16px 14px}
+  #storeCard .sv-stage{width:100%;max-width:230px;justify-self:center}
+  #storeCard .sv-info{gap:7px;justify-items:start;text-align:left}#storeCard .sv-badges{justify-content:flex-start}
+  #storeCard .sv-info h3{font-size:25px}#storeCard #featDesc{-webkit-line-clamp:2;font-size:13px;margin:0}
+  #storeCard .sv-buy{height:50px;font-size:18px}
+}
+@media (min-width:1100px){#storeCard .st-cols{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}#storeCard .st-slide{height:300px}#storeCard .st-art{width:300px;right:8%}}
+@media (prefers-reduced-motion:reduce){#storeCard :is(.st-art img,.st-rays,.st-sheen,.st-sheen::before){animation:none}}
+body.saver #storeCard :is(.st-art img,.st-rays,.st-sheen,.st-sheen::before){animation:none}
+/* @ui:shop2 end */
 /* battery: the arena redraws under the HUD every frame, so glass blur there costs the GPU every frame; phones show the HUD
    without it, and battery saver drops blur everywhere */
 @media (pointer:coarse){body.playing :is(#stats,.act,.evo,#banner,.toast,#tip,#roundClock,#boardToggle,#board,#board ol,#perfHud,#fx .hchip,#feed div,#joy .knob,.spec-bar,.panel){-webkit-backdrop-filter:none!important;backdrop-filter:none!important}}
@@ -2893,7 +3081,9 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
       <div class="sv-tabs" role="tablist" aria-label="Shop sections"><button type="button" role="tab" id="tabSkins" aria-controls="skinSec" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="10.5" cy="11" r="2.6"/><circle cx="15.5" cy="15.2" r="1"/></svg>Skins</button><button type="button" role="tab" id="tabAtp" aria-controls="packSec" aria-selected="false"><i class="sv-coin" aria-hidden="true"></i>ATP</button></div>
       <button class="sv-bal" id="storeBalBtn" type="button" aria-label="Your ATP, get more"><i class="sv-coin" aria-hidden="true"></i><b id="storeBal">0</b><span class="sv-plus" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg></span></button>
     </header>
-    <section class="sv-feat" id="skinFeat" aria-live="polite">
+    <div class="sv-scrim" id="svScrim" aria-hidden="true"></div>
+    <section class="sv-feat" id="skinFeat" role="dialog" aria-modal="true" aria-labelledby="featName" aria-hidden="true" inert>
+      <i class="sv-grab" aria-hidden="true"></i><button class="sv-x" id="sheetClose" type="button" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
       <div class="sv-stage"><canvas id="featCv" width="320" height="320" aria-hidden="true"></canvas></div>
       <div class="sv-info">
         <div class="sv-badges"><span class="sv-rar" id="featRar"></span><span class="sv-left" id="featLeft" hidden></span></div>
@@ -2903,7 +3093,7 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
         <p class="sv-note" id="featNote"></p>
       </div>
     </section>
-    <section class="sv-list" id="skinSec" role="tabpanel" aria-labelledby="tabSkins"><div class="ds-chips sv-filters" id="shopFilters" role="group" aria-label="Show"></div><div class="skins" id="skins"></div><p class="hint" id="skinHint"></p></section>
+    <section class="sv-list" id="skinSec" role="tabpanel" aria-labelledby="tabSkins"><div class="st-find"><div class="st-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input id="shopQ" type="search" placeholder="Search skins" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="search" aria-label="Search skins"><button type="button" class="st-clear" id="shopQx" aria-label="Clear search" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button></div></div><div class="skins" id="skins"></div><p class="hint" id="skinHint"></p></section>
     <section class="sv-atp" id="packSec" role="tabpanel" aria-labelledby="tabAtp" hidden>
       <p class="sv-need" id="storeNeed" hidden></p>
       <div class="packs" id="packs"></div>
@@ -6706,41 +6896,122 @@ function shopShelves(){ // every skin on one shelf, in the same order every time
   for(const k in SEASONS)if(!seasonState(k).open)add('s-'+k,SEASONS[k].name,'Back every year from '+seasonFrom(k),PREMIUM.filter(S=>S.season===k));
   add('more','More skins','',PREMIUM.filter(S=>!S.pass&&!S.season));
   return out;}
-function renderShopGrid(el){ // the shelves under filter chips; an open season leads in its banner with a live countdown
-  const shelves=shopShelves(),all=shelves.flatMap(c=>c.list),nOwn=all.filter(S=>ownsSkin(S.id)).length,rars=['legendary','epic','rare','common','seasonal'].filter(r=>all.some(S=>rarOf(S)===r));
-  if(!['all','own','lock',...rars].includes(shopFilter))shopFilter='all';
-  const fit=S=>shopFilter==='all'||(shopFilter==='own'?ownsSkin(S.id):shopFilter==='lock'?!ownsSkin(S.id):rarOf(S)===shopFilter);
-  const chip=(k,label,n,r)=>`<button type="button" class="ds-chip" data-f="${k}"${r?` data-r="${r}"`:''} aria-pressed="${shopFilter===k}">${r?'<i aria-hidden="true"></i>':''}${label}${n!=null?`<em>${n}</em>`:''}</button>`;
-  const fe=$('shopFilters'),sig=[all.length,nOwn,rars].join('|');
-  if(fe.dataset.sig!==sig){fe.dataset.sig=sig;fe.innerHTML=chip('all','All',all.length)+chip('own','Owned',nOwn)+chip('lock','Not owned',all.length-nOwn)+rars.map(r=>chip(r,RAR_NAME[r],all.filter(S=>rarOf(S)===r).length,r)).join('');}
-  for(const c of fe.children)c.setAttribute('aria-pressed',String(c.dataset.f===shopFilter));
-  let html='';for(const c of shelves){const list=c.list.filter(fit);if(!list.length)continue;
-    if(c.open)html+=`<section class="sv-ltd" aria-label="${escH(c.name)}, limited time"><div class="sv-season">${SV_PUMP}<b>${escH(c.name)}</b><span class="sv-tag">Limited</span><span class="sv-clock" data-ends="${c.open.ends}">${svIcon('clock')}<span>${svClock(c.open.ends-Date.now())}</span></span></div><div class="sv-row" style="--n:${list.length}">${list.map(S=>shopCard(S)).join('')}</div></section>`;
-    else html+=`<section class="ds-sec sv-col" data-col="${c.key}" aria-label="${escH(c.name)}"><div class="ds-head"><span class="sv-colt"><b>${escH(c.name)}</b>${c.line?`<small>${escH(c.line)}</small>`:''}</span><span class="ds-pill" aria-label="${c.list.filter(S=>ownsSkin(S.id)).length} of ${c.list.length} owned">${c.list.filter(S=>ownsSkin(S.id)).length}/${c.list.length}</span></div><div class="sv-row">${list.map(S=>shopCard(S)).join('')}</div></section>`;}
-  el.innerHTML=html||`<p class="sv-none">${shopFilter==='own'?'No skins yet. Tap one to see it, then buy it.':'Nothing here yet.'}</p>`;renderFeat();}
+// The Shop's skins tab is a store you browse (Rowan: "make those look far better"). Home: search, a Featured carousel, browse by
+// rarity, Collections, the rarest and what you can afford. A collection, rarity or Owned page, and search as you type. Tapping a
+// skin opens the buy panel (#skinFeat) as a sheet; renderFeat and the featBuy handler are unchanged. Tiles are pictures (tileImg).
+let shopView={v:'home'},shopQ='',shopSort='rar',shopSig='',shopAnim='',heroAt=0,heroTouch=0;
+const RAR_TOP=['mythic','legendary','epic','rare','common','seasonal'],rarRank=r=>{const i=RAR_TOP.indexOf(r);return i<0?9:i;};
+const rarLabel=r=>RAR_NAME[r]||(String(r).charAt(0).toUpperCase()+String(r).slice(1));
+const byRarest=(a,b)=>rarRank(rarOf(a))-rarRank(rarOf(b))||b.price-a.price||a.id-b.id;
+const byCheapest=(a,b)=>a.price-b.price||rarRank(rarOf(a))-rarRank(rarOf(b))||a.id-b.id;
+const skinTint=S=>{const b=S&&S.base||[168,45,50],s=Math.max(25,Math.min(85,b[1]|0));return `--h:${b[0]|0};--s:${s}%;--sd:${Math.round(s*.5)}%`;}; // --sd: the same hue, duller, for card surfaces // backplates lit in the skin's own colour
+const normQ=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+const ST_CHEV='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5.5l6.5 6.5L9 18.5"/></svg>';
+function stMark(name,q){const n=normQ(name),i=q?n.indexOf(q):-1;if(i<0||n.length!==name.length)return escH(name);
+  return escH(name.slice(0,i))+'<mark>'+escH(name.slice(i,i+q.length))+'</mark>'+escH(name.slice(i+q.length));}
+function skinColName(S){if(S.pass)return'Battle Pass';if(S.season)return SEASONS[S.season].name;const C=SKIN_CATS.find(c=>c[0]===S.col||(c[3]||[]).includes(S.id));return C?C[1]:'';}
+function stTile(S,where,i,q){const own=ownsSkin(S.id),eq=settings.skin===S.id,r=rarOf(S),how=skinHow(S),
+    hl=how==='pass'?'Battle Pass':how==='event'?'Back '+seasonFrom(S.season):how==='soon'?'Coming soon':'',
+    meta=eq?'<span class="st-m on">Wearing</span>':own?`<span class="st-m">${svIcon('check')}Owned</span>`:hl?`<span class="st-m">${hl}</span>`:`<span class="st-m pr"><i class="sv-coin"></i>${fmtAtp(S.price)}</span>`;
+  return `<button type="button" class="st${eq?' eq':''}" data-id="${S.id}" data-r="${r}" style="${skinTint(S)};--i:${Math.min(i|0,10)}" aria-label="${escH(S.name)}, ${rarLabel(r)}, ${eq?'wearing':own?'owned':hl||S.price.toLocaleString()+' ATP'}"><span class="st-p">${tileImg(S,where)}<i class="st-g" aria-hidden="true"></i></span><b>${stMark(S.name,q)}</b>${meta}</button>`;}
+function stArt(list,where){const t=[...list].sort(byRarest);return `${t[1]?`<i class="l">${tileImg(t[1],where)}</i>`:''}${t[0]?`<i class="m">${tileImg(t[0],where)}</i>`:''}${t[2]?`<i class="r">${tileImg(t[2],where)}</i>`:''}`;}
+function stColCard(c,i){const own=c.list.filter(S=>ownsSkin(S.id)).length,k=c.key.startsWith('s-')?c.key.slice(2):'',
+    sub=c.open?'Limited time':k&&SEASONS[k]?'Back '+seasonFrom(k):c.key==='pass'?'On the Battle Pass':`${own} of ${c.list.length} owned`;
+  return `<button type="button" class="st-c" data-col="${c.key}" style="${skinTint([...c.list].sort(byRarest)[0])};--i:${Math.min(i,10)}" aria-label="${escH(c.name)}, ${c.list.length} skins, ${own} owned"><span class="st-ca" aria-hidden="true">${stArt(c.list,'cc')}</span><b>${escH(c.name)}</b><small>${escH(sub)}</small><i class="st-cbar" aria-hidden="true"><i style="width:${(own/c.list.length*100).toFixed(1)}%"></i></i></button>`;}
+function stHero(sh,all){
+  const sold=all.filter(S=>!ownsSkin(S.id)&&!skinHow(S)),slides=[],used=new Set(),add=(S,tag,o)=>{if(S&&!used.has(S.id)&&slides.length<3){used.add(S.id);slides.push(Object.assign({S,tag},o));}};
+  const ss=sh.find(c=>c.open);if(ss){const l=[...ss.list].sort(byRarest);add(l.find(S=>!ownsSkin(S.id))||l[0],ss.name,{ends:ss.open.ends});}
+  let lf=null;try{lf=lbFeatSkin();}catch(e){}add(lf,'New'); // the lobby's NEW card (defined further down the page)
+  for(const S of [...sold].sort(byRarest))add(S,'Featured');
+  if(!slides.length)add([...all].sort(byRarest)[0],'Featured');
+  if(heroAt>=slides.length)heroAt=0;
+  const html=slides.length?`<section class="st-hero" aria-label="Featured skins"><div class="st-hs" id="heroTrack">${slides.map(x=>{const S=x.S,own=ownsSkin(S.id),how=skinHow(S),r=rarOf(S);
+    const cta=own?'<span class="st-cta how">Owned</span>':how==='pass'?'<span class="st-cta how">Battle Pass</span>':how==='event'?`<span class="st-cta how">Back ${seasonFrom(S.season)}</span>`:`<span class="st-cta"><i class="sv-coin"></i>${S.price.toLocaleString()}</span>`;
+    return `<button type="button" class="st-slide" data-id="${S.id}" data-r="${r}" style="${skinTint(S)}" aria-label="${escH(x.tag)}: ${escH(S.name)}, ${rarLabel(r)}"><span class="st-art" aria-hidden="true"><i class="st-rays"></i>${tileImg(S,'hero')}<i class="st-sheen"></i></span><span class="st-tx"><span class="st-tag">${escH(x.tag)}${x.ends?`<span class="st-clk" data-ends="${x.ends}"><span>${svClock(x.ends-Date.now())}</span></span>`:''}</span><b class="st-hn">${escH(S.name)}</b><span class="st-rar" data-r="${r}"><i></i>${rarLabel(r)}</span>${cta}</span></button>`;}).join('')}</div>${slides.length>1?`<div class="st-dots" aria-hidden="true">${slides.map((x,i)=>`<i${i===heroAt?' class="on"':''}></i>`).join('')}</div>`:''}</section>`:'';
+  return{html,ids:used};}
+function stHome(sh){const all=sh.flatMap(c=>c.list),hero=stHero(sh,all);let h=hero.html;
+  const rars=RAR_TOP.filter(r=>all.some(S=>rarOf(S)===r)),nOwn=all.filter(S=>ownsSkin(S.id)).length;
+  h+=`<div class="st-chips" role="group" aria-label="Browse by rarity">${rars.map(r=>`<button type="button" class="st-chip" data-rar="${r}"><i data-r="${r}" aria-hidden="true"></i>${rarLabel(r)}</button>`).join('')}${nOwn?`<button type="button" class="st-chip" data-rar="own">Owned<em>${nOwn}</em></button>`:''}</div>`;
+  h+=`<div class="st-h"><h4>Collections</h4><span>${sh.length}</span></div><div class="st-cols">${sh.map((c,i)=>stColCard(c,i)).join('')}</div>`;
+  const pool=all.filter(S=>!ownsSkin(S.id)&&!skinHow(S)&&!hero.ids.has(S.id)),rare=[...pool].sort(byRarest).slice(0,4);
+  if(rare.length)h+=`<div class="st-h"><h4>Rarest</h4><button type="button" class="st-more" data-rar="${rarOf(rare[0])}">See all ${ST_CHEV}</button></div><div class="st-grid two">${rare.map((S,i)=>stTile(S,'st2',i)).join('')}</div>`;
+  const left=pool.filter(S=>!rare.includes(S)),reach=left.filter(S=>S.price<=(wallet.balance|0)).sort((a,b)=>b.price-a.price).slice(0,6),pick=reach.length?reach:[...left].sort(byCheapest).slice(0,6);
+  if(pick.length)h+=`<div class="st-h"><h4>${reach.length?'Within reach':'Starter picks'}</h4><span>${reach.length?'Your ATP covers these':'The easiest to get'}</span></div><div class="st-grid">${pick.map((S,i)=>stTile(S,'st',i)).join('')}</div>`;
+  return h;}
+function stList(sh,o){const all=sh.flatMap(c=>c.list);let list,title,line='',col=null;
+  if(o.kind==='col'){col=sh.find(c=>c.key===o.key);if(!col)return null;list=col.list;title=col.name;line=col.open?'':col.line||'';} // an open season shows its Limited tag instead
+  else if(o.kind==='own'){list=all.filter(S=>ownsSkin(S.id));title='Owned';line='Tap one to wear it';}
+  else{list=all.filter(S=>rarOf(S)===o.key);title=rarLabel(o.key);line=o.key==='mythic'?'The rarest there is':o.key==='legendary'?'The best of every collection':`Every ${rarLabel(o.key).toLowerCase()} skin`;}
+  if(!list.length)return null;
+  const own=list.filter(S=>ownsSkin(S.id)).length,sorted=[...list].sort(shopSort==='price'?byCheapest:byRarest);
+  return `<section class="st-ban" style="${skinTint([...list].sort(byRarest)[0])}"><span class="st-ca st-ba" aria-hidden="true">${stArt(list,'cc')}</span><span class="st-bt"><b>${escH(title)}</b>${line?`<small>${escH(line)}</small>`:''}${col&&col.open?`<span class="st-tag st-ltd">Limited<span class="st-clk" data-ends="${col.open.ends}"><span>${svClock(col.open.ends-Date.now())}</span></span></span>`:''}<span class="st-own"><i><i style="width:${(own/list.length*100).toFixed(1)}%"></i></i>${own} of ${list.length} owned</span></span></section>`
+    +`<div class="st-sortrow"><span>${list.length} skin${list.length>1?'s':''}</span><div class="st-sort" role="group" aria-label="Sort"><button type="button" data-sort="rar" aria-pressed="${shopSort!=='price'}">Rarest</button><button type="button" data-sort="price" aria-pressed="${shopSort==='price'}">Cheapest</button></div></div>`
+    +`<div class="st-grid">${sorted.map((S,i)=>stTile(S,'st',i)).join('')}</div>`;}
+function stSearch(sh,raw){const n=normQ(raw),all=sh.flatMap(c=>c.list),first=S=>normQ(S.name).startsWith(n)?0:1;
+  const hits=all.filter(S=>normQ(S.name).includes(n)).sort((a,b)=>first(a)-first(b)||byRarest(a,b));
+  const rows=[...sh.filter(c=>normQ(c.name).includes(n)).map(c=>({a:`data-col="${c.key}"`,name:c.name,sub:`Collection · ${c.list.length} skins`,list:c.list})),
+    ...RAR_TOP.filter(r=>all.some(S=>rarOf(S)===r)&&normQ(rarLabel(r)).startsWith(n)).map(r=>{const l=all.filter(S=>rarOf(S)===r);return{a:`data-rar="${r}"`,name:rarLabel(r),sub:`Rarity · ${l.length} skins`,list:l};})];
+  let h='';
+  if(hits.length)h+=`<div class="st-h"><h4>Skins</h4><span>${hits.length}</span></div><div class="st-grid">${hits.map((S,i)=>stTile(S,'st',i,n)).join('')}</div>`;
+  if(rows.length)h+=`<div class="st-h"><h4>Browse</h4></div><div class="st-rows">${rows.map(x=>{const S=[...x.list].sort(byRarest)[0];return `<button type="button" class="st-row" ${x.a} style="${skinTint(S)}"><span class="st-p">${tileImg(S,'row')}</span><span class="st-rt"><b>${stMark(x.name,n)}</b><small>${x.sub}</small></span>${ST_CHEV}</button>`;}).join('')}</div>`;
+  return h||`<div class="st-empty"><b>No skins match “${escH(raw)}”</b><span>Try a name, a collection like Space, or a rarity like Epic.</span></div>`;}
+function renderShopGrid(el){
+  const sh=shopShelves(),q=shopQ.trim(),v=q?'search':shopView.v,key=[v,shopView.kind,shopView.key,normQ(q)].join('|');
+  const sig=[key,shopSort,settings.skin|0,wallet.balance|0,wallet.skins.join(),bpOn(),wallet.online,(wallet.catalog&&wallet.catalog.skins||[]).length,Object.keys(SEASONS).map(k=>seasonState(k).open?1:0).join('')].join('#');
+  const inp=$('shopQ');if(inp){const p=`Search ${sh.reduce((n,c)=>n+c.list.length,0)} skins`;if(inp.placeholder!==p)inp.placeholder=p;}
+  if(sig!==shopSig||!el.childElementCount){shopSig=sig;
+    let html=v==='search'?stSearch(sh,q):v==='list'?stList(sh,shopView):null;if(html==null){shopView={v:'home'};html=stHome(sh);}
+    el.innerHTML=html;el.dataset.v=v==='search'?'search':shopView.v;
+    if(key!==shopAnim){shopAnim=key;el.classList.remove('st-anim');if(!RM){void el.offsetWidth;el.classList.add('st-anim');}} // tiles ease in when the page changes, not on every wallet update
+    heroSync(true);}
+  renderFeat();}
+const heroStep=tr=>{const c=tr.children;return c.length>1?c[1].offsetLeft-c[0].offsetLeft:tr.clientWidth;}; // one slide, two in landscape
+const heroLast=tr=>Math.max(0,Math.ceil((tr.scrollWidth-tr.clientWidth)/Math.max(1,heroStep(tr))-.01));
+function heroSync(jump){const tr=$('heroTrack');if(!tr)return;const st=heroStep(tr);if(jump&&st)tr.scrollLeft=Math.min(heroAt,heroLast(tr))*st;
+  const d=tr.parentNode.querySelector('.st-dots');if(d)[...d.children].forEach((x,i)=>x.classList.toggle('on',i===heroAt));}
+function shopGo(view){shopView=view;shopQ='';const i=$('shopQ');if(i){i.value='';$('shopQx').hidden=true;}renderSkins();$('skinSec').scrollTop=0;Native.haptic('light');}
+function shopOpenSkin(id){if(!PREMIUM.some(x=>x.id===id))return;shopSel=id;confirmSkin=0;shopSheet(true);renderFeat();Native.haptic('light');}
+function shopSheet(on){const c=$('storeCard'),f=$('skinFeat');if(!c||!f)return;on=!!on;if((c.dataset.sheet==='open')===on)return;
+  c.dataset.sheet=on?'open':'';f.setAttribute('aria-hidden',String(!on));f.inert=!on;if(on){f.scrollTop=0;drawFeat();}}
 $('skinSec').addEventListener('scroll',e=>{const l=e.currentTarget,on=l.scrollTop>4;if(on!==l.classList.contains('stuck'))l.classList.toggle('stuck',on);},{passive:true});
-$('shopFilters').addEventListener('click',e=>{const c=e.target.closest('.ds-chip');if(!c||c.dataset.f===shopFilter)return;shopFilter=c.dataset.f;renderShopGrid($('skins'));renderPreviews();$('skinSec').scrollTop=0;Native.haptic('light');});
+$('skins').addEventListener('scroll',e=>{const tr=e.target;if(!tr||tr.id!=='heroTrack')return;const st=heroStep(tr);if(!st)return;const i=Math.round(tr.scrollLeft/st);if(i!==heroAt){heroAt=i;heroSync(false);}},{capture:true,passive:true});
+$('skins').addEventListener('pointerdown',e=>{if(e.target.closest('#heroTrack'))heroTouch=performance.now();},{passive:true});
+setInterval(()=>{const c=$('storeCard');if(c.hidden||document.hidden||RM||saverOn||c.dataset.sheet==='open'||c.dataset.tab==='atp'||performance.now()-heroTouch<9000)return; // Featured turns on its own
+  const tr=$('heroTrack');if(!tr||!tr.offsetWidth)return;const last=heroLast(tr);if(!last)return;heroAt=heroAt>=last?0:heroAt+1;tr.scrollTo({left:heroAt*heroStep(tr),behavior:'smooth'});heroSync(false);},6500);
+$('shopQ').addEventListener('input',e=>{shopQ=e.target.value;$('shopQx').hidden=!shopQ;renderSkins();$('skinSec').scrollTop=0;});
+$('shopQ').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();e.target.blur();}else if(e.key==='Escape'&&shopQ){e.preventDefault();e.stopPropagation();shopQ='';e.target.value='';$('shopQx').hidden=true;renderSkins();}});
+$('shopQx').addEventListener('click',()=>{shopQ='';$('shopQ').value='';$('shopQx').hidden=true;renderSkins();$('shopQ').focus();});
+$('sheetClose').addEventListener('click',()=>shopSheet(false));$('svScrim').addEventListener('click',()=>shopSheet(false));
+addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('storeCard').hidden&&$('storeCard').dataset.sheet==='open'){e.preventDefault();e.stopImmediatePropagation();shopSheet(false);}},true);
+{let y0=null,dy=0;const f=$('skinFeat'); // drag the sheet down to close it (portrait)
+  f.addEventListener('pointerdown',e=>{if($('storeCard').dataset.sheet!=='open'||innerWidth>innerHeight||f.scrollTop>0||e.target.closest('button'))return;y0=e.clientY;dy=0;f.style.transition='none';});
+  addEventListener('pointermove',e=>{if(y0==null)return;dy=Math.max(0,e.clientY-y0);f.style.transform=`translateY(${dy}px)`;},{passive:true});
+  const end=()=>{if(y0==null)return;y0=null;f.style.transition='';f.style.transform='';if(dy>90)shopSheet(false);};addEventListener('pointerup',end);addEventListener('pointercancel',end);}
 function renderFeat(){
   let S=PREMIUM.find(x=>x.id===shopSel);const b=$('featBuy');
   if(!S||(notSold(S)&&!ownsSkin(S.id))){const sh=shopShelves();S=(sh[0]&&sh[0].list[0])||PREMIUM[0];} // never a skin the shop leaves out
   if(!S||!b)return;shopSel=S.id;
   const rar=rarOf(S),own=ownsSkin(S.id),eq=settings.skin===S.id,cf=confirmSkin===S.id&&performance.now()-confirmT<4000,need=S.price-wallet.balance,
     how=skinHow(S),st=eq?'wearing':own?'own':how?how:!wallet.online?'off':need>0?'short':cf?'confirm':'buy',price=`<span class="pz"><i class="sv-coin"></i>${S.price.toLocaleString()}</span>`;
-  $('storeCard').dataset.r=rar;$('featRar').className='sv-rar '+rar;$('featRar').textContent=S.season?SEASONS[S.season].name:rar;$('featName').textContent=S.name;$('featDesc').textContent=SKIN_DESC[S.id]||'';
+  $('storeCard').dataset.r=rar;$('featRar').className='sv-rar '+rar;{const cn=skinColName(S);$('featRar').textContent=rarLabel(rar)+(cn?' · '+cn:'');const bs=S.base||[168,45,50],st=$('storeCard').style;st.setProperty('--fh',bs[0]|0);st.setProperty('--fs',Math.max(25,Math.min(85,bs[1]|0))+'%');}$('featName').textContent=S.name;$('featDesc').textContent=SKIN_DESC[S.id]||'';
   const ss=S.season&&!own?seasonState(S.season):null,fl=$('featLeft');fl.hidden=!(ss&&ss.open);if(ss&&ss.open){fl.dataset.ends=ss.ends;fl.innerHTML=svIcon('clock')+'<span>'+svClock(ss.ends-Date.now())+'</span>';}
   b.className='primary sv-buy '+st;b.disabled=eq||!!how;
   b.innerHTML=how==='pass'?'<span>Unlock it on the Battle Pass</span>':how==='soon'?'<span>Coming soon</span>':how==='event'?`<span>Back for ${escH(SEASONS[S.season].name)} on ${seasonFrom(S.season)}</span>`:eq?svIcon('check')+'<span>Wearing</span>':own?'<span>Wear</span>':st==='off'?'<span>Connect to buy</span>'+price:st==='short'?svIcon('plus')+'<span>Get ATP</span>':cf?'<span>Confirm</span>'+price:'<span>Buy</span>'+price;
   $('featNote').innerHTML=st==='short'?`<span class="sv-prog"><i style="width:${Math.max(3,Math.min(100,wallet.balance/S.price*100)).toFixed(1)}%"></i></span><span class="sv-of"><i class="sv-coin"></i>${fmtAtp(wallet.balance)} / ${fmtAtp(S.price)}</span>`:'';
   drawFeat();
 }
-function drawFeat(){const cv=$('featCv'),S=PREMIUM.find(x=>x.id===shopSel);if(!cv||!S||$('storeCard').hidden)return;drawPreview(cv,S);} // drawPreview sizes the canvas
+function drawFeat(){const cv=$('featCv'),S=PREMIUM.find(x=>x.id===shopSel);if(!cv||!S||$('storeCard').hidden||$('storeCard').dataset.sheet!=='open')return;drawPreview(cv,S);} // drawPreview sizes the canvas
 (function shopLoop(){if(!$('storeCard').hidden&&!document.hidden&&!RM)drawFeat();requestAnimationFrame(shopLoop);})();
 setInterval(()=>{if($('storeCard').hidden||document.hidden)return; // tick the limited-time countdowns
   for(const c of document.querySelectorAll('#storeCard [data-ends]')){if(c.hidden)continue;const ms=+c.dataset.ends-Date.now();if(ms<=0){renderSkins();return;}const s=c.querySelector('span');if(s)s.textContent=svClock(ms);}},1000);
-function shopTab(t){const atp=t==='atp';$('tabSkins').setAttribute('aria-selected',String(!atp));$('tabAtp').setAttribute('aria-selected',String(atp));$('skinFeat').hidden=$('skinSec').hidden=atp;$('packSec').hidden=!atp;$('storeCard').dataset.tab=atp?'atp':'skins';if(!atp)renderFeat();}
+function shopTab(t){const atp=t==='atp';if(atp)shopSheet(false);$('tabSkins').setAttribute('aria-selected',String(!atp));$('tabAtp').setAttribute('aria-selected',String(atp));$('skinFeat').hidden=$('skinSec').hidden=atp;$('packSec').hidden=!atp;$('storeCard').dataset.tab=atp?'atp':'skins';if(!atp)renderFeat();}
 $('tabSkins').addEventListener('click',()=>shopTab('skins'));$('tabAtp').addEventListener('click',()=>shopTab('atp'));$('storeBalBtn').addEventListener('click',()=>shopTab('atp'));
-$('skins').addEventListener('click',e=>{
-  const b=e.target.closest('.svc');if(!b)return;const id=+b.dataset.id;if(id===shopSel||!PREMIUM.some(x=>x.id===id))return;shopSel=id;confirmSkin=0;renderSkins();Native.haptic('light');});
+$('skins').addEventListener('click',e=>{const t=e.target; // the store's pages: back, sort, a collection, a rarity or Owned, or a skin (opens the sheet)
+  if(t.closest('[data-back]')){shopGo({v:'home'});return;}
+  const so=t.closest('[data-sort]');if(so){if(shopSort!==so.dataset.sort){shopSort=so.dataset.sort;renderSkins();Native.haptic('light');}return;}
+  const c=t.closest('[data-col]');if(c){shopGo({v:'list',kind:'col',key:c.dataset.col});return;}
+  const r=t.closest('[data-rar]');if(r){shopGo(r.dataset.rar==='own'?{v:'list',kind:'own'}:{v:'list',kind:'rar',key:r.dataset.rar});return;}
+  const k=t.closest('[data-id]');if(k)shopOpenSkin(+k.dataset.id);});
 $('featBuy').addEventListener('click',async()=>{
   const id=shopSel,S=PREMIUM.find(x=>x.id===id),b=$('featBuy');if(!S)return;
   if(ownsSkin(id)){settings.skin=id;saveSettings();syncPats();Native.haptic('medium');return;}
@@ -6905,10 +7176,11 @@ function renderEarn(){ // the placement payouts, from the server's rules when we
 // ATP store (packs are sold through the App Store / Google Play from inside the apps)
 let storeNote='',storeMsg='';
 const showStoreHint=()=>{const nd=$('storeNeed');nd.hidden=!storeNote;nd.innerHTML=storeNote?'<i class="sv-coin"></i>'+escH(storeNote):'';$('storeHint').textContent=storeMsg;};
-async function openStore(note){
-  storeNote=note||'';{const sel=PREMIUM.find(x=>x.id===shopSel);if(!sel||sel.pass){const w=PREMIUM.find(x=>x.id===settings.skin);shopSel=w&&!w.pass?w.id:PREMIUM[0].id;}}confirmSkin=0;
+async function openStore(note,o){ // o: {skin:id} opens that skin's sheet, {col:key} a collection
+  storeNote=note||'';shopView=o&&o.col?{v:'list',kind:'col',key:o.col}:{v:'home'};shopQ='';{const q=$('shopQ');if(q){q.value='';$('shopQx').hidden=true;}}heroAt=0;shopSheet(false);{const sel=PREMIUM.find(x=>x.id===shopSel);if(!sel||sel.pass){const w=PREMIUM.find(x=>x.id===settings.skin);shopSel=w&&!w.pass?w.id:PREMIUM[0].id;}}confirmSkin=0;
   showCard('storeCard');shopTab(note?'atp':'skins');renderSkins();renderEarn();renderPacks([],true);
   $('skinSec').scrollTop=0; // every visit starts at the top, not where the last one was left
+  if(o&&o.skin)shopOpenSkin(o.skin);
   if(!Native.platform){renderPacks(null);storeMsg='Packs are sold in the iPhone and Android app';showStoreHint();return;}
   storeMsg='';showStoreHint();
   try{const r=await Native.call('products',{ids:ATP_PACKS.map(p=>p.id)});const ps=r.products||[];
@@ -6968,7 +7240,9 @@ if(/[?&]autopilot=1/.test(location.search)){
 }
 $('shopBtn').addEventListener('click',()=>openStore());
 
-$('storeBack').addEventListener('click',()=>{showCard('startCard');renderSkins();});
+$('storeBack').addEventListener('click',()=>{const c=$('storeCard');if(c.dataset.sheet==='open'){shopSheet(false);return;} // the sheet, then a page, then the lobby
+  if(c.dataset.tab!=='atp'&&(shopQ||shopView.v!=='home')){shopGo({v:'home'});return;}
+  showCard('startCard');renderSkins();});
 /* ---------- Account: Sign in with Apple / Google, so the wallet follows the player across devices ---------- */
 let authProviders=null,webAuthConfig=null,signingIn=false; // which sign-in buttons this build can offer
 function renderAccount(){
@@ -8901,7 +9175,7 @@ $('modeClose').addEventListener('click',()=>modeSheet(false));
 $('modeSeg').addEventListener('click',e=>{const b=e.target.closest('.lb-mpick');if(!b)return;setPlayMode(b.dataset.m);Native.haptic('light');setTimeout(()=>modeSheet(false),RM?0:180);});
 $('lbToCasual').addEventListener('click',()=>{setPlayMode('casual');Native.haptic('light');});
 $('lbSkill').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.botSkill=b.dataset.k;saveSettings();syncSkill();setPlayMode('casual');});
-$('lbSkinCard').addEventListener('click',()=>{const F=lbFeatSkin();if(F)shopSel=F.id;openStore();});
+$('lbSkinCard').addEventListener('click',()=>{const F=lbFeatSkin();openStore('',F?{skin:F.id}:null);}); // the NEW card opens that skin's sheet
 $('nameIn').addEventListener('input',fitName);
 // Enter on the lobby (or Go on the name keyboard) presses Play for the chosen mode; Escape closes the mode select
 addEventListener('keydown',e=>{if($('startCard').hidden||mode==='play')return;const t=e.target,tag=t&&t.tagName,sh=!$('modeSheet').hidden;
@@ -8927,7 +9201,7 @@ function syncNearby(){ // Nearby is one of the lobby's play modes: it follows th
 // Lobby event pill: while a season is on, it replaces the title and opens the shop on its limited skins
 function syncEvent(){const key=Object.keys(SEASONS).find(k=>seasonState(k).open),pill=$('eventPill');pill.hidden=!key;$('startCard').classList.toggle('event',!!key);if(!key)return;
   const st=seasonState(key),left=fmtLeft(st.ends-Date.now());$('eventName').textContent=st.name;$('eventSub').textContent=left;pill.setAttribute('aria-label',`${st.name} event, limited skins, ${left} left`);}
-$('eventPill').addEventListener('click',()=>{const key=Object.keys(SEASONS).find(k=>seasonState(k).open),S=PREMIUM.find(x=>x.season===key&&!ownsSkin(x.id))||PREMIUM.find(x=>x.season===key);if(S)shopSel=S.id;openStore();});
+$('eventPill').addEventListener('click',()=>{const key=Object.keys(SEASONS).find(k=>seasonState(k).open);openStore('',key?{col:'s-'+key}:null);}); // the event banner opens its collection
 syncEvent();setInterval(syncEvent,60000);
 syncNearby();
 if(/[?&]nearby=1/.test(location.search))setTimeout(()=>setNearby(true),1500); // debug builds: -nearby 1 (testing with two simulators)
