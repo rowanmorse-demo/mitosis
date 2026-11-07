@@ -9056,8 +9056,8 @@ const PUSH_ICONS={all:'<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.6 2.2H4.4z"/><pa
   shop:'<path d="M5.5 8h13l-1 12.5h-11z"/><path d="M9 10.5V7a3 3 0 0 1 6 0v3.5"/>'};
 function pushSettings(){
   let sec=$('pushSec');if(sec&&sec.dataset.built)return sec;
-  const seg=$('sndSeg'),snd=seg&&seg.closest('section'),tpl=seg&&seg.closest('.srow');if(!snd||!tpl)return null;
-  if(!sec){sec=snd.cloneNode(false);sec.id='pushSec';snd.after(sec);}else sec.className=snd.className;
+  const seg=$('sndSeg'),snd=seg&&(seg.closest('.st-grp,.sg,.ds-sec')||seg.closest('section')),tpl=seg&&seg.closest('.srow');if(!snd||!tpl)return null; // the Sound group
+  if(!sec){sec=snd.cloneNode(false);sec.id='pushSec';snd.after(sec);}else if(!sec.className)sec.className=snd.className; // a spot the Settings page keeps for it has its own class
   sec.innerHTML='';sec.hidden=true;
   const head=snd.firstElementChild.cloneNode(true),word=[head,...head.querySelectorAll('*')].reverse().find(e=>!e.children.length&&e.textContent.trim());
   if(word)word.textContent='Notifications';sec.appendChild(head);

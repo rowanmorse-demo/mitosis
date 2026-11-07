@@ -70,8 +70,9 @@ class CDP {
 
     // 2. Settings › Notifications, after Sound, master Off; "On" asks iOS, then the token is registered
     await p.eval(`document.getElementById('setBtn').click()`);
+    await p.eval(`document.getElementById('stTabAudio')&&document.getElementById('stTabAudio').click()`); // the tabbed Settings keeps it under Audio
     await p.until(`!!document.getElementById('pushSec')&&!document.getElementById('pushSec').hidden`, 'the Notifications section');
-    assert.equal(await p.eval(`document.getElementById('pushSec').previousElementSibling===document.getElementById('sndSeg').closest('section')`), true, 'it sits right after Sound');
+    assert.ok(await p.eval(`(()=>{const s=document.getElementById('pushSec'),snd=document.getElementById('sndSeg'),g=snd.closest('.st-grp,.sg,.ds-sec');return s.closest('#settingsCard')&&s.parentElement===g.parentElement&&s.className===g.className&&/Notifications/.test(s.firstElementChild.textContent)&&s.querySelector('.st-list,.sg-list')})()`), 'a Notifications group beside Sound, in its look');
     assert.equal(await p.eval(`document.querySelector('#pushSeg [aria-pressed=true]').dataset.v`), '0', 'master shows Off before permission');
     await p.eval(`document.getElementById('pushSec').scrollIntoView()`); await p.shot('1-settings-before');
     await p.eval(`document.querySelector('#pushSeg [data-v="1"]').click()`);
