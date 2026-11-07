@@ -2556,6 +2556,33 @@ body:not(.playing) #toasts .toast .tt{display:contents}body:not(.playing) #toast
 #friendsCard .fr-me{background:radial-gradient(120% 100% at 0% 0%,rgba(79,227,194,.08),transparent 60%),var(--sf);border-color:var(--sf-edge);box-shadow:var(--sf-hi),var(--sf-drop)}
 #friendsCard .fr-code i{height:48px;font-size:23px}
 @media (orientation:portrait){.lobby{--cell:min(64vw,38vh,300px)}} /* a bigger cell: less dead space between the name and PLAY */
+/* bot difficulty: every level has its colour on one ramp (Normal was plain white, so picking it looked like nothing was picked),
+   the picked level is a tinted pill with a ring in that colour, and the five options get more room */
+.lb-bots{gap:4px;padding:4px;border-radius:16px}
+.lb-bots button{height:42px;padding:0 1px;border-radius:12px;font:700 12.5px/1 var(--display);letter-spacing:-.01em;white-space:nowrap}
+.lb-bots [data-k=normal]{--k:#7cc0ff}.lb-play[data-k=normal]{--pk:#7cc0ff}
+.lb-bots button[data-k][aria-checked=true]{color:var(--k);background:var(--kb);box-shadow:inset 0 0 0 1.5px var(--kr),inset 0 1px 0 rgba(255,255,255,.12),0 4px 12px -4px rgba(0,0,0,.6)}
+.lb-bots [data-k=easy]{--kb:rgba(95,224,168,.16);--kr:rgba(95,224,168,.6)}.lb-bots [data-k=normal]{--kb:rgba(124,192,255,.16);--kr:rgba(124,192,255,.6)}
+.lb-bots [data-k=hard]{--kb:rgba(255,192,77,.15);--kr:rgba(255,192,77,.6)}.lb-bots [data-k=expert]{--kb:rgba(255,122,160,.16);--kr:rgba(255,122,160,.6)}.lb-bots [data-k=master]{--kb:rgba(201,164,255,.16);--kr:rgba(201,164,255,.62)}
+@media (max-width:380px){.lb-bots button{font-size:11.5px;letter-spacing:-.02em}.lb-bots{gap:3px;padding:3px}}
+@media (orientation:landscape) and (max-height:520px){.lb-bots button{height:36px}}
+/* ATP packs offline: the price stays (remembered, or the standard one) with "Connect to buy" under it, instead of a blank */
+#storeCard .sv-pack.wait .pr{display:grid;place-content:center;gap:3px;height:46px;background:rgba(255,255,255,.07);color:#ffe2a6;font:800 16px/1 var(--display);letter-spacing:-.01em;box-shadow:inset 0 0 0 1px rgba(255,214,140,.22)}
+#storeCard .sv-pack .pr small{font:700 9px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+/* the name under the cell: a title, not a pill. The name in big type over a fine pink line, a small pencil chip after it;
+   no name yet: "Name your cell" in pink with a pink chip; editing: a field with a pink ring, the line and chip hidden */
+.lobby .lb-hero .lb-name{background:none;box-shadow:none;padding:6px 6px 12px 12px;gap:10px;border-radius:16px;font:800 25px/1.1 var(--display);letter-spacing:-.03em;color:#fff;-webkit-backdrop-filter:none;backdrop-filter:none}
+.lobby .lb-hero .lb-name input[type=text]{text-shadow:0 2px 14px rgba(0,0,0,.6)}
+.lobby .lb-hero .lb-name::after{content:"";position:absolute;left:22%;right:22%;bottom:2px;height:2px;border-radius:2px;background:linear-gradient(90deg,rgba(255,92,138,0),rgba(255,92,138,.85),rgba(255,92,138,0));transition:opacity .2s}
+.lobby .lb-hero .lb-name svg{box-sizing:border-box;width:28px;height:28px;padding:7px;border-radius:50%;background:var(--sf);box-shadow:inset 0 0 0 1px var(--sf-edge),0 4px 10px -4px rgba(0,0,0,.7);stroke:rgba(240,250,247,.85);stroke-width:2.4}
+.lobby .lb-hero .lb-name.long{font-size:20px}
+.lobby .lb-hero .lb-name.empty input[type=text]::placeholder{color:#ff9dbb;opacity:1}
+.lobby .lb-hero .lb-name.empty svg{background:linear-gradient(180deg,#ff8aac,#ff5c8a 55%,#e8417a);stroke:#fff;box-shadow:0 4px 12px -3px rgba(255,92,138,.7)}
+.lobby .lb-hero .lb-name:focus-within{background:rgba(2,8,9,.88);box-shadow:inset 0 0 0 1.5px rgba(255,92,138,.8),0 12px 26px -10px rgba(0,0,0,.8);padding:8px 14px}
+.lobby .lb-hero .lb-name:focus-within::after,.lobby .lb-hero .lb-name:focus-within svg{opacity:0;width:0;padding:0;margin-left:-10px}
+@media (hover:hover){.lobby .lb-hero .lb-name:hover{background:rgba(255,255,255,.04)}}
+@media (orientation:landscape) and (max-height:520px){.lobby .lb-hero .lb-name{font-size:20px;padding:4px 4px 9px 10px}.lobby .lb-hero .lb-name.long{font-size:17px}.lobby .lb-hero .lb-name svg{width:24px;height:24px;padding:6px}}
+.lobby .hero-edit::after{content:"";position:absolute;inset:-12px;border-radius:50%} /* a finger-sized target round the + */
 /* @ui:lobby-look end */
 /* battery: the arena redraws under the HUD every frame, so glass blur there costs the GPU every frame; phones show the HUD
    without it, and battery saver drops blur everywhere */
@@ -2618,7 +2645,7 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
     </aside>
     <section class="lb-hero">
       <button type="button" class="hero-cell" id="avatarBtn" aria-label="Change your skin in Inventory"><canvas id="avatarCv" width="320" height="320" aria-hidden="true"></canvas><span class="hero-edit" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5.5v13M5.5 12h13"/></svg></span></button>
-      <label class="lb-name"><input id="nameIn" type="text" maxlength="16" placeholder="Unnamed cell" autocomplete="off" spellcheck="false" enterkeyhint="go" aria-label="Your name"><span class="lb-measure" id="nameMeasure" aria-hidden="true"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg></label>
+      <label class="lb-name"><input id="nameIn" type="text" maxlength="16" placeholder="Name your cell" autocomplete="off" spellcheck="false" enterkeyhint="go" aria-label="Your name"><span class="lb-measure" id="nameMeasure" aria-hidden="true"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg></label>
     </section>
     <nav class="lb-nav" aria-label="Menu">
       <button class="lb-tab" id="lookBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 5.3V4.5a2.5 2.5 0 0 1 5 0v.8"/><path d="M6 10.8A5.8 5.8 0 0 1 11.8 5h.4a5.8 5.8 0 0 1 5.8 5.8V19a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2z"/><rect x="9" y="13.5" width="6" height="4.5" rx="1.3"/><path d="M6 13H4.5v4.5H6M18 13h1.5v4.5H18"/></svg><span>Inventory</span></button>
@@ -6372,7 +6399,8 @@ async function loadTop(){const seq=++rkSeq;rkState('loading');
   $('topList').innerHTML=html;rkState('ok');}
 $('rkRetry').addEventListener('click',loadTop);
 $('rankBtn').addEventListener('click',()=>{showCard('rankCard');loadTop();});
-$('avatarBtn').addEventListener('click',()=>$('lookBtn').click());$('lookBtn').addEventListener('click',()=>{showCard('lookCard');renderSkins();});
+$('avatarBtn').addEventListener('click',()=>{$('lookBtn').click(); // the cell (and its +) opens Inventory at the skins, ready to change skin (portrait: the grid is under the stage)
+  requestAnimationFrame(()=>{const c=$('lookCard'),sd=c.querySelector('.lk-side');if(sd&&innerHeight>innerWidth)c.scrollTo({top:Math.max(0,sd.offsetTop-64),behavior:RM?'auto':'smooth'});});});$('lookBtn').addEventListener('click',()=>{showCard('lookCard');renderSkins();});
 $('setBtn').addEventListener('click',()=>showCard('settingsCard'));
 // Settings: an on/off row flips from a tap anywhere on it, the switch included; the invite row shares from anywhere but the link
 for(const r of document.querySelectorAll('#settingsCard .srow.tg'))r.addEventListener('click',e=>{const b=e.target.closest('.seg button');if(b&&b.getAttribute('aria-pressed')!=='true')return;e.stopPropagation();const o=r.querySelector('.seg button:not([aria-pressed="true"])');if(o)o.click();},true);
@@ -6864,9 +6892,10 @@ async function openStore(note){
   $('skinSec').scrollTop=0; // every visit starts at the top, not where the last one was left
   if(!Native.platform){renderPacks(null);storeMsg='Packs are sold in the iPhone and Android app';showStoreHint();return;}
   storeMsg='';showStoreHint();
-  try{const r=await Native.call('products',{ids:ATP_PACKS.map(p=>p.id)});const ps=r.products||[];renderPacks(ps);
-    storeMsg=ps.length?'':'Store unavailable right now';showStoreHint();}
-  catch(e){renderPacks([]);storeMsg='Store unavailable · '+e.message;showStoreHint();}
+  try{const r=await Native.call('products',{ids:ATP_PACKS.map(p=>p.id)});const ps=r.products||[];
+    if(ps.length){const c=packPrices();for(const p of ps)if(p.price)c[p.id]=p.price;try{localStorage.setItem('mitosis.packPrices',JSON.stringify(c));}catch(e){}}
+    renderPacks(ps);}
+  catch(e){renderPacks([]);}
 }
 function packArt(i){ // ATP orbs: more of them, and a bigger glow, the bigger the pack; the top pack is a whole radiant sphere
   const f=n=>+n.toFixed(1),orb=(x,y,r)=>`<g transform="translate(${x} ${y})"><circle r="${r}" fill="url(#pk${i}o)"/>${r>=12?`<path transform="scale(${f(r*.85)})" d="M.02-.6L-.3.06H-.04L-.14.6L.3-.08H.04L.2-.6Z" fill="#8a4600" opacity=".42"/>`:''}<ellipse cx="${f(-.32*r)}" cy="${f(-.4*r)}" rx="${f(.34*r)}" ry="${f(.19*r)}" transform="rotate(-30 ${f(-.32*r)} ${f(-.4*r)})" fill="#fff" opacity=".62"/></g>`,
@@ -6878,10 +6907,15 @@ function packArt(i){ // ATP orbs: more of them, and a bigger glow, the bigger th
   else g+=`<g transform="rotate(-14 60 52)"><ellipse cx="60" cy="52" rx="52" ry="13" fill="none" stroke="#ffe7a0" stroke-width="2" opacity=".45"/></g>`+orb(60,50,31)+`<g transform="rotate(-14 60 52)"><path d="M8 52A52 13 0 0 0 112 52" fill="none" stroke="#fff1c2" stroke-width="2.6" opacity=".9"/></g>`+orb(17,62,6)+orb(103,50,5)+spark(18,20,6)+spark(104,16,4.5)+spark(98,86,3.5)+spark(24,90,3);
   return `<svg viewBox="0 0 120 96">${defs}${g}</svg>`;
 }
+// ATP pack prices: the App Store's (in the player's currency) are remembered, so the shop shows them offline; with none yet, the
+// standard US prices (Products.storekit). A remembered or standard price never starts a purchase: buying needs the store and the server.
+const PACK_USD={atp_500:'$0.99',atp_1500:'$1.99',atp_5000:'$4.99',atp_12000:'$9.99',atp_150000:'$99.99'};
+function packPrices(){try{const c=JSON.parse(localStorage.getItem('mitosis.packPrices')||'{}');return c&&typeof c==='object'?c:{};}catch(e){return{};}}
 function renderPacks(products,loading){
-  const el=$('packs');let html='';
-  ATP_PACKS.forEach((P,i)=>{const pr=products&&products.find(x=>x.id===P.id),tg=P.tag?' tg-'+P.tag.toLowerCase().replace(/\W+/g,'-'):'';
-    html+=`<button type="button" class="pack sv-pack t${i+1}${tg}" data-id="${P.id}"${pr?'':' disabled'} aria-label="${P.atp.toLocaleString()} ATP, ${escH(P.label)}${pr?', '+escH(pr.price):''}">${P.tag?'<span class="tag">'+escH(P.tag)+'</span>':''}<span class="pk-art" aria-hidden="true">${packArt(i)}</span><span class="pk-amt"><b>${P.atp.toLocaleString()}</b><small>${escH(P.label)}</small></span><span class="pr">${pr?escH(pr.price):loading?'<i class="sv-dots"></i>':products?'—':'In the app'}</span></button>`;});
+  const el=$('packs'),cache=packPrices(),live=!!(products&&products.length),can=live&&wallet.online,anyCache=ATP_PACKS.some(P=>cache[P.id]);let html='';
+  storeMsg=products===null?storeMsg:loading?'':can?'':!wallet.online?'Offline · connect to buy':anyCache?'App Store unavailable · connect to buy':'Standard US prices · connect to buy';showStoreHint();
+  ATP_PACKS.forEach((P,i)=>{const lp=live&&products.find(x=>x.id===P.id),pr=lp?{price:lp.price}:products===null?null:{price:cache[P.id]||PACK_USD[P.id]},ok=!!(lp&&can),tg=P.tag?' tg-'+P.tag.toLowerCase().replace(/\W+/g,'-'):'';
+    html+=`<button type="button" class="pack sv-pack t${i+1}${tg}${!ok&&pr?' wait':''}" data-id="${P.id}"${ok?'':' disabled'} aria-label="${P.atp.toLocaleString()} ATP, ${escH(P.label)}${pr?', '+escH(pr.price):''}${!ok&&pr&&!loading?', connect to buy':''}">${P.tag?'<span class="tag">'+escH(P.tag)+'</span>':''}<span class="pk-art" aria-hidden="true">${packArt(i)}</span><span class="pk-amt"><b>${P.atp.toLocaleString()}</b><small>${escH(P.label)}</small></span><span class="pr">${pr?escH(pr.price):'In the app'}${!ok&&pr&&!loading?'<small>Connect to buy</small>':''}</span></button>`;});
   el.innerHTML=html;
 }
 let buying=false;
@@ -6896,7 +6930,7 @@ async function redeem(p){ // server verifies with Apple/Google, credits ATP, the
   Native.send({type:'finish',transactionId:p.transactionId||'',purchaseToken:p.purchaseToken||''});
   if(w.credited){toast('ATP','ATP added',`+${w.credited} ATP — ${w.balance} in your wallet`);Native.haptic('success');}
 }
-$('packs').addEventListener('click',e=>{const b=e.target.closest('.pack');if(b&&!b.disabled)buyPack(b.dataset.id);});
+$('packs').addEventListener('click',e=>{const b=e.target.closest('.pack');if(b&&!b.disabled&&wallet.online)buyPack(b.dataset.id);});
 const BISECT={tag:(location.search.match(/[?&]tag=([\w-]+)/)||[])[1]||''};for(const k of ['nocanvas','nohud','noeject','nosend','lowfx','norestart'])BISECT[k]=new RegExp('[?&]'+k+'=1').test(location.search);
 const SKIP=new Set(((location.search.match(/[?&]skip=([\w,]+)/)||[,''])[1]).split(',').filter(Boolean));BISECT.skip=[...SKIP].join(',');BISECT.auto=/[?&]autopilot=1/.test(location.search);
 // page errors go to the same diagnostics channel as frame hitches (the server log, and the app's log)
@@ -8772,6 +8806,7 @@ $('specRes').addEventListener('click',()=>specEnd(true));
 function fitName(){ // the name field is as wide as the name, so the pencil sits right after it
   const inp=$('nameIn'),m=$('nameMeasure');if(!inp||!m||$('startCard').hidden)return;
   const k=inp.value+'|'+innerWidth+'|'+innerHeight+'|'+(document.fonts?document.fonts.status:'');if(k===lbFit)return;
+  const lb=inp.closest('.lb-name');if(lb){lb.classList.toggle('long',inp.value.length>11);lb.classList.toggle('empty',!inp.value);} // a long name a size smaller; no name: the invitation look
   m.textContent=inp.value||inp.placeholder;const w=m.getBoundingClientRect().width;if(!w)return;lbFit=k;inp.style.width=Math.ceil(w)+3+'px';}
 function lbSharp(cv){if(cv&&cv.clientWidth)drawAvatar(cv);} // the skin code (skinCanvas) sizes the backing store to CSS size x DPR; this just repaints
 function syncPlay(){
