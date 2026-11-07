@@ -7146,13 +7146,13 @@ function creditCell(c,mass,x,y,vcolor,vr,infRem=0,counts=true,bounty=false,boss=
   kick(c,.5+Math.min(1.6,vr/c.r*2.2));
   burst(x,y,col(vcolor,8),Math.min(14,3+vr/10|0),180);
   if(T-bp.comboT<3)bp.combo++;else bp.combo=1;bp.comboT=T;
-  if(bp.combo>=3)bp.fx.surge=Math.max(bp.fx.surge,3);
+  if(bp.combo>=3&&!CL)bp.fx.surge=Math.max(bp.fx.surge,3); // Frenzy: a Battle Royale extra, not in Classic
   if(bp===human){
     floatText(x,y,'+'+Math.round(mass),bp.color,18);sfx('eat',vr);Native.haptic('light');unlock('first');
     cam.shake=Math.max(cam.shake,Math.min(9,2+vr*.05));
     if(bounty){floatText(x,y-40,'Bounty ×1.5',[45,95,60],24);unlock('bounty');}
     if(boss)unlock('levi');
-    if(bp.combo>=3){floatText(c.x,c.y-c.r-20,'Frenzy ×'+bp.combo,[340,100,70],26);sfx('frenzy');}
+    if(bp.combo>=3&&!CL){floatText(c.x,c.y-c.r-20,'Frenzy ×'+bp.combo,[340,100,70],26);sfx('frenzy');}
     if(bp.combo>=5)unlock('frenzy5');
   }
 }
