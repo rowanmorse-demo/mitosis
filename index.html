@@ -3038,6 +3038,14 @@ const num=v=>typeof v==='number'&&isFinite(v)?v:0;
 const radius=m=>4+Math.sqrt(m)*6;
 const speedOf=r=>1000*Math.pow(r,-0.45);
 const mergeDelay=m=>15+m*0.006; // seconds before split pieces may fuse: ~20-30 s at everyday sizes
+// Splitting: the new half leaves at SPLIT_SPEED and slows by CELL_DRAG per second, a lunge of SPLIT_SPEED/CELL_DRAG ≈ 480
+// units however big the cell is. Agar-style servers lunge ~800 of their units, but their cells are 1.6× as wide as ours
+// (radius 10√m against 4+6√m), so 480 here is the same reach in radii: a mass-200 split lands its half 5.8 parent radii out
+// (it was 720 units, 8.7 radii, which flung pieces far past anything they were aimed at). Pieces of one player are solid to
+// each other (pushed apart at SIB_STIFF per second) until they may fuse, except in a new piece's first SPLIT_GRACE s, so a half
+// flies clear of its parent instead of shoving it back, as on those servers (13 ticks there).
+const SPLIT_SPEED=1550,CELL_DRAG=3.2,SPLIT_GRACE=.5,SIB_STIFF=30;
+const splitReach=m=>SPLIT_SPEED/CELL_DRAG*.4+.75*radius(m/2); // how far past its edge the bots reckon a mass-m cell's split can catch something
 function randInDish(margin=0,rad=arenaR()){const rr=Math.max(150,rad-margin)*Math.sqrt(Math.random()),t=Math.random()*TAU;return{x:Math.cos(t)*rr,y:Math.sin(t)*rr};}
 const col=(c,dl=0,a=1)=>`hsla(${c[0]},${c[1]}%,${clamp(c[2]+dl,0,100)}%,${a})`;
 // Canvas gradients are native objects. Making hundreds per frame (every cell, virus and blob) left WebKit's
@@ -6960,7 +6968,7 @@ function makePlayer(name,color,bot){
 function makeOrg(){const o=[];for(let i=0;i<6;i++)o.push({a:rand(0,TAU),d:rand(.3,.64),s:rand(.045,.1),sp:rand(-.35,.35),l:Math.random()<.5?18:-20});return o;}
 function addCell(p,x,y,mass,vx=0,vy=0){
   const r=radius(mass);
-  const c={id:nextId++,nid:(nidC++%4095)+1,owner:p,x,y,px:x,py:y,svx:0,svy:0,mass,r,dr:r,vx,vy,mergeAt:0,wob:Math.random()*TAU,dead:false,inf:0,infVis:false,
+  const c={id:nextId++,nid:(nidC++%4095)+1,owner:p,x,y,px:x,py:y,svx:0,svy:0,mass,r,dr:r,vx,vy,mergeAt:0,born:T,wob:Math.random()*TAU,dead:false,inf:0,infVis:false,
     tx:x,ty:y,tt:0,nvx:0,nvy:0,ex:0,ey:0,pts:new Float32Array(NP).fill(1),pv:new Float32Array(NP),lim:new Float32Array(NP),org:makeOrg()};
   p.cells.push(c);cells.push(c);return c;
 }
@@ -7020,8 +7028,7 @@ function split(p){
   for(const c of list){
     if(count>=MAX_CELLS)break;if(c.mass<36)continue;
     const[nx,ny]=aim(p,c);const half=c.mass/2;c.mass=half;c.r=radius(half);
-    const sp=2300; // Agar.io-style fixed boost: about 720 units of travel however big the cell is
-    const n=addCell(p,c.x+nx*c.r*.4,c.y+ny*c.r*.4,half,nx*sp,ny*sp);n.dr=c.dr*.78;n.org=c.org.map(o=>({...o,a:o.a+rand(-.5,.5)}));n.inf=c.inf;
+    const n=addCell(p,c.x+nx*c.r*.4,c.y+ny*c.r*.4,half,nx*SPLIT_SPEED,ny*SPLIT_SPEED);n.dr=c.dr*.78;n.org=c.org.map(o=>({...o,a:o.a+rand(-.5,.5)}));n.inf=c.inf;
     c.mergeAt=n.mergeAt=T+mdel(p,half*2);kick(c,1.6);kick(n,2);count++;did=true;
   }
   if(did&&p===human){sfx('split');flash('splitBtn');Native.haptic('medium');cam.shake=Math.max(cam.shake,3);}
@@ -7330,7 +7337,7 @@ function think(p){
     const d=Math.hypot(dx,dy)||1,gap=d-c.r-me.r;
     if(!boss&&p.fx.shield<=0&&c.mass>me.mass*need(c.owner,p)){
       const canSplitKill=c.mass/2>me.mass*need(c.owner,p);
-      const reach=c.r+(canSplitKill?194+.75*radius(c.mass/2):50)+(c.owner.fx.surge>0?90:0)+(c.owner.dashCd<=0?60:0);
+      const reach=c.r+(canSplitKill?splitReach(c.mass):50)+(c.owner.fx.surge>0?90:0)+(c.owner.dashCd<=0?60:0);
       threats.push({x:c.x+c.svx*lead,y:c.y+c.svy*lead,reach,w:Math.min(4,c.mass/me.mass),m:c.mass});
       if(gap-reach+c.r<minGap)minGap=gap-reach+c.r;
     }else if(me.mass>c.mass*need(p,c.owner)&&c.owner.fx.shield<=0&&!((c.inf||c.infVis)&&!has(p,'lysozyme'))){
@@ -7382,15 +7389,15 @@ function think(p){
   // ---- tactics
   if(minGap<70&&p.dashCd<=0&&Math.random()<.3+aggr*.35){dash(p);return;}           // escape burst
   if(mode==='hunt'&&!boss){
-    const d=Math.hypot(exact.x-me.x,exact.y-me.y),gap=d-me.r,half=me.mass/2,reach=194+.75*radius(half);
+    const d=Math.hypot(exact.x-me.x,exact.y-me.y),gap=d-me.r,half=me.mass/2,reach=splitReach(me.mass);
     let safeHalves=true;for(const t of threats)if(t.m>half*1.25&&Math.hypot(t.x-exact.x,t.y-exact.y)<t.reach+600){safeHalves=false;break;}
     let blocked=false;
     if(me.mass>VIRUS_M*1.3){const ux=exact.x-me.x,uy=exact.y-me.y,dd=d*d||1,hr=radius(half)*.6;
       for(const v of viruses){const t=((v.x-me.x)*ux+(v.y-me.y)*uy)/dd;if(t<=0||t>=1.2)continue;
         const ex=v.x-(me.x+ux*t),ey=v.y-(me.y+uy*t),o=v.r+hr;if(ex*ex+ey*ey<o*o){blocked=true;break;}}}
     if(half>prey.mass*need(p,prey.owner)&&gap<reach+me.r*.15&&safeHalves&&!blocked&&p.cells.length<=Math.ceil(2+4*aggr)&&Math.random()<.35+aggr*.35){p.target=exact;split(p);return;}
-    // Master: too far for one split but not for two (the halves have flown ~230 units when the second one goes)
-    if(M&&p.cells.length===1&&safeHalves&&!blocked&&me.mass/4>prey.mass*need(p,prey.owner)&&gap>=reach+me.r*.15&&gap<reach+210&&Math.random()<.5){
+    // Master: too far for one split but not for two (the halves have flown ~150 units when the second one goes)
+    if(M&&p.cells.length===1&&safeHalves&&!blocked&&me.mass/4>prey.mass*need(p,prey.owner)&&gap>=reach+me.r*.15&&gap<reach+SPLIT_SPEED/CELL_DRAG*(1-Math.exp(-CELL_DRAG*.12))*.9&&Math.random()<.5){
       let safeQ=true;for(const t of threats)if(t.m>me.mass/4*1.25&&Math.hypot(t.x-exact.x,t.y-exact.y)<t.reach+600){safeQ=false;break;}
       if(safeQ){p.target=exact;split(p);p.ai.split2={prey,t:T};p.ai.t=T+.12;return;}}
     if(gap<280&&p.dashCd<=0&&speedOf(prey.r)>=speedOf(me.r)*.95&&Math.random()<aggr*.3){p.target=exact;dash(p);return;}
@@ -7452,7 +7459,7 @@ function step(dt){
   for(const c of cells){c.px=c.x;c.py=c.y;}
   smoothRemote(dt);
   // movement (our own cells only; others arrive over the room)
-  const kd=Math.exp(-3.2*dt);
+  const kd=Math.exp(-CELL_DRAG*dt);
   for(const c of cells){
     const p=c.owner;if(p.remote)continue;
     let dx=p.target.x-c.x,dy=p.target.y-c.y;const d=Math.hypot(dx,dy);
@@ -7474,8 +7481,8 @@ function step(dt){
           else{ // both ready: slide together at the smaller piece's own speed (faster once touching), the way agar.io pieces slurp back in
             const sm=a.mass<b.mass?a:b,touch=d<a.r+b.r,s=Math.min(d*.5,speedOf(sm.r)*(touch?1.1:.55)*dt),tot=a.mass+b.mass;
             a.x+=dx*s*2*(b.mass/tot);a.y+=dy*s*2*(b.mass/tot);b.x-=dx*s*2*(a.mass/tot);b.y-=dy*s*2*(a.mass/tot);}
-        }else{
-          const ov=a.r+b.r-d;if(ov>0){const tot=a.mass+b.mass,k=Math.min(1,dt*14)*ov;a.x-=dx*k*(b.mass/tot);a.y-=dy*k*(b.mass/tot);b.x+=dx*k*(a.mass/tot);b.y+=dy*k*(a.mass/tot);}
+        }else if(T-a.born>=SPLIT_GRACE&&T-b.born>=SPLIT_GRACE){ // solid, but a piece just split off may pass through to fly clear
+          const ov=a.r+b.r-d;if(ov>0){const tot=a.mass+b.mass,k=Math.min(1,dt*SIB_STIFF)*ov;a.x-=dx*k*(b.mass/tot);a.y-=dy*k*(b.mass/tot);b.x+=dx*k*(a.mass/tot);b.y+=dy*k*(a.mass/tot);}
         }
       }}
   }
