@@ -2,7 +2,7 @@
 #   docker compose up -d          # start (or apply changes after git pull: docker compose up -d --force-recreate)
 #   docker compose logs -f        # watch
 # Wallets, skins and purchases live in the mitosis-data volume. Put the IAP verification
-# variables in a .env file next to this file (see README); compose passes them through.
+# and push notification variables in a .env file next to this file (see README); compose passes them through.
 services:
   mitosis:
     image: node:22-alpine
@@ -22,6 +22,13 @@ services:
       APPLE_BUNDLE_ID: ${APPLE_BUNDLE_ID:-com.mitosisgame.app}
       GOOGLE_PACKAGE_NAME: ${GOOGLE_PACKAGE_NAME:-com.mitosisgame.app}
       GOOGLE_SERVICE_ACCOUNT: ${GOOGLE_SERVICE_ACCOUNT:-}
+      # push notifications (push.js, docs/PUSH.md): the APNs key from Apple Developer › Keys. APNS_KEY is the .p8 file's
+      # contents (\n for newlines), or put the file in the data volume and set APNS_KEY_FILE=/data/AuthKey_XXXXXXXXXX.p8
+      APNS_KEY_ID: ${APNS_KEY_ID:-}
+      APNS_TEAM_ID: ${APNS_TEAM_ID:-4M7HR323EA}
+      APNS_KEY: ${APNS_KEY:-}
+      APNS_KEY_FILE: ${APNS_KEY_FILE:-}
+      FCM_SERVICE_ACCOUNT: ${FCM_SERVICE_ACCOUNT:-}   # Android later: a Firebase service-account JSON (or its base64)
       ADMIN_TOKEN: ${ADMIN_TOKEN:-}          # opens /admin/net (connection report), /admin/live (live players) and /admin/pass (battle pass switch); empty: one is made in /data/admin-token
     ports:
       - "3000:3000"
