@@ -10,7 +10,8 @@
 //
 // Then commit updates/ and deploy the server as usual. An app checks when it opens (and at most every 30 minutes
 // when it comes back to the foreground), downloads the page, checks its signature and SHA-256, and shows it on its
-// next launch. A page that doesn't start (no {type:'booted'} within 15 s) is dropped and the built-in page used again.
+// next launch. A page that doesn't start (it loads but never sends {type:'booted'}, or the app is killed
+// twice before it does) is dropped and the built-in page used again.
 // See ios/Mitosis/PageUpdates.swift for the app side. Only the page can change this way: native code (StoreKit,
 // sign-in, Nearby, haptics) still needs an App Store build, and Apple's rules allow downloaded web code only while
 // it doesn't change what the app is for.

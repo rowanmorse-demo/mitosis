@@ -12,7 +12,8 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
     private var nearbyResume = false
     private var server: String?          // the game server, once resolved (page updates are checked there)
     private var booted = false           // the loaded page said {type:'booted'}
-    private var bootTimer: Timer?        // a downloaded page that doesn't boot in time is dropped (see PageUpdates)
+    private var pageLoaded = false       // WebKit finished loading it (its script has run by then)
+    private var bootTimer: Timer?        // a downloaded page that doesn't boot is dropped (see PageUpdates)
 
     override var prefersStatusBarHidden: Bool { true }
     override var prefersHomeIndicatorAutoHidden: Bool { true }
@@ -65,7 +66,7 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
                 if label == "background", Recorder.shared.isRecording { Recorder.shared.stop { _ in } }
                 // a page update's boot clock only runs in the foreground; look for a newer page on return
                 if label == "resignActive" { self?.bootTimer?.invalidate() }
-                if label == "becomeActive" { self?.watchBoot(); if let s = self?.server { PageUpdates.shared.check(server: s) } }
+                if label == "becomeActive" { self?.watchBoot(); if self?.booted == true, let s = self?.server { PageUpdates.shared.check(server: s) } }
             }
         }
         for name in [Notification.Name.NSProcessInfoPowerStateDidChange, ProcessInfo.thermalStateDidChangeNotification] {
@@ -84,6 +85,7 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
         let index = PageUpdates.shared.pageToLoad() ?? bundled
         let update = PageUpdates.shared.loaded
         booted = false
+        pageLoaded = false
         bootTimer?.invalidate()
         resolveServerURL { server in
             self.server = server
@@ -109,16 +111,28 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
         }
     }
 
-    /// A downloaded page gets `PageUpdates.bootTimeout` seconds in the foreground to say it started; otherwise it is
-    /// dropped and the built-in page loaded. The built-in page isn't timed: there is nothing to fall back to.
+    /// A downloaded page has to say it started. Its script has run by the time WebKit finishes loading it, so from then
+    /// it gets `PageUpdates.bootGrace` seconds; a page that never finishes loading gets `bootTimeout`, counted in the
+    /// foreground only, so a slow phone isn't mistaken for a broken page. A page that fails is dropped and the
+    /// built-in page loaded. The built-in page isn't watched: there is nothing to fall back to.
     private func watchBoot() {
         bootTimer?.invalidate()
         guard PageUpdates.shared.loaded != nil, !booted, UIApplication.shared.applicationState == .active else { return }
-        bootTimer = Timer.scheduledTimer(withTimeInterval: PageUpdates.bootTimeout, repeats: false) { [weak self] _ in
-            guard let self, !self.booted, PageUpdates.shared.loaded != nil else { return }
-            PageUpdates.shared.failed()
-            self.loadGame()
+        let wait = pageLoaded ? PageUpdates.bootGrace : PageUpdates.bootTimeout
+        bootTimer = Timer.scheduledTimer(withTimeInterval: wait, repeats: false) { [weak self] _ in
+            self?.bootFailed(self?.pageLoaded == true ? "it loaded but didn't say it started" : "it didn't load within \(Int(wait)) s")
         }
+    }
+
+    private func bootFailed(_ why: String) {
+        guard !booted, PageUpdates.shared.loaded != nil else { return }
+        bootTimer?.invalidate()
+        PageUpdates.shared.failed(why)
+        loadGame()
+    }
+
+    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        bootFailed("it couldn't be opened: \(error.localizedDescription)")
     }
 
     /// Production builds always use MitosisServerURL from Info.plist. Debug builds in
@@ -155,6 +169,7 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
     }
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        if !pageLoaded { pageLoaded = true; watchBoot() } // a page update's script has run: it must have said booted
         tameGestures()
         gestureTimer?.invalidate()
         gestureTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in self?.tameGestures() }
@@ -206,6 +221,7 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
         switch type {
         case "booted":
             // the page's script ran to the end (sent at once, before the network): a page update is good
+            if !booted { NSLog("[Mitosis] page booted (%@)", PageUpdates.shared.loaded.map { "page update \($0.v)" } ?? "built-in page") }
             booted = true
             bootTimer?.invalidate()
             PageUpdates.shared.booted()

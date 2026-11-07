@@ -8,9 +8,10 @@ import Foundation
 /// to the foreground) it reads the manifest, and if it is signed by `publicKey`, newer than anything it has taken,
 /// and meant for this build, it downloads the page, checks its size and SHA-256, and keeps it for the next launch.
 ///
-/// A downloaded page has to send {type:'booted'} (the last line of the page's script) within 15 seconds in the
-/// foreground. If it doesn't, or the app is killed twice before it does, that version is dropped for good and the
-/// page built into the app is loaded again; the next update fixes it. The server is plain HTTP, so the signature
+/// A downloaded page has to send {type:'booted'} (the last line of the page's script): within `bootGrace` seconds of
+/// WebKit finishing loading it, or `bootTimeout` seconds in the foreground if it never finishes. If it doesn't, or the
+/// app is killed twice before it does, that version is dropped for good and the page built into the app is loaded
+/// again; the next update fixes it. The server is plain HTTP, so the signature
 /// is what keeps anyone on the network from swapping the page.
 final class PageUpdates {
     static let shared = PageUpdates()
@@ -18,7 +19,8 @@ final class PageUpdates {
     /// The public half of the signing key (raw Ed25519, base64), written by `tools/page-update.js keygen`. Empty: off.
     static let publicKey = "ac6RTqGWSnmyyazAR5AebdnbUF2NbpRfCn0uCI43SbQ="
     static let platform = "ios"
-    static let bootTimeout: TimeInterval = 15
+    static let bootGrace: TimeInterval = 5       // after the page has loaded (its script has run by then)
+    static let bootTimeout: TimeInterval = 90    // a page that never finishes loading (foreground time)
     private static let checkEvery: TimeInterval = 30 * 60
 
     struct Manifest: Codable, Equatable {
@@ -95,10 +97,10 @@ final class PageUpdates {
         attempts = 0
     }
 
-    /// The downloaded page didn't start in time: never use that version again.
-    func failed() {
+    /// The downloaded page didn't start: never use that version again.
+    func failed(_ why: String) {
         guard let m = loaded else { return }
-        drop(m, why: "it didn't start within \(Int(Self.bootTimeout)) s")
+        drop(m, why: why)
     }
 
     private func drop(_ m: Manifest, why: String) {
