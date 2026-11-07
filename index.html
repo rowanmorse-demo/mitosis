@@ -1788,7 +1788,7 @@ img.sk-im{display:block;-webkit-user-drag:none;user-select:none;-webkit-touch-ca
 #settingsCard .st-panel{display:grid;min-width:0;animation:stIn .2s ease-out}
 @keyframes stIn{from{opacity:0;transform:translateY(4px)}}
 #settingsCard .st-grp{display:grid;gap:8px;min-width:0;margin-top:22px}
-#settingsCard .st-grp:first-child{margin-top:8px}
+#settingsCard .st-grp:first-child,#settingsCard .st-grp[hidden]:first-child+.st-grp{margin-top:8px}
 #settingsCard .st-grp:has(#inviteRow[hidden]){display:none}
 #settingsCard .st-h{display:flex;align-items:center;gap:12px;margin:0;padding:0 2px;font:500 10.5px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
 #settingsCard .st-h::after{content:"";flex:1;height:1px;background:var(--st-rule)}
@@ -1817,6 +1817,7 @@ img.sk-im{display:block;-webkit-user-drag:none;user-select:none;-webkit-touch-ca
 #settingsCard .srow.nav{cursor:pointer}
 #settingsCard .srow.nav::after{content:"";flex:none;width:7px;height:7px;margin:0 8px 0 0;border-top:1.75px solid var(--dim);border-right:1.75px solid var(--dim);transform:rotate(45deg);transition:transform .2s}
 #settingsCard .st-val{flex:none;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
+#settingsCard #nameStyleVal{font-size:16px;color:var(--ink)}
 #settingsCard summary.srow{list-style:none}#settingsCard summary.srow::-webkit-details-marker{display:none}
 #settingsCard details[open]>summary.srow::after{transform:rotate(135deg)}
 #settingsCard :is(.srow.tg,.srow.nav,.srow.inv):active{background:rgba(255,255,255,.04)}
@@ -2864,7 +2865,9 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
         <div class="st-foot"><button type="button" class="st-reset"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5v5h5"/><path d="M4.6 14.5A8 8 0 1 0 6.3 6.3L4 10"/></svg>Reset to defaults</button></div>
       </section>
       <section class="st-panel" id="stAccount" role="tabpanel" aria-labelledby="stTabAccount" hidden>
-        <!-- Name style (custom name fonts) goes first here: a group "Profile" with a .srow.nav row and its .st-val preview -->
+        <div class="st-grp" id="nameStyleGrp" hidden><h3 class="st-h">Profile</h3><div class="st-list">
+          <button type="button" class="srow nav" id="nameStyleBtn"><span class="sl">Name style</span><span class="st-val" id="nameStyleVal">Classic</span></button>
+        </div></div>
         <div class="st-grp"><h3 class="st-h">Friends</h3><div class="st-list">
           <div class="srow inv" id="inviteRow"><span class="sl">Invite friends<input id="inviteUrl" type="text" readonly aria-label="Invite link" value=""></span><button id="copyInvite" class="s-act" type="button">Share</button></div>
         </div>
@@ -6162,11 +6165,6 @@ let settings={name:'',stain:0,diff:'standard',skin:0,lowFx:false,haptics:true}; 
 try{const s=JSON.parse(localStorage.getItem('mitosis.settings')||'null');if(s&&typeof s==='object')settings=Object.assign(settings,s);}catch(e){}
 if(!DIFF[settings.diff])settings.diff='standard';settings.stain=clamp(settings.stain|0,0,STAINS.length-1);settings.skin=clamp(settings.skin|0,0,SKIN_COUNT-1);
 const saveSettings=()=>{try{localStorage.setItem('mitosis.settings',JSON.stringify(settings));}catch(e){}};
-// Settings › Controls › Keyboard: one key per action, by e.code (either Shift, Ctrl, Alt or Cmd counts); Esc always pauses
-const KEY_DEF={split:'Space',eject:'KeyW',dash:'Shift',pause:'KeyP',mute:'KeyM'};
-settings.keys=Object.assign({},KEY_DEF,settings.keys&&typeof settings.keys==='object'?settings.keys:{});
-const keyCode=c=>/^(Shift|Control|Alt|Meta)(Left|Right)$/.test(c)?c.replace(/(Left|Right)$/,''):c,keyIs=(e,a)=>keyCode(e.code)===settings.keys[a],keyBound=c=>Object.values(settings.keys).includes(c);
-const keyName=c=>({Control:'Ctrl',Meta:'Cmd',Backquote:'`',Minus:'-',Equal:'=',BracketLeft:'[',BracketRight:']',Backslash:'\\',Semicolon:';',Quote:"'",Comma:',',Period:'.',Slash:'/',ArrowUp:'↑',ArrowDown:'↓',ArrowLeft:'←',ArrowRight:'→',CapsLock:'Caps',Backspace:'Bksp'})[c]||String(c).replace(/^(Key|Digit|Numpad)/,'');
 
 /* ================= ATP economy: wallet, runs, skins, store ================= */
 /* The server owns every wallet (see economy.js). The page only asks: "this run ended", "buy this skin",
@@ -6419,7 +6417,17 @@ $('setBtn').addEventListener('click',()=>showCard('settingsCard'));
 // Settings: an on/off row flips from a tap anywhere on it, the switch included; the invite row shares from anywhere but the link
 for(const r of document.querySelectorAll('#settingsCard .srow.tg'))r.addEventListener('click',e=>{const b=e.target.closest('.seg button');if(b&&b.getAttribute('aria-pressed')!=='true')return;e.stopPropagation();const o=r.querySelector('.seg button:not([aria-pressed="true"])');if(o)o.click();},true);
 $('inviteRow').addEventListener('click',e=>{if(!e.target.closest('input,button'))$('copyInvite').click();});
-// Settings tabs: one panel at a time (Controls only on touch screens); arrow keys move between the tabs
+// Settings › Account › Name style: opens the name fonts picker (openNameFonts, nfLabel and myFont come with the name fonts work)
+// and shows your font in itself; on a page without them the row stays hidden. Read each time Settings opens, after start-up.
+const nameStyleSync=()=>{try{const id=myFont(),v=$('nameStyleVal');v.textContent=nfLabel(id);nfEl(v,id);$('nameStyleGrp').hidden=false;}catch(e){$('nameStyleGrp').hidden=true;}};
+$('nameStyleBtn').addEventListener('click',()=>{try{openNameFonts('settingsCard');}catch(e){}});
+new MutationObserver(()=>{if(!$('settingsCard').hidden)nameStyleSync();}).observe($('settingsCard'),{attributes:true,attributeFilter:['hidden']});
+// Settings › Controls › Keyboard: one key per action, by e.code (either Shift, Ctrl, Alt or Cmd counts); Esc always pauses
+const KEY_DEF={split:'Space',eject:'KeyW',dash:'Shift',pause:'KeyP',mute:'KeyM'};
+settings.keys=Object.assign({},KEY_DEF,settings.keys&&typeof settings.keys==='object'?settings.keys:{});
+const keyCode=c=>/^(Shift|Control|Alt|Meta)(Left|Right)$/.test(c)?c.replace(/(Left|Right)$/,''):c,keyIs=(e,a)=>keyCode(e.code)===settings.keys[a],keyBound=c=>Object.values(settings.keys).includes(c);
+const keyName=c=>({Control:'Ctrl',Meta:'Cmd',Backquote:'`',Minus:'-',Equal:'=',BracketLeft:'[',BracketRight:']',Backslash:'\\',Semicolon:';',Quote:"'",Comma:',',Period:'.',Slash:'/',ArrowUp:'↑',ArrowDown:'↓',ArrowLeft:'←',ArrowRight:'→',CapsLock:'Caps',Backspace:'Bksp'})[c]||String(c).replace(/^(Key|Digit|Numpad)/,'');
+// Settings tabs: one panel at a time; arrow keys move between the tabs
 const stTabs=[...$('stTabs').children];
 function stTab(t){for(const x of stTabs){const on=x===t;x.setAttribute('aria-selected',String(on));x.tabIndex=on?0:-1;$(x.getAttribute('aria-controls')).hidden=!on;}$('settingsCard').scrollTop=0;}
 $('stTabs').addEventListener('click',e=>{const t=e.target.closest('[role=tab]');if(t&&t.getAttribute('aria-selected')!=='true')stTab(t);});
