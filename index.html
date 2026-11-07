@@ -446,7 +446,7 @@ body:not(.playing) .hud,body:not(.playing) #actions{display:none!important}
 .skin{appearance:none;border:1px solid var(--line);background:rgba(0,0,0,.25);border-radius:12px;padding:8px 4px 7px;display:grid;gap:3px;justify-items:center;color:var(--muted);cursor:pointer;transition:border-color .15s,transform .12s,background .15s}
 .skin canvas{width:64px;height:64px;border-radius:50%}
 .skin .sn{font:600 12px var(--display);color:var(--ink)}.skin .sp{font:600 10px var(--mono);color:var(--amber);text-align:center;background:rgba(242,177,52,.12);border-radius:999px;padding:3px 8px}
-.skin .rt{font:600 8.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--violet);margin-top:-2px}.skin.rare{border-color:rgba(154,140,255,.4)}.skin.epic{border-color:rgba(242,177,52,.45)}.skin.epic .rt{color:var(--amber)}.skin.legendary{border-color:rgba(255,92,138,.55);box-shadow:0 0 22px rgba(255,92,138,.18),inset 0 0 18px rgba(255,120,40,.08)}.skin.legendary .rt{color:var(--accent)}
+.skin .rt{font:600 8.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--violet);margin-top:-2px}.skin.rare{border-color:rgba(154,140,255,.4)}.skin.epic{border-color:rgba(242,177,52,.45)}.skin.epic .rt{color:var(--amber)}.skin.legendary{border-color:rgba(255,92,138,.55);box-shadow:0 0 22px rgba(255,92,138,.18),inset 0 0 18px rgba(255,120,40,.08)}.skin.mythic{border-color:rgba(110,230,255,.55);box-shadow:0 0 22px rgba(110,230,255,.18),inset 0 0 18px rgba(200,110,255,.08)}.skin.legendary .rt{color:var(--accent)}.skin.mythic .rt{color:#8fe8ff}
 .skin.own .sp{color:#5fe0a8;background:rgba(95,224,168,.12)}.skin[aria-pressed=true]{border-color:var(--accent)}.skin[aria-pressed=true] .sp{background:var(--accent);color:var(--accent-ink)}
 .skin.confirm{border-color:var(--amber);background:rgba(242,177,52,.1)}.skin.confirm .sp{color:var(--ink)}
 .skin:hover{transform:translateY(-1px);border-color:var(--line-strong)}.skin:disabled{opacity:.5;cursor:default}
@@ -493,7 +493,7 @@ body:not(.playing) #tip{display:none}
 :is(.shopview,#lookCard) .skin .sn{font-size:11.5px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px;box-sizing:border-box}
 :is(.shopview,#lookCard) .skin.sel{background:rgba(255,255,255,.07);box-shadow:0 0 0 2px var(--ink);border-color:transparent}
 :is(.shopview,#lookCard) .skin .rt{display:none}:is(.shopview,#lookCard) .skin::before{content:"";position:absolute;top:7px;left:7px;width:7px;height:7px;border-radius:50%;background:#8fd8c6;opacity:.8}
-:is(.shopview,#lookCard) .skin.rare::before{background:var(--violet)}:is(.shopview,#lookCard) .skin.epic::before{background:var(--amber)}:is(.shopview,#lookCard) .skin.legendary::before{background:#ff7a59;box-shadow:0 0 8px #ff7a59}
+:is(.shopview,#lookCard) .skin.rare::before{background:var(--violet)}:is(.shopview,#lookCard) .skin.epic::before{background:var(--amber)}:is(.shopview,#lookCard) .skin.legendary::before{background:#ff7a59;box-shadow:0 0 8px #ff7a59}:is(.shopview,#lookCard) .skin.mythic::before{background:#6ee6ff;box-shadow:0 0 8px #6ee6ff}
 :is(.shopview,#lookCard) .skin.seasonal{border-color:rgba(255,138,42,.55);background:linear-gradient(180deg,rgba(255,120,30,.1),rgba(2,8,9,.55))}:is(.shopview,#lookCard) .skin.seasonal::before{background:#ff8a2a;box-shadow:0 0 8px #ff8a2a}
 @media (orientation:landscape) and (max-height:520px){
   :is(.shopview,#lookCard) .skins{grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px}:is(.shopview,#lookCard) .skin canvas{width:50px;height:50px}
@@ -840,7 +840,7 @@ body.saver .lb-bg *{animation:none!important}
   padding:max(12px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));box-sizing:border-box;
   background:radial-gradient(40% 62% at 22% 58%,rgba(var(--rc),.15),transparent 70%),radial-gradient(120% 80% at 50% 115%,rgba(0,0,0,.6),transparent 60%),linear-gradient(90deg,rgba(2,8,9,.86),rgba(2,8,9,.72) 45%,rgba(2,8,9,.88));
   -webkit-backdrop-filter:blur(10px) saturate(1.1);backdrop-filter:blur(10px) saturate(1.1);animation:ov .3s ease-out;user-select:none;-webkit-user-select:none}
-.shopview[data-r=rare]{--rc:154,140,255}.shopview[data-r=epic]{--rc:242,177,52}.shopview[data-r=legendary]{--rc:255,110,70}.shopview[data-r=seasonal]{--rc:255,138,42}
+.shopview[data-r=rare]{--rc:154,140,255}.shopview[data-r=epic]{--rc:242,177,52}.shopview[data-r=legendary]{--rc:255,110,70}.shopview[data-r=mythic]{--rc:110,230,255}.shopview[data-r=seasonal]{--rc:255,138,42}
 .shopview[data-tab=atp]{background:radial-gradient(55% 60% at 50% 45%,rgba(242,177,52,.11),transparent 70%),radial-gradient(120% 80% at 50% 115%,rgba(0,0,0,.6),transparent 60%),linear-gradient(90deg,rgba(2,8,9,.86),rgba(2,8,9,.74) 50%,rgba(2,8,9,.86))}
 /* the ATP coin: an amber orb with a bolt, sized by font-size */
 .sv-coin{position:relative;display:inline-block;flex:none;width:1em;height:1em;border-radius:50%;font-style:normal;vertical-align:-.14em;background:radial-gradient(circle at 34% 28%,#fff6d0 0 7%,#ffd765 24%,#f29a1c 64%,#9a5408);box-shadow:inset 0 -.06em .08em rgba(90,40,0,.45),0 0 .45em rgba(242,177,52,.35)}
@@ -912,14 +912,14 @@ body.saver .lb-bg *{animation:none!important}
 #storeCard .svc{--rc:143,216,198;appearance:none;position:relative;display:grid;grid-template-rows:auto 1fr auto;justify-items:center;align-items:center;gap:5px;min-width:0;padding:12px 6px 10px;border-radius:18px;cursor:pointer;color:var(--ink);font:inherit;text-align:center;overflow:hidden;
   border:1px solid rgba(255,255,255,.08);background:radial-gradient(90% 62% at 50% 34%,rgba(var(--rc),.16),transparent 72%),linear-gradient(180deg,rgba(16,34,38,.92),rgba(5,14,16,.94));
   box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 6px 16px rgba(0,0,0,.32);transition:transform .12s,box-shadow .15s,border-color .15s}
-#storeCard .svc.rare{--rc:154,140,255}#storeCard .svc.epic{--rc:242,177,52}#storeCard .svc.legendary{--rc:255,110,70}#storeCard .svc.seasonal{--rc:255,138,42}
+#storeCard .svc.rare{--rc:154,140,255}#storeCard .svc.epic{--rc:242,177,52}#storeCard .svc.legendary{--rc:255,110,70}#storeCard .svc.mythic{--rc:110,230,255}#storeCard .svc.seasonal{--rc:255,138,42}
 #storeCard .svc :is(canvas,img){width:66px;height:66px;filter:drop-shadow(0 6px 8px rgba(0,0,0,.5))}
 #storeCard .svc .sn{max-width:100%;box-sizing:border-box;padding:0 4px;font:700 12.5px/1.15 var(--display);letter-spacing:-.01em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere} /* long names take two lines; the price row stays aligned */
 #storeCard .svc .sp{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:22px;padding:0 9px 0 6px;border-radius:999px;background:rgba(0,0,0,.4);box-shadow:inset 0 1px 2px rgba(0,0,0,.35);color:#ffd77a;font:800 12px/1 var(--display);font-variant-numeric:tabular-nums}
 #storeCard .svc .sp .sv-coin{font-size:13px}
 #storeCard .svc.own .sp{padding:0 6px;background:none;box-shadow:none;color:var(--muted);font:700 9.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase}
 #storeCard .svc.eq .sp{color:#7af0bd}
-#storeCard .svc.legendary{border-color:rgba(255,120,70,.55);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 22px rgba(255,100,50,.22),0 6px 16px rgba(0,0,0,.32)}
+#storeCard .svc.legendary{border-color:rgba(255,120,70,.55);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 22px rgba(255,100,50,.22),0 6px 16px rgba(0,0,0,.32)}#storeCard .svc.mythic{border-color:rgba(110,230,255,.55);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 22px rgba(120,200,255,.22),0 6px 16px rgba(0,0,0,.32)}
 #storeCard .svc.eq{border-color:rgba(95,224,168,.6);box-shadow:inset 0 0 0 1px rgba(95,224,168,.25),0 0 18px rgba(95,224,168,.16),0 6px 16px rgba(0,0,0,.32)}
 #storeCard .svc:hover{border-color:rgba(255,255,255,.2)}
 #storeCard .svc:active{transform:scale(.95)}
@@ -1077,7 +1077,7 @@ body.saver .lb-bg *{animation:none!important}
   padding:max(12px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));box-sizing:border-box;
   background:radial-gradient(40% 60% at 20% 58%,rgba(var(--rc),.13),transparent 70%),radial-gradient(55% 45% at 80% -5%,rgba(var(--bp),.13),transparent 70%),radial-gradient(45% 50% at 105% 105%,rgba(var(--bp2),.12),transparent 70%),linear-gradient(90deg,rgba(2,8,9,.88),rgba(2,8,9,.75) 45%,rgba(2,8,9,.9));
   -webkit-backdrop-filter:blur(10px) saturate(1.1);backdrop-filter:blur(10px) saturate(1.1);animation:ov .3s ease-out;user-select:none;-webkit-user-select:none}
-.passview[data-r=common]{--rc:143,216,198}.passview[data-r=rare]{--rc:154,140,255}.passview[data-r=epic]{--rc:242,177,52}.passview[data-r=legendary]{--rc:255,110,70}.passview[data-r=seasonal]{--rc:255,138,42}
+.passview[data-r=common]{--rc:143,216,198}.passview[data-r=rare]{--rc:154,140,255}.passview[data-r=epic]{--rc:242,177,52}.passview[data-r=legendary]{--rc:255,110,70}.passview[data-r=mythic]{--rc:110,230,255}.passview[data-r=seasonal]{--rc:255,138,42}
 .passview svg use{pointer-events:none}
 /* top bar */
 #passCard .bp-top{grid-area:top;display:flex;align-items:center;gap:12px;min-width:0}
@@ -1181,7 +1181,7 @@ body.saver .lb-bg *{animation:none!important}
 #passCard .bpr{--rc:242,177,52;--tk:var(--bp);appearance:none;position:relative;display:grid;justify-items:center;align-content:center;gap:6px;min-width:0;padding:14px 6px 10px;border-radius:20px;cursor:pointer;color:var(--ink);font:inherit;text-align:center;overflow:hidden;
   border:1px solid rgba(var(--rc),.24);background:radial-gradient(90% 62% at 50% 34%,rgba(var(--rc),.2),transparent 72%),linear-gradient(180deg,rgba(16,34,38,.92),rgba(5,14,16,.94));box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 6px 16px rgba(0,0,0,.32);transition:transform .12s,box-shadow .15s,border-color .15s,opacity .2s}
 #passCard .bpr.prem{--tk:var(--bp2)}
-#passCard .bpr.common{--rc:143,216,198}#passCard .bpr.rare{--rc:154,140,255}#passCard .bpr.epic{--rc:242,177,52}#passCard .bpr.legendary{--rc:255,110,70}
+#passCard .bpr.common{--rc:143,216,198}#passCard .bpr.rare{--rc:154,140,255}#passCard .bpr.epic{--rc:242,177,52}#passCard .bpr.legendary{--rc:255,110,70}#passCard .bpr.mythic{--rc:110,230,255}
 #passCard .bpr::after{content:"";position:absolute;left:18%;right:18%;bottom:0;height:2px;border-radius:2px 2px 0 0;background:rgb(var(--tk));box-shadow:0 0 10px rgba(var(--tk),.9);opacity:.75}
 #passCard .bpr-art{display:grid;place-items:center;width:70px;height:70px}
 #passCard .bpr-art canvas{width:100%;height:100%;filter:drop-shadow(0 6px 8px rgba(0,0,0,.5))}
@@ -1380,7 +1380,7 @@ body.saver .lb-bg *{animation:none!important}
 #overlay>#lookCard.page{grid-template-columns:minmax(0,1fr);grid-auto-rows:max-content;gap:14px 22px} /* max-content rows: the clipped stage must not shrink when the page overflows */
 #lookCard [data-r],#lookCard .lk-tile{--rc:196 214 210}
 #lookCard [data-r=common]{--rc:118 226 196}#lookCard [data-r=rare]{--rc:154 140 255}#lookCard [data-r=epic]{--rc:242 177 52}
-#lookCard [data-r=legendary]{--rc:255 108 92}#lookCard [data-r=seasonal]{--rc:255 138 42}
+#lookCard [data-r=legendary]{--rc:255 108 92}#lookCard [data-r=mythic]{--rc:110 230 255}#lookCard [data-r=seasonal]{--rc:255 138 42}
 #lookCard #lookShop{display:inline-flex;align-items:center;gap:7px;min-height:44px;box-sizing:border-box;padding:0 18px 0 14px;border-radius:999px;color:var(--ink);font:700 14px/1 var(--display);
   border:1px solid rgba(255,92,138,.42);background:linear-gradient(180deg,rgba(255,92,138,.2),rgba(255,92,138,.06));box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 6px 18px rgba(255,92,138,.12);transition:transform .15s,filter .15s}
 #lookCard #lookShop svg{width:18px;height:18px;fill:none;stroke:var(--accent);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
@@ -1400,7 +1400,7 @@ body.saver .lb-bg *{animation:none!important}
 #lookCard .lk-rays{position:absolute;z-index:0;left:-20%;right:-20%;top:-26%;bottom:-6%;border-radius:50%;opacity:.3;pointer-events:none;
   background:repeating-conic-gradient(from 0deg,rgb(var(--rc)/.5) 0deg 3deg,rgb(var(--rc)/0) 6deg 15deg);-webkit-mask:radial-gradient(closest-side,#000 16%,rgba(0,0,0,.45) 42%,transparent 74%);mask:radial-gradient(closest-side,#000 16%,rgba(0,0,0,.45) 42%,transparent 74%);
   animation:lk-spin 70s linear infinite;transition:opacity .45s}
-#lookCard [data-r=common] .lk-rays{opacity:.34}#lookCard [data-r=rare] .lk-rays{opacity:.44}#lookCard [data-r=epic] .lk-rays{opacity:.52}#lookCard [data-r=seasonal] .lk-rays{opacity:.56}#lookCard [data-r=legendary] .lk-rays{opacity:.7;animation-duration:40s}
+#lookCard [data-r=common] .lk-rays{opacity:.34}#lookCard [data-r=rare] .lk-rays{opacity:.44}#lookCard [data-r=epic] .lk-rays{opacity:.52}#lookCard [data-r=seasonal] .lk-rays{opacity:.56}#lookCard [data-r=legendary] .lk-rays{opacity:.7;animation-duration:40s}#lookCard [data-r=mythic] .lk-rays{opacity:.7;animation-duration:40s}
 /* a glowing dish the cell floats over, and its shadow breathing with the float */
 #lookCard .lk-ped{position:absolute;z-index:1;left:17%;right:17%;top:79%;height:15%;border-radius:50%;pointer-events:none;
   background:radial-gradient(closest-side,rgb(var(--rc)/.42),rgb(var(--rc)/.12) 62%,rgb(var(--rc)/0));border:1.5px solid rgb(var(--rc)/.6);
@@ -1412,8 +1412,8 @@ body.saver .lb-bg *{animation:none!important}
 #lookCard .lk-rar{display:inline-flex;align-items:center;gap:7px;padding:6px 12px 6px 10px;border-radius:999px;font:700 10px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;
   color:rgb(var(--rc));background:rgb(var(--rc)/.12);box-shadow:inset 0 0 0 1px rgb(var(--rc)/.42)}
 #lookCard .lk-rar::before{content:"";width:7px;height:7px;transform:rotate(45deg);border-radius:1.5px;background:currentColor;box-shadow:0 0 8px currentColor}
-#lookCard .lk-stage[data-r=legendary] .lk-rar{color:#1c0709;background:linear-gradient(90deg,#ff5c8a,#ff8a50 55%,#ffc45a);box-shadow:0 0 18px rgba(255,110,90,.45),inset 0 1px 0 rgba(255,255,255,.35)}
-#lookCard .lk-stage[data-r=legendary] .lk-rar::before{box-shadow:none}
+#lookCard .lk-stage[data-r=legendary] .lk-rar{color:#1c0709;background:linear-gradient(90deg,#ff5c8a,#ff8a50 55%,#ffc45a);box-shadow:0 0 18px rgba(255,110,90,.45),inset 0 1px 0 rgba(255,255,255,.35)}#lookCard .lk-stage[data-r=mythic] .lk-rar{color:#08061a;background:linear-gradient(90deg,#5ee0ff,#b48cff 50%,#ff6ad5);box-shadow:0 0 18px rgba(140,200,255,.45),inset 0 1px 0 rgba(255,255,255,.35)}
+#lookCard .lk-stage[data-r=legendary] .lk-rar::before{box-shadow:none}#lookCard .lk-stage[data-r=mythic] .lk-rar::before{box-shadow:none}
 /* swapping skins: the cell pops in, the name rises, the dish flashes */
 #lookCard .lk-pop .lk-show{animation:lk-pop .55s cubic-bezier(.2,.9,.25,1.2) both}
 #lookCard .lk-pop #lookName,#lookCard .lk-pop .lk-rar{animation:lk-up .4s cubic-bezier(.2,.8,.2,1) both}#lookCard .lk-pop .lk-rar{animation-delay:.06s}
@@ -1458,8 +1458,8 @@ body.saver .lb-bg *{animation:none!important}
 #lookCard .lk-tile>span:not(.lk-tease){max-width:100%;font:700 9px/1.2 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:rgb(var(--rc));white-space:nowrap;overflow:hidden;text-overflow:ellipsis} /* the rarity, in its colour */
 #lookCard .lk-tile[hidden]{display:none}
 img.sk-im{display:block;-webkit-user-drag:none;user-select:none;-webkit-touch-callout:none;pointer-events:none} /* a skin tile's picture (tileImg) */
-#lookCard .lk-tile[data-r=legendary]{background:radial-gradient(90% 62% at 50% 32%,rgba(255,110,90,.3),rgba(255,92,138,0) 72%),linear-gradient(160deg,rgba(255,92,138,.16),rgba(255,180,80,.06) 60%,rgba(0,0,0,.18)),#120b10}
-#lookCard .lk-tile[data-r=legendary]::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(105deg,transparent 40%,rgba(255,220,190,.16) 50%,transparent 60%) no-repeat;background-size:250% 100%;animation:lk-sheen 3.8s ease-in-out infinite}
+#lookCard .lk-tile[data-r=legendary]{background:radial-gradient(90% 62% at 50% 32%,rgba(255,110,90,.3),rgba(255,92,138,0) 72%),linear-gradient(160deg,rgba(255,92,138,.16),rgba(255,180,80,.06) 60%,rgba(0,0,0,.18)),#120b10}#lookCard .lk-tile[data-r=mythic]{background:radial-gradient(90% 62% at 50% 32%,rgba(140,200,255,.3),rgba(110,230,255,0) 72%),linear-gradient(160deg,rgba(110,230,255,.16),rgba(255,106,213,.06) 60%,rgba(0,0,0,.18)),#0b0c18}
+#lookCard .lk-tile[data-r=legendary]::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(105deg,transparent 40%,rgba(255,220,190,.16) 50%,transparent 60%) no-repeat;background-size:250% 100%;animation:lk-sheen 3.8s ease-in-out infinite}#lookCard .lk-tile[data-r=mythic]::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(105deg,transparent 40%,rgba(220,240,255,.16) 50%,transparent 60%) no-repeat;background-size:250% 100%;animation:lk-sheen 3.8s ease-in-out infinite}
 #lookCard .lk-tile:active{transform:scale(.94)}
 #lookCard .lk-tile[aria-pressed=true]{border-color:rgba(255,92,138,.9);background-color:#1a0d14;box-shadow:0 0 0 1.5px var(--accent),0 0 24px rgba(255,92,138,.32),inset 0 1px 0 rgba(255,255,255,.12)}
 #lookCard .lk-tile[aria-pressed=true] :is(canvas,img){transform:scale(1.08)}
@@ -1939,7 +1939,7 @@ img.sk-im{display:block;-webkit-user-drag:none;user-select:none;-webkit-touch-ca
 .ds-chip em{font:600 11px/1 var(--mono);font-style:normal;opacity:.65;font-variant-numeric:tabular-nums}
 .ds-chip[aria-pressed=true]{color:#fff;border-color:rgb(var(--rc)/.65);background:rgb(var(--rc)/.16);box-shadow:inset 0 1px 0 rgba(255,255,255,.1)}
 .ds-chip:active{transform:scale(.95)}
-.ds-chip[data-r=common]{--rc:118 226 196}.ds-chip[data-r=rare]{--rc:154 140 255}.ds-chip[data-r=epic]{--rc:242 177 52}.ds-chip[data-r=legendary]{--rc:255 108 92}.ds-chip[data-r=seasonal]{--rc:255 138 42}
+.ds-chip[data-r=common]{--rc:118 226 196}.ds-chip[data-r=rare]{--rc:154 140 255}.ds-chip[data-r=epic]{--rc:242 177 52}.ds-chip[data-r=legendary]{--rc:255 108 92}.ds-chip[data-r=mythic]{--rc:110 230 255}.ds-chip[data-r=seasonal]{--rc:255 138 42}
 @media (orientation:landscape) and (max-height:520px){.ds-sec{gap:12px;padding:12px 12px 14px;border-radius:20px}.ds-head b{font-size:15px}.ds-chip{height:32px;padding:0 12px}}
 /* both pages: one full-width column under the top bar (the shared landscape rule splits pages in two) */
 #overlay>#rankCard.page,#overlay>:is(#settingsCard,#friendsCard).page{grid-template-columns:minmax(0,1fr)}
@@ -7361,7 +7361,7 @@ async function flushRuns(){ // report finished runs; keep them queued while the 
 }
 // Skins grid on the start card
 let confirmSkin=0,confirmT=0;
-const RARITY={12:'rare',13:'rare',14:'rare',15:'epic',16:'legendary',17:'rare',19:'rare',20:'epic',22:'epic',23:'rare',28:'rare',29:'rare',30:'epic',31:'legendary',33:'rare',34:'rare',35:'rare',39:'epic',40:'rare',41:'rare',42:'rare',43:'rare',44:'epic',45:'epic'};
+const RARITY={12:'rare',13:'rare',14:'rare',15:'epic',16:'mythic',17:'rare',19:'rare',20:'epic',22:'epic',23:'rare',28:'rare',29:'rare',30:'epic',31:'legendary',33:'rare',34:'rare',35:'rare',39:'epic',40:'rare',41:'rare',42:'rare',43:'rare',44:'epic',45:'epic'};
 const SKIN_DESC={
   32:'The Moon up close: grey seas, bright rayed craters and a dusting of starlight.',33:'A whole world: oceans, green and desert continents, ice caps and clouds drifting round it.',34:'The heart of a storm cloud, rain sheeting through it and lightning flaring inside.',35:'A blue morpho\'s wing: scales that shimmer electric blue, edged in black and white.',36:'A juicy slice, seeds and all, inside a striped green rind.',37:'A glossy peppermint swirl that spins as you swim.',38:'A ring doughnut, pink icing and a fistful of sprinkles.',39:'An open watch movement: brass and steel gears turning, ruby jewels and a ticking balance wheel.',40:'A mirror ball throwing coloured light as it turns.',41:'Glowing wax rising, splitting and sinking through warm liquid.',42:'A rose window of jewel-coloured glass, lit from behind.',43:'Black opal, flashing green, blue and fire as the light moves.',44:'Emerald scales and a molten eye that follows you, slit pupil and all.',45:'A bird of fire: feathers of flame, burning wings beyond the membrane and embers in its wake.',
   5:'A star-forming nebula: glowing gas, dust pillars and newborn stars.',6:'Basalt plates split by lava that flares as it pulses.',7:'Wax cells brimming with honey, and a bee at work.',8:'A circuit board with a chip at its heart: traces, parts, and data pulsing along the lines.',
@@ -7462,9 +7462,9 @@ setInterval(()=>{if(document.hidden||RM)return;if(!$('storeCard').hidden||!$('lo
 // Inventory › Skins: the classic cell first, then the premium skins you own, rarest first. Tiles are rebuilt only when
 // what you own changes, so picking one just flips aria-pressed and the selection animates.
 let invFilter='all'; // Inventory's rarity filter
-const RAR_NAME={legendary:'Legendary',seasonal:'Seasonal',epic:'Epic',rare:'Rare',common:'Common'};
+const RAR_NAME={mythic:'Mythic',legendary:'Legendary',seasonal:'Seasonal',epic:'Epic',rare:'Rare',common:'Common'};
 function renderOwned(){const oe=$('ownedSkins');if(!oe)return;
-  const RK={legendary:5,seasonal:4,epic:3,rare:2,common:1},sk=settings.skin|0,cn=classicName(),
+  const RK={mythic:6,legendary:5,seasonal:4,epic:3,rare:2,common:1},sk=settings.skin|0,cn=classicName(),
     mine=PREMIUM.filter(S=>ownsSkin(S.id)).sort((a,b)=>RK[rarOf(b)]-RK[rarOf(a)]||b.price-a.price||a.id-b.id),sig=mine.map(S=>S.id).join();
   $('ownedHint').textContent=mine.length?`${mine.length}/${PREMIUM.length}`:'';
   if(oe.dataset.sig!==sig){oe.dataset.sig=sig;
@@ -7498,7 +7498,7 @@ const SKIN_CATS=[['space','Space','Stars, worlds and things that swallow light',
 for(const S of PREMIUM)if(S.col){let C=SKIN_CATS.find(c=>c[0]===S.col);if(!C)SKIN_CATS.push(C=[S.col,...GEN_COLS[S.col],[]]);if(!C[3].includes(S.id))C[3].push(S.id);}
 SKIN_CATS.sort((a,b)=>GEN_ORDER.indexOf(a[0])-GEN_ORDER.indexOf(b[0]));for(const C of SKIN_CATS)for(const id of C[3])if(PREMIUM[id-SKIN_FREE])PREMIUM[id-SKIN_FREE].col=C[0];
 let shopFilter='all'; // the Shop's filter: all, own (owned), lock (not owned) or a rarity
-const RAR_ORD={common:1,rare:2,epic:3,legendary:4,seasonal:5},SV_PUMP=`<svg class="sv-pump" viewBox="0 0 32 32" aria-hidden="true"><defs><radialGradient id="svPumpG" cx=".38" cy=".34" r=".8"><stop offset="0" stop-color="#ffc878"/><stop offset=".55" stop-color="#ff7d1e"/><stop offset="1" stop-color="#a63a00"/></radialGradient></defs><path d="M16 9.5c-.6-3 .4-5.2 2.8-6.3" fill="none" stroke="#6c9a2e" stroke-width="2.6" stroke-linecap="round"/><ellipse cx="10.4" cy="18.5" rx="7.6" ry="9.6" fill="url(#svPumpG)"/><ellipse cx="21.6" cy="18.5" rx="7.6" ry="9.6" fill="url(#svPumpG)"/><ellipse cx="16" cy="18.5" rx="7" ry="10.2" fill="url(#svPumpG)"/><path d="M9.6 16.2l2.6-3.4 2.6 3.4zM17.2 16.2l2.6-3.4 2.6 3.4zM9 20.6q7 5.4 14 0l-1.9 2.6-1.7-1.3-1.6 1.9-1.8-1.6-1.8 1.6-1.6-1.9-1.7 1.3z" fill="#3b1300"/></svg>`;
+const RAR_ORD={common:1,rare:2,epic:3,legendary:4,mythic:5,seasonal:6},SV_PUMP=`<svg class="sv-pump" viewBox="0 0 32 32" aria-hidden="true"><defs><radialGradient id="svPumpG" cx=".38" cy=".34" r=".8"><stop offset="0" stop-color="#ffc878"/><stop offset=".55" stop-color="#ff7d1e"/><stop offset="1" stop-color="#a63a00"/></radialGradient></defs><path d="M16 9.5c-.6-3 .4-5.2 2.8-6.3" fill="none" stroke="#6c9a2e" stroke-width="2.6" stroke-linecap="round"/><ellipse cx="10.4" cy="18.5" rx="7.6" ry="9.6" fill="url(#svPumpG)"/><ellipse cx="21.6" cy="18.5" rx="7.6" ry="9.6" fill="url(#svPumpG)"/><ellipse cx="16" cy="18.5" rx="7" ry="10.2" fill="url(#svPumpG)"/><path d="M9.6 16.2l2.6-3.4 2.6 3.4zM17.2 16.2l2.6-3.4 2.6 3.4zM9 20.6q7 5.4 14 0l-1.9 2.6-1.7-1.3-1.6 1.9-1.8-1.6-1.8 1.6-1.6-1.9-1.7 1.3z" fill="#3b1300"/></svg>`;
 const seasonFrom=k=>{const d=SEASONS[k].from;return new Date(2000,d[0]-1,d[1]).toLocaleDateString('en-US',{month:'short',day:'numeric'});}; // "Oct 24"
 const skinHow=S=>ownsSkin(S.id)?'':S.pass?'pass':S.season&&!seasonState(S.season).open?'event':notSold(S)?'soon':''; // a skin the shop doesn't sell right now, and why
 // a skin this page knows but the server's catalogue doesn't list yet (the page can be newer than the server): buying it would
@@ -7514,7 +7514,7 @@ function shopShelves(){ // every skin on one shelf, in the same order every time
   add('more','More skins','',PREMIUM.filter(S=>!S.pass&&!S.season));
   return out;}
 function renderShopGrid(el){ // the shelves under filter chips; an open season leads in its banner with a live countdown
-  const shelves=shopShelves(),all=shelves.flatMap(c=>c.list),nOwn=all.filter(S=>ownsSkin(S.id)).length,rars=['legendary','epic','rare','common','seasonal'].filter(r=>all.some(S=>rarOf(S)===r));
+  const shelves=shopShelves(),all=shelves.flatMap(c=>c.list),nOwn=all.filter(S=>ownsSkin(S.id)).length,rars=['mythic','legendary','epic','rare','common','seasonal'].filter(r=>all.some(S=>rarOf(S)===r));
   if(!['all','own','lock',...rars].includes(shopFilter))shopFilter='all';
   const fit=S=>shopFilter==='all'||(shopFilter==='own'?ownsSkin(S.id):shopFilter==='lock'?!ownsSkin(S.id):rarOf(S)===shopFilter);
   const chip=(k,label,n,r)=>`<button type="button" class="ds-chip" data-f="${k}"${r?` data-r="${r}"`:''} aria-pressed="${shopFilter===k}">${r?'<i aria-hidden="true"></i>':''}${label}${n!=null?`<em>${n}</em>`:''}</button>`;
