@@ -460,7 +460,7 @@ async function post(url, body, secret) {
       const res = await fetch(base + url, { method: 'POST', headers, body: JSON.stringify(body || {}) }); return { status: res.status, body: await res.json() }; };
     const sx = 'questsecret' + 'x'.repeat(21), sy = 'questsecret' + 'y'.repeat(21), D = questsAt('day', today), W = questsAt('week', today);
     const find = (w, id) => [...w.quests.daily.quests, ...w.quests.weekly.quests].find(q => q.id === id), line = (w, id) => w.quests.permanent.find(q => q.line === id);
-    const life = async (secret, body, mode) => post('/api/run/end', { runId: (await post('/api/run/start', mode ? { mode } : {}, secret)).body.runId, ...body }, secret);
+    const life = async (secret, body, mode) => post('/api/run/end', { runId: (await post('/api/run/start', mode ? { mode } : {}, secret)).body.runId, claims: 1, ...body }, secret); // claims: 1, as pages with the Claim button send
     const claim = (secret, body) => post('/api/quests/claim', body, secret);
     assert.deepEqual([QUESTS.atp, QUESTS.xp, PERM_ATP], [{ day: 30, week: 100 }, { day: 100, week: 300 }, [100, 300, 1000, 3000]], 'Rowan\'s choice: 30 / 100 ATP, 100 / 300 pass XP, permanent tiers 100 to 3,000 ATP');
     // on from the start, with the battle pass off: four for the day, seven for the week, the permanent ladders; the same for everyone
@@ -486,16 +486,16 @@ async function post(url, body, secret) {
     if (store === 'sqlite') {
       const db = new (require('node:sqlite').DatabaseSync)(path.join(dataDir, 'mitosis.sqlite'));
       const lifeFor = async (secret, sec, body = {}) => { const id = (await post('/api/run/start', {}, secret)).body.runId; db.prepare('UPDATE runs SET started = started - ? WHERE id = ?').run(sec * 1000, id);
-        return post('/api/run/end', { runId: id, survived: sec, ...body }, secret); };
+        return post('/api/run/end', { runId: id, survived: sec, claims: 1, ...body }, secret); };
       // progress: lives of 25 s move the lives and time quests; the one that reaches the goal finishes it, and nothing is paid until it is claimed
       for (let i = 1; i < dLives.goal; i++) { r = await lifeFor(sx, 25); assert.deepEqual([r.body.questsDone, find(r.body, dLives.id).progress, find(r.body, dLives.id).done], [[], i, false], 'life ' + i); }
       assert.equal(find(r.body, wTime.id).progress, 25 * (dLives.goal - 1), 'time adds up across lives');
       const bal0 = r.body.balance, last = (await post('/api/run/start', {}, sx)).body.runId; db.prepare('UPDATE runs SET started = started - 25000 WHERE id = ?').run(last);
-      r = await post('/api/run/end', { runId: last, survived: 25 }, sx);
+      r = await post('/api/run/end', { runId: last, survived: 25, claims: 1 }, sx);
       assert.deepEqual(r.body.questsDone, [{ id: dLives.id, text: dLives.text, atp: 30, xp: 0, kind: 'day', period: D.period }], 'the life that finishes it says so');
       assert.deepEqual([find(r.body, dLives.id).done, find(r.body, dLives.id).claimed, r.body.quests.claimable, r.body.balance - bal0], [true, false, 1, r.body.payout], 'it waits to be claimed: nothing paid but the life\'s own ATP');
       assert.equal(find(r.body, wLives.id).progress, dLives.goal, 'the week counts the same lives');
-      r = await post('/api/run/end', { runId: last, survived: 25 }, sx); assert.deepEqual([r.body.duplicate, r.body.quests.claimable], [true, 1], 'a repeated run/end finishes nothing more');
+      r = await post('/api/run/end', { runId: last, survived: 25, claims: 1 }, sx); assert.deepEqual([r.body.duplicate, r.body.quests.claimable], [true, 1], 'a repeated run/end finishes nothing more');
       // claiming: pays its ATP once, even when asked five times at once
       const bal1 = r.body.balance, earned1 = r.body.earned;
       const five = await Promise.all([1, 2, 3, 4, 5].map(() => claim(sx, { period: D.period, id: dLives.id })));
@@ -557,10 +557,21 @@ async function post(url, body, secret) {
       r = await post('/api/session', { secret: sy }); assert.ok([...r.body.quests.daily.quests, ...r.body.quests.weekly.quests, ...r.body.quests.permanent].every(q => q.progress === 0 && !q.done), 'a device of the deleted account starts afresh');
       db.close();
     } else console.log('(JSON store: skipping the backdated quest lives)');
-    // old apps: run/end sends what they read; the quest fields are extra
+    // old apps: run/end sends what they read; the quest fields are extra. Without claims (no Claim button) every ready reward is claimed for them
     await post('/api/session', { secret: sx }); // (a fresh wallet: its account was deleted above)
-    r = await life(sx, { survived: 30, eaten: 1, peak: 40, bestRank: 3, place: 5, of: 9, life: 0, show: 1, name: 'Old app' });
+    r = await post('/api/run/end', { runId: (await post('/api/run/start', {}, sx)).body.runId, survived: 30, eaten: 1, peak: 40, bestRank: 3, place: 5, of: 9, life: 0, show: 1, name: 'Old app' }, sx);
     for (const k of ['payout', 'ratingDelta', 'balance', 'earned', 'skins', 'rating', 'tier', 'runs', 'playerId', 'passUp', 'questXp', 'questsDone']) assert.ok(k in r.body, 'run/end still sends ' + k);
+    if (store === 'sqlite') {
+      const db = new (require('node:sqlite').DatabaseSync)(path.join(dataDir, 'mitosis.sqlite')), old = async (sec, body = {}) => { const id = (await post('/api/run/start', {}, sx)).body.runId; db.prepare('UPDATE runs SET started = started - ? WHERE id = ?').run(sec * 1000, id); return post('/api/run/end', { runId: id, survived: sec, ...body }, sx); };
+      assert.equal(await flip(true), 303);
+      for (let i = 1; i < dLives.goal; i++) await old(25);
+      const b0 = (await post('/api/pass', {}, sx)).body; r = await old(25);
+      assert.deepEqual([r.body.questsDone.map(q => q.id), r.body.questAtp, r.body.questXp, find(r.body, dLives.id).claimed], [[dLives.id], 30, 100, true], 'an old app\'s finished quest is claimed at once: 30 ATP and 100 pass XP');
+      assert.deepEqual([r.body.balance, r.body.pass.xp], [b0.balance + r.body.payout + 30, b0.pass.xp + r.body.xpGained + 100], 'paid into its wallet and pass, as before claiming');
+      r = await old(25); assert.deepEqual([r.body.questAtp, r.body.questXp], [0, 0], 'and only once');
+      r = await life(sx, { survived: 9999 }); assert.equal(r.body.questAtp, 0, 'a page with claims gets nothing claimed for it');
+      db.close(); assert.equal(await flip(false), 303);
+    }
     for (const sec of [sx, sy]) await post('/api/account/delete', { confirm: 'DELETE' }, sec);
     assert.equal(await flip(false), 303);
   }

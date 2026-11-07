@@ -524,6 +524,9 @@ function runEnd(store, body, p, ctx = {}) {
   // the same XP fills the battle pass while a season is on; a ranked life also moves the quests and lifetime totals on (claimed later)
   const passUp = passAddXp(store, p, xp.total), q = casual ? { xp: 0, done: [], tiers: [] } : questsTick(store, p, { ...life, eaten: body.eaten, peak: body.peak, splitKills: body.splitKills, mode: kind === 'classic' ? 'classic' : 'ranked' });
   Object.assign(p, w); p.xp = Number(p.xp || 0) + xp.total;
+  // apps with a Claim button send claims: 1. For the others (builds before quest claiming, and lives queued by older pages)
+  // every reward that is ready is claimed here, as quests used to pay at once, so their players still get it.
+  const auto = !body.claims && questsOn(store) ? questClaim(store, { all: true }, p) : null;
   // rating: bots move only the AI rating. Ranked bot games always have Normal bots; Casual says which it had.
   const name = cleanName(body.name) || p.name || null, vsBots = kind === 'ai' || casual;
   const before = Number((vsBots ? p.ai_rating : p.rating) ?? RATING.base), mult = casual ? RATING_AI.skill[body.skill] || 1 : 1;
@@ -534,11 +537,11 @@ function runEnd(store, body, p, ctx = {}) {
   // kind: who the life was against (comp, ai, casual; legacy for apps that don't say); ratingDelta and aiDelta: how each
   // rating moved (one is 0); winBonus: the part of payout a win or top 3 paid; winCapped: the day's cap cut it;
   // xpParts: where the XP came from (time alive, placing, the win); levelUp: how many levels this life gained;
-  // passUp: pass levels from the life; questsDone and questTiers: the quests and permanent tiers it finished, now ready to
-  // claim (questXp stays 0: quests pay when claimed)
+  // passUp: pass levels from the life (and, for apps without claims, from the quests claimed for them); questsDone and
+  // questTiers: the quests and permanent tiers it finished; questXp and questAtp: what was claimed for an app without claims
   const out = wallet(store, p);
   return { payout, kind, winBonus: bonus, winCapped: capped, ratingDelta: vsBots ? 0 : delta, aiDelta: vsBots ? delta : 0, xpGained: xp.total, xpParts: { time: xp.time, place: xp.place, win: xp.win }, levelUp: out.level - level,
-    passUp, questXp: 0, questsDone: q.done, questTiers: q.tiers, ...out };
+    passUp: passUp + (auto ? auto.passUp : 0), questXp: auto ? auto.xp : 0, questAtp: auto ? auto.atp : 0, questsDone: q.done, questTiers: q.tiers, ...out };
 }
 function buySkin(store, body, p) {
   const skin = skinById(body.skinId | 0);
