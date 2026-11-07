@@ -41,14 +41,14 @@ What is new for these, all usable by the October cuts too:
 Scripted play reads as fake, so the ads are cut from real matches played on this Mac:
 
 ```bash
-node promo/record.js                     # portrait 1080×1920 for TikTok, Reels and Shorts
-node promo/record.js --shape=landscape   # 1920×886 for the App Store
+node promo/record.js                     # landscape 2340×1080, an iPhone's shape: makes 1920×1080 ads and 1920×886 App Store previews
+node promo/record.js --shape=portrait    # 1080×1920, if a vertical cut is ever wanted
 node promo/record.js --skin=22           # wear Supernova (default 15, Black Hole); --name=… for the name on the cell
 ```
 
 The game opens in its own window. Start a match, press **R** to start a take and **R** again to stop it. The mouse
 steers, Space splits, W shoots, Shift boosts. Each take is the game's own canvas (no cursor, browser or HUD in the
-video, though you see the HUD while playing) with a log of its sounds, saved as `promo/rec/<date-time>.mp4` at 60 fps. The
+video, though you see the HUD while playing) with a log of its sounds, saved as `promo/rec/<date-time>.mp4` at 60 fps (2340×1080). The
 terminal says if any frames came late; retake if it warns of a hitch. Offline by default: the game fills the room
 with its own bots on this Mac, so ship Wi-Fi can't make it lag, and the wallet owns every skin on sale. `--online` plays
 on the live server instead. `--selftest=4` checks the plumbing headless.

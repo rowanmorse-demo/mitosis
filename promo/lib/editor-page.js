@@ -68,6 +68,16 @@ const draw = {
     g.fillStyle = 'rgb(' + rc + ')'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(label, W / 2 + ks * .11, ly + ks * .05);
     g.textBaseline = 'alphabetic'; oline(o.name, W / 2, y, size, '#ffffff', -.025); g.restore();
   },
+  // the brand, small in a corner from the first frame (a pre-roll can be skipped at 5 s: they still saw the name)
+  async brand(o) {
+    const icon = await load('icon.png'), w = wide(), s = Math.round((w ? H * .075 : W * .1) * (o.scale || 1)), pad = Math.round((w ? H : W) * .04);
+    const a = Math.min(cl(o.lt / .25, 0, 1), cl((o.dur - o.lt) / .2, 0, 1)) * (o.alpha || .92);
+    g.save(); g.globalAlpha = a; g.shadowColor = 'rgba(0,0,0,.5)'; g.shadowBlur = s * .3; g.shadowOffsetY = s * .04;
+    g.beginPath(); g.roundRect(pad, pad, s, s, s * .225); g.fillStyle = C.dark; g.fill(); g.shadowColor = 'transparent';
+    g.save(); g.clip(); g.drawImage(icon, pad, pad, s, s); g.restore();
+    const ts = Math.round(s * .52); g.font = '800 ' + ts + 'px ' + DISPLAY; g.letterSpacing = (TRACK * ts).toFixed(1) + 'px'; g.textAlign = 'left'; g.textBaseline = 'middle';
+    shadow(true, ts); g.fillStyle = C.ink; g.fillText('Mitosis', pad + s * 1.25, pad + s * .5 + ts * .04); g.restore();
+  },
   // the end card: icon, name, and (for ads) the call to action; cta: false for the App Store, which shows no prices
   async end(o) {
     const lt = o.lt, icon = await load('icon.png'), w = wide();

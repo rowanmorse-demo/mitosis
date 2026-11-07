@@ -1,6 +1,8 @@
 // Record real play for the promos: the game in its own window on this Mac; you play, R starts and stops a take.
-//   node promo/record.js                      portrait 1080×1920 (TikTok, Reels, Shorts), offline, wearing Black Hole
-//   node promo/record.js --shape=landscape    1920×886 (App Store previews for current iPhones)
+//   node promo/record.js                      landscape 2340×1080, an iPhone's own shape (the game is landscape-only),
+//                                             offline, wearing Black Hole. One take makes both a 1920×1080 ad (cropped,
+//                                             pixel for pixel) and a 1920×886 App Store preview (the whole frame, scaled)
+//   node promo/record.js --shape=portrait     1080×1920 instead
 //   node promo/record.js --skin=22 --name=Rowan
 //   node promo/record.js --online             the live server instead of a room of the game's own bots (laggy on ship Wi-Fi)
 //   node promo/record.js --selftest=4         headless: records 4 s of the lobby by itself and quits (checks the plumbing)
@@ -19,8 +21,8 @@ const CHROME = process.env.CHROME || '/Applications/Google Chrome.app/Contents/M
 const FFMPEG = process.env.FFMPEG || '/opt/homebrew/bin/ffmpeg';
 const PORT = +arg.port || 3917; // not 3000: another session's test server lives there
 const WORK = path.join(__dirname, '.work'), OUT = path.join(__dirname, 'rec');
-const LAND = arg.shape === 'landscape';
-const TARGET = LAND ? { w: 1920, h: 886 } : { w: 1080, h: 1920 };
+const LAND = arg.shape !== 'portrait';
+const TARGET = LAND ? { w: 2340, h: 1080 } : { w: 1080, h: 1920 };
 const WIN = LAND ? { w: 1280, h: 591 + 28 } : { w: 405, h: 720 + 28 }; // the window, in points (28: its title bar)
 const ON_SALE = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23];
 const SKIN = +(arg.skin || 15);
