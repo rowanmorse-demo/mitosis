@@ -54,7 +54,7 @@ const ROUTES = {
   'POST /api/auth/apple': { fn: signIn(economy.handlers.signInApple), auth: true },
   'POST /api/auth/google': { fn: signIn(economy.handlers.signInGoogle), auth: true },
   'POST /api/auth/signout': { fn: economy.handlers.signOut, auth: true },
-  'POST /api/account/delete': { fn: (store, body, p) => { const r = economy.handlers.deleteAccount(store, body, p); friends.forget(p.id); push.forget(p.id); return r; }, auth: true },
+  'POST /api/account/delete': { fn: (store, body, p) => { const r = economy.handlers.deleteAccount(store, body, p); friends.forget(p.id); return r; }, auth: true },
   'POST /api/pass': { fn: economy.handlers.passView, auth: true },
   'POST /api/pass/premium': { fn: economy.handlers.passPremium, auth: true },
   'POST /api/pass/claim': { fn: economy.handlers.passClaim, auth: true },
@@ -81,6 +81,8 @@ const ROUTES = {
   // connection quality from the games (ping, lost pings, frame rate, time-zone region); read it at /admin/net
   'POST /api/net': { fn: (store, body) => { const r = netstats.clean(body, Date.now()); if (r) store.addNet(r); return { ok: true }; }, auth: false },
 };
+// deleting an account deletes its push devices and switches too
+{ const route = ROUTES['POST /api/account/delete'], del = route.fn; route.fn = (store, body, p) => { const r = del(store, body, p); push.forget(p.id); return r; }; }
 // The admin pages are for the operator: /admin/net?token=… (connection report), /admin/live?token=… (live players) and /admin/pass?token=… (the battle pass switch).
 // The token is ADMIN_TOKEN, or one made on first start and kept in the data dir.
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || (() => {

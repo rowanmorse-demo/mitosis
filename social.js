@@ -32,6 +32,8 @@ function create({ file, nameBlocked = () => false, now = () => Date.now(), onEve
   }
   setInterval(flush, 2000).unref();
   process.on('exit', flush);
+  // what may deserve a push notification (see onEvent above), told after the reply
+  const emit = (type, from, to, extra) => { if (onEvent) setImmediate(() => { try { onEvent({ type, from, to, name: card(from).name, ...extra }); } catch (e) {} }); };
 
   const seen = new Map();     // player id -> { at, status }
   const parties = new Map();  // party id -> { id, leader, members: [id], invites: Map(id -> at), go: 0, goBy: null }
@@ -53,7 +55,6 @@ function create({ file, nameBlocked = () => false, now = () => Date.now(), onEve
   const without = (list, id) => { const i = list.indexOf(id); if (i >= 0) list.splice(i, 1); return i >= 0; };
   function online(id) { const s = seen.get(id); return s && now() - s.at < ONLINE_MS ? s.status : null; }
   function card(id) { const r = d.players[id]; return { code: r.code, name: r.name || 'Player ' + r.code.slice(0, 3) }; }
-  const emit = (type, from, to, extra) => { if (onEvent) setImmediate(() => { try { onEvent({ type, from, to, name: card(from).name, ...extra }); } catch (e) {} }); };
 
   function setName(p, r, body) {
     // the account's name (checked when a run ends) wins; otherwise the name the game sends, if it passes the same filter
