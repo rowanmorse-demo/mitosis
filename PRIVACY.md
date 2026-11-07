@@ -18,6 +18,8 @@ Mitosis: Cell Arena ("Mitosis", "the game") is made by Catapult Consulting, LLC.
 
 **Game recording (iPhone app, off unless you turn it on).** With Settings › Record games on, the app records each of your games with iOS screen recording (iOS asks you first) and adds the video to your Photos library (iOS asks for permission to add photos). Recordings stay on your phone; the app never uploads them or reads anything else in Photos.
 
+**Notifications (optional).** The app asks before it sends notifications, and only after you've played a few games, made a friend or switched them on in Settings. If you allow them, Apple (or Google on Android) gives the app a push token for this device. The app sends the server that token, the app version and your phone's time zone (so news isn't sent at night), linked to your device identity. Settings › Notifications switches each kind off; turning notifications off in your phone's settings stops them all. Tokens Apple or Google report as no longer valid are deleted, and deleting your account deletes them too. Notifications are sent through Apple's and Google's push services, which see the token and the message.
+
 **Connection quality.** While you play online, the game measures how long messages take to reach the server and back, how many never come back, and how smoothly it draws. Every few minutes it sends those numbers, the app version and your device's time zone (for example "Europe/London") so we can see where a closer server would help. These reports carry no player identifier, and the server does not store IP addresses with them.
 
 **Player counts.** The server counts how many games are connected to it at a time, whether each came from the website or the iPhone or Android app (from the browser details every connection sends), and whether it is in a game or the menus. It keeps only these totals, minute by minute for 24 hours; nothing that identifies a player or a device is stored.
@@ -28,7 +30,7 @@ Mitosis: Cell Arena ("Mitosis", "the game") is made by Catapult Consulting, LLC.
 
 - No advertising, no ad identifiers, no advertising networks.
 - No tracking across apps or websites, and no sale of data.
-- No analytics SDKs; the only server the apps talk to is the Mitosis game server, plus Apple's and Google's services for purchases and sign-in.
+- No analytics SDKs; the only server the apps talk to is the Mitosis game server, plus Apple's and Google's services for purchases, sign-in and notifications.
 - No access to contacts, location, camera or microphone, and no reading of your photos (the app only adds the games you choose to record). The local network is used only for Nearby play, and only after you choose it.
 
 ## Where data is kept

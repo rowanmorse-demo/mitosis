@@ -8978,8 +8978,9 @@ async function pushState(){
 }
 async function pushToken(token,env){
   PUSH.token=token;PUSH.env=env||'';if(!wallet.online||!wallet.playerId||PUSH.busy||PUSH.noServer)return; // pushTick tries again once the session is in
+  if(PUSH.regFor===wallet.playerId&&PUSH.regTok===token)return; // already registered for this player
   PUSH.busy=true;const who=wallet.playerId;
-  try{PUSH.view=await api('push/register',{platform:Native.platform,token,env:PUSH.env,app:APP_VER,tz:pushTz()});PUSH.regFor=who;}
+  try{PUSH.view=await api('push/register',{platform:Native.platform,token,env:PUSH.env,app:APP_VER,tz:pushTz()});PUSH.regFor=who;PUSH.regTok=token;}
   catch(e){if(e.status===404)PUSH.noServer=true;else{PUSH.regFor='';PUSH.retryAt=Date.now()+30000;}}
   finally{PUSH.busy=false;}
   pushRender();
@@ -9080,15 +9081,14 @@ function pushFlip(key,on){
 }
 function pushRender(){
   const sec=PUSH.st?pushSettings():$('pushSec');if(!sec)return;
-  sec.hidden=!PUSH.st||PUSH.st==='unknown';if(sec.hidden)return;
+  sec.hidden=!PUSH.st||PUSH.st==='unknown'||PUSH.noServer;if(sec.hidden)return; // a server without push.js: nothing to switch on
   const kinds=(PUSH.view&&PUSH.view.kinds)||[];
   for(const k of kinds)if(!sec.querySelector(`[data-push="${k.id}"]`))sec._row(k.id,k.name);
   const off=pushOff(),all=pushAllowed()&&!off.includes('all');
   for(const r of sec.querySelectorAll('[data-push]')){const k=r.dataset.push,on=k==='all'?all:!off.includes(k);
     if(k!=='all')r.hidden=!all||!kinds.some(x=>x.id===k);
     for(const b of r.querySelectorAll('.seg button'))b.setAttribute('aria-pressed',String((b.dataset.v==='1')===on));}
-  $('pushFoot').textContent=PUSH.noServer?"This server doesn't send notifications yet."
-    :PUSH.st==='denied'?'Notifications are off for Mitosis in iOS Settings. Switch on to open them there.'
+  $('pushFoot').textContent=PUSH.st==='denied'?'Notifications are off for Mitosis in iOS Settings. Switch on to open them there.'
     :all?'Choose what Mitosis tells you about. A few a day at most, never at night.'
     :'Know when a friend invites you to play, even with the game closed.';
 }

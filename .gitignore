@@ -5,6 +5,9 @@ Thumbs.db
 
 # Server data (wallets, skins, purchases) — never commit
 data/
+# Keys put on the server by the Deploy workflow (APNs .p8) — never commit
+.secrets/
+*.p8
 
 # iOS
 ios/build/
