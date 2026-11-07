@@ -627,7 +627,7 @@ async function post(url, body, secret) {
     }
   }
   { // quests at chosen times, in both stores: the sets, finishing once, claiming once, the daily and weekly resets, rewards that wait, the switch, permanent tiers, merges and deletion
-    const E = require('./economy'), { questsAt, questsOf, questsTick, isoWeekOf, statsOf, QUESTS, PASS_SEASONS, PERMANENT, PERM_ATP } = E, claim = E.handlers.questClaim;
+    const E = require('./economy'), { questsAt, questsOf, questsTick, isoWeekOf, questTotals, QUESTS, PASS_SEASONS, PERMANENT, PERM_ATP } = E, claim = E.handlers.questClaim;
     const { SqliteStore, JsonStore } = require('./store'), at = Date.parse, s1 = PASS_SEASONS[0];
     for (const [d, w] of [['2026-11-16', '2026-W47'], ['2026-11-22', '2026-W47'], ['2026-11-23', '2026-W48'], ['2026-12-31', '2026-W53'], ['2027-01-03', '2026-W53'], ['2027-01-04', '2027-W01'], ['2024-12-30', '2025-W01'], ['2021-01-03', '2020-W53']])
       assert.equal(isoWeekOf(at(d + 'T12:00:00Z')).key, w, 'ISO week of ' + d);
@@ -684,17 +684,17 @@ async function post(url, body, secret) {
       // quests don't need a season: they run before, between and after them
       assert.ok(view(a, at('2026-11-01T12:00:00Z')) && view(a, at('2027-03-01T12:00:00Z')), k('no season needed'));
       // the switch: while off there are no quests and lives finish none, but lifetime totals count; back on, it is as it was
-      const mon = at('2026-11-23T12:00:00Z'); questsTick(st, a, L(30), mon); const before = view(a, mon), livesBefore = statsOf(st, P('a')).lives;
+      const mon = at('2026-11-23T12:00:00Z'); questsTick(st, a, L(30), mon); const before = view(a, mon), livesBefore = questTotals(st, P('a')).lives;
       st.setFlag('quests', 'off'); assert.equal(view(a, mon), null, k('no quests while off'));
       assert.deepEqual(questsTick(st, a, L(600, 1, 10), mon), { xp: 0, done: [], tiers: [] }, k('lives while off finish nothing'));
       assert.throws(() => claim(st, { all: true }, P('a')), e => e.status === 404, k('and claim nothing'));
       st.setFlag('quests', 'on'); v = view(a, mon); assert.deepEqual([v.daily, v.weekly], [before.daily, before.weekly], k('on again: as it was'));
-      assert.equal(statsOf(st, P('a')).lives, livesBefore + 1, k('the lifetime totals kept counting'));
+      assert.equal(questTotals(st, P('a')).lives, livesBefore + 1, k('the lifetime totals kept counting'));
       // permanent quests: lifetime totals in tiers; a life past a tier reaches it once; claiming pays its tier once and moves the ladder on
       st.createPlayer('e', 'he', 1);
       r = questsTick(st, P('e'), L(800, 1, 10, 9999), mon);
       const dl = r.done.filter(q => q.kind === 'day').length; assert.ok(dl >= 2, k('the life finishes some daily quests'));
-      assert.deepEqual(statsOf(st, P('e')), { lives: 1, time: 600, eaten: 10 + 600 / 60 * 15, wins: 1, top3: 1, dailies: dl }, k('one long winning life: time capped at 10 min, cells by its length, and the daily quests it finished'));
+      assert.deepEqual(questTotals(st, P('e')), { lives: 1, time: 600, eaten: 10 + 600 / 60 * 15, wins: 1, top3: 1, dailies: dl }, k('one long winning life: time capped at 10 min, cells by its length, and the daily quests it finished'));
       assert.deepEqual(r.tiers.map(t => t.id).sort(), ['eaten-1', 'wins-1'], k('it reaches the first cells and wins tiers'));
       assert.deepEqual(questsTick(st, P('e'), L(30, 5, 10, 3), mon).tiers, [], k('each tier is reached once'));
       v = view(P('e'), mon); assert.deepEqual([line(v, 'wins').done, line(v, 'wins').tier, line(v, 'lives').done, line(v, 'lives').progress, line(v, 'lives').goal], [true, 1, false, 2, 10]);
@@ -704,7 +704,7 @@ async function post(url, body, secret) {
       assert.throws(() => claim(st, { period: 'perm', id: 'wins-2' }, P('e')), e => e.status === 409, k('not before it is reached'));
       // ranked lives from before permanent quests count: the rating's counts start the lifetime lives
       st.createPlayer('f', 'hf', 1); for (let i = 0; i < 30; i++) st.setRating('f', 1000, null); for (let i = 0; i < 5; i++) st.setAiRating('f', 1000, null);
-      assert.equal(statsOf(st, P('f')).lives, 35, k('35 ranked lives before'));
+      assert.equal(questTotals(st, P('f')).lives, 35, k('35 ranked lives before'));
       assert.deepEqual([line(view(P('f'), mon), 'lives').done, line(view(P('f'), mon), 'lives').total], [true, 35], k('the first lives tier is ready at once'));
       questsTick(st, P('f'), L(30), mon); assert.equal(st.stats('f').lives, 36, k('kept from the first life on'));
       r = claim(st, { all: true }, P('f')); assert.deepEqual([r.claimed.map(c => c.id), r.atp], [['lives-1'], 100], k('claim all'));

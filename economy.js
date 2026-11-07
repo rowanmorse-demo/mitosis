@@ -342,7 +342,7 @@ function questStep(q, life) {
 }
 // Lifetime totals. Ranked lives played before permanent quests existed count: the first time a player's totals are
 // written, lives starts from the ranked lives the rating has counted.
-function statsOf(store, p) {
+function questTotals(store, p) {
   const s = store.stats(p.id);
   if (s.lives == null) s.lives = Number(p.runs || 0) + Number(p.ai_runs || 0);
   return s;
@@ -366,7 +366,7 @@ function questsOf(store, p, t = now()) {
       if (done && !claimed) claimable++;
       return { id: q.id, kind: q.kind, text: q.text, goal: q.goal, progress: Math.min(q.goal, Number(r && r.progress) || 0), atp: q.atp, xp: live ? q.xp : 0, done, claimed }; }) };
   };
-  const daily = view('day'), weekly = view('week'), stats = statsOf(store, p), got = new Set(store.questRows(p.id, 'perm').filter(r => r.claimed != null).map(r => r.quest));
+  const daily = view('day'), weekly = view('week'), stats = questTotals(store, p), got = new Set(store.questRows(p.id, 'perm').filter(r => r.claimed != null).map(r => r.quest));
   const permanent = PERMANENT.map(L => {
     const n = Number(stats[L.stat] || 0), open = L.tiers.map((g, i) => i).filter(i => !got.has(`${L.id}-${i + 1}`));
     claimable += open.filter(i => n >= L.tiers[i]).length;
@@ -395,7 +395,7 @@ function questsTick(store, p, life, t = now()) {
     }
   }
   if (!life && !dailies) return out;
-  const before = statsOf(store, p), f = life ? lifeFacts(life) : { counts: false };
+  const before = questTotals(store, p), f = life ? lifeFacts(life) : { counts: false };
   const add = { dailies, lives: f.counts ? 1 : 0, time: f.counts ? Math.floor(f.sec) : 0, eaten: f.eaten || 0, wins: f.placed && f.pl === 1 ? 1 : 0, top3: f.placed && f.pl <= 3 ? 1 : 0 };
   statsAdd(store, p, add);
   if (on) for (const L of PERMANENT) { const a = Number(before[L.stat] || 0), b = a + (add[L.stat] || 0);
@@ -561,7 +561,7 @@ function questClaim(store, body, p) {
   if (!questsOn(store)) throw new ApiError(404, 'quests are off');
   const want = [], all = !!body.all;
   if (all) {
-    const v = questsOf(store, p), stats = statsOf(store, p);
+    const v = questsOf(store, p), stats = questTotals(store, p);
     for (const G of [v.daily, v.weekly]) for (const q of G.quests) if (q.done && !q.claimed) want.push({ period: G.period, id: q.id });
     for (const e of v.earlier) want.push({ period: e.period, id: e.id });
     for (const L of PERMANENT) L.tiers.forEach((g, i) => { if (Number(stats[L.stat] || 0) >= g) want.push({ period: 'perm', id: `${L.id}-${i + 1}` }); });
@@ -572,7 +572,7 @@ function questClaim(store, body, p) {
   for (const w of want) {
     if (w.period === 'perm') {
       const t = permTier(w.id); if (!t) { skip(404, 'no such quest'); continue; }
-      if (Number(statsOf(store, p)[t.L.stat] || 0) < t.L.tiers[t.i]) { skip(409, 'not finished yet'); continue; }
+      if (Number(questTotals(store, p)[t.L.stat] || 0) < t.L.tiers[t.i]) { skip(409, 'not finished yet'); continue; }
       if (!store.questClaimPerm(p.id, w.id, at)) continue;   // claimed already
       atp += PERM_ATP[t.i]; claimed.push({ period: 'perm', id: w.id, text: t.L.text(t.L.tiers[t.i]), atp: PERM_ATP[t.i], xp: 0 });
     } else {
@@ -635,4 +635,4 @@ function passAdmin(store, on, tester) {
 
 function leaderboard(store) { return { top: store.top(10).map((r, i) => ({ rank: i + 1, name: (r.name && !nameBlocked(r.name) && r.name) || 'Unnamed cell', rating: r.rating, tier: tierOf(r.rating), runs: r.runs })) }; }
 
-module.exports = { PERMANENT, PERM_ATP, questsOn, questsSwitch, questById, statsOf, SKINS, PACKS, RULES, RATING, RATING_AI, WINS, winBonus, runKind, XP, SEASONS, seasonOpen, PASS, PASS_SEASONS, passSeason, passLive, passAdmin, QUESTS, QUEST_SLOTS, questsAt, questsOf, questsTick, isoWeekOf, catalog, payoutFor, ratingDelta, xpFor, levelOf, xpAtLevel, xpToNext, tierOf, nameBlocked, ApiError, auth, handlers: { questClaim, deleteAccount, session, runStart, runEnd, buySkin, iapApple, iapGoogle, leaderboard, signInApple, signInGoogle, signOut, passView, passPremium, passClaim } };
+module.exports = { PERMANENT, PERM_ATP, questsOn, questsSwitch, questById, questTotals, SKINS, PACKS, RULES, RATING, RATING_AI, WINS, winBonus, runKind, XP, SEASONS, seasonOpen, PASS, PASS_SEASONS, passSeason, passLive, passAdmin, QUESTS, QUEST_SLOTS, questsAt, questsOf, questsTick, isoWeekOf, catalog, payoutFor, ratingDelta, xpFor, levelOf, xpAtLevel, xpToNext, tierOf, nameBlocked, ApiError, auth, handlers: { questClaim, deleteAccount, session, runStart, runEnd, buySkin, iapApple, iapGoogle, leaderboard, signInApple, signInGoogle, signOut, passView, passPremium, passClaim } };
