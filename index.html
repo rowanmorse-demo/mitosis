@@ -2493,6 +2493,70 @@ body:not(.playing) #toasts .toast .tt{display:contents}body:not(.playing) #toast
 /* @ui:skin-art */
 
 /* @ui:skin-art end */
+/* @ui:lobby-look */
+/* One look for the lobby and its tab pages: a single glass surface, one radius scale, one accent (pink: play and selection),
+   gold only for ATP, and white icons instead of a colour per tab. Everything here overrides rules above it. */
+:is(.lobby,#lookCard,#storeCard,#rankCard,#friendsCard){
+  --sf:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.022)),rgba(8,19,23,.8);--sf-edge:rgba(255,255,255,.085);
+  --sf-hi:inset 0 1px 0 rgba(255,255,255,.08);--sf-drop:0 14px 30px -16px rgba(0,0,0,.85);--ink2:rgba(222,238,234,.66);--r-m:20px;--r-l:26px}
+/* top bar: the player chip, ATP and Settings are one family (same height, surface and edge) */
+.lobby :is(.lb-me,.lb-atp,.lb-icon){background:var(--sf);border:1px solid var(--sf-edge);box-shadow:var(--sf-hi),var(--sf-drop)}
+.lobby .lb-me{border-radius:var(--r-m)}
+.lobby .lb-atp{border-color:rgba(242,177,52,.28)}
+.lobby .lb-me-sub .tier{color:var(--ink2)}
+/* the featured skin: a calm card, the art carries the colour; the tag is a small light chip */
+.lobby .lb-sk{border-color:var(--sf-edge);background:radial-gradient(70% 95% at 85% 45%,rgba(154,140,255,.18),transparent 65%),var(--sf);box-shadow:var(--sf-hi),var(--sf-drop)}
+.lobby .lb-tag{background:rgba(255,255,255,.92);color:#0b1416;letter-spacing:.16em}
+.lobby .lb-feat{border-radius:var(--r-m)}
+/* the cell: the plus is the accent, not a white disc; the name sits lighter under it */
+.lobby .hero-edit{width:40px;height:40px;background:linear-gradient(180deg,#ff8aac,#ff5c8a 55%,#e8417a);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 6px 16px -4px rgba(255,92,138,.7),0 0 0 3px rgba(3,10,12,.85)}
+.lobby .hero-edit svg{width:18px;height:18px;stroke-width:3}
+.lobby .lb-hero .lb-name{background:rgba(3,12,14,.42);box-shadow:inset 0 0 0 1px rgba(255,255,255,.07);font-weight:800;color:#fff}
+.lobby .lb-hero .lb-name svg{stroke:rgba(222,238,234,.55)}
+/* play: the mode row is neutral (only its icon has the mode's colour) and PLAY is one confident pink button */
+.lobby .lb-modebtn{background:var(--sf);border-color:var(--sf-edge);box-shadow:var(--sf-hi),var(--sf-drop);border-radius:var(--r-m)}
+.lb-modebtn b{color:var(--ink);letter-spacing:.1em;font-size:14px}
+.lb-modebtn .ic{background:var(--mc-bg);box-shadow:none}
+.lobby .lb-go{border-radius:var(--r-l);font-size:30px;letter-spacing:.09em;color:#2a0614;text-shadow:0 1px 0 rgba(255,255,255,.25);
+  background:radial-gradient(120% 140% at 50% -30%,rgba(255,255,255,.4),rgba(255,255,255,0) 52%),linear-gradient(180deg,#ff86a8,#ff5c8a 48%,#e2386f);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.2),inset 0 -3px 0 rgba(140,10,55,.28),0 4px 0 #9b1a4b,0 18px 34px -14px rgba(255,80,140,.75)}
+.lobby .lb-go:not(:disabled):active{box-shadow:inset 0 0 0 1px rgba(255,255,255,.18),inset 0 -2px 0 rgba(140,10,55,.28),0 1px 0 #9b1a4b,0 8px 18px -8px rgba(255,80,140,.6)}
+/* the dock: white line icons and labels, no colour per tab */
+.lobby .lb-nav{background:var(--sf);border-color:var(--sf-edge);box-shadow:var(--sf-hi),0 18px 34px -18px rgba(0,0,0,.9);border-radius:var(--r-l)}
+.lobby .lb-tab svg,.lobby :is(#lookBtn,#shopBtn,#rankBtn,#friendsBtn) svg{color:rgba(240,250,247,.92);filter:none;stroke-width:1.7}
+.lobby .lb-tab span{color:var(--ink2);font-weight:700;letter-spacing:.02em}
+/* the background, quieter: the edge cells softer and the vignette deeper, so the lobby's own pieces lead */
+.lb-bk1{background:radial-gradient(closest-side,rgba(95,224,168,.07),rgba(95,224,168,.03) 80%,rgba(95,224,168,0))}
+.lb-bk2{background:radial-gradient(closest-side,rgba(154,140,255,.09),rgba(154,140,255,.03) 80%,rgba(154,140,255,0))}
+.lb-bg::after{background:radial-gradient(ellipse 88% 72% at 50% 46%,rgba(1,5,7,0) 40%,rgba(1,5,7,.55) 78%,rgba(1,4,6,.88))}
+#lbBgMid{opacity:.7}
+/* tab pages: sections in the same glass */
+:is(#lookCard,#storeCard,#rankCard,#friendsCard) .ds-sec,#lookCard .lk-sec{background:var(--sf);border-color:var(--sf-edge);box-shadow:var(--sf-hi),var(--sf-drop)}
+/* Inventory: the stage gets the lobby's soft pool of light instead of the old ringed dish, and less of the screen in portrait */
+#lookCard .lk-stage{border-color:var(--sf-edge)}
+#lookCard .lk-ped{top:80%;left:14%;right:14%;height:16%;border:0;box-shadow:none;background:radial-gradient(38% 42% at 50% 50%,rgba(0,0,0,.4),rgba(0,0,0,0)),radial-gradient(closest-side,rgb(var(--rc)/.42),rgb(var(--rc)/.12) 60%,rgb(var(--rc)/0))}
+#lookCard .lk-ped::after{display:none}
+#lookCard .lk-rays{opacity:.2}
+@media (orientation:portrait){#lookCard .lk-show{width:min(100cqw - 24px,56vw,230px)}}
+/* Shop: the selected tab and tile in the accent, not white */
+#storeCard .sv-tabs{background:rgba(3,10,12,.6);border-color:var(--sf-edge)}
+#storeCard .sv-tabs button[aria-selected=true]{background:var(--sf);color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.14),inset 0 1px 0 rgba(255,255,255,.12),0 4px 12px -4px rgba(0,0,0,.6)}
+#storeCard .sv-tabs button[aria-selected=true] svg{color:var(--accent)}
+#storeCard .svc.sel{box-shadow:0 0 0 2px var(--accent),0 0 22px -4px rgba(255,92,138,.55),inset 0 1px 0 rgba(255,255,255,.1)}
+#storeCard .sv-feat{border-color:var(--sf-edge)}
+/* Ranks: the two rating cards in the shared glass, the labels quieter */
+#rankCard :is(.rk-me,.rk-ai){border-color:var(--sf-edge);box-shadow:var(--sf-hi),var(--sf-drop)}
+#rankCard .rk-k{color:var(--ink2);opacity:1}
+/* a longer ladder (more than 6 tiers): it scrolls sideways, opened at your tier (renderTierLegend) */
+#rankCard .rk-ladder.long{display:flex;overflow-x:auto;scrollbar-width:none;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
+#rankCard .rk-ladder.long::-webkit-scrollbar{display:none}
+#rankCard .rk-ladder.long li{flex:0 0 68px;scroll-snap-align:center}
+#rankCard .rk-ladder.long::before,#rankCard .rk-ladder.long::after{display:none}
+/* Friends: the code card in the shared glass, the code a little smaller */
+#friendsCard .fr-me{background:radial-gradient(120% 100% at 0% 0%,rgba(79,227,194,.08),transparent 60%),var(--sf);border-color:var(--sf-edge);box-shadow:var(--sf-hi),var(--sf-drop)}
+#friendsCard .fr-code i{height:48px;font-size:23px}
+@media (orientation:portrait){.lobby{--cell:min(64vw,38vh,300px)}} /* a bigger cell: less dead space between the name and PLAY */
+/* @ui:lobby-look end */
 /* battery: the arena redraws under the HUD every frame, so glass blur there costs the GPU every frame; phones show the HUD
    without it, and battery saver drops blur everywhere */
 @media (pointer:coarse){body.playing :is(#stats,.act,.evo,#banner,.toast,#tip,#roundClock,#boardToggle,#board,#board ol,#perfHud,#fx .hchip,#feed div,#joy .knob,.spec-bar,.panel){-webkit-backdrop-filter:none!important;backdrop-filter:none!important}}
@@ -6233,10 +6297,13 @@ const TIER_GLYPH=(()=>{let star='';for(let i=0;i<10;i++){const a=-Math.PI/2+i*Ma
   return{Bronze:{d:'M22.5 37l9.5-7.5 9.5 7.5',w:5},Silver:{d:'M22.5 32l9.5-7.5 9.5 7.5M22.5 41l9.5-7.5 9.5 7.5',w:4.6},Gold:{d:'M23 28l9-7 9 7M23 35.5l9-7 9 7M23 43l9-7 9 7',w:3.8},
     Platinum:{d:star+'Z',fill:1},Diamond:{d:'M25 23h14l5.5 6.5L32 44.5 19.5 29.5z',fill:1,facet:'M19.5 29.5h25M28.6 23L26 29.5l6 15 6-15-2.6-6.5'},Legend:{d:'M19.5 42.5l-2.6-16.5 8.6 6.8L32 21.5l6.5 11.3 8.6-6.8-2.6 16.5z',fill:1,facet:'M20.5 37.5h23'}};})();
 let tierEmN=0,rkPos=0,rkSeq=0;
-const tierCol=t=>(TIER_PAL[t]||TIER_PAL.Silver)[1];
+// a tier the palette doesn't name yet (a longer ladder): "Gold II" uses Gold; any other new name takes the metal at its place in the ladder
+function tierKey(t){if(TIER_PAL[t])return t;const K=Object.keys(TIER_PAL),m=K.find(k=>String(t).startsWith(k));if(m)return m;
+  const T=tierTable().tiers,i=T.indexOf(t);return i<0?'Silver':K[Math.min(K.length-1,Math.floor(i/Math.max(1,T.length)*K.length))];}
+const tierCol=t=>TIER_PAL[tierKey(t)][1];
 function tierTable(){const c=wallet.catalog;return c&&Array.isArray(c.tiers)&&c.tiers.length&&Array.isArray(c.tierAt)&&c.tierAt.length===c.tiers.length?c:TIER_FB;}
 function tierEmblem(t){ // a bevelled hexagon in the tier's metal, with chevrons, a star, a gem or a crown
-  const p=TIER_PAL[t]||TIER_PAL.Silver,g=TIER_GLYPH[t]||TIER_GLYPH.Silver,id='tem'+(++tierEmN);
+  const k=tierKey(t),p=TIER_PAL[k],g=TIER_GLYPH[k]||TIER_GLYPH.Silver,id='tem'+(++tierEmN);
   const gl=c=>g.fill?`<path d="${g.d}" fill="${c}" stroke="${c}" stroke-width="1.6" stroke-linejoin="round"/>`:`<path d="${g.d}" fill="none" stroke="${c}" stroke-width="${g.w}" stroke-linecap="round" stroke-linejoin="round"/>`;
   return `<svg class="emb" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="${id}a" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="${p[0]}"/><stop offset=".48" stop-color="${p[1]}"/><stop offset="1" stop-color="${p[2]}"/></linearGradient><linearGradient id="${id}b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${p[2]}"/><stop offset="1" stop-color="${p[1]}"/></linearGradient></defs>`
     +`<path d="M32 4.5L55.5 18v28L32 59.5 8.5 46V18z" fill="url(#${id}a)" stroke="url(#${id}a)" stroke-width="4" stroke-linejoin="round"/>`
@@ -6252,7 +6319,9 @@ function renderTierLegend(){const el=$('tierLegend'),me=$('rkMe');if(!el||!me)re
   el.style.setProperty('--prog',T.tiers.length>1?i/(T.tiers.length-1):1);
   const ai=$('rkAi'),at=T.tiers.includes(wallet.aiTier)?wallet.aiTier:T.tiers[1]; // the AI rating: bots only, never the ladder or the leaderboard
   if(ai){ai.style.setProperty('--tc',tierCol(at));ai.innerHTML=`<div class="rk-ai-e">${tierEmblem(at)}</div><div class="rk-me-t"><small class="rk-k">vs AI</small><span class="tier" data-tier="${escH(at)}">${escH(at)}</span></div><b class="rk-ai-r">${wallet.aiRating|0}</b>`;}
-  el.innerHTML=T.tiers.map((n,k)=>`<li class="${k<i?'done':k===i?'cur':'up'}" style="--tc:${tierCol(n)}">${tierEmblem(n)}<b>${escH(n)}</b><span>${k?T.tierAt[k-1]:'<'+T.tierAt[0]}</span></li>`).join('');}
+  el.innerHTML=T.tiers.map((n,k)=>`<li class="${k<i?'done':k===i?'cur':'up'}" style="--tc:${tierCol(n)}">${tierEmblem(n)}<b>${escH(n)}</b><span>${k?T.tierAt[k-1]:'<'+T.tierAt[0]}</span></li>`).join('');
+  const long=T.tiers.length>6;el.style.setProperty('--n',T.tiers.length);el.classList.toggle('long',long); // a long ladder scrolls sideways, opened at your tier
+  if(long)requestAnimationFrame(()=>{const c=el.querySelector('.cur');if(c)el.scrollLeft=c.offsetLeft-(el.clientWidth-c.offsetWidth)/2;});}
 function renderMe(){const n=$('meName');if(n)n.textContent=cleanName($('nameIn').value)||settings.name||'Unnamed cell';const a=$('lobbyAtp');if(a)a.textContent=(wallet.balance|0).toLocaleString();
   if(!renderMe.raf)renderMe.raf=requestAnimationFrame(()=>{renderMe.raf=0;drawAvatar($('meCv'));});} // next frame: the wallet can arrive before the game clock exists, and animated skins read it
 function renderLevel(){ // the level badge on the lobby's portrait (the profile card opens the Profile, which has the XP bar)
@@ -8754,9 +8823,9 @@ function lbBgPaint(){const far=$('lbBgFar'),mid=$('lbBgMid');if(!far||!mid||$('s
   let g=open(far,Math.min(1,dpr)); // blurry anyway: device pixels would only cost memory
   for(let i=0;i<10;i++)lbBgCell(g,rnd()*w,rnd()*h,m*(.13+rnd()*.2),HUE[i%6],.05+rnd()*.05,true);
   g=open(mid,Math.min(2,dpr));const hb=$('avatarBtn').getBoundingClientRect(),fb=mid.getBoundingClientRect(),hx=hb.left+hb.width/2-fb.left,hy=hb.top+hb.height*.6-fb.top,hr=hb.width*.95;
-  for(let i=0,n=0;i<80&&n<11;i++){const x=rnd()*w,y=rnd()*h,r=m*(.03+rnd()*.065);
-    if(Math.hypot(x-hx,y-hy)<hr+r)continue;n++;lbBgCell(g,x,y,r,HUE[(n*5)%6],.06+rnd()*.05,false);} // none round the hero, which has its own light
-  for(let i=0;i<150;i++){const x=rnd()*w,y=rnd()*h,r=.5+rnd()*1.3;g.fillStyle=`rgba(190,255,235,${(.12+rnd()*.3).toFixed(2)})`;g.beginPath();g.arc(x,y,r,0,TAU);g.fill();}} // plankton
+  for(let i=0,n=0;i<80&&n<7;i++){const x=rnd()*w,y=rnd()*h,r=m*(.03+rnd()*.065);
+    if(Math.hypot(x-hx,y-hy)<hr+r)continue;n++;lbBgCell(g,x,y,r,HUE[(n*5)%6],.05+rnd()*.04,false);} // none round the hero, which has its own light
+  for(let i=0;i<120;i++){const x=rnd()*w,y=rnd()*h,r=.5+rnd()*1.1;g.fillStyle=`rgba(190,255,235,${(.08+rnd()*.2).toFixed(2)})`;g.beginPath();g.arc(x,y,r,0,TAU);g.fill();}} // plankton
 addEventListener('resize',()=>setTimeout(lbBgPaint,120));setTimeout(lbBgPaint,0);
 let lbArtT=0;(function lbArtLoop(now){requestAnimationFrame(lbArtLoop);if(RM||document.hidden||$('startCard').hidden||now-lbArtT<40)return;lbArtT=now;lbDrawArt();})(0);
 function modeSheet(open){const sh=$('modeSheet');if(sh.hidden===!open)return;sh.hidden=!open;syncPlay();
