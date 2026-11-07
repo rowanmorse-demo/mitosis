@@ -1628,13 +1628,14 @@ img.sk-im{display:block;-webkit-user-drag:none;user-select:none;-webkit-touch-ca
 /* @ui:profile end */
 /* @ui:name-fonts */
 /* Name style: a page over the one that opened it (Settings › Account › Name style): your cell with your name on it, the categories and every font with your name in it */
-#overlay>#fontCard.page{grid-template-columns:minmax(0,1fr);gap:12px 22px}
+#overlay>#fontCard.page{z-index:5;grid-template-columns:minmax(0,1fr);gap:12px 22px} /* above the page that opened it, wherever that sits in the document */
 #fontCard .nf-count{font:600 11px/1 var(--mono);color:var(--muted);white-space:nowrap}
 #fontCard .nf-stage{display:grid;align-self:start;justify-items:center;align-content:start;gap:8px;min-width:0;padding:16px 14px;border-radius:22px;border:1px solid var(--line);text-align:center;background:radial-gradient(80% 60% at 50% 30%,rgba(154,140,255,.12),transparent 72%),linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.012))}
 #fontCard .nf-cell{position:relative;width:150px;aspect-ratio:1}
 #fontCard .nf-cell canvas{display:block;width:100%;height:100%}
 #fontCard .nf-cell-n{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);white-space:nowrap;color:#fff;font:700 20px/1 var(--display);-webkit-text-stroke:.16em rgba(0,0,0,.42);paint-order:stroke fill;pointer-events:none}
 #fontCard .nf-pick{margin:0;display:grid;gap:5px}
+#fontCard .nf-pick small,#fontCard .nf-t small{font:600 9.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 #fontCard .nf-pick b{font:800 19px/1.1 var(--display)}
 #fontCard .nf-why{margin:0;max-width:28ch;font:500 12.5px/1.35 var(--display);color:var(--muted)}
 #fontCard .nf-main{display:grid;gap:12px;min-width:0}
