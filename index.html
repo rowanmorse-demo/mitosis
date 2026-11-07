@@ -3037,7 +3037,12 @@ const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const num=v=>typeof v==='number'&&isFinite(v)?v:0;
 const radius=m=>4+Math.sqrt(m)*6;
 const speedOf=r=>1000*Math.pow(r,-0.45);
-const mergeDelay=m=>15+m*0.006; // seconds before split pieces may fuse: ~20-30 s at everyday sizes
+// Merging: pieces split from a mass-m cell may fuse after MERGE_BASE + MERGE_PER_MASS·m seconds, the classic agar rule of
+// 30 s plus 2% of each half's mass (Ogar; MultiOgar's max(30, 2√m) is within a few seconds of it at everyday sizes):
+// 32 s after splitting a mass-200 cell, 40 s for 1000, 50 s for 2000. It was 15 s + 0.6%, about half that, which took
+// most of the risk out of splitting. The Mitotic trait still cuts it by 40%.
+const MERGE_BASE=30,MERGE_PER_MASS=.01;
+const mergeDelay=m=>MERGE_BASE+m*MERGE_PER_MASS;
 // Splitting: the new half leaves at SPLIT_SPEED and slows by CELL_DRAG per second, a lunge of SPLIT_SPEED/CELL_DRAG ≈ 480
 // units however big the cell is. Agar-style servers lunge ~800 of their units, but their cells are 1.6× as wide as ours
 // (radius 10√m against 4+6√m), so 480 here is the same reach in radii: a mass-200 split lands its half 5.8 parent radii out
