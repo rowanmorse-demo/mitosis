@@ -14,7 +14,7 @@ const SKINS = [
   { id: 8, key: 'circuit', name: 'Circuit', price: 450 },
   { id: 9, key: 'leopard', name: 'Leopard', price: 300 },
   { id: 10, key: 'glacier', name: 'Glacier', price: 350 },
-  { id: 11, key: 'toxic', name: 'Toxic', price: 400 },
+  { id: 11, key: 'toxic', name: 'Toxic', price: 4000 },
   { id: 12, key: 'eyeball', name: 'Eyeball', price: 600 },
   { id: 13, key: 'galaxy', name: 'Galaxy', price: 700 },
   { id: 14, key: 'gilded', name: 'Gilded', price: 800 },
