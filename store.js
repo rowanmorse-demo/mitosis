@@ -51,18 +51,21 @@ class SqliteStore {
       'ALTER TABLE players ADD COLUMN xp INTEGER NOT NULL DEFAULT 0', 'ALTER TABLE runs ADD COLUMN xp INTEGER',
       // the AI rating (bots only) beside the competitive one, and per run: the mode the game said, who it was against (kind) and its win bonus
       'ALTER TABLE players ADD COLUMN ai_rating INTEGER NOT NULL DEFAULT 1000', 'ALTER TABLE players ADD COLUMN ai_runs INTEGER NOT NULL DEFAULT 0',
-      'ALTER TABLE runs ADD COLUMN mode TEXT', 'ALTER TABLE runs ADD COLUMN kind TEXT', 'ALTER TABLE runs ADD COLUMN bonus INTEGER'])
+      'ALTER TABLE runs ADD COLUMN mode TEXT', 'ALTER TABLE runs ADD COLUMN kind TEXT', 'ALTER TABLE runs ADD COLUMN bonus INTEGER',
+      // the rank ladder: the bots' skill per run, and the ratings from before the ladder's reset (economy.js ladderReset)
+      'ALTER TABLE runs ADD COLUMN skill TEXT', 'ALTER TABLE players ADD COLUMN rating_v1 INTEGER', 'ALTER TABLE players ADD COLUMN ai_rating_v1 INTEGER'])
       try { this.db.exec(sql); } catch (e) {} // already migrated
     const p = s => this.db.prepare(s);
     this.q = {
       bySecret: p('SELECT * FROM players WHERE secret = ?'),
       byId: p('SELECT * FROM players WHERE id = ?'),
-      insPlayer: p('INSERT INTO players(id, secret, created, seen) VALUES(?, ?, ?, ?)'),
+      insPlayer: p('INSERT INTO players(id, secret, created, seen, rating, ai_rating) VALUES(?, ?, ?, ?, 0, 0)'),
+      resetRatings: p('UPDATE players SET rating_v1 = rating, ai_rating_v1 = ai_rating, rating = ?, ai_rating = ?'),
       touch: p('UPDATE players SET seen = ? WHERE id = ?'),
       setWallet: p('UPDATE players SET balance = ?, earned = ?, hour_at = ?, hour_sum = ? WHERE id = ?'),
       skins: p('SELECT skin FROM skins WHERE player = ? ORDER BY skin'),
       addSkin: p('INSERT OR IGNORE INTO skins(player, skin, at) VALUES(?, ?, ?)'),
-      insRun: p('INSERT INTO runs(id, player, started, mode) VALUES(?, ?, ?, ?)'),
+      insRun: p('INSERT INTO runs(id, player, started, mode, skill) VALUES(?, ?, ?, ?, ?)'),
       run: p('SELECT * FROM runs WHERE id = ? AND player = ?'),
       endRun: p('UPDATE runs SET ended = ?, payout = ?, xp = ?, kind = ?, bonus = ? WHERE id = ?'),
       bonusSince: p('SELECT COALESCE(SUM(bonus), 0) AS n FROM runs WHERE player = ? AND started >= ? AND kind = ?'),
@@ -133,8 +136,8 @@ class SqliteStore {
     const a = this.player(from), b = this.player(to); if (!a || !b || from === to) return;
     this.db.exec('BEGIN');
     try {
-      this.q.mergeWallet.run(Number(a.balance), Number(a.earned), Number(a.runs || 0), Number(a.xp || 0), Number(a.rating ?? 1000), a.name || null, to);
-      this.q.mergeAi.run(Number(a.ai_rating ?? 1000), Number(a.ai_runs || 0), to);
+      this.q.mergeWallet.run(Number(a.balance), Number(a.earned), Number(a.runs || 0), Number(a.xp || 0), Number(a.rating ?? 0), a.name || null, to);
+      this.q.mergeAi.run(Number(a.ai_rating ?? 0), Number(a.ai_runs || 0), to);
       this.q.moveSkins.run(to, from); this.q.delSkins.run(from);
       this.q.moveRuns.run(to, from); this.q.movePurchases.run(to, from);
       this.q.moveIdentities.run(to, from); this.q.delIdentities.run(from);
@@ -158,7 +161,9 @@ class SqliteStore {
   setWallet(id, w) { this.q.setWallet.run(w.balance, w.earned, w.hour_at, w.hour_sum, id); }
   skins(id) { return this.q.skins.all(id).map(r => Number(r.skin)); }
   addSkin(id, skin, now) { this.q.addSkin.run(id, skin, now); }
-  createRun(id, player, now, mode = null) { this.q.insRun.run(id, player, now, mode); }
+  createRun(id, player, now, mode = null, skill = null) { this.q.insRun.run(id, player, now, mode, skill); }
+  /** Puts every player's ratings back to `start`, keeping the old ones in rating_v1 / ai_rating_v1 (economy.js ladderReset). */
+  resetRatings(start) { this.q.resetRatings.run(start, start); }
   run(id, player) { return this.q.run.get(id, player) || null; }
   endRun(id, now, payout, xp = 0, kind = null, bonus = 0) { this.q.endRun.run(now, payout, xp, kind, bonus, id); }
   /** ATP that the player's runs of this kind, started from `since` on, paid as win bonuses (economy.js WINS caps it per day). */
@@ -216,8 +221,8 @@ class JsonStore {
   forgetDevice(h) { delete this.d.devices[h]; this.save(); }
   mergePlayers(from, to) {
     const a = this.d.players[from], b = this.d.players[to]; if (!a || !b || from === to) return;
-    b.balance += a.balance; b.earned += a.earned; b.runs = (b.runs || 0) + (a.runs || 0); b.xp = (b.xp || 0) + (a.xp || 0); b.rating = Math.max(b.rating ?? 1000, a.rating ?? 1000); b.name = b.name || a.name || null;
-    b.ai_rating = Math.max(b.ai_rating ?? 1000, a.ai_rating ?? 1000); b.ai_runs = (b.ai_runs || 0) + (a.ai_runs || 0);
+    b.balance += a.balance; b.earned += a.earned; b.runs = (b.runs || 0) + (a.runs || 0); b.xp = (b.xp || 0) + (a.xp || 0); b.rating = Math.max(b.rating ?? 0, a.rating ?? 0); b.name = b.name || a.name || null;
+    b.ai_rating = Math.max(b.ai_rating ?? 0, a.ai_rating ?? 0); b.ai_runs = (b.ai_runs || 0) + (a.ai_runs || 0);
     const s = this.d.skins[to] || (this.d.skins[to] = []); for (const k of this.d.skins[from] || []) if (!s.includes(k)) s.push(k); delete this.d.skins[from];
     for (const r of Object.values(this.d.runs)) if (r.player === from) r.player = to;
     for (const p of Object.values(this.d.purchases)) if (p.player === from) p.player = to;
@@ -244,14 +249,15 @@ class JsonStore {
     this.save();
   }
   createPlayer(id, h, now) {
-    this.d.players[id] = { id, secret: h, created: now, seen: now, balance: 0, earned: 0, hour_at: 0, hour_sum: 0, rating: 1000, name: null, runs: 0, xp: 0, ai_rating: 1000, ai_runs: 0 };
+    this.d.players[id] = { id, secret: h, created: now, seen: now, balance: 0, earned: 0, hour_at: 0, hour_sum: 0, rating: 0, name: null, runs: 0, xp: 0, ai_rating: 0, ai_runs: 0 };
     this.d.secrets[h] = id; this.save(); return this.player(id);
   }
   touch(id, now) { const p = this.d.players[id]; if (p) { p.seen = now; this.save(); } }
   setWallet(id, w) { const p = this.d.players[id]; if (p) { Object.assign(p, { balance: w.balance, earned: w.earned, hour_at: w.hour_at, hour_sum: w.hour_sum }); this.save(); } }
   skins(id) { return (this.d.skins[id] || []).slice().sort((a, b) => a - b); }
   addSkin(id, skin, now) { const s = this.d.skins[id] || (this.d.skins[id] = []); if (!s.includes(skin)) { s.push(skin); this.save(); } }
-  createRun(id, player, now, mode = null) { this.d.runs[id] = { id, player, started: now, ended: null, payout: null, xp: null, mode, kind: null, bonus: null }; this.prune(); this.save(); }
+  createRun(id, player, now, mode = null, skill = null) { this.d.runs[id] = { id, player, started: now, ended: null, payout: null, xp: null, mode, skill, kind: null, bonus: null }; this.prune(); this.save(); }
+  resetRatings(start) { for (const p of Object.values(this.d.players)) { p.rating_v1 = p.rating ?? 1000; p.ai_rating_v1 = p.ai_rating ?? 1000; p.rating = start; p.ai_rating = start; } this.save(); }
   run(id, player) { const r = this.d.runs[id]; return r && r.player === player ? { ...r } : null; }
   endRun(id, now, payout, xp = 0, kind = null, bonus = 0) { const r = this.d.runs[id]; if (r) { r.ended = now; r.payout = payout; r.xp = xp; r.kind = kind; r.bonus = bonus; this.save(); } }
   bonusSince(player, since, kind) { let n = 0; for (const r of Object.values(this.d.runs)) if (r.player === player && r.started >= since && r.kind === kind) n += r.bonus || 0; return n; }

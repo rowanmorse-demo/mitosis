@@ -98,27 +98,30 @@ const RULES = { byRank: [[1, 25], [2, 20], [3, 16], [4, 13], [5, 11], [6, 9], [7
 const HOUR = 3600 * 1000;
 // Rating (Elo-like): survival, kills and a high placing raise it, dying quickly lowers it. Gains
 // shrink and losses grow as the rating climbs, so it settles instead of inflating forever.
-// Everyone starts at 1000.
+// Everyone starts at 0 (start), the bottom of the ladder; gains count in full up to base, then shrink.
 // winBonus: finishing 1st of 4+; lifePenalty: each respawn already used this round trims the gain (dying less pays more).
-const RATING = { base: 1000, perTenSec: .5, survCap: 25, perKill: 2, killCap: 30, placeBonus: 8, winBonus: 10, lifePenalty: .25, quickDeathSec: 60, quickPenalty: 10, scale: 2000 };
+const RATING = { start: 0, base: 1000, perTenSec: .5, survCap: 25, perKill: 2, killCap: 30, placeBonus: 8, winBonus: 10, lifePenalty: .25, quickDeathSec: 60, quickPenalty: 10, scale: 2000 };
 // Who a life was against decides which rating it moves and what a win pays. The server decides it (runKind), never the
 // game: 'comp' only when the relay saw another player alive in the same arena room during the life (server.js metSince);
 // 'ai' is ranked rules against bots only (nobody found in the search, ping over Max ping, or alone in the arena); 'casual'
 // is Casual. Apps from before this (no mode in run/start) are rated as they always were, on the competitive rating.
-// The AI rating works like the competitive one, from its own 1000, and bots can never move the competitive one. Its
-// gains (not its losses) scale with the bots' skill, so beating Easy bots climbs slowly.
+// The AI rating works like the competitive one, from its own start, and bots can never move the competitive one. Its
+// gains (not its losses) scale with the bots' skill, so beating Easy bots climbs slowly. Ranked games of bots use Master bots.
 const RATING_AI = { skill: { easy: .5, normal: 1, hard: 1.2, expert: 1.35, master: 1.5 } };
 // Wins: on top of the placement payout (none in Casual), 1st place pays win[0] and 2nd or 3rd pays win[1], by kind.
+// Casual pays by the bots' skill instead, [1st, 2nd, 3rd]: Master tops out at 15 (Rowan, Nov 7) and each easier skill pays
+// a fifth less. The skill is the one the game gave at run/start (apps from before that send it with run/end; none is Normal).
 // Only a placing of minOf or more cells counts, and only a life of minSec or more on the server's clock, so a quit
 // (no placing), an early death or an abandoned life (never ended) pays nothing. Each day (UTC) bonuses stop at the cap:
 // bots (ai and casual together) and comp (friends could trade wins) each have their own.
-const WINS = { comp: [50, 15], ai: [25, 5], casual: [20, 5], minSec: 120, minOf: 8, cap: { bots: 200, comp: 400 } };
+const WINS = { comp: [50, 15], ai: [25, 5], casual: { easy: [3, 2, 2], normal: [6, 5, 4], hard: [9, 7, 6], expert: [12, 10, 8], master: [15, 12, 10] }, minSec: 120, minOf: 8, cap: { bots: 200, comp: 400 } };
+const SKILLS = Object.keys(WINS.casual), skillOf = v => (SKILLS.includes(v) ? v : null);
 const WIN_POOLS = { bots: ['ai', 'casual'], comp: ['comp'] }, winPool = kind => (kind === 'comp' ? 'comp' : 'bots');
-function winBonus({ kind, survived, place, of }) {
-  const t = Array.isArray(WINS[kind]) ? WINS[kind] : null; if (!t) return 0;
+function winBonus({ kind, survived, place, of, skill }) {
+  const t = kind === 'casual' ? WINS.casual[skillOf(skill) || 'normal'] : Array.isArray(WINS[kind]) ? WINS[kind] : null; if (!t) return 0;
   const n = Math.floor(+of || 0), pl = Math.floor(+place || 0);
   if ((+survived || 0) < WINS.minSec || n < WINS.minOf || pl < 1 || pl > 3 || pl > n) return 0;
-  return pl === 1 ? t[0] : t[1];
+  return kind === 'casual' ? t[pl - 1] : pl === 1 ? t[0] : t[1];
 }
 const RUN_MODES = ['arena', 'bots', 'casual'];
 // mode: what the game said at run/start; metSince(t): whether the relay saw another player alive beside this one since t
@@ -151,8 +154,28 @@ function levelOf(xp) {
   while (xpAtLevel(level + 1) <= xp) level++;
   return { xp, level, levelXp: xp - xpAtLevel(level), levelNeed: xpToNext(level) };
 }
-const TIERS = [[900, 'Bronze'], [1100, 'Silver'], [1400, 'Gold'], [1800, 'Platinum'], [2300, 'Diamond'], [Infinity, 'Legend']];
+// The rank ladder (Rowan, Nov 7): nine steps through the life of a dividing cell, from Amoeba to Mitosis. Each step but the
+// last has three divisions (I is the lowest); Mitosis is one rank. `at` is where each division starts; everyone starts at
+// Amoeba I. The first steps are quick (an average player reaches Colony in about 4 lives) and later ones slower.
+// Apps from before the ladder know only six metal tiers and draw the tier list the server sends, so `tier`, `tiers` and
+// `tierAt` keep those six, spread over the steps (Amoeba = Bronze … Metaphase = Diamond, Anaphase and up = Legend).
+const LADDER = [
+  { key: 'amoeba', name: 'Amoeba', at: [0, 25, 50] }, { key: 'colony', name: 'Colony', at: [75, 100, 150] },
+  { key: 'interphase', name: 'Interphase', at: [200, 250, 325] }, { key: 'prophase', name: 'Prophase', at: [425, 525, 650] },
+  { key: 'metaphase', name: 'Metaphase', at: [800, 1000, 1200] }, { key: 'anaphase', name: 'Anaphase', at: [1400, 1600, 1800] },
+  { key: 'telophase', name: 'Telophase', at: [2000, 2200, 2400] }, { key: 'cytokinesis', name: 'Cytokinesis', at: [2600, 2850, 3150] },
+  { key: 'mitosis', name: 'Mitosis', at: [3500] },
+];
+const RANKS = LADDER.flatMap(st => st.at.map((at, d) => ({ name: st.at.length > 1 ? `${st.name} ${['I', 'II', 'III'][d]}` : st.name, step: st.key, div: st.at.length > 1 ? d + 1 : 0, at })));
+const rankOf = r => { let k = RANKS[0]; for (const x of RANKS) if (r >= x.at) k = x; return k; };
+const TIERS = [[75, 'Bronze'], [200, 'Silver'], [425, 'Gold'], [800, 'Platinum'], [1400, 'Diamond'], [Infinity, 'Legend']];
 const tierOf = r => TIERS.find(t => r < t[0])[1];
+// Rowan chose "everyone starts again" for the ladder: once per database, every rating and AI rating goes to the start.
+// The old values are kept in rating_v1 / ai_rating_v1. Server start-up runs this (flag 'ladder').
+function ladderReset(store) {
+  if (store.flag('ladder') === '1') return false;
+  store.resetRatings(RATING.start); store.setFlag('ladder', '1'); return true;
+}
 function ratingDelta(rating, survived, eaten, place, of, life = 0, mult = 1) { // mult scales the gain only (RATING_AI.skill)
   // placing: 1st of N earns the full bonus, last earns none; needs at least 4 in the round to count. Winning adds more.
   const n = Math.max(0, of | 0), pl = Math.max(1, place | 0), placing = n >= 4 && pl <= n ? RATING.placeBonus * (1 - (pl - 1) / (n - 1)) : 0;
@@ -338,7 +361,7 @@ function questsTick(store, p, life, t = now()) {
   return out;
 }
 const packById = id => PACKS.find(p => p.id === id);
-const catalog = (store, p = null) => ({ skins: SKINS, seasons: Object.fromEntries(Object.entries(SEASONS).map(([k, s]) => [k, { ...s, open: seasonOpen(k) }])), pass: passCatalog(passLive(store, now(), p)), packs: PACKS, rules: RULES, rating: RATING, ratingAi: RATING_AI, wins: WINS, xp: XP, tiers: TIERS.map(t => t[1]), tierAt: TIERS.map(t => t[0]), iap: iap.status(), auth: signin.status() });
+const catalog = (store, p = null) => ({ skins: SKINS, seasons: Object.fromEntries(Object.entries(SEASONS).map(([k, s]) => [k, { ...s, open: seasonOpen(k) }])), pass: passCatalog(passLive(store, now(), p)), packs: PACKS, rules: RULES, rating: RATING, ratingAi: RATING_AI, wins: WINS, xp: XP, tiers: TIERS.map(t => t[1]), tierAt: TIERS.map(t => t[0]), ranks: RANKS, steps: LADDER.map(st => ({ key: st.key, name: st.name })), iap: iap.status(), auth: signin.status() });
 
 function payoutFor({ survived, bestRank, place }) {
   const sec = Math.max(0, Math.min(RULES.maxRunSec, +survived || 0));
@@ -352,8 +375,8 @@ class ApiError extends Error { constructor(status, msg) { super(msg); this.statu
 const hash = s => crypto.createHash('sha256').update(String(s)).digest('hex');
 // The sign-in a wallet belongs to (Apple or Google), or null for a device-only wallet.
 const accountOf = (store, p) => { const i = store.identities(p.id)[0]; return i ? { provider: i.provider, email: i.email || null, since: Number(i.at) } : null; };
-const wallet = (store, p) => ({ playerId: p.id, balance: Number(p.balance), earned: Number(p.earned), skins: store.skins(p.id), rating: Number(p.rating ?? RATING.base), tier: tierOf(Number(p.rating ?? RATING.base)), runs: Number(p.runs || 0),
-  aiRating: Number(p.ai_rating ?? RATING.base), aiTier: tierOf(Number(p.ai_rating ?? RATING.base)), aiRuns: Number(p.ai_runs || 0), ...levelOf(p.xp), pass: passOf(store, p), quests: questsOf(store, p), account: accountOf(store, p) });
+const wallet = (store, p) => ({ playerId: p.id, balance: Number(p.balance), earned: Number(p.earned), skins: store.skins(p.id), rating: Number(p.rating ?? RATING.start), tier: tierOf(Number(p.rating ?? RATING.start)), rank: rankOf(Number(p.rating ?? RATING.start)).name, runs: Number(p.runs || 0),
+  aiRating: Number(p.ai_rating ?? RATING.start), aiTier: tierOf(Number(p.ai_rating ?? RATING.start)), aiRank: rankOf(Number(p.ai_rating ?? RATING.start)).name, aiRuns: Number(p.ai_runs || 0), ...levelOf(p.xp), pass: passOf(store, p), quests: questsOf(store, p), account: accountOf(store, p) });
 
 /* ---------- handlers: each gets (store, body, player?) and returns a JSON-able object ---------- */
 function session(store, body) {
@@ -413,7 +436,8 @@ function runStart(store, body, p) {
   const now = Date.now();
   if (store.openRuns(p.id, now - HOUR) > 20) throw new ApiError(429, 'too many open runs');
   const id = crypto.randomBytes(8).toString('hex');
-  store.createRun(id, p.id, now, RUN_MODES.includes(body.mode) ? body.mode : null);   // mode: the game's word for where it is played, checked at run/end
+  // mode: the game's word for where it is played, checked at run/end; skill: the bots' skill in a game of bots, fixed from here on
+  store.createRun(id, p.id, now, RUN_MODES.includes(body.mode) ? body.mode : null, skillOf(body.skill));
   return { runId: id };
 }
 // ctx (from server.js): metSince(t), whether the relay saw this game alive beside another player since t
@@ -427,7 +451,8 @@ function runEnd(store, body, p, ctx = {}) {
   const survived = Math.min(+body.survived || 0, elapsed);
   // Casual pays only for a win or a top-3 finish, and earns no XP (it has endless lives)
   const kind = runKind(run, ctx.metSince), casual = kind === 'casual', life = { survived, place: body.place, of: body.of };
-  let bonus = winBonus({ kind, ...life }), capped = false;
+  const vsBots = kind === 'ai' || casual, skill = vsBots ? skillOf(run.skill) || skillOf(body.skill) || 'normal' : null;
+  let bonus = winBonus({ kind, ...life, skill }), capped = false;
   if (bonus) {
     const pool = winPool(kind), day = dayOf(now).starts, used = WIN_POOLS[pool].reduce((n, k) => n + store.bonusSince(p.id, day, k), 0);
     const left = Math.max(0, WINS.cap[pool] - used); if (bonus > left) { bonus = left; capped = true; }
@@ -439,19 +464,19 @@ function runEnd(store, body, p, ctx = {}) {
   // the same XP fills the battle pass while a season is on, and the life moves the quests on, which pay the pass only
   const passUp = passAddXp(store, p, xp.total), passMid = passOf(store, p), q = casual ? { xp: 0, done: [] } : questsTick(store, p, life);
   Object.assign(p, w); p.xp = Number(p.xp || 0) + xp.total;
-  // rating: bots move only the AI rating. Ranked bot games always have Normal bots; Casual says which it had.
-  const name = cleanName(body.name) || p.name || null, vsBots = kind === 'ai' || casual;
-  const before = Number((vsBots ? p.ai_rating : p.rating) ?? RATING.base), mult = casual ? RATING_AI.skill[body.skill] || 1 : 1;
+  // rating: bots move only the AI rating, its gains scaled by the bots' skill (ranked games of bots have Master bots)
+  const name = cleanName(body.name) || p.name || null;
+  const before = Number((vsBots ? p.ai_rating : p.rating) ?? RATING.start), mult = vsBots ? RATING_AI.skill[skill] : 1;
   const delta = ratingDelta(before, survived, body.eaten, body.place, body.of, body.life, mult), rating = Math.max(0, before + delta);
   if (vsBots) { store.setAiRating(p.id, rating, name); p.ai_rating = rating; p.ai_runs = Number(p.ai_runs || 0) + 1; }
   else { store.setRating(p.id, rating, name); p.rating = rating; p.runs = Number(p.runs || 0) + 1; }
   p.name = name;
   // kind: who the life was against (comp, ai, casual; legacy for apps that don't say); ratingDelta and aiDelta: how each
-  // rating moved (one is 0); winBonus: the part of payout a win or top 3 paid; winCapped: the day's cap cut it;
+  // rating moved (one is 0); winBonus: the part of payout a win or top 3 paid; winCapped: the day's cap cut it; skill: the bots';
   // xpParts: where the XP came from (time alive, placing, the win); levelUp: how many levels this life gained;
   // passUp: pass levels from the life and its quests; questXp and questsDone: the quests it finished
   const out = wallet(store, p);
-  return { payout, kind, winBonus: bonus, winCapped: capped, ratingDelta: vsBots ? 0 : delta, aiDelta: vsBots ? delta : 0, xpGained: xp.total, xpParts: { time: xp.time, place: xp.place, win: xp.win }, levelUp: out.level - level,
+  return { payout, kind, skill, winBonus: bonus, winCapped: capped, ratingDelta: vsBots ? 0 : delta, aiDelta: vsBots ? delta : 0, xpGained: xp.total, xpParts: { time: xp.time, place: xp.place, win: xp.win }, levelUp: out.level - level,
     passUp: passUp + (passMid && out.pass ? out.pass.level - passMid.level : 0), questXp: q.xp, questsDone: q.done, ...out };
 }
 function buySkin(store, body, p) {
@@ -529,6 +554,6 @@ function passAdmin(store, on, tester) {
   return { on: store.flag('pass') === 'on', live: !!passLive(store), season: passCatalog(s), next: next ? { key: next.key, name: next.name, starts: Date.parse(next.from) } : null, stats: s ? { ...store.passStats(s.key), quests } : null, testers, recent };
 }
 
-function leaderboard(store) { return { top: store.top(10).map((r, i) => ({ rank: i + 1, name: (r.name && !nameBlocked(r.name) && r.name) || 'Unnamed cell', rating: r.rating, tier: tierOf(r.rating), runs: r.runs })) }; }
+function leaderboard(store) { return { top: store.top(10).map((r, i) => ({ rank: i + 1, name: (r.name && !nameBlocked(r.name) && r.name) || 'Unnamed cell', rating: r.rating, tier: tierOf(r.rating), rankName: rankOf(r.rating).name, runs: r.runs })) }; }
 
-module.exports = { SKINS, PACKS, RULES, RATING, RATING_AI, WINS, winBonus, runKind, XP, SEASONS, seasonOpen, PASS, PASS_SEASONS, passSeason, passLive, passAdmin, QUESTS, QUEST_SLOTS, questsAt, questsOf, questsTick, isoWeekOf, catalog, payoutFor, ratingDelta, xpFor, levelOf, xpAtLevel, xpToNext, tierOf, nameBlocked, ApiError, auth, handlers: { deleteAccount, session, runStart, runEnd, buySkin, iapApple, iapGoogle, leaderboard, signInApple, signInGoogle, signOut, passView, passPremium, passClaim } };
+module.exports = { SKINS, PACKS, RULES, RATING, RATING_AI, WINS, LADDER, RANKS, rankOf, ladderReset, winBonus, runKind, XP, SEASONS, seasonOpen, PASS, PASS_SEASONS, passSeason, passLive, passAdmin, QUESTS, QUEST_SLOTS, questsAt, questsOf, questsTick, isoWeekOf, catalog, payoutFor, ratingDelta, xpFor, levelOf, xpAtLevel, xpToNext, tierOf, nameBlocked, ApiError, auth, handlers: { deleteAccount, session, runStart, runEnd, buySkin, iapApple, iapGoogle, leaderboard, signInApple, signInGoogle, signOut, passView, passPremium, passClaim } };

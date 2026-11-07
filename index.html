@@ -1482,6 +1482,7 @@ img.sk-im{display:block;-webkit-user-drag:none;user-select:none;-webkit-touch-ca
 @keyframes pfbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 #profileCard .pf-name{margin:2px 0 0;max-width:100%;font:800 30px/1.02 var(--display);letter-spacing:-.04em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #profileCard .pf-rank{display:flex;align-items:center;gap:10px;text-align:left}
+#profileCard .pf-badge{display:grid;width:52px;height:52px}#profileCard .pf-badge svg{width:100%;height:100%}
 #profileCard .pf-crest{width:42px;height:46px;flex:none;filter:drop-shadow(0 4px 10px var(--tg)) drop-shadow(0 2px 3px rgba(0,0,0,.4))}
 #profileCard .pf-crest .s1{stop-color:var(--tc1)}#profileCard .pf-crest .s2{stop-color:var(--tc2)}
 #profileCard .pf-crest .o{fill:url(#pfCrestG)}#profileCard .pf-crest .i{fill:rgba(3,12,14,.6);stroke:rgba(255,255,255,.22);stroke-width:.8}
@@ -1952,7 +1953,7 @@ img.sk-im{display:block;-webkit-user-drag:none;user-select:none;-webkit-touch-ca
 #deathCard #dRank{margin:0;padding:12px 16px 14px;display:grid;gap:9px;align-content:center;font:inherit;color:inherit;transition:border-color .4s,box-shadow .4s}
 #deathCard .rr-head{display:flex;align-items:center;gap:8px;min-width:0}
 #deathCard .rr-emb{width:17px;height:19px;flex:none;background:linear-gradient(150deg,rgba(255,255,255,.9),currentColor 40%,currentColor 62%,rgba(0,0,0,.5));clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}
-#deathCard .rr-tier{font:700 11.5px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase}
+#deathCard .rr-tier{font:700 11.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 #deathCard .rr-next{margin-left:auto;font:600 11px/1 var(--mono);color:var(--dim);white-space:nowrap}
 #deathCard .rr-k{min-width:0;overflow:hidden;text-overflow:ellipsis;padding:4px 7px;border-radius:999px;border:1px solid rgba(160,225,215,.18);font:600 9.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
 #deathCard #dRank.ai .rr-k{color:#c3bbff;border-color:rgba(154,140,255,.4)}
@@ -1964,6 +1965,7 @@ img.sk-im{display:block;-webkit-user-drag:none;user-select:none;-webkit-touch-ca
 #deathCard .rr-track{display:flex;align-items:center;gap:9px}
 #deathCard .rr-track .rr-bar{flex:1}
 #deathCard .rr-to{opacity:.55;filter:saturate(.7)}
+#deathCard .rr-emb{background:none;clip-path:none;width:26px;height:26px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}#deathCard .rr-emb svg{width:100%;height:100%;display:block}
 #deathCard #dRank.promo .rr-head .rr-emb{animation:res-bump .6s cubic-bezier(.2,1.6,.4,1)}
 #deathCard .rr-delta{margin-left:auto;display:inline-flex;align-items:center;height:30px;padding:0 12px;border-radius:999px;font:800 16px/1 var(--display);font-variant-numeric:tabular-nums;opacity:0;transform:scale(.4)}
 #deathCard .rr-delta.show{opacity:1;transform:none;transition:transform .5s cubic-bezier(.2,1.8,.4,1),opacity .2s}
@@ -2661,7 +2663,7 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
       <div class="pf-ava"><canvas id="profCv" width="320" height="320" aria-hidden="true"></canvas></div>
       <h2 class="pf-name" id="profName">Unnamed cell</h2>
       <div class="pf-rank">
-        <svg class="pf-crest" viewBox="0 0 40 44" aria-hidden="true"><defs><linearGradient id="pfCrestG" x1="0" y1="0" x2=".35" y2="1"><stop offset="0" class="s1"/><stop offset="1" class="s2"/></linearGradient></defs><path class="o" d="M20 2.5 35.5 8v13.5c0 9.6-6.6 16.4-15.5 20-8.9-3.6-15.5-10.4-15.5-20V8z"/><path class="i" d="M20 7 31 11v10.7c0 7.1-4.8 12.2-11 14.9-6.2-2.7-11-7.8-11-14.9V11z"/><g class="g" id="pCrest"></g></svg>
+        <span class="pf-crest pf-badge" id="pBadge" aria-hidden="true"></span>
         <span class="pf-rk"><small class="pf-rk-k">vs players</small><span class="tier" id="pTierTxt">Silver</span><b id="pRating">1000</b></span>
         <span class="pf-ai" id="pAi"><span class="pf-mcw" id="pAiMc"></span><span class="pf-rk"><small class="pf-rk-k">vs AI</small><span class="tier" id="pAiTier">Silver</span><b id="pAiRating">1000</b></span></span>
       </div>
@@ -2897,8 +2899,8 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
     <section class="res-side">
       <div class="res-top">
         <div class="res-card res-rating" id="dRank" hidden>
-          <div class="rr-head"><i class="rr-emb tier" aria-hidden="true"></i><span class="rr-tier tier"></span><span class="rr-k">vs players</span><span class="rr-next"></span></div>
-          <div class="rr-mid"><b class="rr-num">0</b><span class="rr-delta"></span></div>
+          <div class="rr-head"><i class="rr-emb tier" aria-hidden="true"></i><span class="rr-tier tier"></span><span class="rr-next"></span></div>
+          <div class="rr-mid"><b class="rr-num">0</b><span class="rr-k">vs players</span><span class="rr-delta"></span></div>
           <div class="rr-track"><div class="rr-bar"><i></i></div><i class="rr-emb rr-to tier" aria-hidden="true"></i></div>
         </div>
         <div class="res-card res-atp" id="dEarn" hidden><i class="coin" aria-hidden="true"></i><b class="ra-n"></b><span class="ra-l">ATP</span></div>
@@ -3075,7 +3077,7 @@ const SKILL={easy:{label:'Easy',aggr:.3,think:.44,caution:.55},normal:{label:'No
 // Nearby match settings: the host phone picks them in the lobby and the others follow (see nearIngest)
 const NEAR_BOTS={none:0,few:20,normal:40,lots:60},NEAR_LEN=[180,300,600],NEAR_LIVES=[1,3,5],near={k:'normal',b:'normal',len:300,lives:3,m:0,heard:false,tx:0,sq:0,txn:0,txb:0,rx:0,rxb:0,logAt:0,fN:0,sqAt:new Map(),was:null,wasName:''};
 const nearMode=()=>{const N=window.__mitosisNet;return !local&&!!N&&N.mode==='nearby';};
-const skillNow=()=>SKILL[local==='practice'?(settings.botSkill||'normal'):nearMode()?near.k:'normal']||SKILL.normal;
+const skillNow=()=>SKILL[local==='practice'?(settings.botSkill||'normal'):local==='auto'?'master':nearMode()?near.k:'normal']||SKILL.normal; // ranked games of bots: Master (Rowan, Nov 7)
 const STAINS=[[340,100,68],[250,100,76],[174,62,54],[40,90,58],[18,100,64],[200,25,88]];
 /* ================= skin art ================= */
 // Skins are drawn in layers. Detail that never changes is painted once into a sprite at about the size it shows
@@ -6147,7 +6149,7 @@ let runId=null,runPromise=null;
 const isNearby=()=>{const N=window.__mitosisNet;return !!N&&N.mode==='nearby';};
 const casualRated=()=>!!(wallet.catalog&&wallet.catalog.wins),runMode=()=>local==='practice'?'casual':local?'bots':'arena',relayKey=()=>{const N=window.__mitosisNet;return(N&&N.key)||undefined;};
 const runOff=()=>isNearby()||(local==='practice'&&!casualRated());
-function econRunStart(){runId=null;if(runOff()){runPromise=null;return;}runPromise=api('run/start',{mode:runMode(),relay:relayKey()}).then(r=>{runId=r.runId;return r.runId;}).catch(()=>null);}
+function econRunStart(){runId=null;if(runOff()){runPromise=null;return;}runPromise=api('run/start',{mode:runMode(),relay:relayKey(),skill:local==='practice'?settings.botSkill||'normal':local?'master':undefined}).then(r=>{runId=r.runId;return r.runId;}).catch(()=>null);}
 async function econRunEnd(){
   if(!human)return;const unranked=isNearby()?'nearby':local==='practice'?'practice':'',off=runOff();resPrep(unranked,off);if(off)return;
   const s=human.stats,rep={survived:Math.max(0,T-s.born),eaten:s.eaten|0,peak:Math.round(s.peak),bestRank:s.bestRank||999,place:s.place|0,of:s.of|0,life:Math.max(0,livesUsed()-1),show:1,relay:relayKey()};
@@ -6174,15 +6176,14 @@ function resPrep(unranked,off){ // a run just ended (econRunEnd): reset the rati
   const ai=!!unranked||!!local;rrKind(ai);const r=ai?wallet.aiRating:wallet.rating;rrSet(r,tierAtRating(r));showEarn(off?null:{k:'wait'}); // until the server says, bot games on this device move the AI rating
 }
 function rrKind(ai){const k=$('dRank').querySelector('.rr-k');k.textContent=ai?'vs AI':'vs players';$('dRank').classList.toggle('ai',ai);} // which rating the card shows
-function tierNext(r){const names=(wallet.catalog&&wallet.catalog.tiers)||[],at=((wallet.catalog&&wallet.catalog.tierAt)||[]).map(v=>v==null?Infinity:v),i=at.findIndex(v=>r<v);
-  return i>=0&&i<names.length-1&&isFinite(at[i])?{name:names[i+1],left:at[i]-r}:null;}
+function tierNext(r){const n=rankNext(r);return n?{name:n.name,left:n.at-r}:null;}
 function rrSet(r,t){const el=$('dRank'),tier=el.querySelector('.rr-tier'),to=el.querySelector('.rr-to'),nx=tierNext(r);el.querySelector('.rr-num').textContent=r;el.querySelector('.rr-bar i').style.width=(t.pct*100).toFixed(1)+'%';
-  if(tier.textContent!==t.name){tier.textContent=t.name;tier.dataset.tier=el.querySelector('.rr-emb').dataset.tier=t.name;}
-  to.hidden=!nx;if(nx&&to.dataset.tier!==nx.name){to.dataset.tier=nx.name;to.title=nx.name;}}
+  if(tier.textContent!==t.name){tier.textContent=t.name;tier.style.color=rankCol(t.name);el.querySelector('.rr-emb').innerHTML=rankBadge(t.name);}
+  to.hidden=!nx;if(nx&&to.dataset.rank!==nx.name){to.dataset.rank=nx.name;to.title=nx.name;to.innerHTML=rankBadge(nx.name);}}
 function showEarn(o){ // the ATP tile. o: null (hidden) | {k:'wait'} | {k:'atp',n,tag} | {k:'none',why} | {k:'offline'} | {k:'later'}; tag: what a win bonus was for
   const el=$('dEarn');resS.earn=o||null;el.hidden=!o;if(!o)return;el.className='res-card res-atp '+o.k;
   el.querySelector('.ra-n').textContent=o.k==='atp'?'+0':o.k==='none'?'0':o.k==='wait'?'':'—';
-  el.querySelector('.ra-l').textContent=o.k==='none'?o.why:o.k==='offline'?'Offline':o.k==='later'?'Pending':o.tag?'ATP · '+o.tag:'ATP';
+  el.querySelector('.ra-l').textContent=o.k==='none'?o.why:o.k==='offline'?'Offline':o.k==='later'?'Pending':o.full?o.tag:o.tag?'ATP · '+o.tag:'ATP';
   if(resS.at)resPlayEarn();}
 function resPlayEarn(){const o=resS.earn;if(!o||o.k!=='atp')return;clearTimeout(resS.t2);
   resS.t2=setTimeout(()=>{const el=$('dEarn'),n=el.querySelector('.ra-n');if(resS.earn!==o)return;el.classList.add('got');if(RM){n.textContent='+'+o.n;return;}
@@ -6219,12 +6220,9 @@ function resPlayXp(){const w=resS.xp,el=$('dXp');if(!w||w.later||el.hidden||type
       xpSet(l);g.textContent='+'+Math.round(gain*e).toLocaleString()+' XP';if(l.level>lv){lv=l.level;xpLevelUp(el);}
       if(k<1)xpAnim=requestAnimationFrame(tick);else done();};
     xpAnim=requestAnimationFrame(tick);},Math.max(0,resS.at+900-performance.now()));}
-function tierProgress(){ // where this rating sits inside its tier, for the progress bars
-  const names=(wallet.catalog&&wallet.catalog.tiers)||[],at=(wallet.catalog&&wallet.catalog.tierAt)||[],i=names.indexOf(wallet.tier);
-  if(i<0||at.length!==names.length)return{text:'',pct:0};
-  const hi=at[i]==null?Infinity:at[i],lo=i>0?at[i-1]:Math.min(at[0]-300,wallet.rating);
-  if(!isFinite(hi))return{text:'top tier',pct:100};
-  return{text:`${hi-wallet.rating} to ${names[i+1]}`,pct:Math.round(clamp((wallet.rating-lo)/(hi-lo),0,1)*100)};
+function tierProgress(){ // where this rating sits inside its rank, for the progress bars
+  const r=wallet.rating|0,n=rankNext(r);if(!n)return{text:ladderOn()?'Top rank':'',pct:100};
+  return{text:`${n.at-r} to ${n.name}`,pct:Math.round(rankPct(r)*100)};
 }
 // Ranks page: tiers come from the server's table, or from this copy of economy.js TIERS while offline
 const TIER_FB={tiers:['Bronze','Silver','Gold','Platinum','Diamond','Legend'],tierAt:[900,1100,1400,1800,2300,null]};
@@ -6232,10 +6230,130 @@ const TIER_PAL={Bronze:['#ffd9b5','#c9854f','#4f260c'],Silver:['#ffffff','#a9b8c
 const TIER_GLYPH=(()=>{let star='';for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,r=i%2?5.4:12.4;star+=(i?'L':'M')+(32+r*Math.cos(a)).toFixed(1)+' '+(33.2+r*Math.sin(a)).toFixed(1);}
   return{Bronze:{d:'M22.5 37l9.5-7.5 9.5 7.5',w:5},Silver:{d:'M22.5 32l9.5-7.5 9.5 7.5M22.5 41l9.5-7.5 9.5 7.5',w:4.6},Gold:{d:'M23 28l9-7 9 7M23 35.5l9-7 9 7M23 43l9-7 9 7',w:3.8},
     Platinum:{d:star+'Z',fill:1},Diamond:{d:'M25 23h14l5.5 6.5L32 44.5 19.5 29.5z',fill:1,facet:'M19.5 29.5h25M28.6 23L26 29.5l6 15 6-15-2.6-6.5'},Legend:{d:'M19.5 42.5l-2.6-16.5 8.6 6.8L32 21.5l6.5 11.3 8.6-6.8-2.6 16.5z',fill:1,facet:'M20.5 37.5h23'}};})();
+/* Rank ladder (economy.js LADDER, Rowan Nov 7): nine steps through the life of a dividing cell, Amoeba to Mitosis, each with
+   divisions I-III (I lowest) but Mitosis. Everyone starts at 0, Amoeba I. The server sends the ranks (catalog.ranks) and each
+   wallet's rank; RANK_STEPS is this copy for offline. A server from before the ladder sends only the six metal tiers, so a
+   rating there shows as the step its tier became (no division). Badges are a faceted crest in the step's metal with its cell
+   symbol and chevrons for the division (rankBadge); trophies, one per step, are for the Profile's shelf (rankTrophy). */
+const RANK_STEPS=[
+  {key:'amoeba',name:'Amoeba',at:[0,25,50],pal:['#ffd9b5','#c9854f','#4f260c']},
+  {key:'colony',name:'Colony',at:[75,100,150],pal:['#ffffff','#a9b8c7','#344150']},
+  {key:'interphase',name:'Interphase',at:[200,250,325],pal:['#fff1b8','#f2b134','#6e3f02']},
+  {key:'prophase',name:'Prophase',at:[425,525,650],pal:['#e2fffb','#55d0c9','#0f4f50']},
+  {key:'metaphase',name:'Metaphase',at:[800,1000,1200],pal:['#e3ecff','#5b8cff','#16307a']},
+  {key:'anaphase',name:'Anaphase',at:[1400,1600,1800],pal:['#efe3ff','#a070ff','#2a0d66']},
+  {key:'telophase',name:'Telophase',at:[2000,2200,2400],pal:['#ffe0e6','#ff4d6d','#5c0a1c']},
+  {key:'cytokinesis',name:'Cytokinesis',at:[2600,2850,3150],pal:['#ffeedd','#ff8a3d','#5c2204']},
+  {key:'mitosis',name:'Mitosis',at:[3500],pal:['#fff6d6','#ffd36b','#3a2408']}];
+const RANK_FB=RANK_STEPS.flatMap(st=>st.at.map((at,d)=>({name:st.at.length>1?st.name+' '+['I','II','III'][d]:st.name,step:st.key,div:st.at.length>1?d+1:0,at})));
+const RANK_OLD={Bronze:'amoeba',Silver:'colony',Gold:'interphase',Platinum:'prophase',Diamond:'metaphase',Legend:'anaphase'}; // the step each metal tier became
+const ladderOn=()=>!!(wallet.catalog&&Array.isArray(wallet.catalog.ranks)&&wallet.catalog.ranks.length);
+function rankTable(){return ladderOn()?wallet.catalog.ranks:RANK_FB;}
+const rankStep=k=>RANK_STEPS.find(st=>st.key===k)||RANK_STEPS[0];
+function rankOf(r){ // the rank for a rating: {name, step, div, at}; on a server from before the ladder, the step of its metal tier
+  if(wallet.catalog&&!ladderOn()&&wallet.catalog.tiers){const t=tierAtRating0(r).name,st=rankStep(RANK_OLD[t]||'amoeba');return{name:st.name,step:st.key,div:0,at:r};}
+  const T=rankTable();let k=T[0];for(const x of T)if(r>=x.at)k=x;return k;}
+function rankNext(r){if(wallet.catalog&&!ladderOn())return null;return rankTable().find(x=>x.at>r)||null;}
+function rankPct(r){const a=rankOf(r),n=rankNext(r);return n?clamp((r-a.at)/(n.at-a.at),0,1):1;}
+const rankFind=x=>typeof x==='object'&&x?x:rankTable().find(r=>r.name===x)||RANK_FB.find(r=>r.name===x||r.step===String(x).toLowerCase())||null;
+const rankCol=x=>{const r=rankFind(x);return rankStep(r?r.step:'amoeba').pal[1];};
+const rk1=v=>(+v).toFixed(1);let rkN=0;
+const RANK_GLYPH={
+  amoeba:(c, d) => `<path d="M30 15.5c6-1.6 8.6 4.4 12.6 6 6.2-.8 9.6 5.6 5.4 10.2-2.6 2.8 1.2 7.4-1.2 11.6-3 5.2-10 3.4-13.6 6.4-4.6 3.6-11 .6-11.4-4.6-5-.8-8.6-6-4.8-10.4 2.4-2.8-1.4-7.6 3.4-11.4 3-2.4 5.6-6.4 9.6-7.8z" fill="${c}"/><circle cx="34.5" cy="31" r="4.6" fill="${d}"/><circle cx="25" cy="38.5" r="2.4" fill="none" stroke="${d}" stroke-width="1.6"/>`,
+  colony:(c, d) => [[32, 32], ...Array.from({ length: 6 }, (_, i) => [32 + 10.4 * Math.cos(i * Math.PI / 3 + Math.PI / 6), 32 + 10.4 * Math.sin(i * Math.PI / 3 + Math.PI / 6)])].map(([x, y]) => `<circle cx="${rk1(x)}" cy="${rk1(y)}" r="5.1" fill="${c}"/><circle cx="${rk1(x + .8)}" cy="${rk1(y + .6)}" r="1.7" fill="${d}"/>`).join(''),
+  interphase:(c, d, s) => `<circle cx="32" cy="32" r="16" fill="${s}" stroke="${c}" stroke-width="2.4"/><circle cx="32" cy="32" r="9.6" fill="${c}"/><path d="M25.5 30c2-3 4 2.6 6-.4s4 2.6 6.4-.2M26.4 35.4c2-2.8 4 2.4 6 0s3.6 2.2 5.4-.2" fill="none" stroke="${d}" stroke-width="1.8" stroke-linecap="round"/>`,
+  prophase:(c, d, s) => `<circle cx="32" cy="32" r="16" fill="${s}" stroke="${c}" stroke-width="2.4"/>` + [[25.5, 27, 20], [37.5, 26, -35], [31, 38.5, 60]].map(([x, y, a]) => `<g transform="rotate(${a} ${x} ${y})" fill="${c}"><rect x="${x - 1.8}" y="${y - 6}" width="3.6" height="12" rx="1.8"/><rect x="${x - 6}" y="${y - 1.8}" width="12" height="3.6" rx="1.8"/></g>`).join(''),
+  metaphase:(c, d, s) => `<circle cx="32" cy="32" r="16" fill="${s}" stroke="${c}" stroke-width="2.4"/><g stroke="${c}" stroke-width="1.1" opacity=".75">${[-9, -3, 3, 9].map(y => `<path d="M20 32L32 ${32 + y}M44 32L32 ${32 + y}"/>`).join('')}</g><circle cx="20" cy="32" r="2.4" fill="${c}"/><circle cx="44" cy="32" r="2.4" fill="${c}"/>` + [-9, -3, 3, 9].map(y => `<rect x="29.6" y="${32 + y - 2.2}" width="4.8" height="4.4" rx="1.6" fill="${c}"/>`).join(''),
+  anaphase:(c, d, s) => `<ellipse cx="32" cy="32" rx="17" ry="14" fill="${s}" stroke="${c}" stroke-width="2.4"/><g stroke="${c}" stroke-width="1.1" opacity=".7"><path d="M18 32h28"/></g><circle cx="18.5" cy="32" r="2.2" fill="${c}"/><circle cx="45.5" cy="32" r="2.2" fill="${c}"/>`+ [-7, 0, 7].map(y => `<path d="M${26 - Math.abs(y) * .2} ${32 + y - 3.4}l-3.4 3.4 3.4 3.4M${38 + Math.abs(y) * .2} ${32 + y - 3.4}l3.4 3.4-3.4 3.4" fill="none" stroke="${c}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`).join(''),
+  telophase:(c, d, s) => `<g transform="rotate(-35 32 32)"><path d="M32 23.4c-3-4-6.8-6-10.6-6-8 0-13.2 6.6-13.2 14.6s5.2 14.6 13.2 14.6c3.8 0 7.6-2 10.6-6 3 4 6.8 6 10.6 6 8 0 13.2-6.6 13.2-14.6S51.2 17.4 43.2 17.4c-3.8 0-7.6 2-10.6 6z" fill="${s}" stroke="${c}" stroke-width="2.4" stroke-linejoin="round"/>` + [21, 43].map(x => `<circle cx="${x}" cy="32" r="5.6" fill="none" stroke="${c}" stroke-width="2"/><path d="M${x - 2.6} 30.6c1.2-1.4 2.4 1.4 3.6 0s1.2 1.4 1.8 0M${x - 2.4} 33.8c1.2-1.2 2.2 1.2 3.4 0" fill="none" stroke="${c}" stroke-width="1.2" stroke-linecap="round"/>`).join('') + `</g>`,
+  cytokinesis:(c, d) => `<path d="M26.6 30.6l10.8 2.8" stroke="${c}" stroke-width="3.4" stroke-linecap="round"/><circle cx="21.5" cy="25.5" r="10.6" fill="${c}"/><circle cx="42.5" cy="38.5" r="10.6" fill="${c}"/><circle cx="20" cy="24.4" r="4.2" fill="none" stroke="${d}" stroke-width="1.8" opacity=".7"/><circle cx="44" cy="39.6" r="4.2" fill="none" stroke="${d}" stroke-width="1.8" opacity=".7"/><path d="M28 17.5a12 12 0 0 1 3 4M36 46.5a12 12 0 0 1-3-4" fill="none" stroke="${c}" stroke-width="1.6" stroke-linecap="round" opacity=".7"/>`,
+  mitosis:(c, d, s) => `<circle cx="25.5" cy="38.5" r="12.5" fill="${c}" opacity=".55"/><circle cx="38.5" cy="25.5" r="12.5" fill="${c}" opacity=".55"/><path d="M25.5 26a12.5 12.5 0 0 1 13 12.5" fill="none" stroke="${c}" stroke-width="1.6"/><path d="M32 18.5l3 10.5 10.5 3-10.5 3L32 45.5l-3-10.5-10.5-3 10.5-3z" fill="${c}"/><circle cx="32" cy="32" r="2.4" fill="${d}"/>`};
+const rkGrad=(id,p)=>`<linearGradient id="${id}" x1="0" y1="0" x2=".9" y2="1"><stop offset="0" stop-color="${p[0]}"/><stop offset=".5" stop-color="${p[1]}"/><stop offset="1" stop-color="${p[2]}"/></linearGradient>`;
+const rkPrism=id=>`<linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe58f"/><stop offset=".3" stop-color="#ff7aa8"/><stop offset=".55" stop-color="#a98bff"/><stop offset=".8" stop-color="#6fe3dc"/><stop offset="1" stop-color="#ffe58f"/></linearGradient>`;
+function rankBadge(x,cls='rb'){ // a faceted crest in the step's metal, its cell symbol, chevrons counting the division; blades, wings and a point as the steps climb
+  const r=rankFind(x)||RANK_FB[0],fi=Math.max(0,RANK_STEPS.findIndex(st=>st.key===r.step)),p=RANK_STEPS[fi].pal,id='rkb'+(++rkN),metal=fi===8?`url(#${id}p)`:`url(#${id}g)`,div=r.div|0;
+  let s=`<defs>${rkGrad(id+'g',p)}${rkPrism(id+'p')}<linearGradient id="${id}i" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${p[2]}"/><stop offset="1" stop-color="#050b0c"/></linearGradient></defs>`;
+  if(fi>=4)s+=`<path d="M9.5 18L1 13.5l3.5 13.5L9.5 31zM54.5 18L63 13.5l-3.5 13.5L54.5 31z" fill="${metal}" stroke="rgba(0,0,0,.4)" stroke-width=".8"/>`;
+  if(fi>=6)s+=`<path d="M9.5 31L2.5 34l5 9.5 4.5-.5zM54.5 31l7 3-5 9.5-4.5-.5z" fill="${metal}" stroke="rgba(0,0,0,.4)" stroke-width=".8"/>`;
+  if(fi>=7)s+=`<path d="M24.5 7.6L32 .5l7.5 7.1" fill="${metal}" stroke="rgba(0,0,0,.4)" stroke-width=".8"/>`;
+  s+=`<path d="M32 4.5L54.5 13.5V33c0 12.5-9 21.5-22.5 26.5C18.5 54.5 9.5 45.5 9.5 33V13.5z" fill="${metal}" stroke="rgba(0,0,0,.45)" stroke-width="1"/>`
+    +`<path d="M32 4.5L54.5 13.5V33c0 12.5-9 21.5-22.5 26.5z" fill="#000" opacity=".18"/><path d="M32 4.5L9.5 13.5l22.5 9 22.5-9z" fill="#fff" opacity=".18"/>`
+    +`<path d="M32 10.5L49 17.4V33c0 9.6-6.8 16.6-17 20.7C21.8 49.6 15 42.6 15 33V17.4z" fill="url(#${id}i)" stroke="${p[0]}" stroke-opacity=".35" stroke-width=".8"/>`
+    +`<g transform="translate(32 30.5) scale(.62) translate(-32 -32)">${RANK_GLYPH[r.step](p[0],p[2],p[1]+'33')}</g>`;
+  for(let i=0;i<div;i++)s+=`<path d="M25.5 ${46-i*3.6}l6.5 3.2 6.5-3.2" fill="none" stroke="${p[0]}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`;
+  return `<svg class="${cls}" viewBox="0 0 64 64" aria-hidden="true">${s}</svg>`;}
+function rankTrophy(x){ // the step's trophy for the Profile: its cell glowing in a glass orb on an obsidian plinth, grander each step up
+  const st=rankStep(typeof x==='string'?(rankFind(x)||{step:x}).step:x.step),fi=RANK_STEPS.indexOf(st),name=st.name;
+  const p = st.pal, u = 'rkt' + (++rkN), top = fi === 8, M = `url(#${u}m)`, cx = 80, oy = 60;
+  const metalStops = top ? `<stop offset="0" stop-color="#fff2b8"/><stop offset=".25" stop-color="#ff8ab0"/><stop offset=".5" stop-color="#a98bff"/><stop offset=".75" stop-color="#6fe3dc"/><stop offset="1" stop-color="#fff2b8"/>`
+    : `<stop offset="0" stop-color="${p[0]}"/><stop offset=".22" stop-color="${p[1]}"/><stop offset=".5" stop-color="${p[2]}"/><stop offset=".72" stop-color="${p[1]}"/><stop offset=".9" stop-color="${p[0]}"/><stop offset="1" stop-color="${p[1]}"/>`;
+  let defs = `<linearGradient id="${u}m" x1="0" y1="0" x2="1" y2=".35">${metalStops}</linearGradient>`
+    + `<linearGradient id="${u}v" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${p[0]}"/><stop offset=".3" stop-color="${p[1]}"/><stop offset="1" stop-color="${p[2]}"/></linearGradient>`
+    + `<linearGradient id="${u}o" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#26302f"/><stop offset="1" stop-color="#050909"/></linearGradient>`
+    + `<radialGradient id="${u}g" cx=".5" cy=".42" r=".62"><stop offset="0" stop-color="${p[1]}" stop-opacity=".55"/><stop offset=".6" stop-color="${p[2]}" stop-opacity=".9"/><stop offset="1" stop-color="#020606"/></radialGradient>`
+    + `<radialGradient id="${u}a" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="${p[1]}" stop-opacity="${.35 + fi * .05}"/><stop offset=".6" stop-color="${p[1]}" stop-opacity=".08"/><stop offset="1" stop-color="${p[1]}" stop-opacity="0"/></radialGradient>`
+    + `<radialGradient id="${u}r" gradientUnits="userSpaceOnUse" cx="${cx}" cy="${oy}" r="95"><stop offset=".25" stop-color="${p[0]}" stop-opacity=".55"/><stop offset="1" stop-color="${p[0]}" stop-opacity="0"/></radialGradient>`
+    + `<filter id="${u}b" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3.2"/></filter>`;
+  let s = `<ellipse cx="${cx}" cy="${oy + 20}" rx="80" ry="88" fill="url(#${u}a)"/>`;
+  // light rays behind (Prophase up)
+  if (fi >= 3) { let r = ''; const n = 18 + fi * 2; for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2, w = .035; r += `<path d="M${cx} ${oy}L${rk1(cx + 95 * Math.cos(a - w))} ${rk1(oy + 95 * Math.sin(a - w))}L${rk1(cx + 95 * Math.cos(a + w))} ${rk1(oy + 95 * Math.sin(a + w))}z"/>`; } s += `<g fill="url(#${u}r)">${r}</g>`; }
+  // wings (Anaphase up): feathered blades sweeping out from behind the orb
+  if (fi >= 5) {
+    const big = fi >= 7 ? 1.18 : 1; let w = '';
+    for (let i = 0; i < 6; i++) { const len = (34 + i * 7) * big, ang = (-62 + i * 15) * Math.PI / 180, x0 = cx - 26, y0 = oy + 6 + i * 2.2;
+      const x1 = x0 - len * Math.cos(ang + .55), y1 = y0 + len * Math.sin(ang - .1) * .55;
+      w += `<path d="M${rk1(x0)} ${rk1(y0 - 4)}Q${rk1((x0 + x1) / 2)} ${rk1(Math.min(y0, y1) - 10)} ${rk1(x1)} ${rk1(y1)}Q${rk1((x0 + x1) / 2 + 4)} ${rk1((y0 + y1) / 2 + 6)} ${rk1(x0)} ${rk1(y0 + 5)}z"/>`; }
+    s += `<g fill="${M}" stroke="${p[2]}" stroke-width=".8" stroke-linejoin="round">${w}</g><g fill="${M}" stroke="${p[2]}" stroke-width=".8" stroke-linejoin="round" transform="matrix(-1 0 0 1 ${2 * cx} 0)">${w}</g>`;
+  }
+  // plinth: obsidian slab, block with an engraved metal nameplate, metal top plate
+  s += `<rect x="22" y="190" width="116" height="15" rx="3" fill="url(#${u}o)" stroke="${M}" stroke-width="1.2"/><path d="M34 160h92l9 30H25z" fill="url(#${u}o)" stroke="${M}" stroke-width="1.2" stroke-linejoin="round"/>`
+    + `<path d="M34 160h92l1 3.2H33z" fill="#fff" opacity=".12"/>`
+    + `<rect x="47" y="168" width="66" height="15" rx="3.5" fill="${top ? '#fff6d6' : p[0]}" stroke="${M}" stroke-width="1.4"/><text x="${cx}" y="179" text-anchor="middle" font-family="'IBM Plex Mono',ui-monospace,monospace" font-weight="600" font-size="${name.length > 9 ? 6.6 : 7.6}" letter-spacing="1.4" fill="${p[2]}">${name.toUpperCase()}</text>`
+    + `<rect x="42" y="153" width="76" height="8" rx="2.5" fill="${M}" stroke="${p[2]}" stroke-width=".8"/>`;
+  if (fi >= 2) s += [30, 130].map(x => `<path d="M${x} 168l4.2 5.5-4.2 5.5-4.2-5.5z" fill="${p[0]}" stroke="${p[2]}" stroke-width=".8"/>`).join('');
+  // stem with a knot (a gem in it from Interphase up)
+  s += `<path d="M71 153l3.4-24h11.2l3.4 24z" fill="${M}" stroke="${p[2]}" stroke-width=".8"/><ellipse cx="${cx}" cy="131" rx="10" ry="5.4" fill="${M}" stroke="${p[2]}" stroke-width=".8"/><ellipse cx="${cx}" cy="125" rx="7" ry="3" fill="${M}" stroke="${p[2]}" stroke-width=".8"/>`;
+  if (fi >= 2) s += `<path d="M${cx} 127.2l3.6 3.8-3.6 3.8-3.6-3.8z" fill="${p[1]}" stroke="${p[0]}" stroke-width=".7"/><path d="M${cx - 1.4} 129.8l1.4-1.6 1.2 1.4z" fill="#fff" opacity=".8"/>`;
+  // laurels around the bowl (Colony up)
+  if (fi >= 1) { const R = 42, ocy = 98, leaf = 'M0 0c3.6-3.6 10-4 14-.4C10 3.2 3.6 3.4 0 0z'; let l = '';
+    const pt = d => { const t = d * Math.PI / 180; return [cx + R * Math.cos(t), ocy + R * Math.sin(t)]; };
+    for (let d = 100; d <= (fi >= 4 ? 205 : 180); d += 13) { const [x, y] = pt(d); for (const o of [-34, 34]) l += `<path d="${leaf}" transform="translate(${rk1(x)} ${rk1(y)}) rotate(${rk1(d + 90 + o)})"/><path d="${leaf}" transform="translate(${rk1(2 * cx - x)} ${rk1(y)}) rotate(${rk1(180 - (d + 90 + o))})"/>`; }
+    s += `<g fill="${M}" stroke="${p[2]}" stroke-width=".6">${l}</g>`; }
+  // handles (ornate scrolls from Metaphase up)
+  s += `<g fill="none" stroke="${M}" stroke-width="5" stroke-linecap="round"><path d="M50 92C30 90 27 110 46 113"/><path d="M110 92c20-2 23 18 4 21"/></g>`;
+  if (fi >= 4) s += `<g fill="none" stroke="${M}" stroke-width="2.6" stroke-linecap="round"><path d="M33 99c-6-1-7 6-2 7"/><path d="M127 99c6-1 7 6 2 7"/></g>`;
+  // the bowl
+  s += `<path d="M44 84c0 24 15 37 36 38.6C101 121 116 108 116 84z" fill="${M}" stroke="${p[2]}" stroke-width="1"/>`
+    + `<path d="M50 88c1 15 8 25 18 29.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" opacity=".38"/>`
+    + `<path d="M58 104q22 8 44 0" fill="none" stroke="${p[2]}" stroke-width="1" opacity=".5"/>`
+    + `<ellipse cx="${cx}" cy="84" rx="36" ry="7.4" fill="url(#${u}v)" stroke="${p[2]}" stroke-width=".8"/><ellipse cx="${cx}" cy="84" rx="31" ry="5" fill="#050b0b" opacity=".75"/>`;
+  // cradle prongs holding the orb
+  s += `<g fill="${M}" stroke="${p[2]}" stroke-width=".8"><path d="M52 84c-4-10-2-20 6-26l2 2c-5 7-5 15-3 24z"/><path d="M108 84c4-10 2-20-6-26l-2 2c5 7 5 15 3 24z"/><path d="M77.6 84l1.2-6h2.4l1.2 6z"/></g>`;
+  // orbit rings behind the orb (Anaphase up)
+  const ring = (rot, op) => `<ellipse cx="${cx}" cy="${oy}" rx="${fi >= 7 ? 48 : 43}" ry="11" transform="rotate(${rot} ${cx} ${oy})" fill="none" stroke="${M}" stroke-width="1.8" opacity="${op}"/>`;
+  // the orb: dark culture, the glowing cell inside, glass shine
+  const g = RANK_GLYPH[st.key];
+  s += (fi >= 5 ? ring(-16, .9) : '') + (fi >= 6 ? ring(20, .75) : '')
+    + `<circle cx="${cx}" cy="${oy}" r="29" fill="url(#${u}g)" stroke="${M}" stroke-width="3.4"/>`
+    + `<g filter="url(#${u}b)" opacity=".95"><g transform="translate(${cx} ${oy}) scale(1.15) translate(-32 -32)">${g(p[1], p[1], p[1] + '55')}</g></g>`
+    + `<g transform="translate(${cx} ${oy}) scale(1.15) translate(-32 -32)">${g(p[0], p[2], p[1] + '40')}</g>`
+    + `<path d="M58 49a24 24 0 0 1 14-14" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".55"/><circle cx="56.5" cy="56" r="1.6" fill="#fff" opacity=".6"/>`;
+  // front halves of the rings pass over the orb
+  if (fi >= 5) s += `<path d="M${cx - 43} ${oy + 3}A43 11 0 0 0 ${cx + 43} ${oy - 3}" transform="rotate(-16 ${cx} ${oy})" fill="none" stroke="${M}" stroke-width="1.8"/>`;
+  // crown (Telophase up), halo for Mitosis
+  if (fi >= 7) s += `<path d="M62 31.5l-4-17 13 9.4L80 10l9 13.9 13-9.4-4 17c-11.8-4.6-24.2-4.6-36 0z" fill="${M}" stroke="${p[2]}" stroke-width="1" stroke-linejoin="round"/><path d="M62 31.5c11.8-4.6 24.2-4.6 36 0" fill="none" stroke="${p[0]}" stroke-width="1.2"/>`
+    + `<g fill="#fff">${[[80, 14.6, 2.2], [67.5, 21, 1.5], [92.5, 21, 1.5]].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}"/>`).join('')}</g>`;
+  if (top) s += `<ellipse cx="${cx}" cy="5.5" rx="20" ry="4" fill="none" stroke="${M}" stroke-width="2.6"/><ellipse cx="${cx}" cy="5.5" rx="20" ry="4" fill="none" stroke="#fff" stroke-width="5" opacity=".25" filter="url(#${u}b)"/>`;
+  // sparkles (Metaphase up)
+  if (fi >= 4) s += [[22, 34, 4], [140, 46, 5], [130, 18, 3], [30, 128, 3], [134, 132, 3.4], [16, 74, 2.6]].slice(0, fi - 2).map(([x, y, r]) => `<path d="M${x} ${y - r}l${rk1(r * .28)} ${rk1(r * .72)} ${rk1(r * .72)} ${rk1(r * .28)}-${rk1(r * .72)} ${rk1(r * .28)}-${rk1(r * .28)} ${rk1(r * .72)}-${rk1(r * .28)}-${rk1(r * .72)}-${rk1(r * .72)}-${rk1(r * .28)} ${rk1(r * .72)}-${rk1(r * .28)}z" fill="#fff" opacity=".9"/>`).join('');
+  return `<svg viewBox="0 0 160 210" aria-hidden="true"><defs>${defs}</defs>${s}</svg>`;
+}
+
 let tierEmN=0,rkPos=0,rkSeq=0;
-const tierCol=t=>(TIER_PAL[t]||TIER_PAL.Silver)[1];
+const tierCol=t=>TIER_PAL[t]?TIER_PAL[t][1]:rankFind(t)?rankCol(t):TIER_PAL.Silver[1];
 function tierTable(){const c=wallet.catalog;return c&&Array.isArray(c.tiers)&&c.tiers.length&&Array.isArray(c.tierAt)&&c.tierAt.length===c.tiers.length?c:TIER_FB;}
-function tierEmblem(t){ // a bevelled hexagon in the tier's metal, with chevrons, a star, a gem or a crown
+function tierEmblem(t){ // a rank's crest (rankBadge), or for an old metal tier a bevelled hexagon in its metal, with chevrons, a star, a gem or a crown
+  if(!TIER_PAL[t]&&rankFind(t))return rankBadge(t,'emb');
   const p=TIER_PAL[t]||TIER_PAL.Silver,g=TIER_GLYPH[t]||TIER_GLYPH.Silver,id='tem'+(++tierEmN);
   const gl=c=>g.fill?`<path d="${g.d}" fill="${c}" stroke="${c}" stroke-width="1.6" stroke-linejoin="round"/>`:`<path d="${g.d}" fill="none" stroke="${c}" stroke-width="${g.w}" stroke-linecap="round" stroke-linejoin="round"/>`;
   return `<svg class="emb" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="${id}a" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="${p[0]}"/><stop offset=".48" stop-color="${p[1]}"/><stop offset="1" stop-color="${p[2]}"/></linearGradient><linearGradient id="${id}b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${p[2]}"/><stop offset="1" stop-color="${p[1]}"/></linearGradient></defs>`
@@ -6258,10 +6376,11 @@ function renderMe(){const n=$('meName');if(n)n.textContent=cleanName($('nameIn')
 function renderLevel(){ // the level badge on the lobby's portrait (the profile card opens the Profile, which has the XP bar)
   const c=$('lvChip');if(!c)return;c.hidden=wallet.level==null;$('profBtn').setAttribute('aria-label',c.hidden?'Profile':`Profile, level ${wallet.level}`);if(c.hidden)return;
   $('heroLv').textContent=wallet.level;c.title=`Level ${wallet.level}, ${wallet.levelXp} of ${wallet.levelNeed} XP to the next`;}
-function renderRank(){renderTierLegend();renderMe();renderLevel();$('rankVal').textContent=wallet.rating;{const ht=$('heroTier');if(ht){ht.textContent=wallet.tier;ht.dataset.tier=wallet.tier;$('heroRating').textContent=wallet.rating;}}$('rankTier').textContent=wallet.tier;$('rankTier').dataset.tier=wallet.tier;
+function renderRank(){renderTierLegend();renderMe();renderLevel();$('rankVal').textContent=wallet.rating;const rkName=rankOf(wallet.rating).name;{const ht=$('heroTier');if(ht){ht.textContent=rkName;ht.dataset.tier=wallet.tier;$('heroRating').textContent=wallet.rating;}}$('rankTier').textContent=rkName;$('rankTier').dataset.tier=wallet.tier;
   const p=tierProgress(),nx=$('rankNext'),fill=$('tierFill');if(nx)nx.textContent=p.text;if(fill)fill.style.width=p.pct+'%';
 }
-function tierAtRating(r){ // tier name and progress through it for any rating, from the server's tier table
+function tierAtRating(r){const k=rankOf(r);return{name:k.name,pct:rankPct(r)};} // the rank and progress through it, for the results card
+function tierAtRating0(r){ // the old metal tier and progress through it, from the server's tier table (a server from before the ladder)
   const names=(wallet.catalog&&wallet.catalog.tiers)||[],at=((wallet.catalog&&wallet.catalog.tierAt)||[]).map(v=>v==null?Infinity:v);
   if(!names.length||at.length!==names.length)return{name:wallet.tier||'',pct:0};let i=at.findIndex(v=>r<v);if(i<0)i=names.length-1;
   const hi=at[i],lo=i>0?at[i-1]:Math.min(at[0]-300,r);return{name:names[i],pct:isFinite(hi)?clamp((r-lo)/(hi-lo),0,1):1};}
@@ -6282,8 +6401,8 @@ function resPlayRank(){const w=resS.rank,el=$('dRank');if(!w||el.hidden)return;c
 const RK_ICO={off:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M9 5.4A6.5 6.5 0 0 1 18.4 10a4.6 4.6 0 0 1 2.1 7.6M16.5 19H7.2a4.6 4.6 0 0 1-1.1-9.1"/></svg>',
   cup:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3M12 14v4M8 20h8"/></svg>'};
 const rkYou='<em class="rk-you">You</em>';
-const rkRow=t=>`<li class="rk-row${t.me?' me':''}" style="--tc:${tierCol(t.tier)}"><span class="rk-k">${escH(t.rank)}</span>${tierEmblem(t.tier)}<span class="rk-n"><b>${escH(t.name)}</b><small class="tier" data-tier="${escH(t.tier)}">${escH(t.tier)}</small></span>${t.me?rkYou:''}<span class="rk-r">${t.rating|0}</span></li>`;
-const rkSlot=(t,pl)=>t?`<div class="pd pd${pl}${t.me?' me':''}" style="--tc:${tierCol(t.tier)}">${pl===1?'<svg class="pd-crown" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 18L3 8.5l5 4L12 5.5l4 7 5-4L19.5 18z"/></svg>':''}<div class="pd-av">${tierEmblem(t.tier)}</div><b class="pd-n">${escH(t.name)}</b><span class="pd-r">${t.me?rkYou:''}${t.rating|0}</span><div class="pd-base"><span>${pl}</span></div></div>`
+const rkRow=t=>`<li class="rk-row${t.me?' me':''}" style="--tc:${tierCol(t.rankName||t.tier)}"><span class="rk-k">${escH(t.rank)}</span>${tierEmblem(t.rankName||t.tier)}<span class="rk-n"><b>${escH(t.name)}</b><small class="tier" data-tier="${escH(t.tier)}" style="color:${tierCol(t.rankName||t.tier)}">${escH(t.rankName||t.tier)}</small></span>${t.me?rkYou:''}<span class="rk-r">${t.rating|0}</span></li>`;
+const rkSlot=(t,pl)=>t?`<div class="pd pd${pl}${t.me?' me':''}" style="--tc:${tierCol(t.rankName||t.tier)}">${pl===1?'<svg class="pd-crown" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 18L3 8.5l5 4L12 5.5l4 7 5-4L19.5 18z"/></svg>':''}<div class="pd-av">${tierEmblem(t.rankName||t.tier)}</div><b class="pd-n">${escH(t.name)}</b><span class="pd-r">${t.me?rkYou:''}${t.rating|0}</span><div class="pd-base"><span>${pl}</span></div></div>`
   :`<div class="pd pd${pl} open"><div class="pd-av"></div><b class="pd-n">—</b><span class="pd-r"></span><div class="pd-base"><span>${pl}</span></div></div>`;
 function rkState(s,title,sub,ico){$('rkBoard').dataset.state=s;const e=$('rkEmpty');e.hidden=!title;if(!title)return;$('rkEmptyIco').innerHTML=ico;$('rkEmptyT').textContent=title;$('rkEmptyS').textContent=sub;$('rkRetry').hidden=s!=='offline';}
 async function loadTop(){const seq=++rkSeq;rkState('loading');
@@ -6299,7 +6418,7 @@ async function loadTop(){const seq=++rkSeq;rkState('loading');
   if(!list.length){$('rkPodium').innerHTML=$('topList').innerHTML='';rkState('empty','No ranks yet','Be the first',RK_ICO.cup);return;}
   $('rkPodium').innerHTML=[list[1],list[0],list[2]].map((t,k)=>rkSlot(t,[2,1,3][k])).join('');
   let html=list.slice(3).map(rkRow).join('');
-  if(!seen&&wallet.online&&(wallet.runs|0)>0)html+='<li class="rk-gap" aria-hidden="true"><i></i><i></i><i></i></li>'+rkRow({rank:'—',name:myName,tier:wallet.tier,rating:wallet.rating,me:true});
+  if(!seen&&wallet.online&&(wallet.runs|0)>0)html+='<li class="rk-gap" aria-hidden="true"><i></i><i></i><i></i></li>'+rkRow({rank:'—',name:myName,tier:wallet.tier,rankName:rankOf(wallet.rating).name,rating:wallet.rating,me:true});
   $('topList').innerHTML=html;rkState('ok');}
 $('rkRetry').addEventListener('click',loadTop);
 $('rankBtn').addEventListener('click',()=>{showCard('rankCard');loadTop();});
@@ -6351,10 +6470,10 @@ let pfQueued=false,pfIntro=false,pfCount=0; // render after the caller finishes,
 function renderProfile(){if(pfQueued||!$('profName'))return;pfQueued=true;Promise.resolve().then(()=>{pfQueued=false;renderProfileNow();});}
 function renderProfileNow(){renderRuns();renderAch();renderInv();
   $('profName').textContent=cleanName($('nameIn').value)||settings.name||'Unnamed cell';
-  const t=wallet.tier,p=tierProgress(),names=(wallet.catalog&&wallet.catalog.tiers)||[],nx=names[names.indexOf(t)+1]||'';
-  $('profileCard').dataset.tier=t;$('pTierTxt').textContent=t;$('pTierTxt').dataset.tier=t;$('pCrest').innerHTML=PF_GLYPH[t]||PF_GLYPH.Silver;$('pRating').textContent=wallet.rating;
-  {const at=wallet.aiTier||'Silver';$('pAi').style.setProperty('--ac',tierCol(at));$('pAiTier').textContent=at;$('pAiRating').textContent=wallet.aiRating|0;$('pAiMc').innerHTML=miniCrest(at);} // the AI rating (bots only)
-  $('pCurMc').innerHTML=miniCrest(t);$('pNextMc').innerHTML=nx?miniCrest(nx):'';
+  const t=wallet.tier,p=tierProgress(),rk=rankOf(wallet.rating|0),nx=rankNext(wallet.rating|0);
+  $('profileCard').dataset.tier=t;$('pTierTxt').textContent=rk.name;$('pTierTxt').style.color=rankCol(rk);$('pBadge').innerHTML=rankBadge(rk);$('pRating').textContent=wallet.rating;
+  {const ar=rankOf(wallet.aiRating|0);$('pAi').style.setProperty('--ac',rankCol(ar));$('pAiTier').textContent=ar.name;$('pAiRating').textContent=wallet.aiRating|0;$('pAiMc').innerHTML=rankBadge(ar,'pf-mc');} // the AI rating (bots only)
+  $('pCurMc').innerHTML=rankBadge(rk,'pf-mc');$('pNextMc').innerHTML=nx?rankBadge(nx,'pf-mc'):'';
   const nums=[[$('pAtp'),wallet.balance],[$('pEarned'),wallet.earned],[$('pRuns'),(wallet.runs|0)+(wallet.aiRuns|0)],[$('pBest'),bestMass()]],fill=$('pFill'),xf=$('pLvFill'),intro=pfIntro&&!RM;pfIntro=false;cancelAnimationFrame(pfCount);
   for(const[el,v]of nums)el.textContent=fmtStat(intro?0:v);
   $('pProg').hidden=!p.text;$('pNext').textContent=p.text;
@@ -6428,7 +6547,8 @@ async function flushRuns(){ // report finished runs; keep them queued while the 
   if(flushing)return;flushing=true;
   try{let a=loadPending();while(a.length){const rep=a[0];
     try{const w=await api('run/end',rep);applyWallet(w);if(rep.show){const R=(wallet.catalog&&wallet.catalog.rules)||{};const W=wallet.catalog&&wallet.catalog.wins,cas=w.kind==='casual',pl=rep.place|0;
-      showEarn(w.payout?{k:'atp',n:w.payout,tag:w.winCapped?'capped':w.winBonus>0?(pl===1?'Win':'Top 3'):''}:{k:'none',why:w.winCapped?'Daily cap':cas?(W&&rep.survived<W.minSec?`Survive ${Math.round(W.minSec/60)} min`:'Top 3 only'):rep.survived<(R.minSec||20)?`Survive ${R.minSec||20}s`:`Top ${(R.byRank||[[30]]).slice(-1)[0][0]} only`});showRank(w);showXp(w);
+      const sk=cas&&w.skill&&SKILL[w.skill]?SKILL[w.skill].label:'';
+      showEarn(w.payout?{k:'atp',n:w.payout,full:!!(sk&&w.winBonus>0&&!w.winCapped),tag:w.winCapped?'capped':w.winBonus>0?(sk?sk+' '+(pl===1?'win':ordinal(pl)):pl===1?'Win':'Top 3'):''}:{k:'none',why:w.winCapped?'Daily cap':cas?(W&&rep.survived<W.minSec?`Survive ${Math.round(W.minSec/60)} min`:'Top 3 only'):rep.survived<(R.minSec||20)?`Survive ${R.minSec||20}s`:`Top ${(R.byRank||[[30]]).slice(-1)[0][0]} only`});showRank(w);showXp(w);
       const qd=Array.isArray(w.questsDone)?w.questsDone:[],up=w.passUp>0&&bpOn()?`Tier ${w.pass.level}, +${w.passUp*wallet.catalog.pass.stars} Battle Stars`:'';
       if(qd.length&&bpOn()){for(const q of qd)bqJust.add(q.id);toast('Battle Pass',`${qd.length>1?qd.length+' quests':'Quest'} complete · +${(w.questXp|0).toLocaleString()} XP`,up||(qd.length>1?qd.map(q=>q.text).join(' · '):qd[0].text));} // phones show only the title
       else if(up)toast('Battle Pass',`Tier ${w.pass.level}`,`+${w.passUp*wallet.catalog.pass.stars} Battle Stars to spend`);}}
@@ -7186,7 +7306,7 @@ function startLocal(kind){ // a game on this device only: bots fill every slot. 
   syncBots();
   const sk=SKILL[settings.botSkill]||SKILL.normal;
   toast(kind==='practice'?(isOffline()?'Offline':'Practice'):'Game found',kind==='practice'?`${sk.label} bots${isOffline()?' · no connection needed':''}`:'Bots fill the empty slots',
-    kind!=='practice'?'Ranked rules against bots: counts for your AI rating':casualRated()&&!isOffline()?'Counts for your AI rating · ATP for a top 3':'Unranked: no ATP, no rating change');
+    kind!=='practice'?'Ranked rules against Master bots: counts for your AI rating':casualRated()&&!isOffline()?'Counts for your AI rating · ATP for a top 3':'Unranked: no ATP, no rating change');
   startGame();
 }
 function leaveLocal(){ // back to the shared world

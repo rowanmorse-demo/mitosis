@@ -19,6 +19,7 @@ const API_RATE = 120;               // API requests per minute per IP
 const page = fs.readFileSync(path.join(__dirname, 'index.html'));
 const UPDATES_DIR = process.env.UPDATES_DIR || path.join(__dirname, 'updates'); // signed page updates for the apps (tools/page-update.js)
 const store = openStore();
+if (economy.ladderReset(store)) console.log('rank ladder: every rating starts again at ' + economy.RATING.start); // once per database (economy.js)
 const friends = social.create({ file: path.join(DATA_DIR, 'social.json'), nameBlocked: economy.nameBlocked });
 // signing in can fold this device's player into an existing account: its friends move along
 const signIn = fn => async (store, body, p) => {

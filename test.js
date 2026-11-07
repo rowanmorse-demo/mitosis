@@ -103,7 +103,7 @@ async function post(url, body, secret) {
     const big = levelOf(1e12); assert.ok(big.levelXp >= 0 && big.levelXp < big.levelNeed && xpAtLevel(big.level) + big.levelXp === 1e12, 'huge XP still lands inside a level');
   }
   // rating: that run (15 s on the server clock, 10 kills) is a quick death: +0.5 survival +20 kills -7.5 penalty = +13
-  assert.equal(r.body.ratingDelta, 13); assert.equal(r.body.rating, 1013); assert.equal(r.body.tier, 'Silver');
+  assert.equal(r.body.ratingDelta, 13); assert.equal(r.body.rating, 13, 'from the start of 0'); assert.equal(r.body.tier, 'Bronze'); assert.equal(r.body.rank, 'Amoeba I');
   // XP is capped the same way: ~15 s of time, so 2 XP however long the client says it lived
   assert.equal(r.body.xpGained, 2); assert.deepEqual(r.body.xpParts, { time: 2, place: 0, win: 0 }); assert.equal(r.body.xp, 2); assert.equal(r.body.level, 1); assert.equal(r.body.levelXp, 2); assert.equal(r.body.levelNeed, 100); assert.equal(r.body.levelUp, 0);
   r = await post('/api/run/end', { runId, survived: 9999, eaten: 10, peak: 800 }, secret);
@@ -111,8 +111,8 @@ async function post(url, body, secret) {
   r = await post('/api/run/end', { runId: 'nope' }, secret); assert.equal(r.status, 404);
   // an instant death with no kills loses rating
   r = await post('/api/run/start', {}, secret); const run2 = r.body.runId;
-  r = await post('/api/run/end', { runId: run2, survived: 0, eaten: 0, peak: 25, name: 'Tester' }, secret); assert.equal(r.body.ratingDelta, -10); assert.equal(r.body.rating, 1003);
-  const lb = await (await fetch(base + '/api/leaderboard')).json(); assert.equal(lb.top[0].name, 'Tester'); assert.equal(lb.top[0].rating, 1003);
+  r = await post('/api/run/end', { runId: run2, survived: 0, eaten: 0, peak: 25, name: 'Tester' }, secret); assert.equal(r.body.ratingDelta, -10); assert.equal(r.body.rating, 3);
+  const lb = await (await fetch(base + '/api/leaderboard')).json(); assert.equal(lb.top[0].name, 'Tester'); assert.equal(lb.top[0].rating, 3); assert.equal(lb.top[0].rankName, 'Amoeba I');
   { // connection report: the relay echoes pings, reports are checked and kept anonymously, and only the token opens the report
     const ws = new WebSocket(base.replace(/^http/, 'ws') + '/ws'); await new Promise((res, rej) => { ws.onopen = res; ws.onerror = rej; });
     const pong = new Promise(res => { ws.onmessage = e => { const m = JSON.parse(e.data); if (m.t === 'pong') res(m); }; });
