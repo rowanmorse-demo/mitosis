@@ -108,5 +108,17 @@ Everything here happens in [Play Console](https://play.google.com/console). Noth
 | `{type:'app'}` events | `resignActive`, `becomeActive`, `background`, `memoryWarning`, the same names as iOS |
 | `{type:'power', low, thermal}` | Battery saver plus the thermal state (`nominal`, `fair`, `serious` or `critical`). The page uses reduced effects while battery saver is on or the phone is hot. |
 | `nearby`, `record` | Not on Android. The page hides both, and `record` is refused at once. |
+| `booted` | The page's script ran to the end. A downloaded page update that doesn't send it is dropped (below). |
 
 A crashed or killed WebView renderer no longer takes the app down: the app makes a new WebView and reloads the game, as iOS does.
+
+## Page updates (a new game page without a Play release)
+
+From versionCode 10 the app takes signed page updates from the game server, on the same channel and with the same key as the
+iOS app: `/updates/android/manifest.json` + `page.html`, published with `node tools/page-update.js publish` (see
+docs/PAGE-UPDATES.md). The app (PageUpdates.kt) checks when it opens and at most every 30 minutes when it returns, checks the
+Ed25519 signature (Ed25519.kt, since Android has it built in only from Android 13) and the SHA-256, and loads the page on the next
+launch in place of `file:///android_asset/index.html`, at the same address, so the player's localStorage stays. A page that
+doesn't send `booted` within 5 s of loading, or that the app is killed twice before it does, is dropped and the built-in page
+used again. Google Play allows this: its Device and Network Abuse policy exempts JavaScript running in a WebView from the
+ban on downloaded code, as long as the code doesn't break another Play policy.

@@ -6,6 +6,8 @@ import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.KeyEvent
 import android.view.ViewGroup
@@ -15,7 +17,9 @@ import android.webkit.ConsoleMessage
 import android.webkit.JavascriptInterface
 import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
@@ -36,6 +40,7 @@ import org.json.JSONObject
  * the Play in-app review, page logs, and app foreground/background events. Android also reports battery saver
  * and the thermal state ({type:'power'}), which the page answers with reduced effects.
  * Nearby play and game recording are iOS-only: the page hides them outside the iOS app.
+ * The page itself can be updated without a Play release (PageUpdates, the same channel as the iOS app's).
  */
 class MainActivity : AppCompatActivity() {
     private lateinit var root: FrameLayout
@@ -44,7 +49,15 @@ class MainActivity : AppCompatActivity() {
     private lateinit var signIn: SignIn
     private lateinit var haptics: Haptics
     private lateinit var power: Power
+    private lateinit var pageUpdates: PageUpdates
     private var pageReady = false   // the page has its wallet session (it sent "ready")
+    private var booted = false      // the loaded page said {type:'booted'}
+    private var pageLoaded = false  // the WebView finished loading it (its script has run by then)
+    private var resumed = false     // in the foreground: a page update's boot clock only runs then
+    private val main = Handler(Looper.getMainLooper())
+    private val bootCheck = Runnable {   // a downloaded page that doesn't boot is dropped (see watchBoot)
+        bootFailed(if (pageLoaded) "it loaded but didn't say it started" else "it didn't load within ${PageUpdates.BOOT_TIMEOUT_MS / 1000} s")
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,6 +79,7 @@ class MainActivity : AppCompatActivity() {
         signIn = SignIn(this) { reply(it) }
         haptics = Haptics(this)
         power = Power(this) { low, thermal -> reply(JSONObject().put("type", "power").put("low", low).put("thermal", thermal)) }
+        pageUpdates = PageUpdates(this, BuildConfig.VERSION_CODE) { kind, text -> CrashReporter.note(kind, text) }
         if (BuildConfig.DEBUG) WebView.setWebContentsDebuggingEnabled(true)
 
         // Android's back button is Esc to the page: it closes the open page or sheet, else pauses the game.
@@ -117,8 +131,18 @@ class MainActivity : AppCompatActivity() {
                 return true
             }
 
+            // A page update is served in place of the built-in page, at the same address (PageUpdates.intercept).
+            override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? =
+                pageUpdates.intercept(request)
+
             override fun onPageFinished(view: WebView, url: String) {
-                if (view === web) power.report(force = true)
+                if (view !== web) return
+                power.report(force = true)
+                if (!pageLoaded) { pageLoaded = true; watchBoot() } // a page update's script has run: it must have said booted
+            }
+
+            override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
+                if (view === web && request.isForMainFrame) bootFailed("it couldn't be opened: ${error.description}")
             }
 
             // The renderer was killed for memory or crashed. That WebView is dead: make a new one and reload the
@@ -139,13 +163,45 @@ class MainActivity : AppCompatActivity() {
             }
         }
         w.addJavascriptInterface(Bridge(), "MitosisAndroid")
+        loadGame()
+    }
 
+    /** Loads the game page: a downloaded page update when there is a good one (PageUpdates), else the built-in copy. */
+    private fun loadGame() {
+        val w = web ?: return
+        val update = pageUpdates.pageToLoad()
+        booted = false
+        pageLoaded = false
+        main.removeCallbacks(bootCheck)
+        // the app version, for the connection report; "-p3" = page update 3
         val q = StringBuilder("?server=").append(Uri.encode(serverUrl()))
-            .append("&app=").append(Uri.encode("android-" + BuildConfig.VERSION_NAME)) // for the connection report
+            .append("&app=").append(Uri.encode("android-" + BuildConfig.VERSION_NAME + (update?.let { "-p${it.v}" } ?: "")))
         // Development builds: `adb shell am start -n com.mitosisgame.app/.MainActivity --ez autopilot true`
         // makes the page play by itself (soak testing without touching the phone).
         if (BuildConfig.DEBUG && intent.getBooleanExtra("autopilot", false)) q.append("&autopilot=1")
-        w.loadUrl("file:///android_asset/index.html$q")
+        w.loadUrl(PageUpdates.PAGE_URL + q)
+        watchBoot()
+        // look for a newer page once this one is up (it is used from the next launch)
+        main.postDelayed({ pageUpdates.check(serverUrl()) }, 8_000)
+    }
+
+    /**
+     * A downloaded page has to say it started. Its script has run by the time the WebView finishes loading it, so from
+     * then it gets [PageUpdates.BOOT_GRACE_MS]; a page that never finishes loading gets [PageUpdates.BOOT_TIMEOUT_MS],
+     * counted in the foreground only, so a slow phone isn't mistaken for a broken page. A page that fails is dropped
+     * and the built-in page loaded. The built-in page isn't watched: there is nothing to fall back to.
+     */
+    private fun watchBoot() {
+        main.removeCallbacks(bootCheck)
+        if (pageUpdates.loaded == null || booted || !resumed) return
+        main.postDelayed(bootCheck, if (pageLoaded) PageUpdates.BOOT_GRACE_MS else PageUpdates.BOOT_TIMEOUT_MS)
+    }
+
+    private fun bootFailed(why: String) {
+        if (booted || pageUpdates.loaded == null) return
+        main.removeCallbacks(bootCheck)
+        pageUpdates.failed(why)
+        loadGame()
     }
 
     /** Release builds always use SERVER_URL. Development builds take `--es server http://10.0.2.2:3000`. */
@@ -177,13 +233,19 @@ class MainActivity : AppCompatActivity() {
     // App lifecycle, told to the page with the iOS names: resignActive, becomeActive, background, memoryWarning.
     override fun onResume() {
         super.onResume()
+        resumed = true
         web?.onResume()
         appEvent("becomeActive")
         power.report()
         if (pageReady) billing.deliverPending()  // a pending payment may have completed while we were away
+        // a page update's boot clock runs again; look for a newer page (at most every 30 minutes)
+        watchBoot()
+        if (booted) pageUpdates.check(serverUrl())
     }
 
     override fun onPause() {
+        resumed = false
+        main.removeCallbacks(bootCheck)
         appEvent("resignActive")
         web?.onPause()
         super.onPause()
@@ -206,6 +268,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        main.removeCallbacksAndMessages(null)
         billing.close()
         power.close()
         haptics.close()
@@ -229,6 +292,13 @@ class MainActivity : AppCompatActivity() {
         val id = msg.optLong("id", -1)
         when (msg.optString("type")) {
             "ready" -> { pageReady = true; billing.deliverPending() }
+            // the page's script ran to the end (sent at once, before the network): a page update is good
+            "booted" -> {
+                if (!booted) Log.i(TAG, "page booted (${pageUpdates.loaded?.let { "page update ${it.v}" } ?: "built-in page"})")
+                booted = true
+                main.removeCallbacks(bootCheck)
+                pageUpdates.booted()
+            }
             "products" -> billing.products(id, strings(msg.optJSONArray("ids")))
             "buy" -> billing.buy(this, id, msg.optString("productId"))
             "finish" -> billing.consume(msg.optString("purchaseToken"))
