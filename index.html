@@ -1627,57 +1627,46 @@ img.sk-im{display:block;-webkit-user-drag:none;user-select:none;-webkit-touch-ca
 @media (orientation:landscape) and (max-height:520px){#profileCard .pf-lv{padding-top:10px;gap:10px}#profileCard .pf-lv .lv-badge{width:38px;height:38px}#profileCard .pf-lv .lv-badge b{font-size:16px}}
 /* @ui:profile end */
 /* @ui:name-fonts */
-/* Name style: a row on the Profile, and its picker, a page over the Profile: your cell with your name on it, the categories and every font with your name in it */
-#profileCard .nf-row{appearance:none;width:100%;min-height:52px;display:flex;align-items:center;gap:12px;margin:-4px 0;padding:0;border:0;background:none;color:var(--ink);cursor:pointer;text-align:left}
-#profileCard .nf-row-t{flex:1;min-width:0;display:grid;gap:6px}
-#profileCard .nf-row-t small,#profileCard .nf-pick small,#profileCard .nf-t small{font:600 9.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
-#profileCard .nf-row-t b{font:800 23px/1.2 var(--display);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#profileCard .nf-row-f{flex:none;font:600 11px/1 var(--mono);color:var(--muted);background:rgba(255,255,255,.07);border-radius:999px;padding:5px 9px}
-#profileCard .nf-row svg{flex:none;width:18px;height:18px;fill:none;stroke:var(--muted);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s}
-#profileCard .nf-row:hover svg{stroke:var(--ink);transform:translateX(2px)}
-#profileCard.nf-open{overflow:hidden}
-#profileCard .nf-page{position:absolute;inset:0;z-index:6;display:grid;grid-template-columns:minmax(0,1fr);align-content:start;gap:12px 22px;overflow:hidden auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
-  padding:0 max(18px,env(safe-area-inset-right),calc((100% - 880px)/2)) max(24px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left),calc((100% - 880px)/2));
-  background:radial-gradient(60% 45% at 30% 0%,rgba(154,140,255,.13),transparent 70%),linear-gradient(180deg,#041012,#030b0c);animation:ov .25s ease-out}
-#profileCard .nf-page[hidden]{display:none}
-#profileCard .nf-count{font:600 11px/1 var(--mono);color:var(--muted);white-space:nowrap}
-#profileCard .nf-stage{display:grid;align-self:start;justify-items:center;align-content:start;gap:8px;min-width:0;padding:16px 14px;border-radius:22px;border:1px solid var(--line);text-align:center;background:radial-gradient(80% 60% at 50% 30%,rgba(154,140,255,.12),transparent 72%),linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.012))}
-#profileCard .nf-cell{position:relative;width:150px;aspect-ratio:1}
-#profileCard .nf-cell canvas{display:block;width:100%;height:100%}
-#profileCard .nf-cell-n{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);white-space:nowrap;color:#fff;font:700 20px/1 var(--display);-webkit-text-stroke:.16em rgba(0,0,0,.42);paint-order:stroke fill;pointer-events:none}
-#profileCard .nf-pick{margin:0;display:grid;gap:5px}
-#profileCard .nf-pick b{font:800 19px/1.1 var(--display)}
-#profileCard .nf-why{margin:0;max-width:28ch;font:500 12.5px/1.35 var(--display);color:var(--muted)}
-#profileCard .nf-main{display:grid;gap:12px;min-width:0}
-#profileCard .nf-cats{display:flex;gap:8px;margin:0 -2px;padding:2px;overflow-x:auto;scrollbar-width:none;overscroll-behavior-x:contain}
-#profileCard .nf-cats::-webkit-scrollbar{display:none}
-#profileCard .nf-cat{appearance:none;flex:none;min-height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--muted);font:700 13px/1 var(--display);cursor:pointer;transition:background .15s,color .15s}
-#profileCard .nf-cat[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:#061113}
-#profileCard .nf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
-#profileCard .nf-t{appearance:none;position:relative;display:grid;align-content:center;gap:7px;min-width:0;min-height:76px;padding:12px 14px 10px;border-radius:16px;border:1px solid var(--line);color:var(--ink);text-align:left;cursor:pointer;
+/* Name style: a page over the one that opened it (Settings › Account › Name style): your cell with your name on it, the categories and every font with your name in it */
+#overlay>#fontCard.page{grid-template-columns:minmax(0,1fr);gap:12px 22px}
+#fontCard .nf-count{font:600 11px/1 var(--mono);color:var(--muted);white-space:nowrap}
+#fontCard .nf-stage{display:grid;align-self:start;justify-items:center;align-content:start;gap:8px;min-width:0;padding:16px 14px;border-radius:22px;border:1px solid var(--line);text-align:center;background:radial-gradient(80% 60% at 50% 30%,rgba(154,140,255,.12),transparent 72%),linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.012))}
+#fontCard .nf-cell{position:relative;width:150px;aspect-ratio:1}
+#fontCard .nf-cell canvas{display:block;width:100%;height:100%}
+#fontCard .nf-cell-n{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);white-space:nowrap;color:#fff;font:700 20px/1 var(--display);-webkit-text-stroke:.16em rgba(0,0,0,.42);paint-order:stroke fill;pointer-events:none}
+#fontCard .nf-pick{margin:0;display:grid;gap:5px}
+#fontCard .nf-pick b{font:800 19px/1.1 var(--display)}
+#fontCard .nf-why{margin:0;max-width:28ch;font:500 12.5px/1.35 var(--display);color:var(--muted)}
+#fontCard .nf-main{display:grid;gap:12px;min-width:0}
+#fontCard .nf-cats{display:flex;gap:8px;margin:0 -2px;padding:2px;overflow-x:auto;scrollbar-width:none;overscroll-behavior-x:contain}
+#fontCard .nf-cats::-webkit-scrollbar{display:none}
+#fontCard .nf-cat{appearance:none;flex:none;min-height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--muted);font:700 13px/1 var(--display);cursor:pointer;transition:background .15s,color .15s}
+#fontCard .nf-cat[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:#061113}
+#fontCard .nf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+#fontCard .nf-t{appearance:none;position:relative;display:grid;align-content:center;gap:7px;min-width:0;min-height:76px;padding:12px 14px 10px;border-radius:16px;border:1px solid var(--line);color:var(--ink);text-align:left;cursor:pointer;
   background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.015));transition:transform .12s,border-color .15s,background .15s}
-#profileCard .nf-t:hover{border-color:var(--line-strong)}#profileCard .nf-t:active{transform:scale(.97)}
-#profileCard .nf-tn{display:block;padding-right:16px;font:800 22px/1.25 var(--display);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#profileCard .nf-t.on{border-color:var(--accent);background:linear-gradient(180deg,rgba(255,92,138,.17),rgba(255,92,138,.05));box-shadow:0 0 0 1px var(--accent),0 8px 22px rgba(255,92,138,.18)}
-#profileCard .nf-t.on::after{content:"✓";position:absolute;top:8px;right:8px;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:var(--accent-ink);font:800 11px/1 var(--display)}
-#profileCard .nf-t.lk .nf-tn{opacity:.42}
-#profileCard .nf-lk{position:absolute;top:8px;right:8px;display:inline-flex;align-items:center;gap:4px;padding:4px 7px;border-radius:999px;background:rgba(0,0,0,.45);font:700 10px/1 var(--mono);font-style:normal;color:var(--amber)}
-#profileCard .nf-lk svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
-#profileCard .nf-buy{position:sticky;bottom:max(12px,env(safe-area-inset-bottom));z-index:2;display:flex;align-items:center;gap:12px;padding:10px 10px 10px 16px;border-radius:16px;border:1px solid rgba(242,177,52,.4);background:rgba(18,15,6,.95);box-shadow:0 12px 30px rgba(0,0,0,.5);font:600 14px/1.25 var(--display)}
-#profileCard .nf-buy[hidden]{display:none}#profileCard .nf-buy span{flex:1;min-width:0}
-#profileCard .nf-buy-go{appearance:none;flex:none;min-height:40px;padding:0 16px;border-radius:999px;border:0;background:var(--amber);color:#2a1a00;font:800 14px/1 var(--display);cursor:pointer}
-#profileCard .nf-buy-go:disabled{opacity:.5;cursor:default}
-#profileCard .nf-credits{padding:0 14px;border-radius:16px;border:1px solid var(--line);background:rgba(0,0,0,.2);font:500 12px/1.45 var(--display);color:var(--muted)}
-#profileCard .nf-credits summary{min-height:44px;display:flex;align-items:center;cursor:pointer;color:var(--ink);font:700 13px/1 var(--display)}
-#profileCard .nf-credits p{margin:0 0 10px}#profileCard .nf-credits ul{margin:0 0 12px;padding:0;list-style:none;display:grid;gap:8px}#profileCard .nf-credits li b{color:var(--ink)}
-#profileCard .nf-credits pre{margin:0 0 12px;max-height:240px;overflow:auto;padding:10px;border-radius:10px;background:rgba(0,0,0,.3);white-space:pre-wrap;font:11px/1.4 var(--mono)}
+#fontCard .nf-t:hover{border-color:var(--line-strong)}#fontCard .nf-t:active{transform:scale(.97)}
+#fontCard .nf-tn{display:block;padding-right:16px;font:800 22px/1.25 var(--display);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#fontCard .nf-t.on{border-color:var(--accent);background:linear-gradient(180deg,rgba(255,92,138,.17),rgba(255,92,138,.05));box-shadow:0 0 0 1px var(--accent),0 8px 22px rgba(255,92,138,.18)}
+#fontCard .nf-t.on::after{content:"✓";position:absolute;top:8px;right:8px;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:var(--accent-ink);font:800 11px/1 var(--display)}
+#fontCard .nf-t.lk .nf-tn{opacity:.42}
+#fontCard .nf-lk{position:absolute;top:8px;right:8px;display:inline-flex;align-items:center;gap:4px;padding:4px 7px;border-radius:999px;background:rgba(0,0,0,.45);font:700 10px/1 var(--mono);font-style:normal;color:var(--amber)}
+#fontCard .nf-lk svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+#fontCard .nf-buy{position:sticky;bottom:max(12px,env(safe-area-inset-bottom));z-index:2;display:flex;align-items:center;gap:12px;padding:10px 10px 10px 16px;border-radius:16px;border:1px solid rgba(242,177,52,.4);background:rgba(18,15,6,.95);box-shadow:0 12px 30px rgba(0,0,0,.5);font:600 14px/1.25 var(--display)}
+#fontCard .nf-buy[hidden]{display:none}#fontCard .nf-buy span{flex:1;min-width:0}
+#fontCard .nf-buy-go{appearance:none;flex:none;min-height:40px;padding:0 16px;border-radius:999px;border:0;background:var(--amber);color:#2a1a00;font:800 14px/1 var(--display);cursor:pointer}
+#fontCard .nf-buy-go:disabled{opacity:.5;cursor:default}
+#fontCard .nf-credits{padding:0 14px;border-radius:16px;border:1px solid var(--line);background:rgba(0,0,0,.2);font:500 12px/1.45 var(--display);color:var(--muted)}
+#fontCard .nf-credits summary{min-height:44px;display:flex;align-items:center;cursor:pointer;color:var(--ink);font:700 13px/1 var(--display)}
+#fontCard .nf-credits p{margin:0 0 10px}#fontCard .nf-credits ul{margin:0 0 12px;padding:0;list-style:none;display:grid;gap:8px}#fontCard .nf-credits li b{color:var(--ink)}
+#fontCard .nf-credits pre{margin:0 0 12px;max-height:240px;overflow:auto;padding:10px;border-radius:10px;background:rgba(0,0,0,.3);white-space:pre-wrap;font:11px/1.4 var(--mono)}
 @media (orientation:landscape){
-  #profileCard .nf-page{grid-template-columns:minmax(220px,.6fr) minmax(0,1.4fr)}
-  #profileCard .nf-stage{position:sticky;top:68px}
+  #overlay>#fontCard.page{grid-template-columns:minmax(220px,.6fr) minmax(0,1.4fr)}
+  #fontCard .nf-stage{position:sticky;top:68px}
 }
 @media (orientation:landscape) and (max-height:520px){
-  #profileCard .nf-stage{top:62px;gap:6px;padding:12px}#profileCard .nf-cell{width:112px}#profileCard .nf-why{display:none}
-  #profileCard .nf-grid{grid-template-columns:repeat(auto-fill,minmax(136px,1fr));gap:8px}#profileCard .nf-t{min-height:64px;padding:10px 12px 9px;gap:6px}#profileCard .nf-tn{font-size:20px}
+  #fontCard .nf-stage{top:62px;gap:6px;padding:12px}#fontCard .nf-cell{width:112px}#fontCard .nf-why{display:none}
+  #fontCard .nf-grid{grid-template-columns:repeat(auto-fill,minmax(136px,1fr));gap:8px}#fontCard .nf-t{min-height:64px;padding:10px 12px 9px;gap:6px}#fontCard .nf-tn{font-size:20px}
 }
 /* Victory: your name under the place, in your font */
 #deathCard .res-who{margin:-4px 0 0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:800 clamp(20px,1.4vw + 12px,30px)/1.2 var(--display);color:#ffe7a8;text-shadow:0 0 18px rgba(242,177,52,.35),0 2px 10px rgba(0,0,0,.5);animation:res-up .5s cubic-bezier(.2,.9,.25,1) .12s both}
@@ -2725,6 +2714,17 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
     </div>
   </div>
 
+  <div class="card panel page" id="fontCard" role="dialog" aria-modal="true" aria-labelledby="nfTitle" hidden><!-- Name style: opens over the page that asked (openNameFonts), so its own Back returns there -->
+    <header class="pg-top"><button class="lb-icon nf-back" id="nfBack" type="button" aria-label="Back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><h2 id="nfTitle">Name style</h2><span class="nf-count" id="nfCount"></span></header>
+    <div class="nf-stage"><div class="nf-cell"><canvas id="nfCv" width="320" height="320" aria-hidden="true"></canvas><b class="nf-cell-n" id="nfCellName" aria-hidden="true"></b></div><p class="nf-pick"><b id="nfPickLbl">Classic</b><small id="nfPickCat"></small></p><p class="nf-why" id="nfWhy">Everyone in the arena sees your name in this font.</p></div>
+    <div class="nf-main">
+      <div class="nf-cats" id="nfCats"></div>
+      <div class="nf-grid" id="nfGrid" role="listbox" aria-label="Fonts"></div>
+      <div class="nf-buy" id="nfBuy" hidden><span id="nfBuyTxt"></span><button type="button" class="nf-buy-go" id="nfBuyGo"></button></div>
+      <details class="nf-credits" id="nfCredits"><summary>Font credits and licences</summary><div id="nfCreditList"></div></details>
+    </div>
+  </div>
+
   <div class="card panel modal" id="introCard" hidden>
     <h2>Eat. Divide. <em>Survive.</em></h2>
     <ol class="ov-steps">
@@ -2799,19 +2799,6 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
         <div class="pf-stat s-earn"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 16.5l5-5 4 4 7-7"/><path d="M15 8.5h5v5"/></svg></i><b id="pEarned">0</b><span>Earned</span></div>
         <div class="pf-stat s-runs"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5.5 21V4"/><path d="M5.5 4.5h11.5l-2.4 4.2 2.4 4.3H5.5"/></svg></i><b id="pRuns">0</b><span>Runs</span></div>
         <div class="pf-stat s-best"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 19.5l6.2-10 4.3 5.6 3-4.1 4.5 8.5z"/></svg></i><b id="pBest">0</b><span>Best</span></div>
-      </div>
-      <section class="pf-sec nf-sec" id="nfField">
-        <button type="button" class="nf-row" id="nfOpen" aria-haspopup="dialog"><span class="nf-row-t"><small>Name style</small><b id="nfNowName">Unnamed cell</b></span><span class="nf-row-f" id="nfNowLbl">Classic</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
-      </section>
-      <div class="nf-page" id="nfPage" role="dialog" aria-modal="true" aria-labelledby="nfTitle" hidden>
-        <header class="pg-top"><button class="lb-icon nf-back" id="nfBack" type="button" aria-label="Back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><h2 id="nfTitle">Name style</h2><span class="nf-count" id="nfCount"></span></header>
-        <div class="nf-stage"><div class="nf-cell"><canvas id="nfCv" width="320" height="320" aria-hidden="true"></canvas><b class="nf-cell-n" id="nfCellName" aria-hidden="true"></b></div><p class="nf-pick"><b id="nfPickLbl">Classic</b><small id="nfPickCat"></small></p><p class="nf-why" id="nfWhy">Everyone in the arena sees your name in this font.</p></div>
-        <div class="nf-main">
-          <div class="nf-cats" id="nfCats"></div>
-          <div class="nf-grid" id="nfGrid" role="listbox" aria-label="Fonts"></div>
-          <div class="nf-buy" id="nfBuy" hidden><span id="nfBuyTxt"></span><button type="button" class="nf-buy-go" id="nfBuyGo"></button></div>
-          <details class="nf-credits" id="nfCredits"><summary>Font credits and licences</summary><div id="nfCreditList"></div></details>
-        </div>
       </div>
       <section class="pf-sec" id="invField">
         <button type="button" class="pf-head pf-link" id="invOpen" aria-label="Open your inventory"><b>Skins</b><span class="pf-cnt" id="pSkins">0</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
@@ -6529,18 +6516,21 @@ function renderProfileNow(){renderRuns();renderAch();renderInv();
 $('profBtn').addEventListener('click',()=>{pfIntro=true;renderProfile();renderAccount();showCard('profileCard');});
 $('profShop').addEventListener('click',()=>openStore());
 $('invOpen').addEventListener('click',()=>$('lookBtn').click());
-/* Name style (fonts: see NAME_FONTS): the Profile row and the picker, a page over the Profile. openNameFonts(from) opens it from
-   anywhere (from: the card to go back to). A pick is saved here at once and sent to the server when it can be (settings.nfSync
+/* Name style (fonts: see NAME_FONTS): the picker, a page over the one that opens it. openNameFonts(from) opens it from
+   anywhere (from: the card it sits on; Back and Escape return there). A pick is saved here at once and sent to the server when it can be (settings.nfSync
    until it is); the server's font is taken at the next session unless one is waiting to go. */
 const NF_CATS=[['all','All'],['bold','Bold'],['round','Rounded'],['pixel','Pixel'],['hand','Handwritten'],['tech','Tech'],['elegant','Elegant'],['wild','Wild']],NF_CAT=Object.fromEntries(NF_CATS);
 const NF_LOCK_ICO='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
-let nfCat='all',nfFrom=null,nfBusy=false,nfBuyId=0;
+let nfCat='all',nfFrom=null,nfObs=null,nfBusy=false,nfBuyId=0;
+// Where it opens from (one hook): Settings › Account › Name style (#nameStyleBtn, its .st-val shows your name in your font), or any
+// element with data-nf-open (and data-nf-preview for a preview). The markup belongs to those pages; this wires it.
+const NF_OPEN='#nameStyleBtn,[data-nf-open]',NF_PREVIEW='#nameStyleBtn .st-val,[data-nf-preview]';
 const nfName=()=>cleanName($('nameIn').value)||settings.name||'Unnamed cell',nfLabel=id=>NF.has(id)?NF.get(id).n:'Classic';
 const nfLockText=L=>L.lv?`Level ${L.lv}`:L.price?`${(L.price|0).toLocaleString()} ATP`:'Battle Pass';
-function nfApply(){ // your name wherever it is on screen: the lobby plate and name field, the Profile, the picker
-  const id=myFont();for(const k of['meName','nameIn','nameMeasure','profName','nfNowName'])nfEl($(k),id);
-  $('nfNowName').textContent=nfName();$('nfNowLbl').textContent=nfLabel(id);lbFit='';fitName();
-  if(!$('nfPage').hidden)nfStage();}
+function nfApply(){ // your name wherever it is on screen: the lobby plate and name field, the Profile, the entry rows' previews, the picker
+  const id=myFont();for(const k of['meName','nameIn','nameMeasure','profName'])nfEl($(k),id);
+  for(const el of document.querySelectorAll(NF_PREVIEW)){el.textContent=nfName();nfEl(el,id);}lbFit='';fitName();
+  if(!$('fontCard').hidden)nfStage();}
 function nfStage(){ // your cell with your name on it, sized as in play (labelSprite): a third of the radius, narrower than 1.72 radii
   const id=myFont(),F=NF.get(id),n=$('nfCellName');n.textContent=nfName();nfEl(n,id);
   $('nfPickLbl').textContent=nfLabel(id);$('nfPickCat').textContent=F?NF_CAT[F.c]:"The game's own";drawAvatar($('nfCv'));
@@ -6557,12 +6547,12 @@ function nfPick(id){
   nfApply();nfGrid();nfPush();}
 function nfPush(){if(nfBusy||!settings.nfSync||!wallet.online)return;nfBusy=true;const id=nfId(settings.nameFont);
   api('font',{font:id}).then(w=>{if(nfId(settings.nameFont)===id){settings.nfSync=0;saveSettings();}applyWallet(w);},
-    e=>{if(e.status===400||e.status===403){settings.nfSync=0;settings.nameFont=wallet.nameFont|0;saveSettings();nfApply();if(!$('nfPage').hidden)nfGrid();}}) // refused: back to the server's; offline, or a server without fonts: it waits
+    e=>{if(e.status===400||e.status===403){settings.nfSync=0;settings.nameFont=wallet.nameFont|0;saveSettings();nfApply();if(!$('fontCard').hidden)nfGrid();}}) // refused: back to the server's; offline, or a server without fonts: it waits
     .finally(()=>{nfBusy=false;});}
 function nfWallet(w){if(!('nameFont' in w))return; // a server from before name fonts: yours stays on this device
   wallet.nameFont=w.nameFont|0;wallet.fonts=Array.isArray(w.fonts)?w.fonts:[];
   if(settings.nfSync)nfPush();else if((settings.nameFont|0)!==wallet.nameFont){settings.nameFont=wallet.nameFont;saveSettings();}
-  nfApply();if(!$('nfPage').hidden)nfGrid();}
+  nfApply();if(!$('fontCard').hidden)nfGrid();}
 function nfOffer(id,L){ // a locked font: what opens it, and the price when ATP can
   nfBuyId=id;const go=$('nfBuyGo'),nm=nfLabel(id),need=L.price>0?(L.price|0)-(wallet.balance|0):0;
   $('nfBuyTxt').textContent=L.lv?`${nm} opens at level ${L.lv}`:L.price>0?(need>0?`${nm} costs ${(L.price|0).toLocaleString()} ATP: ${need.toLocaleString()} more to go`:`Unlock ${nm} for good`):`${nm} comes with the Battle Pass`;
@@ -6571,15 +6561,17 @@ $('nfBuyGo').addEventListener('click',()=>{const id=nfBuyId,b=$('nfBuyGo');if(!i
   api('font/buy',{font:id}).then(w=>{applyWallet(w);$('nfBuy').hidden=true;nfPick(id);Native.haptic('success');},e=>{toast('Name style',"Couldn't unlock it",e.message);b.disabled=false;});});
 $('nfGrid').addEventListener('click',e=>{const b=e.target.closest('.nf-t');if(!b)return;const id=+b.dataset.id,L=nfLock(id);if(L){nfOffer(id,L);return;}$('nfBuy').hidden=true;nfPick(id);});
 $('nfCats').addEventListener('click',e=>{const b=e.target.closest('.nf-cat');if(!b||b.dataset.c===nfCat)return;nfCat=b.dataset.c;$('nfBuy').hidden=true;nfGrid();});
-function openNameFonts(from){
-  nfFrom=from&&from!=='profileCard'?from:null;if($('profileCard').hidden){renderProfile();renderAccount();showCard('profileCard');}
-  const pc=$('profileCard'),pg=$('nfPage');pc.scrollTop=0;pc.classList.add('nf-open');pg.hidden=false;pg.scrollTop=0;$('nfBuy').hidden=true;nfGrid();nfStage();
+function openNameFonts(from=shownCard){ // from: the page it opens over (shown first if it isn't); leaving that page closes it too
+  if(from&&$(from)&&$(from).hidden)showCard(from);nfFrom=from&&$(from)?from:null;
+  const pg=$('fontCard');pg.hidden=false;pg.scrollTop=0;$('nfBuy').hidden=true;nfGrid();nfStage();
+  if(nfObs)nfObs.disconnect();nfObs=null;if(nfFrom){nfObs=new MutationObserver(()=>{if($(nfFrom).hidden)closeNameFonts();});nfObs.observe($(nfFrom),{attributes:true,attributeFilter:['hidden']});}
   const on=$('nfGrid').querySelector('.nf-t.on');if(on&&on.scrollIntoView&&matchMedia('(orientation:landscape)').matches)requestAnimationFrame(()=>on.scrollIntoView({block:'nearest'}));} // beside the preview, the grid shows your font; in one column the preview stays in view
-function closeNameFonts(){$('nfPage').hidden=true;$('profileCard').classList.remove('nf-open');if(nfFrom){const f=nfFrom;nfFrom=null;showCard(f);}}
-$('nfOpen').addEventListener('click',()=>openNameFonts());$('nfBack').addEventListener('click',closeNameFonts);
-new MutationObserver(()=>{if($('profileCard').hidden&&!$('nfPage').hidden){$('nfPage').hidden=true;$('profileCard').classList.remove('nf-open');nfFrom=null;}}).observe($('profileCard'),{attributes:true,attributeFilter:['hidden']}); // leaving the Profile closes it
-$('nameIn').addEventListener('input',()=>{nfApply();if(!$('nfPage').hidden)nfGrid();});
-setInterval(()=>{if(!document.hidden&&!RM&&!$('nfPage').hidden)drawAvatar($('nfCv'));},33); // premium skins move
+function closeNameFonts(){$('fontCard').hidden=true;if(nfObs)nfObs.disconnect();nfObs=null;nfFrom=null;} // the page under it is still there
+$('nfBack').addEventListener('click',closeNameFonts);
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest(NF_OPEN);if(!b)return;const c=b.closest('.card');openNameFonts(c?c.id:shownCard);});
+addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('fontCard').hidden){e.preventDefault();e.stopImmediatePropagation();closeNameFonts();}},true);
+$('nameIn').addEventListener('input',()=>{nfApply();if(!$('fontCard').hidden)nfGrid();});
+setInterval(()=>{if(!document.hidden&&!RM&&!$('fontCard').hidden)drawAvatar($('nfCv'));},33); // premium skins move
 $('nfCredits').addEventListener('toggle',()=>{const d=$('nfCreditList');if(!$('nfCredits').open||d.childElementCount)return;
   d.innerHTML='<p>Every name font is free software, made smaller for Mitosis: only the letters a name can use, under a Mitosis name. Thank you to their makers.</p><ul>'
     +NF_CREDITS.map(([id,fam,by,copy,lic])=>`<li><b>${escH(nfLabel(id))}</b>: ${escH(fam)}${by?' by '+escH(by):''}. ${escH(copy)} ${lic==='Apache-2.0'?'Apache License 2.0':'SIL Open Font License 1.1'}.</li>`).join('')+'</ul>'
