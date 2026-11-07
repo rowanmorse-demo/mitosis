@@ -6294,9 +6294,9 @@ function rankTrophy(x){ // the step's trophy for the Profile: its cell glowing i
     + `<radialGradient id="${u}a" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="${p[1]}" stop-opacity="${.35 + fi * .05}"/><stop offset=".6" stop-color="${p[1]}" stop-opacity=".08"/><stop offset="1" stop-color="${p[1]}" stop-opacity="0"/></radialGradient>`
     + `<radialGradient id="${u}r" gradientUnits="userSpaceOnUse" cx="${cx}" cy="${oy}" r="95"><stop offset=".25" stop-color="${p[0]}" stop-opacity=".55"/><stop offset="1" stop-color="${p[0]}" stop-opacity="0"/></radialGradient>`
     + `<filter id="${u}b" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3.2"/></filter>`;
-  let s = `<ellipse cx="${cx}" cy="${oy + 20}" rx="80" ry="88" fill="url(#${u}a)"/>`;
+  let s = `<ellipse class="tt-glow" cx="${cx}" cy="${oy + 20}" rx="80" ry="88" fill="url(#${u}a)"/>`;
   // light rays behind (Prophase up)
-  if (fi >= 3) { let r = ''; const n = 18 + fi * 2; for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2, w = .035; r += `<path d="M${cx} ${oy}L${rk1(cx + 95 * Math.cos(a - w))} ${rk1(oy + 95 * Math.sin(a - w))}L${rk1(cx + 95 * Math.cos(a + w))} ${rk1(oy + 95 * Math.sin(a + w))}z"/>`; } s += `<g fill="url(#${u}r)">${r}</g>`; }
+  if (fi >= 3) { let r = ''; const n = 18 + fi * 2; for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2, w = .035; r += `<path d="M${cx} ${oy}L${rk1(cx + 95 * Math.cos(a - w))} ${rk1(oy + 95 * Math.sin(a - w))}L${rk1(cx + 95 * Math.cos(a + w))} ${rk1(oy + 95 * Math.sin(a + w))}z"/>`; } s += `<g class="tt-rays" fill="url(#${u}r)">${r}</g>`; }
   // wings (Anaphase up): feathered blades sweeping out from behind the orb
   if (fi >= 5) {
     const big = fi >= 7 ? 1.18 : 1; let w = '';
@@ -6346,7 +6346,7 @@ function rankTrophy(x){ // the step's trophy for the Profile: its cell glowing i
   if (top) s += `<ellipse cx="${cx}" cy="5.5" rx="20" ry="4" fill="none" stroke="${M}" stroke-width="2.6"/><ellipse cx="${cx}" cy="5.5" rx="20" ry="4" fill="none" stroke="#fff" stroke-width="5" opacity=".25" filter="url(#${u}b)"/>`;
   // sparkles (Metaphase up)
   if (fi >= 4) s += [[22, 34, 4], [140, 46, 5], [130, 18, 3], [30, 128, 3], [134, 132, 3.4], [16, 74, 2.6]].slice(0, fi - 2).map(([x, y, r]) => `<path d="M${x} ${y - r}l${rk1(r * .28)} ${rk1(r * .72)} ${rk1(r * .72)} ${rk1(r * .28)}-${rk1(r * .72)} ${rk1(r * .28)}-${rk1(r * .28)} ${rk1(r * .72)}-${rk1(r * .28)}-${rk1(r * .72)}-${rk1(r * .72)}-${rk1(r * .28)} ${rk1(r * .72)}-${rk1(r * .28)}z" fill="#fff" opacity=".9"/>`).join('');
-  return `<svg viewBox="0 0 160 210" aria-hidden="true"><defs>${defs}</defs>${s}</svg>`;
+  return `<svg class="trophy" viewBox="-4 0 168 210" aria-hidden="true"><defs>${defs}</defs>${s}</svg>`; // 4:5, as the Profile shelf lays them out
 }
 
 let tierEmN=0,rkPos=0,rkSeq=0;
