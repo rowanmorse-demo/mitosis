@@ -44,6 +44,7 @@ window.__sfx = async function (events, dur, sr) {
   window.AudioContext = function () { return proxy; }; window.webkitAudioContext = undefined;
   const game = (function () {
     let actx = null, master = null, noiseBuf = null, muted = false; const rand = (a, b) => a + Math.random() * (b - a);
+    const mode = 'play'; // sfx() stays quiet in the lobby (mode 'attract'); everything filmed here is in play
     ${gameAudio}
     return { initAudio, sfx, setLive(n) { liveNodes = n; } };
   })();
