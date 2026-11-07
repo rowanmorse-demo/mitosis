@@ -6418,10 +6418,12 @@ $('setBtn').addEventListener('click',()=>showCard('settingsCard'));
 for(const r of document.querySelectorAll('#settingsCard .srow.tg'))r.addEventListener('click',e=>{const b=e.target.closest('.seg button');if(b&&b.getAttribute('aria-pressed')!=='true')return;e.stopPropagation();const o=r.querySelector('.seg button:not([aria-pressed="true"])');if(o)o.click();},true);
 $('inviteRow').addEventListener('click',e=>{if(!e.target.closest('input,button'))$('copyInvite').click();});
 // Settings › Account › Name style: opens the name fonts picker (openNameFonts, nfLabel and myFont come with the name fonts work)
-// and shows your font in itself; on a page without them the row stays hidden. Read each time Settings opens, after start-up.
+// and shows your font in itself; on a page without them the row stays hidden. Read each time Settings opens, after start-up,
+// and when the font changes (the picker fires namefont on document).
 const nameStyleSync=()=>{try{const id=myFont(),v=$('nameStyleVal');v.textContent=nfLabel(id);nfEl(v,id);$('nameStyleGrp').hidden=false;}catch(e){$('nameStyleGrp').hidden=true;}};
 $('nameStyleBtn').addEventListener('click',()=>{try{openNameFonts('settingsCard');}catch(e){}});
 new MutationObserver(()=>{if(!$('settingsCard').hidden)nameStyleSync();}).observe($('settingsCard'),{attributes:true,attributeFilter:['hidden']});
+document.addEventListener('namefont',()=>nameStyleSync()); // a pick in the picker, which opens over Settings without hiding it
 // Settings › Controls › Keyboard: one key per action, by e.code (either Shift, Ctrl, Alt or Cmd counts); Esc always pauses
 const KEY_DEF={split:'Space',eject:'KeyW',dash:'Shift',pause:'KeyP',mute:'KeyM'};
 settings.keys=Object.assign({},KEY_DEF,settings.keys&&typeof settings.keys==='object'?settings.keys:{});
