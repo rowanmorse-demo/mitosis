@@ -1892,6 +1892,30 @@ img.sk-im{display:block;-webkit-user-drag:none;user-select:none;-webkit-touch-ca
 .spec-bar[hidden]{display:none}
 .spec-bar b{color:#8fe9ff}
 .spec-bar button{appearance:none;min-height:32px;padding:0 14px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.08);color:inherit;font:600 13px/1 var(--display);cursor:pointer}
+/* the rank ladder (rank-ladder branch): 9 steps in a row that scrolls sideways, opened at yours, joined by a line lit up to it;
+   under it your step's divisions, each a bar filling as you climb */
+#rankCard .rk-ladder.rk-steps{display:flex;gap:0;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;margin:-4px -14px 0;padding:8px 14px 6px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;background:none;border-color:transparent;box-shadow:none}
+#rankCard .rk-steps::-webkit-scrollbar{display:none}
+#rankCard .rk-steps::before,#rankCard .rk-steps::after{display:none}
+#rankCard .rk-steps li{position:relative;flex:0 0 78px;gap:6px;scroll-snap-align:center}
+#rankCard .rk-steps li::before{content:"";position:absolute;z-index:0;top:25px;left:-50%;right:50%;height:2px;border-radius:1px;background:rgba(255,255,255,.08)}
+#rankCard .rk-steps li:first-child::before{display:none}
+#rankCard .rk-steps li:is(.done,.cur)::before{background:linear-gradient(90deg,rgba(255,255,255,.3),var(--tc))}
+#rankCard .rk-steps .emb{position:relative;z-index:1;width:50px;height:50px}
+#rankCard .rk-steps b{font-size:11px}
+#rankCard .rk-rn{color:var(--tc)}
+#rankCard .rk-me .rk-bar{grid-column:1/-1}#rankCard .rk-me .rk-next{grid-column:1/-1;justify-self:start;margin-top:-2px} /* rank names are longer than the metals were: the next rank gets its own line */
+#rankCard .rk-divs{display:grid;gap:11px;padding:12px 12px 13px;border-radius:16px;background:rgba(0,0,0,.24);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05)}
+#rankCard .rk-divs[hidden]{display:none}
+#rankCard .rk-dh{display:flex;align-items:baseline;justify-content:space-between;gap:10px;min-width:0}
+#rankCard .rk-dh b{font:800 15px/1 var(--display);letter-spacing:-.02em;color:var(--tc)}
+#rankCard .rk-dh span{font:600 12px/1 var(--display);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#rankCard .rk-dv{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+#rankCard .rk-dv li{display:grid;grid-template-columns:auto 1fr;align-items:baseline;gap:7px 6px}
+#rankCard .rk-dbar{grid-column:1/-1;display:block;height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden}
+#rankCard .rk-dbar i{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,rgba(255,255,255,.35),var(--tc))}
+#rankCard .rk-dv b{font:800 13px/1 var(--display);color:var(--muted)}#rankCard .rk-dv li:is(.cur,.done) b{color:var(--ink)}#rankCard .rk-dv li.cur b{color:var(--tc)}
+#rankCard .rk-dv small{font:500 11px/1 var(--mono);color:var(--dim);font-variant-numeric:tabular-nums}
 /* @ui:ranks-settings end */
 
 /* @ui:results */
@@ -2639,8 +2663,9 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
       <aside class="rk-side">
         <div class="rk-me" id="rkMe"></div>
         <div class="rk-ai" id="rkAi"></div>
-        <section class="ds-sec rk-tiers" aria-labelledby="rkTiersT"><div class="ds-head"><b id="rkTiersT">Tiers</b><span class="ds-pill">vs players</span></div>
-        <ol class="rk-ladder" id="tierLegend" aria-label="Tiers"></ol>
+        <section class="ds-sec rk-tiers" aria-labelledby="rkTiersT"><div class="ds-head"><b id="rkTiersT">Ladder</b><span class="ds-pill">vs players</span></div>
+        <ol class="rk-ladder rk-steps" id="tierLegend" aria-label="Rank ladder"></ol>
+        <div class="rk-divs" id="rkDivs"></div>
         <div class="rk-howrow"><span class="ds-sub" aria-hidden="true">Rating rises when you</span>
         <ul class="rk-how" id="rankHint" aria-label="Rating rises when you">
           <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9.5 2.5h5"/></svg>Survive</li>
@@ -6307,16 +6332,18 @@ function tierEmblem(t){ // a rank's crest (rankBadge), or for an old metal tier 
     +`<path d="M32 11.5l17.5 10v21l-17.5 10-17.5-10v-21z" fill="url(#${id}b)" stroke="rgba(0,0,0,.3)" stroke-width="1"/>`
     +`<path d="M32 11.5l17.5 10V30c-9-3-26-3-35 0v-8.5z" fill="#fff" opacity=".12"/>`
     +`<g transform="translate(0 1.8)" opacity=".38">${gl('#000')}</g>${gl(p[0])}${g.facet?`<path d="${g.facet}" fill="none" stroke="${p[1]}" stroke-width="1.3" stroke-linejoin="round"/>`:''}</svg>`;}
-function renderTierLegend(){const el=$('tierLegend'),me=$('rkMe');if(!el||!me)return;const T=tierTable(),r=wallet.rating|0;
-  let i=T.tiers.indexOf(wallet.tier);if(i<0){i=T.tierAt.findIndex(v=>v!=null&&r<v);if(i<0)i=T.tiers.length-1;}
-  const name=T.tiers[i],hi=T.tierAt[i],lo=i>0?T.tierAt[i-1]:Math.min(T.tierAt[0]-300,r),top=hi==null,pct=top?100:Math.round(clamp((r-lo)/(hi-lo),0,1)*100);
-  me.style.setProperty('--tc',tierCol(name));
-  me.innerHTML=`<div class="rk-me-e">${tierEmblem(name)}</div><div class="rk-me-t"><small class="rk-k">vs players</small><span class="tier" data-tier="${escH(name)}">${escH(name)}</span><b>${r}</b></div>${rkPos?`<span class="rk-pos">#${rkPos}</span>`:''}`
-    +`<div class="rk-bar"><i style="width:${pct}%"></i></div><small class="rk-next">${top?'Top tier':`<b>${hi-r}</b> to ${escH(T.tiers[i+1])}`}</small>`;
-  el.style.setProperty('--prog',T.tiers.length>1?i/(T.tiers.length-1):1);
-  const ai=$('rkAi'),at=T.tiers.includes(wallet.aiTier)?wallet.aiTier:T.tiers[1]; // the AI rating: bots only, never the ladder or the leaderboard
-  if(ai){ai.style.setProperty('--tc',tierCol(at));ai.innerHTML=`<div class="rk-ai-e">${tierEmblem(at)}</div><div class="rk-me-t"><small class="rk-k">vs AI</small><span class="tier" data-tier="${escH(at)}">${escH(at)}</span></div><b class="rk-ai-r">${wallet.aiRating|0}</b>`;}
-  el.innerHTML=T.tiers.map((n,k)=>`<li class="${k<i?'done':k===i?'cur':'up'}" style="--tc:${tierCol(n)}">${tierEmblem(n)}<b>${escH(n)}</b><span>${k?T.tierAt[k-1]:'<'+T.tierAt[0]}</span></li>`).join('');}
+function renderTierLegend(){ // your rank and the next, the 9 steps of the ladder (opened at yours) and your step's divisions
+  const el=$('tierLegend'),me=$('rkMe');if(!el||!me)return;const r=wallet.rating|0,R=rankOf(r),N=rankNext(r),st=rankStep(R.step),si=RANK_STEPS.indexOf(st);
+  me.style.setProperty('--tc',st.pal[1]);
+  me.innerHTML=`<div class="rk-me-e">${rankBadge(R,'emb')}</div><div class="rk-me-t"><small class="rk-k">vs players</small><span class="tier rk-rn">${escH(R.name)}</span><b>${r}</b></div>${rkPos?`<span class="rk-pos">#${rkPos}</span>`:''}`
+    +`<div class="rk-bar"><i style="width:${Math.round(rankPct(r)*100)}%"></i></div><small class="rk-next">${N?`<b>${N.at-r}</b> to ${escH(N.name)}`:'Top rank'}</small>`;
+  const ai=$('rkAi'),ar=wallet.aiRating|0,A=rankOf(ar); // the AI rating: bots only, never the ladder or the leaderboard
+  if(ai){ai.style.setProperty('--tc',rankStep(A.step).pal[1]);ai.innerHTML=`<div class="rk-ai-e">${rankBadge(A,'emb')}</div><div class="rk-me-t"><small class="rk-k">vs AI</small><span class="tier rk-rn">${escH(A.name)}</span></div><b class="rk-ai-r">${ar}</b>`;}
+  el.innerHTML=RANK_STEPS.map((s,k)=>`<li class="${k<si?'done':k===si?'cur':'up'}" style="--tc:${s.pal[1]}"${k===si?' aria-current="step"':''}>${rankBadge({step:s.key,div:0},'emb')}<b>${escH(s.name)}</b><span>${s.at[0]}</span></li>`).join('');
+  requestAnimationFrame(()=>{const c=el.querySelector('.cur');if(c)el.scrollLeft=c.offsetLeft-(el.clientWidth-c.offsetWidth)/2;});
+  const dv=$('rkDivs'),D=rankTable().filter(x=>x.step===R.step);if(!dv)return;dv.style.setProperty('--tc',st.pal[1]);dv.hidden=D.length<2;if(D.length<2)return;
+  dv.innerHTML=`<div class="rk-dh"><b>${escH(st.name)}</b><span>${N?`${N.at-r} to ${escH(N.name)}`:'Top rank'}</span></div><ol class="rk-dv">${D.map((d,k)=>{const nx=D[k+1]||rankNext(d.at),f=r<d.at?0:nx?clamp((r-d.at)/(nx.at-d.at),0,1):1;
+    return `<li class="${d.name===R.name?'cur':r>=d.at?'done':'up'}"><span class="rk-dbar"><i style="width:${(f*100).toFixed(1)}%"></i></span><b>${['I','II','III'][d.div-1]||escH(d.name)}</b><small>${d.at}</small></li>`;}).join('')}</ol>`;}
 function renderMe(){const n=$('meName');if(n)n.textContent=cleanName($('nameIn').value)||settings.name||'Unnamed cell';const a=$('lobbyAtp');if(a)a.textContent=(wallet.balance|0).toLocaleString();
   if(!renderMe.raf)renderMe.raf=requestAnimationFrame(()=>{renderMe.raf=0;drawAvatar($('meCv'));});} // next frame: the wallet can arrive before the game clock exists, and animated skins read it
 function renderLevel(){ // the level badge on the lobby's portrait (the profile card opens the Profile, which has the XP bar)
