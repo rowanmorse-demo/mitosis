@@ -83,6 +83,15 @@ class CDP {
     const pid = st.recent[0].player;
     await p.eval(`document.getElementById('pushSec').scrollIntoView()`); await p.shot('2-settings-on');
 
+    // the redesign's conventions: no data-def (Reset must not touch notifications), its note style, a tap on the row flips it
+    assert.ok(await p.eval(`!document.querySelector('#pushSec [data-def]')`), 'no Reset-to-default marks on the push switches');
+    assert.ok(await p.eval(`document.getElementById('pushFoot').className===(document.querySelector('#pushSec .st-list')?'st-note':'sg-foot')`), 'the note in the page\'s own style');
+    await p.eval(`document.querySelector('[data-push="quests"] .sl').click()`);
+    await p.until(`document.querySelector('#pushSeg-quests [aria-pressed=true]').dataset.v==='0'`, 'a tap on the Quests row to switch it off');
+    await p.eval(`document.querySelector('[data-push="quests"] .sl').click()`);
+    await p.until(`document.querySelector('#pushSeg-quests [aria-pressed=true]').dataset.v==='1'`, 'and on again');
+    await sleep(600);
+
     // 3. switching a kind off reaches the server
     await p.eval(`document.querySelector('#pushSeg-shop [data-v="0"]').click()`);
     await p.until(`document.querySelector('#pushSeg-shop [aria-pressed=true]').dataset.v==='0'`, 'Shop off');

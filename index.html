@@ -9067,9 +9067,11 @@ function pushSettings(){
     const sg=r.querySelector('.seg');sg.id=key==='all'?'pushSeg':'pushSeg-'+key;
     for(const b of sg.children){const v=b.dataset.s;for(const k of Object.keys(b.dataset))delete b.dataset[k];b.dataset.v=v;b.setAttribute('aria-pressed','false');}
     sg.addEventListener('click',e=>{const b=e.target.closest('button');if(b&&b.getAttribute('aria-pressed')!=='true'){Native.haptic('selection');pushFlip(key,b.dataset.v==='1');}});
+    // a tap anywhere else on the row flips it, like the Settings page's own rows (whose handler is bound before these exist)
+    r.addEventListener('click',e=>{const b=e.target.closest('.seg button');if(b&&b.getAttribute('aria-pressed')!=='true')return;e.stopPropagation();const o=sg.querySelector('button:not([aria-pressed="true"])');if(o)o.click();});
     list.appendChild(r);return r;};
   row('all','Notifications');
-  const foot=document.createElement('p');foot.className='sg-foot';foot.id='pushFoot';sec.appendChild(foot);
+  const foot=document.createElement('p');foot.className=list.classList.contains('st-list')?'st-note':'sg-foot';foot.id='pushFoot';sec.appendChild(foot); // the note style of whichever Settings look
   sec.dataset.built='1';sec._row=row;return sec;
 }
 function pushFlip(key,on){
