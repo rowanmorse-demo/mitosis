@@ -11,8 +11,8 @@
 //        [--to <git rev>]                    or index.html as it was at that commit or tag
 //   node tools/page-update.js off           send every app back to the page built into it
 //   node tools/page-update.js check         verify updates/ against the keys built into the apps
-//   Every command takes --platform ios|android|all; the default is every app that has page updates built in.
-//   --out <dir> (with one --platform) writes or checks that folder instead of updates/<platform>/: for test releases.
+//   Every command takes --platform ios|android|all (default ios; all = every app that has page updates built in).
+//   --out <dir> (with ios or android) writes or checks that folder instead of updates/<platform>/: for test releases.
 //
 // Then commit updates/ and deploy the server as usual. An app checks when it opens (and at most every 30 minutes
 // when it comes back to the foreground), downloads the page, checks its signature and SHA-256, and shows it on its
@@ -161,7 +161,7 @@ function main(argv) {
   const [cmd, ...rest] = argv;
   const str = name => { const i = rest.indexOf('--' + name); if (i < 0) return undefined; if (rest[i + 1] === undefined) throw new Error(`--${name} needs a value`); return rest[i + 1]; };
   const num = name => { const v = str(name); if (v === undefined) return undefined; if (!/^\d+$/.test(v)) throw new Error(`--${name} takes a build number`); return Number(v); };
-  const which = str('platform') || 'all';
+  const which = str('platform') || 'ios';
   const platforms = which === 'all' ? enabledPlatforms() : [which];
   if (!platforms.length) throw new Error('No app has page updates built in (PageUpdates.swift / PageUpdates.kt are missing)');
   for (const p of platforms) {
@@ -169,8 +169,8 @@ function main(argv) {
     if (!fs.existsSync(PLATFORMS[p].app)) throw new Error(`The ${PLATFORMS[p].name} app in this checkout has no page updates (${path.relative(ROOT, PLATFORMS[p].app)} is missing)`);
   }
   const min = num('min'), max = num('max'), outArg = str('out');
-  if ((min !== undefined || max !== undefined) && platforms.length > 1) throw new Error('--min and --max are build numbers of one app: add --platform ios or --platform android');
-  if (outArg && (platforms.length > 1 || which === 'all')) throw new Error('--out is one app\'s folder: add --platform ios or --platform android');
+  if ((min !== undefined || max !== undefined) && which === 'all') throw new Error('--min and --max are build numbers of one app: use --platform ios or --platform android');
+  if (outArg && which === 'all') throw new Error('--out is one app\'s folder: use --platform ios or --platform android');
   const dirOf = p => (outArg ? path.resolve(outArg) : outDir(p));
 
   if (cmd === 'keygen') {

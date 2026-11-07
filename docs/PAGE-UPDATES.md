@@ -17,14 +17,14 @@ permissions, the icon, and the update code itself.
 1. Commit the change to `index.html` on `main`. Test it as usual (`npm test`, the browser, a simulator).
 2. Sign it:
    ```bash
-   node tools/page-update.js publish
+   node tools/page-update.js publish --platform all
    ```
    This writes `updates/ios/` and, once the Android app has page updates, `updates/android/`: a signed `manifest.json` and
-   `page.html`. Each update covers every app build from the first with page updates up to the build in `ios/project.yml` or
+   `page.html`. Without `--platform` the tool covers the iOS app only; `--platform android` covers Android only. Each update covers every app build from the first with page updates up to the build in `ios/project.yml` or
    `android/app/build.gradle.kts`.
 3. Check what will go out:
    ```bash
-   node tools/page-update.js check
+   node tools/page-update.js check --platform all
    ```
 4. Commit `updates/` and push `main`.
 5. Deploy the server. The server reads `updates/` on every request, so the deploy is all it takes:
@@ -43,7 +43,7 @@ update as `ios-2.3.0-p<v>` or `android-2.3.0-p<v>`.
 ```bash
 node tools/page-update.js publish --platform ios --min 12
 ```
-`--max N` holds an update back from newer builds. `--platform ios|android` publishes for one app only.
+`--max N` holds an update back from newer builds.
 
 ## Roll back
 
@@ -53,7 +53,7 @@ node tools/page-update.js publish --platform ios --min 12
 | `node tools/page-update.js rollback --to <commit or tag>` | Publishes `index.html` as it was at that commit. |
 | `node tools/page-update.js off` | Sends every app back to the page built into it. |
 
-Then commit, push and deploy, as for a publish. Phones switch the way they take any update: they learn of it when they
+Each takes `--platform ios|android|all` like `publish` (default: iOS). Then commit, push and deploy, as for a publish. Phones switch the way they take any update: they learn of it when they
 open and switch on the launch after.
 
 **Phones also roll back on their own**, one phone at a time. A downloaded page has to send `{type:'booted'}`, the last line
