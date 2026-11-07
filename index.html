@@ -1822,6 +1822,23 @@ img.sk-im{display:block;-webkit-user-drag:none;user-select:none;-webkit-touch-ca
 #settingsCard :is(.srow.tg,.srow.nav,.srow.inv):active{background:rgba(255,255,255,.04)}
 @media (hover:hover){#settingsCard .seg button:not([aria-pressed=true]):hover{color:var(--ink)}#settingsCard :is(.srow.tg,.srow.nav,.srow.inv):hover{background:rgba(255,255,255,.025)}}
 /* invite */
+/* a slider with its value (Volume) */
+#settingsCard .st-range{flex:0 1 220px;min-width:0;margin-left:auto;display:flex;align-items:center;gap:12px}
+#settingsCard .st-range input{-webkit-appearance:none;appearance:none;flex:1;min-width:96px;height:30px;margin:0;background:none;cursor:pointer}
+#settingsCard .st-range input:focus{outline:none}
+#settingsCard .st-range input::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:linear-gradient(90deg,var(--accent) var(--v,100%),rgba(255,255,255,.14) 0)}
+#settingsCard .st-range input::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;margin-top:-7px;border-radius:5px;background:#f2faf8;box-shadow:0 1px 4px rgba(0,0,0,.5)}
+#settingsCard .st-range input:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px rgba(255,92,138,.4)}
+#settingsCard .st-range input::-moz-range-track{height:4px;border-radius:2px;background:rgba(255,255,255,.14)}
+#settingsCard .st-range input::-moz-range-progress{height:4px;border-radius:2px;background:var(--accent)}
+#settingsCard .st-range input::-moz-range-thumb{width:18px;height:18px;border:0;border-radius:5px;background:#f2faf8}
+#settingsCard .st-range output{flex:none;min-width:30px;text-align:right;font:500 13px/1 var(--mono);color:var(--ink);font-variant-numeric:tabular-nums}
+/* a key binding: a keycap; click it and it waits for the next key */
+#settingsCard .st-key{appearance:none;position:relative;flex:none;min-width:76px;height:32px;margin:0 0 0 auto;padding:0 12px;border-radius:7px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.34);box-shadow:inset 0 -2px 0 rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.06);color:var(--ink);font:500 12px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:border-color .15s,color .15s,background-color .15s}
+#settingsCard .st-key.listen{border-color:var(--accent);color:#fff;background:rgba(255,92,138,.12);animation:stKey 1s ease-in-out infinite}
+@keyframes stKey{50%{border-color:rgba(255,92,138,.3)}}
+@media (hover:hover){#settingsCard .st-key:not(.listen):hover{border-color:rgba(170,235,225,.3)}}
+@media (pointer:fine){#settingsCard .st-grp.touch-only+.st-grp{margin-top:8px}}
 #settingsCard .srow.inv{cursor:pointer;flex-wrap:nowrap}
 #settingsCard .srow.inv .sl{display:grid;gap:3px}
 #settingsCard #inviteUrl{appearance:none;display:block;width:100%;box-sizing:border-box;margin:0;padding:0;border:0;border-radius:0;background:none;color:var(--dim);font:400 11px/1.25 var(--mono);text-overflow:ellipsis;cursor:text}
@@ -2375,6 +2392,9 @@ body.joy-float #joy{opacity:.4}body.joy-float #joy.active{opacity:1}
   #board.collapsed ~ #toasts{top:var(--hud-row)!important;left:auto;right:var(--hud-r);transform:none;justify-items:end;max-width:calc(100% - 2*var(--hud-l) - 160px)}
   #board.collapsed ~ #banner:not([hidden]) ~ #toasts{top:calc(var(--hud-row) + 32px)!important}
 }
+/* Settings › Controls › Touch: button size, and how solid the stick and buttons are (--ctl-op) */
+@media (pointer:coarse){body[data-act=small] #actions{transform:scale(.88);transform-origin:100% 100%}body[data-act=large] #actions{transform:scale(1.15);transform-origin:100% 100%}body.lefty #actions{transform-origin:0 100%}}
+#actions,#joy>.base,#joy>.knob{opacity:var(--ctl-op,1)}
 /* @ui:hud end */
 
 /* @ui:overlays */
@@ -2731,7 +2751,7 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
 
   <div class="card panel page" id="settingsCard" hidden>
     <header class="pg-top"><button class="lb-icon back" type="button" aria-label="Back to the lobby"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><h2>Settings</h2>
-      <div class="st-tabs" id="stTabs" role="tablist" aria-label="Settings"><button type="button" role="tab" id="stTabGame" aria-controls="stGame" aria-selected="true">Game</button><button type="button" role="tab" id="stTabControls" aria-controls="stControls" aria-selected="false" tabindex="-1" class="touch-only">Controls</button><button type="button" role="tab" id="stTabVideo" aria-controls="stVideo" aria-selected="false" tabindex="-1">Video</button><button type="button" role="tab" id="stTabAudio" aria-controls="stAudio" aria-selected="false" tabindex="-1">Audio</button><button type="button" role="tab" id="stTabAccount" aria-controls="stAccount" aria-selected="false" tabindex="-1">Account</button></div></header>
+      <div class="st-tabs" id="stTabs" role="tablist" aria-label="Settings"><button type="button" role="tab" id="stTabGame" aria-controls="stGame" aria-selected="true">Game</button><button type="button" role="tab" id="stTabControls" aria-controls="stControls" aria-selected="false" tabindex="-1">Controls</button><button type="button" role="tab" id="stTabVideo" aria-controls="stVideo" aria-selected="false" tabindex="-1">Video</button><button type="button" role="tab" id="stTabAudio" aria-controls="stAudio" aria-selected="false" tabindex="-1">Audio</button><button type="button" role="tab" id="stTabAccount" aria-controls="stAccount" aria-selected="false" tabindex="-1">Account</button></div></header>
     <div class="st-panels">
       <section class="st-panel" id="stGame" role="tabpanel" aria-labelledby="stTabGame">
         <div class="st-grp"><h3 class="st-h">Match</h3><div class="st-list">
@@ -2749,9 +2769,9 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
           <details class="srow-d" id="helpSec"><summary class="srow nav"><span class="sl">How to play</span></summary><div class="body">
             <dl class="keys kbd-only">
               <dt>Mouse</dt><dd>Steer</dd>
-              <dt>Space</dt><dd>Split</dd>
-              <dt>W</dt><dd>Eject mass</dd>
-              <dt>Shift</dt><dd>Dash · costs 4% mass</dd>
+              <dt data-k="split">Space</dt><dd>Split</dd>
+              <dt data-k="eject">W</dt><dd>Eject mass</dd>
+              <dt data-k="dash">Shift</dt><dd>Dash · costs 4% mass</dd>
               <dt>Esc</dt><dd>Pause</dd>
             </dl>
             <dl class="keys touch-only">
@@ -2775,13 +2795,25 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
         </div></div>
         <div class="st-foot"><button type="button" class="st-reset"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5v5h5"/><path d="M4.6 14.5A8 8 0 1 0 6.3 6.3L4 10"/></svg>Reset to defaults</button></div>
       </section>
-      <section class="st-panel touch-only" id="stControls" role="tabpanel" aria-labelledby="stTabControls" hidden>
-        <div class="st-grp"><h3 class="st-h">Touch</h3><div class="st-list">
+      <section class="st-panel" id="stControls" role="tabpanel" aria-labelledby="stTabControls" hidden>
+        <div class="st-grp touch-only"><h3 class="st-h">Touch</h3><div class="st-list">
           <div class="srow"><span class="sl">Joystick</span>
             <div class="seg two" id="joySeg"><button type="button" data-j="fixed" data-def>Fixed</button><button type="button" data-j="float">Floating</button></div></div>
-          <div class="srow"><span class="sl">Buttons</span>
+          <div class="srow"><span class="sl">Button side</span>
             <div class="seg two" id="handSeg"><button type="button" data-l="1">Left</button><button type="button" data-l="0" data-def>Right</button></div></div>
+          <div class="srow"><span class="sl">Button size</span>
+            <div class="seg" id="actSeg"><button type="button" data-sz="small">Small</button><button type="button" data-sz="normal" data-def>Normal</button><button type="button" data-sz="large">Large</button></div></div>
+          <div class="srow"><span class="sl">Opacity</span>
+            <div class="seg" id="opSeg"><button type="button" data-op="100" data-def>100%</button><button type="button" data-op="75">75%</button><button type="button" data-op="50">50%</button></div></div>
         </div></div>
+        <div class="st-grp kbd-only"><h3 class="st-h">Keyboard</h3><div class="st-list">
+          <div class="srow"><span class="sl">Split</span><button type="button" class="st-key" data-k="split">Space</button></div>
+          <div class="srow"><span class="sl">Eject mass</span><button type="button" class="st-key" data-k="eject">W</button></div>
+          <div class="srow"><span class="sl">Dash</span><button type="button" class="st-key" data-k="dash">Shift</button></div>
+          <div class="srow"><span class="sl">Pause</span><button type="button" class="st-key" data-k="pause">P</button></div>
+          <div class="srow"><span class="sl">Mute sound</span><button type="button" class="st-key" data-k="mute">M</button></div>
+        </div>
+        <p class="st-note">Click a key, then press the new one. <b>Esc</b> cancels, and always pauses a game; <b>1</b> <b>2</b> <b>3</b> pick mutations.</p></div>
         <div class="st-foot"><button type="button" class="st-reset"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5v5h5"/><path d="M4.6 14.5A8 8 0 1 0 6.3 6.3L4 10"/></svg>Reset to defaults</button></div>
       </section>
       <section class="st-panel" id="stVideo" role="tabpanel" aria-labelledby="stTabVideo" hidden>
@@ -2792,8 +2824,22 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
             <div class="seg two" id="fxSeg"><button type="button" data-fx="0" data-def>Full</button><button type="button" data-fx="1">Lite</button></div></div>
           <div class="srow"><span class="sl">HUD</span>
             <div class="seg two" id="infoSeg"><button type="button" data-i="0" data-def>Full</button><button type="button" data-i="1">Compact</button></div></div>
+          <div class="srow"><span class="sl">Leaderboard</span>
+            <div class="seg two" id="boardSeg"><button type="button" data-bm="0">Open</button><button type="button" data-bm="1">Folded</button></div></div>
+        </div></div>
+        <div class="st-grp"><h3 class="st-h">Arena</h3><div class="st-list">
+          <div class="srow tg"><span class="sl">Player names</span>
+            <div class="seg two sw2" id="namesSeg"><button type="button" data-v="0">Off</button><button type="button" data-v="1" data-def>On</button></div></div>
+          <div class="srow tg"><span class="sl">Mass number</span>
+            <div class="seg two sw2" id="massSeg"><button type="button" data-v="0">Off</button><button type="button" data-v="1" data-def>On</button></div></div>
+          <div class="srow tg"><span class="sl">Grid</span>
+            <div class="seg two sw2" id="gridSeg"><button type="button" data-v="0">Off</button><button type="button" data-v="1" data-def>On</button></div></div>
+          <div class="srow"><span class="sl">Screen shake</span>
+            <div class="seg" id="shakeSeg"><button type="button" data-sh="full" data-def>Full</button><button type="button" data-sh="low">Low</button><button type="button" data-sh="off">Off</button></div></div>
         </div></div>
         <div class="st-grp"><h3 class="st-h">Performance</h3><div class="st-list">
+          <div class="srow"><span class="sl">Resolution</span>
+            <div class="seg" id="resSeg"><button type="button" data-res="high" data-def>High</button><button type="button" data-res="medium">Medium</button><button type="button" data-res="low">Low</button></div></div>
           <div class="srow tg"><span class="sl">FPS &amp; ping</span>
             <div class="seg two sw2" id="perfSeg"><button type="button" data-p="0" data-def>Off</button><button type="button" data-p="1">On</button></div></div>
           <div class="srow tg"><span class="sl">Battery saver</span>
@@ -2804,12 +2850,15 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
         <div class="st-foot"><button type="button" class="st-reset"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5v5h5"/><path d="M4.6 14.5A8 8 0 1 0 6.3 6.3L4 10"/></svg>Reset to defaults</button></div>
       </section>
       <section class="st-panel" id="stAudio" role="tabpanel" aria-labelledby="stTabAudio" hidden>
-        <div class="st-grp"><h3 class="st-h">Sound &amp; haptics</h3><div class="st-list">
+        <div class="st-grp"><h3 class="st-h">Sound</h3><div class="st-list">
           <div class="srow tg"><span class="sl">Sound</span>
             <div class="seg two sw2" id="sndSeg"><button type="button" data-s="0">Off</button><button type="button" data-s="1" data-def>On</button></div></div>
-          <div class="srow tg"><span class="sl">Vibration</span>
-            <div class="seg two sw2" id="hapSeg"><button type="button" data-h="0">Off</button><button type="button" data-h="1" data-def>On</button></div></div>
+          <div class="srow"><label class="sl" for="volIn">Volume</label><span class="st-range"><input type="range" id="volIn" min="0" max="100" step="5" value="100" data-def="100"><output id="volOut" for="volIn">100</output></span></div>
         </div></div>
+        <div class="st-grp"><h3 class="st-h">Haptics</h3><div class="st-list">
+          <div class="srow"><span class="sl">Vibration</span>
+            <div class="seg" id="hapSeg"><button type="button" data-h="0">Off</button><button type="button" data-h="light">Light</button><button type="button" data-h="normal" data-def>Normal</button><button type="button" data-h="strong">Strong</button></div></div>
+        </div><p class="st-note">Light is a soft tick on each hit; Strong shakes the whole phone on bursts, deaths and wins.</p></div>
         <!-- Notifications (push): filled at runtime with <h3 class="st-h"> and a .st-list of .srow.tg rows, then shown -->
         <section class="st-grp" id="pushSec" hidden></section>
         <div class="st-foot"><button type="button" class="st-reset"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5v5h5"/><path d="M4.6 14.5A8 8 0 1 0 6.3 6.3L4 10"/></svg>Reset to defaults</button></div>
@@ -3052,9 +3101,10 @@ const cv=$('game'),ctx=cv.getContext('2d',{alpha:false});
 const mini=$('mini'),mctx=mini.getContext('2d');
 let W=0,H=0,DPR=1;
 let lobbyAt=0,lbBgKey=''; // when the lobby last opened (its painted background hides the arena), and the size it was painted at
+let resCap=2; // Settings › Video › Resolution: the most device pixels drawn per CSS pixel
 let saverOn=false; // battery saver (Settings, iOS Low Power Mode or a hot phone): 30 fps, lighter effects, no glass blur, lower resolution
 function resize(){
-  DPR=Math.min(saverOn?1.5:2,window.devicePixelRatio||1);W=innerWidth;H=innerHeight;
+  DPR=Math.min(saverOn?1.5:2,resCap,window.devicePixelRatio||1);W=innerWidth;H=innerHeight;
   cv.width=Math.round(W*DPR);cv.height=Math.round(H*DPR);
   const ms=mini.clientWidth||140;mini.width=Math.round(ms*DPR);mini.height=Math.round(ms*DPR);
 }
@@ -6112,6 +6162,11 @@ let settings={name:'',stain:0,diff:'standard',skin:0,lowFx:false,haptics:true}; 
 try{const s=JSON.parse(localStorage.getItem('mitosis.settings')||'null');if(s&&typeof s==='object')settings=Object.assign(settings,s);}catch(e){}
 if(!DIFF[settings.diff])settings.diff='standard';settings.stain=clamp(settings.stain|0,0,STAINS.length-1);settings.skin=clamp(settings.skin|0,0,SKIN_COUNT-1);
 const saveSettings=()=>{try{localStorage.setItem('mitosis.settings',JSON.stringify(settings));}catch(e){}};
+// Settings › Controls › Keyboard: one key per action, by e.code (either Shift, Ctrl, Alt or Cmd counts); Esc always pauses
+const KEY_DEF={split:'Space',eject:'KeyW',dash:'Shift',pause:'KeyP',mute:'KeyM'};
+settings.keys=Object.assign({},KEY_DEF,settings.keys&&typeof settings.keys==='object'?settings.keys:{});
+const keyCode=c=>/^(Shift|Control|Alt|Meta)(Left|Right)$/.test(c)?c.replace(/(Left|Right)$/,''):c,keyIs=(e,a)=>keyCode(e.code)===settings.keys[a],keyBound=c=>Object.values(settings.keys).includes(c);
+const keyName=c=>({Control:'Ctrl',Meta:'Cmd',Backquote:'`',Minus:'-',Equal:'=',BracketLeft:'[',BracketRight:']',Backslash:'\\',Semicolon:';',Quote:"'",Comma:',',Period:'.',Slash:'/',ArrowUp:'↑',ArrowDown:'↓',ArrowLeft:'←',ArrowRight:'→',CapsLock:'Caps',Backspace:'Bksp'})[c]||String(c).replace(/^(Key|Digit|Numpad)/,'');
 
 /* ================= ATP economy: wallet, runs, skins, store ================= */
 /* The server owns every wallet (see economy.js). The page only asks: "this run ended", "buy this skin",
@@ -6151,8 +6206,13 @@ const Native=(()=>{
   // taps closer than 120 ms are dropped; the strong ones (death, a win, a burst, an infection) always play, but the
   // same one at most every 300 ms (several achievements can unlock in one frame)
   let lastHap=0,lastStyle='';const LOUD=new Set(['heavy','success','warning','error']);
+  // Settings › Audio › Vibration: Light turns each tap down to a soft one; Strong turns it up, and the strong moments shake twice
+  const HAP_LV={light:{light:'selection',soft:'selection',medium:'light',rigid:'light',heavy:'soft',success:'light',warning:'light',error:'soft'},
+    strong:{selection:'light',light:'medium',soft:'medium',medium:'heavy',rigid:'heavy',heavy:'error',success:'error',warning:'error'}};
   return{platform,send,call,haptic(style){if(!platform||!settings.haptics)return;const n=performance.now(),gap=n-lastHap;
-    if(LOUD.has(style)?style===lastStyle&&gap<300:gap<120)return;lastHap=n;lastStyle=style;send({type:'haptic',style});}};
+    if(LOUD.has(style)?style===lastStyle&&gap<300:gap<120)return;lastHap=n;lastStyle=style;
+    const lv=settings.hapLevel;send({type:'haptic',style:(HAP_LV[lv]&&HAP_LV[lv][style])||style});
+    if(lv==='strong'&&LOUD.has(style))setTimeout(()=>send({type:'haptic',style:'error'}),240);}};
 })();
 
 async function api(path,body,auth=true){
@@ -6364,11 +6424,25 @@ const stTabs=[...$('stTabs').children];
 function stTab(t){for(const x of stTabs){const on=x===t;x.setAttribute('aria-selected',String(on));x.tabIndex=on?0:-1;$(x.getAttribute('aria-controls')).hidden=!on;}$('settingsCard').scrollTop=0;}
 $('stTabs').addEventListener('click',e=>{const t=e.target.closest('[role=tab]');if(t&&t.getAttribute('aria-selected')!=='true')stTab(t);});
 $('stTabs').addEventListener('keydown',e=>{const d=e.key==='ArrowRight'?1:e.key==='ArrowLeft'?-1:0;if(!d)return;const v=stTabs.filter(x=>x.offsetParent),i=v.indexOf(document.activeElement);if(i<0)return;const t=v[(i+d+v.length)%v.length];e.preventDefault();stTab(t);t.focus();});
-// Reset to defaults: the first tap arms it, a second within 3 s taps each of the tab's data-def choices that isn't picked
+// Reset to defaults: the first tap arms it, a second within 3 s taps each of the tab's data-def choices that isn't picked,
+// puts sliders back to their data-def value and the keys back to KEY_DEF
+// Settings › Controls › Keyboard: click a key, then press the new one (Esc cancels); a key another action had swaps over
+function syncKeys(){for(const b of document.querySelectorAll('#settingsCard .st-key'))if(!b.classList.contains('listen'))b.textContent=keyName(settings.keys[b.dataset.k]);
+  for(const [id,a] of [['splitBtn','split'],['ejectBtn','eject'],['dashBtn','dash']]){const k=$(id).querySelector('kbd');if(k)k.textContent=keyName(settings.keys[a]);}
+  for(const d of document.querySelectorAll('#helpSec dt[data-k]'))d.textContent=keyName(settings.keys[d.dataset.k]);}
+let keyWait=null;const keyStop=()=>{if(!keyWait)return;keyWait.classList.remove('listen');keyWait=null;syncKeys();};
+for(const b of document.querySelectorAll('#settingsCard .st-key'))b.addEventListener('click',()=>{const was=keyWait===b;keyStop();if(was)return;keyWait=b;b.classList.add('listen');b.textContent='Press a key';});
+addEventListener('keydown',e=>{if(!keyWait)return;e.preventDefault();e.stopImmediatePropagation();if(e.key==='Escape'){keyStop();return;}
+  const c=keyCode(e.code);if(!c||/^Digit[123]$/.test(c))return; // 1-3 pick mutations
+  const a=keyWait.dataset.k,old=settings.keys[a];for(const k in settings.keys)if(k!==a&&settings.keys[k]===c)settings.keys[k]=old;settings.keys[a]=c;saveSettings();keyStop();},true);
+addEventListener('pointerdown',e=>{if(keyWait&&e.target!==keyWait)keyStop();},true);
+syncKeys();
 for(const b of document.querySelectorAll('#settingsCard .st-reset')){const label=b.lastChild;let t=0;
   b.addEventListener('click',()=>{clearTimeout(t);
     if(!b.classList.contains('arm')){b.classList.add('arm');label.textContent='Tap again to reset';t=setTimeout(()=>{b.classList.remove('arm');label.textContent='Reset to defaults';},3000);return;}
-    b.classList.remove('arm');for(const d of b.closest('.st-panel').querySelectorAll('.seg [data-def]'))if(d.getAttribute('aria-pressed')!=='true')d.click();
+    b.classList.remove('arm');const panel=b.closest('.st-panel');for(const d of panel.querySelectorAll('.seg [data-def]'))if(d.getAttribute('aria-pressed')!=='true')d.click();
+    for(const r of panel.querySelectorAll('input[type=range][data-def]'))if(r.value!==r.dataset.def){r.value=r.dataset.def;r.dispatchEvent(new Event('input'));r.dispatchEvent(new Event('change'));}
+    if(panel.querySelector('.st-key')){settings.keys=Object.assign({},KEY_DEF);saveSettings();keyStop();syncKeys();}
     label.textContent='Back to defaults';t=setTimeout(()=>{label.textContent='Reset to defaults';},1600);Native.haptic('light');});}
 // account deletion (App Store guideline 5.1.1(v)): Profile › Account, or the last button on Settings; both open the #deleteCard confirm
 let delFrom='profileCard';const DEL_BODY=$('delBody').textContent;
@@ -6995,7 +7069,7 @@ const vslots=[];
 let ev={type:0,id:0,end:0,x:0,y:0},evNext=40,evIdC=1,evoOffer=null,runAch=[],lysedAt=0,emSeq=0;
 let achGot=new Set();try{const a=JSON.parse(localStorage.getItem('mitosis.ach')||'[]');if(Array.isArray(a))achGot=new Set(a);}catch(e){}
 let T=0,nextId=1,nidC=1,vidC=1,puC=1,hidC=1,human=null,mode='attract',leader=null,paused=false,lowFx=!!settings.lowFx,histT=0,hunterT=12,slow=1;
-const cam={x:0,y:0,z:.6,shake:0};
+const cam={x:0,y:0,z:.6,shake:0};let shakeK=1; // Settings › Video › Screen shake scales it
 const pointer={x:innerWidth/2,y:innerHeight/2};
 // Touch devices steer with the on-screen joystick (bottom left) instead of the finger position.
 const TOUCH_UI=matchMedia('(pointer:coarse)').matches;
@@ -7820,11 +7894,11 @@ function drawCell(c){
   if(sr>15&&!SKIP.has('text')&&p.name){
     let px=labelPx(Math.max(sr*.34,11));const maxW=sr*1.72;let L=labelSprite(p.name,px);
     if(L.tw>maxW){px=labelPx(px*maxW/L.tw);L=labelSprite(p.name,px);}
-    if(L.tw<=sr*2.6)ctx.drawImage(L.c,c.x-L.w/2/z,c.y-L.h/2/z,L.w/z,L.h/z); // sprite is in screen pixels: undo the camera scale so it stays crisp; a name far wider than its cell waits until the cell grows
+    if(settings.names!==false&&L.tw<=sr*2.6)ctx.drawImage(L.c,c.x-L.w/2/z,c.y-L.h/2/z,L.w/z,L.h/z); // sprite is in screen pixels: undo the camera scale so it stays crisp; a name far wider than its cell waits until the cell grows
     if(p.pk&&sr>30&&c===bigCell(p)){ // mutation badges, on the biggest cell only, sized so the row fits inside it
       const n=popcount(p.pk),bp=Math.round(Math.min(22,sr*.2,sr*1.3/(n*1.75)));
       if(bp>=7){const B=perkSprite(p.pk,bp),dy=(L.h/2+(p===human?px*1.25:px*.35)+B.h/2)/z;ctx.drawImage(B.c,c.x-B.w/2/z,c.y+dy-B.h/2/z,B.w/z,B.h/z);}}
-    if(p===human&&sr>24){ // the live mass readout changes every frame, so it is drawn directly, in screen space at a fixed set of sizes
+    if(p===human&&sr>24&&settings.massLabel!==false){ // the live mass readout changes every frame, so it is drawn directly, in screen space at a fixed set of sizes
       const ms=labelPx(px*.56),t=c.inf?Math.max(0,c.inf-T).toFixed(1)+'s':String(Math.round(c.mass));
       ctx.save();ctx.setTransform(DPR,0,0,DPR,0,0);ctx.font=monoFont(ms);ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';ctx.lineWidth=ms*.16;ctx.strokeStyle='rgba(0,0,0,.42)';
       ctx.fillStyle=c.inf?col(INF_C,20):'#fff';const X=scrX(c.x),Y=scrY(c.y)+px*.82;ctx.strokeText(t,X,Y);ctx.fillText(t,X,Y);ctx.restore();}
@@ -7921,7 +7995,7 @@ function drawEj(x,y,r,color,vx=0,vy=0){
   ctx.beginPath();ctx.arc(0,0,r,0,TAU);fillUnit(ctx,grad(ctx,'ej'+color,g=>{const q=g.createRadialGradient(-.3,-.3,0,0,0,1);q.addColorStop(0,col(color,16));q.addColorStop(1,col(color,-6));return q;}),0,0,r);ctx.lineWidth=Math.max(1/z,2.5);ctx.strokeStyle=col(color,-26);ctx.stroke();ctx.restore();
 }
 function draw(){
-  const z=cam.z;let shx=0,shy=0;if(cam.shake>.3){shx=(Math.random()-.5)*cam.shake;shy=(Math.random()-.5)*cam.shake;}
+  const z=cam.z,sk=cam.shake*shakeK;let shx=0,shy=0;if(sk>.3){shx=(Math.random()-.5)*sk;shy=(Math.random()-.5)*sk;}
   ctx.setTransform(DPR,0,0,DPR,0,0);ctx.fillStyle=BG.page;ctx.fillRect(0,0,W,H);
   if(!lowFx&&BG.bokeh&&!SKIP.has('bokeh'))drawBokeh(BOK_BACK);
   ctx.setTransform(DPR*z,0,0,DPR*z,DPR*(W/2-cam.x*z+shx),DPR*(H/2-cam.y*z+shy));
@@ -7930,7 +8004,7 @@ function draw(){
   ctx.beginPath();ctx.arc(0,0,R,0,TAU);ctx.fillStyle=g;ctx.fill();
   ctx.save();ctx.clip();
   const cx0=Math.max(x0,-R),cy0=Math.max(y0,-R),cx1=Math.min(x1,R),cy1=Math.min(y1,R);
-  if(cx1>cx0&&cy1>cy0&&!SKIP.has('grid'))drawGrid(cx0,cy0,cx1,cy1);
+  if(cx1>cx0&&cy1>cy0&&settings.grid!==false&&!SKIP.has('grid'))drawGrid(cx0,cy0,cx1,cy1);
   ctx.restore();
   ctx.beginPath();ctx.arc(0,0,R+18,0,TAU);ctx.lineWidth=36;ctx.strokeStyle=BG.halo;ctx.stroke();
   const lg=ctx.createLinearGradient(-R,-R,R,R);lg.addColorStop(0,BG.rim[0]);lg.addColorStop(.5,BG.rim[1]);lg.addColorStop(1,BG.rim[2]);
@@ -8060,7 +8134,7 @@ function renderFeed(){feedEl.innerHTML=feed.map(f=>`<div class="${f.you?'you':''
 let tipSeen=new Set(),tipAt=-99,tipRuns=0;try{tipSeen=new Set(JSON.parse(localStorage.getItem('mitosis.tips')||'[]'));tipRuns=+localStorage.getItem('mitosis.tipRuns')||0;}catch(e){}
 const TIPS=[
   {id:'move',when:()=>T-human.stats.born>2,text:()=>TOUCH_UI?'Stick to move':'Steer with the mouse'},
-  {id:'split',when:()=>T-human.stats.born>15&&human.cells.some(c=>c.mass>=70),text:()=>TOUCH_UI?'Split: launch half your mass':'Space: launch half your mass'},
+  {id:'split',when:()=>T-human.stats.born>15&&human.cells.some(c=>c.mass>=70),text:()=>TOUCH_UI?'Split: launch half your mass':keyName(settings.keys.split)+': launch half your mass'},
   {id:'merge',when:()=>human.cells.length>1,text:()=>'Pieces merge back in 20 s'},
   {id:'virus',when:()=>human.cells.some(c=>c.mass>150&&viruses.some(v=>Math.hypot(v.x-c.x,v.y-c.y)<c.r+500)),text:()=>'Big cells pop on phages'},
   {id:'arena',when:()=>arenaR()<R-1,text:()=>'Arena shrinking: stay inside'},
@@ -8170,7 +8244,7 @@ sndEl.addEventListener('click',e=>{const b=e.target.closest('button');if(b&&(b.d
 function initAudio(){
   if(actx)return;try{actx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){return;}
   // master → gentle low-pass → soft compressor → out, plus a small synthesised room on a send so sounds sit in a space
-  master=actx.createGain();master.gain.value=.5;const lp=actx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=7000;lp.Q.value=.5;
+  master=actx.createGain();master.gain.value=.5*(settings.vol??100)/100;const lp=actx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=7000;lp.Q.value=.5;
   const comp=actx.createDynamicsCompressor();comp.threshold.value=-18;comp.knee.value=12;comp.ratio.value=4;comp.attack.value=.004;comp.release.value=.2;
   master.connect(lp);lp.connect(comp);comp.connect(actx.destination);
   noiseBuf=actx.createBuffer(1,actx.sampleRate*.8,actx.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
@@ -8511,7 +8585,7 @@ function setPaused(v){
 function syncPause(){const live=multi(),n=$('pauseNote'),s=$('pauseSnd');n.classList.toggle('live',live);n.lastChild.textContent=live?'Arena still live':'Time frozen';
   s.setAttribute('aria-pressed',String(!muted));s.setAttribute('aria-label',muted?'Sound off':'Sound on');}
 $('pauseSnd').addEventListener('click',()=>{toggleSnd();syncPause();});
-addEventListener('keydown',e=>{if(e.code==='KeyM')setTimeout(syncPause,0);});
+addEventListener('keydown',e=>{if(keyIs(e,'mute'))setTimeout(syncPause,0);});
 // Settings from the pause card: its back button returns to the pause card instead of the lobby
 $('pauseSet').addEventListener('click',()=>showCard('settingsCard'));
 $('settingsCard').addEventListener('click',e=>{if(mode==='play'&&paused&&e.target.closest('.back')){e.stopPropagation();showCard('pauseCard');syncPause();}},true);
@@ -8608,8 +8682,24 @@ saverEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)re
 window.__onPower=m=>{power.low=!!m.low;power.thermal=m.thermal|0;syncSaver();};syncSaver(); // the app sends {low, thermal 0-3} on load and on change
 const bgSegEl=$('bgSeg'),syncBgSeg=()=>{BG=BGS[settings.bg]||BGS.black;document.body.dataset.bg=BG===BGS.white?'white':'black';[...bgSegEl.children].forEach(b=>b.setAttribute('aria-pressed',String(BGS[b.dataset.bg]===BG)));};
 bgSegEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.bg=b.dataset.bg;saveSettings();syncBgSeg();});syncBgSeg();
-const hapEl=$('hapSeg'),syncHap=()=>[...hapEl.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.h==='1')===!!settings.haptics)));
-hapEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.haptics=b.dataset.h==='1';saveSettings();syncHap();});syncHap();
+const hapEl=$('hapSeg'),hapNow=()=>!settings.haptics?'0':['light','strong'].includes(settings.hapLevel)?settings.hapLevel:'normal',syncHap=()=>[...hapEl.children].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.h===hapNow())));
+hapEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.dataset.h===hapNow())return;const v=b.dataset.h;settings.haptics=v!=='0';if(v!=='0')settings.hapLevel=v;saveSettings();syncHap();Native.haptic('heavy');});syncHap(); // a taste of the new strength
+// Settings › Audio › Volume: 100 is the mix as built (master gain .5)
+const volIn=$('volIn'),syncVol=()=>{const v=Math.max(0,Math.min(100,settings.vol??100));volIn.value=v;$('volOut').textContent=v;volIn.style.setProperty('--v',v+'%');if(master)master.gain.value=.5*v/100;};
+volIn.addEventListener('input',()=>{settings.vol=volIn.value|0;syncVol();});volIn.addEventListener('change',saveSettings);syncVol();
+// Settings › Video: names, your mass number and the grid (on unless switched off), screen shake, resolution
+for(const [id,k] of [['namesSeg','names'],['massSeg','massLabel'],['gridSeg','grid']]){const el=$(id),sync=()=>[...el.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.v==='1')===(settings[k]!==false))));
+  el.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings[k]=b.dataset.v==='1';saveSettings();sync();});sync();}
+const SHAKE_K={full:1,low:.4,off:0},shakeEl=$('shakeSeg'),syncShake=()=>{const v=settings.shake in SHAKE_K?settings.shake:'full';shakeK=SHAKE_K[v];[...shakeEl.children].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.sh===v)));};
+shakeEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.shake=b.dataset.sh;saveSettings();syncShake();});syncShake();
+const RES_CAP={high:2,medium:1.5,low:1},resEl=$('resSeg'),syncRes=()=>{const v=settings.res in RES_CAP?settings.res:'high';[...resEl.children].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.res===v)));if(resCap!==RES_CAP[v]){resCap=RES_CAP[v];resize();}};
+resEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.res=b.dataset.res;saveSettings();syncRes();});syncRes();
+// Settings › Controls › Touch: button size and opacity
+const actEl=$('actSeg'),opEl=$('opSeg'),syncTouch=()=>{const sz=['small','large'].includes(settings.actSize)?settings.actSize:'normal',op=[75,50].includes(settings.ctlOp)?settings.ctlOp:100;
+  document.body.dataset.act=sz;document.body.style.setProperty('--ctl-op',op/100);
+  [...actEl.children].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.sz===sz)));[...opEl.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.op|0)===op)));};
+actEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.actSize=b.dataset.sz;saveSettings();syncTouch();});
+opEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.ctlOp=b.dataset.op|0;saveSettings();syncTouch();});syncTouch();
 /* game recording (iOS app, off by default): each run is recorded with ReplayKit and saved to Photos as its own video */
 const recEl=$('recSeg');let recOn=false,recStopT=0,recQ=Promise.resolve();
 const syncRec=()=>{$('recField').hidden=Native.platform!=='ios';[...recEl.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.rec==='1')===!!settings.recordGames)));};
@@ -8984,17 +9074,20 @@ zoneEl.addEventListener('pointerup',zoneEnd);zoneEl.addEventListener('pointercan
 // collapsible leaderboard (remembered)
 const boardBox=$('board'),boardTg=$('boardToggle');
 const syncBoard=()=>{if(settings.boardMin===undefined)settings.boardMin=TOUCH_UI; // phones start with the ranking folded
-  const c=!!settings.boardMin;boardBox.classList.toggle('collapsed',c);boardTg.setAttribute('aria-expanded',String(!c));};
+  const c=!!settings.boardMin;boardBox.classList.toggle('collapsed',c);boardTg.setAttribute('aria-expanded',String(!c));
+  [...$('boardSeg').children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.bm==='1')===c)));};
 boardTg.addEventListener('click',()=>{settings.boardMin=!settings.boardMin;saveSettings();syncBoard();});syncBoard();
+$('boardSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.boardMin=b.dataset.bm==='1';saveSettings();syncBoard();});
+$('boardSeg').querySelector(`[data-bm="${TOUCH_UI?1:0}"]`).toggleAttribute('data-def',true); // the default: folded on phones, open on desktop
 addEventListener('keydown',e=>{
   const tag=e.target&&e.target.tagName;
   if(tag==='INPUT'){if(e.key==='Enter'&&e.target.id==='nameIn')startGame();return;}
-  if(e.code==='KeyM'){toggleSnd();return;}
-  if(mode==='play'&&(e.key==='Escape'||e.code==='KeyP')){e.preventDefault();setPaused(!paused);return;}
+  if(keyIs(e,'mute')){toggleSnd();return;}
+  if(mode==='play'&&(e.key==='Escape'||keyIs(e,'pause'))){e.preventDefault();setPaused(!paused);return;}
   if(mode!=='play'||paused){if(e.key==='Enter'&&tag!=='BUTTON'&&!$('startCard').hidden)startGame();return;}
-  if(e.code==='Space'){e.preventDefault();if(!e.repeat)split(human);}
-  else if(e.code==='KeyW')eject(human);
-  else if(e.key==='Shift'||e.code==='KeyE'){if(!e.repeat)dash(human);}
+  if(keyIs(e,'split')){e.preventDefault();if(!e.repeat)split(human);}
+  else if(keyIs(e,'eject'))eject(human);
+  else if(keyIs(e,'dash')||e.code==='KeyE'&&!keyBound('KeyE')){if(!e.repeat)dash(human);}
   else if(/^Digit[123]$/.test(e.code)&&evoOffer){takeEvo(+e.code.slice(5)-1);}
 });
 document.addEventListener('visibilitychange',()=>{reportHitch('visibility '+(document.hidden?'hidden':'visible'));
