@@ -37,6 +37,72 @@ const SKINS = [
   { id: 29, key: 'seasparkle', name: 'Sea Sparkle', price: 0, pass: 's1' },
   { id: 30, key: 'radiolarian', name: 'Radiolarian', price: 0, pass: 's1' },
   { id: 31, key: 'bloom', name: 'Bloom', price: 0, pass: 's1' },
+  // the November additions, shown in the shop by category (SKIN_CATS in index.html)
+  { id: 32, key: 'lunar', name: 'Lunar', price: 400 },
+  { id: 33, key: 'terra', name: 'Terra', price: 900 },
+  { id: 34, key: 'storm', name: 'Tempest', price: 1200 },
+  { id: 35, key: 'morpho', name: 'Morpho', price: 700 },
+  { id: 36, key: 'watermelon', name: 'Watermelon', price: 300 },
+  { id: 37, key: 'peppermint', name: 'Peppermint', price: 350 },
+  { id: 38, key: 'sprinkles', name: 'Sprinkles', price: 450 },
+  { id: 39, key: 'clockwork', name: 'Clockwork', price: 2500 },
+  { id: 40, key: 'disco', name: 'Disco', price: 1100 },
+  { id: 41, key: 'lavalamp', name: 'Lava Lamp', price: 800 },
+  { id: 42, key: 'stainedglass', name: 'Stained Glass', price: 1500 },
+  { id: 43, key: 'opal', name: 'Opal', price: 900 },
+  { id: 44, key: 'dragon', name: 'Dragon', price: 5000 },
+  { id: 45, key: 'phoenix', name: 'Phoenix', price: 9000 },
+  // the showcase collections (GEN50 in index.html), one line each
+  { id: 46, key: 'nautilus', name: 'Nautilus', price: 2500 }, // ocean
+  { id: 47, key: 'moonjellies', name: 'Moon Jellies', price: 1200 }, // ocean
+  { id: 48, key: 'blackpearl', name: 'Black Pearl', price: 3000 }, // ocean
+  { id: 49, key: 'seaturtle', name: 'Sea Turtle', price: 1500 }, // ocean
+  { id: 50, key: 'clownfish', name: 'Clownfish', price: 900 }, // ocean
+  { id: 51, key: 'abyss', name: 'Abyss', price: 5000 }, // ocean
+  { id: 52, key: 'mantaray', name: 'Manta Ray', price: 2500 }, // ocean
+  { id: 53, key: 'pufferfish', name: 'Pufferfish', price: 1200 }, // ocean
+  { id: 54, key: 'octopus', name: 'Octopus', price: 2500 }, // ocean
+  { id: 55, key: 'seahorse', name: 'Seahorse', price: 1500 }, // ocean
+  { id: 56, key: 'saturn', name: 'Saturn', price: 3000 }, // space
+  { id: 57, key: 'jupiter', name: 'Jupiter', price: 1500 }, // space
+  { id: 58, key: 'totaleclipse', name: 'Total Eclipse', price: 4000 }, // space
+  { id: 59, key: 'spacewalk', name: 'Spacewalk', price: 5000 }, // space
+  { id: 60, key: 'comet', name: 'Comet', price: 1200 }, // space
+  { id: 61, key: 'redplanet', name: 'Red Planet', price: 1500 }, // space
+  { id: 62, key: 'nightearth', name: 'Night Earth', price: 3000 }, // space
+  { id: 63, key: 'pulsar', name: 'Pulsar', price: 2500 }, // space
+  { id: 64, key: 'wormhole', name: 'Wormhole', price: 6000 }, // space
+  { id: 65, key: 'astrolabe', name: 'Astrolabe', price: 1800 }, // space
+  { id: 66, key: 'tigereye', name: 'Tiger Eye', price: 3000 }, // wild
+  { id: 67, key: 'sleepyfox', name: 'Sleeping Fox', price: 2000 }, // wild
+  { id: 68, key: 'barnowl', name: 'Barn Owl', price: 1500 }, // wild
+  { id: 69, key: 'peacock', name: 'Peacock', price: 2500 }, // wild
+  { id: 70, key: 'monarch', name: 'Monarch', price: 1200 }, // wild
+  { id: 71, key: 'moonhowl', name: 'Moon Howl', price: 1500 }, // wild
+  { id: 72, key: 'fireflies', name: 'Fireflies', price: 900 }, // wild
+  { id: 73, key: 'ladybird', name: 'Ladybird', price: 900 }, // wild
+  { id: 74, key: 'python', name: 'Python', price: 2500 }, // wild
+  { id: 75, key: 'hummingbird', name: 'Hummingbird', price: 2000 }, // wild
+  { id: 76, key: 'rose', name: 'Rose', price: 3000 }, // garden
+  { id: 77, key: 'sunflower', name: 'Sunflower', price: 1500 }, // garden
+  { id: 78, key: 'lotus', name: 'Lotus', price: 2500 }, // garden
+  { id: 79, key: 'zengarden', name: 'Zen Garden', price: 1800 }, // garden
+  { id: 80, key: 'dandelion', name: 'Dandelion', price: 1200 }, // garden
+  { id: 81, key: 'echeveria', name: 'Succulent', price: 2500 }, // garden
+  { id: 82, key: 'lavender', name: 'Lavender', price: 1200 }, // garden
+  { id: 83, key: 'toadstool', name: 'Toadstool', price: 900 }, // garden
+  { id: 84, key: 'fiddlehead', name: 'Fiddlehead', price: 1500 }, // garden
+  { id: 85, key: 'flytrap', name: 'Venus Flytrap', price: 1200 }, // garden
+  { id: 86, key: 'faberge', name: 'Imperial Egg', price: 8000 }, // treasures
+  { id: 87, key: 'hoard', name: 'Hoard', price: 4000 }, // treasures
+  { id: 88, key: 'scarab', name: 'Scarab', price: 2500 }, // treasures
+  { id: 89, key: 'diamond', name: 'Diamond', price: 6000 }, // treasures
+  { id: 90, key: 'kintsugi', name: 'Kintsugi', price: 1500 }, // treasures
+  { id: 91, key: 'crystalball', name: 'Crystal Ball', price: 3000 }, // mythic
+  { id: 92, key: 'excalibur', name: 'Excalibur', price: 4000 }, // mythic
+  { id: 93, key: 'kitsune', name: 'Kitsune', price: 2000 }, // mythic
+  { id: 94, key: 'philstone', name: 'Philosopher’s Stone', price: 1800 }, // mythic
+  { id: 95, key: 'worldtree', name: 'World Tree', price: 3000 }, // mythic
 ];
 const PACKS = [
   { id: 'atp_500', atp: 500 },
