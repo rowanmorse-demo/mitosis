@@ -74,6 +74,8 @@ body{margin:0;background:var(--void);color:var(--ink);font-family:var(--display)
 .act.flash{background:rgba(255,92,138,.22)}
 #dashBtn::after{content:"";position:absolute;inset:0;background:rgba(255,255,255,.08);transform:scaleX(var(--cd,0));transform-origin:left;pointer-events:none}
 #dashBtn.ready{border-color:rgba(255,92,138,.6)}
+/* Classic mode is plain agar: none of Battle Royale's HUD (Boost, the round clock, lives, evolution, mutation chips) */
+body.classic #dashBtn,body.classic #roundClock,body.classic .livesrow,body.classic #evolve,body.classic #fx{display:none!important}
 
 body:not(.playing) #stats, body:not(.playing) #actions, body:not(.playing) #scale, body:not(.playing) #feed{display:none}
 
@@ -2947,11 +2949,11 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
     if(nearby)return;
     N.state=N.state==='full'?'full':'connecting';
     try{ws=new WebSocket(SERVER.replace(/^http/,'ws')+'/ws');}catch(e){later();return;}
-    ws.onopen=()=>{retry=0;ws.send(JSON.stringify(N.party?{t:'hello',id:myId,party:N.party}:{t:'hello',id:myId}));}; // party: the server seats party members in one arena
+    ws.onopen=()=>{retry=0;const h={t:'hello',id:myId};if(N.party)h.party=N.party;if(N.gameMode==='classic')h.mode='classic';ws.send(JSON.stringify(h));}; // party: the server seats party members in one arena; mode: Classic games get rooms of their own
     ws.onmessage=ev=>{const w0=performance.now();try{onMsg(ev);}finally{const w=performance.now()-w0;if(window.__wsTime)window.__wsTime(w);}};
   function onMsg(ev){if(nearby)return;let m;try{m=JSON.parse(ev.data);}catch(e){return;}if(!m||typeof m!=='object')return;
       if(m.t==='welcome'){others.clear();for(const q of Array.isArray(m.peers)?m.peers:[])if(q&&typeof q.id==='string'&&q.p&&typeof q.p==='object'){others.set(q.id,Object.freeze(q.p));gotAt.set(q.id,performance.now());}
-        N.lan=Array.isArray(m.lan)?m.lan.filter(u=>typeof u==='string'):[];N.key=typeof m.key==='string'?m.key:null;N.state='live';rebuild();setConn(true);flush();}
+        N.lan=Array.isArray(m.lan)?m.lan.filter(u=>typeof u==='string'):[];N.key=typeof m.key==='string'?m.key:null;N.roomMode=typeof m.mode==='string'?m.mode:null;N.state='live';rebuild();setConn(true);flush();}
       else if(m.t==='p'&&typeof m.id==='string'&&m.p&&typeof m.p==='object'){got(m.id,Object.freeze(m.p),performance.now());rebuild();}
       else if(m.t==='bye'&&typeof m.id==='string'){others.delete(m.id);rebuild();}
       else if(m.t==='pong'&&typeof m.c==='number'&&pings.delete(m.c)){const rtt=performance.now()-m.c;if(rtt>=0&&rtt<60000){NS.rtts.push(rtt);if(NS.rtts.length>300)NS.rtts.shift();NS.pongs++;N.rtt=N.rtt==null?rtt:N.rtt*.7+rtt*.3;}}
@@ -2968,7 +2970,10 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
   });
   // Nearby play (iOS app): the app finds phones over Bluetooth and peer-to-peer Wi-Fi and relays presence between them.
   // useNearby(send) switches to it (send posts one presence string to every phone); useNearby(null) goes back to the server.
-  N.id=myId;N.mode='server';N.party=null;
+  N.id=myId;N.mode='server';N.party=null;N.roomMode=null; // roomMode: what the server says our room is for (servers before Classic say nothing)
+  N.gameMode=(()=>{if(/[?&]mode=classic\b/.test(location.search))return 'classic';if(/[?&]mode=br\b/.test(location.search))return 'br';
+    try{const s=JSON.parse(localStorage.getItem('mitosis.settings')||'null');return s&&s.mode==='classic'?'classic':'br';}catch(e){return 'br';}})();
+  N.setGameMode=m=>{m=m==='classic'?'classic':'br';if(m===N.gameMode)return;N.gameMode=m;N.roomMode=null;if(ws&&ws.readyState===1)ws.close();}; // say hello again for a room of that mode
   // joining or leaving a party: say hello again so the server can seat us with the party (the game calls this only
   // from the menus, since reconnecting drops the arena for a moment)
   N.setParty=id=>{id=id||null;if(id===N.party)return;N.party=id;if(ws&&ws.readyState===1)ws.close();};
@@ -3013,6 +3018,15 @@ addEventListener('resize',resize);resize();
 const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const R=6800,TAU=Math.PI*2,NP=40,OFF=R+2000;
 const MAX_CELLS=16,VIRUS_M=100,VSLOTS=140,MAX_FREEV=16,PELLETS=19200,MAX_PU=24;
+// Classic mode (settings.mode 'classic', set from the lobby with setGameMode; ?mode=classic for tests): plain agar in a
+// fixed square arena CL_HALF from the centre to each wall (about the dish's area, so food is as dense), endless, with
+// none of Battle Royale's extras (rounds, lives, shrinking, events, hunters, mutations, traits, Boost, the crown).
+// The rest of the game asks CL and goes through the helpers below instead of assuming the round dish.
+let CL=false;const CL_HALF=6000;
+const wallGap=(x,y)=>CL?CL_HALF-Math.max(Math.abs(x),Math.abs(y)):R-Math.hypot(x,y); // room left to the arena wall
+function wallClamp(o,m){ // keep o's centre at least m inside the wall
+  if(CL){const L=Math.max(0,CL_HALF-m);if(o.x>L)o.x=L;else if(o.x<-L)o.x=-L;if(o.y>L)o.y=L;else if(o.y<-L)o.y=-L;return;}
+  const d=Math.hypot(o.x,o.y),L=Math.max(0,R-m);if(d>L){o.x*=L/d;o.y*=L/d;}}
 // No gameplay cap on a single cell's mass: MAX_MASS is only the ceiling the network packet can carry
 // (23 bits; the 24th bit of the field flags an infected cell), far beyond anything reachable in play.
 const MAX_MASS=8388607,INF_FLAG=8388608;
@@ -3055,7 +3069,7 @@ const mergeDelay=m=>MERGE_BASE+m*MERGE_PER_MASS;
 // flies clear of its parent instead of shoving it back, as on those servers (13 ticks there).
 const SPLIT_SPEED=1550,CELL_DRAG=3.2,SPLIT_GRACE=.5,SIB_STIFF=30;
 const splitReach=m=>SPLIT_SPEED/CELL_DRAG*.4+.75*radius(m/2); // how far past its edge the bots reckon a mass-m cell's split can catch something
-function randInDish(margin=0,rad=arenaR()){const rr=Math.max(150,rad-margin)*Math.sqrt(Math.random()),t=Math.random()*TAU;return{x:Math.cos(t)*rr,y:Math.sin(t)*rr};}
+function randInDish(margin=0,rad=arenaR()){if(CL){const L=Math.max(150,CL_HALF-margin);return{x:(Math.random()*2-1)*L,y:(Math.random()*2-1)*L};}const rr=Math.max(150,rad-margin)*Math.sqrt(Math.random()),t=Math.random()*TAU;return{x:Math.cos(t)*rr,y:Math.sin(t)*rr};}
 const col=(c,dl=0,a=1)=>`hsla(${c[0]},${c[1]}%,${clamp(c[2]+dl,0,100)}%,${a})`;
 // Canvas gradients are native objects. Making hundreds per frame (every cell, virus and blob) left WebKit's
 // garbage collector with millions to finalize and froze phones for seconds. Each gradient is now built once
@@ -3081,7 +3095,7 @@ function nameBlocked(s) {
 }
 const cleanName=s=>{const n=typeof s==='string'?s.replace(/[\u0000-\u001f\u007f-\u009f­​-‏‪-‮⁠-⁯﻿]/g,'').trim().slice(0,16):'';return n&&!nameBlocked(n)?n:'';}; // a refused name shows as the default
 function h32(a){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}
-function hpos(k,margin){const rr=(R-margin)*Math.sqrt(h32(k)),t=h32(k+1)*TAU;return{x:Math.cos(t)*rr,y:Math.sin(t)*rr};}
+function hpos(k,margin){if(CL){const L=CL_HALF-margin;return{x:(h32(k)*2-1)*L,y:(h32(k+1)*2-1)*L};}const rr=(R-margin)*Math.sqrt(h32(k)),t=h32(k+1)*TAU;return{x:Math.cos(t)*rr,y:Math.sin(t)*rr};}
 /* compact base-64 packing for the live room (4 KiB per participant) */
 const B64='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
 const DEC=new Int16Array(128).fill(-1);for(let i=0;i<64;i++)DEC[B64.charCodeAt(i)]=i;
@@ -6081,6 +6095,9 @@ let settings={name:'',stain:0,diff:'standard',skin:0,lowFx:false,haptics:true}; 
 try{const s=JSON.parse(localStorage.getItem('mitosis.settings')||'null');if(s&&typeof s==='object')settings=Object.assign(settings,s);}catch(e){}
 if(!DIFF[settings.diff])settings.diff='standard';settings.stain=clamp(settings.stain|0,0,STAINS.length-1);settings.skin=clamp(settings.skin|0,0,SKIN_COUNT-1);
 const saveSettings=()=>{try{localStorage.setItem('mitosis.settings',JSON.stringify(settings));}catch(e){}};
+if(settings.mode!=='classic')settings.mode='br';
+CL=(window.__mitosisNet?window.__mitosisNet.gameMode:settings.mode)==='classic'; // the net module read the same setting (and ?mode=) before this ran
+document.body.dataset.mode=CL?'classic':'br';document.body.classList.toggle('classic',CL);
 
 /* ================= ATP economy: wallet, runs, skins, store ================= */
 /* The server owns every wallet (see economy.js). The page only asks: "this run ended", "buy this skin",
@@ -6165,13 +6182,14 @@ async function econInit(){
 // an older server would count it as ranked. Nearby is never reported.
 let runId=null,runPromise=null;
 const isNearby=()=>{const N=window.__mitosisNet;return !!N&&N.mode==='nearby';};
-const casualRated=()=>!!(wallet.catalog&&wallet.catalog.wins),runMode=()=>local==='practice'?'casual':local?'bots':'arena',relayKey=()=>{const N=window.__mitosisNet;return(N&&N.key)||undefined;};
-const runOff=()=>isNearby()||(local==='practice'&&!casualRated());
+const casualRated=()=>!!(wallet.catalog&&wallet.catalog.wins),classicRated=()=>!!(wallet.catalog&&Array.isArray(wallet.catalog.modes)&&wallet.catalog.modes.includes('classic')),
+  runMode=()=>CL?'classic':local==='practice'?'casual':local?'bots':'arena',relayKey=()=>{const N=window.__mitosisNet;return(N&&N.key)||undefined;};
+const runOff=()=>isNearby()||(CL?!classicRated():local==='practice'&&!casualRated());
 function econRunStart(){runId=null;if(runOff()){runPromise=null;return;}runPromise=api('run/start',{mode:runMode(),relay:relayKey()}).then(r=>{runId=r.runId;return r.runId;}).catch(()=>null);}
 async function econRunEnd(){
-  if(!human)return;const unranked=isNearby()?'nearby':local==='practice'?'practice':'',off=runOff();resPrep(unranked,off);if(off)return;
+  if(!human)return;const unranked=CL?'classic':isNearby()?'nearby':local==='practice'?'practice':'',off=runOff();resPrep(unranked,off);if(off)return;
   const s=human.stats,rep={survived:Math.max(0,T-s.born),eaten:s.eaten|0,peak:Math.round(s.peak),bestRank:s.bestRank||999,place:s.place|0,of:s.of|0,life:Math.max(0,livesUsed()-1),show:1,relay:relayKey()};
-  if(unranked)rep.skill=settings.botSkill||'normal'; // Casual: the bots' skill scales AI rating gains
+  if(unranked&&!CL)rep.skill=settings.botSkill||'normal'; // Casual: the bots' skill scales AI rating gains
   rep.name=human.name;const rid=runId||(runPromise?await runPromise:null);runId=null;runPromise=null;
   if(!rid){showEarn(wallet.online?null:{k:'offline'});showXp(null);return;}
   rep.runId=rid;const a=loadPending();a.push(rep);savePending(a);flushRuns();
@@ -6401,7 +6419,7 @@ function resFill(kind,pb,sub){ // kind: dead | arena (dissolved by the closing a
   const s=human.stats,card=$('deathCard'),un=resS.mode;
   card.className='res '+(kind==='arena'?'dead arena':kind)+(un?' unranked':'')+(s.place>=1&&s.place<=3?' m'+(s.place|0):'');
   $('dTitle').textContent={dead:'Eliminated',arena:'Dissolved',win:'Victory',round:'Round over',quit:'Run ended'}[kind];$('resIco').innerHTML=RES_ICO[kind];
-  const md=$('resMode');md.hidden=!un;md.textContent=un==='nearby'?'Nearby':'Casual';
+  const md=$('resMode');md.hidden=!un;md.textContent=un==='nearby'?'Nearby':un==='classic'?'Classic':'Casual';
   const place=s.place|0,shown=place||(kind==='quit'?s.bestRank|0:0);$('dPlace').hidden=!shown;
   $('resPlaceN').textContent=shown;$('dPlace').classList.toggle('n2',shown>=10);$('resPlaceOf').textContent=place?'of '+s.of:'best';
   const why=$('deathWhy'),k=s.killerRef;
@@ -6961,7 +6979,7 @@ const joy={id:null,ux:0,uy:0,m:0,R:46,lx:1,ly:0};
 // live room
 let local=null,queued=false,searchUntil=0,queuedPeers=0; // local: null | 'practice' (unranked) | 'auto' (a bot-filled game after a search)
 let lives={round:0,used:0};                               // spawns used in the current round
-let lastPeerCount=1,room=null,netState='pending',myPeer=null,isHost=true,claimReady=false,roomAt=-1,netSendT=0,seq=0,recs=[],peLog=[],peerCount=1,hostPeer=null,yielded=false,netNames=[];
+let clTx=0,lastPeerCount=1,room=null,netState='pending',myPeer=null,isHost=true,claimReady=false,roomAt=-1,netSendT=0,seq=0,recs=[],peLog=[],peerCount=1,hostPeer=null,yielded=false,netNames=[];
 const proxies=new Map(),botProx=new Map(),remoteEj=new Map(),lastSeen=new Map(),seenAt=new Map(),lastSeq=new Map(),vSup=new Map(),wSup=new Map(),puSup=new Map(),hSup=new Map();
 const now=()=>performance.now()/1000;
 const myKey=()=>myPeer||'me';
@@ -6992,7 +7010,7 @@ function spawn(p,mass){
     if(!(md<=bestD)){bestD=md;bestS=s;}if(md>900)break;
   }
   p.cells=[];const c=addCell(p,bestS.x,bestS.y,mass);c.dr=3;
-  p.alive=true;p.fx={magnet:0,shield:2.5,surge:0};p.dashCd=0;p.combo=0;p.hist=[mass];p.pk=0;p.evo=0;p.bloomEats=0;
+  p.alive=true;p.fx={magnet:0,shield:CL?0:2.5,surge:0};p.dashCd=CL?Infinity:0;p.combo=0;p.hist=[mass];p.pk=0;p.evo=0;p.bloomEats=0;
   p.stats={eaten:0,peak:mass,born:T,killer:'',killerRef:null};p.target={x:bestS.x,y:bestS.y};
 }
 // food: deterministic positions from (index, generation) so every player sees the same pellets
@@ -7139,7 +7157,7 @@ function creditCell(c,mass,x,y,vcolor,vr,infRem=0,counts=true,bounty=false,boss=
 }
 function resolveEat(big,sm){ // sm is always ours; its owner's client decides
   sm.dead=true;const sp=sm.owner,bp=big.owner,infRem=sm.inf?Math.max(0,sm.inf-T):0;
-  const bounty=sp===leader&&!sp.boss&&!bp.boss,mass=sm.mass*(bounty?1.5:1);
+  const bounty=!CL&&sp===leader&&!sp.boss&&!bp.boss,mass=sm.mass*(bounty?1.5:1);
   if(!bp.remote)creditCell(big,mass,sm.x,sm.y,sp.color,sm.dr,infRem,true,bounty,sp.boss);
   else{rec(['e',keyOf(bp),keyOf(sp),Math.round(mass),Math.round(sm.x),Math.round(sm.y),Math.round(sm.dr),+infRem.toFixed(1),bounty?1:0]);
     ghosts.push({x:sm.x,y:sm.y,r:sm.dr,color:sp.color,to:big,t:0,life:.2});burst(sm.x,sm.y,col(sp.color,8),6,180);}
@@ -7200,7 +7218,7 @@ let SPAWN_CUTOFF=Math.min(300,Math.round(ROUND_SEC*.5)),MAX_RESPAWNS=2;const SEA
 function setRoundLen(s){ROUND_SEC=s;ROUND_GRACE=Math.round(s*.1);ROUND_HOLD=Math.round(s*.05);BOT_CUTOFF=Math.round(s*.7);SPAWN_CUTOFF=Math.min(300,Math.round(s*.5));} // a Nearby match can be shorter
 function livesUsed(){if(lives.round!==round.id){lives.round=round.id;lives.used=0;}return lives.used;}
 function roundOpen(){if(multi()&&!isHost&&!round.synced)return true;return round.over||roundT()<ROUND_SEC-SPAWN_CUTOFF;}
-function spawnOpen(){if(local==='practice')return true;return roundOpen()&&livesUsed()<=MAX_RESPAWNS;}
+function spawnOpen(){if(local==='practice'||CL)return true;return roundOpen()&&livesUsed()<=MAX_RESPAWNS;}
 function spawnBlockReason(){return !roundOpen()?'closed':livesUsed()>MAX_RESPAWNS?'lives':null;}
 function spawnWait(){return round.over?Math.max(0,round.start-T):Math.max(0,ROUND_SEC-roundT())+ROUND_GAP;}
 function updateSpawnLock(){
@@ -7210,10 +7228,10 @@ function updateSpawnLock(){
     if(open){queued=false;startGame();return;}                                    // the round opened: in you go
     if(performance.now()>=searchUntil){queued=false;startLocal('auto');return;}   // nothing to join in time: bots fill the slots
   }
-  let goT=!local&&isOffline()?'Play offline':'Play',agT='Re-inoculate';
+  let goT=!local&&isOffline()?'Play offline':'Play',agT=CL?'Respawn':'Re-inoculate';
   if(queued){const left=Math.max(0,Math.ceil((searchUntil-performance.now())/1000));goT=agT=`Searching… 0:${String(left).padStart(2,'0')}${queuedPeers?' · '+(queuedPeers+1)+' waiting':''}`;}
   else if(!open){const why=spawnBlockReason();goT=agT=(why==='lives'?'No lives left · ':'Round closed · ')+'find a game';}
-  else{const left=MAX_RESPAWNS+1-livesUsed();if(!local&&left<=MAX_RESPAWNS)agT=`Re-inoculate · ${left} ${left===1?'life':'lives'} left`;}
+  else if(!CL){const left=MAX_RESPAWNS+1-livesUsed();if(!local&&left<=MAX_RESPAWNS)agT=`Re-inoculate · ${left} ${left===1?'life':'lives'} left`;}
   if(nearMode()&&!queued)goT=nearLabel();
   go.classList.toggle('lb-wait',nearMode()&&!near.m&&!nearHost()); // a guest waits for the host to start
   if(go.textContent!==goT)go.textContent=goT;if(ag.textContent!==agT)ag.textContent=agT;
@@ -7221,12 +7239,32 @@ function updateSpawnLock(){
   if(queued){const sp=clamp((searchUntil-performance.now())/(SEARCH_MAX*1000),0,1)*100+'%';go.style.setProperty('--sp',sp);ag.style.setProperty('--sp',sp);}
 }
 setInterval(updateSpawnLock,250);
+// The lobby's Battle Royale / Classic switch. Only between matches: it rebuilds the world for that arena (food and phages
+// placed for its shape, a fresh round, the bots dealt again) and has the relay seat us in a room of that mode.
+function setGameMode(m){
+  m=m==='classic'?'classic':'br';if(mode==='play'&&human&&human.alive)return false;
+  settings.mode=m;saveSettings();const cl=m==='classic',N=window.__mitosisNet;if(N&&N.setGameMode)N.setGameMode(m);
+  if(cl===CL)return true;
+  CL=cl;document.body.dataset.mode=m;document.body.classList.toggle('classic',CL);
+  if(local)leaveLocal();removeHuman();isHost=true;claimReady=false;yielded=false;lastPeerCount=-1;
+  for(const p of players.filter(p=>!p.remote))removePlayer(p);cells=cells.filter(c=>!c.dead);
+  for(const pl of pellets)placePellet(pl);
+  for(const v of vslots){v.g=0;v.feed=0;v.gen=0;v.ft=-rand(0,VREP_WAIT);v.alive=true;v.respawnAt=0;setVM(v);placeSlot(v);}
+  freeV=[];ejected=[];powerups=[];hunters=[];hunterT=12;ev={type:0,id:0,end:0,x:0,y:0};evNext=T+rand(40,70);
+  round={id:(round.id%4095)+1,start:T,n:0,synced:!multi(),over:false};
+  if(!CL)for(let i=0;i<16;i++)addPU();
+  rebuildViruses();syncBots();return true;
+}
+// Classic online needs a server that gives it rooms of its own (its welcome names the room's mode). Until then, offline,
+// or over Nearby, Classic is played on this device with bots, so it never joins a Battle Royale room.
+const classicRoom=()=>{const N=window.__mitosisNet;return !!N&&N.mode==='server'&&N.roomMode==='classic';};
 function startLocal(kind){ // a game on this device only: bots fill every slot. 'practice' is unranked; 'auto' follows a search
   local=kind;queued=false;lastSeen.clear();
   for(const p of players.filter(p=>p.remote))removePlayer(p);
   round={id:(round.id%4095)+1,start:T,n:0,synced:true,over:false};isHost=true;claimReady=false;
   syncBots();
   const sk=SKILL[settings.botSkill]||SKILL.normal;
+  if(CL)toast('Classic','Endless arena with bots',isOffline()?'No connection needed':'Bots fill the arena on this device');else
   toast(kind==='practice'?(isOffline()?'Offline':'Practice'):'Game found',kind==='practice'?`${sk.label} bots${isOffline()?' · no connection needed':''}`:'Bots fill the empty slots',
     kind!=='practice'?'Ranked rules against bots: counts for your AI rating':casualRated()&&!isOffline()?'Counts for your AI rating · ATP for a top 3':'Unranked: no ATP, no rating change');
   startGame();
@@ -7237,7 +7275,8 @@ function leaveLocal(){ // back to the shared world
   round.synced=false;lastSeen.clear();lastPeerCount=-1;if(room&&myPeer){isHost=false;claimReady=false;yielded=false;}
 }
 function arenaR(){ // the round's safe radius: full for ROUND_GRACE s, then the safe AREA shrinks at a steady rate to R_MIN at ROUND_SEC-ROUND_HOLD
-  if(multi()&&!isHost&&!round.synced)return R;const t=roundT();if(t<ROUND_GRACE)return R;
+  if(CL||multi()&&!isHost&&!round.synced)return R; // Classic never closes in
+  const t=roundT();if(t<ROUND_GRACE)return R;
   const p=clamp((t-ROUND_GRACE)/(ROUND_SEC-ROUND_HOLD-ROUND_GRACE),0,1);return Math.sqrt(R*R-(R*R-R_MIN*R_MIN)*p);}
 function safeR(){return Math.min(tideSafe(),arenaR());}
 const ordinal=n=>{const t=n%10,h=n%100;return n+(t===1&&h!==11?'st':t===2&&h!==12?'nd':t===3&&h!==13?'rd':'th');};
@@ -7339,7 +7378,7 @@ function bestFood(me,safe){ // densest nearby patch of food, weighted by distanc
     if(x<0||y<0||x>=GN||y>=GN)continue;const b=grid[y*GN+x];if(!b.length)continue;
     const wx=(x+.5)*GS-R,wy=(y+.5)*GS-R,d=Math.hypot(wx-me.x,wy-me.y);if(d<me.r*.4)continue;
     let s=b.length/(1+d/350)*rand(.8,1.2);if(ev.type===1&&(wx-ev.x)**2+(wy-ev.y)**2<BLOOM_R2)s*=3;
-    if(Math.hypot(wx,wy)>safe-me.r)s*=.05;
+    if(wallGap(wx,wy)<me.r+R-safe)s*=.05;
     if(s>bs){bs=s;best={x:wx,y:wy};}
   }
   return best;
@@ -7372,7 +7411,7 @@ function think(p){
       threats.push({x:c.x+c.svx*lead,y:c.y+c.svy*lead,reach,w:Math.min(4,c.mass/me.mass),m:c.mass});
       if(gap-reach+c.r<minGap)minGap=gap-reach+c.r;
     }else if(me.mass>c.mass*need(p,c.owner)&&c.owner.fx.shield<=0&&!((c.inf||c.infVis)&&!has(p,'lysozyme'))){
-      const edge=R-Math.hypot(c.x,c.y)-c.r;
+      const edge=wallGap(c.x,c.y)-c.r;
       let s=c.mass/(Math.max(gap,0)+160)*(edge<350?1.7:1)*(c.owner===leader?1.5:1)*(c.owner.bot?1:M?1.4:1.15);
       if(speedOf(c.r)>speedOf(me.r)*1.15&&gap>me.r*1.5&&edge>350)s*=.35; // it would just outrun me
       if(s>preyScore){preyScore=s;prey=c;}
@@ -7411,7 +7450,7 @@ function think(p){
       for(const t of threats){const ex=px-t.x,ey=py-t.y,e2=ex*ex+ey*ey;if(e2>=t.far)continue;const d=Math.sqrt(e2)-t.reach-mr6;if(d<520){const f=1-Math.max(0,d)/520;s-=t.w*f*f*2.2*caution*wq;}}
       for(const v of hz){const ex=px-v.x,ey=py-v.y,e2=ex*ex+ey*ey,o=90+v.r+mr8;if(e2>=o*o)continue;const d=Math.sqrt(e2)-v.r-mr8;s-=1.8*(1-Math.max(0,d)/90)*wq;}
       for(const v of cover){const ex=px-v.x,ey=py-v.y,e2=ex*ex+ey*ey;if(e2<67600)s+=.9*(1-Math.sqrt(e2)/260)*wq;}
-      const pr=Math.sqrt(px*px+py*py);if(pr>lim)s-=(pr-lim)/110*(ev.type===2?2.4:1.3)*wq;
+      const og=R-lim-wallGap(px,py);if(og>0)s-=og/110*(ev.type===2?2.4:1.3)*wq; // past the safe line, by how much
     }
     if(s>bestS){bestS=s;bestA=k/16*TAU;}
   }
@@ -7482,11 +7521,11 @@ function step(dt){
     if(p.remote)continue;
     for(const k in p.fx)if(p.fx[k]>0)p.fx[k]=Math.max(0,p.fx[k]-dt);
     if(p.dashCd>0)p.dashCd=Math.max(0,p.dashCd-dt);
-    if(p.bot&&isHost){if(p.alive&&T>=p.ai.t)aiDue.push(p);else if(!p.alive&&!p.boss&&T>=p.respawnAt&&roundT()<BOT_CUTOFF&&!round.over)spawn(p,rand(20,45));}
+    if(p.bot&&isHost){if(p.alive&&T>=p.ai.t)aiDue.push(p);else if(!p.alive&&!p.boss&&T>=p.respawnAt&&(CL||roundT()<BOT_CUTOFF&&!round.over))spawn(p,rand(20,45));}
   }
   if(aiDue.length){aiLook();aiDue.sort((a,b)=>a.ai.t-b.ai.t);for(const p of aiDue){if(aiTok<1)break;aiTok--;think(p);}} // longest waiting first
-  if(isHost){for(const p of players.filter(p=>p.boss&&!p.remote&&!p.alive))removePlayer(p);eventTick();}
-  if(isHost||!multi())roundTick();
+  if(isHost&&!CL){for(const p of players.filter(p=>p.boss&&!p.remote&&!p.alive))removePlayer(p);eventTick();}
+  if(!CL&&(isHost||!multi()))roundTick(); // Classic has no rounds or events
   for(const c of cells){c.px=c.x;c.py=c.y;}
   smoothRemote(dt);
   // movement (our own cells only; others arrive over the room)
@@ -7497,7 +7536,7 @@ function step(dt){
     const sp=speedOf(c.r)*(p.fx.surge>0?1.45:1)*(has(p,'flagella')?1.12:1),f=Math.min(1,d/(c.r*.8+20));
     if(d>.01){dx/=d;dy/=d;}else{dx=dy=0;}
     c.x+=(dx*sp*f+c.vx)*dt;c.y+=(dy*sp*f+c.vy)*dt;c.vx*=kd;c.vy*=kd;
-    const dc=Math.hypot(c.x,c.y),lim=Math.max(0,R-c.r*.9);if(dc>lim){c.x*=lim/dc;c.y*=lim/dc;}
+    wallClamp(c,c.r*.9);
   }
   // siblings: push apart or fuse
   for(const p of players){
@@ -7531,7 +7570,7 @@ function step(dt){
   for(const e of ejected){
     e.x+=e.vx*dt;e.y+=e.vy*dt;e.vx*=kj;e.vy*=kj;
     for(const c of mags){if(c.owner===e.owner)continue;const dx=c.x-e.x,dy=c.y-e.y,d=Math.hypot(dx,dy);if(d<c.r+300&&d>1){const m=Math.min(d,560*dt);e.x+=dx/d*m;e.y+=dy/d*m;break;}}
-    const dc=Math.hypot(e.x,e.y);if(dc>R-e.r){e.x*=(R-e.r)/dc;e.y*=(R-e.r)/dc;}
+    wallClamp(e,e.r);
     for(const h of hunters){if(h.dead)continue;if(Math.hypot(h.x-e.x,h.y-e.y)<HUNTER_R+e.r){e.dead=true;
         if(isHost){h.hp--;if(h.hp<=0){lyseHunter(h);if(e.owner===human)unlock('hunter');}else burst(h.x,h.y,col(INF_C),5,160);}else{rec(['h',h.id]);if(h.hp<=1&&e.owner===human)unlock('hunter');h.hp--;burst(h.x,h.y,col(INF_C),5,160);}
         if(e.owner===human){sfx('hit');Native.haptic('light');}break;}}
@@ -7551,9 +7590,10 @@ function step(dt){
   if(isHost){
     for(const v of vslots)if(!v.alive&&T>=v.respawnAt){v.g=(v.g+1)%256;v.feed=0;v.gen=0;v.ft=-rand(0,VREP_WAIT);setVM(v);placeSlot(v);v.alive=true;}
     for(const v of freeV){v.x+=v.vx*dt;v.y+=v.vy*dt;v.vx*=kv;v.vy*=kv;
-      const dc=Math.hypot(v.x,v.y);if(dc>R-v.r){v.x*=(R-v.r)/dc;v.y*=(R-v.r)/dc;v.vx*=-.5;v.vy*=-.5;}}
-    for(const v of vslots)if(v.alive)growVirus(v,dt);
-    for(const v of freeV.slice())if(!v.dead)growVirus(v,dt);
+      if(CL){const L=CL_HALF-v.r;if(Math.abs(v.x)>L){v.x=Math.sign(v.x)*L;v.vx*=-.5;}if(Math.abs(v.y)>L){v.y=Math.sign(v.y)*L;v.vy*=-.5;}}
+      else{const dc=Math.hypot(v.x,v.y);if(dc>R-v.r){v.x*=(R-v.r)/dc;v.y*=(R-v.r)/dc;v.vx*=-.5;v.vy*=-.5;}}}
+    if(!CL){for(const v of vslots)if(v.alive)growVirus(v,dt); // Classic phages only grow when fed, like agar's
+    for(const v of freeV.slice())if(!v.dead)growVirus(v,dt);}
   }
   rebuildViruses();
   for(const v of viruses){v.spin+=dt*.25;if(v.dead)continue;
@@ -7564,7 +7604,7 @@ function step(dt){
   rebuildViruses();
   // hunters
   if(isHost){
-    hunterT-=dt;if(hunterT<=0){hunterT=rand(10,20);if(hunters.length<MAX_HUNTERS)spawnHunter();}
+    hunterT-=dt;if(hunterT<=0&&!CL){hunterT=rand(10,20);if(hunters.length<MAX_HUNTERS)spawnHunter();}
     for(const h of hunters){hunterBrain(h,dt);moveHunter(h,dt);if(T-h.born>75||(!h.inside&&T-h.born>25)){h.dead=true;}}
   }
   for(const h of hunters){if(h.dead)continue;
@@ -7594,7 +7634,7 @@ function step(dt){
         if(!isHost){rec(['u',u.id]);puSup.set(u.id,T);}
         burst(u.x,u.y,col(def.c,10),12,200);if(p===human){sfx('power');Native.haptic('light');floatText(u.x,u.y,def.label,def.c,22);}break;}}}
   powerups=powerups.filter(u=>!u.dead);
-  if(isHost&&powerups.length<MAX_PU&&Math.random()<dt*.9)addPU();
+  if(isHost&&!CL&&powerups.length<MAX_PU&&Math.random()<dt*.9)addPU();
   // decay, infection clocks, radii, cleanup
   for(const c of cells){
     if(c.dead)continue;
@@ -7602,7 +7642,7 @@ function step(dt){
       if(c.mass>120)c.mass-=c.mass*(has(c.owner,'metabolism')?.0006:.0012)*dt;
       if(has(c.owner,'photo'))c.mass=Math.min(MAX_MASS,c.mass+1.5*dt);
       const aR=arenaR(),dC=Math.hypot(c.x,c.y)+Math.min(c.r*.3,aR*.5),outA=dC>aR,outT=dC>tideSafe(); // a cell bigger than the final arena still fits if it is centred
-      if(outA||outT){c.toxic=T;if(outA){c.mass-=(c.mass*(aR<=R_MIN+1?.6:.2)+12)*dt;if(c.mass<10)dissolve(c);}else c.mass=Math.max(8,c.mass-c.mass*.08*dt);
+      if(!CL&&(outA||outT)){c.toxic=T;if(outA){c.mass-=(c.mass*(aR<=R_MIN+1?.6:.2)+12)*dt;if(c.mass<10)dissolve(c);}else c.mass=Math.max(8,c.mass-c.mass*.08*dt);
         if(!c.dead&&Math.random()<dt*6&&parts.length<700){const a=rand(0,TAU);parts.push({x:c.x+Math.cos(a)*c.r,y:c.y+Math.sin(a)*c.r,vx:Math.cos(a)*60,vy:Math.sin(a)*60,t:0,life:.6,color:outA?'rgba(255,120,130,.9)':'rgba(170,150,255,.9)',r:rand(3,7)});}}
       if(c.inf&&T>=c.inf)lyse(c);
     }
@@ -7612,7 +7652,7 @@ function step(dt){
   cells=cells.filter(c=>!c.dead);
   for(const p of players){if(p.cells.some(c=>c.dead))p.cells=p.cells.filter(c=>!c.dead);
     if(p.alive&&!p.remote){const m=p.cells.reduce((s,c)=>s+c.mass,0);if(m>p.stats.peak)p.stats.peak=m;
-      if(p.evo<EVO.length&&m>=EVO[p.evo]){
+      if(!CL&&p.evo<EVO.length&&m>=EVO[p.evo]){
         if(p===human){if(!evoOffer)offerEvo();}
         else if(p.bot&&!p.boss){const pool=BOT_PERKS.filter(id=>!has(p,id));if(pool.length)p.pk|=PBIT[pool[Math.floor(Math.random()*pool.length)]];p.evo++;}
       }}}
@@ -7645,7 +7685,10 @@ function membranes(dt){
     if(Math.abs(a.x-cam.x)>hw+a.dr||Math.abs(a.y-cam.y)>hh+a.dr)continue;
     const L=a.lim,ra=a.dr;L.fill(9);
     const p2=a.x*a.x+a.y*a.y;
-    if(Math.sqrt(p2)+ra>R){for(let i=0;i<NP;i++){const dp=a.x*COS[i]+a.y*SIN[i],disc=dp*dp-(p2-R*R);if(disc>0){const t=(-dp+Math.sqrt(disc))/ra;if(t<L[i])L[i]=t;}}}
+    if(CL){const Q=CL_HALF;if(Math.abs(a.x)+ra>Q||Math.abs(a.y)+ra>Q)for(let i=0;i<NP;i++){const cx=COS[i]*ra,cy=SIN[i]*ra;
+      if(cx>1e-6){const t=(Q-a.x)/cx;if(t<L[i])L[i]=t;}else if(cx<-1e-6){const t=(-Q-a.x)/cx;if(t<L[i])L[i]=t;}
+      if(cy>1e-6){const t=(Q-a.y)/cy;if(t<L[i])L[i]=t;}else if(cy<-1e-6){const t=(-Q-a.y)/cy;if(t<L[i])L[i]=t;}}}
+    else if(Math.sqrt(p2)+ra>R){for(let i=0;i<NP;i++){const dp=a.x*COS[i]+a.y*SIN[i],disc=dp*dp-(p2-R*R);if(disc>0){const t=(-dp+Math.sqrt(disc))/ra;if(t<L[i])L[i]=t;}}}
     const cs=a.owner.cells;
     if(cs.length>1&&!a.owner.remote)for(const b of cs){
       if(b===a||b.dead||(T>a.mergeAt&&T>b.mergeAt))continue;
@@ -7906,6 +7949,12 @@ function draw(){
   if(!lowFx&&BG.bokeh&&!SKIP.has('bokeh'))drawBokeh(BOK_BACK);
   ctx.setTransform(DPR*z,0,0,DPR*z,DPR*(W/2-cam.x*z+shx),DPR*(H/2-cam.y*z+shy));
   const hw=W/2/z,hh=H/2/z,x0=cam.x-hw-20,x1=cam.x+hw+20,y0=cam.y-hh-20,y1=cam.y+hh+20;
+  if(CL){ // Classic: a flat square floor with the grid and a plain wall line, nothing to rebuild per frame
+    const Q=CL_HALF;ctx.fillStyle=BG.dish[1];ctx.fillRect(-Q,-Q,2*Q,2*Q);
+    const cx0=Math.max(x0,-Q),cy0=Math.max(y0,-Q),cx1=Math.min(x1,Q),cy1=Math.min(y1,Q);
+    if(cx1>cx0&&cy1>cy0&&!SKIP.has('grid'))drawGrid(cx0,cy0,cx1,cy1);
+    ctx.lineWidth=Math.max(2/z,4);ctx.strokeStyle=BG.rim[1];ctx.strokeRect(-Q,-Q,2*Q,2*Q);
+  }else{
   const g=ctx.createRadialGradient(0,0,0,0,0,R);g.addColorStop(0,BG.dish[0]);g.addColorStop(.85,BG.dish[1]);g.addColorStop(1,BG.dish[2]);
   ctx.beginPath();ctx.arc(0,0,R,0,TAU);ctx.fillStyle=g;ctx.fill();
   ctx.save();ctx.clip();
@@ -7914,7 +7963,7 @@ function draw(){
   ctx.restore();
   ctx.beginPath();ctx.arc(0,0,R+18,0,TAU);ctx.lineWidth=36;ctx.strokeStyle=BG.halo;ctx.stroke();
   const lg=ctx.createLinearGradient(-R,-R,R,R);lg.addColorStop(0,BG.rim[0]);lg.addColorStop(.5,BG.rim[1]);lg.addColorStop(1,BG.rim[2]);
-  ctx.beginPath();ctx.arc(0,0,R,0,TAU);ctx.lineWidth=Math.max(2/z,4);ctx.strokeStyle=lg;ctx.stroke();
+  ctx.beginPath();ctx.arc(0,0,R,0,TAU);ctx.lineWidth=Math.max(2/z,4);ctx.strokeStyle=lg;ctx.stroke();}
   drawBreaches();
   if(ev.type===1){const g2=ctx.createRadialGradient(ev.x,ev.y,0,ev.x,ev.y,BLOOM_R);g2.addColorStop(0,'rgba(242,193,78,.16)');g2.addColorStop(.75,'rgba(242,193,78,.06)');g2.addColorStop(1,'rgba(242,193,78,0)');
     ctx.fillStyle=g2;ctx.beginPath();ctx.arc(ev.x,ev.y,BLOOM_R,0,TAU);ctx.fill();ctx.save();ctx.setLineDash([30,22]);ctx.lineDashOffset=T*30;ctx.beginPath();ctx.arc(ev.x,ev.y,BLOOM_R,0,TAU);ctx.lineWidth=Math.max(1.5/z,4);ctx.strokeStyle='rgba(242,193,78,.45)';ctx.stroke();ctx.restore();}
@@ -7970,7 +8019,7 @@ function draw(){
 function drawTags(){ // crown on the leader, emote bubbles, in screen space
   const z=cam.z,sx=x=>(x-cam.x)*z+W/2,sy=y=>(y-cam.y)*z+H/2;
   const big=p=>{let b=null;for(const c of p.cells)if(!b||c.mass>b.mass)b=c;return b;};
-  if(leader&&leader.alive&&leader.cells.length){const c=big(leader),x=sx(c.x),y=sy(c.y-c.dr)-6,s=clamp(c.dr*z*.35,12,34);
+  if(!CL&&leader&&leader.alive&&leader.cells.length){const c=big(leader),x=sx(c.x),y=sy(c.y-c.dr)-6,s=clamp(c.dr*z*.35,12,34);
     if(x>-50&&x<W+50&&y>-50&&y<H+60){ctx.beginPath();ctx.moveTo(x-s,y);ctx.lineTo(x-s*.9,y-s*.75);ctx.lineTo(x-s*.45,y-s*.35);ctx.lineTo(x,y-s*.95);ctx.lineTo(x+s*.45,y-s*.35);ctx.lineTo(x+s*.9,y-s*.75);ctx.lineTo(x+s,y);ctx.closePath();
       ctx.fillStyle='#f2c14e';ctx.fill();ctx.lineWidth=2;ctx.lineJoin='round';ctx.strokeStyle='rgba(60,40,0,.6)';ctx.stroke();}}
   ctx.font='600 13px "Bricolage Grotesque",system-ui,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
@@ -8007,7 +8056,7 @@ function drawAllyArrow(){ // where your party ally is while they're off screen: 
 function drawMini(){
   const s=mini.width,h=s/2,SR=R+500,k=(h-3)/SR,rr=R*k;mctx.setTransform(1,0,0,1,0,0);mctx.clearRect(0,0,s,s);
   mctx.beginPath();mctx.arc(h,h,h-2,0,TAU);mctx.fillStyle='rgba(2,8,9,.7)';mctx.fill();
-  mctx.beginPath();mctx.arc(h,h,rr,0,TAU);mctx.fillStyle='rgba(6,20,22,.9)';mctx.fill();mctx.lineWidth=DPR;mctx.strokeStyle='rgba(140,210,200,.35)';mctx.stroke();
+  mctx.beginPath();if(CL){const q=CL_HALF*k;mctx.rect(h-q,h-q,2*q,2*q);}else mctx.arc(h,h,rr,0,TAU);mctx.fillStyle='rgba(6,20,22,.9)';mctx.fill();mctx.lineWidth=DPR;mctx.strokeStyle='rgba(140,210,200,.35)';mctx.stroke();
   mctx.beginPath();mctx.moveTo(h,h-rr);mctx.lineTo(h,h+rr);mctx.moveTo(h-rr,h);mctx.lineTo(h+rr,h);mctx.strokeStyle='rgba(140,210,200,.08)';mctx.stroke();
   for(const p of players){if(!p.alive||p===human)continue;const tm=p.cells.reduce((a,c)=>a+c.mass,0);const humanish=p.remote&&!p.bot;if(tm<300&&p!==leader&&!humanish)continue;
     for(const c of p.cells){mctx.beginPath();mctx.arc(h+c.x*k,h+c.y*k,Math.max((humanish?2.2:1.4)*DPR,c.r*k),0,TAU);mctx.fillStyle=col(p.color,0,p===leader||humanish?.95:.55);mctx.fill();
@@ -8070,7 +8119,7 @@ function hud(){
   clockUI();
   // ranking: a chip with your place; the list drops down under it (short phones 5 rows, portrait 6, desktop 10)
   const small=phone.matches||shortScreen.matches,cap=shortScreen.matches?5:phone.matches?6:10;let html='';
-  const row=(r,i)=>{const hu=r.p.remote&&!r.p.bot;return`<li class="${r.p===human?'me':''}"><span class="rk">${i===0?CROWN:i+1}</span><span class="dot" style="background:${col(r.p.color)}"></span><span class="nm">${esc(r.p.name)}</span>${r.p.boss?'<span class="tag boss">Boss</span>':hu?'<span class="tag" title="Player"></span>':''}<span class="ms">${kfmt(r.m)}</span></li>`;};
+  const row=(r,i)=>{const hu=r.p.remote&&!r.p.bot;return`<li class="${r.p===human?'me':''}"><span class="rk">${i===0&&!CL?CROWN:i+1}</span><span class="dot" style="background:${col(r.p.color)}"></span><span class="nm">${esc(r.p.name)}</span>${r.p.boss?'<span class="tag boss">Boss</span>':hu?'<span class="tag" title="Player"></span>':''}<span class="ms">${kfmt(r.m)}</span></li>`;};
   const hi=ranked.findIndex(r=>r.p===human);if(human&&human.alive&&hi>=0){const rk=hi+1;if(!human.stats.bestRank||rk<human.stats.bestRank)human.stats.bestRank=rk;}
   const N=hi>=cap?cap-2:cap;ranked.slice(0,N).forEach((r,i)=>{html+=row(r,i);});
   if(hi>=N)html+=`<li class="gap" aria-hidden="true"></li>`+row(ranked[hi],hi);
@@ -8347,7 +8396,7 @@ function send(){
   const P={v:PROTO,h:(isHost&&claimReady&&!yielded)?1:0,n:(human?human.name:(cleanName($('nameIn').value)||'Unnamed cell')).slice(0,16),s:settings.stain|0,
     a:human&&human.alive?1:0,f:human?fxBits(human):0,k:wireSkin(human?human.skin:settings.skin),ks:human?human.skin:settings.skin,q:queued?1:0,bp:null,em:null,ev:null,rd:null,cl:null,ej:null,r:null,pe:null,b:null,vs:null,vw:null,pu:null,hv:null,
     pt:soc&&soc.party?soc.party.id:null, // pt: your party, so your ally's game treats you as an ally (older games ignore it)
-    ts:enc(Math.floor(performance.now())%TS_WRAP,4),sq:nearMode()?enc(++near.sq%4096,2):null}; // ts: our clock, for smoothing (sampleTime); sq: Nearby counts lost messages
+    ts:enc(Math.floor(performance.now())%TS_WRAP,4),sq:nearMode()?enc(++near.sq%4096,2):null,md:CL?'c':null}; // md: Classic (older games send none and are Battle Royale) // ts: our clock, for smoothing (sampleTime); sq: Nearby counts lost messages
   if(human&&human.alive)P.cl=human.cells.slice(0,MAX_CELLS).map(encCell).join('');
   if(ejected.length)P.ej=ejected.slice(-16).map(e=>enc(e.x+OFF,3)+enc(e.y+OFF,3)).join('');
   recs=recs.filter(r=>T-r.t<3).slice(-20);if(recs.length)P.r=recs.map(r=>r.d);
@@ -8356,7 +8405,7 @@ function send(){
   const peL=nv?peLog.filter(p=>T-p.t<.11||p.x==null||inView(nv,p.x,p.y,0)):peLog; // ...far eats go once, near ones are repeated
   const peStr=n=>peL.slice(-n).map(p=>enc(p.i,3)+enc(p.g,3)).join('');
   P.pe=peL.length?peStr(120):null;
-  if(local){P.h=0;P.a=0;P.cl=null;P.ej=null;P.r=null;P.pe=null;}   // a local game is invisible to the room
+  if(local||CL&&!classicRoom()){P.h=0;P.a=0;P.cl=null;P.ej=null;P.r=null;P.pe=null;}   // a local game is invisible to the room
   P.lb=nearMode()&&isHost?nearWire():null;   // Nearby: the match settings and whether a match is on
   const host=P.h===1;
   const bots=(perCell,keep)=>{let s='';for(const b of players){if(!b.bot||b.remote||!b.alive||!b.cells.length||(keep&&!keep(b)))continue;
@@ -8371,6 +8420,7 @@ function send(){
     P.hv=hunters.map(h=>enc(h.id,2)+enc(h.x+OFF,3)+enc(h.y+OFF,3)+enc(h.kind,1)+enc(Math.max(0,h.hp),1)).join('');
   }
   if(host&&nearMode()&&++near.tx%4){P.vs=null;P.pu=null;} // Nearby: virus slots and power-ups change slowly, so they go in every 4th message
+  if(host&&CL){P.pu=P.ev=P.rd=P.hv=null;if(++clTx%4)P.vs=null;} // Classic has none of these, and its phage slots change slowly
   let js=JSON.stringify(P),budget=3900;
   if(js.length>budget){P.pe=peL.length?peStr(40):null;js=JSON.stringify(P);}
   if(js.length>budget&&host&&!nv){P.b=bots(2);js=JSON.stringify(P);}
@@ -8387,8 +8437,8 @@ function netTick(dt){
   const me=peers.find(p=>p.sameTab);if(me&&!myPeer){myPeer=me.peer;roomAt=T;}
   if(!myPeer)return;
   const N=window.__mitosisNet,inbox=N&&N.take?N.take():[]; // every message since the last frame, oldest first
-  if(local){peerCount=1;queuedPeers=0;return;}   // a local game ignores the room until you leave it
-  const others=peers.filter(p=>!p.sameTab&&p.kind==='viewer'&&p.presence&&p.presence.v===PROTO);
+  if(local||CL&&!classicRoom()){peerCount=1;queuedPeers=0;return;}   // a local game (or Classic on a server without Classic rooms) ignores the room
+  const others=peers.filter(p=>!p.sameTab&&p.kind==='viewer'&&p.presence&&p.presence.v===PROTO&&(p.presence.md==='c')===CL); // only games of our mode
   peerCount=1+others.length;queuedPeers=others.filter(p=>p.presence.q===1).length;netNames=others.map(p=>cleanName(p.presence.n)||'Guest cell');
   if(peerCount!==lastPeerCount){lastPeerCount=peerCount;if(isHost)syncBots();}
   const claims=others.filter(p=>p.presence.h===1&&T-(seenAt.get(p.peer)??T)<3).map(p=>p.peer).sort(); // stalled hosts are ignored
@@ -8445,7 +8495,7 @@ function syncBots(){
 function init(){
   for(let i=0;i<PELLETS;i++){const pl={i,g:0};placePellet(pl);gridAdd(pl);pellets.push(pl);}
   for(let i=0;i<VSLOTS;i++)vslots.push(makeSlot(i));
-  for(let i=0;i<16;i++)addPU();
+  if(!CL)for(let i=0;i<16;i++)addPU();
   rebuildViruses();syncBots();
 }
 function removeHuman(){if(!human)return;removePlayer(human);cells=cells.filter(c=>!c.dead);human=null;}
@@ -8462,6 +8512,7 @@ const isOffline=()=>{const N=window.__mitosisNet;return !N||N.state==='offline';
 const pingNow=()=>{const N=window.__mitosisNet,r=N&&N.stats&&N.stats.rtts;return r&&r.length>=3?median(r.slice(-5)):null;};
 const pingOver=()=>{const N=window.__mitosisNet,L=settings.maxPing|0,p=pingNow();return L>0&&!!N&&N.mode!=='nearby'&&p!=null&&p>L;};
 function startGame(){
+  if(CL&&!local&&!classicRoom()){startLocal('practice');return;} // Classic without a Classic room: bots on this device
   if(nearMode()&&!nearGate())return; // Nearby: the host starts the match from the lobby, the others join it
   if(!local&&isOffline()){startLocal('practice');return;} // no connection: play the bots right away, unranked
   if(!spawnOpen()){
@@ -8498,7 +8549,8 @@ $('settingsCard').addEventListener('click',e=>{if(mode==='play'&&paused&&e.targe
 function die(){
   mode='dead';if(!multi())slow=.22;sfx('die');Native.haptic('error');const s=human.stats;human.hist.push(0);paused=false;
   const pb=notePeak(s.peak);
-  const pl=placeOf();s.place=pl.place;s.of=pl.of;if(BISECT.auto)reportHitch(`autopilot died place=${pl.place} of=${pl.of} by=${s.killer} t=${fmtT(T-s.born)} roundT=${roundT().toFixed(0)}`);recordRun({t:Date.now(),place:s.place,of:s.of,peak:Math.round(s.peak),eaten:s.eaten,sec:Math.round(T-s.born),practice:local==='practice'});
+  const pl=CL?{place:0,of:0}:placeOf();s.place=pl.place;s.of=pl.of; // Classic has no placings
+  if(BISECT.auto)reportHitch(`autopilot died place=${pl.place} of=${pl.of} by=${s.killer} t=${fmtT(T-s.born)} roundT=${roundT().toFixed(0)}`);recordRun({t:Date.now(),place:s.place,of:s.of,peak:Math.round(s.peak),eaten:s.eaten,sec:Math.round(T-s.born),practice:local==='practice'});
   evoOffer=null;renderEvo();lysedAt=0;
   econRunEnd();recStop(1500);resFill(s.killer==='the collapse'?'arena':'dead',pb);
   const hist=human.hist.slice();

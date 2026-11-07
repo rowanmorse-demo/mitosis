@@ -284,16 +284,18 @@ function onData(c, d) {
 // room with the most players in the arena (or searching for a round), then the fullest, so newcomers find company and
 // overflow rooms empty out as their players leave. A room opens when every other is full and closes when it empties.
 // A game in a party (hello.party, see social.js) joins the room its party already plays in, while that room has space.
-function roomFor(now, party) {
-  if (party) for (const r of rooms) if (r.size < ROOM_SIZE && [...r].some(o => o.party === party)) return r;
+// Rooms are per mode (hello.mode): Classic games only meet Classic games, and every game that names no mode (all apps
+// before Classic) plays Battle Royale, so those never land in a Classic room.
+function roomFor(now, party, mode = 'br') {
+  if (party) for (const r of rooms) if (r.mode === mode && r.size < ROOM_SIZE && [...r].some(o => o.party === party)) return r;
   let best = null, score = -1;
   for (const r of rooms) {
-    if (r.size >= ROOM_SIZE) continue;
+    if (r.mode !== mode || r.size >= ROOM_SIZE) continue;
     let active = 0; for (const o of r) { const a = live.activityOf(o, now); if (a === 'arena' || a === 'searching') active++; }
     const sc = active * (ROOM_SIZE + 1) + r.size; // most in the arena first, then the fullest; ties go to the oldest room
     if (sc > score) { best = r; score = sc; }
   }
-  if (!best && rooms.length < MAX_ROOMS) { best = new Set(); rooms.push(best); }
+  if (!best && rooms.length < MAX_ROOMS) { best = new Set(); best.mode = mode; rooms.push(best); }
   return best;
 }
 const roomNo = c => rooms.indexOf(c.room) + 1;
@@ -310,14 +312,15 @@ function onMessage(c, text) {
   if (m.t === 'ping') { c.pingAt = now; send(c, { t: 'pong', c: typeof m.c === 'number' ? m.c : 0 }); return; } // the game measures its round trip with these
   if (m.t === 'hello' && !c.id) {
     c.party = typeof m.party === 'string' && /^[a-z0-9]{6,16}$/.test(m.party) ? m.party : null;
-    const room = roomFor(now, c.party);
+    c.mode = m.mode === 'classic' ? 'classic' : 'br';
+    const room = roomFor(now, c.party, c.mode);
     if (!room) { players.turnedAway(); send(c, { t: 'full' }); setTimeout(() => kill(c), 200); return; }
     let id = typeof m.id === 'string' && /^[a-z0-9]{6,20}$/.test(m.id) ? m.id : crypto.randomBytes(6).toString('hex');
     while ([...clients].some(o => o.id === id)) id += Math.floor(Math.random() * 10);
     c.id = id; c.pAt = c.pingAt = now; c.room = room; room.add(c); clients.add(c); players.tick();
     c.key = crypto.randomBytes(12).toString('hex'); byKey.set(c.key, c);
-    send(c, { t: 'welcome', id, key: c.key, peers: [...room].filter(o => o !== c && o.p).map(o => ({ id: o.id, p: o.p })), lan: lanUrls() });
-    log(`+ player joined room ${roomNo(c)} (${room.size} there, ${clients.size} online in ${rooms.length} room${rooms.length === 1 ? '' : 's'})`);
+    send(c, { t: 'welcome', id, key: c.key, mode: room.mode, peers: [...room].filter(o => o !== c && o.p).map(o => ({ id: o.id, p: o.p })), lan: lanUrls() });
+    log(`+ player joined ${room.mode} room ${roomNo(c)} (${room.size} there, ${clients.size} online in ${rooms.length} room${rooms.length === 1 ? '' : 's'})`);
   } else if (m.t === 'p' && c.id && m.p && typeof m.p === 'object' && !Array.isArray(m.p)) {
     c.p = m.p; c.pAt = now;
     if (m.p.a === 1) meet(c, now);
