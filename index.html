@@ -893,7 +893,7 @@ body.saver .lb-bg *{animation:none!important}
   border:1px solid rgba(255,255,255,.08);background:radial-gradient(90% 62% at 50% 34%,rgba(var(--rc),.16),transparent 72%),linear-gradient(180deg,rgba(16,34,38,.92),rgba(5,14,16,.94));
   box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 6px 16px rgba(0,0,0,.32);transition:transform .12s,box-shadow .15s,border-color .15s}
 #storeCard .svc.rare{--rc:154,140,255}#storeCard .svc.epic{--rc:242,177,52}#storeCard .svc.legendary{--rc:255,110,70}#storeCard .svc.seasonal{--rc:255,138,42}
-#storeCard .svc canvas{width:66px;height:66px;filter:drop-shadow(0 6px 8px rgba(0,0,0,.5))}
+#storeCard .svc :is(canvas,img){width:66px;height:66px;filter:drop-shadow(0 6px 8px rgba(0,0,0,.5))}
 #storeCard .svc .sn{max-width:100%;box-sizing:border-box;padding:0 4px;font:700 12.5px/1.15 var(--display);letter-spacing:-.01em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere} /* long names take two lines; the price row stays aligned */
 #storeCard .svc .sp{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:22px;padding:0 9px 0 6px;border-radius:999px;background:rgba(0,0,0,.4);box-shadow:inset 0 1px 2px rgba(0,0,0,.35);color:#ffd77a;font:800 12px/1 var(--display);font-variant-numeric:tabular-nums}
 #storeCard .svc .sp .sv-coin{font-size:13px}
@@ -973,7 +973,7 @@ body.saver .lb-bg *{animation:none!important}
   #storeCard .sv-buy .pz{height:36px;font-size:16px;border-radius:11px}
   #storeCard #skins,#storeCard .sv-row{grid-template-columns:repeat(auto-fill,minmax(94px,1fr));gap:8px}
   #storeCard .svc{padding:10px 5px 8px;gap:4px;border-radius:16px}
-  #storeCard .svc canvas{width:58px;height:58px}
+  #storeCard .svc :is(canvas,img){width:58px;height:58px}
   #storeCard .sv-ltd{padding:9px 9px 10px;gap:8px;border-radius:20px}
   #storeCard .sv-atp{gap:10px;padding-top:6px}
   #storeCard .sv-atp:has(#storeNeed:not([hidden])) .pk-art svg{max-height:62px}#storeCard .sv-atp:has(#storeNeed:not([hidden])) #storeHint{display:none}
@@ -1000,7 +1000,7 @@ body.saver .lb-bg *{animation:none!important}
   #storeCard .sv-ltd{padding:9px 8px 10px;gap:9px}
   #storeCard .sv-ltd .sv-season{gap:7px}#storeCard .sv-ltd .sv-season b{font-size:17px}#storeCard .sv-clock{height:28px;padding:0 9px 0 8px;gap:5px;font-size:12px}
   #storeCard .svc{padding:10px 3px 8px;gap:4px;border-radius:16px}
-  #storeCard .svc canvas{width:54px;height:54px}
+  #storeCard .svc :is(canvas,img){width:54px;height:54px}
   #storeCard .svc .sn{font-size:11.5px;padding:0 2px}
   #storeCard .svc .sp{font-size:11px;padding:0 7px 0 5px}
   #storeCard .sv-atp{grid-row:2/-1;padding-top:14px}#storeCard .sv-atp::before{display:none}
@@ -1019,7 +1019,7 @@ body.saver .lb-bg *{animation:none!important}
 @media (min-width:1100px){
   .shopview{padding-left:max(48px,calc(50vw - 620px));padding-right:max(48px,calc(50vw - 620px));gap:20px 28px}
   #storeCard #skins,#storeCard .sv-row{grid-template-columns:repeat(auto-fill,minmax(116px,1fr));gap:12px}
-  #storeCard .svc canvas{width:74px;height:74px}
+  #storeCard .svc :is(canvas,img){width:74px;height:74px}
 }
 /* every skin on shelves by collection (the shared .ds-sec sections), under filter chips that stay at the top of the list */
 #storeCard #skins.skins{grid-template-columns:minmax(0,1fr);gap:12px}
@@ -1371,15 +1371,16 @@ body.saver .lb-bg *{animation:none!important}
 #lookCard .lk-tile{appearance:none;position:relative;min-width:0;display:grid;grid-template-rows:auto 1fr auto;justify-items:center;align-items:center;gap:3px;padding:12px 6px 11px;border-radius:18px;cursor:pointer;color:var(--ink);font:inherit;text-align:center;
   border:1px solid rgba(255,255,255,.08);background:radial-gradient(90% 62% at 50% 32%,rgb(var(--rc)/.16),rgb(var(--rc)/0) 72%),linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.01) 55%,rgba(0,0,0,.18)),#081719;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 6px 16px rgba(0,0,0,.3);transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s,border-color .2s,background-color .2s}
-#lookCard .lk-tile canvas{width:64px;height:64px;display:block;margin-bottom:5px;filter:drop-shadow(0 6px 8px rgba(0,0,0,.5));transition:transform .25s cubic-bezier(.2,.9,.3,1.3)}
+#lookCard .lk-tile :is(canvas,img){width:64px;height:64px;display:block;margin-bottom:5px;filter:drop-shadow(0 6px 8px rgba(0,0,0,.5));transition:transform .25s cubic-bezier(.2,.9,.3,1.3)}
 #lookCard .lk-tile b{max-width:100%;font:700 12.5px/1.12 var(--display);letter-spacing:-.01em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
 #lookCard .lk-tile>span:not(.lk-tease){max-width:100%;font:700 9px/1.2 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:rgb(var(--rc));white-space:nowrap;overflow:hidden;text-overflow:ellipsis} /* the rarity, in its colour */
 #lookCard .lk-tile[hidden]{display:none}
+img.sk-im{display:block;-webkit-user-drag:none;user-select:none;-webkit-touch-callout:none;pointer-events:none} /* a skin tile's picture (tileImg) */
 #lookCard .lk-tile[data-r=legendary]{background:radial-gradient(90% 62% at 50% 32%,rgba(255,110,90,.3),rgba(255,92,138,0) 72%),linear-gradient(160deg,rgba(255,92,138,.16),rgba(255,180,80,.06) 60%,rgba(0,0,0,.18)),#120b10}
 #lookCard .lk-tile[data-r=legendary]::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(105deg,transparent 40%,rgba(255,220,190,.16) 50%,transparent 60%) no-repeat;background-size:250% 100%;animation:lk-sheen 3.8s ease-in-out infinite}
 #lookCard .lk-tile:active{transform:scale(.94)}
 #lookCard .lk-tile[aria-pressed=true]{border-color:rgba(255,92,138,.9);background-color:#1a0d14;box-shadow:0 0 0 1.5px var(--accent),0 0 24px rgba(255,92,138,.32),inset 0 1px 0 rgba(255,255,255,.12)}
-#lookCard .lk-tile[aria-pressed=true] canvas{transform:scale(1.08)}
+#lookCard .lk-tile[aria-pressed=true] :is(canvas,img){transform:scale(1.08)}
 /* nothing owned yet: a wide teaser of three shop skins that says so and opens the Shop */
 #lookCard .lk-tile.lk-get{--rc:255 92 138;grid-column:2/-1;grid-template-rows:auto auto auto;align-content:center;gap:4px;border:1px solid rgba(255,92,138,.5);
   background:radial-gradient(70% 80% at 50% 30%,rgba(255,92,138,.22),rgba(255,92,138,0) 72%),linear-gradient(180deg,rgba(255,255,255,.06),rgba(0,0,0,.18)),#140b12;
@@ -1442,7 +1443,7 @@ body.saver .lb-bg *{animation:none!important}
   #lookCard .lk-side{gap:10px}#lookCard .lk-sec{gap:12px;padding:12px 12px 14px;border-radius:20px}#lookCard .lk-head b{font-size:15px}
   #lookCard .lk-filters{margin:-4px -12px 0;padding:2px 12px}#lookCard .lk-chip{height:32px;padding:0 12px}
   #lookCard .lk-grid{grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px}
-  #lookCard .lk-tile{padding:10px 5px 9px;border-radius:16px}#lookCard .lk-tile canvas{width:56px;height:56px}
+  #lookCard .lk-tile{padding:10px 5px 9px;border-radius:16px}#lookCard .lk-tile :is(canvas,img){width:56px;height:56px}
   #lookCard .swatches{grid-template-columns:repeat(6,minmax(0,44px))}
   #lookCard .pats{gap:8px}#lookCard .pat{border-radius:16px}
   #lookCard #lookShop{min-height:40px;padding:0 15px 0 12px;font-size:13px}
@@ -3080,7 +3081,7 @@ const STAINS=[[340,100,68],[250,100,76],[174,62,54],[40,90,58],[18,100,64],[200,
 // (a "bake", cached per size bucket) and blitted, turned with the cell where the art allows; only what moves is
 // drawn live, with less of it when the cell is small on screen; shared lighting (rim, bounce, specular) goes on top.
 const SKIN_BR=1.15,BAKES=new Map(); // a bake spans 1.15 r, so a membrane that bulges never shows past the art
-const PV_R={16:40,22:36,24:50,27:47,45:32}; // in a preview, a skin that burns past its membrane shows smaller so its aura fits the canvas
+const PV_R={16:46,22:36,24:50,27:47,45:32}; // in a preview, a skin that burns past its membrane shows smaller so its aura fits the canvas
 let bakeArea=0,bakeAt=-1e9,PV_K=1,PV_SR=1; // PV_K: device px per preview unit; PV_SR: CSS px per unit (level of detail)
 function hash(n){const x=Math.sin(n*12.9898)*43758.5453;return x-Math.floor(x);}
 function prng(s){return()=>{s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
@@ -3220,6 +3221,69 @@ const ONERING_CRACKS=(()=>{const R=prng(163),o=[];for(let i=0;i<8;i++){let a=i/8
   for(let i=0;i<14;i++){let a=R()*TAU,d=.86+R()*.08;const p=[Math.cos(a)*d,Math.sin(a)*d];for(let s=0;s<4;s++){a+=.04+R()*.05;d=Math.max(.85,Math.min(.95,d+(R()-.5)*.04));p.push(Math.cos(a)*d,Math.sin(a)*d);}o.push(p);}return o;})();
 function oneRingLava(q,w,style,one){if(one){q.beginPath();for(const p of ONERING_CRACKS){q.moveTo(p[0],p[1]);for(let i=2;i<p.length;i+=2)q.lineTo(p[i],p[i+1]);}q.lineWidth=w;q.strokeStyle=style;q.stroke();return;}
   for(const p of ONERING_CRACKS)taper(q,p,w,w*.3,style);}
+// One Cell's base, painted pixel by pixel once (see cosmoTex): the domed band is a mirror lit from the upper left, its crest holding a warm sky, below its
+// horizon the dark glass round it, and the eye's fire on its inner wall; everywhere else black volcanic glass with magma deep under it
+const ONERING_GOLD=[[0,18,7,2],[.14,62,30,5],[.3,128,72,12],[.46,190,124,34],[.6,228,170,68],[.74,252,212,118],[.87,255,238,178],[1,255,252,236]];
+function oneRingGold(v,o){v=Math.max(0,Math.min(1,v));const G=ONERING_GOLD;let i=1;while(i<G.length-1&&G[i][0]<v)i++;const A=G[i-1],B=G[i],f=(v-A[0])/(B[0]-A[0]);for(let j=0;j<3;j++)o[j]=A[j+1]+(B[j+1]-A[j+1])*f;}
+function oneRingPx(x,y,o){const d=Math.hypot(x,y)+1e-6,rx=x/d,ry=y/d;
+  if(d>.548&&d<.832){const u=Math.max(-.999,Math.min(.999,(d-.69)/.142)),nz=Math.sqrt(1-u*u),Nx=rx*u,Ny=ry*u,dif=Math.max(0,-.42*Nx-.58*Ny+.7*nz),
+      Rx=2*nz*Nx,Ry=2*nz*Ny,Rz=2*nz*nz-1,sp=Math.max(0,-.42*Rx-.58*Ry+.7*Rz),ham=cosmoFbm(x*15+5,y*15+2,2)-.5;let v,fire;
+    if(Rz>0){const az=Math.atan2(Ry,Rx);v=.2+.14*Rz+.26*dif+.3*Math.pow(sp,6)+.5*Math.pow(sp,70)+.07*Math.cos(az*3+1)*(1-Rz);fire=.28*Math.exp(-Rz*6)*(.4+.6*Math.max(0,Ry));}
+    else{v=.04+.12*dif-.06*Rz;fire=u<0?.12-u*.62:.1+.12*Math.max(0,Ry);}
+    oneRingGold(v+ham*.07,o);o[0]=Math.min(255,o[0]+fire*230);o[1]=Math.min(255,o[1]+fire*88);o[2]=Math.min(255,o[2]+fire*8);return;}
+  const n=cosmoFbm(x*3.1+7,y*3.1+3,4),m=cosmoFbm(x*5.5+1,y*5.5+9,3),rip=Math.pow(.5+.5*Math.sin(n*44+d*5),14),sh=Math.max(0,-.6*x-.8*y)*Math.max(0,d-.84)*5,mg=cosmoStep(.58,.8,m);
+  let R=6+7*n+rip*16+sh*55+mg*58,G=3+3*n+rip*11+sh*38+mg*8,B=4+4*n+rip*14+sh*32+mg*2;
+  if(d<.556){const h=Math.max(0,1-d/.556);R+=34+h*150;G+=2+h*60;}
+  o[0]=Math.min(255,R);o[1]=Math.min(255,G);o[2]=Math.min(255,B);}
+// the eye's fire, pixel by pixel: white-hot at the slit through yellow and orange to a dark red rim, in wavering fibres
+const ONERING_IRIS=[[0,255,250,226],[.14,255,238,156],[.32,255,204,78],[.5,252,146,26],[.66,222,74,8],[.8,140,24,0],[.91,60,7,0],[1,20,2,0]];
+function oneRingIrisPx(x,y,o){const d=Math.hypot(x,y)+1e-6,a=Math.atan2(y,x)+(cosmoFbm(x*2.6+3,y*2.6+8,3)-.5)*.9*d,ax=Math.cos(a),ay=Math.sin(a),
+    fib=cosmoFbm(ax*6+d*1.3+3,ay*6-d*1.1+7,3),fin=cosmoNoise(ax*30+d*2.2+11,ay*30+d*2.7+5),p=d+(fib-.5)*.34,S=ONERING_IRIS;
+  let i=1;const v=Math.max(0,Math.min(1,p));while(i<S.length-1&&S[i][0]<v)i++;const A=S[i-1],B=S[i],f=(v-A[0])/(B[0]-A[0]),k=.62+.5*fin+.22*fib;
+  for(let j=0;j<3;j++)o[j]=Math.min(255,(A[j+1]+(B[j+1]-A[j+1])*f)*k);}
+// the fire round the membrane, pixel by pixel once: tongues of flame from the membrane (radius 1) out to about 1.5, white-hot at the root, red and thin
+// at the tips, over a soft heat glow, in a 256 px sprite spanning ±1.6 with alpha; the aura lays two copies over each other, turning against each other
+let ONERING_FIRE=null;
+function oneRingFire(){if(ONERING_FIRE)return ONERING_FIRE;const N=256,E=1.6,c=document.createElement('canvas');c.width=c.height=N;const t=c.getContext('2d'),im=t.createImageData(N,N),D=im.data,
+    S=[[0,0,0,0],[.12,120,8,0],[.3,210,40,0],[.5,255,110,10],[.7,255,180,50],[.88,255,232,140],[1,255,252,220]];
+  for(let j=0;j<N;j++){const y=((j+.5)/N*2-1)*E;for(let i=0;i<N;i++){const x=((i+.5)/N*2-1)*E,d=Math.hypot(x,y);if(d<.86||d>E)continue;
+    const wa=Math.atan2(y,x)+(cosmoFbm(x*1.8+2,y*1.8+6,2)-.5)*1.4*(d-.9),cx=Math.cos(wa),cy=Math.sin(wa),h=.26+.3*cosmoFbm(cx*2.4+5,cy*2.4+1,2),tt=(d-.95)/h,w=cosmoFbm(cx*7+d*2.6+1,cy*7-d*2.2+4,3),w2=cosmoNoise(cx*19+d*5+3,cy*19-d*4+8);
+    let I=Math.min(1,Math.max((w*1.5+w2*.35-.42)*1.25-tt*.85,(1-tt*2.4)*.78));if(tt<0)I=Math.max(I,.9+tt);I=Math.max(0,I);
+    const gl=.36*Math.pow(Math.max(0,1-Math.max(0,d-.95)/.64),2),af=Math.min(1,I*1.6),A0=af+gl*(1-af),k=(j*N+i)<<2;if(A0<=.004)continue;
+    let s=1;while(s<S.length-1&&S[s][0]<I)s++;const A=S[s-1],B=S[s],f=(I-A[0])/(B[0]-A[0]),wg=gl*(1-af);
+    D[k]=((A[1]+(B[1]-A[1])*f)*af+255*wg)/A0;D[k+1]=((A[2]+(B[2]-A[2])*f)*af+105*wg)/A0;D[k+2]=((A[3]+(B[3]-A[3])*f)*af+20*wg)/A0;D[k+3]=A0*255;}}
+  t.putImageData(im,0,0);return ONERING_FIRE=c;}
+// the inscription: an invented calligraphic hand (no real script) round the band, as if written with a broad nib: words of bows, loops and stems that
+// run above and below the line, crowned with dots, curls and strokes. Kept as [angle, height] pairs; oneRingInk adds one sweep of the nib to the path
+const ONERING_INK=(()=>{const R=prng(1616),S=.056,PI=Math.PI,B=-.9,lines=[],pen=[],flush=()=>{if(pen.length>2)lines.push(pen.slice());pen.length=0;},
+    to=(x,v)=>pen.push(x,v),arc=(cs,cv,rs,rv,t0,t1,n=14)=>{for(let i=0;i<=n;i++){const t=t0+(t1-t0)*i/n;to(cs+rs*Math.cos(t),cv+rv*Math.sin(t));}},mark=p=>lines.push(p);
+  let a=.03;
+  while(a<TAU-.2){const nw=2+Math.floor(R()*4);
+    for(let e=0;e<nw&&a<TAU-.14;e++){const k=R();let w;
+      if(k<.2){w=1.4*S;arc(a+w/2,B,w/2,1.75,PI,0);}
+      else if(k<.38){w=1.15*S;for(let i=0;i<=16;i++){const t=i/16;to(a+w*t-.32*w*Math.sin(2*PI*t),B+1.6*(1-Math.cos(2*PI*t))/2);}}
+      else if(k<.52){w=.95*S;to(a,B);to(a+.3*w,B+2.9);arc(a+.18*w,B+2.9,.12*w,.38,0,PI*1.5,10);flush();to(a+.32*w,B+1);to(a+.38*w,B-2.3);flush();to(a+.5*w,B);to(a+w,B);}
+      else if(k<.66){w=1.3*S;arc(a+w/2,B,w/2,1.9,PI,2*PI);}
+      else if(k<.82){w=1.1*S;to(a,B);for(let i=0;i<=14;i++){const t=i/14;to(a+w*t,B+.55+.6*Math.sin(t*2*PI));}to(a+w,B);}
+      else{w=1*S;to(a,B);arc(a+w/2,B+.8,.4*w,.8,-PI/2,PI*1.5,18);to(a+w,B);}
+      const m=R(),mx=a+w/2,top=2.1;
+      if(m<.2)mark([mx,top,mx,top]);else if(m<.32){mark([mx-w*.2,top,mx-w*.2,top]);mark([mx+w*.2,top,mx+w*.2,top]);}
+      else if(m<.44){const p=[];for(let i=0;i<=8;i++){const t=i/8;p.push(mx-w*.3+w*.6*t,top+.25*Math.sin(t*2*PI));}mark(p);}
+      else if(m<.54)mark([mx-w*.2,top-.3,mx+w*.2,top+.4]);
+      else if(m<.62){const p=[];for(let i=0;i<=10;i++){const t=i/10*PI*1.5;p.push(mx+Math.cos(t)*w*.16,top+.1+Math.sin(t)*.4);}mark(p);}
+      else if(m<.7)mark([mx,-2.6,mx,-2.6]);
+      a+=w+S*.06;}
+    flush();a+=S*.5;}
+  return lines;})();
+function oneRingInk(q,k,dx=0,dy=0){for(const p of ONERING_INK){for(let i=0;i<p.length;i+=2){const v=p[i+1],a=p[i]+k*.0022-v*.003,rr=.69+(v+k*.1)*.035,x=Math.cos(a)*rr+dx,y=Math.sin(a)*rr+dy;
+  if(!i)q.moveTo(x,y);else q.lineTo(p[i]===p[i-2]&&v===p[i-1]?x+.0004:x,y);}}}
+// the circle of runes beyond the membrane: invented staves with branches (no real alphabet), a node between each word of seven
+const ONERING_RUNES=(()=>{const R=prng(1618),N=40,R0=1.33,H=.036,W=TAU/N,lines=[],dots=[],opts=[[0,1,1,.35],[0,1,-1,.35],[0,.15,1,-.4],[0,.15,-1,-.4],[0,-.35,1,.3],[-1,1,0,.35],[1,1,0,.35],[0,-1,1,-.5],[0,-1,-1,-.5],[-1,0,1,0]];
+  for(let k=0;k<N;k++){const a0=k*W,P=(s,v)=>{const a=a0+(.5+s*.3)*W,rr=R0+v*H;return[Math.cos(a)*rr,Math.sin(a)*rr];};
+    if(k%8===0){dots.push(P(0,0));continue;}
+    lines.push([...P(0,-1),...P(0,1)]);const n=1+Math.floor(R()*3);for(let j=0;j<n;j++){const e=opts[Math.floor(R()*opts.length)];lines.push([...P(e[0],e[1]),...P(e[2],e[3])]);}}
+  return{lines,dots};})();
+const ONERING_FL=(()=>{const R=prng(1617),o=[];for(let i=0;i<24;i++)o.push([R(),R(),R()]);return o;})(); // per-ember constants
 // The Widow's orb web: its spokes, and the big dew drops that catch the light (the live glints sit on them)
 const WIDOW_SPOKES=(()=>{const R=prng(250),o=[];for(let i=0;i<13;i++)o.push(i/13*TAU+(R()-.5)*.22);return o;})(),WIDOW_DEW=[[-.5,-.42,.034],[.62,-.22,.03],[-.3,.64,.028],[.42,.56,.024],[-.72,.12,.022]];
 // Helpers for the nature skins (Magma, Honeycomb, Leopard, Koi, Sakura, Toxic, Glacier). natureWarp maps a point on flat ground to where it
@@ -3868,111 +3932,83 @@ const PREMIUM=[
     for(let i=0;i<n;i++){const ph=(T*.11+i/n+c.wob*.37)%1,d=1-ph*.62,a=i*2.4+c.wob+ph*ph*9;if(holeAt(c,r,cs,sn,a,d))continue;dot(g,P[0],P[1],r*.05*(.6+ph*.6),'255,222,175',(.35+.65*ph)*(.7-.3*Math.cos(a)));}},
   eye(g,c,r,nx,ny,sick){if(sick){g.beginPath();g.arc(c.x,c.y,r*BH_RS*.9,0,TAU);g.fillStyle=col(INF_C,-30,.9);g.fill();}
     const tilt=-.2+Math.sin(c.wob)*.12;g.globalAlpha=.4+.3*Math.sin(T*2.6+c.wob);g.beginPath();g.arc(c.x,c.y,r*BH_RP,tilt+Math.PI+.25,tilt+TAU-.25);g.lineWidth=r*.012;g.strokeStyle='#fff3dc';g.stroke();g.globalAlpha=1;}},
-{id:16,key:'onering',name:'One Cell to Rule Them All',price:12000000,base:[42,92,46],pupil:true,noGlint:true,edge:'#3a1904',edge2:'rgba(255,205,100,.6)',
-  // a jewel of obsidian and gold: a domed band of polished gold with fiery script turning round it, an engraved sunburst round an eye of flame,
-  // a collar of gold filigree set with rubies and diamonds behind milgrain beading, lava glowing in the glass; and beyond the membrane a sigil of
-  // orbiting runes, god rays, lightning off the band, flame satellites, a shockwave every few seconds, embers and a fire trail when it moves
+{id:16,key:'onering',name:'One Cell to Rule Them All',price:12000000,base:[42,92,46],pupil:true,noGlint:true,edge:'#170502',edge2:'rgba(255,190,90,.7)',
+  // the crown jewel, a cell of obsidian and gold: a domed band of polished gold mirroring the fire, a burning inscription turning in it, round an eye of
+  // fire with a black slit; a collar of filigree set with faceted rubies and diamonds, magma glowing under the volcanic glass. Beyond the membrane it burns:
+  // soft flame churning round the membrane over a heat glow, embers rising, a faint circle of runes turning, and a pulse of power every few seconds
   aura(g,c,r,k,sr,lead){
-    const H=n=>{const x=Math.sin(n*12.9898)*43758.5453;return x-Math.floor(x);},big=lead&&sr>44,mid=sr>22,show=lead&&mid,w0=c.wob;
-    // darkness pooling around it, then rays of light sweeping slowly
-    g.beginPath();g.arc(c.x,c.y,r*2.7,0,TAU);fillUnit(g,grad(g,'ring_dark',q=>{const u=q.createRadialGradient(0,0,1.2,0,0,2.7);u.addColorStop(0,'rgba(10,0,0,.32)');u.addColorStop(1,'rgba(10,0,0,0)');return u;}),c.x,c.y,r);
-    if(show){const ray=grad(g,'ring_ray',q=>{const u=q.createRadialGradient(0,0,.9,0,0,3);u.addColorStop(0,'rgba(255,215,100,.34)');u.addColorStop(.45,'rgba(255,140,30,.14)');u.addColorStop(1,'rgba(255,100,0,0)');return u;});
-      for(let i=0;i<10;i++){const a=T*.18+i*TAU/10+Math.sin(T*.7+i)*.08,L=r*(2.6+.4*Math.sin(T*1.3+i*2)),ca=Math.cos(a),sa=Math.sin(a),hw=r*.4;
-        g.beginPath();g.moveTo(c.x+ca*r*.9,c.y+sa*r*.9);g.lineTo(c.x+ca*L-sa*hw,c.y+sa*L+ca*hw);g.lineTo(c.x+ca*L+sa*hw,c.y+sa*L-ca*hw);g.closePath();fillUnit(g,ray,c.x,c.y,r);}}
-    // warm glow hugging the membrane
-    g.beginPath();g.arc(c.x,c.y,r*1.6,0,TAU);fillUnit(g,grad(g,'ring_glow',q=>{const u=q.createRadialGradient(0,0,.9,0,0,1.6);u.addColorStop(0,'rgba(255,120,20,.45)');u.addColorStop(.4,'rgba(255,60,10,.18)');u.addColorStop(1,'rgba(255,40,0,0)');return u;}),c.x,c.y,r);
-    // a shockwave every few seconds
-    if(lead){const ph=(T*.38+w0*.05)%1;g.beginPath();g.arc(c.x,c.y,r*(1+ph*1.9),0,TAU);g.lineWidth=r*(.02+.1*(1-ph));g.strokeStyle=`rgba(255,${Math.round(200-ph*120)},80,${.6*(1-ph)*(1-ph)})`;g.stroke();}
-    // the sigil: two rings of light with two dozen runes drifting round them and four bright nodes
-    if(show){const R=r*1.78,rot=-T*.22+w0;g.lineCap='round';
-      g.lineWidth=r*.016;g.strokeStyle='rgba(255,225,160,.5)';g.beginPath();g.arc(c.x,c.y,r*1.66,0,TAU);g.stroke();g.beginPath();g.arc(c.x,c.y,r*1.9,0,TAU);g.stroke();g.lineWidth=r*.006;g.strokeStyle='rgba(255,235,190,.3)';g.beginPath();g.arc(c.x,c.y,r*1.6,0,TAU);g.stroke();
-      const n=big?24:12;for(let i=0;i<n;i++){const a=rot+i*TAU/n,x=c.x+Math.cos(a)*R,y=c.y+Math.sin(a)*R,ca=Math.cos(a),sa=Math.sin(a),tx=-sa,ty=ca,L=r*.06,burn=.35+.65*Math.max(0,Math.sin(T*2.1+i*.8)),kind=i%3;
-        g.beginPath();
-        if(kind===0){g.moveTo(x-ca*L*1.2,y-sa*L*1.2);g.lineTo(x+ca*L*1.2,y+sa*L*1.2);g.moveTo(x-tx*L*.8,y-ty*L*.8);g.lineTo(x+tx*L*.8,y+ty*L*.8);}
-        else if(kind===1){g.arc(x,y,L*.9,a+.6,a+4.2);}
-        else{g.moveTo(x-tx*L,y-ty*L-0);g.lineTo(x+ca*L*1.1,y+sa*L*1.1);g.lineTo(x+tx*L,y+ty*L);g.lineTo(x-ca*L*1.1,y-sa*L*1.1);g.closePath();}
-        g.lineWidth=r*.05;g.strokeStyle=`rgba(255,120,20,${burn*.5})`;g.stroke();g.lineWidth=r*.018;g.strokeStyle=`rgba(255,${Math.round(235+burn*20)},${Math.round(190+burn*60)},${burn})`;g.stroke();}
-      for(let i=0;i<4;i++){const a=rot*1.5+i*TAU/4,x=c.x+Math.cos(a)*R,y=c.y+Math.sin(a)*R,d=r*.11,pl=.6+.4*Math.sin(T*4+i);
-        g.beginPath();g.moveTo(x,y-d);g.lineTo(x+d*.6,y);g.lineTo(x,y+d);g.lineTo(x-d*.6,y);g.closePath();g.fillStyle=`rgba(255,250,220,${pl})`;g.fill();g.lineWidth=r*.02;g.strokeStyle='rgba(255,160,40,.9)';g.stroke();}
-      g.lineCap='butt';}
-    // lightning crackling from the band out to the sigil
-    if(big){g.lineCap='round';g.lineJoin='round';for(let i=0;i<3;i++){const seed=Math.floor(T*7)+i*131;if(H(seed)>.4)continue;const a=H(seed+1)*TAU,ca=Math.cos(a),sa=Math.sin(a);
-        g.beginPath();for(let st=0;st<=6;st++){const d=r*(.85+st*.15),j=st&&st<6?(H(seed+2+st)-.5)*r*.26:0,x=c.x+ca*d-sa*j,y=c.y+sa*d+ca*j;st?g.lineTo(x,y):g.moveTo(x,y);}
-        g.lineWidth=r*.09;g.strokeStyle='rgba(255,180,60,.3)';g.stroke();g.lineWidth=r*.028;g.strokeStyle='rgba(255,250,230,.95)';g.stroke();}g.lineCap='butt';g.lineJoin='miter';}
-    // fire licking out past the membrane: three layers per tongue, red to white-hot
-    const n=big?16:mid?10:6,base=T*.5+w0;
-    for(let i=0;i<n;i++){const a=base+i*TAU/n+Math.sin(T*2.3+i*1.7)*.1,fl=.5+.5*Math.sin(T*6.5+i*2.1),ca=Math.cos(a),sa=Math.sin(a),sw=Math.sin(T*5+i)*r*.1,bx=c.x+ca*r*.88,by=c.y+sa*r*.88;
-      const tongue=(h,w,fill)=>{const tx=c.x+ca*h-sa*sw,ty=c.y+sa*h+ca*sw;g.beginPath();g.moveTo(bx-sa*w,by+ca*w);g.quadraticCurveTo(c.x+ca*h*.75-sa*w*.7,c.y+sa*h*.75+ca*w*.7,tx,ty);g.quadraticCurveTo(c.x+ca*h*.75+sa*w*.7,c.y+sa*h*.75-ca*w*.7,bx+sa*w,by-ca*w);g.closePath();g.fillStyle=fill;g.fill();};
-      tongue(r*(1.2+fl*.42),r*(.2+.05*Math.sin(T*4+i)),`rgba(220,40,10,${.45+fl*.25})`);
-      tongue(r*(1.12+fl*.3),r*.14,`rgba(255,${Math.round(110+fl*60)},20,${.7+fl*.3})`);
-      tongue(r*(1.02+fl*.16),r*.07,`rgba(255,240,${Math.round(150+fl*80)},${.8+fl*.2})`);}
-    // three flaming satellites on their own orbits, each with a short trail
-    if(show){const orb=grad(g,'ring_orb',q=>{const u=q.createRadialGradient(0,0,0,0,0,1);u.addColorStop(0,'rgba(255,255,235,1)');u.addColorStop(.3,'rgba(255,200,60,.95)');u.addColorStop(.65,'rgba(255,90,10,.5)');u.addColorStop(1,'rgba(255,40,0,0)');return u;});
-      for(let i=0;i<3;i++){const sp=(1.1+i*.35)*(i%2?-1:1),R=r*(2.08+i*.12);for(let t=4;t>=0;t--){const a=T*sp+i*TAU/3+w0-t*.11*Math.sign(sp),x=c.x+Math.cos(a)*R,y=c.y+Math.sin(a)*R,sz=r*(.16-t*.025);
-          g.save();g.globalAlpha=t?.5-t*.1:1;g.beginPath();g.arc(x,y,sz,0,TAU);fillUnit(g,orb,x,y,sz);g.restore();}}}
-    // embers drifting up and away, and a fire trail when it is moving
-    if(mid)for(let i=0;i<14;i++){const ph=(T*.5+i*.071)%1,a=i*TAU/14+T*.1+Math.sin(T+i)*.4,d=r*(1.05+ph*1.1),x=c.x+Math.cos(a)*d,y=c.y+Math.sin(a)*d-ph*r*.5,sz=r*.04*(1-ph*.7),fk=.6+.4*Math.sin(T*13+i*5);
-      g.beginPath();g.arc(x,y,sz,0,TAU);g.fillStyle=`rgba(255,${Math.round(230-ph*170)},${Math.round(140-ph*130)},${(1-ph)*fk})`;g.fill();}
-    const spd=Math.hypot(c.svx||0,c.svy||0);if(mid&&spd>40){const ux=-c.svx/spd,uy=-c.svy/spd,len=Math.min(1,spd/300);
-      for(let t=1;t<=5;t++){const d=r*(.5+t*.42*len),x=c.x+ux*d+(-uy)*Math.sin(T*9+t)*r*.12,y=c.y+uy*d+ux*Math.sin(T*9+t)*r*.12,sz=r*(.85-t*.14);
-        g.beginPath();g.arc(x,y,sz,0,TAU);g.fillStyle=`rgba(255,${Math.round(150-t*22)},20,${(.42-t*.07)*len})`;g.fill();}}
+    const q=skinPx(g,r),w0=c.wob,show=lead&&sr>22,F=ONERING_FL,pulse=(T*.2+w0*.1)%1,pw=Math.max(0,1-pulse*3);
+    // a faint circle of runes turning slowly, brighter with each pulse
+    if(show&&q>30){g.globalAlpha=Math.min(1,.42+.1*Math.sin(T*1.3+w0)+.4*pw);blit(g,bake(g,'onering_sigil',q*3,this.sigil,1.5),c.x,c.y,r,-T*.05+w0,1.5);g.globalAlpha=1;}
+    // the pulse of power: a soft ring of heat going out
+    if(lead&&sr>18){const e=1-pulse;g.beginPath();g.arc(c.x,c.y,r*(1.08+pulse*.8),0,TAU);g.lineWidth=r*.14*e;g.globalAlpha=.28*e*e;g.strokeStyle='#ff8a28';g.stroke();g.lineWidth=r*.022*e;g.globalAlpha=.6*e*e;g.strokeStyle='#ffe6a0';g.stroke();g.globalAlpha=1;}
+    // flame over a heat glow: the fire sprite laid on twice, adding up, turning against each other and breathing in and out, so the tongues churn and flicker
+    const fire=oneRingFire();g.globalCompositeOperation='lighter';
+    for(let l=0;l<2;l++){const s=r*1.6*(1+.045*Math.sin(T*(2.3+l*.9)+l*2.1+w0)+.02*Math.sin(T*(5.7+l*1.3)+l)),a=(l?-T*.13:T*.1)+w0+l*2.1;
+      g.save();g.translate(c.x,c.y);g.rotate(a);if(l)g.scale(-1,1);g.globalAlpha=.6+.16*Math.sin(T*(3.1+l*1.7)+l*4);g.drawImage(fire,-s,-s,2*s,2*s);g.restore();}
+    g.globalCompositeOperation='source-over';g.globalAlpha=1;
+    // embers rising off it
+    if(sr>18){const m=show?14:6;for(let i=0;i<m;i++){const f=F[i],ph=(T*(.16+f[0]*.14)+f[1])%1,a=f[2]*TAU+.3*Math.sin(T*.5+i),d=r*(1.02+ph*.72),x=c.x+Math.cos(a)*d+Math.sin(T*2+i*3)*r*.05,y=c.y+Math.sin(a)*d-ph*r*.55;
+      dot(g,x,y,r*(.045-.02*ph),'255,150,50',Math.sin(ph*Math.PI)*(.65+.35*Math.sin(T*11+i*5)));}}
+    // a fire trail when it moves
+    const spd=Math.hypot(c.svx||0,c.svy||0);if(sr>18&&spd>40){const ux=-c.svx/spd,uy=-c.svy/spd,len=Math.min(1,spd/300);
+      for(let t=1;t<=4;t++){const d=r*(.55+t*.4*len),s=Math.sin(T*7+t*1.7)*r*.08;soft(g,c.x+ux*d-uy*s,c.y+uy*d+ux*s,r*(.78-t*.12),'255,100,20',(.42-t*.08)*len);}}
   },
-  bake(q,u){const R=prng(16),hl=Math.max(.004,.9/u),ann=(a,b)=>{q.beginPath();q.arc(0,0,b,0,TAU);q.arc(0,0,a,0,TAU,true);};
-    fillAll(q,rgr(q,-.2,-.25,1.3,[0,'#2c0d08',.4,'#130403',.75,'#1a0604',1,'#3e1006']));
-    q.lineWidth=.006;q.strokeStyle='rgba(255,170,120,.12)';q.beginPath();for(let i=0;i<26;i++){const a=R()*TAU,d=R()<.5?.2+R()*.32:.85+R()*.1,l=.2+R()*.5;q.moveTo(Math.cos(a)*d,Math.sin(a)*d);q.arc(0,0,d,a,a+l);}q.stroke(); // ripples in the volcanic glass
-    // the engraved sunburst round the eye, and the inner bezel
-    q.beginPath();for(let i=0;i<48;i++){const a=i/48*TAU,r0=.3,r1=i%2?.46:.53;q.moveTo(Math.cos(a)*r0,Math.sin(a)*r0);q.lineTo(Math.cos(a)*r1,Math.sin(a)*r1);}q.lineWidth=.012;q.strokeStyle='rgba(200,130,40,.55)';q.stroke();
-    q.save();q.translate(-.004,-.006);q.lineWidth=.005;q.strokeStyle='rgba(255,225,150,.5)';q.stroke();q.restore();
-    // the band: domed polished gold mirroring the fire round it, engraved borders, bevelled edges
-    ann(.555,.825);q.fillStyle=rgr(q,0,0,.825,[0,'#000',.67,'#5a3204',.7,'#c08422',.76,'#ffe9a0',.82,'#e3a73a',.88,'#b47614',.94,'#fff0b0',1,'#6a3a05']);q.fill();
-    ann(.555,.825);q.fillStyle=lgr(q,-.7,-.7,.7,.7,[0,'rgba(255,250,220,.5)',.35,'rgba(255,240,200,.08)',.55,'rgba(80,30,0,.1)',1,'rgba(60,15,0,.5)']);q.fill();
-    q.lineCap='round';q.lineWidth=.06;q.strokeStyle='rgba(255,255,240,.28)';q.beginPath();q.arc(0,0,.69,3.5,4.7);q.stroke();q.lineWidth=.018;q.strokeStyle='rgba(255,255,245,.6)';q.stroke();
-    q.lineWidth=.03;q.strokeStyle='rgba(255,170,60,.25)';q.beginPath();q.arc(0,0,.7,.2,1.3);q.stroke();
-    for(const [rr,w,cl] of[[.556,.012,'rgba(40,18,0,.9)'],[.824,.014,'rgba(40,18,0,.9)'],[.6,.007,'rgba(90,50,0,.65)'],[.78,.007,'rgba(90,50,0,.65)'],[.567,.006,'rgba(255,240,180,.75)'],[.812,.006,'rgba(255,240,180,.6)'],[.606,.004,'rgba(255,245,200,.5)'],[.786,.004,'rgba(255,245,200,.5)']]){q.lineWidth=w;q.strokeStyle=cl;q.beginPath();q.arc(0,0,rr,0,TAU);q.stroke();}
+  bake(q,u){const R=prng(16),hl=Math.max(.003,.8/u);
+    cosmoField(q,cosmoTex('onering',320,oneRingPx)); // the mirror gold and the volcanic glass
+    // the band's edges: a dark groove each side and a bright bevel catching the light
+    for(const [rr,w,cl] of[[.553,.014,'rgba(30,10,0,.95)'],[.826,.016,'rgba(30,10,0,.95)'],[.564,.006,'rgba(255,236,170,.7)'],[.815,.006,'rgba(255,230,160,.55)']]){q.lineWidth=w;q.strokeStyle=cl;q.beginPath();q.arc(0,0,rr,0,TAU);q.stroke();}
+    q.lineCap='round';q.lineWidth=.012;q.strokeStyle='rgba(255,252,235,.75)';q.beginPath();q.arc(0,0,.567,3.6,4.6);q.stroke();q.beginPath();q.arc(0,0,.812,3.5,4.5);q.stroke();
     // the collar: gold filigree scrolls, milgrain beading, rubies and diamonds in their settings
     q.beginPath();for(let i=0;i<12;i++){const a0=i/12*TAU,pt=(a,d)=>[Math.cos(a0+a)*d,Math.sin(a0+a)*d];
       for(const s of[-1,1]){let [x,y]=pt(s*.02,.89);q.moveTo(x,y);for(let t=1;t<=14;t++){const tt=t/14,a=s*(.02+tt*.2),d=.89+Math.sin(tt*Math.PI*1.6)*.035*(1-tt*.4);[x,y]=pt(a,d);q.lineTo(x,y);}
         const [cx,cy]=pt(s*.2,.885);for(let t=0;t<=10;t++){const aa=t/10*TAU*.85,rr=.022*(1-t/14);q.lineTo(cx+Math.cos(a0+aa*s+Math.PI)*rr,cy+Math.sin(a0+aa*s+Math.PI)*rr);}}}
-    q.lineWidth=.024;q.strokeStyle='rgba(30,10,0,.85)';q.stroke();q.lineWidth=.012;q.strokeStyle='#d69a32';q.stroke();q.save();q.translate(-.003,-.004);q.lineWidth=.005;q.strokeStyle='rgba(255,240,180,.85)';q.stroke();q.restore();
-    for(const [rr,n,s] of[[.955,110,.011],[.838,96,.008],[.545,64,.007]]){const bead=(dx,dy,k)=>{q.beginPath();for(let i=0;i<n;i++){const a=i/n*TAU,x=Math.cos(a)*rr+dx,y=Math.sin(a)*rr+dy;q.moveTo(x+s*k,y);q.arc(x,y,s*k,0,TAU);}};
-      bead(.002,.003,1.1);q.fillStyle='rgba(30,10,0,.8)';q.fill();bead(0,0,1);q.fillStyle='#c78a26';q.fill();bead(-s*.3,-s*.35,.45);q.fillStyle='rgba(255,245,200,.9)';q.fill();}
-    for(let i=0;i<12;i++){const a=i/12*TAU+TAU/24,x=Math.cos(a)*.893,y=Math.sin(a)*.893,ruby=i%2===0,s=ruby?.042:.03;
-      disc(q,x+.006,y+.008,s*1.3,'rgba(20,5,0,.7)');disc(q,x,y,s*1.25,rgr(q,x,y,s*1.25,[0,'#fff2b8',.5,'#e0a540',1,'#6a3e06'],x-s*.4,y-s*.5,0)); // the setting
-      q.fillStyle='#f4cf6a';for(let p=0;p<4;p++){const pa=a+p*Math.PI/2+Math.PI/4;disc(q,x+Math.cos(pa)*s*1.02,y+Math.sin(pa)*s*1.02,s*.2,'#f6d27a');}
-      if(ruby){disc(q,x,y,s,rgr(q,x,y,s,[0,'#ff7a8a',.35,'#e3122f',.75,'#8a0418',1,'#3e0008'],x-s*.3,y-s*.35,0));q.lineWidth=s*.12;q.strokeStyle='rgba(255,120,140,.4)';q.beginPath();q.arc(x,y,s*.62,.3,1.6);q.stroke();
-        q.beginPath();q.ellipse(x-s*.32,y-s*.36,s*.32,s*.17,-.7,0,TAU);q.fillStyle='rgba(255,255,255,.85)';q.fill();}
-      else{q.beginPath();for(let p=0;p<8;p++){const pa=p/8*TAU+Math.PI/8;p?q.lineTo(x+Math.cos(pa)*s,y+Math.sin(pa)*s):q.moveTo(x+Math.cos(pa)*s,y+Math.sin(pa)*s);}q.closePath();q.fillStyle=rgr(q,x,y,s,[0,'#ffffff',.5,'#d8e6ff',1,'#7d8fb8'],x-s*.3,y-s*.3,0);q.fill();
-        q.lineWidth=s*.07;q.strokeStyle='rgba(90,110,160,.7)';q.beginPath();for(let p=0;p<8;p++){const pa=p/8*TAU+Math.PI/8;q.moveTo(x+Math.cos(pa)*s,y+Math.sin(pa)*s);q.lineTo(x+Math.cos(pa+Math.PI/8)*s*.5,y+Math.sin(pa+Math.PI/8)*s*.5);}q.stroke();disc(q,x-s*.25,y-s*.3,s*.22,'#fff');}}
-    q.lineWidth=.016;q.strokeStyle='rgba(25,8,0,.9)';q.beginPath();q.arc(0,0,.972,0,TAU);q.stroke();},
+    q.lineWidth=.024;q.strokeStyle='rgba(20,6,0,.85)';q.stroke();q.lineWidth=.012;q.strokeStyle='#cf9530';q.stroke();q.save();q.translate(-.003,-.004);q.lineWidth=.005;q.strokeStyle='rgba(255,240,180,.85)';q.stroke();q.restore();
+    for(const [rr,n,s] of[[.955,110,.011],[.84,96,.008],[.543,64,.007]]){const bead=(dx,dy,k)=>{q.beginPath();for(let i=0;i<n;i++){const a=i/n*TAU,x=Math.cos(a)*rr+dx,y=Math.sin(a)*rr+dy;q.moveTo(x+s*k,y);q.arc(x,y,s*k,0,TAU);}};
+      bead(.002,.003,1.1);q.fillStyle='rgba(20,6,0,.85)';q.fill();bead(0,0,1);q.fillStyle='#c78a26';q.fill();bead(-s*.3,-s*.35,.45);q.fillStyle='rgba(255,245,200,.9)';q.fill();}
+    const LA=-2.2,gem=(x,y,s,ruby)=>{const P=(a,d)=>[x+Math.cos(a)*d,y+Math.sin(a)*d],
+        ramp=ruby?[[0,34,0,8],[.3,118,4,22],[.55,198,14,40],[.75,246,50,72],[.9,255,132,140],[1,255,230,222]]:[[0,26,32,52],[.35,104,118,156],[.6,186,200,230],[.82,234,240,255],[1,255,255,255]],
+        rc=v=>{v=Math.max(0,Math.min(1,v));let i=1;while(i<ramp.length-1&&ramp[i][0]<v)i++;const A=ramp[i-1],B=ramp[i],f=(v-A[0])/(B[0]-A[0]);return `rgb(${Math.round(A[1]+(B[1]-A[1])*f)},${Math.round(A[2]+(B[2]-A[2])*f)},${Math.round(A[3]+(B[3]-A[3])*f)})`;},
+        face=(p,v)=>{q.beginPath();q.moveTo(p[0],p[1]);for(let i=2;i<p.length;i+=2)q.lineTo(p[i],p[i+1]);q.closePath();q.fillStyle=rc(v);q.fill();},E=[];
+      disc(q,x+.007,y+.009,s*1.36,'rgba(8,2,0,.8)');disc(q,x,y,s*1.3,rgr(q,x,y,s*1.3,[0,'#fff3b8',.45,'#e2a63e',.8,'#8a5208',1,'#3a1e02'],x-s*.5,y-s*.6,0));disc(q,x,y,s*1.04,'#140301');
+      for(let j=0;j<8;j++){const a0=j*Math.PI/4+Math.PI/8,a1=a0+Math.PI/4,am=(a0+a1)/2,l=Math.cos(am-LA),o=[...P(a0,s),...P(a1,s)],mid=P(am,s*.78),t0=P(a0,s*.52),t1=P(a1,s*.52);
+        const A1=[o[0],o[1],mid[0],mid[1],...t0],A2=[o[2],o[3],mid[0],mid[1],...t1],A3=[...t0,mid[0],mid[1],...t1];
+        face(A1,.36+.36*l+(R()-.5)*.24);face(A2,.3+.36*Math.cos(am+.3-LA)+(R()-.5)*.24);face(A3,.44+.3*l+(R()-.5)*.2);E.push(A1,A2,A3);}
+      const tb=[];for(let j=0;j<8;j++)tb.push(...P(j*Math.PI/4+Math.PI/8,s*.52));face(tb,.58);E.push(tb);
+      q.globalCompositeOperation='lighter';disc(q,x+s*.2,y+s*.25,s*.8,rgr(q,x+s*.2,y+s*.25,s*.8,ruby?[0,'rgba(255,60,80,.45)',1,'rgba(255,30,60,0)']:[0,'rgba(200,220,255,.35)',1,'rgba(200,220,255,0)']));q.globalCompositeOperation='source-over';
+      q.beginPath();for(const p of E){q.moveTo(p[0],p[1]);for(let i=2;i<p.length;i+=2)q.lineTo(p[i],p[i+1]);q.closePath();}q.lineWidth=Math.max(s*.04,hl*.6);q.strokeStyle=ruby?'rgba(255,170,180,.4)':'rgba(255,255,255,.45)';q.stroke();
+      q.beginPath();treasureSpark(q,x-s*.38,y-s*.42,s*.55);q.fillStyle='rgba(255,255,255,.95)';q.fill();
+      for(let p=0;p<4;p++){const pa=p*Math.PI/2+Math.PI/4,px=x+Math.cos(pa)*s*1.02,py=y+Math.sin(pa)*s*1.02;disc(q,px+.002,py+.003,s*.24,'rgba(20,6,0,.7)');disc(q,px,py,s*.22,rgr(q,px,py,s*.22,[0,'#fff6cc',.5,'#e8b44c',1,'#7a4a08'],px-s*.08,py-s*.1,0));}};
+    for(let i=0;i<12;i++){const a=i/12*TAU+TAU/24;gem(Math.cos(a)*.893,Math.sin(a)*.893,i%2?.036:.048,i%2===0);}
+    q.lineWidth=.016;q.strokeStyle='rgba(20,6,0,.9)';q.beginPath();q.arc(0,0,.972,0,TAU);q.stroke();},
   lava(q,u){ghostBlur(q,SKIN_BR,(s,k)=>{s.translate(-6,0);s.shadowOffsetX=6*k;s.shadowBlur=.04*k;s.shadowColor='rgba(255,90,10,.9)';oneRingLava(s,.035,'#000',1);}); // lava glowing in the cracks of the glass, kept off the band
-    oneRingLava(q,.008,'rgba(255,215,120,.95)');},
-  script(q,u){const N=56; // the inscription: a flowing hand of loops with tall stems, low tails and marks above, cut into the gold and burning inside
-    const P=(a,v)=>[Math.cos(a)*(.69+v),Math.sin(a)*(.69+v)],hand=()=>{q.beginPath();const S=N*14;for(let s=0;s<=S;s++){const th=s/S*TAU,ph=th*N,k=Math.floor(ph/TAU),hk=h32(k*7+1),
-        up=hk<.22?.022:0,dn=hk>.86?.02:0,amp=.017+.005*Math.sin(k*1.7),v=-amp*Math.cos(ph)+(Math.cos(ph)<0?up*-Math.cos(ph):-dn*Math.cos(ph)),a=th-.016*Math.sin(ph)/.69,[x,y]=P(a,v);s?q.lineTo(x,y):q.moveTo(x,y);}
-      for(let k=0;k<N;k++){const hk=h32(k*7+3),a=(k+.5)/N*TAU;if(hk<.35){const [x,y]=P(a,.042);q.moveTo(x+.006,y);q.arc(x,y,.006,0,TAU);}else if(hk<.55){const [x0,y0]=P(a-.012,.04),[x1,y1]=P(a+.012,.048);q.moveTo(x0,y0);q.lineTo(x1,y1);}}};
-    q.lineCap=q.lineJoin='round';hand();q.lineWidth=.022;q.strokeStyle='rgba(60,20,0,.5)';q.stroke(); // the cut
-    ghostBlur(q,1,(s,k)=>{const q0=q;q=s;hand();s.lineWidth=.026;s.shadowBlur=.03*k;s.shadowColor='rgba(255,90,10,.95)';s.strokeStyle='rgba(255,110,20,.7)';s.stroke();q=q0;});
-    hand();q.lineWidth=.009;q.strokeStyle='#ffe39a';q.stroke();q.lineWidth=.004;q.strokeStyle='#fffdf0';q.stroke();},
-  iris(q){const R=prng(162); // the eye's fire: white-hot within, flame streaming out through yellow and orange to red
-    disc(q,0,0,1,rgr(q,0,0,1,[0,'rgba(255,252,225,1)',.2,'rgba(255,220,110,1)',.42,'rgba(255,150,30,.95)',.66,'rgba(225,60,8,.72)',.86,'rgba(150,18,0,.3)',1,'rgba(90,0,0,0)']));
-    q.globalCompositeOperation='lighter';q.lineCap='round';for(const [cl,w,n] of[['rgba(255,190,60,.3)',.05,40],['rgba(255,235,150,.35)',.018,70],['rgba(255,120,20,.35)',.03,50]]){q.beginPath();for(let i=0;i<n;i++){const a=R()*TAU,r0=.12+R()*.2,r1=.5+R()*.42,b=(R()-.5)*.5;
+    oneRingLava(q,.008,'rgba(255,215,120,.95)');
+    q.globalCompositeOperation='lighter';q.beginPath();q.arc(0,0,.68,0,TAU);q.arc(0,0,.556,0,TAU,true);q.fillStyle=rgr(q,0,0,.68,[0,'rgba(0,0,0,0)',.81,'rgba(255,130,30,.4)',.88,'rgba(255,90,10,.14)',1,'rgba(255,60,0,0)']);q.fill();q.globalCompositeOperation='source-over';}, // the eye's fire on the band's inner wall
+  script(q,u){const nib=(s,w,st,dx,dy)=>{s.beginPath();for(let k=-2;k<=2;k++)oneRingInk(s,k,dx,dy);s.lineWidth=w;s.strokeStyle=st;s.stroke();}; // five sweeps of a broad nib: thick across it, thin along it
+    q.lineCap=q.lineJoin='round';nib(q,.011,'rgba(50,16,0,.6)',.0025,.0035); // cut into the gold
+    ghostBlur(q,1,(s,k)=>{s.shadowBlur=.02*k;s.shadowColor='rgba(255,70,0,.85)';nib(s,.011,'rgba(255,96,8,.42)',0,0);}); // burning inside the cut
+    nib(q,.0055,'#ffc84a',0,0);nib(q,.0022,'rgba(255,252,236,.85)',0,0);},
+  sigil(q,u){const I=ONERING_RUNES,path=s=>{treasureLines(s,I.lines);for(const rr of[1.262,1.398])s.moveTo(rr,0),s.arc(0,0,rr,0,TAU);for(const [x,y] of I.dots){s.moveTo(x+.022,y);s.arc(x,y,.022,0,TAU);}};
+    ghostBlur(q,1.5,(s,k)=>{path(s);s.shadowBlur=.05*k;s.shadowColor='rgba(255,110,10,1)';s.lineWidth=.026;s.strokeStyle='rgba(255,130,30,.55)';s.stroke();});
+    path(q);q.lineCap=q.lineJoin='round';q.lineWidth=.007;q.strokeStyle='rgba(255,220,150,.85)';q.stroke();},
+  iris(q){q.drawImage(cosmoTex('onering_iris',256,oneRingIrisPx),-1.15,-1.15,2.3,2.3);
+    q.globalCompositeOperation='destination-in';disc(q,0,0,1,rgr(q,0,0,1,[0,'#000',.8,'#000',.93,'rgba(0,0,0,.55)',1,'rgba(0,0,0,0)']));
+    const R=prng(162);q.globalCompositeOperation='lighter';q.lineCap='round';for(const [cl,w,n] of[['rgba(255,225,140,.16)',.012,40]]){q.beginPath();for(let i=0;i<n;i++){const a=R()*TAU,r0=.1+R()*.2,r1=.45+R()*.4,b=(R()-.5)*.5;
       q.moveTo(Math.cos(a)*r0,Math.sin(a)*r0);q.quadraticCurveTo(Math.cos(a+b)*(r0+r1)/2,Math.sin(a+b)*(r0+r1)/2,Math.cos(a+b*1.6)*r1,Math.sin(a+b*1.6)*r1);}q.lineWidth=w;q.strokeStyle=cl;q.stroke();}
-    q.globalCompositeOperation='source-over';q.beginPath();for(let i=0;i<60;i++){const a=R()*TAU,r0=.3+R()*.3,r1=r0+.1+R()*.2;q.moveTo(Math.cos(a)*r0,Math.sin(a)*r0);q.lineTo(Math.cos(a+.05)*r1,Math.sin(a+.05)*r1);}q.lineWidth=.012;q.strokeStyle='rgba(120,15,0,.35)';q.stroke();},
-  draw(g,c,r,k){const q=skinPx(g,r),rot=T*.25+c.wob,burn=.5+.5*Math.sin(T*1.7+c.wob);skinArt(g,this,c,r,0);
-    if(q>10){g.globalAlpha=.55+.45*burn;skinArt(g,this,c,r,0,'onering_lava',this.lava);g.globalAlpha=1;}
-    if(q>14){g.globalAlpha=.7+.3*Math.sin(T*2.3+c.wob);blit(g,bake(g,'onering_script',q*2,this.script,1),c.x,c.y,r,rot,1);g.globalAlpha=1;}
-    if(q>20){const sh=-rot*1.6;g.lineWidth=r*.24;g.strokeStyle='rgba(255,255,235,.26)';g.beginPath();g.arc(c.x,c.y,r*.69,sh,sh+1.1);g.stroke();g.strokeStyle='rgba(60,25,0,.3)';g.beginPath();g.arc(c.x,c.y,r*.69,sh+Math.PI,sh+Math.PI+1.4);g.stroke();
-      for(let i=0;i<2;i++){const a=rot*2.2+i*Math.PI;soft(g,c.x+Math.cos(a)*r*.69,c.y+Math.sin(a)*r*.69,r*.12,'255,190,80',.45+.3*burn);}}
-    if(q>40)for(let i=0;i<3;i++){const a=(i*4+1)/12*TAU+TAU/24;glint(g,c.x+Math.cos(a)*r*.893,c.y+Math.sin(a)*r*.893,r*.07,Math.sin(T*2.2+i*2.1+c.wob)*1.2);}},
-  eye(g,c,r,nx,ny,sick){
-    const fl=.5+.5*Math.sin(T*5.3+c.wob),flare=1+.18*Math.sin(T*7+c.wob*2),q=skinPx(g,r),er=r*.56*(.95+.1*fl),img=bake(g,'onering_iris',skinPx(g,er)*2,this.iris,1);
-    g.save();g.translate(nx,ny);g.rotate(T*.3+c.wob);g.drawImage(img,-er,-er,er*2,er*2);if(q>16){g.rotate(-T*.75);g.globalAlpha=.3+.35*fl;g.drawImage(img,-er*.8,-er*.8,er*1.6,er*1.6);}g.restore();g.globalAlpha=1;
-    const h=r*.42,w=r*.15*flare;g.lineCap='round';
-    g.beginPath();g.moveTo(nx,ny-h*1.15);g.quadraticCurveTo(nx+w*2.6,ny,nx,ny+h*1.15);g.quadraticCurveTo(nx-w*2.6,ny,nx,ny-h*1.15);g.closePath();g.fillStyle=`rgba(255,235,150,${.35+.3*fl})`;g.fill();
-    g.beginPath();g.moveTo(nx,ny-h);g.quadraticCurveTo(nx+w*1.8,ny,nx,ny+h);g.quadraticCurveTo(nx-w*1.8,ny,nx,ny-h);g.closePath();
-    g.fillStyle=sick?col(INF_C,-30,.9):'#040102';g.fill();g.lineWidth=r*.022;g.strokeStyle=`rgba(255,240,170,${.7+.3*fl})`;g.stroke();
-    for(const sgn of[-1,1]){const t=.6+.4*Math.sin(T*9+sgn*1.3+c.wob),ty=ny+sgn*h,tip=ny+sgn*(h+r*(.12+.1*t));g.beginPath();g.moveTo(nx-r*.05,ty);g.quadraticCurveTo(nx+r*.03*Math.sin(T*11),tip,nx+r*.05,ty);g.closePath();g.fillStyle=`rgba(255,220,120,${.5+.5*t})`;g.fill();}
-    g.lineCap='butt';
+    q.globalCompositeOperation='source-over';},
+  draw(g,c,r,k){const q=skinPx(g,r),rot=T*.18+c.wob,burn=.5+.5*Math.sin(T*1.7+c.wob),pw=Math.max(0,1-((T*.2+c.wob*.1)%1)*3);skinArt(g,this,c,r,0);
+    if(q>10){g.globalAlpha=Math.min(1,.5+.4*burn+.2*pw);skinArt(g,this,c,r,0,'onering_lava',this.lava);g.globalAlpha=1;}
+    if(q>14){g.globalAlpha=Math.min(1,.72+.18*Math.sin(T*2.3+c.wob)+.3*pw);blit(g,bake(g,'onering_script',q*2,this.script,1),c.x,c.y,r,rot,1);g.globalAlpha=1;}
+    if(q>28){glint(g,c.x-r*.43,c.y-r*.6,r*.12,.45+.4*Math.sin(T*1.9+c.wob)); // the light on the crest of the band
+      for(let i=0;i<3;i++){const a=(i*4+1)/12*TAU+TAU/24;glint(g,c.x+Math.cos(a)*r*.893,c.y+Math.sin(a)*r*.893,r*.08,Math.sin(T*2.2+i*2.1+c.wob)*1.2);}}},
+  eye(g,c,r,nx,ny,sick){ // the iris stays in its setting and only the slit looks where the cell is going
+    const q=skinPx(g,r),fl=.5+.5*Math.sin(T*5.3+c.wob),er=r*.54*(.97+.06*fl),img=bake(g,'onering_iris',skinPx(g,er)*2,this.iris,1),ix=c.x+(nx-c.x)*.3,iy=c.y+(ny-c.y)*.3;
+    nx=c.x+(nx-c.x)*.75;ny=c.y+(ny-c.y)*.75;g.save();g.translate(ix,iy);g.rotate(T*.3+c.wob);g.drawImage(img,-er,-er,er*2,er*2);if(q>16){g.rotate(-T*.75);g.globalAlpha=.25+.3*fl;g.drawImage(img,-er*.82,-er*.82,er*1.64,er*1.64);}g.restore();g.globalAlpha=1;
+    const h=r*.4,w=r*.085*(1+.15*Math.sin(T*7+c.wob*2));
+    g.beginPath();g.ellipse(nx,ny,w*3.4,h*1.22,0,0,TAU);fillUnit(g,grad(g,'ring_slitglow',m=>rgr(m,0,0,1,[0,'rgba(255,255,236,1)',.32,'rgba(255,238,160,.82)',.62,'rgba(255,168,48,.34)',1,'rgba(255,110,20,0)'])),nx,ny,w*3.4,h*1.22); // white-hot fire round the slit
+    g.beginPath();g.moveTo(nx,ny-h);g.bezierCurveTo(nx+w*1.36,ny-h*.42,nx+w*1.36,ny+h*.42,nx,ny+h);g.bezierCurveTo(nx-w*1.36,ny+h*.42,nx-w*1.36,ny-h*.42,nx,ny-h);g.closePath();
+    if(sick){g.fillStyle=col(INF_C,-30,.9);g.fill();}else fillUnit(g,grad(g,'ring_slit',m=>lgr(m,-1,0,1,0,[0,'#6a1000',.28,'#160200',.5,'#000',.72,'#160200',1,'#6a1000'])),nx,ny,w,h);
+    if(q>14){g.lineWidth=r*.012;g.globalAlpha=.65+.3*fl;g.strokeStyle='#fff6c8';g.stroke();g.globalAlpha=1;}
   }},
 {id:17,key:'aurora',name:'Aurora',price:900,base:[226,62,14],edge:'#0a1a36',edge2:'rgba(130,255,200,.5)',
   // the northern lights over a winter lake: curtains of green light with rays and pink upper fringes rippling across a sky of stars, the Milky Way
@@ -6406,7 +6442,7 @@ const SKIN_DESC={
   32:'The Moon up close: grey seas, bright rayed craters and a dusting of starlight.',33:'A whole world: oceans, green and desert continents, ice caps and clouds drifting round it.',34:'The heart of a storm cloud, rain sheeting through it and lightning flaring inside.',35:'A blue morpho\'s wing: scales that shimmer electric blue, edged in black and white.',36:'A juicy slice, seeds and all, inside a striped green rind.',37:'A glossy peppermint swirl that spins as you swim.',38:'A ring doughnut, pink icing and a fistful of sprinkles.',39:'An open watch movement: brass and steel gears turning, ruby jewels and a ticking balance wheel.',40:'A mirror ball throwing coloured light as it turns.',41:'Glowing wax rising, splitting and sinking through warm liquid.',42:'A rose window of jewel-coloured glass, lit from behind.',43:'Black opal, flashing green, blue and fire as the light moves.',44:'Emerald scales and a molten eye that follows you, slit pupil and all.',45:'A bird of fire: feathers of flame, burning wings beyond the membrane and embers in its wake.',
   5:'A star-forming nebula: glowing gas, dust pillars and newborn stars.',6:'Basalt plates split by lava that flares as it pulses.',7:'Wax cells brimming with honey, and a bee at work.',8:'A circuit board with a chip at its heart: traces, parts, and data pulsing along the lines.',
   9:'Golden fur with black rosettes round tawny hearts.',10:'Cut ice with trapped bubbles, fractures and frost at the rim.',11:'Bubbling radioactive slime round a glowing hazard sign.',12:'A bloodshot eye whose iris, in your colour, looks wherever you go.',13:'A spiral galaxy turning slowly inside you.',
-  14:'An 18-carat medallion: filigree set with diamonds round a faceted ruby, a shine sweeping across it.',15:'A shadow ringed by fire. Light spirals in and never comes out.',16:'Obsidian and molten gold set with rubies and diamonds, burning script and an eye of flame, with runes, lightning and fire beyond the membrane.',
+  14:'An 18-carat medallion: filigree set with diamonds round a faceted ruby, a shine sweeping across it.',15:'A shadow ringed by fire. Light spirals in and never comes out.',16:'Obsidian and mirror-polished gold set with rubies and diamonds, a burning inscription and an eye of flame, wreathed in fire and a circle of runes.',
   17:'Northern lights rippling over snowy peaks and a still lake.',18:'Two koi circling a sunlit pond, under lily pads and a water lily.',19:'A plasma globe: arcs reach from the electrode to the glass.',20:'Cracked open: banded agate round a cavity of amethyst points.',
   21:'A cherry branch in bloom, with petals on the breeze.',
   24:'A little ghost shouting boo on a misty moonlit night, glowing and see-through, with blinking eyes and wisps trailing behind it. Halloween only.',25:'A glossy black widow in her dewy web, her red hourglass glowing. Halloween only.',
@@ -6439,6 +6475,11 @@ function skinBall(g,S,c,r,k,stain){ // a premium skin as a lit ball: body, art c
 const TOK_CELL={x:0,y:0,wob:1.3,svx:0,svy:0};
 function tokenArt(q,u,p){const S=PREMIUM[p.skin-SKIN_FREE],k0=PV_K;PV_K=u;q.lineCap=q.lineJoin='butt';skinBall(q,S,TOK_CELL,.96,S.base,STAINS[p.stain|0]);PV_K=k0;}
 function shadeArt(q){disc(q,0,0,1,rgr(q,0,0,1.02,[0,'rgba(0,0,0,0)',.66,'rgba(0,0,0,.03)',.86,'rgba(0,0,0,.12)',1,'rgba(0,0,0,.4)'],-.14,-.18,.4));} // the sphere's shadow over skin art in play
+// Behind every skin tile, a soft ball in the skin's colour, just inside where the skin's own ball is drawn (60 of the 144-unit
+// preview, or PV_R for skins with an aura). On iPhone, WebKit paints canvases in its GPU process a moment after the page draws
+// them, and right after launch that can take a second or two: the tile shows this ball until the art lands, not a black square.
+const tilePh=S=>{if(!S||!S.base)return'';const r=(S.aura?PV_R[S.id]||35:60)/144*100-1.5;
+  return ` style="background:radial-gradient(circle at 50% 50%,hsl(${S.base[0]} ${S.base[1]}% ${Math.max(24,Math.min(70,S.base[2]+8))}%) 0,hsl(${S.base[0]} ${S.base[1]}% ${Math.max(13,S.base[2]-14)}%) ${(r*.92).toFixed(1)}%,transparent ${r.toFixed(1)}%)"`;};
 function drawPreview(cv,S){ // a skin on its own (shop, Inventory, lobby and profile), drawn at full resolution with the shared lighting
   cv._pv=S;const g=skinCanvas(cv),x=72,y=72,r=S.aura?PV_R[S.id]||35:60,k=S.base||STAINS[settings.stain],c={x,y,wob:1.3,svx:0,svy:0};
   if(S.aura)S.aura(g,c,r,k,Math.max(26,r*PV_SR),true);
@@ -6460,7 +6501,7 @@ function drawAvatar(cv=$('avatarCv'),sk=settings.skin|0,st=settings.stain|0){ //
 }
 let prvMore=0;
 function renderPreviews(live){const vh=innerHeight,t0=performance.now();let wait=false;for(const cv of document.querySelectorAll('#skins canvas, #ownedSkins canvas')){
-  if(!cv.offsetWidth)continue; // a hidden page: drawn when it opens (warmShop has the art ready by then), not now at a size it won't be shown at
+  if(!cv.offsetWidth)continue; // a hidden page: drawn when it opens, not now at a size it won't be shown at
   const b=cv.getBoundingClientRect();
   if(live){if(!b.width||b.bottom<-40||b.top>vh+40)continue;} // animating: only the tiles on screen
   else if(b.bottom<-vh*.5||b.top>vh*1.5){if(cv.width>1&&(b.bottom<-vh*3||b.top>vh*4))cv.width=cv.height=1;continue;} // only near the screen; far-off canvases give their memory back (drawn again as they scroll in)
@@ -6468,20 +6509,31 @@ function renderPreviews(live){const vh=innerHeight,t0=performance.now();let wait
   if(S&&cv._pv!==S&&performance.now()-t0>12){wait=true;continue;} // a budget: a tile not drawn yet (its first bake can take tens of ms) waits a frame once this one has spent 12 ms
   if(S)drawPreview(cv,S);else if(cv.dataset.def)drawAvatar(cv,settings.pat|0);}
   if(wait&&!live&&!prvMore)prvMore=requestAnimationFrame(()=>{prvMore=0;renderPreviews();});} // the live loop picks the rest up on its next tick anyway
-// The shop's tiles used to bake every skin's art the moment it opened (half a second on a phone, then they all popped in).
-// The lobby bakes them ahead instead, one skin about every 120 ms while nothing else is going on, at the size the shop's
-// tiles will ask for: a detached canvas as wide as their CSS says (read from a hidden tile), so the bakes land in the same sizes.
-let warmAt=0;const warmCv=document.createElement('canvas');
-function warmShop(){
-  if(warmAt>=PREMIUM.length)return;
-  if(mode==='play'||document.hidden||!$('storeCard').hidden){setTimeout(warmShop,1500);return;}
-  const tile=document.querySelector('#skins .svc canvas'),css=tile&&parseFloat(getComputedStyle(tile).width)||66,d=Math.min(3,window.devicePixelRatio||1);
-  const S=PREMIUM[warmAt++];if(!S.pass){warmCv.width=warmCv.height=Math.max(48,Math.min(960,Math.round(css*d)));drawPreview(warmCv,S);}
-  setTimeout(warmShop,120);
+// The Shop's and the Inventory's skin tiles are pictures, made once per skin and size from a canvas drawn off screen. On
+// iPhone a canvas shown for the first time sat black for a second or two after launch while WebKit painted it; a picture
+// shows nothing (so the ball in the skin's colour behind it) until it is ready. They are made from launch, as many as fit
+// in ~10 ms a frame, in page order; the pages' tiles then open already showing them. (The grids no longer animate: the big
+// previews above them do.)
+const TILE_IMG=new Map(),TILE_PX={shop:0,own:0},TILE_BLANK='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'; // 'id@px' -> object URL ('' while being made); each grid's last tile size
+function tileImg(S,where){const px=TILE_PX[where],u=px&&TILE_IMG.get(S.id+'@'+px);
+  return `<img class="sk-im" alt="" data-skin="${S.id}" data-w="${where}" src="${u||TILE_BLANK}"${tilePh(S)}>`;} // blank: no empty-image outline while it waits
+function tileFill(){
+  const t0=performance.now(),d=Math.min(3,window.devicePixelRatio||1);
+  const ims=[...document.querySelectorAll('img.sk-im')];ims.sort((a,b)=>(b.offsetWidth>0)-(a.offsetWidth>0)); // the page that is open first
+  for(const im of ims){
+    if(!im._px){const css=parseFloat(getComputedStyle(im).width);if(!(css>0))continue;im._px=Math.max(48,Math.min(960,Math.round(css*d)));TILE_PX[im.dataset.w]=im._px;}
+    const k=im.dataset.skin+'@'+im._px,u=TILE_IMG.get(k);
+    if(u){if(im._k!==k){im._k=k;im.src=u;}continue;}
+    if(u===''||performance.now()-t0>10)continue; // being made, or this frame's time is used up
+    const S=PREMIUM[+im.dataset.skin-SKIN_FREE];if(!S)continue;
+    TILE_IMG.set(k,'');const cv=document.createElement('canvas');cv.width=cv.height=im._px;drawPreview(cv,S);
+    cv.toBlob(b=>{if(b)TILE_IMG.set(k,URL.createObjectURL(b));else TILE_IMG.delete(k);});
+  }
 }
-setTimeout(warmShop,2500);
+function tileLoop(){if(mode!=='play'&&!document.hidden)tileFill();requestAnimationFrame(tileLoop);}
+requestAnimationFrame(tileLoop); // from the first frame (mode and the pages exist by then)
+addEventListener('resize',()=>{for(const im of document.querySelectorAll('img.sk-im'))im._px=0;}); // a turned phone resizes the tiles: pictures at the new size
 let prvRaf=0;for(const id of['skinSec','lookCard'])$(id).addEventListener('scroll',()=>{if(!RM||prvRaf)return;prvRaf=requestAnimationFrame(()=>{prvRaf=0;renderPreviews();});},{passive:true}); // the live loop draws tiles as they scroll in; with Reduce Motion it is off, so scrolling does
-addEventListener('resize',()=>{if(warmAt>=PREMIUM.length){warmAt=0;setTimeout(warmShop,1500);}}); // a turned phone changes the tile size: warm again (bakes already made are kept)
 setInterval(()=>{if(document.hidden||RM)return;if(!$('storeCard').hidden||!$('lookCard').hidden)renderPreviews(true);if(!$('startCard').hidden)drawAvatar($('meCv'));if(!$('profileCard').hidden)drawAvatar($('profCv'));},33);
 // Inventory › Skins: the classic cell first, then the premium skins you own, rarest first. Tiles are rebuilt only when
 // what you own changes, so picking one just flips aria-pressed and the selection animates.
@@ -6492,8 +6544,8 @@ function renderOwned(){const oe=$('ownedSkins');if(!oe)return;
     mine=PREMIUM.filter(S=>ownsSkin(S.id)).sort((a,b)=>RK[rarOf(b)]-RK[rarOf(a)]||b.price-a.price||a.id-b.id),sig=mine.map(S=>S.id).join();
   $('ownedHint').textContent=mine.length?`${mine.length}/${PREMIUM.length}`:'';
   if(oe.dataset.sig!==sig){oe.dataset.sig=sig;
-    const tile=(id,r,name,rl,cv)=>`<button type="button" class="lk-tile" data-id="${id}" data-r="${r}" aria-pressed="false"><canvas width="192" height="192" ${cv}></canvas><b>${escH(name)}</b><span>${escH(rl)}</span><em class="lk-on" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5.5 12.5l4.2 4.2 8.8-9.2"/></svg></em></button>`;
-    oe.innerHTML=tile('def','classic',cn,'Classic','data-def="1"')+mine.map(S=>tile(S.id,rarOf(S),S.name,S.season?SEASONS[S.season].name:rarOf(S),`data-skin="${S.id}"`)).join('')
+    const tile=(id,r,name,rl,cv)=>`<button type="button" class="lk-tile" data-id="${id}" data-r="${r}" aria-pressed="false">${cv}<b>${escH(name)}</b><span>${escH(rl)}</span><em class="lk-on" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5.5 12.5l4.2 4.2 8.8-9.2"/></svg></em></button>`;
+    oe.innerHTML=tile('def','classic',cn,'Classic','<canvas width="192" height="192" data-def="1"></canvas>')+mine.map(S=>tile(S.id,rarOf(S),S.name,S.season?SEASONS[S.season].name:rarOf(S),tileImg(S,'own'))).join('')
       +(mine.length?'':`<button type="button" class="lk-tile lk-get" data-id="shop" aria-label="No skins yet. Get skins in the Shop"><span class="lk-tease" aria-hidden="true">${[17,22,13].map(id=>`<canvas width="144" height="144" data-skin="${id}"></canvas>`).join('')}</span><b>No skins yet</b><small>Get skins in the Shop<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5.5l6.5 6.5L9 18.5"/></svg></small></button>`);}
   const cats=[...new Set(mine.map(rarOf))],fe=$('invFilters'); // mine runs rarest first, so the chips do too
   if(!cats.includes(invFilter))invFilter='all';fe.hidden=cats.length<2;
@@ -6513,7 +6565,7 @@ $('ownedSkins').addEventListener('click',e=>{const b=e.target.closest('.lk-tile'
 function svIcon(n){return '<svg viewBox="0 0 24 24" aria-hidden="true">'+({check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',plus:'<path d="M12 5.5v13M5.5 12h13"/>'})[n]+'</svg>';}
 function svClock(ms){const s=Math.max(0,Math.floor(ms/1000)),d=Math.floor(s/86400),p=n=>String(n).padStart(2,'0'),hms=`${p(Math.floor(s%86400/3600))}:${p(Math.floor(s%3600/60))}:${p(s%60)}`;return d?`${d}d ${hms}`:hms;}
 function shopCard(S){const own=ownsSkin(S.id),eq=settings.skin===S.id,rar=rarOf(S),how=skinHow(S),hl=how==='pass'?'Battle Pass':how==='event'?'Back '+seasonFrom(S.season):'',px=Math.min(208,Math.max(144,Math.round(70*(window.devicePixelRatio||1))));
-  return `<button type="button" class="svc ${rar}${own?' own':''}${eq?' eq':''}${how?' how '+how:''}${S.id===shopSel?' sel':''}" data-id="${S.id}" aria-pressed="${S.id===shopSel}" aria-label="${escH(S.name)}, ${rar}${eq?', wearing':own?', owned':hl?', '+hl:', '+S.price+' ATP'}"><canvas width="${px}" height="${px}" data-skin="${S.id}"></canvas><span class="sn">${escH(S.name)}</span><span class="sp">${eq?'Wearing':own?svIcon('check')+'Owned':hl?escH(hl):'<i class="sv-coin"></i>'+fmtAtp(S.price)}</span></button>`;}
+  return `<button type="button" class="svc ${rar}${own?' own':''}${eq?' eq':''}${how?' how '+how:''}${S.id===shopSel?' sel':''}" data-id="${S.id}" aria-pressed="${S.id===shopSel}" aria-label="${escH(S.name)}, ${rar}${eq?', wearing':own?', owned':hl?', '+hl:', '+S.price+' ATP'}">${tileImg(S,'shop')}<span class="sn">${escH(S.name)}</span><span class="sp">${eq?'Wearing':own?svIcon('check')+'Owned':hl?escH(hl):'<i class="sv-coin"></i>'+fmtAtp(S.price)}</span></button>`;}
 // The shop's shelves, in order, each run cheapest first: [id, name, line, skin ids]. A skin on no shelf (a seasonal one kept after its season) goes on a last one
 const SKIN_CATS=[['space','Space','Stars, worlds and things that swallow light',[5,13,15,22,32,33]],['elements','Elements','Fire, ice, storms and worse',[6,10,11,17,19,34]],
   ['wild','Wild','Fur, fins, wings and blossoms',[7,9,18,21,35]],['sweets','Sweets','Good enough to eat',[36,37,38]],['gadgets','Gadgets','Machines and flashing lights',[8,23,39,40,41]],

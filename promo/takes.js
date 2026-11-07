@@ -3,12 +3,13 @@
 // (P.aimAt / P.chase / P.away / P.wander set where the left thumb wants to go; P.tap / P.hold press buttons with
 // the right thumb). Both are serialised and run inside the page, so they can only use their arguments.
 // P.mark(name) records the frame of a moment for the edit; P.slowmo() slows the whole page down for a beat.
-// The hero's skin and name come from the take (skin ids: 24 Ghost, 25 Widow, 26 Jack-o'-Lantern, 27 Witching Hour).
+// The hero's skin and name come from the take (skin ids: 11 Toxic, 13 Galaxy, 14 Gilded, 15 Black Hole, 16 One Cell to Rule
+// Them All, 22 Supernova, 24 Ghost). Menu takes (menu: true) stay in the lobby and tap through the pages in ui() instead.
 'use strict';
 module.exports = [
   // ---- boost, split, split again: a chain through a group of small cells ----
   {
-    id: 'chain', seed: 101, name: 'Juno', skin: 26, preroll: 10, frames: 360,
+    id: 'chain', seed: 101, name: 'Juno', skin: 22, preroll: 10, frames: 360,
     setup: (G, P, S) => {
       const hx = -1800, hy = 900; P.data.home = { x: hx, y: hy };
       S.hero({ x: hx, y: hy, mass: 1000 });
@@ -49,7 +50,7 @@ module.exports = [
 
   // ---- the close escape: a giant splits at you, you boost out of reach ----
   {
-    id: 'escape', seed: 202, name: 'Juno', skin: 27, preroll: 20, frames: 330,
+    id: 'escape', seed: 202, name: 'Juno', skin: 15, preroll: 20, frames: 330,
     setup: (G, P, S) => {
       const hx = 2300, hy = -1400;
       S.hero({ x: hx, y: hy, mass: 360 });
@@ -84,7 +85,7 @@ module.exports = [
 
   // ---- feed a phage until it fires into a giant, then sweep up the pieces ----
   {
-    id: 'virus', seed: 303, name: 'Juno', skin: 24, preroll: 20, frames: 360,
+    id: 'virus', seed: 303, name: 'Juno', skin: 11, preroll: 20, frames: 360,
     setup: (G, P, S) => {
       const hx = -700, hy = -2300;
       S.hero({ x: hx, y: hy, mass: 560 });
@@ -149,7 +150,7 @@ module.exports = [
 
   // ---- the Leviathan surfaces, chases, and is lured onto a phage ----
   {
-    id: 'leviathan', seed: 505, name: 'Juno', skin: 25, preroll: 30, frames: 420,
+    id: 'leviathan', seed: 505, name: 'Juno', skin: 14, preroll: 30, frames: 420,
     setup: (G, P, S) => {
       const hx = -2600, hy = -800;
       S.hero({ x: hx, y: hy, mass: 620 });
@@ -186,7 +187,7 @@ module.exports = [
 
   // ---- the arena closes; the last rival goes; Victory ----
   {
-    id: 'finale', seed: 606, name: 'Juno', skin: 26, preroll: 20, frames: 540, result: { payout: 25, rating: 1412, ratingDelta: 24 },
+    id: 'finale', seed: 606, name: 'Juno', skin: 16, preroll: 20, frames: 540, result: { payout: 25, rating: 1412, ratingDelta: 24 },
     setup: (G, P, S) => {
       S.roundAt(553);
       const ar = G.arenaR(); P.data.ar = ar;
@@ -213,5 +214,57 @@ module.exports = [
         P.tap('split'); d.split = 1; P.mark('final'); P.slowmo({ to: .3, in: .04, hold: .5, out: .5 });
       }
     },
+  },
+
+  // ==== the menus (investor demo): a real account made by the game's server code (lib/world.js), tapped through ====
+  // setup() runs once the lobby is up and marks the start; ui() runs every recorded frame, acting on exact frames (at(s)).
+  {
+    id: 'm-lobby', menu: true, seed: 11, name: 'Juno', skin: 22, owns: [13, 15, 16, 22, 24, 26], frames: 300,
+    setup: (G, P) => { P.data.go = 1; },
+    ui: (G, P) => { if (P.data.go && P.frame === 0) P.mark('open'); },
+  },
+  {
+    id: 'm-skins', menu: true, seed: 12, name: 'Juno', skin: 0, owns: [16, 15, 22, 13, 17, 18, 24, 26, 27, 14, 20, 21], frames: 720,
+    setup: (G, P) => { P.data.go = 1; },
+    ui: (G, P) => {
+      if (!P.data.go) return; const at = t => P.frame === Math.round(t * 60);
+      if (at(.3)) { document.getElementById('lookBtn').click(); P.mark('open'); }
+      const tiles = [...document.querySelectorAll('#ownedSkins .lk-tile')].filter(b => /^\d+$/.test(b.dataset.id));
+      for (let k = 0; k < 9; k++) if (at(1.2 + k * 1.15) && tiles[k]) { tiles[k].click(); P.mark('pick' + (k + 1)); }
+    },
+  },
+  {
+    id: 'm-shop', menu: true, seed: 13, name: 'Juno', skin: 13, owns: [13, 24], balance: 4850, frames: 720,
+    setup: (G, P) => { P.data.go = 1; },
+    ui: (G, P) => {
+      if (!P.data.go) return; const at = t => P.frame === Math.round(t * 60);
+      if (at(.3)) { document.getElementById('shopBtn').click(); P.mark('open'); }
+      [24, 18, 15, 22, 16].forEach((id, k) => { if (at(1.6 + k * 1.5)) { const b = document.querySelector('#skins .svc[data-id="' + id + '"]'); if (b) b.click(); P.mark('pick' + (k + 1)); } });
+      if (P.frame > Math.round(9.4 * 60) && P.frame < Math.round(11.4 * 60)) { // a slow scroll down the grid
+        let e = document.getElementById('skins'); while (e && e !== document.body) { const o = getComputedStyle(e).overflowY; if ((o === 'auto' || o === 'scroll') && e.scrollHeight > e.clientHeight) break; e = e.parentElement; }
+        (e && e !== document.body ? e : document.scrollingElement).scrollTop += 3;
+      }
+    },
+  },
+  {
+    id: 'm-pass', menu: true, seed: 14, name: 'Juno', skin: 22, owns: [13, 22], epoch: '2026-11-20T18:00:00', frames: 600,
+    setup: (G, P) => { P.data.go = 1; },
+    ui: (G, P) => {
+      if (!P.data.go) return; const at = t => P.frame === Math.round(t * 60);
+      if (at(.4)) { const b = document.getElementById('passBtn'); if (b) b.click(); P.mark('open'); }
+      const btn = re => [...document.querySelectorAll('#passCard button')].find(b => re.test(b.textContent.trim()));
+      if (at(3.2)) { const b = btn(/^2$/); if (b) b.click(); P.mark('page2'); } // the second page of rewards (skins)
+      if (at(6.2)) { const b = btn(/^Quests/); if (b) b.click(); P.mark('quests'); } // the daily and weekly quests
+    },
+  },
+  {
+    id: 'm-friends', menu: true, seed: 15, name: 'Juno', skin: 22, owns: [22], frames: 380,
+    setup: (G, P) => { P.data.go = 1; },
+    ui: (G, P) => { if (!P.data.go) return; if (P.frame === 18) { document.getElementById('friendsBtn').click(); P.mark('open'); } },
+  },
+  {
+    id: 'm-ranks', menu: true, seed: 16, name: 'Juno', skin: 22, owns: [22], frames: 380,
+    setup: (G, P) => { P.data.go = 1; },
+    ui: (G, P) => { if (!P.data.go) return; if (P.frame === 18) { document.getElementById('rankBtn').click(); P.mark('open'); } },
   },
 ];

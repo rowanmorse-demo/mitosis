@@ -240,6 +240,7 @@
       for (let i = timers.length - 1; i >= 0; i--) if (timers[i].at <= t) { const fn = timers[i].fn; timers.splice(i, 1); try { fn(); } catch (e) { console.error(e); } }
       if (frameNo % 30 === 0) S.dressBots(); // microbes that joined since get a name and a look too
       if (take && take.brain && G.human && G.human.alive && G.mode === 'play') { try { take.brain(G, P, S, dt); } catch (e) { console.error('brain', e && e.stack || e); } }
+      if (take && take.ui) { try { take.ui(G, P, S, dt); } catch (e) { console.error('ui', e && e.stack || e); } } // menu takes: taps on the pages
       leftThumb(t, dt); rightThumb(t);
       await window.__vt.step(1000 / 60 * sp);
       frameNo++;
