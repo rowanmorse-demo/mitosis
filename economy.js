@@ -276,7 +276,9 @@ function passAddXp(store, p, n) {
 // and only the lifetime totals keep counting.
 // Quests are kept by id ('top-10-2', 'eaten-2'), so a variant's id must not change in a period that has started.
 const QUESTS = { atp: { day: 30, week: 100 }, xp: { day: 100, week: 300 }, minSec: RULES.minSec, eatenBase: 10, eatenPerMin: 15, massBase: 300, massPerMin: 1500, classicSec: 3600, earlier: 30,
-  splitKills: false };   // split-kill quests join the sets once the game reports splitKills in run/end (until then nobody could finish them)
+  // split-kill quests join the sets once the game reports splitKills in run/end (until then nobody could finish them).
+  // It reports them since Classic (claude/classic-mode f7a2e2e), so they come on with the server's 'classic' run mode.
+  splitKills: RUN_MODES.includes('classic') };
 const RANKED_ONLY = ['life', 'lasts', 'top', 'win'];   // quest kinds that need a battle royale round
 const questModes = kind => (RANKED_ONLY.includes(kind) ? ['ranked'] : ['ranked', 'classic']);
 const QL = goal => ({ kind: 'lives', goal }), QT = min => ({ kind: 'time', goal: min * 60 }), QS = sec => ({ kind: 'life', sec, goal: 1 }),

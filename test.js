@@ -656,7 +656,9 @@ async function post(url, body, secret) {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mitosis-quests-')); let sqlite = null; try { sqlite = require('node:sqlite'); } catch (e) {}
     const open = kind => kind === 'json' ? new JsonStore(path.join(dir, 'q.json')) : new SqliteStore(sqlite, path.join(dir, 'q.sqlite'));
     const L = (survived, place, of, eaten) => ({ survived, place, of, eaten });
-    assert.ok(QUESTS.splitKills === false && [questsAt('day', fri), questsAt('week', fri)].every(Q => Q.list.every(q => q.kind !== 'splitkill')), 'no split-kill quests until the game reports them');
+    const withClassic = (E.catalog().modes || []).includes('classic'), splitWas = QUESTS.splitKills;
+    assert.equal(QUESTS.splitKills, withClassic, 'split-kill quests come on with Classic, whose game reports splitKills');
+    QUESTS.splitKills = false; assert.ok([questsAt('day', fri), questsAt('week', fri)].every(Q => Q.list.every(q => q.kind !== 'splitkill')), 'none while they are off');
     QUESTS.splitKills = true; // as once the game sends splitKills (set back below)
     const dayWith = (kind, from) => { for (let t = at(from + 'T12:00:00Z'), i = 0; i < 400; i++, t += 864e5) { const q = questsAt('day', t).list.find(x => x.kind === kind); if (q) return { t, q, period: questsAt('day', t).period }; } throw new Error('no day with ' + kind); };
     assert.equal(questsAt('day', fri).list.filter(q => q.modes.includes('classic')).length >= 2 && questsAt('week', fri).list.filter(q => q.modes.includes('classic')).length, 3, 'every set has quests Classic can do: 2 or more a day, 3 a week');
@@ -777,7 +779,7 @@ async function post(url, body, secret) {
       assert.ok(st.questStats(D.period) >= 1, k('quest stats per period'));
       if (kind === 'sqlite') st.db.close();
     }
-    QUESTS.splitKills = false;
+    QUESTS.splitKills = splitWas;
   }
   { // both stores keep XP, add it up, carry it through a merge and drop it with the player; old databases gain the column
     const { SqliteStore, JsonStore } = require('./store'), dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mitosis-xp-'));
