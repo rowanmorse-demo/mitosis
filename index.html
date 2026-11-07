@@ -7449,6 +7449,8 @@ function frame(nowMs){
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
+// the last line: the whole script ran. The app drops a downloaded page update that never says this (ios/Mitosis/PageUpdates.swift)
+Native.send({type:'booted'});
 })();
 </script>
 

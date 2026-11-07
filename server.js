@@ -17,6 +17,7 @@ const MAX_RATE = 90;                // messages per second per player
 const MAX_BODY = 64 * 1024;         // bytes per API request
 const API_RATE = 120;               // API requests per minute per IP
 const page = fs.readFileSync(path.join(__dirname, 'index.html'));
+const UPDATES_DIR = process.env.UPDATES_DIR || path.join(__dirname, 'updates'); // signed page updates for the apps (tools/page-update.js)
 const store = openStore();
 const friends = social.create({ file: path.join(DATA_DIR, 'social.json'), nameBlocked: economy.nameBlocked });
 // signing in can fold this device's player into an existing account: its friends move along
@@ -188,6 +189,8 @@ const server = http.createServer((req, res) => {
     passPage(req, res).catch(e => { console.error(e); res.end(); });
   } else if (url === '/admin/live/stream') {
     if (adminOk(req, res)) players.stream(req, res);
+  } else if (/^\/updates\/(ios|android)\/(manifest\.json|page\.html)$/.test(url)) {
+    sendUpdate(res, url);
   } else if (url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ players: clients.size, rooms: rooms.length, accounts: store.playerCount(), store: store.kind, iap: economy.catalog().iap }));
@@ -196,6 +199,16 @@ const server = http.createServer((req, res) => {
     res.end('Not found');
   }
 });
+
+// Remote page updates (tools/page-update.js): the apps read a signed manifest and download the page it describes. The files
+// are read on every request, so a git pull publishes one without a restart. Plain HTTP is fine: the apps check the signature.
+function sendUpdate(res, url) {
+  fs.readFile(path.join(UPDATES_DIR, url.slice('/updates/'.length)), (err, buf) => {
+    if (err) { res.writeHead(404, { 'Content-Type': 'text/plain' }); res.end('Not found'); return; }
+    res.writeHead(200, { 'Content-Type': url.endsWith('.json') ? 'application/json' : 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
+    res.end(buf);
+  });
+}
 
 /* ---------- minimal WebSocket (RFC 6455) ---------- */
 const clients = new Set(), rooms = []; // every game that said hello; the arena rooms they are in (see the relay below)
