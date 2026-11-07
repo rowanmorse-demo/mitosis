@@ -3036,7 +3036,11 @@ const rand=(a,b)=>a+Math.random()*(b-a);
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const num=v=>typeof v==='number'&&isFinite(v)?v:0;
 const radius=m=>4+Math.sqrt(m)*6;
-const speedOf=r=>1000*Math.pow(r,-0.45);
+// Speed (units/s) for a radius. Fitted so a cell crosses as many of its own radii per second as on agar-style servers
+// (2200·r^-0.45 there, with r = 10√m) from mass 25 to 6000, within 3%. It was 1000·r^-0.45, which left small cells 20%
+// slower than that (mass 25: 205 → 252 units/s, 100: 154 → 181, 1000: 93 → 102, 4000: 69 → 72).
+const SPEED_K=1567,SPEED_EXP=.519;
+const speedOf=r=>SPEED_K*Math.pow(r,-SPEED_EXP);
 // Merging: pieces split from a mass-m cell may fuse after MERGE_BASE + MERGE_PER_MASS·m seconds, the classic agar rule of
 // 30 s plus 2% of each half's mass (Ogar; MultiOgar's max(30, 2√m) is within a few seconds of it at everyday sizes):
 // 32 s after splitting a mass-200 cell, 40 s for 1000, 50 s for 2000. It was 15 s + 0.6%, about half that, which took
