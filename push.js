@@ -55,7 +55,8 @@ function sqliteBackend(db) {
     CREATE INDEX IF NOT EXISTS push_tokens_player ON push_tokens(player);
     CREATE TABLE IF NOT EXISTS push_prefs(player TEXT PRIMARY KEY, off TEXT NOT NULL DEFAULT '', at INTEGER);
     CREATE TABLE IF NOT EXISTS push_log(player TEXT, kind TEXT, at INTEGER);
-    CREATE INDEX IF NOT EXISTS push_log_player ON push_log(player, at);`);
+    CREATE INDEX IF NOT EXISTS push_log_player ON push_log(player, at);
+    CREATE TABLE IF NOT EXISTS push_once(player TEXT, key TEXT, at INTEGER, PRIMARY KEY(player, key));`);
   const p = s => db.prepare(s), q = {
     save: p(`INSERT INTO push_tokens(token, player, platform, env, app, tz, created, seen) VALUES(?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(token) DO UPDATE SET player = excluded.player, platform = excluded.platform, env = excluded.env, app = excluded.app, tz = excluded.tz, seen = excluded.seen`),
@@ -77,6 +78,12 @@ function sqliteBackend(db) {
     recent: p('SELECT player, MAX(seen) AS seen, GROUP_CONCAT(DISTINCT platform) AS platforms, MAX(app) AS app, COUNT(*) AS n FROM push_tokens GROUP BY player ORDER BY seen DESC LIMIT ?'),
     sentSince: p('SELECT kind, COUNT(*) AS n FROM push_log WHERE at >= ? GROUP BY kind'),
     allPrefs: p("SELECT off FROM push_prefs WHERE off != ''"),
+    players: p('SELECT player, tz, seen FROM push_tokens ORDER BY seen DESC'),
+    onceHas: p('SELECT 1 AS y FROM push_once WHERE player = ? AND key = ?'),
+    onceSet: p('INSERT OR IGNORE INTO push_once(player, key, at) VALUES(?, ?, ?)'),
+    moveOnce: p('UPDATE OR IGNORE push_once SET player = ? WHERE player = ?'),
+    dropOnce: p('DELETE FROM push_once WHERE player = ?'),
+    pruneOnce: p('DELETE FROM push_once WHERE at < ?'),
   };
   return {
     save: (t, now) => q.save.run(t.token, t.player, t.platform, t.env || null, t.app || null, t.tz || null, now, now),
@@ -88,15 +95,18 @@ function sqliteBackend(db) {
     setPrefs: (id, off, now) => q.setPrefs.run(id, off.join(','), now),
     log: (id, kind, at) => { q.log.run(id, kind, at); if (Math.random() < .02) q.pruneLog.run(at - 3 * DAY); },
     logSince: (id, t) => q.logSince.all(id, t).map(r => ({ kind: r.kind, at: Number(r.at) })),
-    move: (from, to) => { q.moveTokens.run(to, from); q.moveLog.run(to, from); q.dropPrefs.run(from); },
-    forget: id => { q.dropOf.run(id); q.dropPrefs.run(id); q.dropLog.run(id); },
+    move: (from, to) => { q.moveTokens.run(to, from); q.moveLog.run(to, from); q.dropPrefs.run(from); q.moveOnce.run(to, from); q.dropOnce.run(from); },
+    forget: id => { q.dropOf.run(id); q.dropPrefs.run(id); q.dropLog.run(id); q.dropOnce.run(id); },
+    players: () => q.players.all().map(r => ({ player: r.player, tz: r.tz, seen: Number(r.seen) })),
+    onceHas: (id, key) => !!q.onceHas.get(id, key),
+    onceSet: (id, key, at) => { q.onceSet.run(id, key, at); if (Math.random() < .02) q.pruneOnce.run(at - 400 * DAY); },
     stats: since => ({ devices: q.devices.all().map(r => ({ platform: r.platform, env: r.env, n: Number(r.n), players: Number(r.players) })),
       sent: Object.fromEntries(q.sentSince.all(since).map(r => [r.kind, Number(r.n)])), off: q.allPrefs.all().map(r => r.off.split(',')) }),
     recent: n => q.recent.all(n).map(r => ({ player: r.player, seen: Number(r.seen), platforms: String(r.platforms || '').split(','), app: r.app, n: Number(r.n) })),
   };
 }
 function jsonBackend(file) {
-  let d = { tokens: {}, prefs: {}, log: [] };
+  let d = { tokens: {}, prefs: {}, log: [], once: {} };
   try { const j = JSON.parse(fs.readFileSync(file, 'utf8')); if (j && j.tokens) d = Object.assign(d, j); } catch (e) {}
   let timer = null;
   const save = () => { if (timer) return; timer = setTimeout(() => { timer = null; try { fs.writeFileSync(file + '.tmp', JSON.stringify(d)); fs.renameSync(file + '.tmp', file); } catch (e) { console.error('push: not saved: ' + e.message); } }, 250); if (timer.unref) timer.unref(); };
@@ -111,8 +121,13 @@ function jsonBackend(file) {
     setPrefs: (id, off) => { if (off.length) d.prefs[id] = off.slice(); else delete d.prefs[id]; save(); },
     log: (id, kind, at) => { d.log.push({ player: id, kind, at }); if (d.log.length > 5000 || Math.random() < .02) d.log = d.log.filter(r => r.at >= at - 3 * DAY); save(); },
     logSince: (id, t) => d.log.filter(r => r.player === id && r.at >= t).map(r => ({ kind: r.kind, at: r.at })),
-    move: (from, to) => { for (const v of all()) if (v.player === from) v.player = to; for (const r of d.log) if (r.player === from) r.player = to; delete d.prefs[from]; save(); },
-    forget: id => { for (const [k, v] of Object.entries(d.tokens)) if (v.player === id) delete d.tokens[k]; delete d.prefs[id]; d.log = d.log.filter(r => r.player !== id); save(); },
+    move: (from, to) => { for (const v of all()) if (v.player === from) v.player = to; for (const r of d.log) if (r.player === from) r.player = to; delete d.prefs[from];
+      for (const [k, at] of Object.entries(d.once)) if (k.startsWith(from + '\n')) { const nk = to + k.slice(from.length); if (!(nk in d.once)) d.once[nk] = at; delete d.once[k]; } save(); },
+    forget: id => { for (const [k, v] of Object.entries(d.tokens)) if (v.player === id) delete d.tokens[k]; delete d.prefs[id]; d.log = d.log.filter(r => r.player !== id);
+      for (const k of Object.keys(d.once)) if (k.startsWith(id + '\n')) delete d.once[k]; save(); },
+    players: () => all().sort((a, b) => b.seen - a.seen).map(t => ({ player: t.player, tz: t.tz, seen: t.seen })),
+    onceHas: (id, key) => (id + '\n' + key) in d.once,
+    onceSet: (id, key, at) => { d.once[id + '\n' + key] = at; save(); },
     stats: since => {
       const dev = new Map(); for (const t of all()) { const k = t.platform + '|' + t.env, r = dev.get(k) || { platform: t.platform, env: t.env, n: 0, ps: new Set() }; r.n++; r.ps.add(t.player); dev.set(k, r); }
       const sent = {}; for (const r of d.log) if (r.at >= since) sent[r.kind] = (sent[r.kind] || 0) + 1;
@@ -291,6 +306,17 @@ function create({ store, dataDir, config = fromEnv(), senders = {}, now = () => 
     return out;
   }
 
+  // notify, but only once per player for `key` (an event: a season starting, an event opening). It counts as done when it
+  // reached a device or the player has the kind switched off; at night or over a limit it can be tried again later.
+  async function notifyOnce(id, key, kind, msg, opts) {
+    if (db.onceHas(id, key)) return { sent: 0, dead: 0, errors: [], skipped: 'sent before' };
+    const r = await notify(id, kind, msg, opts);
+    if (r.sent || r.skipped === 'off') db.onceSet(id, key, now());
+    return r;
+  }
+  // every player with a device: { player, tz (of their latest device), seen }, latest first
+  function players() { const seen = new Set(); return db.players().filter(r => !seen.has(r.player) && seen.add(r.player)); }
+
   const handlers = {
     // the page hands over this device's token: { token, platform, env?, app?, tz? }
     register(store, body, p) {
@@ -319,7 +345,7 @@ function create({ store, dataDir, config = fromEnv(), senders = {}, now = () => 
   };
 
   return {
-    KINDS, notify, handlers, view,
+    KINDS, notify, notifyOnce, players, handlers, view,
     // sign-in folded one player into another: devices and the send log move; the account keeps its own switches
     merge(from, to) { if (from !== to) db.move(from, to); },
     forget(id) { db.forget(id); },
@@ -329,4 +355,4 @@ function create({ store, dataDir, config = fromEnv(), senders = {}, now = () => 
   };
 }
 
-module.exports = { create, fromEnv, apnsSender, fcmSender, KINDS, DAILY_MAX, quietAt };
+module.exports = { create, fromEnv, apnsSender, fcmSender, KINDS, DAILY_MAX, quietAt, localHour };

@@ -9,6 +9,7 @@ const netstats = require('./netstats');
 const live = require('./live');
 const social = require('./social');
 const pushes = require('./push');
+const pushTriggersMod = require('./push-triggers');
 
 const PORT = Number(process.env.PORT) || 3000;
 const ROOM_SIZE = 16;                // games per arena room: each room has its own host, bots and round
@@ -20,8 +21,12 @@ const API_RATE = 120;               // API requests per minute per IP
 const page = fs.readFileSync(path.join(__dirname, 'index.html'));
 const UPDATES_DIR = process.env.UPDATES_DIR || path.join(__dirname, 'updates'); // signed page updates for the apps (tools/page-update.js)
 const store = openStore();
-const friends = social.create({ file: path.join(DATA_DIR, 'social.json'), nameBlocked: economy.nameBlocked });
-const push = pushes.create({ store, dataDir: DATA_DIR, log: s => console.log(new Date().toLocaleTimeString() + '  ' + s) }); // push notifications (push.js): device tokens, switches, APNs / FCM
+let pushTriggers = null; // what sends notifications (push-triggers.js): friend requests and party invites as they happen, the rest on a timer
+const friends = social.create({ file: path.join(DATA_DIR, 'social.json'), nameBlocked: economy.nameBlocked, onEvent: e => { if (pushTriggers) pushTriggers.onSocial(e).catch(err => console.error('push: ' + err.message)); } });
+const pushLog = s => console.log(new Date().toLocaleTimeString() + '  ' + s);
+const push = pushes.create({ store, dataDir: DATA_DIR, log: pushLog }); // push notifications (push.js): device tokens, switches, APNs / FCM
+pushTriggers = pushTriggersMod.create({ store, push, economy, social: friends, log: pushLog });
+pushTriggers.start();
 // signing in can fold this device's player into an existing account: its friends move along
 const signIn = fn => async (store, body, p) => {
   const r = await fn(store, body, p);

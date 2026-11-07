@@ -17,6 +17,20 @@ setup Rowan does in his Apple Developer account, how to test it, and how it work
 - Limits on the server: each kind has a gap and a daily cap, nobody gets more than 4 a day in all, and news (quests, pass, shop) is
   never sent between 22:00 and 9:00 in the player's time zone.
 
+## What gets sent (approved Nov 8 2026)
+
+| Kind | When | Opens |
+| --- | --- | --- |
+| Party invites | A friend invites you to a party, while your game is closed. Expires with the invite (5 min) | Friends |
+| Friend requests | Someone sends you a request, or accepts yours, while your game is closed | Friends |
+| New quests | Once a day between 17:00 and 21:00 your time, if you haven't opened the game since the day's quests came out and the battle pass is on. Players seen in the last week | Quests |
+| Battle pass | A season starts (in its first 3 days live), and 3 days before it ends if you have rewards ready to claim. Players seen in the last 30 days | Battle Pass |
+| Shop and events | A limited event with skins opens (Halloween today), in its first 2 days. Players seen in the last 30 days | Shop |
+
+Each timed one goes once per player and event; one held back by the night or the daily limit is tried again on the next
+10-minute tick. Code: `push-triggers.js` (social.js sends it friend and party events). New kinds: add to `KINDS` in
+`push.js` (Settings shows the switch by itself) and send with `push.notify` / `push.notifyOnce`.
+
 ## Setup (Rowan, once)
 
 ### 1. Create the APNs key (Apple Developer)

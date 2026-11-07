@@ -116,6 +116,113 @@ async function moduleTests() {
   }
 }
 
+/* ---------- the triggers (push-triggers.js), through a simulated calendar ---------- */
+async function triggerTests() {
+  let sqlite = null; try { sqlite = require('node:sqlite'); } catch (e) {}
+  if (!sqlite) { console.log('(no node:sqlite: trigger tests skipped)'); return; }
+  const economy = require('./economy'), social = require('./social'), triggers = require('./push-triggers');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mitosis-triggers-')), store = new SqliteStore(sqlite, path.join(dir, 't.sqlite'));
+  let clock = Date.parse('2026-10-24T12:00:00Z');
+  const at = iso => { clock = Date.parse(iso); process.env.MITOSIS_DATE = iso; }; // economy's "now" too (the pass view)
+  const got = [];
+  const fake = { send: async (t, note) => { got.push({ to: t.player || t.token, token: t.token, note }); return { ok: true }; } };
+  const push = pushes.create({ store, dataDir: dir, config: { apns: null, fcm: null }, senders: { ios: fake }, now: () => clock, log: () => {} });
+  const events = [], soc = social.create({ file: path.join(dir, 'social.json'), now: () => clock, onEvent: e => events.push(e) });
+  const tr = triggers.create({ store, push, economy, social: soc, now: () => clock });
+  const toks = {};
+  const player = (id, tz, seenDaysAgo = 1) => { const p = store.createPlayer(id, 'h' + id, clock); store.touch(id, clock - seenDaysAgo * DAY); toks[id] = hex(id.length + id.charCodeAt(0));
+    push.handlers.register(store, { platform: 'ios', token: toks[id], tz }, p); return store.player(id); };
+  const sentTo = (id, kind) => got.filter(g => g.token === toks[id] && (!kind || g.note.kind === kind));
+  const flush = () => new Promise(r => setImmediate(r));
+
+  // Halloween opens: one shop push to each recent player, once
+  const londoner = player('london', 'Europe/London'), sydney = player('sydney', 'Australia/Sydney'), gone = player('gone', 'Europe/London', 45), shy = player('shy', 'Europe/London');
+  push.handlers.prefs(store, { off: ['shop'] }, shy);
+  let r = await tr.tick();
+  assert.deepEqual(tr.openEvents(clock).map(e => [e.id, e.skins, e.until]), [['halloween-2026', 4, 'Nov 3']], 'Halloween is open with its 4 skins');
+  assert.equal(sentTo('london', 'shop').length, 1, 'a recent player hears Halloween is back');
+  assert.deepEqual([sentTo('london', 'shop')[0].note.title, sentTo('london', 'shop')[0].note.body, sentTo('london', 'shop')[0].note.link], ['Halloween is back', '4 limited Halloween skins are in the Shop until Nov 3.', 'shop']);
+  assert.equal(sentTo('sydney', 'shop').length, 0, 'not at 23:00 in Sydney');
+  assert.equal(sentTo('gone', 'shop').length, 0, 'not to a player away for 45 days');
+  assert.equal(sentTo('shy', 'shop').length, 0, 'not to a player with Shop switched off');
+  assert.ok(r.held >= 1, 'the night one is held for later');
+  at('2026-10-25T00:30:00Z'); await tr.tick();                                    // 11:30 in Sydney
+  assert.equal(sentTo('sydney', 'shop').length, 1, 'Sydney gets it in the morning');
+  await tr.tick(); assert.equal(got.filter(g => g.note.kind === 'shop').length, 2, 'nobody gets it twice');
+  at('2026-11-01T12:00:00Z'); player('late', 'Europe/London'); await tr.tick();
+  assert.equal(sentTo('late', 'shop').length, 0, 'a week into the event, nobody new is told');
+
+  // friends and parties, as they happen
+  const A = { id: 'london' }, B = { id: 'sydney' };
+  soc.handlers.me(store, { name: 'Rowan' }, A); soc.handlers.me(store, { name: 'Ti' }, B);
+  at('2026-11-02T09:00:00Z');                                                     // both apps closed for a while
+  const codeA = soc.handlers.add(store, { code: soc.handlers.me(store, {}, B).code }, A).code; at('2026-11-02T09:05:00Z');
+  await flush(); assert.deepEqual(events.map(e => [e.type, e.from, e.to, e.name]), [['request', 'london', 'sydney', 'Rowan']], 'a friend request is an event');
+  for (const e of events.splice(0)) await tr.onSocial(e);
+  let n = sentTo('sydney', 'friends').at(-1).note;
+  assert.deepEqual([n.title, n.link, n.collapse], ['Rowan wants to be friends', 'friends', 'fr-london'], 'B hears about the request');
+  soc.handlers.accept(store, { code: codeA }, B); await flush();
+  assert.equal(events[0].type, 'accepted', 'accepting is an event');
+  at('2026-11-02T09:20:00Z'); for (const e of events.splice(0)) await tr.onSocial(e);
+  assert.equal(sentTo('london', 'friends').at(-1).note.title, 'Ti accepted your friend request', 'A hears B said yes');
+  soc.handlers.partyInvite(store, { code: soc.handlers.me(store, {}, B).code }, A); await flush();
+  at('2026-11-02T10:00:00Z'); const inv = events.splice(0)[0]; await tr.onSocial(inv);
+  n = sentTo('sydney', 'party').at(-1).note;
+  assert.deepEqual([inv.type, n.title, n.link, n.urgent, n.ttl, n.collapse], ['invite', 'Rowan invited you to a party', 'friends', true, 300, 'party-' + inv.party], 'B hears about the party invite');
+  soc.handlers.me(store, {}, B); soc.handlers.partyInvite(store, { code: soc.handlers.me(store, {}, B).code }, A); await flush();
+  at('2026-11-02T10:00:20Z'); assert.equal(await tr.onSocial(events.splice(0)[0]), null, 'not while their game is open (it checked in 20 s ago)');
+
+  // the season starts: everyone recent hears once, the night owls later
+  store.setFlag('pass', 'on');
+  at('2026-11-16T10:00:00Z');
+  player('la', 'America/Los_Angeles');                                             // 02:00 there
+  await tr.tick();
+  n = sentTo('london', 'pass').at(-1).note;
+  assert.deepEqual([n.title, n.link], ['Season 1: Bloom has started', 'pass'], 'the season start');
+  assert.equal(sentTo('la', 'pass').length, 0, 'held at night in Los Angeles');
+  at('2026-11-16T18:00:00Z'); await tr.tick();
+  assert.equal(sentTo('la', 'pass').length, 1, '10:00 in Los Angeles: sent');
+  assert.equal(sentTo('london', 'pass').length, 1, 'still once each');
+  at('2026-11-20T10:00:00Z'); player('newbie', 'Europe/London'); await tr.tick();
+  assert.equal(sentTo('newbie', 'pass').length, 0, 'four days in, it is old news');
+
+  // today's quests, in each player's evening, unless they've opened the game today
+  at('2026-11-20T08:00:00Z'); store.touch('london', clock - DAY); await tr.tick();
+  assert.equal(sentTo('london', 'quests').length, 0, 'not in the morning');
+  store.touch('newbie', Date.parse('2026-11-20T09:00:00Z'));                      // opened the game this morning
+  at('2026-11-20T18:00:00Z'); await tr.tick();
+  const day = economy.questsAt('day', clock);
+  n = sentTo('london', 'quests').at(-1).note;
+  assert.deepEqual([n.title, n.link], ["Today's quests are waiting", 'quests']);
+  assert.ok(n.body.startsWith(day.list[0].text + ', ') && /and 2 more\. 100 Battle Pass XP each\.$/.test(n.body), 'the body names two quests: ' + n.body);
+  await tr.tick(); assert.equal(sentTo('london', 'quests').length, 1, 'once a day');
+  assert.equal(sentTo('newbie', 'quests').length, 0, 'not to a player who opened the game today');
+  assert.equal(sentTo('gone', 'quests').length, 0, 'not to a player away for weeks');
+  at('2026-11-21T07:00:00Z'); store.touch('sydney', clock - DAY); await tr.tick();  // 18:00 in Sydney
+  assert.equal(sentTo('sydney', 'quests').length, 1, 'Sydney gets them in its evening');
+  store.setFlag('pass', 'off'); at('2026-11-21T18:30:00Z'); store.touch('london', clock - DAY); await tr.tick(); store.setFlag('pass', 'on');
+  assert.equal(sentTo('london', 'quests').length, 1, 'no quests while the pass is off');
+
+  // the season's last days: only players with rewards they can claim
+  at('2026-12-26T20:00:00Z'); store.touch('london', clock - DAY); store.touch('la', clock - DAY); // 20:00 in London, 12:00 in Los Angeles
+  store.passAddXp('london', 's1', 900, clock);                                     // level 4: rewards to claim
+  economy.handlers.passClaim(store, { reward: '1b' }, store.player('la'));          // la claimed the one free reward they could
+  assert.deepEqual([economy.handlers.passView(store, {}, store.player('la')).pass.claimable, economy.handlers.passView(store, {}, store.player('london')).pass.claimable > 0], [0, true], 'la has nothing to claim, london has');
+  await tr.tick();
+  n = sentTo('london', 'pass').at(-1).note;
+  assert.ok(n.title === 'Bloom ends in 1 day' && /^You have \d+ rewards? ready to claim/.test(n.body), 'the season end: ' + n.title + ' / ' + n.body);
+  assert.equal(sentTo('la', 'pass').length, 1, 'nothing to claim: no reminder (still just the start)');
+  await tr.tick(); assert.equal(sentTo('london', 'pass').length, 2, 'the reminder goes once');
+
+  // one-off keys follow a sign-in merge and go with the account
+  push.merge('london', 'mergedInto');
+  assert.equal((await push.notifyOnce('mergedInto', 'pass-end:s1', 'pass', { title: 'x', body: 'y' })).skipped, 'sent before', 'the once-keys moved with the merge');
+  push.forget('mergedInto');
+  assert.equal(push.players().some(r => r.player === 'mergedInto'), false, 'deleted with the account');
+  delete process.env.MITOSIS_DATE;
+  store.db.close();
+}
+
 /* ---------- the APNs sender against the stand-in ---------- */
 async function apnsTests() {
   const prod = await mock.start({ publicKey, keyId: 'KEY1234567', teamId: '4M7HR323EA', badPrefix: ['bad', 'both'] });
@@ -229,6 +336,14 @@ async function apiTests() {
     assert.equal((await post('/api/push/prefs', {}, secret)).body.devices, 1, 'the dead one is gone');
     const json = await (await fetch(base + '/admin/push?token=admintest&format=json')).json();
     assert.ok(json.sent.test >= 2 && json.recent[0].player === me, 'the JSON report counts the tests');
+    // a friend accepting your request reaches your phone (server.js → social.js → push-triggers.js → "Apple")
+    const friend = 'pushfriend' + 'b'.repeat(24); await post('/api/session', { secret: friend });
+    const friendCode = (await post('/api/social/me', { name: 'Ti' }, friend)).body.code;
+    const myCode = (await post('/api/social/add', { code: friendCode }, secret)).body.code;
+    const before = apple.sent.length; await post('/api/social/accept', { code: myCode }, friend);
+    for (let i = 0; i < 50 && apple.sent.length === before; i++) await sleep(100);
+    const acc = apple.sent.at(-1);
+    assert.deepEqual([acc.token, acc.payload.aps.alert.title, acc.payload.link, acc.payload.kind], [tok, 'Ti accepted your friend request', 'friends', 'friends'], 'the accept reached Apple for my phone');
     // deleting the account deletes the devices
     await post('/api/account/delete', { confirm: 'DELETE' }, secret);
     const after = await (await fetch(base + '/admin/push?token=admintest&format=json')).json();
@@ -238,6 +353,7 @@ async function apiTests() {
 
 (async () => {
   await moduleTests(); console.log('push: storage, switches, limits ok');
+  await triggerTests(); console.log('push: triggers ok (Halloween, friends, parties, season start, quests, season end)');
   await apnsTests(); console.log('push: APNs sender ok');
   await fcmTests(); console.log('push: FCM sender ok');
   await apiTests(); console.log('push: API and admin page ok');
