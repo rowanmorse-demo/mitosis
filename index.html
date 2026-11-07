@@ -8041,7 +8041,7 @@ let tipSeen=new Set(),tipAt=-99,tipRuns=0;try{tipSeen=new Set(JSON.parse(localSt
 const TIPS=[
   {id:'move',when:()=>T-human.stats.born>2,text:()=>TOUCH_UI?'Stick to move':'Steer with the mouse'},
   {id:'split',when:()=>T-human.stats.born>15&&human.cells.some(c=>c.mass>=70),text:()=>TOUCH_UI?'Split: launch half your mass':'Space: launch half your mass'},
-  {id:'merge',when:()=>human.cells.length>1,text:()=>'Pieces merge back in 20 s'},
+  {id:'merge',when:()=>human.cells.length>1,text:()=>`Pieces merge back in about ${Math.round(MERGE_BASE)} s`},
   {id:'virus',when:()=>human.cells.some(c=>c.mass>150&&viruses.some(v=>Math.hypot(v.x-c.x,v.y-c.y)<c.r+500)),text:()=>'Big cells pop on phages'},
   {id:'arena',when:()=>arenaR()<R-1,text:()=>'Arena shrinking: stay inside'},
   {id:'pause',when:()=>T-human.stats.born>45,text:()=>TOUCH_UI?'Tap your mass to pause':'Esc to pause'},
