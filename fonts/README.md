@@ -1,6 +1,6 @@
 # Name fonts
 
-Players pick a font for their name in **Profile › Name style**. Everyone sees it: on their cell in a match, on
+Players pick a font for their name in **Settings › Account › Name style**. Everyone sees it: on their cell in a match, on
 the in-match board, in Ranks, in Friends, in the Nearby lobby and on the results screen (your name on a win, the
 killer's name when you're eaten).
 
