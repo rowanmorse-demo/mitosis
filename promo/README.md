@@ -36,6 +36,23 @@ What is new for these, all usable by the October cuts too:
   a vignette, the `hook` / `tag` / `end` title styles, `--stills` and `--secs`.
 - Takes are filmed on Nov 10 (after Halloween, before the Battle Pass): no Halloween or pass skins on screen.
 
+## Recording real play (`record.js`)
+
+Scripted play reads as fake, so the ads are cut from real matches played on this Mac:
+
+```bash
+node promo/record.js                     # portrait 1080×1920 for TikTok, Reels and Shorts
+node promo/record.js --shape=landscape   # 1920×886 for the App Store
+node promo/record.js --skin=22           # wear Supernova (default 15, Black Hole); --name=… for the name on the cell
+```
+
+The game opens in its own window. Start a match, press **R** to start a take and **R** again to stop it. The mouse
+steers, Space splits, W shoots, Shift boosts. Each take is the game's own canvas (no cursor, browser or HUD in the
+video, though you see the HUD while playing) with the game's sound, saved as `promo/rec/<date-time>.mp4` at 60 fps. The
+terminal says if any frames came late; retake if it warns of a hitch. Offline by default: the game fills the room
+with its own bots on this Mac, so ship Wi-Fi can't make it lag, and the wallet owns every skin on sale. `--online` plays
+on the live server instead. `--selftest=4` checks the plumbing headless (4 s of the lobby, no sound).
+
 ## The October trailers
 
 Two trailers cut from real gameplay of the current `index.html`, filmed in headless Chrome and played through the

@@ -32,3 +32,4 @@ ios/store-art/chrome-*/
 # promo video: rendered output and working files (re-render with node promo/render.js)
 promo/out/
 promo/.work/
+promo/rec/
