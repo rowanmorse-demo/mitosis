@@ -451,12 +451,11 @@ function runEnd(store, body, p, ctx = {}) {
   Object.assign(p, w); p.xp = Number(p.xp || 0) + xp.total;
   // rating: bots move only the AI rating. Ranked bot games always have Normal bots; Casual says which it had.
   const name = cleanName(body.name) || p.name || null, vsBots = kind === 'ai' || casual;
-  if (classic) { p.name = name; const out = wallet(store, p); // Classic moves no rating
-    return { payout, kind, winBonus: 0, winCapped: capped, ratingDelta: 0, aiDelta: 0, xpGained: xp.total, xpParts: { time: xp.time, place: 0, win: 0 }, levelUp: out.level - level,
-      passUp: passUp + (passMid && out.pass ? out.pass.level - passMid.level : 0), questXp: q.xp, questsDone: q.done, ...out }; }
   const before = Number((vsBots ? p.ai_rating : p.rating) ?? RATING.base), mult = casual ? RATING_AI.skill[body.skill] || 1 : 1;
-  const delta = ratingDelta(before, survived, body.eaten, body.place, body.of, body.life, mult), rating = Math.max(0, before + delta);
-  if (vsBots) { store.setAiRating(p.id, rating, name); p.ai_rating = rating; p.ai_runs = Number(p.ai_runs || 0) + 1; }
+  // Classic moves no rating (delta 0, nothing written); it shares the answer below, where its winBonus and deltas come out 0
+  const delta = classic ? 0 : ratingDelta(before, survived, body.eaten, body.place, body.of, body.life, mult), rating = Math.max(0, before + delta);
+  if (classic) { /* no rating, no run count */ }
+  else if (vsBots) { store.setAiRating(p.id, rating, name); p.ai_rating = rating; p.ai_runs = Number(p.ai_runs || 0) + 1; }
   else { store.setRating(p.id, rating, name); p.rating = rating; p.runs = Number(p.runs || 0) + 1; }
   p.name = name;
   // kind: who the life was against (comp, ai, casual; legacy for apps that don't say); ratingDelta and aiDelta: how each
