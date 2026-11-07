@@ -1,7 +1,7 @@
 // Runs in the page record.js opens, before any of the game's scripts. A person plays; this records what they play:
 //  - the game's own canvas (the world, without the cursor, the browser or the HUD) at a phone's resolution, whatever
 //    size the window is: devicePixelRatio is raised so the canvas is drawn at the target size and shown scaled down;
-//  - the game's own sound, tapped from its master bus;
+//  - the game's own sound, as a log of every sound it plays (edit.js renders it again, in sync);
 //  - R starts and stops a take; each take streams to record.js, which writes promo/rec/<name>.mp4.
 // Offline (the default) the live room fails at once, so the game fills the room with its own bots on this Mac (no
 // network lag on ship Wi-Fi), and the economy API answers from a wallet that owns every skin on sale.
@@ -47,7 +47,7 @@ module.exports = ({ port, target, api, settings }) => `(() => {
   }
 
   // ---- the recorder
-  let rec = null, chunks = 0, t0 = 0, badge = null, audioDest = null;
+  let rec = null, t0 = 0, badge = null;
   // smoothness: every frame the page draws while recording, and how many came late (a hitch the video would show)
   let frames = 0, late = 0, last = 0;
   (function tick(t) { if (rec) { if (last && t - last > 26) late++; frames++; } last = t; requestAnimationFrame(tick); })(0);
@@ -63,30 +63,35 @@ module.exports = ({ port, target, api, settings }) => `(() => {
     else { let ready = false; try { ready = !!(window.__mt && window.__mt.x('actx')); } catch (e) {} b.textContent = ready ? 'R to record' : 'Start a match, then R to record'; }
   }
   setInterval(show, 250);
-  // the game's sound: its master gain, also into a stream (once the game has made its AudioContext, on the first input)
-  function soundTrack() {
-    try {
-      const actx = window.__mt && window.__mt.x('actx'), master = window.__mt && window.__mt.x('master');
-      if (!actx || !master) return null;
-      if (!audioDest) { audioDest = actx.createMediaStreamDestination(); master.connect(audioDest); }
-      return audioDest.stream.getAudioTracks()[0] || null;
-    } catch (e) { return null; }
+  // the game's sound, as a log: every sfx(kind, amount) the game plays during a take, with its time. edit.js renders
+  // it again with the game's own sound code, in sync and clean (live audio capture can stall the recorder, and a
+  // paused AudioContext would leave a take silent)
+  let sfxLog = [], hooked = false;
+  function hookSfx() {
+    if (hooked || !window.__mt) return; hooked = true;
+    window.__recSfx = (k, a) => { if (rec) sfxLog.push({ t: +((performance.now() - t0) / 1000).toFixed(4), k, a: +a || 0 }); };
+    window.__mt.x('sfx=(function(o){return function(k,a){try{window.__recSfx&&window.__recSfx(k,a)}catch(e){}return o.apply(this,arguments)}})(sfx)');
   }
-  const TYPES = ['video/mp4;codecs=avc1.640033,mp4a.40.2', 'video/mp4;codecs=avc1,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm'];
+  const post = (what, q, body) => fetch('http://127.0.0.1:' + PORT + '/' + what + '?' + q, { method: 'POST', body });
+  const log = msg => post('log', '', String(msg)).catch(() => {});
+  const TYPES = ['video/mp4;codecs=avc1.640033', 'video/mp4;codecs=avc1', 'video/mp4', 'video/webm;codecs=vp9', 'video/webm'];
   async function start() {
-    const cv = document.getElementById('game'); if (!cv) return;
-    const stream = cv.captureStream(60), a = soundTrack(); if (a) stream.addTrack(a);
-    const type = TYPES.find(t => MediaRecorder.isTypeSupported(t)) || '';
-    const id = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-    await fetch('http://127.0.0.1:' + PORT + '/start?id=' + id + '&type=' + encodeURIComponent(type) + '&w=' + cv.width + '&h=' + cv.height + '&sound=' + (a ? 1 : 0), { method: 'POST' });
-    rec = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: 48e6, audioBitsPerSecond: 256e3 }); rec.id = id; chunks = 0; t0 = performance.now();
-    const sent = [];
-    rec.ondataavailable = e => { if (e.data && e.data.size) { const n = chunks++; sent.push(e.data.arrayBuffer().then(b => fetch('http://127.0.0.1:' + PORT + '/chunk?id=' + id + '&n=' + n, { method: 'POST', body: b }))); } };
-    rec.onstop = () => setTimeout(() => Promise.allSettled(sent).then(() => fetch('http://127.0.0.1:' + PORT + '/stop?id=' + id + '&n=' + chunks + '&frames=' + frames + '&late=' + late, { method: 'POST' })), 100);
-    frames = 0; late = 0; rec.start(1000); show();
+    try {
+      const cv = document.getElementById('game'); if (!cv) return;
+      hookSfx();
+      const stream = cv.captureStream(60), type = TYPES.find(t => MediaRecorder.isTypeSupported(t)) || '';
+      const id = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      await post('start', 'id=' + id + '&type=' + encodeURIComponent(type) + '&w=' + cv.width + '&h=' + cv.height);
+      const r = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: 48e6 }), sent = []; let n = 0;
+      r.ondataavailable = e => { if (e.data && e.data.size) { const k = n++; sent.push(e.data.arrayBuffer().then(b => post('chunk', 'id=' + id + '&n=' + k, b))); } };
+      r.onerror = e => log('recorder error: ' + (e.error && e.error.message || e.type));
+      r.onstop = () => setTimeout(() => Promise.allSettled(sent).then(() => post('sfx', 'id=' + id, JSON.stringify(r.sfx)))
+        .then(() => post('stop', 'id=' + id + '&frames=' + r.frames + '&late=' + r.late)), 100);
+      sfxLog = []; frames = 0; late = 0; t0 = performance.now(); rec = r; r.start(1000); show();
+    } catch (e) { rec = null; log('could not start a take: ' + (e && e.message || e)); }
   }
-  function stop() { if (!rec) return; const r = rec; rec = null; r.stop(); show(); }
+  function stop() { if (!rec) return; const r = rec; r.sfx = sfxLog; r.frames = frames; r.late = late; rec = null; r.stop(); show(); }
   addEventListener('keydown', e => { if (e.code === 'KeyR' && !e.repeat && !(e.target && /INPUT|TEXTAREA/.test(e.target.tagName))) { e.preventDefault(); rec ? stop() : start(); } }, true);
   addEventListener('beforeunload', stop);
-  { const m = /[?&]autorec=(\\d+)/.exec(location.search); if (m) setTimeout(() => { start(); setTimeout(stop, +m[1] * 1000); }, 2500); } // record.js --selftest
+  { const m = /[?&]autorec=(\\d+)/.exec(location.search); if (m) setTimeout(() => { try { window.__mt.x("startLocal('practice')"); } catch (e) {} setTimeout(() => { start(); setTimeout(() => { try { window.__mt.x("sfx('split')"); } catch (e) {} }, 1000); setTimeout(stop, +m[1] * 1000); }, 1500); }, 2500); } // record.js --selftest: a practice match, then a take
 })();`;

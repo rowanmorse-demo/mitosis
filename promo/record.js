@@ -5,8 +5,8 @@
 //   node promo/record.js --online             the live server instead of a room of the game's own bots (laggy on ship Wi-Fi)
 //   node promo/record.js --selftest=4         headless: records 4 s of the lobby by itself and quits (checks the plumbing)
 // Controls are the desktop ones: the mouse steers, Space splits, W shoots, Shift boosts, P pauses, M mutes.
-// Each take is the game's canvas (no cursor, browser or HUD; you still see the HUD) with the game's sound, written to
-// promo/rec/<date-time>.mp4 as 60 fps H.264. The window can be any size: the canvas is drawn at the take's resolution.
+// Each take is the game's canvas (no cursor, browser or HUD; you still see the HUD), written to promo/rec/<date-time>.mp4
+// as 60 fps H.264, with <date-time>.json: every game sound it played and when (edit.js renders the sound from it). The window can be any size: the canvas is drawn at the take's resolution.
 // Skin ids: 5 Nebula, 6 Magma, 10 Glacier, 11 Toxic, 12 Eyeball, 13 Galaxy, 14 Gilded, 15 Black Hole, 17 Aurora, 18 Koi,
 // 19 Plasma, 20 Geode, 21 Sakura, 22 Supernova, 23 Glitch.
 'use strict';
@@ -46,11 +46,13 @@ function finish(id, frames, late) {
   const out = path.join(OUT, id + '.mp4');
   try {
     execFileSync(FFMPEG, ['-hide_banner', '-v', 'error', '-y', '-i', raw, '-vf', `fps=60,scale=${TARGET.w}:${TARGET.h}:force_original_aspect_ratio=increase,crop=${TARGET.w}:${TARGET.h},format=yuv420p`,
-      '-c:v', 'libx264', '-preset', 'medium', '-crf', '14', '-c:a', 'aac', '-b:a', '256k', '-ar', '48000', '-ac', '2', '-movflags', '+faststart', out], { stdio: ['ignore', 'ignore', 'inherit'] });
-    fs.rmSync(t.dir, { recursive: true, force: true });
+      '-c:v', 'libx264', '-preset', 'medium', '-crf', '14', '-an', '-movflags', '+faststart', out], { stdio: ['ignore', 'ignore', 'inherit'] });
+    fs.writeFileSync(path.join(OUT, id + '.json'), JSON.stringify({ fps: 60, w: TARGET.w, h: TARGET.h, sfx: t.sfx ? JSON.parse(t.sfx) : [] }));
+    if (!arg.keepraw) fs.rmSync(t.dir, { recursive: true, force: true });
     const secs = +execFileSync(FFMPEG.replace(/ffmpeg$/, 'ffprobe'), ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', out]).toString();
     const smooth = frames ? `, ${late ? late + ' of ' + frames + ' frames late' + (late / frames > .01 ? ': a hitch shows, close other apps and retake' : '') : 'every frame on time'}` : '';
-    console.log(`  saved ${path.relative(ROOT, out)} (${secs.toFixed(1)} s${smooth}${t.sound ? '' : '; no sound: press a key or click in the game first'})`);
+    const nsfx = t.sfx ? JSON.parse(t.sfx).length : 0;
+    console.log(`  saved ${path.relative(ROOT, out)} (${secs.toFixed(1)} s${smooth}, ${nsfx} game sounds logged)`);
   } catch (e) { console.error('  could not convert ' + raw + ': ' + e.message + ' (the raw recording is kept)'); }
 }
 const server = http.createServer((req, res) => {
@@ -62,9 +64,11 @@ const server = http.createServer((req, res) => {
   req.on('end', () => {
     if (u.pathname === '/start' && id) {
       const dir = path.join(WORK, 'rec-' + id); fs.mkdirSync(dir, { recursive: true });
-      takes.set(id, { dir, type: u.searchParams.get('type') || '', started: Date.now(), sound: u.searchParams.get('sound') === '1' });
+      takes.set(id, { dir, type: u.searchParams.get('type') || '', started: Date.now() });
       console.log(`  recording ${id} at ${u.searchParams.get('w')}×${u.searchParams.get('h')} (${u.searchParams.get('type') || 'default format'})`);
-    } else if (u.pathname === '/chunk' && takes.has(id)) {
+    } else if (u.pathname === '/log') console.log('  [game] ' + Buffer.concat(body).toString().slice(0, 300));
+    else if (u.pathname === '/sfx' && takes.has(id)) takes.get(id).sfx = Buffer.concat(body).toString();
+    else if (u.pathname === '/chunk' && takes.has(id)) {
       fs.writeFileSync(path.join(takes.get(id).dir, String(+u.searchParams.get('n')).padStart(6, '0')), Buffer.concat(body));
     } else if (u.pathname === '/stop') { finish(id, +u.searchParams.get('frames'), +u.searchParams.get('late')); if (arg.selftest) setTimeout(() => process.kill(process.pid, 'SIGTERM'), 100); }
     res.end('ok');
