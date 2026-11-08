@@ -33,6 +33,11 @@ Each timed one goes once per player and event; one held back by the night or the
 
 ## Setup (Rowan, once)
 
+**Done Nov 8 2026:** Push Notifications is on for `com.mitosisgame.app`, and the APNs key exists: **Mitosis Push, Key ID
+`A6WR2S2FPG`**, Sandbox & Production, team scoped (Apple offers topic-specific keys only for a single environment). Its `.p8`
+was downloaded to the Mac (Apple keeps no copy). A real push through Apple's sandbox with it reached a simulator. What's
+left is step 3 (the key on the server) and a deploy.
+
 ### 1. Create the APNs key (Apple Developer)
 
 1. Go to [developer.apple.com/account/resources/authkeys/list](https://developer.apple.com/account/resources/authkeys/list)
