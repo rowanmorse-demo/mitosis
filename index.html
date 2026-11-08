@@ -1457,53 +1457,74 @@ img.sk-im{display:block;-webkit-user-drag:none;user-select:none;-webkit-touch-ca
 /* @ui:skins end */
 
 /* @ui:profile */
-/* Profile: your cell big at the top with your name and level, both ratings side by side under it, then three tabs:
-   Overview (trophies, recent form, skins, account, Delete account last), Stats (two rings, the rating line, career numbers,
-   recent runs) and Trophies (the next one to win, the ones you hold, achievements). Open space instead of boxes inside boxes;
-   one glass surface (the lobby-look --sf tokens) for the few things that need a card. One type scale: 30 name, 28 numbers,
-   17 section titles, 15 items, 13 notes. Pink only marks state (the open tab, what you're wearing, your current trophy).
-   Your step of the ladder tints the light behind the cell and the rating bar: --tc its metal, --tg its glow (set from RANK_STEPS). */
+/* Profile: a player screen you'd show a friend. Your cell alive at the top in your rank's light, your name and level, one rank
+   block (crest, rank, rating, how far to the next), then three tabs: Overview (your best trophy on a stage, your skins, account,
+   Delete account last), Stats (two rings, the rating line, three numbers, the AI rating, recent runs) and Trophies (all nine
+   in a lit cabinet, achievements). Colour comes from art and light: your step's metal (--tc, its light --tl, dark --td, glows
+   --tg/--th, set from RANK_STEPS) lights the cell, the crest, the bars and the trophies. No colour-coded rows or icons; pink only
+   marks state (the open tab, what you're wearing). One type scale: 34 name, 24 rank and numbers, 20 section titles, 15 items,
+   13 notes. Surfaces: the lobby-look glass (--sf tokens), defined here with the same values so it matches with or without it. */
 #profileCard{--sf:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.022)),rgba(8,19,23,.8);--sf-edge:rgba(255,255,255,.085);
   --sf-hi:inset 0 1px 0 rgba(255,255,255,.08);--sf-drop:0 14px 30px -16px rgba(0,0,0,.85);--ink2:rgba(222,238,234,.66);--rule:rgba(170,235,225,.08);
-  --tc:#c4d0da;--tg:rgba(185,198,210,.16)}
+  --tc:#a9b8c7;--tl:#ffffff;--td:#344150;--tg:rgba(169,184,199,.18);--th:rgba(169,184,199,.4)}
 #overlay>#profileCard.page{grid-template-columns:minmax(0,1fr);gap:22px 40px;align-items:start;
-  background:radial-gradient(90% 46% at 50% 4%,var(--tg),transparent 72%),linear-gradient(180deg,rgba(2,8,9,.94),rgba(2,8,9,.88))}
+  background:radial-gradient(110% 38% at 50% 0%,var(--tg),transparent 75%),radial-gradient(70% 26% at 50% 21%,var(--tg),transparent 80%),linear-gradient(180deg,rgba(2,8,9,.95),rgba(2,8,9,.9))}
 #profileCard .pv-set svg{width:21px;height:21px}
-/* the hero: the cell with a soft pool of light under it, the name, the level */
+/* the hero: your cell breathing in a halo of your rank's light, motes drifting up around it */
 #profileCard .pv-hero{display:grid;gap:22px;min-width:0}
 #profileCard .pv-me{display:grid;justify-items:center;text-align:center;min-width:0}
-#profileCard .pv-ava{position:relative;width:min(52vw,210px);aspect-ratio:1;margin:2px 0 12px;display:grid;place-items:center;isolation:isolate}
-#profileCard .pv-ava::before{content:"";position:absolute;z-index:-1;inset:-22%;border-radius:50%;background:radial-gradient(closest-side,var(--tg),transparent 75%);pointer-events:none}
-#profileCard .pv-ava::after{content:"";position:absolute;z-index:-1;left:16%;right:16%;bottom:-3%;height:13%;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.6),rgba(0,0,0,0));pointer-events:none}
-#profileCard .pv-ava canvas{width:100%;height:100%;display:block;filter:drop-shadow(0 16px 22px rgba(0,0,0,.45));animation:pfbob 4.5s ease-in-out infinite}
-@keyframes pfbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
-#profileCard .pv-name{margin:0;max-width:100%;font-family:var(--display);font-size:30px;font-weight:800;line-height:1.1;letter-spacing:-.035em;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#profileCard .pv-name.long{font-size:24px}
-#profileCard .pv-sub{margin:5px 0 0;font:500 13px/1.3 var(--display);color:var(--ink2)}
+#profileCard .pv-stage{position:relative;width:min(50vw,200px);aspect-ratio:1;margin:14px 0 22px;isolation:isolate}
+#profileCard .pv-halo{position:absolute;z-index:-2;inset:-36%;border-radius:50%;pointer-events:none;background:radial-gradient(closest-side,var(--th) 30%,var(--tg) 52%,transparent 76%)}
+#profileCard .pv-halo::before{content:"";position:absolute;inset:0;border-radius:50%;opacity:.7;
+  background:conic-gradient(from 0deg,transparent 0,var(--th) 9%,transparent 20%,transparent 33%,var(--tg) 42%,transparent 52%,transparent 66%,var(--th) 76%,transparent 87%);
+  -webkit-mask:radial-gradient(closest-side,transparent 36%,#000 50%,rgba(0,0,0,.4) 76%,transparent 98%);mask:radial-gradient(closest-side,transparent 36%,#000 50%,rgba(0,0,0,.4) 76%,transparent 98%);
+  animation:pvspin 48s linear infinite}
+#profileCard .pv-halo::after{content:"";position:absolute;inset:27%;border-radius:50%;box-shadow:0 0 30px 8px var(--th),0 0 90px 24px var(--tg);animation:pvglow 6s ease-in-out infinite}
+@keyframes pvspin{to{transform:rotate(1turn)}}
+@keyframes pvglow{0%,100%{opacity:.7}50%{opacity:1}}
+#profileCard .pv-motes{position:absolute;z-index:-1;inset:-12% -34% 4%;pointer-events:none}
+#profileCard .pv-motes i{position:absolute;bottom:0;left:var(--x);width:var(--s);height:var(--s);border-radius:50%;background:var(--tl);box-shadow:0 0 7px 1px var(--tc);opacity:0;animation:pvmote var(--d) linear var(--w) infinite}
+#profileCard .pv-motes i.f{z-index:2}
+@keyframes pvmote{0%{opacity:0;transform:translate3d(0,0,0)}18%,70%{opacity:var(--o)}100%{opacity:0;transform:translate3d(var(--dx),calc(-1*var(--h)),0)}}
+#profileCard .pv-ava{position:absolute;inset:0;animation:pvlive 6s ease-in-out infinite}
+#profileCard .pv-ava canvas{width:100%;height:100%;display:block;filter:drop-shadow(0 18px 24px rgba(0,0,0,.55))}
+#profileCard .pv-ava::after{content:"";position:absolute;inset:7%;border-radius:50%;pointer-events:none;opacity:.9;filter:drop-shadow(0 0 5px var(--tc));
+  background:conic-gradient(from 0deg,transparent 0,transparent 58%,var(--tc) 70%,var(--tl) 76%,transparent 86%);
+  -webkit-mask:radial-gradient(closest-side,transparent calc(100% - 3px),#000 calc(100% - 2px),#000 calc(100% - .5px),transparent);mask:radial-gradient(closest-side,transparent calc(100% - 3px),#000 calc(100% - 2px),#000 calc(100% - .5px),transparent);
+  animation:pvspin 10s linear infinite}
+#profileCard .pv-stage::after{content:"";position:absolute;z-index:-1;left:14%;right:14%;bottom:-9%;height:12%;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.65),rgba(0,0,0,0));animation:pvpool 6s ease-in-out infinite}
+@keyframes pvlive{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-7px) scale(1.025)}}
+@keyframes pvpool{0%,100%{transform:scaleX(1);opacity:1}50%{transform:scaleX(.9);opacity:.75}}
+#profileCard .pv-name{margin:0;max-width:100%;font-family:var(--display);font-size:34px;font-weight:800;line-height:1.08;letter-spacing:-.04em;color:#fff;text-shadow:0 2px 20px rgba(0,0,0,.55);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#profileCard .pv-name.long{font-size:27px}
+#profileCard .pv-sub{margin:6px 0 0;font:500 13px/1.3 var(--display);color:var(--ink2)}
 #profileCard .pv-sub:empty{display:none}
-#profileCard .pv-xp{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;width:min(100%,320px);margin-top:14px}
-#profileCard .pv-xp b{font:700 15px/1 var(--display);letter-spacing:-.01em;white-space:nowrap}
-#profileCard .pv-xpn{font:500 13px/1 var(--display);color:var(--ink2);font-variant-numeric:tabular-nums;white-space:nowrap}
-#profileCard .pv-bar{display:block;height:6px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}
-#profileCard .pv-bar i{display:block;height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,rgba(255,255,255,.55),#fff);transition:width .9s cubic-bezier(.2,.8,.2,1)}
-#profileCard .pv-xpbar i{background:linear-gradient(90deg,var(--xp1),var(--xp2))}
-/* both ratings in one band between two hairlines: vs players (opens Trophies) and vs AI */
-#profileCard .pv-ranks{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
-#profileCard :is(.pv-rank,.pv-ai){appearance:none;display:grid;align-content:start;gap:10px;min-width:0;margin:0;padding:16px 16px 16px 0;border:0;background:none;color:var(--ink);font:inherit;text-align:left}
-#profileCard .pv-rank{cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity .15s}
-#profileCard .pv-rank:active{opacity:.7}
-#profileCard .pv-ai{padding:16px 0 16px 18px;border-left:1px solid var(--rule)}
-#profileCard .pv-k{font:500 13px/1 var(--display);color:var(--ink2)}
-#profileCard .pv-rrow{display:flex;align-items:center;gap:12px;min-width:0}
-#profileCard :is(.pv-crest,.pv-aie){flex:none;display:block;width:46px;height:46px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.45))}
-#profileCard :is(.pv-crest,.pv-aie) svg{display:block;width:100%;height:100%}
-#profileCard .pv-aie{width:40px;height:40px}
-#profileCard .pv-rk{display:grid;gap:4px;min-width:0}
-#profileCard .pv-rk b{font:800 28px/1 var(--display);letter-spacing:-.04em;font-variant-numeric:tabular-nums}
-#profileCard .pv-tier{font:600 13px/1.15 var(--display);color:var(--ink2)} /* long ranks (Cytokinesis III) wrap rather than cut */
-#profileCard .pv-rbar{height:4px}
-#profileCard .pv-rbar i{background:linear-gradient(90deg,rgba(255,255,255,.35),var(--tc))}
-#profileCard .pv-next{font:500 13px/1.2 var(--display);color:var(--ink2);margin-top:-2px}
+/* the level: the lobby's green level chip, then the XP bar */
+#profileCard .pv-xp{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;width:min(100%,300px);margin-top:14px}
+#profileCard .pv-lvb{min-width:32px;height:32px;box-sizing:border-box;padding:0 8px;border-radius:999px;display:grid;place-items:center;font:800 16px/1 var(--display);font-variant-numeric:tabular-nums;color:#03231e;
+  background:linear-gradient(160deg,#fff,var(--xp2) 55%,var(--xp1));box-shadow:0 0 0 2px #071719,0 0 14px rgba(95,224,200,.45)}
+#profileCard .pv-xpn{font:600 13px/1 var(--display);color:var(--ink2);font-variant-numeric:tabular-nums;white-space:nowrap}
+/* bars: a glossy fill in your rank's metal with a glow, filling when the page opens and a shine running across it once */
+#profileCard .pv-bar{position:relative;display:block;height:8px;border-radius:99px;background:rgba(255,255,255,.08);box-shadow:inset 0 1px 2px rgba(0,0,0,.55)}
+#profileCard .pv-bar i{position:relative;display:block;height:100%;width:0;min-width:0;border-radius:inherit;overflow:hidden;background:linear-gradient(90deg,var(--td),var(--tc) 58%,var(--tl));box-shadow:0 0 12px var(--th);transition:width 1.25s cubic-bezier(.2,.8,.2,1)}
+#profileCard .pv-bar i::before{content:"";position:absolute;inset:0 0 48%;border-radius:inherit;background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,0))}
+#profileCard .pv-bar i::after{content:"";position:absolute;top:0;bottom:0;left:-45%;width:45%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.75),transparent);animation:pvshine 1.3s 1.2s ease-in-out both}
+@keyframes pvshine{to{left:105%}}
+#profileCard .pv-xpbar{height:7px}
+#profileCard .pv-xpbar i{background:linear-gradient(90deg,#1f7f99,var(--xp1) 55%,var(--xp2));box-shadow:0 0 10px rgba(95,224,200,.35)}
+/* your rank: one block in the glass, lit from behind the crest by its metal; opens Trophies */
+#profileCard .pv-rank{appearance:none;position:relative;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:16px;min-width:0;margin:0;padding:16px 20px 16px 14px;border-radius:22px;
+  border:1px solid var(--sf-edge);background:radial-gradient(60% 130% at 8% 50%,var(--tg),transparent 72%),var(--sf);box-shadow:var(--sf-hi),var(--sf-drop);color:var(--ink);font:inherit;text-align:left;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s}
+#profileCard .pv-rank:active{transform:scale(.98)}
+#profileCard .pv-crest{display:block;width:76px;height:76px;filter:drop-shadow(0 0 14px var(--th)) drop-shadow(0 8px 10px rgba(0,0,0,.5))}
+#profileCard .pv-crest svg,#profileCard .pv-aie svg{display:block;width:100%;height:100%}
+#profileCard .pv-rk{display:grid;gap:10px;min-width:0}
+#profileCard .pv-rt{display:flex;align-items:baseline;justify-content:space-between;gap:12px;min-width:0}
+#profileCard .pv-rt b{min-width:0;font:800 24px/1.05 var(--display);letter-spacing:-.035em;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#profileCard .pv-rt b.long{font-size:20px}
+#profileCard .pv-rt em{flex:none;font:800 24px/1 var(--display);font-style:normal;letter-spacing:-.04em;color:var(--tl);font-variant-numeric:tabular-nums;text-shadow:0 0 18px var(--th)}
+#profileCard .pv-next{font:500 13px/1.2 var(--display);color:var(--ink2)}
 #profileCard .pv-next:empty{display:none}
 /* tabs: the Settings tabs (one row on a hairline, the open one white with a pink line under it) */
 #profileCard .pv-tabs{display:flex;min-width:0;border-bottom:1px solid var(--rule);margin-bottom:-4px}
@@ -1514,58 +1535,76 @@ img.sk-im{display:block;-webkit-user-drag:none;user-select:none;-webkit-touch-ca
 #profileCard .pv-tabs button[aria-selected=true]::after{transform:none}
 #profileCard .pv-tabs button:focus-visible{outline:none;color:#fff;background:rgba(255,255,255,.05)}
 @media (hover:hover){#profileCard .pv-tabs button:not([aria-selected=true]):hover{color:var(--ink)}}
-#profileCard .pv-pane{display:grid;gap:34px;min-width:0;padding-top:6px;animation:pfin .35s cubic-bezier(.2,.8,.2,1) both}
+#profileCard .pv-pane{display:grid;gap:36px;min-width:0;padding-top:8px;animation:pfin .35s cubic-bezier(.2,.8,.2,1) both}
 @keyframes pfin{from{opacity:0;transform:translateY(8px)}}
 /* sections: a title line and the content on the page itself */
 #profileCard .pv-sec{display:grid;gap:14px;min-width:0}
-#profileCard .pv-h{display:flex;align-items:baseline;gap:9px;min-height:22px}
-#profileCard .pv-h b{font:800 17px/1.1 var(--display);letter-spacing:-.02em}
-#profileCard .pv-cnt{font:500 13px/1 var(--display);color:var(--ink2);font-variant-numeric:tabular-nums}
+#profileCard .pv-h{display:flex;align-items:baseline;gap:9px;min-height:24px}
+#profileCard .pv-h b{font:800 20px/1.1 var(--display);letter-spacing:-.025em}
+#profileCard .pv-cnt{font:500 14px/1 var(--display);color:var(--ink2);font-variant-numeric:tabular-nums}
 #profileCard .pv-cnt:empty{display:none}
-#profileCard .pv-more{appearance:none;position:relative;margin:0 0 0 auto;padding:0 2px;border:0;background:none;color:var(--ink2);font:600 13px/1 var(--display);cursor:pointer;-webkit-tap-highlight-color:transparent}
-#profileCard .pv-more::after{content:"›";margin-left:5px;font-size:17px;line-height:0;position:relative;top:1px}
+#profileCard .pv-more{appearance:none;position:relative;margin:0 0 0 auto;padding:0 2px;border:0;background:none;color:var(--ink2);font:600 14px/1 var(--display);cursor:pointer;-webkit-tap-highlight-color:transparent}
+#profileCard .pv-more::after{content:"›";margin-left:5px;font-size:18px;line-height:0;position:relative;top:1px}
 #profileCard .pv-more::before{content:"";position:absolute;inset:-12px -8px} /* a finger-sized target */
 @media (hover:hover){#profileCard .pv-more:hover{color:#fff}}
-/* trophies on Overview: the ones you hold, lit, then the next one as a pale outline with what it takes */
-#profileCard .pv-shelf{display:flex;gap:5px;margin:0 -4px;padding:0 4px 2px;overflow-x:auto;scrollbar-width:none;scroll-snap-type:x proximity;overscroll-behavior-x:contain}
-#profileCard .pv-shelf::-webkit-scrollbar{display:none}
-#profileCard .pv-sh{flex:0 0 84px;display:grid;justify-items:center;align-content:start;gap:6px;min-width:0;text-align:center;scroll-snap-align:start}
-#profileCard .pv-sh .pv-tt{width:62px}
-#profileCard .pv-sh b{max-width:100%;font:600 12.5px/1.15 var(--display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#profileCard .pv-sh small{font:500 12px/1.1 var(--display);color:var(--ink2);white-space:nowrap}
-#profileCard .pv-tt{display:block;aspect-ratio:120/150}
-#profileCard .pv-tt .trophy{display:block;width:100%;height:100%;filter:drop-shadow(0 8px 10px rgba(0,0,0,.5))}
-#profileCard .pv-sh .tt-rays{display:none}
-#profileCard .pv-first{display:flex;align-items:center;gap:16px;min-width:0}
-#profileCard .pv-first .pv-tt{flex:none;width:56px}
-#profileCard .pv-first>div{display:grid;gap:5px;min-width:0}
-#profileCard .pv-first b{font:600 15px/1.2 var(--display)}
-#profileCard .pv-first small{font:500 13px/1.35 var(--display);color:var(--ink2)}
-/* a trophy not won yet: a pale ghost of it, not a dark blob */
-#profileCard .pv-ghost .trophy{filter:grayscale(1) brightness(2.2) contrast(.55);opacity:.16}
-#profileCard .pv-ghost :is(.tt-glow,.tt-rays){display:none}
-#profileCard .pv-ghost b{color:var(--ink2)}
-/* your current trophy: a small pink dot after its name (under it on the narrow shelf) */
-#profileCard .cur>b::after{content:"";display:inline-block;vertical-align:middle;width:5px;height:5px;margin:-2px 0 0 6px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent)}
-#profileCard :is(.pv-sh,.pv-tc).cur>b{overflow:visible}#profileCard .pv-sh.cur>b::after{display:block;margin:5px auto 0}
-/* recent form: the last six finishes in one glass strip, newest first */
-#profileCard .pv-form{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));border-radius:18px;background:var(--sf);border:1px solid var(--sf-edge);box-shadow:var(--sf-hi),var(--sf-drop);overflow:hidden}
-#profileCard .pv-form li{display:grid;justify-items:center;align-content:center;gap:6px;min-width:0;padding:14px 0 13px}
-#profileCard .pv-form li+li{box-shadow:inset 1px 0 0 var(--rule)}
-#profileCard .pv-form b{font:800 17px/1 var(--display);letter-spacing:-.03em;color:var(--ink)}
-#profileCard .pv-form small{font:500 12px/1 var(--display);color:var(--ink2);font-variant-numeric:tabular-nums;white-space:nowrap}
-#profileCard .pv-form li.p1{background:rgba(255,255,255,.05)}#profileCard .pv-form li.p1 b{color:#fff}
+/* trophies: the art in full colour on its own plinth, under a spotlight; your best one with its rays turning; one not won yet
+   is its silhouette with a rim of light */
+#profileCard .pv-tt{position:relative;display:block;aspect-ratio:168/210}
+#profileCard .pv-tt .trophy{position:relative;display:block;width:100%;height:100%;filter:drop-shadow(0 10px 12px rgba(0,0,0,.55))}
+#profileCard .pv-tt .tt-rays{display:none}
+#profileCard .best .pv-tt .tt-rays{display:inline;transform-box:view-box;transform-origin:80px 60px;animation:pvspin 30s linear infinite}
+#profileCard .best{--rg:rgba(255,246,222,.13)}
+#profileCard .best .pv-tt::before{content:"";position:absolute;inset:-14% -24% 18%;border-radius:50%;pointer-events:none;
+  background:conic-gradient(from 0deg at 50% 50%,transparent 0,var(--rg) 5%,transparent 10%,transparent 17%,var(--rg) 22%,transparent 27%,transparent 34%,var(--rg) 39%,transparent 44%,transparent 51%,var(--rg) 56%,transparent 61%,transparent 68%,var(--rg) 73%,transparent 78%,transparent 85%,var(--rg) 90%,transparent 95%);
+  -webkit-mask:radial-gradient(closest-side,#000 20%,transparent 100%);mask:radial-gradient(closest-side,#000 20%,transparent 100%);animation:pvspin 40s linear infinite reverse}
+#profileCard .lock .trophy{filter:brightness(0) drop-shadow(0 0 .7px rgba(170,235,225,.6)) drop-shadow(0 0 10px rgba(170,235,225,.08));opacity:.78}
+#profileCard .lock :is(.tt-glow,.tt-rays){display:none}
+/* Overview: your best trophy on the stage, the one before it on the left, the next to win on the right */
+#profileCard .pv-show{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.55fr) minmax(0,1fr);gap:4px;padding-top:30px;isolation:isolate}
+#profileCard .pv-show.solo{grid-template-columns:minmax(0,1fr)}
+#profileCard .pv-nic{position:relative;justify-self:stretch;display:grid;justify-items:center;align-items:end;isolation:isolate}
+#profileCard .pv-show .pv-nic{padding-bottom:8px}
+#profileCard .pv-show .pv-nic::after{content:"";position:absolute;z-index:-1;left:50%;bottom:-4px;width:min(120%,130px);height:22px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(closest-side,rgba(255,255,255,.09),rgba(255,255,255,.025) 60%,transparent)}
+#profileCard .pv-ped.main .pv-nic::after{width:min(130%,230px);height:30px;bottom:-7px;background:radial-gradient(closest-side,rgba(255,255,255,.16),rgba(255,255,255,.04) 58%,transparent)}
+#profileCard .pv-ped.main .pv-nic::before{content:"";position:absolute;z-index:-2;left:50%;top:-30px;bottom:0;width:min(160%,280px);transform:translateX(-50%);pointer-events:none;
+  background:radial-gradient(42% 58% at 50% 38%,rgba(255,255,255,.075),transparent 72%)}
+#profileCard .pv-ped{position:relative;display:grid;grid-template-rows:1fr auto;justify-items:center;min-width:0;text-align:center;isolation:isolate}
+#profileCard .pv-cap{display:grid;justify-items:center;align-content:start;gap:5px;min-width:0;max-width:100%;min-height:52px;padding-top:12px}
+#profileCard .pv-ped .pv-tt{width:min(100%,84px)}
+#profileCard .pv-ped.main .pv-tt{width:min(100%,150px)}
+#profileCard .pv-ped b{max-width:100%;font:700 15px/1.15 var(--display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#profileCard .pv-ped.main b{font:800 20px/1.1 var(--display);letter-spacing:-.025em}
+#profileCard .pv-ped small{min-height:16px;font:500 13px/1.2 var(--display);color:var(--ink2);white-space:nowrap}
+#profileCard .pv-ped.lock b{color:var(--ink2)}
+#profileCard .pv-ped .pv-bar{width:min(100%,84px);height:5px;margin:2px 0 1px}
+#profileCard .pv-ped.first .pv-tt{width:110px}
+#profileCard .pv-ped.first small{white-space:normal;max-width:260px;line-height:1.35}
+/* Trophies: all nine in a cabinet, three to a shelf */
+#profileCard .pv-case{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:0 -4px}
+#profileCard .pv-tc{position:relative;display:grid;justify-items:center;align-content:start;gap:4px;min-width:0;padding:0 4px 22px;text-align:center}
+#profileCard .pv-tc .pv-nic{padding-top:22px}
+#profileCard .pv-tc .pv-tt{width:min(100%,96px)}
+#profileCard .pv-tc .pv-nic::after{content:"";position:absolute;z-index:-1;left:0;right:0;top:100%;height:18px;margin-top:-3px;border-top:1px solid rgba(255,255,255,.14);background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,0))} /* the shelf */
+#profileCard .pv-tc.got .pv-nic::before{content:"";position:absolute;z-index:-2;inset:0 0 -3px;pointer-events:none;background:radial-gradient(52% 78% at 50% 0%,rgba(255,255,255,.1),rgba(255,255,255,.03) 55%,transparent 80%)}
+#profileCard .pv-tc.best .pv-nic::before{background:radial-gradient(58% 85% at 50% 0%,rgba(255,255,255,.17),rgba(255,255,255,.05) 55%,transparent 82%)}
+#profileCard .pv-tc>b{margin-top:16px}
+#profileCard .pv-tc b{max-width:100%;font:700 15px/1.15 var(--display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#profileCard .pv-tc small{font:500 12.5px/1.2 var(--display);color:var(--ink2);white-space:nowrap}
+#profileCard .pv-tc.lock b{color:var(--ink2)}
+#profileCard .pv-tc.lock:not(.nx) small{color:var(--muted)}
+#profileCard .pv-tc .pv-bar{width:min(100%,78px);height:5px;margin:3px 0 2px}
+#profileCard .pv-note{margin:-2px 0 0;font:500 13px/1.4 var(--display);color:var(--muted)}
 /* skins you own */
 #profileCard .pf-inv{display:flex;gap:14px;margin:-8px -18px -6px;padding:8px 18px 6px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scrollbar-width:none;touch-action:pan-x pan-y;
   -webkit-mask-image:linear-gradient(90deg,transparent,#000 14px,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,transparent,#000 14px,#000 calc(100% - 28px),transparent)}
 #profileCard .pf-inv::-webkit-scrollbar{display:none}
-#profileCard .pf-it{appearance:none;position:relative;flex:none;width:68px;display:grid;justify-items:center;gap:8px;padding:0;border:0;background:none;color:var(--ink2);cursor:pointer;scroll-snap-align:start}
-#profileCard .pf-it canvas{width:60px;height:60px;border-radius:50%;background:radial-gradient(circle at 50% 38%,rgba(255,255,255,.07),rgba(0,0,0,.35) 72%);box-shadow:0 0 0 1px var(--sf-edge),0 8px 16px rgba(0,0,0,.35);transition:transform .12s}
-#profileCard .pf-it span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:500 12px/1.1 var(--display)}
+#profileCard .pf-it{appearance:none;position:relative;flex:none;width:76px;display:grid;justify-items:center;gap:8px;padding:0;border:0;background:none;color:var(--ink2);cursor:pointer;scroll-snap-align:start}
+#profileCard .pf-it canvas{width:68px;height:68px;border-radius:50%;background:radial-gradient(circle at 50% 38%,rgba(255,255,255,.07),rgba(0,0,0,.35) 72%);box-shadow:0 0 0 1px var(--sf-edge),0 8px 16px rgba(0,0,0,.35);transition:transform .12s}
+#profileCard .pf-it span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:500 13px/1.1 var(--display)}
 #profileCard .pf-it.on canvas{box-shadow:0 0 0 2px #061113,0 0 0 4px var(--accent),0 0 20px rgba(255,92,138,.4)}
 #profileCard .pf-it.on span{color:#fff}
 #profileCard .pf-it:active canvas,#profileCard .pf-it:active i{transform:scale(.92)}
-#profileCard .pf-get i{width:60px;height:60px;box-sizing:border-box;border-radius:50%;display:grid;place-items:center;border:1.5px dashed rgba(255,255,255,.22);color:var(--ink2);font:300 30px/1 var(--display);font-style:normal;transition:transform .12s}
+#profileCard .pf-get i{width:68px;height:68px;box-sizing:border-box;border-radius:50%;display:grid;place-items:center;border:1.5px dashed rgba(255,255,255,.22);color:var(--ink2);font:300 30px/1 var(--display);font-style:normal;transition:transform .12s}
 /* account: one quiet row between hairlines; Delete account under it, last on the page */
 #profileCard .pf-acct{display:block;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);margin-top:-10px}
 #profileCard .pf-who{display:flex;align-items:center;gap:14px;min-width:0;min-height:64px;list-style:none;cursor:pointer;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
@@ -1590,85 +1629,62 @@ img.sk-im{display:block;-webkit-user-drag:none;user-select:none;-webkit-touch-ca
 #profileCard .pf-hint{margin:0;font:500 13px/1.3 var(--display);color:var(--ink2)}
 #profileCard .pv-del{appearance:none;justify-self:center;min-height:44px;margin:-14px 0 0;padding:0 16px;border:0;background:none;color:rgba(255,138,148,.8);font:500 13px var(--display);cursor:pointer;transition:color .15s}
 #profileCard .pv-del:hover{color:#ff8a94}#profileCard .pv-del:active{transform:scale(.97)}
-/* stats: two rings, the rating line, then the rest of the numbers in a compact grid */
+/* Stats: two rings, the rating line, three numbers, the AI rating, recent runs */
 #profileCard .pv-stats{display:grid;gap:30px;min-width:0}
 #profileCard .pv-rings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 #profileCard .pv-rg{display:grid;justify-items:center;gap:5px;min-width:0;text-align:center}
-#profileCard .pv-ring{position:relative;width:min(34vw,132px);aspect-ratio:1;display:grid;place-items:center;margin-bottom:8px}
+#profileCard .pv-ring{position:relative;width:min(36vw,140px);aspect-ratio:1;display:grid;place-items:center;margin-bottom:8px}
 #profileCard .pv-ring svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
-#profileCard .pv-ring circle{fill:none;stroke-width:7}
+#profileCard .pv-ring circle{fill:none;stroke-width:8}
 #profileCard .pv-ring .tr{stroke:rgba(255,255,255,.075)}
-#profileCard .pv-ring .arc{stroke:#fff;stroke-linecap:round;filter:drop-shadow(0 0 6px rgba(255,255,255,.28));animation:pvarc 1.1s cubic-bezier(.2,.8,.2,1) both}
-#profileCard .pv-rg+.pv-rg .arc{stroke:rgba(255,255,255,.62);filter:none}
+#profileCard .pv-rg+.pv-rg .arc{opacity:.6}
+#profileCard .pv-ring .arc{stroke:url(#pvRingG);stroke-linecap:round;filter:drop-shadow(0 0 7px var(--th));animation:pvarc 1.2s cubic-bezier(.2,.8,.2,1) both}
 @keyframes pvarc{from{stroke-dasharray:0 999}}
-#profileCard .pv-ring b{font:800 28px/1 var(--display);letter-spacing:-.04em;font-variant-numeric:tabular-nums}
-#profileCard .pv-rg>span{font:700 15px/1.1 var(--display)}
+#profileCard .pv-ring b{font:800 32px/1 var(--display);letter-spacing:-.045em;font-variant-numeric:tabular-nums}
+#profileCard .pv-rg>span{font:700 16px/1.1 var(--display)}
 #profileCard .pv-rg>small{font:500 13px/1.1 var(--display);color:var(--ink2)}
-#profileCard .pv-chart{display:grid;gap:14px;min-width:0;padding:18px 18px 14px;border-radius:22px;background:var(--sf);border:1px solid var(--sf-edge);box-shadow:var(--sf-hi),var(--sf-drop)}
-#profileCard .pv-ch{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+#profileCard .pv-chart{display:grid;gap:14px;min-width:0;padding:18px 18px 16px;border-radius:22px;background:var(--sf);border:1px solid var(--sf-edge);box-shadow:var(--sf-hi),var(--sf-drop)}
+#profileCard .pv-ch{display:flex;align-items:center;justify-content:space-between;gap:12px}
 #profileCard .pv-ch>div{display:grid;gap:6px;min-width:0}
-#profileCard .pv-ch>div:last-child{justify-items:end;text-align:right}
-#profileCard .pv-ch b{font:800 28px/1 var(--display);letter-spacing:-.04em;font-variant-numeric:tabular-nums}
-#profileCard .pv-ch strong{font:700 15px/1 var(--display);font-variant-numeric:tabular-nums}
+#profileCard .pv-ch b{font:800 30px/1 var(--display);letter-spacing:-.045em;font-variant-numeric:tabular-nums}
+#profileCard .pv-ch strong{flex:none;padding:7px 11px;border-radius:999px;background:rgba(255,255,255,.07);font:700 15px/1 var(--display);font-variant-numeric:tabular-nums}
 #profileCard .pv-ch small{font:500 13px/1.1 var(--display);color:var(--ink2);white-space:nowrap}
-#profileCard .pv-plot{position:relative;height:118px;margin:0 2px}
-#profileCard .pv-pw{position:absolute;inset:0 44px 0 0}
+#profileCard .pv-plot{position:relative;height:112px;margin:0 6px 0 2px}
 #profileCard .pv-plot svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
-#profileCard .pv-plot .ln{fill:none;stroke:#fff;stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
+#profileCard .pv-plot .ln{fill:none;stroke:var(--tl);stroke-width:2.4;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
 #profileCard .pv-plot .ar{fill:url(#pvArea)}
-#profileCard .pv-plot .gl{stroke:rgba(255,255,255,.09);stroke-width:1;stroke-dasharray:3 4;vector-effect:non-scaling-stroke}
-#profileCard .pv-plot i{position:absolute;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:#fff;box-shadow:0 0 0 4px rgba(255,255,255,.14),0 0 14px rgba(255,255,255,.6)}
-#profileCard .pv-plot em{position:absolute;right:0;font:500 11.5px/1 var(--display);font-style:normal;color:var(--muted);font-variant-numeric:tabular-nums;transform:translateY(-50%)}
-#profileCard .pv-pw svg{animation:pvdraw 1.1s cubic-bezier(.3,.7,.2,1) both}
+#profileCard .pv-plot i{position:absolute;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;border-radius:50%;background:var(--tl);box-shadow:0 0 0 4px var(--tg),0 0 16px var(--tc)}
+#profileCard .pv-plot svg{animation:pvdraw 1.1s cubic-bezier(.3,.7,.2,1) both}
 @keyframes pvdraw{from{clip-path:inset(0 100% 0 0)}}
 #profileCard .pv-plot i{animation:pvfade .4s .85s both}
 @keyframes pvfade{from{opacity:0;transform:scale(.4)}}
 #profileCard .pv-pk{font:500 13px/1.2 var(--display);color:var(--ink2)}
 #profileCard .pv-plot.empty{display:grid;place-items:center;height:96px;border-radius:14px;border:1px dashed rgba(255,255,255,.1);font:500 13px/1.35 var(--display);color:var(--ink2);text-align:center;padding:0 18px}
 #profileCard .pv-nums{margin:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:14px}
-#profileCard .pv-nums div{display:grid;gap:6px;min-width:0;padding:15px 0 14px;border-top:1px solid var(--rule)}
-#profileCard .pv-nums dd{order:-1;margin:0;font:800 20px/1 var(--display);letter-spacing:-.03em;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#profileCard .pv-nums div{display:grid;gap:7px;min-width:0;padding:16px 0 4px;border-top:1px solid var(--rule)}
+#profileCard .pv-nums dd{order:-1;margin:0;font:800 24px/1 var(--display);letter-spacing:-.04em;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #profileCard .pv-nums dt{font:500 13px/1.15 var(--display);color:var(--ink2)}
-/* recent runs: flat rows between hairlines */
+/* the AI rating: its own line, quieter than your rank */
+#profileCard .pv-ai{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:14px;min-width:0;padding:12px 18px 12px 12px;border-radius:18px;background:var(--sf);border:1px solid var(--sf-edge);box-shadow:var(--sf-hi)}
+#profileCard .pv-aie{display:block;width:40px;height:40px;filter:drop-shadow(0 4px 6px rgba(0,0,0,.45))}
+#profileCard .pv-ai span{display:grid;gap:4px;min-width:0}
+#profileCard .pv-ai small{font:500 13px/1 var(--display);color:var(--ink2)}
+#profileCard .pv-ai b{font:700 16px/1.1 var(--display);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#profileCard .pv-ai em{font:800 22px/1 var(--display);font-style:normal;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+/* recent runs: where you finished, how long you lived, what it did to your rating */
 #profileCard .pf-runs{list-style:none;margin:0;padding:0;display:grid}
-#profileCard .pf-runs li{display:grid;grid-template-columns:54px minmax(0,1.15fr) minmax(0,1fr) minmax(0,.8fr) auto;align-items:center;gap:8px;min-height:56px;border-top:1px solid var(--rule)}
+#profileCard .pf-runs li{display:grid;grid-template-columns:64px minmax(0,1fr) auto;align-items:center;gap:10px;min-height:56px;border-top:1px solid var(--rule)}
 #profileCard .pf-runs li:last-child{border-bottom:1px solid var(--rule)}
-#profileCard .pf-pl{display:grid;gap:4px}
-#profileCard .pf-pl b{font:800 16px/1 var(--display);letter-spacing:-.02em;color:var(--ink)}
-#profileCard .pf-pl.p1 b{color:#fff}
-#profileCard .pf-pl small{font:500 12px/1 var(--display);color:var(--ink2)}
-#profileCard .pf-m{display:flex;align-items:center;gap:6px;min-width:0;color:var(--muted)}
-#profileCard .pf-m svg{width:15px;height:15px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-#profileCard .pf-m b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:600 14px/1 var(--display);color:var(--ink);font-variant-numeric:tabular-nums}
-#profileCard .pf-runs em{justify-self:end;font:700 14px/1 var(--display);font-style:normal;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+#profileCard .pf-runs li>b{font:800 18px/1 var(--display);letter-spacing:-.03em;color:var(--ink)}
+#profileCard .pf-runs li>b.p1{color:#fff}
+#profileCard .pf-runs li>span{font:500 14px/1 var(--display);color:var(--ink2);font-variant-numeric:tabular-nums}
+#profileCard .pf-runs em{justify-self:end;font:700 15px/1 var(--display);font-style:normal;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
 #profileCard .pf-runs em.dn{color:var(--ink2)}
-#profileCard .pf-runs em small{margin-right:5px;font:600 11px/1 var(--display);letter-spacing:.06em;color:var(--muted)}
-#profileCard .pf-runs em.pr{font:500 12px/1 var(--display);color:var(--muted)}
-/* Trophies: the next one to win, in the glass */
-#profileCard .pv-nt{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:20px;min-width:0;padding:18px 20px 18px 16px;border-radius:22px;background:var(--sf);border:1px solid var(--sf-edge);box-shadow:var(--sf-hi),var(--sf-drop)}
-#profileCard .pv-nt:empty{display:none}
-#profileCard .pv-nt .pv-tt{width:84px}
-#profileCard .pv-nt>div{display:grid;gap:8px;min-width:0}
-#profileCard .pv-nt small{font:500 13px/1.2 var(--display);color:var(--ink2)}
-#profileCard .pv-nt b{font:800 24px/1.05 var(--display);letter-spacing:-.03em}
-#profileCard .pv-nt .pv-bar{height:5px;margin-top:4px}
-#profileCard .pv-nt strong{font:600 15px/1.2 var(--display)}
-/* the trophies you hold: three to a row, no frames */
-#profileCard .pv-case{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px 10px}
-#profileCard .pv-tc{display:grid;justify-items:center;align-content:start;gap:5px;min-width:0;text-align:center}
-#profileCard .pv-tc .pv-tt{width:min(100%,92px);margin-bottom:4px}
-#profileCard .pv-tc b{max-width:100%;font:700 15px/1.15 var(--display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#profileCard .pv-tc small{font:500 12.5px/1.2 var(--display);color:var(--ink2);white-space:nowrap}
-#profileCard .pv-case .pv-empty{grid-column:1/-1;margin:0;font:500 13px/1.35 var(--display);color:var(--ink2)}
-/* the ones still to come: a row of small ghosts with the rating each takes */
-#profileCard .pv-soon{grid-column:1/-1;display:grid;gap:12px;margin-top:4px}
-#profileCard .pv-soon>small{font:600 13px/1 var(--display);color:var(--ink2)}
-#profileCard .pv-soon>div{display:flex;gap:4px;margin:0 -4px;padding:0 4px;overflow-x:auto;scrollbar-width:none;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 24px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 24px),transparent)}
-#profileCard .pv-soon>div::-webkit-scrollbar{display:none}
-#profileCard .pv-soon .pv-sh{flex-basis:80px}#profileCard .pv-soon .pv-tt{width:46px}#profileCard .pv-soon .pv-sh b{font-size:12.5px}
-#profileCard .pv-note{margin:-2px 0 0;font:500 13px/1.4 var(--display);color:var(--muted)}
+#profileCard .pf-runs em small{margin-right:6px;font:600 11px/1 var(--display);letter-spacing:.06em;color:var(--muted)}
+#profileCard .pf-runs em.pr{font:500 13px/1 var(--display);color:var(--muted)}
 /* achievements: a progress line, the badges you have, the next few with how far along you are; all of them on request */
-#profileCard .pv-achbar{height:4px;margin-top:-4px}
+#profileCard .pv-achbar{height:5px;margin-top:-4px}
+#profileCard .pv-achbar i{background:linear-gradient(90deg,rgba(255,255,255,.35),#fff);box-shadow:none}
 #profileCard .pv-achs{display:grid;gap:0}
 #profileCard .pv-got{display:flex;flex-wrap:wrap;gap:10px;padding:2px 0 14px}
 #profileCard .pv-a{display:grid;grid-template-columns:40px minmax(0,1fr) auto;align-items:center;column-gap:14px;row-gap:3px;min-height:64px;padding:10px 0;border-top:1px solid var(--rule)}
@@ -1678,6 +1694,8 @@ img.sk-im{display:block;-webkit-user-drag:none;user-select:none;-webkit-touch-ca
 #profileCard .pv-a span{grid-column:2;font:500 13px/1.3 var(--display);color:var(--ink2)}
 #profileCard .pv-a em{grid-column:3;grid-row:1/3;align-self:center;font:500 12.5px/1 var(--display);font-style:normal;color:var(--ink2);font-variant-numeric:tabular-nums;white-space:nowrap}
 #profileCard .pv-a .pv-bar{grid-column:2/4;height:4px;margin-top:5px}
+#profileCard .pv-a .pv-bar i{background:linear-gradient(90deg,rgba(255,255,255,.3),rgba(255,255,255,.85));box-shadow:none}
+#profileCard .pv-a .pv-bar i::after{display:none}
 #profileCard .pv-a.got b{color:#fff}
 #profileCard .pv-hx{position:relative;display:grid;place-items:center;width:40px;aspect-ratio:1/1.1;clip-path:polygon(50% 0,95% 25%,95% 75%,50% 100%,5% 75%,5% 25%);background:rgba(255,255,255,.14)}
 #profileCard .pv-hx::before{content:"";position:absolute;inset:1.5px;clip-path:inherit;background:#0b1a1d}
@@ -1693,25 +1711,21 @@ img.sk-im{display:block;-webkit-user-drag:none;user-select:none;-webkit-touch-ca
 #profileCard .pv-hero,#profileCard .pv-tabs{animation:pfin .5s cubic-bezier(.2,.8,.2,1) both}#profileCard .pv-tabs{animation-delay:.06s}
 /* wide screens: you on the left, held in place, the tabs scrolling on the right */
 @media (orientation:landscape){
-  #overlay>#profileCard.page{grid-template-columns:minmax(260px,.82fr) minmax(0,1.4fr);grid-template-areas:"top top" "hero tabs" "hero pane";grid-template-rows:auto auto 1fr;
-    background:radial-gradient(38% 60% at 22% 30%,var(--tg),transparent 72%),linear-gradient(180deg,rgba(2,8,9,.94),rgba(2,8,9,.88))}
+  #overlay>#profileCard.page{grid-template-columns:minmax(280px,.82fr) minmax(0,1.4fr);grid-template-areas:"top top" "hero tabs" "hero pane";grid-template-rows:auto auto 1fr;
+    background:radial-gradient(40% 70% at 22% 30%,var(--tg),transparent 75%),linear-gradient(180deg,rgba(2,8,9,.95),rgba(2,8,9,.9))}
   #profileCard .pv-hero{grid-area:hero;position:sticky;top:84px;align-self:start}
   #profileCard .pv-tabs{grid-area:tabs}#profileCard .pv-pane{grid-area:pane}
-  #profileCard .pv-ranks{grid-template-columns:minmax(0,1fr)}
-  #profileCard .pv-ai{padding:14px 0 16px;border-left:0;border-top:1px solid var(--rule)}
-  #profileCard .pv-rank{padding-right:0}
 }
 @media (orientation:landscape) and (max-height:520px){
-  #profileCard .pv-hero{top:64px;gap:14px}#profileCard .pv-ava{width:96px;margin-bottom:8px}#profileCard .pv-name{font-size:23px}#profileCard .pv-xp{margin-top:10px}
-  #profileCard .pv-ranks{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}#profileCard .pv-ai{padding:12px 0 12px 12px;border-top:0;border-left:1px solid var(--rule)}
-  #profileCard .pv-rrow{gap:8px}#profileCard .pv-tier{font-size:12px}
-  #profileCard :is(.pv-rank,.pv-ai){gap:8px;padding-top:12px;padding-bottom:12px}#profileCard .pv-rank{padding-right:12px}
-  #profileCard .pv-rk b{font-size:24px}#profileCard .pv-crest{width:36px;height:36px}#profileCard .pv-aie{width:32px;height:32px}
-  #profileCard .pv-pane{gap:26px}#profileCard .pv-tabs button{height:40px}
+  #profileCard .pv-hero{top:64px;gap:12px}#profileCard .pv-stage{width:92px;margin:10px 0 12px}#profileCard .pv-motes{display:none}
+  #profileCard .pv-name{font-size:24px}#profileCard .pv-xp{margin-top:8px}
+  #profileCard .pv-rank{gap:12px;padding:12px 14px 12px 10px}#profileCard .pv-crest{width:52px;height:52px}#profileCard .pv-rk{gap:8px}
+  #profileCard .pv-rt b{font-size:19px}#profileCard .pv-rt em{font-size:19px}#profileCard .pv-rt b.long{font-size:16px}
+  #profileCard .pv-pane{gap:28px}#profileCard .pv-tabs button{height:40px}
 }
-@media (min-width:1000px) and (min-height:640px){#profileCard .pv-ava{width:240px}#profileCard .pv-name{font-size:34px}}
-@media (max-width:380px){#profileCard .pv-name{font-size:27px}#profileCard .pv-rk b{font-size:25px}#profileCard .pv-crest{width:38px;height:38px}#profileCard .pv-aie{width:34px;height:34px}
-  #profileCard .pf-runs li{grid-template-columns:48px minmax(0,1.2fr) minmax(0,1fr) auto}#profileCard .pf-eat{display:none}#profileCard .pv-nums dd{font-size:18px}}
+@media (min-width:1000px) and (min-height:640px){#profileCard .pv-stage{width:220px}#profileCard .pv-name{font-size:36px}}
+@media (max-width:380px){#profileCard .pv-name{font-size:30px}#profileCard .pv-crest{width:64px;height:64px}#profileCard .pv-rt b{font-size:21px}#profileCard .pv-rt em{font-size:21px}#profileCard .pv-rt b.long{font-size:18px}
+  #profileCard .pv-nums dd{font-size:21px}}
 /* @ui:profile end */
 
 /* @ui:ranks-settings */
@@ -2745,21 +2759,22 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
 
   <div class="card panel page" id="profileCard" hidden>
     <header class="pg-top"><button class="lb-icon back" type="button" aria-label="Back to the lobby"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><h2>Profile</h2><button class="lb-icon pv-set" id="profSet" type="button" aria-label="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button></header>
-    <!-- the player: your cell big, your name and level under it, then both ratings side by side -->
+    <!-- the player: your cell alive in your rank's light, your name and level, then your rank (the one against players; vs AI is on Stats) -->
     <section class="pv-hero" id="pvCard" aria-label="Your profile">
       <div class="pv-me">
-        <div class="pv-ava"><canvas id="profCv" width="320" height="320" aria-hidden="true"></canvas></div>
+        <div class="pv-stage" aria-hidden="true">
+          <span class="pv-halo"></span><span class="pv-motes" id="pvMotes"></span>
+          <div class="pv-ava"><canvas id="profCv" width="320" height="320"></canvas></div>
+        </div>
         <h2 class="pv-name" id="profName">Unnamed cell</h2>
         <p class="pv-sub" id="pvSub"></p>
-        <div class="pv-xp" id="pLv" hidden><b>Level <span id="pLvN">1</span></b><span class="pv-bar pv-xpbar" aria-hidden="true"><i id="pLvFill"></i></span><span class="pv-xpn" id="pLvXp"></span></div>
+        <div class="pv-xp" id="pLv" hidden><b class="pv-lvb" id="pLvN">1</b><span class="pv-bar pv-xpbar" aria-hidden="true"><i id="pLvFill"></i></span><span class="pv-xpn" id="pLvXp"></span></div>
       </div>
-      <div class="pv-ranks">
-        <button type="button" class="pv-rank" id="pvRank" aria-label="Your rating against players. Open your trophies"><small class="pv-k">vs players</small>
-          <span class="pv-rrow"><span class="pv-crest" id="pBadge" aria-hidden="true"></span><span class="pv-rk"><b id="pRating">1000</b><span class="pv-tier" id="pTierTxt">Microbe</span></span></span>
-          <span class="pv-bar pv-rbar" aria-hidden="true"><i id="pFill"></i></span><small class="pv-next" id="pNext"></small></button>
-        <div class="pv-ai" id="pAi"><small class="pv-k">vs AI</small>
-          <span class="pv-rrow"><span class="pv-aie" id="pAiMc" aria-hidden="true"></span><span class="pv-rk"><b id="pAiRating">1000</b><span class="pv-tier" id="pAiTier">Microbe</span></span></span></div>
-      </div>
+      <button type="button" class="pv-rank" id="pvRank" aria-label="Your rank. Open your trophies">
+        <span class="pv-crest" id="pBadge" aria-hidden="true"></span>
+        <span class="pv-rk"><span class="pv-rt"><b id="pTierTxt">Amoeba</b><em id="pRating">0</em></span>
+          <span class="pv-bar pv-rbar" aria-hidden="true"><i id="pFill"></i></span><small class="pv-next" id="pNext"></small></span>
+      </button>
     </section>
     <div class="pv-tabs" role="tablist" aria-label="Profile">
       <button type="button" role="tab" id="pvTabOv" data-pane="pvOv" aria-controls="pvOv" aria-selected="true">Overview</button>
@@ -2769,11 +2784,7 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
     <div class="pv-pane" id="pvOv" role="tabpanel" aria-labelledby="pvTabOv">
       <section class="pv-sec">
         <div class="pv-h"><b>Trophies</b><span class="pv-cnt" id="pvShelfN"></span><button type="button" class="pv-more" data-go="pvTr">See all</button></div>
-        <div class="pv-shelf" id="pvShelf"></div>
-      </section>
-      <section class="pv-sec" id="formField" hidden>
-        <div class="pv-h"><b>Recent form</b><button type="button" class="pv-more" data-go="pvSt">Stats</button></div>
-        <ol class="pv-form" id="pvForm"></ol>
+        <div class="pv-show" id="pvShelf"></div>
       </section>
       <section class="pv-sec" id="invField">
         <div class="pv-h"><b>Skins</b><span class="pv-cnt" id="pSkins">0</span><button type="button" class="pv-more" id="invOpen">Inventory</button></div>
@@ -2800,7 +2811,6 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
       </section>
     </div>
     <div class="pv-pane" id="pvTr" role="tabpanel" aria-labelledby="pvTabTr" hidden>
-      <section class="pv-nt" id="pvNext" aria-live="polite"></section>
       <section class="pv-sec">
         <div class="pv-h"><b>Rank trophies</b><span class="pv-cnt" id="pvCaseN"></span></div>
         <div class="pv-case" id="pvCase"></div>
@@ -6555,18 +6565,16 @@ $('deleteDone').addEventListener('click',()=>location.reload());
 function loadHistory(){try{const a=JSON.parse(localStorage.getItem('mitosis.history')||'[]');return Array.isArray(a)?a:[];}catch(e){return[];}}
 function recordRun(e){const h=loadHistory();h.push(e);try{localStorage.setItem('mitosis.history',JSON.stringify(h.slice(-40)));}catch(err){}} // 40: enough for the Profile's rating line
 function updateRunDelta(delta,rating,ai){const h=loadHistory();const last=h[h.length-1];if(!last||last.delta!=null||Date.now()-last.t>60000)return;last.delta=delta;last.rating=rating;if(ai)last.ai=1;try{localStorage.setItem('mitosis.history',JSON.stringify(h));}catch(err){}}
-/* Profile page: your cell, name and level, both ratings, then Overview (trophies, recent form, skins, account),
-   Stats (win and top-3 rings, the rating line, career numbers, recent runs) and Trophies (the next one, the ones you hold,
-   achievements) */
-const PF_IC={peak:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19.5l6.2-10 4.3 5.6 3-4.1 4.5 8.5z"/></svg>',time:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
-  eat:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.9 4A8.5 8.5 0 1 0 20 9.1 3.9 3.9 0 0 1 14.9 4z"/></svg>'};
+/* Profile page: your cell alive in your rank's light, your name and level, your rank; then Overview (your best trophy on a
+   stage, skins, account), Stats (win and top-3 rings, the rating line, three numbers, the AI rating, recent runs) and Trophies
+   (all nine in a cabinet, achievements) */
 const fmtStat=n=>{n=Math.max(0,Math.round(+n||0));return n>=1e6?(n/1e6).toFixed(n<1e7?1:0).replace(/\.0$/,'')+'M':n>=1e5?Math.round(n/1e3)+'K':n.toLocaleString();};
 const bestMass=()=>{try{return Math.round(+localStorage.getItem('mitosis.best')||0);}catch(e){return 0;}};
 function renderRuns(){const el=$('runList'),f=$('runsField');if(!el||!f)return;const h=loadHistory().slice(-5).reverse();f.hidden=!h.length;
   el.innerHTML=h.map(r=>{const pl=r.place|0,dl=typeof r.delta==='number'?r.delta:null,
     d=dl!=null?`<em class="${dl<0?'dn':''}">${r.ai?'<small>AI</small>':''}${dl>0?'+':dl<0?'−':'±'}${Math.abs(dl)}</em>`:r.practice?'<em class="pr">Practice</em>':'<em></em>',
-    lbl=`${pl?ordinal(pl)+' of '+r.of:'Unplaced'}, peak ${r.peak|0}, survived ${fmtT(r.sec|0)}, ate ${r.eaten|0}${dl!=null?(r.ai?', AI rating ':', rating ')+(dl>0?'+':'')+dl:r.practice?', practice':''}`;
-    return `<li aria-label="${escH(lbl)}"><span class="pf-pl${pl===1?' p1':''}"><b>${pl?ordinal(pl):'—'}</b>${pl&&r.of?`<small>of ${r.of|0}</small>`:''}</span><span class="pf-m">${PF_IC.peak}<b>${(r.peak|0).toLocaleString()}</b></span><span class="pf-m">${PF_IC.time}<b>${fmtT(r.sec|0)}</b></span><span class="pf-m pf-eat">${PF_IC.eat}<b>${r.eaten|0}</b></span>${d}</li>`;}).join('');}
+    lbl=`${pl?ordinal(pl)+' of '+r.of:'Unplaced'}, survived ${fmtT(r.sec|0)}${dl!=null?(r.ai?', AI rating ':', rating ')+(dl>0?'+':'')+dl:r.practice?', practice':''}`;
+    return `<li aria-label="${escH(lbl)}"><b class="${pl===1?'p1':''}">${pl?ordinal(pl):'—'}</b><span>${fmtT(r.sec|0)} alive</span>${d}</li>`;}).join('');}
 function renderInv(){ // the skins you own, worn one first; tapping any opens Inventory
   const el=$('invStrip');if(!el)return;const sk=settings.skin|0,mine=PREMIUM.filter(S=>ownsSkin(S.id)),worn=mine.find(S=>S.id===sk);
   $('pSkins').textContent=`${mine.length} of ${PREMIUM.length}`;
@@ -6579,7 +6587,7 @@ function drawInv(){const el=$('invStrip');if(!el)return;for(const cv of el.query
 let pfQueued=false,pfIntro=false,pfCount=0; // render after the caller finishes, so a wallet that brings the tier table shows its progress at once
 function renderProfile(){if(pfQueued||!$('profName'))return;pfQueued=true;Promise.resolve().then(()=>{pfQueued=false;renderProfileNow();});}
 const fmtDur=sec=>{const m=Math.floor(Math.max(0,sec|0)/60),h=Math.floor(m/60),d=Math.floor(h/24);return d?`${d}d ${h%24}h`:h?`${h}h ${m%60}m`:`${m}m`;};
-const fmtDay=t=>new Date(t).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'});
+const fmtDay=t=>{const d=new Date(t);return d.toLocaleDateString(undefined,d.getFullYear()===new Date().getFullYear()?{day:'numeric',month:'short'}:{day:'numeric',month:'short',year:'numeric'});}; // the year only when it isn't this one
 const pfSteps=()=>{const c=wallet.catalog;return c&&Array.isArray(c.steps)&&c.steps.length?c.steps:RANK_STEPS;}; // [{key, name}], Amoeba first
 const stepAt=k=>{const r=rankTable().find(x=>x.step===k);return r?r.at:null;}; // the rating a step starts at
 function trophiesHeld(){ // [{step, at}] from the server; a server from before trophies: the steps up to the current one, undated
@@ -6589,30 +6597,30 @@ function trophyNext(S,held){ // the lowest step whose trophy you don't hold: its
   const j=S.findIndex(st=>!held.has(st.key));if(j<0)return null;
   const r=wallet.rating|0,k=S[j].key,at=j&&ladderOn()?stepAt(k):null,lo=j?stepAt(S[j-1].key)||0:0,need=at==null?null:Math.max(0,at-r);
   return{k,j,at,need,pct:at==null?0:clamp((r-lo)/Math.max(1,at-lo),0,1),note:!j?'First ranked game':at==null?'Keep climbing':need>0?need.toLocaleString()+' to go':'Next ranked game'};}
-function renderTrophies(){const S=pfSteps(),held=new Map(trophiesHeld().map(t=>[t.step,t.at])),cur=rankOf(wallet.rating|0).step,nx=trophyNext(S,held);
+function renderTrophies(){const S=pfSteps(),held=new Map(trophiesHeld().map(t=>[t.step,t.at])),nx=trophyNext(S,held);
   $('pvShelfN').textContent=$('pvCaseN').textContent=`${held.size} of ${S.length}`;
-  const nm=k=>escH((S.find(st=>st.key===k)||rankStep(k)).name),got=S.filter(st=>held.has(st.key)).map(st=>st.key),last=S[S.length-1].key;
-  // Overview: your newest three trophies, then the next one as a pale ghost with what it takes (Trophies has them all)
-  const sh=$('pvShelf');sh.innerHTML=!got.length&&nx?`<div class="pv-first"><span class="pv-tt pv-ghost">${rankTrophy(nx.k)}</span><div><b>${nm(nx.k)}</b><small>Your first trophy comes with your first ranked game.</small></div></div>`
-    :got.slice(-3).map(k=>`<span class="pv-sh${k===cur?' cur':''}"><span class="pv-tt">${rankTrophy(k)}</span><b>${nm(k)}</b></span>`).join('')
-      +(nx?`<span class="pv-sh pv-ghost"><span class="pv-tt">${rankTrophy(nx.k)}</span><b>${nm(nx.k)}</b><small>${nx.note}</small></span>`:'');
-  // Trophies: the next one in the glass, the ones you hold with the day you won them, then the rest as small ghosts
-  $('pvNext').innerHTML=nx?`<span class="pv-tt pv-ghost">${rankTrophy(nx.k)}</span><div><small>Next trophy</small><b>${nm(nx.k)}</b>`
-      +(nx.at==null?`<strong>${nx.j?'Keep climbing to win it':'Play a ranked game to win it'}</strong>`:`<span class="pv-bar" aria-hidden="true"><i style="width:${(nx.pct*100).toFixed(1)}%"></i></span><small><strong>${nx.note}</strong> · at ${nx.at.toLocaleString()}</small>`)+'</div>'
-    :`<span class="pv-tt">${rankTrophy(last)}</span><div><small>Every trophy won</small><b>${nm(last)}</b><strong>The top of the ladder</strong></div>`;
-  const soon=S.filter(st=>!held.has(st.key)&&(!nx||st.key!==nx.k)).map(st=>st.key);
-  $('pvCase').innerHTML=(got.length?got.map(k=>{const at=held.get(k);return `<div class="pv-tc${k===cur?' cur':''}"><span class="pv-tt">${rankTrophy(k)}</span><b>${nm(k)}</b><small>${at?fmtDay(at):'Won'}</small></div>`;}).join('')
-      :'<p class="pv-empty">Your first trophy comes with your first ranked game.</p>')
-    +(soon.length?`<div class="pv-soon"><small>Still to come</small><div>${soon.map(k=>{const at=ladderOn()?stepAt(k):null;return `<span class="pv-sh pv-ghost"><span class="pv-tt">${rankTrophy(k)}</span><b>${nm(k)}</b><small>${at!=null?at.toLocaleString():''}</small></span>`;}).join('')}</div></div>`:'');}
-function renderForm(){const el=$('pvForm'),f=$('formField');const h=loadHistory().filter(r=>!r.practice).slice(-6).reverse();f.hidden=!h.length;
-  el.style.gridTemplateColumns=`repeat(${Math.max(1,h.length)},minmax(0,1fr))`;
-  el.innerHTML=h.map(r=>{const pl=r.place|0,d=typeof r.delta==='number'?r.delta:null;
-    return `<li class="${pl===1?'p1':''}" aria-label="${pl?ordinal(pl)+' of '+(r.of|0):'Unplaced'}${d!=null?(r.ai?', AI rating ':', rating ')+(d>0?'+':'')+d:''}"><b>${pl?ordinal(pl):'—'}</b><small>${r.ai&&d!=null?'AI ':''}${d==null?'·':d>0?'+'+d:d<0?'−'+(-d):'±0'}</small></li>`;}).join('');}
+  const nm=k=>escH((S.find(st=>st.key===k)||rankStep(k)).name),got=S.filter(st=>held.has(st.key)).map(st=>st.key),best=got[got.length-1];
+  const art=k=>`<span class="pv-nic"><span class="pv-tt">${rankTrophy(k)}</span></span>`,won=k=>held.get(k)?fmtDay(held.get(k)):'',
+    bar=f=>`<span class="pv-bar" aria-hidden="true"><i style="width:${(f*100).toFixed(1)}%"></i></span>`;
+  // Overview: your best trophy on the stage, the one before it on the left, the next to win on the right, dark;
+  // a new player sees the first one, dark, and how to win it
+  const sh=$('pvShelf'),ped=(k,cls,sub,b)=>`<div class="pv-ped ${cls}">${art(k)}<span class="pv-cap"><b>${nm(k)}</b>${b||''}<small>${sub}</small></span></div>`;
+  sh.className='pv-show'+(best?'':' solo');
+  sh.innerHTML=!best?(nx?ped(nx.k,'main lock first','Your first trophy comes with your first ranked game.'):'')
+    :(got.length>1?ped(got[got.length-2],'',''):'<div class="pv-ped"></div>')
+      +ped(best,'main best',won(best)?'Won '+won(best):'')
+      +(nx?ped(nx.k,'lock',nx.note,nx.at!=null?bar(nx.pct):''):'<div class="pv-ped"></div>');
+  // Trophies: all of them in the cabinet, three to a shelf: won ones lit, your best with its rays, the rest dark with what they take
+  $('pvCase').innerHTML=S.map(st=>{const k=st.key,h=held.has(k),isNx=!!nx&&k===nx.k,at=ladderOn()?stepAt(k):null;
+    return `<div class="pv-tc ${h?'got'+(k===best?' best':''):'lock'+(isNx?' nx':'')}">${art(k)}<b>${nm(k)}</b>`
+      +(h?`<small>${won(k)||'Won'}</small>`:isNx?(nx.at!=null?bar(nx.pct):'')+`<small>${nx.note}</small>`:`<small>${at!=null?'At '+at.toLocaleString():''}</small>`)+'</div>';}).join('');}
 function renderStats(){ // the server's lifetime stats; on a server without them, only what the wallet and this device know
   const s=wallet.stats||null,pl=s?s.played|0:0,wins=s?s.wins|0:0,pod=s?s.podiums|0:0,pc=n=>s&&pl?Math.round(n/pl*100)+'%':'—';
-  const R=44,C=2*Math.PI*R,ring=(f,big,cap,sub)=>`<div class="pv-rg"><div class="pv-ring"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="tr" cx="50" cy="50" r="${R}"/>`
-    +(f>0?`<circle class="arc" cx="50" cy="50" r="${R}" stroke-dasharray="${(C*Math.min(1,f)).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 50 50)"/>`:'')+`</svg><b>${big}</b></div><span>${cap}</span><small>${sub}</small></div>`;
-  const rings=`<div class="pv-rings">${ring(pl?wins/pl:0,pc(wins),'Win rate',s?`${fmtStat(wins)} of ${fmtStat(pl)}`:'No games yet')}${ring(pl?pod/pl:0,pc(pod),'Top 3',s?`${fmtStat(pod)} of ${fmtStat(pl)}`:'No games yet')}</div>`;
+  const R=44,C=2*Math.PI*R,ring=(f,big,cap,defs)=>`<div class="pv-rg"><div class="pv-ring"><svg viewBox="0 0 100 100" aria-hidden="true">`
+    +(defs?'<defs><linearGradient id="pvRingG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--tl)"/><stop offset="1" style="stop-color:var(--tc)"/></linearGradient></defs>':'')
+    +`<circle class="tr" cx="50" cy="50" r="${R}"/>`+(f>0?`<circle class="arc" cx="50" cy="50" r="${R}" stroke-dasharray="${(C*Math.min(1,f)).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 50 50)"/>`:'')
+    +`</svg><b>${big}</b></div><span>${cap}</span>${pl?'':'<small>No games yet</small>'}</div>`;
+  const rings=`<div class="pv-rings">${ring(pl?wins/pl:0,pc(wins),'Win rate',1)}${ring(pl?pod/pl:0,pc(pod),'Top 3')}</div>`;
   // the rating line: your vs-players rating after each ranked game this device remembers (up to 40)
   const h=loadHistory().filter(r=>!r.practice&&!r.ai&&typeof r.rating==='number'),pts=h.map(r=>r.rating);
   if(h.length&&typeof h[0].delta==='number')pts.unshift(h[0].rating-h[0].delta);
@@ -6620,32 +6628,33 @@ function renderStats(){ // the server's lifetime stats; on a server without them
   if(pts.length<2)plot='<div class="pv-plot empty">Your rating line starts with your next ranked games.</div>';
   else{const lo=Math.min(...pts),hi=Math.max(...pts),pad=Math.max(6,(hi-lo)*.14),y0=lo-pad,y1=hi+pad,n=pts.length-1,ch=pts[n]-pts[0];
     const X=i=>(i/n*100).toFixed(2),Y=v=>((1-(v-y0)/(y1-y0))*100).toFixed(2),d=pts.map((v,i)=>`${i?'L':'M'}${X(i)} ${Y(v)}`).join('');
-    plot=`<div class="pv-plot"><div class="pv-pw"><svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="pvArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".16"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>`
-      +(hi>lo?`<line class="gl" x1="0" x2="100" y1="${Y(hi)}" y2="${Y(hi)}"/><line class="gl" x1="0" x2="100" y1="${Y(lo)}" y2="${Y(lo)}"/>`:'')
-      +`<path class="ar" d="${d}L100 100L0 100Z"/><path class="ln" d="${d}"/></svg><i style="left:${X(n)}%;top:${Y(pts[n])}%"></i></div>`
-      +(hi>lo?`<em style="top:${Y(hi)}%">${hi}</em><em style="top:${Y(lo)}%">${lo}</em>`:'')+'</div>';
-    head=`<strong>${ch>0?'+':ch<0?'−':'±'}${Math.abs(ch)}</strong><small>last ${n} game${n===1?'':'s'}</small>`;}
-  const chart=`<div class="pv-chart"><div class="pv-ch"><div><small>Rating vs players</small><b>${wallet.rating|0}</b></div><div>${head}</div></div>${plot}`
-    +(s&&s.peak?`<small class="pv-pk">Peak ${s.peak} · ${escH(rankOf(s.peak).name)}</small>`:'')+'</div>';
-  const nums=[['Games',fmtStat((wallet.runs|0)+(wallet.aiRuns|0))],['Time alive',s?fmtDur(s.alive):'—'],['Average life',s&&pl?fmtT(Math.round(s.alive/pl)):'—'],
-    ['Cells absorbed',s?fmtStat(s.eaten):'—'],['Best mass',fmtStat(bestMass())],['ATP earned',fmtStat(wallet.earned)]];
-  $('pvStats').innerHTML=rings+chart+`<dl class="pv-nums">${nums.map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>`;}
+    plot=`<div class="pv-plot"><svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="pvArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--tc);stop-opacity:.28"/><stop offset="1" style="stop-color:var(--tc);stop-opacity:0"/></linearGradient></defs>`
+      +`<path class="ar" d="${d}L100 100L0 100Z"/><path class="ln" d="${d}"/></svg><i style="left:${X(n)}%;top:${Y(pts[n])}%"></i></div>`;
+    head=`<strong aria-label="${ch>=0?'Up':'Down'} ${Math.abs(ch)} over the last ${n} games">${ch>0?'+':ch<0?'−':'±'}${Math.abs(ch)}</strong>`;}
+  const chart=`<div class="pv-chart"><div class="pv-ch"><div><small>Rating</small><b>${wallet.rating|0}</b></div>${head}</div>${plot}`
+    +(s&&s.peak?`<small class="pv-pk">Best ${escH(rankOf(s.peak).name)} · ${s.peak.toLocaleString()}</small>`:'')+'</div>';
+  const ar=rankOf(wallet.aiRating|0),ai=`<div class="pv-ai"><span class="pv-aie">${rankBadge(ar)}</span><span><small>vs AI</small><b>${escH(ar.name)}</b></span><em>${wallet.aiRating|0}</em></div>`;
+  const nums=[['Games',fmtStat((wallet.runs|0)+(wallet.aiRuns|0))],['Time alive',s?fmtDur(s.alive):'—'],['Cells absorbed',s?fmtStat(s.eaten):'—']];
+  $('pvStats').innerHTML=rings+chart+ai+`<dl class="pv-nums">${nums.map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>`;}
 function pvShow(id,focus){for(const b of document.querySelectorAll('#profileCard [role=tab]')){const on=b.dataset.pane===id;b.setAttribute('aria-selected',String(on));b.tabIndex=on?0:-1;if(on&&focus)b.focus();}
   for(const p of['pvOv','pvSt','pvTr'])$(p).hidden=p!==id;}
 function renderProfileNow(){if($('profileCard').hidden)return; // only drawn while open: the trophies are a lot of SVG
-  renderRuns();renderAch();renderInv();renderTrophies();renderForm();renderStats();
+  renderRuns();renderAch();renderInv();renderTrophies();renderStats();
   {const n=cleanName($('nameIn').value)||settings.name||'Unnamed cell',el=$('profName');el.textContent=n;el.classList.toggle('long',n.length>14);} // a long name a size smaller
   const rk=rankOf(wallet.rating|0),pal=rankStep(rk.step).pal,p=tierProgress(),a=wallet.account,fill=$('pFill'),xf=$('pLvFill'),intro=pfIntro&&!RM,card=$('profileCard');pfIntro=false;
-  card.dataset.step=rk.step;card.style.setProperty('--tc',pal[1]);card.style.setProperty('--tg',pal[1]+'2e'); // your step tints the light behind the cell and the rating bar
-  $('pTierTxt').textContent=rk.name;$('pRating').textContent=wallet.rating;$('pNext').textContent=p.text;
+  card.dataset.step=rk.step; // your step's metal lights the cell, the crest, the bars and the rating line
+  for(const[k,v]of[['--tc',pal[1]],['--tl',pal[0]],['--td',pal[2]],['--tg',pal[1]+'2e'],['--th',pal[1]+'66']])card.style.setProperty(k,v);
+  const tt=$('pTierTxt');tt.textContent=rk.name;tt.classList.toggle('long',rk.name.length>12);$('pRating').textContent=wallet.rating|0;$('pNext').textContent=p.text;
+  $('pvRank').setAttribute('aria-label',`${rk.name}, rating ${wallet.rating|0}${p.text?', '+p.text:''}. Open your trophies`);
   if($('pBadge').dataset.rank!==rk.name){$('pBadge').dataset.rank=rk.name;$('pBadge').innerHTML=rankBadge(rk);}
   $('pvSub').textContent=a?'Signed in with '+(a.provider==='apple'?'Apple':'Google'):wallet.online?'':'Offline'; // guests: nothing (the Account row says it)
-  {const ar=rankOf(wallet.aiRating|0),e=$('pAiMc');$('pAiTier').textContent=ar.name;$('pAiRating').textContent=wallet.aiRating|0; // the AI rating: bots only
-    if(e.dataset.rank!==ar.name){e.dataset.rank=ar.name;e.innerHTML=rankBadge(ar);}}
   const lv=wallet.level!=null;$('pLv').hidden=!lv;
-  if(lv){$('pLvN').textContent=wallet.level;$('pLvXp').textContent=`${fmtStat(wallet.levelXp)} / ${fmtStat(wallet.levelNeed)} XP`;}
+  if(lv){$('pLvN').textContent=wallet.level;$('pLv').setAttribute('aria-label',`Level ${wallet.level}, ${fmtStat(wallet.levelXp)} of ${fmtStat(wallet.levelNeed)} XP`);$('pLvXp').textContent=`${fmtStat(wallet.levelXp)} / ${fmtStat(wallet.levelNeed)} XP`;}
   if(intro)for(const f of[fill,xf]){f.style.transition='none';f.style.width='0%';void f.offsetWidth;f.style.transition='';} // opening the page: the bars fill
   fill.style.width=p.pct+'%';xf.style.width=(lv?xpPct(wallet):0).toFixed(1)+'%';drawAvatar($('profCv'));}
+// the hero is alive: motes of your rank's light drift up around the cell, and an animated skin keeps moving while the page is open
+$('pvMotes').innerHTML=Array.from({length:16},(_,i)=>{const R=Math.random;return `<i${i%4===3?' class="f"':''} style="--x:${(4+R()*92).toFixed(1)}%;--s:${(1.6+R()*2.6).toFixed(1)}px;--d:${(6+R()*6).toFixed(2)}s;--w:${(-R()*12).toFixed(2)}s;--dx:${Math.round((R()-.5)*44)}px;--h:${Math.round(150+R()*130)}px;--o:${(.3+R()*.55).toFixed(2)}"></i>`;}).join('');
+let pvT=0;(function pvLoop(now){if(!RM&&!document.hidden&&!$('profileCard').hidden&&now-pvT>=33){pvT=now;drawAvatar($('profCv'));}requestAnimationFrame(pvLoop);})(0);
 $('profBtn').addEventListener('click',()=>{pfIntro=true;pvShow('pvOv');showCard('profileCard');renderProfile();renderAccount();$('profileCard').scrollTop=0;});
 document.querySelector('#profileCard .pv-tabs').addEventListener('click',e=>{const b=e.target.closest('[role=tab]');if(b)pvShow(b.dataset.pane);});
 document.querySelector('#profileCard .pv-tabs').addEventListener('keydown',e=>{const k=['ArrowLeft','ArrowRight'].indexOf(e.key);if(k<0)return;const ids=['pvOv','pvSt','pvTr'],cur=ids.findIndex(p=>!$(p).hidden);
