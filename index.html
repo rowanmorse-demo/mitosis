@@ -6739,10 +6739,11 @@ function syncPass(){ // the lobby card (tier, bar, rewards to claim); the page h
     $('lbBpSub').textContent=now<C.starts?'Starts in '+fmtLeft(C.starts-now):C.ends-now<3*864e5?'Ends in '+fmtLeft(Math.max(0,C.ends-now)):'Battle Pass';} // testers before the season; everyone in its last 3 days
   $('passBtn').setAttribute('aria-label',on?`Battle Pass, tier ${wallet.pass.level}`+(n?`, ${n} reward${n>1?'s':''} to claim`:''):'Battle Pass');
   if(!$('passCard').hidden){if(on||qsOn())renderPass();else{bpSheet(false);showCard('startCard');}}} // the page stays while either half has something to show
-function openPass(tab){ // the Battle Pass and Quests page. The lobby's tier card asks for the pass; the home bar's entry opens Quests when a quest reward waits, else the pass
+function openPass(tab){ // the Battle Pass and Quests page. It opens on the Battle Pass, the first tab (Rowan: "battle pass should be the first thing people view");
+  // the Quests tab's badge shows rewards waiting. Quests alone when the pass is hidden
   const pOn=bpOn(),qOn=qsOn();if(!pOn&&!qOn)return;
   if(pOn){bpSel='';const P=wallet.pass,ready=bpRewards().find(r=>bpState(r)==='ready');bpPage=ready?ready.page:Math.max(0,P.pages-1);}
-  bpMode=tab==='rewards'||tab==='quests'?tab:(qOn&&(wallet.quests.claimable|0)>0)||!pOn?'quests':'rewards';
+  bpMode=tab==='quests'||!pOn?'quests':'rewards';
   showCard('passCard');renderPass();api('pass').then(applyWallet).catch(()=>{});Native.haptic('light');}
 function openPassAt(skin){ // the Shop's "Unlock it on the Battle Pass": the page holding that skin, with it chosen
   const r=bpOn()&&bpRewards().find(x=>x.skin===skin);if(!r)return;openPass('rewards');bpPage=r.page;bpSel=r.id;renderPass();}
