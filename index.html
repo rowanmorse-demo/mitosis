@@ -1519,14 +1519,14 @@ img.sk-im{display:block;-webkit-user-drag:none;user-select:none;-webkit-touch-ca
 #profileCard .pv-motes i{position:absolute;bottom:0;left:var(--x);width:var(--s);height:var(--s);border-radius:50%;background:var(--tl);box-shadow:0 0 7px 1px var(--tc);opacity:0;animation:pvmote var(--d) linear var(--w) infinite}
 #profileCard .pv-motes i.f{z-index:2}
 @keyframes pvmote{0%{opacity:0;transform:translate3d(0,0,0)}18%,70%{opacity:var(--o)}100%{opacity:0;transform:translate3d(var(--dx),calc(-1*var(--h)),0)}}
-#profileCard .pv-ava{position:absolute;inset:0;animation:pvlive 6s ease-in-out infinite}
+#profileCard .pv-ava{position:absolute;inset:0;transform:scale(var(--zs,1));animation:pvlive 6s ease-in-out infinite}
 #profileCard .pv-ava canvas{width:100%;height:100%;display:block;filter:drop-shadow(0 18px 24px rgba(0,0,0,.55))}
 #profileCard .pv-ava::after{content:"";position:absolute;inset:7%;border-radius:50%;pointer-events:none;opacity:.9;filter:drop-shadow(0 0 5px var(--tc));
   background:conic-gradient(from 0deg,transparent 0,transparent 58%,var(--tc) 70%,var(--tl) 76%,transparent 86%);
   -webkit-mask:radial-gradient(closest-side,transparent calc(100% - 3px),#000 calc(100% - 2px),#000 calc(100% - .5px),transparent);mask:radial-gradient(closest-side,transparent calc(100% - 3px),#000 calc(100% - 2px),#000 calc(100% - .5px),transparent);
   animation:pvspin 10s linear infinite}
 #profileCard .pv-stage::after{content:"";position:absolute;z-index:-1;left:14%;right:14%;bottom:-9%;height:12%;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.65),rgba(0,0,0,0));animation:pvpool 6s ease-in-out infinite}
-@keyframes pvlive{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-7px) scale(1.025)}}
+@keyframes pvlive{0%,100%{transform:translateY(0) scale(var(--zs,1))}50%{transform:translateY(-7px) scale(calc(var(--zs,1)*1.025))}}
 @keyframes pvpool{0%,100%{transform:scaleX(1);opacity:1}50%{transform:scaleX(.9);opacity:.75}}
 #profileCard .pv-name{margin:0;max-width:100%;font-family:var(--display);font-size:34px;font-weight:800;line-height:1.08;letter-spacing:-.04em;color:#fff;text-shadow:0 2px 20px rgba(0,0,0,.55);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #profileCard .pv-name.long{font-size:27px}
@@ -1585,7 +1585,7 @@ img.sk-im{display:block;-webkit-user-drag:none;user-select:none;-webkit-touch-ca
 #profileCard .pv-tt{position:relative;display:block;aspect-ratio:168/210}
 #profileCard .pv-tt .trophy{position:relative;display:block;width:100%;height:100%;filter:drop-shadow(0 10px 12px rgba(0,0,0,.55))}
 #profileCard .pv-tt .tt-rays{display:none}
-#profileCard .best .pv-tt .tt-rays{display:inline;transform-box:view-box;transform-origin:80px 60px;animation:pvspin 30s linear infinite}
+#profileCard .best .pv-tt .tt-rays{display:inline;animation:pvspin 30s linear infinite} /* the art centres the rays on the orb, so they turn about their own origin */
 #profileCard .best{--rg:rgba(255,246,222,.13)}
 #profileCard .best .pv-tt::before{content:"";position:absolute;inset:-14% -24% 18%;border-radius:50%;pointer-events:none;
   background:conic-gradient(from 0deg at 50% 50%,transparent 0,var(--rg) 5%,transparent 10%,transparent 17%,var(--rg) 22%,transparent 27%,transparent 34%,var(--rg) 39%,transparent 44%,transparent 51%,var(--rg) 56%,transparent 61%,transparent 68%,var(--rg) 73%,transparent 78%,transparent 85%,var(--rg) 90%,transparent 95%);
@@ -1742,21 +1742,87 @@ img.sk-im{display:block;-webkit-user-drag:none;user-select:none;-webkit-touch-ca
 #profileCard .pv-all[aria-expanded=true]::after{transform:rotate(-90deg)}
 #profileCard .pv-all[hidden]{display:none}
 #profileCard .pv-hero,#profileCard .pv-tabs{animation:pfin .5s cubic-bezier(.2,.8,.2,1) both}#profileCard .pv-tabs{animation-delay:.06s}
-/* wide screens: you on the left, held in place, the tabs scrolling on the right */
+/* landscape, where the app lives (it is locked to it): no header row. On the left a stage card, lit by your rank's metal, with
+   your cell as big as the height allows (about 200 px on an iPhone 14), your name, level and rank, all on one screen; the back
+   button sits on its corner. On the right the tabs (the Shop's pill) with Settings beside them, and the open tab, scrolling on
+   its own. Each tab's first screen holds its main thing: the trophy stage, the rings and rating line, the trophy shelf. */
+#profileCard .pv-main,#profileCard .pv-tabrow{display:contents}
+#profileCard .pv-tabs svg{display:none}
 @media (orientation:landscape){
-  #overlay>#profileCard.page{grid-template-columns:minmax(280px,.82fr) minmax(0,1.4fr);grid-template-areas:"top top" "hero tabs" "hero pane";grid-template-rows:auto auto 1fr;
-    background:radial-gradient(40% 70% at 22% 30%,var(--tg),transparent 75%),linear-gradient(180deg,rgba(2,8,9,.95),rgba(2,8,9,.9))}
-  #profileCard .pv-hero{grid-area:hero;position:sticky;top:84px;align-self:start}
-  #profileCard .pv-tabs{grid-area:tabs}#profileCard .pv-pane{grid-area:pane}
+  #overlay>#profileCard.page{overflow:hidden;grid-template-columns:clamp(266px,39%,340px) minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:0 16px;align-content:stretch;
+    padding-bottom:max(10px,env(safe-area-inset-bottom));
+    background:radial-gradient(36% 75% at 19% 40%,var(--tg),transparent 75%),linear-gradient(180deg,rgba(2,8,9,.95),rgba(2,8,9,.9))}
+  #profileCard>.pg-top{position:absolute;z-index:6;grid-area:auto;top:0;left:max(18px,env(safe-area-inset-left),calc((100% - 880px)/2));right:max(18px,env(safe-area-inset-right),calc((100% - 880px)/2));
+    display:flex;justify-content:space-between;align-items:flex-start;padding:max(10px,env(safe-area-inset-top)) 0 0;pointer-events:none}
+  #profileCard>.pg-top>*{pointer-events:auto}
+  #profileCard>.pg-top::before{display:none} /* no frosted bar: the buttons float on the card and the panel */
+  #profileCard>.pg-top h2{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap} /* the card says whose profile it is */
+  #profileCard>.pg-top .back{margin:8px 0 0 8px}
+  #profileCard>.pg-top .pv-set{width:46px;height:46px}
+  /* the stage card */
+  #profileCard .pv-hero{grid-column:1;grid-row:1;align-self:stretch;min-height:0;margin-top:max(10px,env(safe-area-inset-top));overflow:hidden auto;scrollbar-width:none;
+    display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-radius:28px;border:1px solid var(--sf-edge);isolation:isolate;
+    background:radial-gradient(64% 44% at 50% 33%,var(--th),transparent 72%),radial-gradient(130% 55% at 50% 0%,var(--tg),transparent 70%),var(--sf);box-shadow:var(--sf-hi),var(--sf-drop)}
+  #profileCard .pv-hero::-webkit-scrollbar{display:none}
+  #profileCard .pv-me{margin-top:auto}#profileCard .pv-hero>.pv-rank{margin-bottom:auto} /* centred while it fits, never cut at the top when it doesn't */
+  #profileCard .pv-stage{width:clamp(110px,calc(100vh - 192px),220px);margin:0 0 8px}
+  #profileCard .pv-ava{--zs:1.12}
+  #profileCard .pv-halo{inset:-26%}
+  #profileCard .pv-motes{inset:-8% -22% 2%}
+  #profileCard .pv-name{font-size:26px;line-height:1}#profileCard .pv-name.long{font-size:22px}
+  #profileCard .pv-sub{display:none} /* the Account row on Overview says it */
+  #profileCard .pv-xp{width:min(100%,250px);margin-top:8px;gap:10px}
+  #profileCard .pv-lvb{min-width:28px;height:28px;padding:0 7px;font-size:14px}
+  #profileCard .pv-rank{flex:none;container-type:inline-size;gap:10px;padding:8px 12px 8px 8px;border-radius:18px;border-color:rgba(255,255,255,.06);
+    background:radial-gradient(60% 130% at 10% 50%,var(--tg),transparent 72%),rgba(0,0,0,.26);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+  #profileCard .pv-crest{width:clamp(42px,18cqi,50px);height:clamp(42px,18cqi,50px)}
+  #profileCard .pv-rk{gap:7px}
+  #profileCard .pv-rt{gap:8px}#profileCard .pv-rt b,#profileCard .pv-rt em{font-size:clamp(15px,7.4cqi,19px)}#profileCard .pv-rt b.long{font-size:clamp(13px,5.9cqi,17px)}
+  #profileCard .pv-rbar{height:6px}
+  #profileCard .pv-next{font-size:12.5px}
+  /* the panel: the tabs stay at its top as it scrolls */
+  #profileCard .pv-main{display:block;grid-column:2;grid-row:1;align-self:stretch;min-height:0;margin-top:max(10px,env(safe-area-inset-top));overflow:hidden auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  #profileCard .pv-main::-webkit-scrollbar{display:none}
+  #profileCard .pv-tabrow{position:sticky;top:0;z-index:4;display:block;container-type:inline-size;padding:0 58px 12px 0;background:linear-gradient(180deg,rgb(3,10,11) 76%,rgba(3,10,11,0))}
+  #profileCard .pv-tabs{gap:4px;margin:0;padding:4px;border:1px solid var(--sf-edge);border-radius:999px;background:rgba(3,10,12,.6);box-shadow:inset 0 2px 6px rgba(0,0,0,.45),0 1px 0 rgba(255,255,255,.04);animation:none}
+  #profileCard .pv-tabs button{display:flex;align-items:center;justify-content:center;gap:7px;height:36px;padding:0 10px;border-radius:999px;color:var(--muted);font:700 14px/1 var(--display);letter-spacing:-.01em;text-transform:none;transition:background .2s,color .2s,transform .1s}
+  #profileCard .pv-tabs button::after{display:none}
+  #profileCard .pv-tabs button svg{display:block;flex:none;width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+  #profileCard .pv-tabs button:active{transform:scale(.95)}
+  #profileCard .pv-tabs button[aria-selected=true]{background:var(--sf);color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.14),inset 0 1px 0 rgba(255,255,255,.12),0 4px 12px -4px rgba(0,0,0,.6)}
+  #profileCard .pv-tabs button[aria-selected=true] svg{color:var(--accent)}
+  @container (max-width:330px){#profileCard .pv-tabs button{gap:5px;padding:0 4px;font-size:13px}#profileCard .pv-tabs button svg{width:15px;height:15px}} /* an iPhone SE */
+  #profileCard .pv-pane{gap:24px;padding:0 0 6px}
+  #profileCard .pv-h b{font-size:19px}
+  /* Overview: the trophy stage in a card of its own, whole on the first screen */
+  #pvOv>.pv-sec:first-child{gap:2px;padding:14px 16px 10px;border-radius:22px;border:1px solid var(--sf-edge);
+    background:radial-gradient(55% 62% at 50% 64%,rgba(255,255,255,.065),transparent 72%),var(--sf);box-shadow:var(--sf-hi),var(--sf-drop)}
+  #profileCard .pv-show{padding-top:14px}
+  #profileCard .pv-ped .pv-tt{width:min(100%,66px)}
+  #profileCard .pv-ped.main .pv-tt{width:min(100%,112px)}
+  #profileCard .pv-ped.first .pv-tt{width:86px}
+  #profileCard .pv-cap{min-height:46px;padding-top:9px}
+  #profileCard .pv-ped.main b{font-size:18px}
+  #profileCard .pf-acct{margin-top:-6px}
+  /* Stats: smaller rings and line so both fit the first screen */
+  #profileCard .pv-stats{gap:16px}
+  #profileCard .pv-ring{width:86px;margin-bottom:2px}
+  #profileCard .pv-ring b{font-size:22px}
+  #profileCard .pv-rg>span{font-size:15px}
+  #profileCard .pv-chart{gap:10px;padding:14px 16px 12px}
+  #profileCard .pv-ch b{font-size:24px}
+  #profileCard .pv-plot{height:78px}
+  #profileCard .pv-nums dd{font-size:21px}
+  /* Trophies: all nine on one shelf you swipe along, opening on your best */
+  #profileCard .pv-case{display:flex;margin:0 -4px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scrollbar-width:none;touch-action:pan-x pan-y;
+    -webkit-mask-image:linear-gradient(90deg,transparent,#000 10px,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,transparent,#000 10px,#000 calc(100% - 28px),transparent)}
+  #profileCard .pv-case::-webkit-scrollbar{display:none}
+  #profileCard .pv-tc{flex:0 0 112px;padding-bottom:6px;scroll-snap-align:center}
+  #profileCard .pv-tc .pv-nic{padding-top:16px}
+  #profileCard .pv-tc .pv-tt{width:88px}
+  #profileCard .pv-tc>b{margin-top:14px}
 }
-@media (orientation:landscape) and (max-height:520px){
-  #profileCard .pv-hero{top:64px;gap:12px}#profileCard .pv-stage{width:92px;margin:10px 0 12px}#profileCard .pv-motes{display:none}
-  #profileCard .pv-name{font-size:24px}#profileCard .pv-xp{margin-top:8px}
-  #profileCard .pv-rank{gap:12px;padding:12px 14px 12px 10px}#profileCard .pv-crest{width:52px;height:52px}#profileCard .pv-rk{gap:8px}
-  #profileCard .pv-rt b{font-size:19px}#profileCard .pv-rt em{font-size:19px}#profileCard .pv-rt b.long{font-size:16px}
-  #profileCard .pv-pane{gap:28px}#profileCard .pv-tabs button{height:40px}
-}
-@media (min-width:1000px) and (min-height:640px){#profileCard .pv-stage{width:220px}#profileCard .pv-name{font-size:36px}}
+@media (min-width:1000px) and (min-height:640px){#profileCard .pv-name{font-size:30px}}
 @media (max-width:380px){#profileCard .pv-name{font-size:30px}#profileCard .pv-crest{width:64px;height:64px}#profileCard .pv-rt b{font-size:21px}#profileCard .pv-rt em{font-size:21px}#profileCard .pv-rt b.long{font-size:18px}
   #profileCard .pv-nums dd{font-size:21px}}
 /* @ui:profile end */
@@ -2825,11 +2891,13 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
           <span class="pv-bar pv-rbar" aria-hidden="true"><i id="pFill"></i></span><small class="pv-next" id="pNext"></small></span>
       </button>
     </section>
-    <div class="pv-tabs" role="tablist" aria-label="Profile">
-      <button type="button" role="tab" id="pvTabOv" data-pane="pvOv" aria-controls="pvOv" aria-selected="true">Overview</button>
-      <button type="button" role="tab" id="pvTabSt" data-pane="pvSt" aria-controls="pvSt" aria-selected="false" tabindex="-1">Stats</button>
-      <button type="button" role="tab" id="pvTabTr" data-pane="pvTr" aria-controls="pvTr" aria-selected="false" tabindex="-1">Trophies</button>
-    </div>
+    <!-- the tabs and their panes: under the hero in portrait; in landscape a panel of their own on the right, scrolling by itself -->
+    <div class="pv-main" id="pvMain">
+    <div class="pv-tabrow"><div class="pv-tabs" role="tablist" aria-label="Profile">
+      <button type="button" role="tab" id="pvTabOv" data-pane="pvOv" aria-controls="pvOv" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="13.6" cy="10.4" r="2.7"/></svg>Overview</button>
+      <button type="button" role="tab" id="pvTabSt" data-pane="pvSt" aria-controls="pvSt" aria-selected="false" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18.5l5-5.5 4 3 7-8.5"/><path d="M15.5 7.5H20V12"/></svg>Stats</button>
+      <button type="button" role="tab" id="pvTabTr" data-pane="pvTr" aria-controls="pvTr" aria-selected="false" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3"/><path d="M12 14v4M8 20h8"/></svg>Trophies</button>
+    </div></div>
     <div class="pv-pane" id="pvOv" role="tabpanel" aria-labelledby="pvTabOv">
       <section class="pv-sec">
         <div class="pv-h"><b>Trophies</b><span class="pv-cnt" id="pvShelfN"></span><button type="button" class="pv-more" data-go="pvTr">See all</button></div>
@@ -2871,6 +2939,7 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
         <div class="pv-achs" id="achGrid"></div>
         <button type="button" class="pv-all" id="achAll" aria-expanded="false" aria-controls="achGrid">Show all</button>
       </section>
+    </div>
     </div>
   </div>
   <div class="card panel page" id="settingsCard" hidden>
@@ -6606,7 +6675,8 @@ function renderTrophies(){const S=pfSteps(),held=new Map(trophiesHeld().map(t=>[
   // Trophies: all of them in the cabinet, three to a shelf: won ones lit, your best with its rays, the rest dark with what they take
   $('pvCase').innerHTML=S.map(st=>{const k=st.key,h=held.has(k),isNx=!!nx&&k===nx.k,at=ladderOn()?stepAt(k):null;
     return `<div class="pv-tc ${h?'got'+(k===best?' best':''):'lock'+(isNx?' nx':'')}">${art(k)}<b>${nm(k)}</b>`
-      +(h?`<small>${won(k)||'Won'}</small>`:isNx?(nx.at!=null?bar(nx.pct):'')+`<small>${nx.note}</small>`:`<small>${at!=null?'At '+at.toLocaleString():''}</small>`)+'</div>';}).join('');}
+      +(h?`<small>${won(k)||'Won'}</small>`:isNx?(nx.at!=null?bar(nx.pct):'')+`<small>${nx.note}</small>`:`<small>${at!=null?'At '+at.toLocaleString():''}</small>`)+'</div>';}).join('');
+  if(!$('pvTr').hidden)requestAnimationFrame(pvCenterBest);}
 function renderStats(){ // the server's lifetime stats; on a server without them, only what the wallet and this device know
   const s=wallet.stats||null,pl=s?(s.rounds??s.played)|0:0,wins=s?s.wins|0:0,pod=s?s.podiums|0:0,pc=n=>s&&pl?Math.round(n/pl*100)+'%':'—'; // over battle royale rounds (Classic has no placing)
   const R=44,C=2*Math.PI*R,ring=(f,big,cap,defs)=>`<div class="pv-rg"><div class="pv-ring"><svg viewBox="0 0 100 100" aria-hidden="true">`
@@ -6630,7 +6700,11 @@ function renderStats(){ // the server's lifetime stats; on a server without them
   const nums=[['Games',fmtStat((wallet.runs|0)+(wallet.aiRuns|0))],['Time alive',s?fmtDur(s.alive):'—'],['Cells absorbed',s?fmtStat(s.eaten):'—']];
   $('pvStats').innerHTML=rings+chart+ai+`<dl class="pv-nums">${nums.map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>`;}
 function pvShow(id,focus){for(const b of document.querySelectorAll('#profileCard [role=tab]')){const on=b.dataset.pane===id;b.setAttribute('aria-selected',String(on));b.tabIndex=on?0:-1;if(on&&focus)b.focus();}
-  for(const p of['pvOv','pvSt','pvTr'])$(p).hidden=p!==id;}
+  for(const p of['pvOv','pvSt','pvTr'])$(p).hidden=p!==id;
+  $('pvMain').scrollTop=0;if(id==='pvTr')requestAnimationFrame(pvCenterBest);} // landscape: each tab opens at its top (the panel scrolls on its own)
+function pvCenterBest(){ // landscape: the trophy shelf opens on your best trophy (or the next to win)
+  const c=$('pvCase'),b=c&&(c.querySelector('.best')||c.querySelector('.nx'));if(!b||c.scrollWidth<=c.clientWidth+1)return;
+  c.scrollLeft+=b.getBoundingClientRect().left-c.getBoundingClientRect().left-(c.clientWidth-b.offsetWidth)/2;}
 function renderProfileNow(){if($('profileCard').hidden)return; // only drawn while open: the trophies are a lot of SVG
   renderRuns();renderAch();renderInv();renderTrophies();renderStats();
   {const n=cleanName($('nameIn').value)||settings.name||'Unnamed cell',el=$('profName');el.textContent=n;el.classList.toggle('long',n.length>14);} // a long name a size smaller
@@ -6648,7 +6722,7 @@ function renderProfileNow(){if($('profileCard').hidden)return; // only drawn whi
 // the hero is alive: motes of your rank's light drift up around the cell, and an animated skin keeps moving while the page is open
 $('pvMotes').innerHTML=Array.from({length:16},(_,i)=>{const R=Math.random;return `<i${i%4===3?' class="f"':''} style="--x:${(4+R()*92).toFixed(1)}%;--s:${(1.6+R()*2.6).toFixed(1)}px;--d:${(6+R()*6).toFixed(2)}s;--w:${(-R()*12).toFixed(2)}s;--dx:${Math.round((R()-.5)*44)}px;--h:${Math.round(150+R()*130)}px;--o:${(.3+R()*.55).toFixed(2)}"></i>`;}).join('');
 let pvT=0;(function pvLoop(now){if(!RM&&!document.hidden&&!$('profileCard').hidden&&now-pvT>=33){pvT=now;drawAvatar($('profCv'));}requestAnimationFrame(pvLoop);})(0);
-$('profBtn').addEventListener('click',()=>{pfIntro=true;pvShow('pvOv');showCard('profileCard');renderProfile();renderAccount();$('profileCard').scrollTop=0;});
+$('profBtn').addEventListener('click',()=>{pfIntro=true;pvShow('pvOv');showCard('profileCard');renderProfile();renderAccount();$('profileCard').scrollTop=$('pvCard').scrollTop=0;});
 document.querySelector('#profileCard .pv-tabs').addEventListener('click',e=>{const b=e.target.closest('[role=tab]');if(b)pvShow(b.dataset.pane);});
 document.querySelector('#profileCard .pv-tabs').addEventListener('keydown',e=>{const k=['ArrowLeft','ArrowRight'].indexOf(e.key);if(k<0)return;const ids=['pvOv','pvSt','pvTr'],cur=ids.findIndex(p=>!$(p).hidden);
   pvShow(ids[(cur+(k?1:2))%3],true);e.preventDefault();});
