@@ -29,7 +29,7 @@ for (const kind of sqlite ? ['sqlite', 'json'] : ['json']) {
   st.createPlayer('a', 'ha', 1); st.createPlayer('b', 'hb', 1);
   assert.deepEqual([Number(st.player('a').rating), Number(st.player('a').ai_rating)], [0, 0], k('a new player starts at 0 on both ratings'));
   st.setRating('a', 1234, 'Ann'); st.setAiRating('a', 1500, 'Ann'); st.setRating('b', 980, null);
-  st.addStats('a', { played: 3, wins: 1, podiums: 2, alive: 400, eaten: 20 }, 1234); st.addTrophies('a', ['amoeba', 'colony'], 5);
+  st.addStats('a', { played: 3, rounds: 2, wins: 1, podiums: 2, alive: 400, eaten: 20 }); st.setPeak('a', 1234); st.addTrophies('a', ['amoeba', 'colony'], 5);
   assert.equal(ladderReset(st), true, k('the first start-up resets'));
   const a = st.player('a'), b = st.player('b');
   assert.deepEqual([a.rating, a.ai_rating, b.rating, b.ai_rating].map(Number), [0, 0, 0, 0], k('everyone starts again'));
