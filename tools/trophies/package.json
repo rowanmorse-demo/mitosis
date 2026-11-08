@@ -1,0 +1,6 @@
+{
+  "name": "mitosis-trophies",
+  "private": true,
+  "description": "Renders the nine rank trophies in 3D and bakes them into index.html: node tools/trophies/render.js --size=288x360 --q=0.82 --bake",
+  "devDependencies": { "three": "0.187.0", "esbuild": "0.28.2" }
+}
