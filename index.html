@@ -1067,6 +1067,7 @@ body.saver .lb-bg *{animation:none!important}
 #passCard .bp-title span{font:800 27px/1 var(--display);letter-spacing:-.045em;background:linear-gradient(180deg,#f4fffd 20%,#86f4e4 60%,#e9a8ff);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 14px rgba(79,240,216,.25))}
 #passCard .bp-clock{display:inline-flex;align-items:center;gap:6px;height:32px;box-sizing:border-box;padding:0 12px 0 10px;border-radius:999px;background:rgba(0,0,0,.45);border:1px solid rgba(var(--bp),.35);color:#c4f8ef;font:700 12.5px/1 var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
 #passCard .bp-clock svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+#passCard .bp-clock span i{font-style:normal}
 #passCard .sv-bal{appearance:none;display:flex;align-items:center;gap:8px;height:44px;padding:0 5px 0 11px;border-radius:999px;cursor:pointer;border:1px solid rgba(242,177,52,.42);background:linear-gradient(180deg,rgba(60,40,6,.55),rgba(8,10,8,.75));color:#ffe3a0;font:800 17px/1 var(--display);letter-spacing:-.01em;font-variant-numeric:tabular-nums;box-shadow:inset 0 1px 0 rgba(255,220,140,.14),0 4px 14px rgba(0,0,0,.35);transition:transform .1s}
 #passCard .sv-bal .sv-coin{font-size:22px}
 #passCard .sv-plus{display:grid;place-items:center;width:32px;height:32px;margin-left:2px;border-radius:50%;background:linear-gradient(180deg,#ffe28a,#f2a524 60%,#d98510);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 -2px 0 rgba(110,50,0,.28),0 2px 6px rgba(0,0,0,.35)}
@@ -1259,6 +1260,30 @@ body.saver .lb-bg *{animation:none!important}
   :is(#passCard,#questsCard) .bq{min-height:46px;padding:5px 7px 5px 5px;gap:9px;border-radius:14px}:is(#passCard,#questsCard) .bq-ico{width:34px;height:34px;border-radius:11px}:is(#passCard,#questsCard) .bq-ico svg{width:18px;height:18px}
   :is(#passCard,#questsCard) .bq-t{gap:5px}:is(#passCard,#questsCard) .bq-t b{font-size:13px}:is(#passCard,#questsCard) .bq-xp{min-width:46px;padding:5px 6px 4px;font-size:13px;border-radius:11px}
 }
+/* short landscape phones: inside the notch and home bar an iPhone 14 has about 750 x 369 points, a 13 mini 712 x 354 and an SE
+   667 x 375. A one-line top bar and smaller tiles, so both rows of rewards and the line saying how the next page opens fit
+   without scrolling */
+@media (orientation:landscape) and (max-height:440px){
+  .passview{grid-template-columns:minmax(200px,.66fr) minmax(0,1.5fr);gap:7px 12px;padding-top:max(8px,env(safe-area-inset-top));padding-bottom:max(8px,env(safe-area-inset-bottom))}
+  #passCard .bp-top{gap:8px}
+  #passCard #passBack{width:38px;height:38px}
+  #passCard .bp-title{gap:3px}#passCard .bp-title span{font-size:20px;white-space:nowrap}#passCard .bp-title small{font-size:9px}
+  #passCard .bp-mode{padding:3px}#passCard .bp-mode button{height:28px;padding:0 10px;gap:5px;font-size:12.5px}#passCard .bp-mode svg{width:14px;height:14px}
+  #passCard .bp-clock{height:28px;padding:0 10px 0 8px;gap:5px;font-size:11.5px}
+  #passCard .sv-bal{height:38px;gap:6px;padding:0 4px 0 9px}#passCard .sv-bal .sv-coin{font-size:19px}#passCard .sv-plus{width:28px;height:28px}
+  #passCard .bp-lvl{padding:5px 7px 5px 5px}#passCard .bp-lvnum{width:40px;height:40px;border-radius:13px}#passCard .bp-lvnum b{font-size:19px}
+  #passCard .bp-get{height:36px}
+  #passCard .bp-book{gap:6px}#passCard .bp-tabs{padding:3px}#passCard .bp-tabs button{height:28px}
+  #passCard .bp-grid{gap:6px}
+  #passCard .bpr{padding:5px 4px 4px;gap:2px;border-radius:14px}#passCard .bpr-art{width:32px;height:32px}#passCard .bpr-art .sv-coin{font-size:24px}
+  #passCard .bpr-n{font-size:11.5px}#passCard .bpr-c{height:19px;font-size:11px}#passCard .bpr-c svg{width:13px;height:13px}
+  #passCard .bpr-free{top:4px;left:4px}#passCard .bpr-lk{width:18px;height:18px}
+  #passCard .bp-pnote{font-size:10px;line-height:1.25}
+  #passCard .bq-group{gap:4px}#passCard .bq{min-height:38px;padding:3px 6px 3px 4px}#passCard .bq-ico{width:30px;height:30px;border-radius:10px}#passCard .bq-ico svg{width:16px;height:16px}
+  #passCard .bq-t{gap:4px}#passCard .bq-t b{font-size:12.5px}#passCard .bq-xp{min-width:42px;padding:3px 5px;font-size:12px} /* so the Weekly heading peeks out under the daily ones */
+}
+/* and on the narrower ones the clock drops its words: "8d 11h" (its title still says what it counts down to) */
+@media (orientation:landscape) and (max-height:440px) and (max-width:870px){#passCard .bp-clock span i{display:none}}
 /* portrait: one scrolling column: the level, the chosen reward as a banner, then the pages */
 @media (orientation:portrait){
   .passview{grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-auto-rows:max-content;grid-template-areas:"top" "lvl" "feat" "book";align-content:start;gap:12px;overflow:hidden auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
@@ -2054,6 +2079,14 @@ img.sk-im{display:block;-webkit-user-drag:none;user-select:none;-webkit-touch-ca
 #deathCard .rx-parts li b{font:700 11.5px/1 var(--mono);color:var(--ink);font-variant-numeric:tabular-nums}
 #deathCard .rx-parts svg{width:13px;height:13px;flex:none;fill:none;stroke:var(--xp2);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 #deathCard .rx-parts .rx-win{color:#ffd77a;border-color:rgba(242,193,78,.35);background:rgba(242,193,78,.08)}#deathCard .rx-parts .rx-win svg{stroke:#ffd36b}
+#deathCard .rx-parts .rx-pass{margin-left:auto;color:#a9f5e8;border-color:rgba(79,240,216,.3);background:rgba(79,240,216,.07)}#deathCard .rx-parts .rx-pass svg{stroke:#4ff0d8}
+#deathCard .rx-parts .rx-pass.up{color:#d9fff8;border-color:rgba(79,240,216,.7);background:rgba(79,240,216,.16);box-shadow:inset 0 0 12px rgba(79,240,216,.35)}#deathCard .rx-parts .rx-pass.up b{color:#7ff3e2}
+/* the pass chip never adds a row (that would push Respawn off a short screen): narrow ones show "Tier 41" or "+5 stars", and
+   a chip that still doesn't fit (a win's chip takes the room) is clipped away whole */
+#deathCard .rx-parts:has(.rx-pass){max-height:31px;overflow:hidden} /* a chip and 5px for its slide-in, less than the 6px gap to a second row */
+@media (orientation:landscape) and (max-height:500px){#deathCard .rx-parts:has(.rx-pass){max-height:27px}}
+@media (min-width:1000px) and (min-height:640px){#deathCard .rx-parts:has(.rx-pass){max-height:35px}}
+@media (max-width:760px){#deathCard .rx-pass:not(.up) b,#deathCard .rx-pass.up .rx-pt{display:none}}
 #deathCard .res-xp.go .rx-parts li{opacity:1;transform:none;transition:opacity .3s,transform .4s cubic-bezier(.2,1.4,.4,1);transition-delay:calc(var(--i) * .12s)}
 /* level up: the card lights gold, a tag pops on its edge, the badge bumps and throws a ring and sparks */
 #deathCard .rx-up{position:absolute;top:-8px;right:14px;display:none;align-items:center;gap:5px;padding:5px 10px;border-radius:999px;font:800 10px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:#2a1a00;background:linear-gradient(180deg,#fff0b8,#f2b134);box-shadow:0 0 18px rgba(242,177,52,.6),inset 0 1px 0 rgba(255,255,255,.6)}
@@ -2598,7 +2631,7 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
     <aside class="lb-feed" aria-label="News">
       <button class="lb-feat lb-ev" id="eventPill" type="button" hidden><canvas class="lb-art" id="evCv" width="240" height="240" aria-hidden="true"></canvas><span class="lb-left" aria-hidden="true"><i></i><span id="eventSub"></span></span><span class="lb-ft"><svg class="lb-pumpkin" viewBox="0 0 32 32" aria-hidden="true"><path d="M15.2 9.5c-.2-2.4.4-4.6 2.4-5.8l1.4 1.2c-1.4 1-1.8 2.6-1.6 4.6z" fill="#5c8f2e"/><ellipse cx="10.4" cy="19" rx="7.4" ry="9.4" fill="#d9640c"/><ellipse cx="21.6" cy="19" rx="7.4" ry="9.4" fill="#d9640c"/><ellipse cx="16" cy="19" rx="7.8" ry="10.2" fill="#ff8a1f"/><ellipse cx="13" cy="13.5" rx="2.6" ry="1.4" fill="#ffc27a" opacity=".55" transform="rotate(-30 13 13.5)"/><path d="M10.6 16.2l3.2 2.6h-3.6zM21.4 16.2l-3.2 2.6h3.6zM9.8 22c2.6 2.4 9.8 2.4 12.4 0-.8 3.6-11.6 3.6-12.4 0z" fill="#3a1200"/></svg><b id="eventName"></b></span></button>
       <button class="lb-feat lb-sk" id="lbSkinCard" type="button" hidden><canvas class="lb-art" id="skCv" width="240" height="240" aria-hidden="true"></canvas><span class="lb-tag">New</span><span class="lb-ft"><b id="skName"></b><span class="lb-price"><i aria-hidden="true"></i><span id="skPrice"></span></span></span></button>
-      <button class="lb-feat lb-ach lb-bp" id="passBtn" type="button" aria-label="Battle Pass" hidden><span class="lb-medal" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2.6l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8z"/></svg></span><span class="lb-achtx"><b id="lbBpTier">Tier 1</b><small>Battle Pass</small></span><span class="lb-achbar" aria-hidden="true"><i id="lbBpFill"></i></span><i class="bp-badge" id="passBadge" aria-hidden="true" hidden></i></button>
+      <button class="lb-feat lb-ach lb-bp" id="passBtn" type="button" aria-label="Battle Pass" hidden><span class="lb-medal" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2.6l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8z"/></svg></span><span class="lb-achtx"><b id="lbBpTier">Tier 1</b><small id="lbBpSub">Battle Pass</small></span><span class="lb-achbar" aria-hidden="true"><i id="lbBpFill"></i></span><i class="bp-badge" id="passBadge" aria-hidden="true" hidden></i></button>
     </aside>
     <section class="lb-hero">
       <button type="button" class="hero-cell" id="avatarBtn" aria-label="Change your skin in Inventory"><canvas id="avatarCv" width="320" height="320" aria-hidden="true"></canvas><span class="hero-edit" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5.5v13M5.5 12h13"/></svg></span></button>
@@ -6235,7 +6268,7 @@ function resPlayEarn(){const o=resS.earn;if(!o||o.k!=='atp')return;clearTimeout(
 /* the XP card: level badge, XP counting in, the bar filling (and wrapping at each level-up), and where the XP came from.
    Practice, Nearby and lives the server never heard of earn none, so the card stays hidden for them, as it does on a server without levels. */
 let xpAnim=0;
-const RX_ICO={time:'<circle cx="12" cy="13.5" r="7.5"/><path d="M12 10v3.5l2.3 1.6M9.5 3h5"/>',place:'<path d="M5 20V10h4v10M10 20V5h4v15M15 20v-7h4v7"/>',win:'<path d="M4.5 18L3 8.5l5 4L12 5.5l4 7 5-4L19.5 18z"/>'};
+const RX_ICO={time:'<circle cx="12" cy="13.5" r="7.5"/><path d="M12 10v3.5l2.3 1.6M9.5 3h5"/>',place:'<path d="M5 20V10h4v10M10 20V5h4v15M15 20v-7h4v7"/>',win:'<path d="M4.5 18L3 8.5l5 4L12 5.5l4 7 5-4L19.5 18z"/>',pass:'<path d="M12 3.2l2.6 5.4 5.9.8-4.3 4.1 1.1 5.8L12 16.5l-5.3 2.8 1.1-5.8-4.3-4.1 5.9-.8z"/>'};
 function xpSet(l){const el=$('dXp');el.querySelector('.rx-n').textContent=el.querySelector('.rx-ln').textContent=l.level;
   el.querySelector('.rx-of').textContent=`${l.levelXp.toLocaleString()} / ${l.levelNeed.toLocaleString()} XP`;el.querySelector('.rx-bar i').style.width=xpPct(l).toFixed(1)+'%';}
 function xpPrep(on){const el=$('dXp');el.hidden=!on||wallet.level==null;el.className='res-card res-xp wait';el.querySelector('.rx-gain').textContent='';el.querySelector('.rx-parts').innerHTML='';
@@ -6247,7 +6280,9 @@ function showXp(w){ // w: the server's run/end answer | {later:1} (queued until 
   if(!w||typeof w.xpGained!=='number'||typeof w.level!=='number'){el.hidden=true;return;}
   el.hidden=false;el.className='res-card res-xp';el.querySelector('.rx-gain').textContent='+0 XP';
   const P=w.xpParts,parts=P?[['time','Time',P.time|0],['place','Placing',P.place|0],['win','Win',P.win|0]].filter(p=>p[0]!=='win'||p[2]>0):[];
-  el.querySelector('.rx-parts').innerHTML=parts.map(([k,n,v],i)=>`<li class="rx-${k}" style="--i:${i}"><svg viewBox="0 0 24 24" aria-hidden="true">${RX_ICO[k]}</svg>${n}<b>+${v.toLocaleString()}</b></li>`).join('');
+  const bp=bpOn()&&w.pass&&w.pass.season===wallet.catalog.pass.key?w.pass:null,C=wallet.catalog&&wallet.catalog.pass; // the same XP fills the Battle Pass: its tier, or the stars a new tier gave
+  el.querySelector('.rx-parts').innerHTML=parts.map(([k,n,v],i)=>`<li class="rx-${k}" style="--i:${i}"><svg viewBox="0 0 24 24" aria-hidden="true">${RX_ICO[k]}</svg>${n}<b>+${v.toLocaleString()}</b></li>`).join('')
+    +(bp?`<li class="rx-pass${w.passUp>0?' up':''}" style="--i:${parts.length}" title="Battle Pass"><svg viewBox="0 0 24 24" aria-hidden="true">${RX_ICO.pass}</svg><span class="rx-pt">Tier ${bp.level}</span><b>${w.passUp>0?`+${(w.passUp*C.stars).toLocaleString()} stars`:`${bp.xp%C.levelXp} / ${C.levelXp}`}</b></li>`:'');
   xpSet(lvlOf(Math.max(0,w.xp-w.xpGained)));if(resS.at)resPlayXp();}
 function xpLevelUp(el){ // celebrate: the card lights up, the badge pops with a ring and sparks, a tag says so
   el.classList.remove('lvup');void el.offsetWidth;el.classList.add('lvup');sfx('ach');Native.haptic('success');if(RM)return;
@@ -6657,7 +6692,7 @@ function renderFeat(){
     how=skinHow(S),st=eq?'wearing':own?'own':how?how:!wallet.online?'off':need>0?'short':cf?'confirm':'buy',price=`<span class="pz"><i class="sv-coin"></i>${S.price.toLocaleString()}</span>`;
   $('storeCard').dataset.r=rar;$('featRar').className='sv-rar '+rar;$('featRar').textContent=S.season?SEASONS[S.season].name:rar;$('featName').textContent=S.name;$('featDesc').textContent=SKIN_DESC[S.id]||'';
   const ss=S.season&&!own?seasonState(S.season):null,fl=$('featLeft');fl.hidden=!(ss&&ss.open);if(ss&&ss.open){fl.dataset.ends=ss.ends;fl.innerHTML=svIcon('clock')+'<span>'+svClock(ss.ends-Date.now())+'</span>';}
-  b.className='primary sv-buy '+st;b.disabled=eq||!!how;
+  b.className='primary sv-buy '+st;b.disabled=eq||(!!how&&!(how==='pass'&&bpOn())); // a pass skin's button opens the pass on it
   b.innerHTML=how==='pass'?'<span>Unlock it on the Battle Pass</span>':how==='soon'?'<span>Coming soon</span>':how==='event'?`<span>Back for ${escH(SEASONS[S.season].name)} on ${seasonFrom(S.season)}</span>`:eq?svIcon('check')+'<span>Wearing</span>':own?'<span>Wear</span>':st==='off'?'<span>Connect to buy</span>'+price:st==='short'?svIcon('plus')+'<span>Get ATP</span>':cf?'<span>Confirm</span>'+price:'<span>Buy</span>'+price;
   $('featNote').innerHTML=st==='short'?`<span class="sv-prog"><i style="width:${Math.max(3,Math.min(100,wallet.balance/S.price*100)).toFixed(1)}%"></i></span><span class="sv-of"><i class="sv-coin"></i>${fmtAtp(wallet.balance)} / ${fmtAtp(S.price)}</span>`:'';
   drawFeat();
@@ -6673,7 +6708,8 @@ $('skins').addEventListener('click',e=>{
 $('featBuy').addEventListener('click',async()=>{
   const id=shopSel,S=PREMIUM.find(x=>x.id===id),b=$('featBuy');if(!S)return;
   if(ownsSkin(id)){settings.skin=id;saveSettings();syncPats();Native.haptic('medium');return;}
-  if(skinHow(S))return; // Battle Pass, a closed event, or not sold yet: the button says which
+  if(skinHow(S)==='pass'){openPassAt(S.id);return;}
+  if(skinHow(S))return; // a closed event, or not sold yet: the button says which
   if(!wallet.online){toast('ATP','Not connected','Skins can be bought once the server is reachable.');return;}
   if(wallet.balance<S.price){storeNote=`${(S.price-wallet.balance).toLocaleString()} more for ${S.name}`;showStoreHint();shopTab('atp');return;}
   if(confirmSkin!==id||performance.now()-confirmT>4000){confirmSkin=id;confirmT=performance.now();renderFeat();setTimeout(()=>{if(confirmSkin===id)renderFeat();},4100);return;}
@@ -6700,11 +6736,14 @@ function bpOpensNote(i){const C=wallet.catalog.pass,P=wallet.pass,pg=C.pages[i],
   return `${pg.bonus?'The Bonus page':'Page '+(i+1)} opens at tier ${pg.level}, or claim ${left} more on page ${i}`;}
 function syncPass(){ // the lobby card (tier, bar, rewards to claim); the page hides itself if the season ends or the pass is switched off
   const on=bpOn(),n=on?wallet.pass.claimable|0:0,d=$('passBadge');$('passBtn').hidden=!on;d.hidden=!n;d.textContent=n>9?'9+':String(n);
-  if(on){const P=wallet.pass,C=wallet.catalog.pass;$('lbBpTier').textContent='Tier '+P.level;$('lbBpFill').style.width=(P.xp%C.levelXp/C.levelXp*100).toFixed(1)+'%';}
+  if(on){const P=wallet.pass,C=wallet.catalog.pass,now=Date.now();$('lbBpTier').textContent='Tier '+P.level;$('lbBpFill').style.width=(P.xp%C.levelXp/C.levelXp*100).toFixed(1)+'%';
+    $('lbBpSub').textContent=now<C.starts?'Starts in '+fmtLeft(C.starts-now):C.ends-now<3*864e5?'Ends in '+fmtLeft(Math.max(0,C.ends-now)):'Battle Pass';} // testers before the season; everyone in its last 3 days
   $('passBtn').setAttribute('aria-label',on?`Battle Pass, tier ${wallet.pass.level}`+(n?`, ${n} reward${n>1?'s':''} to claim`:''):'Battle Pass');
   if(!$('passCard').hidden){if(on)renderPass();else{bpSheet(false);showCard('startCard');}}}
 function openPass(){if(!bpOn())return;bpSel='';const P=wallet.pass,ready=bpRewards().find(r=>bpState(r)==='ready');bpPage=ready?ready.page:Math.max(0,P.pages-1);if(ready)bpMode='rewards';
   showCard('passCard');renderPass();api('pass').then(applyWallet).catch(()=>{});Native.haptic('light');}
+function openPassAt(skin){ // the Shop's "Unlock it on the Battle Pass": the page holding that skin, with it chosen
+  const r=bpOn()&&bpRewards().find(x=>x.skin===skin);if(!r)return;openPass();bpMode='rewards';bpPage=r.page;bpSel=r.id;renderPass();}
 function renderPass(){
   if(!bpOn())return;const C=wallet.catalog.pass,P=wallet.pass,pages=C.pages;
   $('bpSeason').textContent=`Season ${C.n} · ${C.name}`;$('bpClock').dataset.ends=C.ends;$('bpClock').dataset.starts=C.starts||0;bpTick();
@@ -6754,7 +6793,8 @@ function drawBpTiles(){for(const cv of document.querySelectorAll('#bpGrid canvas
 let bpDrawn=0,bpAsked=0;
 let bpFeatT=0;(function passLoop(now){if(!$('passCard').hidden&&!document.hidden&&!RM){if(now-bpFeatT>=30){bpFeatT=now;drawBpFeat();}if(now-bpDrawn>100){bpDrawn=now;drawBpTiles();}}requestAnimationFrame(passLoop);})(0); // the stage at 30 fps like the lobby's cell, the tiles at 10 fps like the shop's
 function bpTick(){const el=$('bpClock'),now=Date.now(),st=+el.dataset.starts||0,ms=+el.dataset.ends-now,pre=now<st; // testers see a season before it starts
-  el.querySelector('span').textContent=pre?'Starts in '+fmtLeft(st-now):ms>864e5?fmtLeft(ms)+' left':svClock(ms);el.title=pre?'Season starts in':'Season ends in';}
+  const sp=el.querySelector('span'),t=pre?'<i>Starts in </i>'+fmtLeft(st-now):ms>864e5?fmtLeft(ms)+'<i> left</i>':svClock(ms); // the words hide on narrow phones
+  if(sp.innerHTML!==t)sp.innerHTML=t;el.title=pre?'Season starts in':'Season ends in';}
 setInterval(()=>{if($('passCard').hidden||document.hidden)return;bpTick();bqTick();const Q=bqOn()?wallet.quests:null;
   if((+$('bpClock').dataset.ends<=Date.now()||(Q&&Math.min(Q.daily.ends,Q.weekly.ends)<=Date.now()))&&Date.now()-bpAsked>30000){bpAsked=Date.now();api('pass').then(applyWallet).catch(()=>{});}},1000); // the season is over (the server hides it) or new quests are due
 async function bpClaim(){
