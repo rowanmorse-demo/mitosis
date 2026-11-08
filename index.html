@@ -1187,31 +1187,31 @@ body.saver .lb-bg *{animation:none!important}
 /* quests: today's and this week's, each a card of goals with a bar, the count and the XP it pays; done ones turn green */
 #passCard .bp-quests{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px;align-items:start}
 #passCard .bp-quests .bp-pnote{grid-column:1/-1}
-#passCard .bq-group{display:grid;gap:8px;min-width:0;padding:12px 10px 10px;border-radius:24px;border:1px solid rgba(var(--bp),.2);
+:is(#passCard,#questsCard) .bq-group{display:grid;gap:8px;min-width:0;padding:12px 10px 10px;border-radius:24px;border:1px solid rgba(var(--bp),.2);
   background:radial-gradient(90% 60% at 0% 0%,rgba(var(--bp),.1),transparent 70%),linear-gradient(180deg,rgba(16,34,38,.86),rgba(5,14,16,.9));box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 8px 20px rgba(0,0,0,.32)}
-#passCard .bq-head{display:flex;align-items:center;gap:9px;min-width:0;padding:0 4px 2px 6px}
-#passCard .bq-head h3{margin:0;font:800 19px/1 var(--display);letter-spacing:-.03em}
-#passCard .bq-sum{font:700 10.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:rgb(var(--bp));white-space:nowrap}
-#passCard .bq-new{margin-left:auto;display:inline-flex;align-items:center;gap:5px;height:26px;box-sizing:border-box;padding:0 10px 0 8px;border-radius:999px;background:rgba(0,0,0,.4);border:1px solid var(--line);color:var(--muted);font:700 11px/1 var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
-#passCard .bq-new svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
-#passCard .bq-list{list-style:none;margin:0;padding:0;display:grid;gap:6px}
-#passCard .bq{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:11px;min-height:58px;box-sizing:border-box;padding:8px 9px 8px 8px;border-radius:17px;background:rgba(0,0,0,.3);box-shadow:inset 0 0 0 1px rgba(255,255,255,.045);transition:background .3s}
-#passCard .bq-ico{display:grid;place-items:center;width:40px;height:40px;border-radius:13px;color:#8ff6e6;background:radial-gradient(70% 70% at 50% 30%,rgba(var(--bp),.26),rgba(var(--bp),.08));box-shadow:inset 0 0 0 1px rgba(var(--bp),.32),inset 0 1px 0 rgba(255,255,255,.08)}
-#passCard .bq-ico svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 5px rgba(var(--bp),.55))}
-#passCard .bq-t{display:grid;gap:7px;min-width:0}
-#passCard .bq-t b{font:700 14.5px/1.2 var(--display);letter-spacing:-.012em;text-wrap:balance}
-#passCard .bq-p{display:flex;align-items:center;gap:9px;min-width:0}
-#passCard .bq-bar{flex:1;min-width:0;height:6px;border-radius:999px;background:rgba(255,255,255,.08);box-shadow:inset 0 1px 2px rgba(0,0,0,.6);overflow:hidden}
-#passCard .bq-bar i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#1fb9a5,#7ff3e2);box-shadow:0 0 8px rgba(var(--bp),.6);transition:width .6s cubic-bezier(.2,.8,.2,1)}
-#passCard .bq-n{flex:none;font:600 11px/1 var(--mono);color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
-#passCard .bq-xp{display:grid;justify-items:center;gap:2px;min-width:54px;padding:7px 8px 6px;box-sizing:border-box;border-radius:13px;background:rgba(var(--bp),.12);box-shadow:inset 0 0 0 1px rgba(var(--bp),.38);color:#dffcf7;font:800 15px/1 var(--display);font-variant-numeric:tabular-nums}
-#passCard .bq-xp small{font:700 8.5px/1 var(--mono);letter-spacing:.14em;color:rgb(var(--bp))}
-#passCard .bq.done{background:rgba(95,224,168,.06);box-shadow:inset 0 0 0 1px rgba(95,224,168,.16)}
-#passCard .bq.done .bq-ico{color:#5fe0a8;background:rgba(95,224,168,.12);box-shadow:inset 0 0 0 1px rgba(95,224,168,.4)}#passCard .bq.done .bq-ico svg{filter:none}
-#passCard .bq.done .bq-t b{color:var(--muted)}
-#passCard .bq.done .bq-bar i{background:linear-gradient(90deg,#33c285,#9df5cc);box-shadow:0 0 8px rgba(95,224,168,.5)}
-#passCard .bq.done .bq-xp{color:#7af0bd;background:rgba(95,224,168,.1);box-shadow:inset 0 0 0 1px rgba(95,224,168,.45)}#passCard .bq.done .bq-xp small{color:#5fe0a8}
-#passCard .bq.just{animation:bqDone 1.2s cubic-bezier(.2,.8,.2,1)}
+:is(#passCard,#questsCard) .bq-head{display:flex;align-items:center;gap:9px;min-width:0;padding:0 4px 2px 6px}
+:is(#passCard,#questsCard) .bq-head h3{margin:0;font:800 19px/1 var(--display);letter-spacing:-.03em}
+:is(#passCard,#questsCard) .bq-sum{font:700 10.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:rgb(var(--bp));white-space:nowrap}
+:is(#passCard,#questsCard) .bq-new{margin-left:auto;display:inline-flex;align-items:center;gap:5px;height:26px;box-sizing:border-box;padding:0 10px 0 8px;border-radius:999px;background:rgba(0,0,0,.4);border:1px solid var(--line);color:var(--muted);font:700 11px/1 var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+:is(#passCard,#questsCard) .bq-new svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+:is(#passCard,#questsCard) .bq-list{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+:is(#passCard,#questsCard) .bq{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:11px;min-height:58px;box-sizing:border-box;padding:8px 9px 8px 8px;border-radius:17px;background:rgba(0,0,0,.3);box-shadow:inset 0 0 0 1px rgba(255,255,255,.045);transition:background .3s}
+:is(#passCard,#questsCard) .bq-ico{display:grid;place-items:center;width:40px;height:40px;border-radius:13px;color:#8ff6e6;background:radial-gradient(70% 70% at 50% 30%,rgba(var(--bp),.26),rgba(var(--bp),.08));box-shadow:inset 0 0 0 1px rgba(var(--bp),.32),inset 0 1px 0 rgba(255,255,255,.08)}
+:is(#passCard,#questsCard) .bq-ico svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 5px rgba(var(--bp),.55))}
+:is(#passCard,#questsCard) .bq-t{display:grid;gap:7px;min-width:0}
+:is(#passCard,#questsCard) .bq-t b{font:700 14.5px/1.2 var(--display);letter-spacing:-.012em;text-wrap:balance}
+:is(#passCard,#questsCard) .bq-p{display:flex;align-items:center;gap:9px;min-width:0}
+:is(#passCard,#questsCard) .bq-bar{flex:1;min-width:0;height:6px;border-radius:999px;background:rgba(255,255,255,.08);box-shadow:inset 0 1px 2px rgba(0,0,0,.6);overflow:hidden}
+:is(#passCard,#questsCard) .bq-bar i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#1fb9a5,#7ff3e2);box-shadow:0 0 8px rgba(var(--bp),.6);transition:width .6s cubic-bezier(.2,.8,.2,1)}
+:is(#passCard,#questsCard) .bq-n{flex:none;font:600 11px/1 var(--mono);color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+:is(#passCard,#questsCard) .bq-xp{display:grid;justify-items:center;gap:2px;min-width:54px;padding:7px 8px 6px;box-sizing:border-box;border-radius:13px;background:rgba(var(--bp),.12);box-shadow:inset 0 0 0 1px rgba(var(--bp),.38);color:#dffcf7;font:800 15px/1 var(--display);font-variant-numeric:tabular-nums}
+:is(#passCard,#questsCard) .bq-xp small{font:700 8.5px/1 var(--mono);letter-spacing:.14em;color:rgb(var(--bp))}
+:is(#passCard,#questsCard) .bq.done{background:rgba(95,224,168,.06);box-shadow:inset 0 0 0 1px rgba(95,224,168,.16)}
+:is(#passCard,#questsCard) .bq.done .bq-ico{color:#5fe0a8;background:rgba(95,224,168,.12);box-shadow:inset 0 0 0 1px rgba(95,224,168,.4)}:is(#passCard,#questsCard) .bq.done .bq-ico svg{filter:none}
+:is(#passCard,#questsCard) .bq.done .bq-t b{color:var(--muted)}
+:is(#passCard,#questsCard) .bq.done .bq-bar i{background:linear-gradient(90deg,#33c285,#9df5cc);box-shadow:0 0 8px rgba(95,224,168,.5)}
+:is(#passCard,#questsCard) .bq.done .bq-xp{color:#7af0bd;background:rgba(95,224,168,.1);box-shadow:inset 0 0 0 1px rgba(95,224,168,.45)}:is(#passCard,#questsCard) .bq.done .bq-xp small{color:#5fe0a8}
+:is(#passCard,#questsCard) .bq.just{animation:bqDone 1.2s cubic-bezier(.2,.8,.2,1)}
 @keyframes bqDone{0%{background:rgba(95,224,168,.35)}100%{background:rgba(95,224,168,.06)}}
 /* buying: a sheet over the whole screen (beside the page, which scrolls in portrait) with what it gives and the two offers */
 /* its own rules for the dimmed backdrop, the box and the bar, so lobby changes can't unstyle it (the lobby's .lb-sheet is gone) */
@@ -1257,9 +1257,9 @@ body.saver .lb-bg *{animation:none!important}
   #passCard .bpr-n{font-size:12px}#passCard .bpr-c{height:20px;font-size:11.5px}#passCard .bpr-free{top:5px;left:5px;padding:3px 5px;font-size:8px}#passCard .bpr-lk{top:4px;right:4px;width:20px;height:20px}
   #passCard .bp-pnote{font-size:10.5px}
   #passCard .bp-mode button{height:30px;padding:0 12px;font-size:13px}
-  #passCard .bq-group{padding:8px 7px 7px;gap:6px;border-radius:20px}#passCard .bq-head h3{font-size:16px}#passCard .bq-new{height:22px;font-size:10px}
-  #passCard .bq{min-height:46px;padding:5px 7px 5px 5px;gap:9px;border-radius:14px}#passCard .bq-ico{width:34px;height:34px;border-radius:11px}#passCard .bq-ico svg{width:18px;height:18px}
-  #passCard .bq-t{gap:5px}#passCard .bq-t b{font-size:13px}#passCard .bq-xp{min-width:46px;padding:5px 6px 4px;font-size:13px;border-radius:11px}
+  :is(#passCard,#questsCard) .bq-group{padding:8px 7px 7px;gap:6px;border-radius:20px}:is(#passCard,#questsCard) .bq-head h3{font-size:16px}:is(#passCard,#questsCard) .bq-new{height:22px;font-size:10px}
+  :is(#passCard,#questsCard) .bq{min-height:46px;padding:5px 7px 5px 5px;gap:9px;border-radius:14px}:is(#passCard,#questsCard) .bq-ico{width:34px;height:34px;border-radius:11px}:is(#passCard,#questsCard) .bq-ico svg{width:18px;height:18px}
+  :is(#passCard,#questsCard) .bq-t{gap:5px}:is(#passCard,#questsCard) .bq-t b{font-size:13px}:is(#passCard,#questsCard) .bq-xp{min-width:46px;padding:5px 6px 4px;font-size:13px;border-radius:11px}
 }
 /* portrait: one scrolling column: the level, the chosen reward as a banner, then the pages */
 @media (orientation:portrait){
@@ -1294,6 +1294,39 @@ body.saver .lb-bg *{animation:none!important}
   #passCard .bpr{padding:28px 8px 20px;gap:9px;border-radius:24px}#passCard .bpr-art{width:112px;height:112px}#passCard .bpr-art .sv-coin{font-size:76px}#passCard .bpr-n{font-size:16px}#passCard .bpr-c{height:28px;font-size:14px}
 }
 /* @ui:pass end */
+
+/* @ui:quests */
+/* Quests page: rewards still waiting from earlier days, today's and this week's quests with their clocks, and the
+   permanent ladders with tier pips. A finished quest turns gold with a Claim button (it pays ATP); a claimed one turns
+   green. The rows are the pass page's .bq rows, and the pass page's Quests half shows the same thing. */
+#questsCard{--bp:79,240,216;--bp2:226,104,255}
+#questsCard .qs-wrap{min-width:0;width:100%;max-width:1080px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px;align-items:start;padding-bottom:max(18px,env(safe-area-inset-bottom))}
+:is(#passCard,#questsCard) .bq-group.wide{grid-column:1/-1}
+:is(#passCard,#questsCard) .qs-note{grid-column:1/-1;margin:0;padding:0 6px;font:600 11.5px/1.35 var(--mono);color:var(--muted);text-align:center;text-wrap:balance}
+#questsCard .qs-all{appearance:none;border:0;display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 16px;border-radius:999px;cursor:pointer;font:800 14px/1 var(--display);color:#2a1600;
+  background:linear-gradient(180deg,#ffeaa0,#f7bb3a 48%,#e0920f);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.55),inset 0 -2px 0 rgba(110,50,0,.3),0 6px 16px rgba(242,177,52,.3);transition:transform .1s}
+#questsCard .qs-all:active{transform:scale(.95)}#questsCard .qs-all:disabled{opacity:.6}
+#questsBtn{position:relative}
+:is(#passCard,#questsCard) .bq-rw{display:grid;justify-items:center;gap:3px;min-width:58px;padding:7px 8px 6px;box-sizing:border-box;border-radius:13px;background:rgba(242,177,52,.1);box-shadow:inset 0 0 0 1px rgba(242,177,52,.4)}
+:is(#passCard,#questsCard) .bq-rw b{display:inline-flex;align-items:center;gap:4px;font:800 15px/1 var(--display);color:#ffe3a0;font-variant-numeric:tabular-nums}
+:is(#passCard,#questsCard) .bq-rw .sv-coin{font-size:14px}
+:is(#passCard,#questsCard) .bq-rw small{font:700 8.5px/1 var(--mono);letter-spacing:.1em;color:rgb(var(--bp));white-space:nowrap}
+:is(#passCard,#questsCard) .bq-claim{appearance:none;border:0;cursor:pointer;display:grid;justify-items:center;gap:4px;min-width:76px;padding:8px 10px 7px;box-sizing:border-box;border-radius:13px;color:#2a1600;font:800 15px/1 var(--display);
+  background:linear-gradient(180deg,#ffeaa0,#f7bb3a 48%,#e0920f);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.55),inset 0 -2px 0 rgba(110,50,0,.3),0 6px 16px rgba(242,177,52,.32);animation:svpulse 1.6s ease-in-out infinite;transition:transform .1s}
+:is(#passCard,#questsCard) .bq-claim small{display:inline-flex;align-items:center;gap:3px;font:800 10.5px/1 var(--display);opacity:.8;white-space:nowrap;font-variant-numeric:tabular-nums}
+:is(#passCard,#questsCard) .bq-claim small .sv-coin{font-size:10.5px}
+:is(#passCard,#questsCard) .bq-claim:active{transform:scale(.95)}:is(#passCard,#questsCard) .bq-claim:disabled{opacity:.6;animation:none}
+:is(#passCard,#questsCard) .bq-got{display:inline-flex;align-items:center;gap:5px;padding:0 4px;font:800 10px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:#7af0bd}
+:is(#passCard,#questsCard) .bq-got svg{width:13px;height:13px}
+:is(#passCard,#questsCard) .bq.ready{background:rgba(242,177,52,.08);box-shadow:inset 0 0 0 1px rgba(242,177,52,.35)}
+:is(#passCard,#questsCard) .bq.ready .bq-ico{color:#ffd77a;background:rgba(242,177,52,.14);box-shadow:inset 0 0 0 1px rgba(242,177,52,.45)}:is(#passCard,#questsCard) .bq.ready .bq-ico svg{filter:drop-shadow(0 0 5px rgba(242,177,52,.6))}
+:is(#passCard,#questsCard) .bq.ready .bq-bar i{background:linear-gradient(90deg,#e0920f,#ffe28a);box-shadow:0 0 8px rgba(242,177,52,.6)}
+:is(#passCard,#questsCard) .bq-tiers{display:inline-flex;gap:4px;margin-left:8px;vertical-align:2px}
+:is(#passCard,#questsCard) .bq-mode{display:inline-block;margin-left:7px;padding:3px 7px;border-radius:999px;vertical-align:2px;font:700 8.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:#ffb469;background:rgba(255,150,60,.12);box-shadow:inset 0 0 0 1px rgba(255,150,60,.35);white-space:nowrap}
+:is(#passCard,#questsCard) .bq-tiers i{width:7px;height:7px;border-radius:2px;transform:rotate(45deg);background:rgba(255,255,255,.16)}
+:is(#passCard,#questsCard) .bq-tiers i.on{background:#ffd77a;box-shadow:0 0 6px rgba(242,177,52,.6)}
+@media (orientation:landscape) and (max-height:520px){:is(#passCard,#questsCard) .bq-claim{min-width:64px;padding:6px 8px 5px;font-size:13px;border-radius:11px}:is(#passCard,#questsCard) .bq-rw{min-width:50px;padding:5px 6px 4px}}
+/* @ui:quests end */
 
 /* @ui:skins */
 /* Inventory: a lit showcase stage for the skin you wear, then your collection and the classic-cell picker.
@@ -2536,6 +2569,21 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
 <div id="joyZone" aria-hidden="true"></div>
 <div id="joy" aria-hidden="true"><div class="base"></div><div class="knob"></div></div>
 
+<!-- icons the Quests page and the battle pass share (outside the pages, so a hidden page doesn't hide them) -->
+<svg class="lb-sprite" aria-hidden="true" focusable="false">
+  <symbol id="bpi-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="bpi-o-star" viewBox="0 0 24 24"><path d="M12 3.2l2.6 5.4 5.9.8-4.3 4.1 1.1 5.9L12 16.6l-5.3 2.8 1.1-5.9-4.3-4.1 5.9-.8z"/></symbol>
+  <symbol id="bpi-o-list" viewBox="0 0 24 24"><path d="M10 6.5h10M10 12h10M10 17.5h10M3.6 6.6l1.4 1.4 2.4-2.8M3.6 12.1l1.4 1.4 2.4-2.8M3.6 17.6l1.4 1.4 2.4-2.8"/></symbol>
+  <symbol id="bpi-q-lives" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6"/><circle cx="10.2" cy="10.4" r="2.7"/><circle cx="15.6" cy="15.2" r="1.1"/></symbol>
+  <symbol id="bpi-q-time" viewBox="0 0 24 24"><circle cx="12" cy="13.6" r="7.6"/><path d="M12 13.6V9.8M9.4 2.8h5.2M12 2.8V6M18.4 7.2l1.5-1.5"/></symbol>
+  <symbol id="bpi-q-life" viewBox="0 0 24 24"><path d="M6.5 3h11M6.5 21h11M8 3v2.6c0 2.6 4 3.8 4 6.4s-4 3.8-4 6.4V21M16 3v2.6c0 2.6-4 3.8-4 6.4s4 3.8 4 6.4V21"/></symbol>
+  <symbol id="bpi-q-lasts" viewBox="0 0 24 24"><path d="M16.8 3.2l3 3-3 3M4.2 11.4V10a3.8 3.8 0 0 1 3.8-3.8h11.6M7.2 20.8l-3-3 3-3M19.8 12.6V14a3.8 3.8 0 0 1-3.8 3.8H4.4"/></symbol>
+  <symbol id="bpi-q-top" viewBox="0 0 24 24"><path d="M2.8 20.6h18.4M9 20.6V8.6h6v12M3.6 20.6v-6.2H9M15 12.4h5.4v8.2M12 3.4v2.2"/></symbol>
+  <symbol id="bpi-q-win" viewBox="0 0 24 24"><path d="M3.5 8.5l4.2 3.3L12 5.5l4.3 6.3 4.2-3.3-1.8 10H5.3zM6 21h12"/></symbol>
+  <symbol id="bpi-q-eat" viewBox="0 0 24 24"><path d="M19.2 7.4a8.4 8.4 0 1 0 0 9.2L12.5 12z"/><circle cx="20.4" cy="12" r="1.3"/><circle cx="9.6" cy="8.6" r="1.1"/></symbol>
+  <symbol id="bpi-q-mass" viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 17V10M8.9 13.1L12 10l3.1 3.1M9 3.2h6"/></symbol>
+  <symbol id="bpi-q-splitkill" viewBox="0 0 24 24"><circle cx="7.6" cy="13.6" r="4.6"/><circle cx="16.4" cy="10.4" r="3.4"/><path d="M11.4 4.2l1.2 3.4M19.2 16.6l2.3 2.3M13.2 19.4l1 2"/></symbol>
+  <symbol id="bpi-q-dailies" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 9.5h17M8 3v4M16 3v4M8.6 14.8l2.3 2.2 4.6-4.5"/></symbol></svg>
 <div id="overlay">
   <div class="lobby" id="startCard">
     <div class="lb-bg" aria-hidden="true"><canvas id="lbBgFar"></canvas><canvas id="lbBgMid"></canvas><i class="lb-bk lb-bk1"></i><i class="lb-bk lb-bk2"></i></div>
@@ -2561,6 +2609,7 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
     <nav class="lb-nav" aria-label="Menu">
       <button class="lb-tab" id="lookBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 5.3V4.5a2.5 2.5 0 0 1 5 0v.8"/><path d="M6 10.8A5.8 5.8 0 0 1 11.8 5h.4a5.8 5.8 0 0 1 5.8 5.8V19a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2z"/><rect x="9" y="13.5" width="6" height="4.5" rx="1.3"/><path d="M6 13H4.5v4.5H6M18 13h1.5v4.5H18"/></svg><span>Inventory</span></button>
       <button class="lb-tab" id="shopBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 8h13l-1 12.5h-11z"/><path d="M9 10.5V7a3 3 0 0 1 6 0v3.5"/></svg><span>Shop</span></button>
+      <button class="lb-tab" id="questsBtn" type="button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 6.5h10M10 12h10M10 17.5h10"/><path d="M3.6 6.6l1.4 1.4 2.4-2.8M3.6 12.1l1.4 1.4 2.4-2.8M3.6 17.6l1.4 1.4 2.4-2.8"/></svg><span>Quests</span><b class="rail-badge" id="questsBadge" hidden></b></button>
       <button class="lb-tab" id="rankBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3"/><path d="M12 14v4M8 20h8"/></svg><span>Ranks</span></button>
       <button class="lb-tab" id="friendsBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.5" r="3.5"/><path d="M2.5 19.5a6.5 6.5 0 0 1 13 0"/><circle cx="17" cy="9.5" r="2.6"/><path d="M15.6 14.3a5 5 0 0 1 5.9 5.2"/></svg><span>Friends</span><b class="rail-badge" id="friendsBadge" hidden></b></button>
     </nav>
@@ -2808,17 +2857,7 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
   <div class="passview" id="passCard" data-r="atp" hidden>
     <svg class="lb-sprite" aria-hidden="true" focusable="false"><defs><linearGradient id="bpStarG" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="#f4fffd"/><stop offset=".5" stop-color="#7ff3e2"/><stop offset="1" stop-color="#19b3a0"/></linearGradient></defs>
       <symbol id="bpi-star" viewBox="0 0 24 24"><path d="M12 1.8l3 6.3 6.9.9-5 4.8 1.3 6.8L12 17.3l-6.2 3.3 1.3-6.8-5-4.8 6.9-.9z" fill="url(#bpStarG)" stroke="#0d5c53" stroke-width=".9" stroke-linejoin="round"/></symbol>
-      <symbol id="bpi-lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.6" fill="currentColor"/><path d="M8.2 10.5V8a3.8 3.8 0 0 1 7.6 0v2.5" fill="none" stroke="currentColor" stroke-width="2.4"/></symbol>
-      <symbol id="bpi-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
-      <!-- quests: the switch, and one icon per kind of goal (stroked in currentColor by the CSS) -->
-      <symbol id="bpi-o-star" viewBox="0 0 24 24"><path d="M12 3.2l2.6 5.4 5.9.8-4.3 4.1 1.1 5.9L12 16.6l-5.3 2.8 1.1-5.9-4.3-4.1 5.9-.8z"/></symbol>
-      <symbol id="bpi-o-list" viewBox="0 0 24 24"><path d="M10 6.5h10M10 12h10M10 17.5h10M3.6 6.6l1.4 1.4 2.4-2.8M3.6 12.1l1.4 1.4 2.4-2.8M3.6 17.6l1.4 1.4 2.4-2.8"/></symbol>
-      <symbol id="bpi-q-lives" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6"/><circle cx="10.2" cy="10.4" r="2.7"/><circle cx="15.6" cy="15.2" r="1.1"/></symbol>
-      <symbol id="bpi-q-time" viewBox="0 0 24 24"><circle cx="12" cy="13.6" r="7.6"/><path d="M12 13.6V9.8M9.4 2.8h5.2M12 2.8V6M18.4 7.2l1.5-1.5"/></symbol>
-      <symbol id="bpi-q-life" viewBox="0 0 24 24"><path d="M6.5 3h11M6.5 21h11M8 3v2.6c0 2.6 4 3.8 4 6.4s-4 3.8-4 6.4V21M16 3v2.6c0 2.6-4 3.8-4 6.4s4 3.8 4 6.4V21"/></symbol>
-      <symbol id="bpi-q-lasts" viewBox="0 0 24 24"><path d="M16.8 3.2l3 3-3 3M4.2 11.4V10a3.8 3.8 0 0 1 3.8-3.8h11.6M7.2 20.8l-3-3 3-3M19.8 12.6V14a3.8 3.8 0 0 1-3.8 3.8H4.4"/></symbol>
-      <symbol id="bpi-q-top" viewBox="0 0 24 24"><path d="M2.8 20.6h18.4M9 20.6V8.6h6v12M3.6 20.6v-6.2H9M15 12.4h5.4v8.2M12 3.4v2.2"/></symbol>
-      <symbol id="bpi-q-win" viewBox="0 0 24 24"><path d="M3.5 8.5l4.2 3.3L12 5.5l4.3 6.3 4.2-3.3-1.8 10H5.3zM6 21h12"/></symbol></svg>
+      <symbol id="bpi-lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.6" fill="currentColor"/><path d="M8.2 10.5V8a3.8 3.8 0 0 1 7.6 0v2.5" fill="none" stroke="currentColor" stroke-width="2.4"/></symbol></svg>
     <header class="bp-top">
       <button class="lb-icon" id="passBack" type="button" aria-label="Back to the lobby"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
       <h2 class="bp-title"><small id="bpSeason">Season 1</small><span>Battle Pass</span></h2>
@@ -2870,6 +2909,11 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
   </div>
 
   <!-- Friends and parties (socRender): your friend code, adding by code, requests, the party and its invites -->
+  <!-- Quests (economy.js QUESTS): daily, weekly and permanent quests; finished ones are claimed here for ATP -->
+  <div class="card panel page" id="questsCard" hidden>
+    <header class="pg-top"><button class="lb-icon back" type="button" aria-label="Back to the lobby"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><h2>Quests</h2><button class="qs-all" id="qsAll" type="button" hidden></button></header>
+    <div class="qs-wrap" id="qsWrap" aria-live="polite"></div>
+  </div>
   <div class="card panel page" id="friendsCard" hidden>
     <header class="pg-top"><button class="lb-icon back" type="button" aria-label="Back to the lobby"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><h2>Friends</h2></header>
     <div class="fr-wrap">
@@ -6169,7 +6213,7 @@ function applyWallet(w){
   drawAvatar();
   renderSkins();
   if(wallet.pass&&!w.catalog&&!bpOn()&&!bpFetch){bpFetch=true;api('pass').then(applyWallet).catch(()=>{}).finally(()=>{bpFetch=false;});} // the pass came on since the session started
-  syncPass();
+  syncPass();syncQuests();
 }
 let econDelay=5000;
 async function econInit(){
@@ -6189,7 +6233,7 @@ const runOff=()=>isNearby()||(CL?!classicRated():local==='practice'&&!casualRate
 function econRunStart(){runId=null;if(runOff()){runPromise=null;return;}runPromise=api('run/start',{mode:runMode(),relay:relayKey()}).then(r=>{runId=r.runId;return r.runId;}).catch(()=>null);}
 async function econRunEnd(){
   if(!human)return;const unranked=CL?'classic':isNearby()?'nearby':local==='practice'?'practice':'',off=runOff();resPrep(unranked,off);if(off)return;
-  const s=human.stats,rep={survived:Math.max(0,T-s.born),eaten:s.eaten|0,splitKills:s.splitKills|0,peak:Math.round(s.peak),bestRank:s.bestRank||999,place:s.place|0,of:s.of|0,life:Math.max(0,livesUsed()-1),show:1,relay:relayKey()};
+  const s=human.stats,rep={claims:1,survived:Math.max(0,T-s.born),eaten:s.eaten|0,splitKills:s.splitKills|0,peak:Math.round(s.peak),bestRank:s.bestRank||999,place:s.place|0,of:s.of|0,life:Math.max(0,livesUsed()-1),show:1,relay:relayKey()};
   if(unranked&&!CL)rep.skill=settings.botSkill||'normal'; // Casual: the bots' skill scales AI rating gains
   rep.name=human.name;const rid=runId||(runPromise?await runPromise:null);runId=null;runPromise=null;
   if(!rid){showEarn(wallet.online?null:{k:'offline'});showXp(null);return;}
@@ -6469,7 +6513,8 @@ async function flushRuns(){ // report finished runs; keep them queued while the 
     try{const w=await api('run/end',rep);applyWallet(w);if(rep.show){const R=(wallet.catalog&&wallet.catalog.rules)||{};const W=wallet.catalog&&wallet.catalog.wins,cas=w.kind==='casual',pl=rep.place|0;
       showEarn(w.payout?{k:'atp',n:w.payout,tag:w.winCapped?'capped':w.winBonus>0?(pl===1?'Win':'Top 3'):''}:{k:'none',why:w.winCapped?'Daily cap':w.kind==='classic'&&rep.survived<((wallet.catalog&&wallet.catalog.classic&&wallet.catalog.classic.minSec)||60)?`Survive ${Math.round(((wallet.catalog&&wallet.catalog.classic&&wallet.catalog.classic.minSec)||60)/60)} min`:cas?(W&&rep.survived<W.minSec?`Survive ${Math.round(W.minSec/60)} min`:'Top 3 only'):rep.survived<(R.minSec||20)?`Survive ${R.minSec||20}s`:`Top ${(R.byRank||[[30]]).slice(-1)[0][0]} only`});showRank(w);showXp(w);
       const qd=Array.isArray(w.questsDone)?w.questsDone:[],up=w.passUp>0&&bpOn()?`Tier ${w.pass.level}, +${w.passUp*wallet.catalog.pass.stars} Battle Stars`:'';
-      if(qd.length&&bpOn()){for(const q of qd)bqJust.add(q.id);toast('Battle Pass',`${qd.length>1?qd.length+' quests':'Quest'} complete · +${(w.questXp|0).toLocaleString()} XP`,up||(qd.length>1?qd.map(q=>q.text).join(' · '):qd[0].text));} // phones show only the title
+      const qt=Array.isArray(w.questTiers)?w.questTiers:[],fin=[...qd,...qt.map(t=>({...t,period:'perm'}))];
+      if(fin.length&&qsOn()){for(const q of fin)bqJust.add(q.period+'/'+q.id);toast('Quests',`${fin.length>1?fin.length+' quests':'Quest'} complete · claim ${fin.reduce((n,q)=>n+(q.atp|0),0).toLocaleString()} ATP`,fin.length>1?fin.map(q=>q.text).join(' · '):fin[0].text);} // phones show only the title
       else if(up)toast('Battle Pass',`Tier ${w.pass.level}`,`+${w.passUp*wallet.catalog.pass.stars} Battle Stars to spend`);}}
     catch(e){if(!e.status||e.status>=500){if(rep.show){showEarn({k:'later'});showXp({later:1});}break;}}
     a.shift();savePending(a);}}
@@ -6792,35 +6837,80 @@ $('bpOffers').addEventListener('click',e=>{const b=e.target.closest('.bp-offer')
 $('bpTabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const i=+b.dataset.i;if(i===bpPage)return;bpPage=i;bpSel='';renderPass();Native.haptic('light');});
 $('bpGrid').addEventListener('click',e=>{const b=e.target.closest('.bpr');if(!b||b.dataset.id===bpSel)return;bpSel=b.dataset.id;for(const t of $('bpGrid').children){const on=t.dataset.id===bpSel;t.classList.toggle('sel',on);t.setAttribute('aria-pressed',String(on));}renderBpFeat();Native.haptic('light');});
 $('bpClaim').addEventListener('click',bpClaim);
-/* ---- Quests (economy.js QUESTS): daily and weekly goals for ranked lives, the same for everyone. Each pays its XP into the
-   Battle Pass once, as soon as the server sees it done, so there is nothing to claim. wallet.quests has today's and this
-   week's with their progress; it is null while the pass is off and missing from servers before quests, and then the
-   switch hides. ---- */
-const bqOn=()=>bpOn()&&!!(wallet.quests&&wallet.quests.daily&&wallet.quests.weekly);
+/* ---- Quests (economy.js QUESTS): daily and weekly goals for ranked lives (the same for everyone), and permanent ladders of
+   lifetime totals. A finished quest waits for its Claim, which pays ATP, and pass XP too while the battle pass is live
+   for you. wallet.quests has today's, this week's, the ladders, rewards still waiting from earlier days and how many are
+   ready; it is null while quests are switched off and missing from servers before them, and then the Quests tab hides.
+   The Quests page and the battle pass page's Quests half show the same thing. ---- */
+const qsOn=()=>!!(wallet.quests&&wallet.quests.daily&&wallet.quests.weekly&&Array.isArray(wallet.quests.permanent));
+const bqOn=()=>bpOn()&&qsOn();
 const bqKey=()=>wallet.quests.daily.key+'/'+wallet.quests.weekly.key;
 const bqSeen=()=>{try{return localStorage.getItem('mitosis.questsSeen')||'';}catch(e){return'';}};
 const bqMarkSeen=()=>{try{localStorage.setItem('mitosis.questsSeen',bqKey());}catch(e){}};
 const bqMs=s=>`${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
 const bqCount=q=>q.kind==='time'?`${bqMs(q.progress)} / ${bqMs(q.goal)}`:`${q.progress} / ${q.goal}`;
-const bqLeft=ends=>(ends>=wallet.catalog.pass.ends?'Ends in ':'New in ')+fmtLeft(ends-Date.now());
-function renderQuests(){
+const bqLeft=ends=>'New in '+fmtLeft(ends-Date.now());
+const QS_ICON={eaten:'q-eat',lives:'q-lives',time:'q-time',wins:'q-win',top3:'q-top',dailies:'q-dailies'};
+const QS_CLOCK='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>';
+const qsAtp=n=>`<i class="sv-coin" aria-hidden="true"></i>${(n|0).toLocaleString()}`;
+const qsHours=s=>s>=3600?`${+(s/3600).toFixed(s<36000?1:0)} h`:`${Math.floor(s/60)} min`;
+const qsClassic=()=>!!(wallet.catalog&&Array.isArray(wallet.catalog.modes)&&wallet.catalog.modes.includes('classic')); // the server counts Classic lives
+const qsTag=q=>qsClassic()&&Array.isArray(q.modes)&&!q.modes.includes('classic')?'<span class="bq-mode" title="Needs a battle royale round: Classic games don\'t count">Ranked only</span>':'';
+const qsPermCount=q=>q.line==='time'?`${qsHours(q.progress)} / ${qsHours(q.goal)}`:`${q.progress.toLocaleString()} / ${q.goal.toLocaleString()}`;
+function qsRight(q,period){ // the reward; the Claim button once the quest is finished; then Claimed
+  if(q.claimed)return `<span class="bq-got">${bpUse('check')}Claimed</span>`;
+  const xp=q.xp?`+${q.xp} XP`:'';
+  if(q.done)return `<button type="button" class="bq-claim" data-period="${escH(period)}" data-id="${escH(q.id)}" aria-label="Claim ${q.atp} ATP${q.xp?` and ${q.xp} pass XP`:''}"><span>Claim</span><small>${qsAtp(q.atp)}${xp?' · '+xp:''}</small></button>`;
+  return `<span class="bq-rw" aria-hidden="true"><b>${qsAtp(q.atp)}</b>${xp?`<small>${xp}</small>`:''}</span>`;}
+function qsRow(q,period,icon,count,extra=''){const st=q.claimed?' done':q.done?' ready':'',key=period+'/'+q.id;
+  return `<li class="bq${st}${bqJust.has(key)?' just':''}" aria-label="${escH(q.text)}, ${q.claimed?'claimed':q.done?'ready to claim':count}, ${q.atp} ATP"><span class="bq-ico">${bpUse(q.claimed?'check':icon)}</span>`
+    +`<span class="bq-t"><b>${escH(q.text)}${extra}${qsTag(q)}</b><span class="bq-p" aria-hidden="true"><span class="bq-bar"><i style="width:${(Math.min(1,q.progress/q.goal)*100).toFixed(1)}%"></i></span><span class="bq-n">${count}</span></span></span>`
+    +qsRight(q,period)+'</li>';}
+function qsHTML(){
+  const Q=wallet.quests,grp=(name,G,when)=>{const done=G.quests.filter(q=>q.done).length;
+    return `<section class="bq-group" aria-label="${name} quests, ${done} of ${G.quests.length} done"><header class="bq-head"><h3>${name}</h3><span class="bq-sum">${done}/${G.quests.length}</span>`
+      +`<span class="bq-new" data-ends="${G.ends}" title="${when}">${QS_CLOCK}<span>${bqLeft(G.ends)}</span></span></header><ol class="bq-list">${G.quests.map(q=>qsRow(q,G.period,'q-'+q.kind,bqCount(q))).join('')}</ol></section>`;};
+  const early=(Q.earlier||[]).length?`<section class="bq-group wide" aria-label="Rewards waiting from earlier"><header class="bq-head"><h3>Not claimed yet</h3><span class="bq-sum">${Q.earlier.length} waiting</span></header><ol class="bq-list">`
+    +Q.earlier.map(e=>qsRow({...e,goal:1,progress:1,done:true,claimed:false},e.period,'q-'+e.kind,e.from==='week'?'From an earlier week':'From an earlier day')).join('')+'</ol></section>':'';
+  const pip=q=>`<span class="bq-tiers" aria-hidden="true">${Array.from({length:q.tiers},(_,i)=>`<i class="${q.claimed||i<q.tier-1?'on':''}"></i>`).join('')}</span>`;
+  const perm=`<section class="bq-group wide" aria-label="Permanent quests"><header class="bq-head"><h3>Permanent</h3><span class="bq-sum">${Q.permanent.filter(q=>q.claimed).length}/${Q.permanent.length} complete</span><span class="bq-new" title="Lifetime totals, in four tiers">Never resets</span></header><ol class="bq-list">`
+    +Q.permanent.map(q=>qsRow(q,'perm',QS_ICON[q.line]||'q-lives',qsPermCount(q),pip(q))).join('')+'</ol></section>';
+  return early+grp('Daily',Q.daily,'New ones every day at midnight UTC')+grp('Weekly',Q.weekly,'New ones every Monday at midnight UTC')+perm
+    +`<p class="qs-note">${qsClassic()?'Ranked and Classic lives of 20 seconds or more count; quests marked Ranked only need a battle royale round.':'Ranked lives of 20 seconds or more count.'} Claim a finished quest for its ATP${bpOn()?', and its XP for your Battle Pass':''}.</p>`;}
+function renderQuests(){ // the battle pass page's Quests half, and its switch's badge
   const Q=wallet.quests,all=[...Q.daily.quests,...Q.weekly.quests],left=all.filter(q=>!q.done).length;
   if(bpMode==='quests'&&bqSeen()!==bqKey())bqMarkSeen(); // a new set is new until you look at it
-  const fresh=bqSeen()!==bqKey(),badge=$('bpModeQ').querySelector('b');badge.hidden=!left&&!fresh;badge.className=fresh?'new':left?'':'all';badge.textContent=left||'✓';
-  $('bpModeQ').setAttribute('aria-label',`Quests, ${left?left+' to do':'all done'}${fresh?', new':''}`);
+  const fresh=bqSeen()!==bqKey(),ready=Q.claimable|0,badge=$('bpModeQ').querySelector('b');badge.hidden=!left&&!fresh&&!ready;badge.className=fresh||ready?'new':left?'':'all';badge.textContent=ready||left||'✓';
+  $('bpModeQ').setAttribute('aria-label',`Quests, ${ready?ready+' to claim':left?left+' to do':'all done'}${fresh?', new':''}`);
   if($('bpQuests').hidden)return;
-  const clock='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>';
-  $('bpQuests').innerHTML=[['Daily',Q.daily,'New ones every day at midnight UTC'],['Weekly',Q.weekly,'New ones every Monday at midnight UTC']].map(([name,G,when])=>{const done=G.quests.filter(q=>q.done).length;
-    return `<section class="bq-group" aria-label="${name} quests, ${done} of ${G.quests.length} done"><header class="bq-head"><h3>${name}</h3><span class="bq-sum">${done}/${G.quests.length}</span>`
-      +`<span class="bq-new" data-ends="${G.ends}" title="${when}">${clock}<span>${bqLeft(G.ends)}</span></span></header><ol class="bq-list">`
-      +G.quests.map(q=>`<li class="bq${q.done?' done':''}${bqJust.has(q.id)?' just':''}" aria-label="${escH(q.text)}, ${q.done?'done':bqCount(q)}, ${q.xp} XP"><span class="bq-ico">${bpUse(q.done?'check':'q-'+q.kind)}</span>`
-        +`<span class="bq-t"><b>${escH(q.text)}</b><span class="bq-p" aria-hidden="true"><span class="bq-bar"><i style="width:${(Math.min(1,q.progress/q.goal)*100).toFixed(1)}%"></i></span><span class="bq-n">${bqCount(q)}</span></span></span>`
-        +`<span class="bq-xp" aria-hidden="true">+${q.xp}<small>XP</small></span></li>`).join('')+'</ol></section>';}).join('')
-    +'<p class="bp-pnote">Ranked lives of 20 seconds or more count. Quest XP goes straight into your Battle Pass.</p>';
-  bqJust.clear();
+  $('bpQuests').innerHTML=qsHTML();bqJust.clear();
 }
-function bqTick(){for(const el of document.querySelectorAll('#bpQuests .bq-new')){const t=bqLeft(+el.dataset.ends),sp=el.lastElementChild;if(sp.textContent!==t)sp.textContent=t;}}
+function renderQuestsPage(){
+  if(!qsOn()||$('questsCard').hidden)return;
+  const n=wallet.quests.claimable|0,all=$('qsAll');all.hidden=n<2;all.innerHTML=`Claim all<span aria-hidden="true">· ${n}</span>`;all.setAttribute('aria-label',`Claim all ${n} rewards`);
+  $('qsWrap').innerHTML=qsHTML();bqJust.clear();bqMarkSeen();
+}
+function syncQuests(){ // the home tab and its badge; the page closes if quests are switched off
+  const on=qsOn(),n=on?wallet.quests.claimable|0:0,b=$('questsBtn'),d=$('questsBadge');b.hidden=!on;d.hidden=!n;d.textContent=n>9?'9+':String(n);
+  b.setAttribute('aria-label',n?`Quests, ${n} reward${n>1?'s':''} to claim`:'Quests');
+  if(!$('questsCard').hidden){if(on)renderQuestsPage();else showCard('startCard');}
+}
+let qsBusy=false;
+async function qsClaim(body,btn){
+  if(qsBusy)return;if(!wallet.online){toast('Quests','Connect to claim','Rewards are paid by the server');return;}
+  qsBusy=true;if(btn)btn.disabled=true;
+  try{const w=await api('quests/claim',body);const c=Array.isArray(w.claimed)?w.claimed:[];for(const q of c)bqJust.add(q.period+'/'+q.id);applyWallet(w);
+    if(c.length){Native.haptic('success');sfx('ach');toast('Quests',`+${(w.atp|0).toLocaleString()} ATP`+(w.xp?` · +${w.xp} pass XP`:''),c.length>1?`${c.length} rewards claimed`:c[0].text);}}
+  catch(e){toast('Quests','Could not claim',e.message);}
+  finally{qsBusy=false;renderQuestsPage();if(!$('passCard').hidden)renderPass();}
+}
+function bqTick(){for(const el of document.querySelectorAll('#bpQuests .bq-new[data-ends],#qsWrap .bq-new[data-ends]')){const t=bqLeft(+el.dataset.ends),sp=el.lastElementChild;if(sp.textContent!==t)sp.textContent=t;}}
+setInterval(()=>{if($('questsCard').hidden||document.hidden||!qsOn())return;bqTick();const Q=wallet.quests;
+  if(Math.min(Q.daily.ends,Q.weekly.ends)<=Date.now()&&Date.now()-bpAsked>30000){bpAsked=Date.now();api('pass').then(applyWallet).catch(()=>{});}},1000); // a new day or week: the server has the new set
 $('bpMode').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.dataset.m===bpMode)return;bpMode=b.dataset.m;renderPass();Native.haptic('light');});
+$('questsBtn').addEventListener('click',()=>{if(!qsOn())return;showCard('questsCard');renderQuestsPage();api('pass').then(applyWallet).catch(()=>{});Native.haptic('light');});
+for(const id of['qsWrap','bpQuests'])$(id).addEventListener('click',e=>{const b=e.target.closest('.bq-claim');if(b&&!b.disabled)qsClaim({period:b.dataset.period,id:b.dataset.id},b);});
+$('qsAll').addEventListener('click',()=>qsClaim({all:true},$('qsAll')));
 function renderEarn(){ // the placement payouts, from the server's rules when we have them: medals for the podium, then the top-N brackets
   const br=(wallet.catalog&&wallet.catalog.rules&&wallet.catalog.rules.byRank)||[[1,25],[2,20],[3,16],[10,5],[30,1]],at=n=>(br.find(([r])=>n<=r)||[0,0])[1],last=br[br.length-1][0];
   $('earnList').innerHTML=[1,2,3,10,last].map(n=>`<li class="${n<=3?'m'+n:'top'}" aria-label="${ordinal(n)} place, ${at(n)} ATP">${n<=3?`<i class="md" aria-hidden="true">${n}</i>`:`<span aria-hidden="true">Top ${n}</span>`}<b aria-hidden="true">+${at(n)}</b><i class="sv-coin" aria-hidden="true"></i></li>`).join('');
@@ -8506,7 +8596,7 @@ function showCard(id){
   // diagnostic: a report of what sends the page from Settings back to the start card (Settings → Account → sign in)
   if(id==='startCard'&&shownCard==='settingsCard')reportHitch('settings->start via '+String(new Error().stack||'').split('\n').slice(1,4).map(s=>s.trim()).join(' | '));
   shownCard=id;if(id)$('tip').classList.remove('show');if(id==='startCard')setTimeout(drawAvatar,0);if(id==='lookCard')setTimeout(()=>drawAvatar($('lookCv')),0);
-  for(const c of['startCard','pauseCard','deathCard','storeCard','passCard','lookCard','rankCard','settingsCard','friendsCard','profileCard','introCard','deleteCard'])$(c).hidden=c!==id;$('overlay').hidden=!id;}
+  for(const c of['startCard','pauseCard','deathCard','storeCard','passCard','questsCard','lookCard','rankCard','settingsCard','friendsCard','profileCard','introCard','deleteCard'])$(c).hidden=c!==id;$('overlay').hidden=!id;}
 const isOffline=()=>{const N=window.__mitosisNet;return !N||N.state==='offline';};
 // Settings › Max ping (100 ms unless changed; 0: any), used by pingTooHigh. It goes by the median of the last 5 pings once
 // there are 3 (the first one after loading runs long); an unknown ping never blocks.
@@ -9068,7 +9158,7 @@ addEventListener('pointerdown',()=>{lastTouchAt=performance.now();},true);
 window.__wsTime=w=>{if(w>wsMax)wsMax=w;};setInterval(()=>{wsMax=0;},1000);
 function reportHitch(text){Native.send({type:'log',text});if(hitchSent++>40)return; // at most 40 reports per session
   try{fetch(window.MITOSIS_SERVER+'/api/log',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({who:(Native.platform||'web')+':'+(wallet.playerId||'?').slice(0,8),text})}).catch(()=>{});}catch(e){}}
-const COVER=new Set(['deathCard','storeCard','passCard','lookCard','rankCard','settingsCard','friendsCard','profileCard','deleteCard']); // full-screen pages: the arena under them can't be seen
+const COVER=new Set(['deathCard','storeCard','passCard','questsCard','lookCard','rankCard','settingsCard','friendsCard','profileCard','deleteCard']); // full-screen pages: the arena under them can't be seen
 function frame(nowMs){
   // battery: menus and pauses redraw at 30 fps (battery saver: play too); nothing is drawn under a full-screen page, and an
   // arena nobody else shares stands still there
