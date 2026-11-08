@@ -1457,175 +1457,261 @@ img.sk-im{display:block;-webkit-user-drag:none;user-select:none;-webkit-touch-ca
 /* @ui:skins end */
 
 /* @ui:profile */
-/* Profile: a hero card tinted by your tier (avatar, crest, progress), stat tiles, the skins you own, badges, runs, account */
-#profileCard,#profileCard .pf-mc[data-tier=Silver]{--tc:#c4d0da;--tc1:#f2f7fb;--tc2:#6f7f8c;--tg:rgba(185,198,210,.2)}
-#profileCard[data-tier=Bronze],#profileCard .pf-mc[data-tier=Bronze]{--tc:#e6ab7c;--tc1:#f8cba3;--tc2:#8a4f27;--tg:rgba(212,154,106,.24)}
-#profileCard[data-tier=Gold],#profileCard .pf-mc[data-tier=Gold]{--tc:#f6c04e;--tc1:#ffe58f;--tc2:#a86c0c;--tg:rgba(242,177,52,.26)}
-#profileCard[data-tier=Platinum],#profileCard .pf-mc[data-tier=Platinum]{--tc:#8fe3e0;--tc1:#d2fffc;--tc2:#2a8a87;--tg:rgba(143,227,224,.22)}
-#profileCard[data-tier=Diamond],#profileCard .pf-mc[data-tier=Diamond]{--tc:#9ac4ff;--tc1:#e0edff;--tc2:#3f6fd0;--tg:rgba(154,196,255,.26)}
-#profileCard[data-tier=Legend],#profileCard .pf-mc[data-tier=Legend]{--tc:#ff86aa;--tc1:#ffc6d6;--tc2:#c42c5f;--tg:rgba(255,92,138,.28)}
-#overlay>#profileCard.page{grid-template-columns:minmax(0,1fr);gap:12px 20px;align-items:start;
-  background:radial-gradient(80% 42% at 50% 0%,var(--tg),transparent 70%),linear-gradient(180deg,rgba(2,8,9,.92),rgba(2,8,9,.85))}
-#profileCard .pf-shop{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 18px 0 14px;border-radius:999px;border:1px solid rgba(242,177,52,.36);color:var(--ink);font:700 14px var(--display);
-  background:linear-gradient(180deg,rgba(242,177,52,.17),rgba(242,177,52,.05));box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 6px 16px rgba(0,0,0,.28);transition:transform .12s,filter .15s}
-#profileCard .pf-shop svg{width:18px;height:18px;fill:none;stroke:var(--amber);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-#profileCard .pf-shop:hover{filter:brightness(1.12);color:var(--ink)}#profileCard .pf-shop:active{transform:scale(.95)}
-/* hero */
-#profileCard .pf-hero{--ava:128px;--ry:calc(22px + var(--ava)/2);position:relative;isolation:isolate;display:grid;justify-items:center;gap:10px;padding:22px 18px 18px;border-radius:24px;border:1px solid var(--line);text-align:center;
-  background:radial-gradient(90% 62% at 50% 0%,var(--tg),transparent 72%),linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.015));box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 18px 40px rgba(0,0,0,.35)}
-#profileCard .pf-hero::before{content:"";position:absolute;z-index:-1;inset:0;border-radius:inherit;pointer-events:none;
-  background:repeating-radial-gradient(circle at 50% var(--ry),rgba(220,239,233,.06) 0 1px,transparent 1.5px 22px);
-  -webkit-mask-image:radial-gradient(circle at 50% var(--ry),#000 40px,transparent 190px);mask-image:radial-gradient(circle at 50% var(--ry),#000 40px,transparent 190px)}
-#profileCard .pf-ava{position:relative;width:var(--ava);aspect-ratio:1;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,var(--tg),transparent 70%)}
-#profileCard .pf-ava::after{content:"";position:absolute;inset:-7px;border-radius:50%;border:1.5px solid var(--tc);opacity:.35;-webkit-mask-image:linear-gradient(180deg,#000,transparent 85%);mask-image:linear-gradient(180deg,#000,transparent 85%)}
-#profileCard .pf-ava canvas{width:100%;height:100%;display:block;filter:drop-shadow(0 12px 18px rgba(0,0,0,.5));animation:pfbob 4.5s ease-in-out infinite}
+/* Profile: your cell big at the top with your name and level, both ratings side by side under it, then three tabs:
+   Overview (trophies, recent form, skins, account, Delete account last), Stats (two rings, the rating line, career numbers,
+   recent runs) and Trophies (the next one to win, the ones you hold, achievements). Open space instead of boxes inside boxes;
+   one glass surface (the lobby-look --sf tokens) for the few things that need a card. One type scale: 30 name, 28 numbers,
+   17 section titles, 15 items, 13 notes. Pink only marks state (the open tab, what you're wearing, your current trophy).
+   Your step of the ladder tints the light behind the cell and the rating bar: --tc its metal, --tg its glow (set from RANK_STEPS). */
+#profileCard{--sf:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.022)),rgba(8,19,23,.8);--sf-edge:rgba(255,255,255,.085);
+  --sf-hi:inset 0 1px 0 rgba(255,255,255,.08);--sf-drop:0 14px 30px -16px rgba(0,0,0,.85);--ink2:rgba(222,238,234,.66);--rule:rgba(170,235,225,.08);
+  --tc:#c4d0da;--tg:rgba(185,198,210,.16)}
+#overlay>#profileCard.page{grid-template-columns:minmax(0,1fr);gap:22px 40px;align-items:start;
+  background:radial-gradient(90% 46% at 50% 4%,var(--tg),transparent 72%),linear-gradient(180deg,rgba(2,8,9,.94),rgba(2,8,9,.88))}
+#profileCard .pv-set svg{width:21px;height:21px}
+/* the hero: the cell with a soft pool of light under it, the name, the level */
+#profileCard .pv-hero{display:grid;gap:22px;min-width:0}
+#profileCard .pv-me{display:grid;justify-items:center;text-align:center;min-width:0}
+#profileCard .pv-ava{position:relative;width:min(52vw,210px);aspect-ratio:1;margin:2px 0 12px;display:grid;place-items:center;isolation:isolate}
+#profileCard .pv-ava::before{content:"";position:absolute;z-index:-1;inset:-22%;border-radius:50%;background:radial-gradient(closest-side,var(--tg),transparent 75%);pointer-events:none}
+#profileCard .pv-ava::after{content:"";position:absolute;z-index:-1;left:16%;right:16%;bottom:-3%;height:13%;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.6),rgba(0,0,0,0));pointer-events:none}
+#profileCard .pv-ava canvas{width:100%;height:100%;display:block;filter:drop-shadow(0 16px 22px rgba(0,0,0,.45));animation:pfbob 4.5s ease-in-out infinite}
 @keyframes pfbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
-#profileCard .pf-name{margin:2px 0 0;max-width:100%;font:800 30px/1.02 var(--display);letter-spacing:-.04em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#profileCard .pf-rank{display:flex;align-items:center;gap:10px;text-align:left}
-#profileCard .pf-badge{display:grid;width:52px;height:52px}#profileCard .pf-badge svg{width:100%;height:100%}
-#profileCard .pf-crest{width:42px;height:46px;flex:none;filter:drop-shadow(0 4px 10px var(--tg)) drop-shadow(0 2px 3px rgba(0,0,0,.4))}
-#profileCard .pf-crest .s1{stop-color:var(--tc1)}#profileCard .pf-crest .s2{stop-color:var(--tc2)}
-#profileCard .pf-crest .o{fill:url(#pfCrestG)}#profileCard .pf-crest .i{fill:rgba(3,12,14,.6);stroke:rgba(255,255,255,.22);stroke-width:.8}
-#profileCard .pf-crest .g{fill:none;stroke:var(--tc1);stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round}
-#profileCard .pf-rk{display:grid;gap:4px}
-#profileCard .pf-rk .tier{font:600 10.5px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--tc)}
-#profileCard .pf-rk b{font:800 25px/1 var(--display);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
-#profileCard .pf-rk-k{font:600 9px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
-#profileCard .pf-ai{--ac:#c4d0da;display:flex;align-items:center;gap:8px;margin-left:6px;padding-left:16px;border-left:1px solid rgba(220,239,233,.12)}
-#profileCard .pf-ai .pf-mcw{width:27px;height:30px}
-#profileCard .pf-ai .tier{color:var(--ac)}
-#profileCard .pf-ai .pf-rk b{font-size:21px}
-#profileCard .pf-prog{width:100%;display:grid;gap:7px;margin-top:2px}
-#profileCard .pf-track{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px}
-#profileCard .pf-mcw{display:grid;width:22px;height:24px}#profileCard .pf-mcw:empty{display:none}
-#profileCard .pf-mc{width:100%;height:100%;filter:drop-shadow(0 2px 6px var(--tg))}#profileCard .pf-mc .o{fill:var(--tc)}
-#profileCard .pf-mc .g{fill:none;stroke:rgba(4,14,16,.78);stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
-#profileCard .pf-mcw.nx{opacity:.5;filter:saturate(.6)}
-#profileCard .pf-bar{height:8px;border-radius:99px;background:rgba(255,255,255,.07);box-shadow:inset 0 1px 2px rgba(0,0,0,.55);overflow:hidden}
-#profileCard .pf-bar i{display:block;height:100%;width:0;border-radius:inherit;background:linear-gradient(180deg,rgba(255,255,255,.38),rgba(255,255,255,0) 60%),linear-gradient(90deg,var(--tc2),var(--tc1));box-shadow:0 0 12px var(--tg);transition:width .7s cubic-bezier(.2,.8,.2,1)}
-#profileCard #pNext{font:600 11px/1 var(--mono);color:var(--muted)}
-/* right side */
-#profileCard .pf-side{display:grid;gap:12px;min-width:0}
-#profileCard .pf-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
-#profileCard .pf-stat{--c:var(--ink);--g:rgba(255,255,255,.06);position:relative;overflow:hidden;display:grid;justify-items:start;gap:4px;min-width:0;padding:12px 12px 11px;border-radius:18px;border:1px solid var(--line);
-  background:radial-gradient(70px 70px at 100% 0%,var(--g),transparent 70%),linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.015));box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 8px 20px rgba(0,0,0,.22)}
-#profileCard .pf-stat i{width:26px;height:26px;border-radius:9px;display:grid;place-items:center;margin-bottom:5px;background:var(--g);color:var(--c)}
-#profileCard .pf-stat i svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-#profileCard .pf-stat i.pf-coin::before{content:"";width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffe08a,#f2b134 55%,#a8700f);box-shadow:0 0 8px rgba(242,177,52,.55)}
-#profileCard .pf-stat b{max-width:100%;overflow:hidden;text-overflow:ellipsis;font:800 21px/1 var(--display);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
-#profileCard .pf-stat span{font:600 9.5px/1.2 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
-#profileCard .pf-stat.s-atp{--c:var(--amber);--g:rgba(242,177,52,.15)}#profileCard .pf-stat.s-earn{--c:#5fe0a8;--g:rgba(95,224,168,.13)}
-#profileCard .pf-stat.s-runs{--c:var(--violet);--g:rgba(154,140,255,.16)}#profileCard .pf-stat.s-best{--c:var(--accent);--g:rgba(255,92,138,.15)}
-#profileCard .pf-sec{display:grid;gap:12px;min-width:0;padding:14px 16px 16px;border-radius:20px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.012));box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
-#profileCard .pf-head{display:flex;align-items:center;gap:8px;min-height:24px}
-#profileCard .pf-head b{font:800 17px/1.1 var(--display);letter-spacing:-.02em}
-#profileCard .pf-cnt{font:600 11px/1 var(--mono);color:var(--muted);background:rgba(255,255,255,.07);border-radius:999px;padding:4px 8px;font-variant-numeric:tabular-nums}
-#profileCard .pf-cnt:empty{display:none}
-#profileCard .pf-link{appearance:none;width:100%;min-height:44px;margin:-8px 0 -6px;padding:0;border:0;background:none;color:var(--ink);cursor:pointer;text-align:left}
-#profileCard .pf-link svg{margin-left:auto;width:18px;height:18px;fill:none;stroke:var(--muted);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s}
-#profileCard .pf-link:hover svg{stroke:var(--ink);transform:translateX(2px)}
+#profileCard .pv-name{margin:0;max-width:100%;font-family:var(--display);font-size:30px;font-weight:800;line-height:1.1;letter-spacing:-.035em;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#profileCard .pv-name.long{font-size:24px}
+#profileCard .pv-sub{margin:5px 0 0;font:500 13px/1.3 var(--display);color:var(--ink2)}
+#profileCard .pv-sub:empty{display:none}
+#profileCard .pv-xp{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;width:min(100%,320px);margin-top:14px}
+#profileCard .pv-xp b{font:700 15px/1 var(--display);letter-spacing:-.01em;white-space:nowrap}
+#profileCard .pv-xpn{font:500 13px/1 var(--display);color:var(--ink2);font-variant-numeric:tabular-nums;white-space:nowrap}
+#profileCard .pv-bar{display:block;height:6px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}
+#profileCard .pv-bar i{display:block;height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,rgba(255,255,255,.55),#fff);transition:width .9s cubic-bezier(.2,.8,.2,1)}
+#profileCard .pv-xpbar i{background:linear-gradient(90deg,var(--xp1),var(--xp2))}
+/* both ratings in one band between two hairlines: vs players (opens Trophies) and vs AI */
+#profileCard .pv-ranks{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+#profileCard :is(.pv-rank,.pv-ai){appearance:none;display:grid;align-content:start;gap:10px;min-width:0;margin:0;padding:16px 16px 16px 0;border:0;background:none;color:var(--ink);font:inherit;text-align:left}
+#profileCard .pv-rank{cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity .15s}
+#profileCard .pv-rank:active{opacity:.7}
+#profileCard .pv-ai{padding:16px 0 16px 18px;border-left:1px solid var(--rule)}
+#profileCard .pv-k{font:500 13px/1 var(--display);color:var(--ink2)}
+#profileCard .pv-rrow{display:flex;align-items:center;gap:12px;min-width:0}
+#profileCard :is(.pv-crest,.pv-aie){flex:none;display:block;width:46px;height:46px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.45))}
+#profileCard :is(.pv-crest,.pv-aie) svg{display:block;width:100%;height:100%}
+#profileCard .pv-aie{width:40px;height:40px}
+#profileCard .pv-rk{display:grid;gap:4px;min-width:0}
+#profileCard .pv-rk b{font:800 28px/1 var(--display);letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+#profileCard .pv-tier{font:600 13px/1.15 var(--display);color:var(--ink2)} /* long ranks (Cytokinesis III) wrap rather than cut */
+#profileCard .pv-rbar{height:4px}
+#profileCard .pv-rbar i{background:linear-gradient(90deg,rgba(255,255,255,.35),var(--tc))}
+#profileCard .pv-next{font:500 13px/1.2 var(--display);color:var(--ink2);margin-top:-2px}
+#profileCard .pv-next:empty{display:none}
+/* tabs: the Settings tabs (one row on a hairline, the open one white with a pink line under it) */
+#profileCard .pv-tabs{display:flex;min-width:0;border-bottom:1px solid var(--rule);margin-bottom:-4px}
+#profileCard .pv-tabs button{appearance:none;position:relative;flex:1 1 0;min-width:0;height:46px;margin:0;padding:0 6px;border:0;background:none;color:var(--muted);
+  font:600 12.5px/1 var(--display);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .15s}
+#profileCard .pv-tabs button::after{content:"";position:absolute;left:22%;right:22%;bottom:-1px;height:2px;border-radius:2px 2px 0 0;background:var(--accent);transform:scaleX(0);transition:transform .2s}
+#profileCard .pv-tabs button[aria-selected=true]{color:#fff}
+#profileCard .pv-tabs button[aria-selected=true]::after{transform:none}
+#profileCard .pv-tabs button:focus-visible{outline:none;color:#fff;background:rgba(255,255,255,.05)}
+@media (hover:hover){#profileCard .pv-tabs button:not([aria-selected=true]):hover{color:var(--ink)}}
+#profileCard .pv-pane{display:grid;gap:34px;min-width:0;padding-top:6px;animation:pfin .35s cubic-bezier(.2,.8,.2,1) both}
+@keyframes pfin{from{opacity:0;transform:translateY(8px)}}
+/* sections: a title line and the content on the page itself */
+#profileCard .pv-sec{display:grid;gap:14px;min-width:0}
+#profileCard .pv-h{display:flex;align-items:baseline;gap:9px;min-height:22px}
+#profileCard .pv-h b{font:800 17px/1.1 var(--display);letter-spacing:-.02em}
+#profileCard .pv-cnt{font:500 13px/1 var(--display);color:var(--ink2);font-variant-numeric:tabular-nums}
+#profileCard .pv-cnt:empty{display:none}
+#profileCard .pv-more{appearance:none;position:relative;margin:0 0 0 auto;padding:0 2px;border:0;background:none;color:var(--ink2);font:600 13px/1 var(--display);cursor:pointer;-webkit-tap-highlight-color:transparent}
+#profileCard .pv-more::after{content:"›";margin-left:5px;font-size:17px;line-height:0;position:relative;top:1px}
+#profileCard .pv-more::before{content:"";position:absolute;inset:-12px -8px} /* a finger-sized target */
+@media (hover:hover){#profileCard .pv-more:hover{color:#fff}}
+/* trophies on Overview: the ones you hold, lit, then the next one as a pale outline with what it takes */
+#profileCard .pv-shelf{display:flex;gap:5px;margin:0 -4px;padding:0 4px 2px;overflow-x:auto;scrollbar-width:none;scroll-snap-type:x proximity;overscroll-behavior-x:contain}
+#profileCard .pv-shelf::-webkit-scrollbar{display:none}
+#profileCard .pv-sh{flex:0 0 84px;display:grid;justify-items:center;align-content:start;gap:6px;min-width:0;text-align:center;scroll-snap-align:start}
+#profileCard .pv-sh .pv-tt{width:62px}
+#profileCard .pv-sh b{max-width:100%;font:600 12.5px/1.15 var(--display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#profileCard .pv-sh small{font:500 12px/1.1 var(--display);color:var(--ink2);white-space:nowrap}
+#profileCard .pv-tt{display:block;aspect-ratio:120/150}
+#profileCard .pv-tt .trophy{display:block;width:100%;height:100%;filter:drop-shadow(0 8px 10px rgba(0,0,0,.5))}
+#profileCard .pv-sh .tt-rays{display:none}
+#profileCard .pv-first{display:flex;align-items:center;gap:16px;min-width:0}
+#profileCard .pv-first .pv-tt{flex:none;width:56px}
+#profileCard .pv-first>div{display:grid;gap:5px;min-width:0}
+#profileCard .pv-first b{font:600 15px/1.2 var(--display)}
+#profileCard .pv-first small{font:500 13px/1.35 var(--display);color:var(--ink2)}
+/* a trophy not won yet: a pale ghost of it, not a dark blob */
+#profileCard .pv-ghost .trophy{filter:grayscale(1) brightness(2.2) contrast(.55);opacity:.16}
+#profileCard .pv-ghost :is(.tt-glow,.tt-rays){display:none}
+#profileCard .pv-ghost b{color:var(--ink2)}
+/* your current trophy: a small pink dot after its name (under it on the narrow shelf) */
+#profileCard .cur>b::after{content:"";display:inline-block;vertical-align:middle;width:5px;height:5px;margin:-2px 0 0 6px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent)}
+#profileCard :is(.pv-sh,.pv-tc).cur>b{overflow:visible}#profileCard .pv-sh.cur>b::after{display:block;margin:5px auto 0}
+/* recent form: the last six finishes in one glass strip, newest first */
+#profileCard .pv-form{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));border-radius:18px;background:var(--sf);border:1px solid var(--sf-edge);box-shadow:var(--sf-hi),var(--sf-drop);overflow:hidden}
+#profileCard .pv-form li{display:grid;justify-items:center;align-content:center;gap:6px;min-width:0;padding:14px 0 13px}
+#profileCard .pv-form li+li{box-shadow:inset 1px 0 0 var(--rule)}
+#profileCard .pv-form b{font:800 17px/1 var(--display);letter-spacing:-.03em;color:var(--ink)}
+#profileCard .pv-form small{font:500 12px/1 var(--display);color:var(--ink2);font-variant-numeric:tabular-nums;white-space:nowrap}
+#profileCard .pv-form li.p1{background:rgba(255,255,255,.05)}#profileCard .pv-form li.p1 b{color:#fff}
 /* skins you own */
-#profileCard .pf-inv{display:flex;gap:12px;margin:-10px -16px -6px;padding:12px 16px 6px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scrollbar-width:none;touch-action:pan-x pan-y;
-  -webkit-mask-image:linear-gradient(90deg,transparent,#000 8px,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,transparent,#000 8px,#000 calc(100% - 28px),transparent)}
+#profileCard .pf-inv{display:flex;gap:14px;margin:-8px -18px -6px;padding:8px 18px 6px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scrollbar-width:none;touch-action:pan-x pan-y;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 14px,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,transparent,#000 14px,#000 calc(100% - 28px),transparent)}
 #profileCard .pf-inv::-webkit-scrollbar{display:none}
-#profileCard .pf-it{--rc:rgba(140,210,200,.24);appearance:none;position:relative;flex:none;width:66px;display:grid;justify-items:center;gap:7px;padding:0;border:0;background:none;color:var(--muted);cursor:pointer;scroll-snap-align:start}
-#profileCard .pf-it canvas{width:58px;height:58px;border-radius:50%;background:radial-gradient(circle at 50% 38%,rgba(255,255,255,.08),rgba(0,0,0,.4) 72%);box-shadow:0 0 0 1.5px var(--rc),0 8px 16px rgba(0,0,0,.35);transition:transform .12s}
-#profileCard .pf-it span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:600 11px/1.1 var(--display)}
-#profileCard .pf-it.r-rare{--rc:rgba(154,140,255,.75)}#profileCard .pf-it.r-epic{--rc:rgba(242,177,52,.8)}#profileCard .pf-it.r-legendary{--rc:#ff7a59}#profileCard .pf-it.r-seasonal{--rc:#ff8a2a}
-#profileCard .pf-it.on canvas{box-shadow:0 0 0 2px #061113,0 0 0 4px var(--accent),0 0 22px rgba(255,92,138,.45)}
-#profileCard .pf-it.on span{color:var(--ink)}
-#profileCard .pf-it.on::after{content:"✓";position:absolute;top:-4px;right:0;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:var(--accent-ink);font:800 11px/1 var(--display);box-shadow:0 0 0 2px #061113}
+#profileCard .pf-it{appearance:none;position:relative;flex:none;width:68px;display:grid;justify-items:center;gap:8px;padding:0;border:0;background:none;color:var(--ink2);cursor:pointer;scroll-snap-align:start}
+#profileCard .pf-it canvas{width:60px;height:60px;border-radius:50%;background:radial-gradient(circle at 50% 38%,rgba(255,255,255,.07),rgba(0,0,0,.35) 72%);box-shadow:0 0 0 1px var(--sf-edge),0 8px 16px rgba(0,0,0,.35);transition:transform .12s}
+#profileCard .pf-it span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:500 12px/1.1 var(--display)}
+#profileCard .pf-it.on canvas{box-shadow:0 0 0 2px #061113,0 0 0 4px var(--accent),0 0 20px rgba(255,92,138,.4)}
+#profileCard .pf-it.on span{color:#fff}
 #profileCard .pf-it:active canvas,#profileCard .pf-it:active i{transform:scale(.92)}
-#profileCard .pf-get i{width:58px;height:58px;box-sizing:border-box;border-radius:50%;display:grid;place-items:center;border:1.5px dashed rgba(255,92,138,.55);background:rgba(255,92,138,.06);color:var(--accent);font:300 30px/1 var(--display);font-style:normal;transition:transform .12s}
-/* badges */
-#profileCard .pf-achs{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px 6px;margin:0 -4px}
-#profileCard .pf-ach{appearance:none;display:grid;justify-items:center;gap:6px;padding:6px 0 0;border:0;border-radius:14px;background:none;cursor:pointer}
-#profileCard .pf-ach::after{content:"";width:14px;height:3px;border-radius:2px;background:var(--ink);opacity:0;transform:scaleX(.4);transition:opacity .15s,transform .2s}
-#profileCard .pf-ach i{position:relative;width:min(100%,50px);aspect-ratio:1/1.1;display:grid;place-items:center;clip-path:polygon(50% 0,95% 25%,95% 75%,50% 100%,5% 75%,5% 25%);
-  background:linear-gradient(165deg,rgba(220,239,233,.22),rgba(220,239,233,.05) 55%,rgba(220,239,233,.12));transition:transform .12s}
-#profileCard .pf-ach i::before{content:"";position:absolute;inset:2.5px;clip-path:polygon(50% 0,95% 25%,95% 75%,50% 100%,5% 75%,5% 25%);background:radial-gradient(120% 90% at 50% 12%,#13262a,#061012 75%)}
-#profileCard .pf-ach svg{position:relative;width:46%;height:auto;fill:none;stroke:var(--dim);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;opacity:.75}
-#profileCard .pf-ach.got{filter:drop-shadow(0 5px 10px rgba(242,177,52,.3))}
-#profileCard .pf-ach.got i{background:linear-gradient(165deg,#fff3c4,#f6c04e 32%,#a96c0e 68%,#ffd56e)}
-#profileCard .pf-ach.got i::before{background:radial-gradient(120% 90% at 50% 10%,#5c4214,#221604 72%)}
-#profileCard .pf-ach.got svg{stroke:#ffd877;opacity:1;filter:drop-shadow(0 0 4px rgba(255,196,80,.7))}
-#profileCard .pf-ach[aria-pressed=true]::after{opacity:.85;transform:none}#profileCard .pf-ach.got[aria-pressed=true]::after{background:var(--amber)}
-#profileCard .pf-ach[aria-pressed=true] i{transform:scale(1.06)}
-#profileCard .pf-ach:active i{transform:scale(.9)}
-#profileCard .pf-achinfo{margin:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:3px 10px;padding:11px 13px;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.24)}
-#profileCard .pf-achinfo:empty{display:none}
-#profileCard .pf-achinfo b{font:700 14px/1.2 var(--display)}
-#profileCard .pf-achinfo span{flex:1;min-width:0;font:500 13px/1.3 var(--display);color:var(--muted)}
-#profileCard .pf-achinfo em{align-self:center;font:600 9.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;font-style:normal;color:var(--dim)}
-#profileCard .pf-achinfo.got em{color:var(--amber)}
-/* recent runs */
-#profileCard .pf-runs{list-style:none;margin:0;padding:0;display:grid;gap:6px}
-#profileCard .pf-runs li{display:grid;grid-template-columns:46px 84px 70px 52px 1fr;align-items:center;gap:10px;padding:5px 7px 5px 5px;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.22)}
-#profileCard .pf-pl{height:40px;border-radius:10px;display:grid;place-content:center;justify-items:center;gap:3px;background:rgba(220,239,233,.07);color:var(--ink)}
-#profileCard .pf-pl b{font:800 14px/1 var(--display);letter-spacing:-.02em}
-#profileCard .pf-pl small{font:500 9px/1 var(--mono);opacity:.65}
-#profileCard .pf-pl.p1{background:linear-gradient(160deg,#ffe58f,#d18f15);color:#2a1a00;box-shadow:0 4px 12px rgba(242,177,52,.25)}
-#profileCard .pf-pl.p2{background:linear-gradient(160deg,#f2f7fb,#8a98a4);color:#11191f}
-#profileCard .pf-pl.p3{background:linear-gradient(160deg,#f8cba3,#a1603a);color:#2a1406}
-#profileCard .pf-m{display:flex;align-items:center;gap:5px;min-width:0;color:var(--dim)}
-#profileCard .pf-m svg{width:15px;height:15px;flex:none;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-#profileCard .pf-m b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:600 13px/1 var(--mono);color:var(--ink);font-variant-numeric:tabular-nums}
-#profileCard .pf-runs em{justify-self:end;padding:6px 9px;border-radius:999px;background:rgba(220,239,233,.07);color:var(--muted);font:700 12px/1 var(--mono);font-style:normal;font-variant-numeric:tabular-nums;white-space:nowrap}
-#profileCard .pf-runs em.up{color:#5fe0a8;background:rgba(95,224,168,.13)}#profileCard .pf-runs em.dn{color:#ff7a95;background:rgba(255,92,138,.13)}
-#profileCard .pf-runs em.pr{font:600 8.5px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;padding:7px 7px}#profileCard .pf-runs em.nil{background:none;padding:0}
-/* account: quiet, at the bottom */
-#profileCard .pf-acct{gap:0;padding-top:12px;padding-bottom:12px}
-#profileCard .pf-who{display:flex;align-items:center;gap:12px;min-width:0;min-height:44px;list-style:none;cursor:pointer;border-radius:12px;-webkit-user-select:none;user-select:none}
+#profileCard .pf-get i{width:60px;height:60px;box-sizing:border-box;border-radius:50%;display:grid;place-items:center;border:1.5px dashed rgba(255,255,255,.22);color:var(--ink2);font:300 30px/1 var(--display);font-style:normal;transition:transform .12s}
+/* account: one quiet row between hairlines; Delete account under it, last on the page */
+#profileCard .pf-acct{display:block;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);margin-top:-10px}
+#profileCard .pf-who{display:flex;align-items:center;gap:14px;min-width:0;min-height:64px;list-style:none;cursor:pointer;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 #profileCard .pf-who::-webkit-details-marker{display:none}#profileCard .pf-who::marker{content:""}
-#profileCard .pf-chev{width:18px;height:18px;flex:none;fill:none;stroke:var(--muted);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s}
-#profileCard .pf-acct[open] .pf-chev{transform:rotate(180deg)}#profileCard .pf-who:hover .pf-chev{stroke:var(--ink)}
-#profileCard .pf-acbody{display:grid;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+#profileCard .pf-chev{width:18px;height:18px;flex:none;fill:none;stroke:var(--ink2);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s}
+#profileCard .pf-acct[open] .pf-chev{transform:rotate(180deg)}
+#profileCard .pf-acbody{display:grid;gap:10px;padding:2px 0 16px}
 #profileCard .pf-acrow{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
-#profileCard .pf-acic{width:42px;height:42px;flex:none;border-radius:13px;display:grid;place-items:center;background:rgba(220,239,233,.06);color:var(--muted);box-shadow:inset 0 0 0 1px var(--line)}
-#profileCard .pf-acic svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+#profileCard .pf-acic{width:40px;height:40px;flex:none;border-radius:12px;display:grid;place-items:center;background:var(--sf);color:var(--ink2);box-shadow:inset 0 0 0 1px var(--sf-edge)}
+#profileCard .pf-acic svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 #profileCard .pf-acic .ok{display:none}
-#profileCard .pf-acct.in .pf-acic{color:#5fe0a8;background:rgba(95,224,168,.1);box-shadow:inset 0 0 0 1px rgba(95,224,168,.32)}#profileCard .pf-acct.in .pf-acic .ok{display:inline}
+#profileCard .pf-acct.in .pf-acic{color:#fff}#profileCard .pf-acct.in .pf-acic .ok{display:inline}
 #profileCard #acctWho{flex:1;min-width:0;margin:0;display:grid;gap:4px}
-#profileCard #acctWho b{font:700 15px/1.15 var(--display)}
-#profileCard #acctWho span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:500 12.5px/1.2 var(--display);color:var(--muted)}
-#profileCard .pf-out{appearance:none;flex:none;min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--line-strong);background:rgba(220,239,233,.04);color:var(--ink);font:600 13px var(--display);cursor:pointer;transition:transform .12s,background .15s}
-#profileCard .pf-out:hover{background:rgba(220,239,233,.09)}#profileCard .pf-out:active{transform:scale(.95)}
+#profileCard #acctWho b{font:600 15px/1.15 var(--display)}
+#profileCard #acctWho span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:500 13px/1.2 var(--display);color:var(--ink2)}
+#profileCard .pf-out{appearance:none;flex:none;min-height:44px;padding:0 18px;border-radius:999px;border:1px solid var(--sf-edge);background:var(--sf);color:var(--ink);font:600 13px var(--display);cursor:pointer;transition:transform .12s}
+#profileCard .pf-out:active{transform:scale(.95)}
 #profileCard .pf-sbtns{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}
 #profileCard .pf-sbtns:not(:has(.sbtn:not([hidden]))){display:none}
-#profileCard .pf-sbtns .sbtn{min-height:46px;border-radius:12px;font:600 15px/1 var(--display);box-shadow:0 6px 16px rgba(0,0,0,.3);transition:transform .12s,filter .15s}
+#profileCard .pf-sbtns .sbtn{min-height:46px;border-radius:12px;font:600 15px/1 var(--display);transition:transform .12s,filter .15s}
 #profileCard .pf-sbtns .sbtn:active{transform:scale(.97)}
-#profileCard .pf-hint{margin:0;font:500 12.5px/1.3 var(--display);color:var(--muted)}
-#profileCard .pf-del{appearance:none;display:inline-flex;align-items:center;gap:8px;min-height:44px;margin:0 0 0 -6px;padding:0 6px;border:0;background:none;color:#ff7a85;font:600 13px var(--display);cursor:pointer;opacity:.85;transition:opacity .15s,transform .12s}
-#profileCard .pf-del svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-#profileCard .pf-del:hover{opacity:1}#profileCard .pf-del:active{transform:scale(.97)}
-#profileCard .pf-hero,#profileCard .pf-side>*{animation:pfin .5s cubic-bezier(.2,.8,.2,1) both}
-#profileCard .pf-side>:nth-child(1){animation-delay:.06s}#profileCard .pf-side>:nth-child(2){animation-delay:.12s}#profileCard .pf-side>:nth-child(3){animation-delay:.18s}#profileCard .pf-side>:nth-child(n+4){animation-delay:.24s}
-@keyframes pfin{from{opacity:0;transform:translateY(12px)}}
-/* wide screens: the hero stays put on the left while the rest scrolls */
+#profileCard .pf-hint{margin:0;font:500 13px/1.3 var(--display);color:var(--ink2)}
+#profileCard .pv-del{appearance:none;justify-self:center;min-height:44px;margin:-14px 0 0;padding:0 16px;border:0;background:none;color:rgba(255,138,148,.8);font:500 13px var(--display);cursor:pointer;transition:color .15s}
+#profileCard .pv-del:hover{color:#ff8a94}#profileCard .pv-del:active{transform:scale(.97)}
+/* stats: two rings, the rating line, then the rest of the numbers in a compact grid */
+#profileCard .pv-stats{display:grid;gap:30px;min-width:0}
+#profileCard .pv-rings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#profileCard .pv-rg{display:grid;justify-items:center;gap:5px;min-width:0;text-align:center}
+#profileCard .pv-ring{position:relative;width:min(34vw,132px);aspect-ratio:1;display:grid;place-items:center;margin-bottom:8px}
+#profileCard .pv-ring svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+#profileCard .pv-ring circle{fill:none;stroke-width:7}
+#profileCard .pv-ring .tr{stroke:rgba(255,255,255,.075)}
+#profileCard .pv-ring .arc{stroke:#fff;stroke-linecap:round;filter:drop-shadow(0 0 6px rgba(255,255,255,.28));animation:pvarc 1.1s cubic-bezier(.2,.8,.2,1) both}
+#profileCard .pv-rg+.pv-rg .arc{stroke:rgba(255,255,255,.62);filter:none}
+@keyframes pvarc{from{stroke-dasharray:0 999}}
+#profileCard .pv-ring b{font:800 28px/1 var(--display);letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+#profileCard .pv-rg>span{font:700 15px/1.1 var(--display)}
+#profileCard .pv-rg>small{font:500 13px/1.1 var(--display);color:var(--ink2)}
+#profileCard .pv-chart{display:grid;gap:14px;min-width:0;padding:18px 18px 14px;border-radius:22px;background:var(--sf);border:1px solid var(--sf-edge);box-shadow:var(--sf-hi),var(--sf-drop)}
+#profileCard .pv-ch{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+#profileCard .pv-ch>div{display:grid;gap:6px;min-width:0}
+#profileCard .pv-ch>div:last-child{justify-items:end;text-align:right}
+#profileCard .pv-ch b{font:800 28px/1 var(--display);letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+#profileCard .pv-ch strong{font:700 15px/1 var(--display);font-variant-numeric:tabular-nums}
+#profileCard .pv-ch small{font:500 13px/1.1 var(--display);color:var(--ink2);white-space:nowrap}
+#profileCard .pv-plot{position:relative;height:118px;margin:0 2px}
+#profileCard .pv-pw{position:absolute;inset:0 44px 0 0}
+#profileCard .pv-plot svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+#profileCard .pv-plot .ln{fill:none;stroke:#fff;stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
+#profileCard .pv-plot .ar{fill:url(#pvArea)}
+#profileCard .pv-plot .gl{stroke:rgba(255,255,255,.09);stroke-width:1;stroke-dasharray:3 4;vector-effect:non-scaling-stroke}
+#profileCard .pv-plot i{position:absolute;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:#fff;box-shadow:0 0 0 4px rgba(255,255,255,.14),0 0 14px rgba(255,255,255,.6)}
+#profileCard .pv-plot em{position:absolute;right:0;font:500 11.5px/1 var(--display);font-style:normal;color:var(--muted);font-variant-numeric:tabular-nums;transform:translateY(-50%)}
+#profileCard .pv-pw svg{animation:pvdraw 1.1s cubic-bezier(.3,.7,.2,1) both}
+@keyframes pvdraw{from{clip-path:inset(0 100% 0 0)}}
+#profileCard .pv-plot i{animation:pvfade .4s .85s both}
+@keyframes pvfade{from{opacity:0;transform:scale(.4)}}
+#profileCard .pv-pk{font:500 13px/1.2 var(--display);color:var(--ink2)}
+#profileCard .pv-plot.empty{display:grid;place-items:center;height:96px;border-radius:14px;border:1px dashed rgba(255,255,255,.1);font:500 13px/1.35 var(--display);color:var(--ink2);text-align:center;padding:0 18px}
+#profileCard .pv-nums{margin:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:14px}
+#profileCard .pv-nums div{display:grid;gap:6px;min-width:0;padding:15px 0 14px;border-top:1px solid var(--rule)}
+#profileCard .pv-nums dd{order:-1;margin:0;font:800 20px/1 var(--display);letter-spacing:-.03em;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#profileCard .pv-nums dt{font:500 13px/1.15 var(--display);color:var(--ink2)}
+/* recent runs: flat rows between hairlines */
+#profileCard .pf-runs{list-style:none;margin:0;padding:0;display:grid}
+#profileCard .pf-runs li{display:grid;grid-template-columns:54px minmax(0,1.15fr) minmax(0,1fr) minmax(0,.8fr) auto;align-items:center;gap:8px;min-height:56px;border-top:1px solid var(--rule)}
+#profileCard .pf-runs li:last-child{border-bottom:1px solid var(--rule)}
+#profileCard .pf-pl{display:grid;gap:4px}
+#profileCard .pf-pl b{font:800 16px/1 var(--display);letter-spacing:-.02em;color:var(--ink)}
+#profileCard .pf-pl.p1 b{color:#fff}
+#profileCard .pf-pl small{font:500 12px/1 var(--display);color:var(--ink2)}
+#profileCard .pf-m{display:flex;align-items:center;gap:6px;min-width:0;color:var(--muted)}
+#profileCard .pf-m svg{width:15px;height:15px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#profileCard .pf-m b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:600 14px/1 var(--display);color:var(--ink);font-variant-numeric:tabular-nums}
+#profileCard .pf-runs em{justify-self:end;font:700 14px/1 var(--display);font-style:normal;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+#profileCard .pf-runs em.dn{color:var(--ink2)}
+#profileCard .pf-runs em small{margin-right:5px;font:600 11px/1 var(--display);letter-spacing:.06em;color:var(--muted)}
+#profileCard .pf-runs em.pr{font:500 12px/1 var(--display);color:var(--muted)}
+/* Trophies: the next one to win, in the glass */
+#profileCard .pv-nt{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:20px;min-width:0;padding:18px 20px 18px 16px;border-radius:22px;background:var(--sf);border:1px solid var(--sf-edge);box-shadow:var(--sf-hi),var(--sf-drop)}
+#profileCard .pv-nt:empty{display:none}
+#profileCard .pv-nt .pv-tt{width:84px}
+#profileCard .pv-nt>div{display:grid;gap:8px;min-width:0}
+#profileCard .pv-nt small{font:500 13px/1.2 var(--display);color:var(--ink2)}
+#profileCard .pv-nt b{font:800 24px/1.05 var(--display);letter-spacing:-.03em}
+#profileCard .pv-nt .pv-bar{height:5px;margin-top:4px}
+#profileCard .pv-nt strong{font:600 15px/1.2 var(--display)}
+/* the trophies you hold: three to a row, no frames */
+#profileCard .pv-case{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px 10px}
+#profileCard .pv-tc{display:grid;justify-items:center;align-content:start;gap:5px;min-width:0;text-align:center}
+#profileCard .pv-tc .pv-tt{width:min(100%,92px);margin-bottom:4px}
+#profileCard .pv-tc b{max-width:100%;font:700 15px/1.15 var(--display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#profileCard .pv-tc small{font:500 12.5px/1.2 var(--display);color:var(--ink2);white-space:nowrap}
+#profileCard .pv-case .pv-empty{grid-column:1/-1;margin:0;font:500 13px/1.35 var(--display);color:var(--ink2)}
+/* the ones still to come: a row of small ghosts with the rating each takes */
+#profileCard .pv-soon{grid-column:1/-1;display:grid;gap:12px;margin-top:4px}
+#profileCard .pv-soon>small{font:600 13px/1 var(--display);color:var(--ink2)}
+#profileCard .pv-soon>div{display:flex;gap:4px;margin:0 -4px;padding:0 4px;overflow-x:auto;scrollbar-width:none;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 24px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 24px),transparent)}
+#profileCard .pv-soon>div::-webkit-scrollbar{display:none}
+#profileCard .pv-soon .pv-sh{flex-basis:80px}#profileCard .pv-soon .pv-tt{width:46px}#profileCard .pv-soon .pv-sh b{font-size:12.5px}
+#profileCard .pv-note{margin:-2px 0 0;font:500 13px/1.4 var(--display);color:var(--muted)}
+/* achievements: a progress line, the badges you have, the next few with how far along you are; all of them on request */
+#profileCard .pv-achbar{height:4px;margin-top:-4px}
+#profileCard .pv-achs{display:grid;gap:0}
+#profileCard .pv-got{display:flex;flex-wrap:wrap;gap:10px;padding:2px 0 14px}
+#profileCard .pv-a{display:grid;grid-template-columns:40px minmax(0,1fr) auto;align-items:center;column-gap:14px;row-gap:3px;min-height:64px;padding:10px 0;border-top:1px solid var(--rule)}
+#profileCard .pv-a:last-child{border-bottom:1px solid var(--rule)}
+#profileCard .pv-a .pv-hx{grid-row:1/4}
+#profileCard .pv-a b{font:600 15px/1.2 var(--display)}
+#profileCard .pv-a span{grid-column:2;font:500 13px/1.3 var(--display);color:var(--ink2)}
+#profileCard .pv-a em{grid-column:3;grid-row:1/3;align-self:center;font:500 12.5px/1 var(--display);font-style:normal;color:var(--ink2);font-variant-numeric:tabular-nums;white-space:nowrap}
+#profileCard .pv-a .pv-bar{grid-column:2/4;height:4px;margin-top:5px}
+#profileCard .pv-a.got b{color:#fff}
+#profileCard .pv-hx{position:relative;display:grid;place-items:center;width:40px;aspect-ratio:1/1.1;clip-path:polygon(50% 0,95% 25%,95% 75%,50% 100%,5% 75%,5% 25%);background:rgba(255,255,255,.14)}
+#profileCard .pv-hx::before{content:"";position:absolute;inset:1.5px;clip-path:inherit;background:#0b1a1d}
+#profileCard .pv-hx svg{position:relative;width:46%;height:auto;fill:none;stroke:var(--ink2);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+#profileCard .got .pv-hx,#profileCard .pv-got .pv-hx{background:linear-gradient(165deg,#fff,#c9d6d3 45%,#8fa3a0)}
+#profileCard .got .pv-hx::before,#profileCard .pv-got .pv-hx::before{background:linear-gradient(165deg,#f4faf8,#bccbc8)}
+#profileCard .got .pv-hx svg,#profileCard .pv-got .pv-hx svg{stroke:#0b1a1d;stroke-width:2.1}
+#profileCard .pv-got .pv-hx{width:44px}
+#profileCard .pv-all{appearance:none;justify-self:start;min-height:44px;margin:-6px 0 -10px;padding:0;border:0;background:none;color:var(--ink2);font:600 13px/1 var(--display);cursor:pointer}
+#profileCard .pv-all::after{content:"›";display:inline-block;margin-left:6px;font-size:17px;line-height:0;transition:transform .2s}
+#profileCard .pv-all[aria-expanded=true]::after{transform:rotate(-90deg)}
+#profileCard .pv-all[hidden]{display:none}
+#profileCard .pv-hero,#profileCard .pv-tabs{animation:pfin .5s cubic-bezier(.2,.8,.2,1) both}#profileCard .pv-tabs{animation-delay:.06s}
+/* wide screens: you on the left, held in place, the tabs scrolling on the right */
 @media (orientation:landscape){
-  #overlay>#profileCard.page{grid-template-columns:minmax(236px,.8fr) minmax(0,1.38fr);background:radial-gradient(40% 70% at 22% 34%,var(--tg),transparent 72%),linear-gradient(180deg,rgba(2,8,9,.92),rgba(2,8,9,.85))}
-  #profileCard .pf-hero{position:sticky;top:68px}
+  #overlay>#profileCard.page{grid-template-columns:minmax(260px,.82fr) minmax(0,1.4fr);grid-template-areas:"top top" "hero tabs" "hero pane";grid-template-rows:auto auto 1fr;
+    background:radial-gradient(38% 60% at 22% 30%,var(--tg),transparent 72%),linear-gradient(180deg,rgba(2,8,9,.94),rgba(2,8,9,.88))}
+  #profileCard .pv-hero{grid-area:hero;position:sticky;top:84px;align-self:start}
+  #profileCard .pv-tabs{grid-area:tabs}#profileCard .pv-pane{grid-area:pane}
+  #profileCard .pv-ranks{grid-template-columns:minmax(0,1fr)}
+  #profileCard .pv-ai{padding:14px 0 16px;border-left:0;border-top:1px solid var(--rule)}
+  #profileCard .pv-rank{padding-right:0}
 }
 @media (orientation:landscape) and (max-height:520px){
-  #profileCard .pf-hero{--ava:100px;top:62px;gap:8px;padding:16px 14px 14px;border-radius:20px}
-  #profileCard .pf-hero{--ry:calc(16px + var(--ava)/2)}
-  #profileCard .pf-name{font-size:24px}#profileCard .pf-rk b{font-size:21px}#profileCard .pf-crest{width:37px;height:40px}
-  #profileCard .pf-side{gap:10px}
-  #profileCard .pf-stat{padding:10px 10px 9px;border-radius:16px}#profileCard .pf-stat i{width:24px;height:24px;margin-bottom:3px}#profileCard .pf-stat b{font-size:18px}
-  #profileCard .pf-sec{padding:12px 14px 14px;border-radius:18px;gap:10px}#profileCard .pf-inv{margin:-10px -14px -6px;padding:12px 14px 6px}
+  #profileCard .pv-hero{top:64px;gap:14px}#profileCard .pv-ava{width:96px;margin-bottom:8px}#profileCard .pv-name{font-size:23px}#profileCard .pv-xp{margin-top:10px}
+  #profileCard .pv-ranks{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}#profileCard .pv-ai{padding:12px 0 12px 12px;border-top:0;border-left:1px solid var(--rule)}
+  #profileCard .pv-rrow{gap:8px}#profileCard .pv-tier{font-size:12px}
+  #profileCard :is(.pv-rank,.pv-ai){gap:8px;padding-top:12px;padding-bottom:12px}#profileCard .pv-rank{padding-right:12px}
+  #profileCard .pv-rk b{font-size:24px}#profileCard .pv-crest{width:36px;height:36px}#profileCard .pv-aie{width:32px;height:32px}
+  #profileCard .pv-pane{gap:26px}#profileCard .pv-tabs button{height:40px}
 }
-@media (max-width:460px){#profileCard .pf-runs li{grid-template-columns:46px minmax(0,1.3fr) minmax(0,1.1fr) minmax(0,.8fr) auto;gap:7px}}
-@media (min-width:1000px) and (min-height:640px){#profileCard .pf-hero{--ava:150px}}
-@media (max-width:370px){#profileCard .pf-stats{grid-template-columns:repeat(2,minmax(0,1fr))}#profileCard .pf-eat{display:none}#profileCard .pf-runs li{grid-template-columns:46px minmax(0,1.2fr) minmax(0,1fr) auto}}
-/* level: the badge, then the XP bar toward the next level */
-#profileCard .pf-lv{width:100%;box-sizing:border-box;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:12px;margin-top:4px;padding-top:14px;border-top:1px solid var(--line);text-align:left}
-#profileCard .pf-lvm{display:grid;gap:7px;min-width:0}
-#profileCard .pf-lvt{display:flex;align-items:baseline;justify-content:space-between;gap:10px;min-width:0}
-#profileCard .pf-lvt b{font:700 10.5px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--xp2);white-space:nowrap}
-#profileCard #pLvXp{font:700 11px/1 var(--mono);color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
-#profileCard #pLvNext{font:600 11px/1 var(--mono);color:var(--muted)}
-#profileCard .pf-xpbar i{background:linear-gradient(180deg,rgba(255,255,255,.38),rgba(255,255,255,0) 60%),linear-gradient(90deg,var(--xp1),var(--xp2));box-shadow:0 0 12px rgba(95,224,200,.45)}
-@media (orientation:landscape) and (max-height:520px){#profileCard .pf-lv{padding-top:10px;gap:10px}#profileCard .pf-lv .lv-badge{width:38px;height:38px}#profileCard .pf-lv .lv-badge b{font-size:16px}}
+@media (min-width:1000px) and (min-height:640px){#profileCard .pv-ava{width:240px}#profileCard .pv-name{font-size:34px}}
+@media (max-width:380px){#profileCard .pv-name{font-size:27px}#profileCard .pv-rk b{font-size:25px}#profileCard .pv-crest{width:38px;height:38px}#profileCard .pv-aie{width:34px;height:34px}
+  #profileCard .pf-runs li{grid-template-columns:48px minmax(0,1.2fr) minmax(0,1fr) auto}#profileCard .pf-eat{display:none}#profileCard .pv-nums dd{font-size:18px}}
 /* @ui:profile end */
 
 /* @ui:ranks-settings */
@@ -2658,39 +2744,42 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
   </div>
 
   <div class="card panel page" id="profileCard" hidden>
-    <header class="pg-top"><button class="lb-icon back" type="button" aria-label="Back to the lobby"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><h2>Profile</h2><button class="ghost pf-shop" id="profShop" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>Shop</button></header>
-    <section class="pf-hero" aria-label="Your rank">
-      <div class="pf-ava"><canvas id="profCv" width="320" height="320" aria-hidden="true"></canvas></div>
-      <h2 class="pf-name" id="profName">Unnamed cell</h2>
-      <div class="pf-rank">
-        <span class="pf-crest pf-badge" id="pBadge" aria-hidden="true"></span>
-        <span class="pf-rk"><small class="pf-rk-k">vs players</small><span class="tier" id="pTierTxt">Silver</span><b id="pRating">1000</b></span>
-        <span class="pf-ai" id="pAi"><span class="pf-mcw" id="pAiMc"></span><span class="pf-rk"><small class="pf-rk-k">vs AI</small><span class="tier" id="pAiTier">Silver</span><b id="pAiRating">1000</b></span></span>
+    <header class="pg-top"><button class="lb-icon back" type="button" aria-label="Back to the lobby"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><h2>Profile</h2><button class="lb-icon pv-set" id="profSet" type="button" aria-label="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button></header>
+    <!-- the player: your cell big, your name and level under it, then both ratings side by side -->
+    <section class="pv-hero" id="pvCard" aria-label="Your profile">
+      <div class="pv-me">
+        <div class="pv-ava"><canvas id="profCv" width="320" height="320" aria-hidden="true"></canvas></div>
+        <h2 class="pv-name" id="profName">Unnamed cell</h2>
+        <p class="pv-sub" id="pvSub"></p>
+        <div class="pv-xp" id="pLv" hidden><b>Level <span id="pLvN">1</span></b><span class="pv-bar pv-xpbar" aria-hidden="true"><i id="pLvFill"></i></span><span class="pv-xpn" id="pLvXp"></span></div>
       </div>
-      <div class="pf-prog" id="pProg"><div class="pf-track" aria-hidden="true"><span class="pf-mcw" id="pCurMc"></span><div class="pf-bar"><i id="pFill"></i></div><span class="pf-mcw nx" id="pNextMc"></span></div><span id="pNext"></span></div>
-      <div class="pf-lv" id="pLv" hidden><span class="lv-badge" aria-hidden="true"><b id="pLvN">1</b></span><div class="pf-lvm"><div class="pf-lvt"><b>Level <span id="pLvN2">1</span></b><span id="pLvXp"></span></div><div class="pf-bar pf-xpbar" aria-hidden="true"><i id="pLvFill"></i></div><span id="pLvNext"></span></div></div>
+      <div class="pv-ranks">
+        <button type="button" class="pv-rank" id="pvRank" aria-label="Your rating against players. Open your trophies"><small class="pv-k">vs players</small>
+          <span class="pv-rrow"><span class="pv-crest" id="pBadge" aria-hidden="true"></span><span class="pv-rk"><b id="pRating">1000</b><span class="pv-tier" id="pTierTxt">Microbe</span></span></span>
+          <span class="pv-bar pv-rbar" aria-hidden="true"><i id="pFill"></i></span><small class="pv-next" id="pNext"></small></button>
+        <div class="pv-ai" id="pAi"><small class="pv-k">vs AI</small>
+          <span class="pv-rrow"><span class="pv-aie" id="pAiMc" aria-hidden="true"></span><span class="pv-rk"><b id="pAiRating">1000</b><span class="pv-tier" id="pAiTier">Microbe</span></span></span></div>
+      </div>
     </section>
-    <div class="pf-side">
-      <div class="pf-stats">
-        <div class="pf-stat s-atp"><i class="pf-coin" aria-hidden="true"></i><b id="pAtp">0</b><span>ATP</span></div>
-        <div class="pf-stat s-earn"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 16.5l5-5 4 4 7-7"/><path d="M15 8.5h5v5"/></svg></i><b id="pEarned">0</b><span>Earned</span></div>
-        <div class="pf-stat s-runs"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5.5 21V4"/><path d="M5.5 4.5h11.5l-2.4 4.2 2.4 4.3H5.5"/></svg></i><b id="pRuns">0</b><span>Runs</span></div>
-        <div class="pf-stat s-best"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 19.5l6.2-10 4.3 5.6 3-4.1 4.5 8.5z"/></svg></i><b id="pBest">0</b><span>Best</span></div>
-      </div>
-      <section class="pf-sec" id="invField">
-        <button type="button" class="pf-head pf-link" id="invOpen" aria-label="Open your inventory"><b>Skins</b><span class="pf-cnt" id="pSkins">0</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+    <div class="pv-tabs" role="tablist" aria-label="Profile">
+      <button type="button" role="tab" id="pvTabOv" data-pane="pvOv" aria-controls="pvOv" aria-selected="true">Overview</button>
+      <button type="button" role="tab" id="pvTabSt" data-pane="pvSt" aria-controls="pvSt" aria-selected="false" tabindex="-1">Stats</button>
+      <button type="button" role="tab" id="pvTabTr" data-pane="pvTr" aria-controls="pvTr" aria-selected="false" tabindex="-1">Trophies</button>
+    </div>
+    <div class="pv-pane" id="pvOv" role="tabpanel" aria-labelledby="pvTabOv">
+      <section class="pv-sec">
+        <div class="pv-h"><b>Trophies</b><span class="pv-cnt" id="pvShelfN"></span><button type="button" class="pv-more" data-go="pvTr">See all</button></div>
+        <div class="pv-shelf" id="pvShelf"></div>
+      </section>
+      <section class="pv-sec" id="formField" hidden>
+        <div class="pv-h"><b>Recent form</b><button type="button" class="pv-more" data-go="pvSt">Stats</button></div>
+        <ol class="pv-form" id="pvForm"></ol>
+      </section>
+      <section class="pv-sec" id="invField">
+        <div class="pv-h"><b>Skins</b><span class="pv-cnt" id="pSkins">0</span><button type="button" class="pv-more" id="invOpen">Inventory</button></div>
         <div class="pf-inv" id="invStrip"></div>
       </section>
-      <section class="pf-sec" id="achField">
-        <div class="pf-head"><b>Achievements</b><span class="pf-cnt" id="achCount"></span></div>
-        <div class="pf-achs" id="achGrid"></div>
-        <p class="pf-achinfo" id="achInfo" aria-live="polite"></p>
-      </section>
-      <section class="pf-sec" id="runsField" hidden>
-        <div class="pf-head"><b>Recent runs</b></div>
-        <ol class="pf-runs" id="runList"></ol>
-      </section>
-      <details class="pf-sec pf-acct" id="acctField">
+      <details class="pv-sec pf-acct" id="acctField">
         <summary class="pf-who"><span class="pf-acic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 18.5h10.5a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.5 9.6 4.5 4.5 0 0 0 7 18.5z"/><path class="ok" d="M9.5 13.6l2 2 3.8-4"/></svg></span><span class="pf-whotxt" id="acctWho"><b>Guest</b><span>Sync across devices</span></span><svg class="pf-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9.5l6 6 6-6"/></svg></summary>
         <div class="pf-acbody">
         <div class="sbtns pf-sbtns" id="acctBtns">
@@ -2698,12 +2787,33 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
         <button type="button" class="sbtn google" id="googleBtn" hidden><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Sign in with Google</button>
         </div>
         <p class="pf-hint" id="acctHint" hidden></p>
-        <div class="pf-acrow"><button type="button" class="pf-out" id="signOutBtn" hidden>Sign out</button><button type="button" class="pf-del" id="deleteAcctBtn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 7h15M10 7V4.5h4V7M6.5 7l1 13h9l1-13M10 11v5.5M14 11v5.5"/></svg>Delete account</button></div>
+        <div class="pf-acrow"><button type="button" class="pf-out" id="signOutBtn" hidden>Sign out</button></div>
         </div>
       </details>
+      <button type="button" class="pv-del" id="deleteAcctBtn">Delete account</button>
+    </div>
+    <div class="pv-pane" id="pvSt" role="tabpanel" aria-labelledby="pvTabSt" hidden>
+      <div class="pv-stats" id="pvStats"></div>
+      <section class="pv-sec" id="runsField" hidden>
+        <div class="pv-h"><b>Recent runs</b></div>
+        <ol class="pf-runs" id="runList"></ol>
+      </section>
+    </div>
+    <div class="pv-pane" id="pvTr" role="tabpanel" aria-labelledby="pvTabTr" hidden>
+      <section class="pv-nt" id="pvNext" aria-live="polite"></section>
+      <section class="pv-sec">
+        <div class="pv-h"><b>Rank trophies</b><span class="pv-cnt" id="pvCaseN"></span></div>
+        <div class="pv-case" id="pvCase"></div>
+        <p class="pv-note">Won with your rating against players. Bot games have their own rating.</p>
+      </section>
+      <section class="pv-sec" id="achField">
+        <div class="pv-h"><b>Achievements</b><span class="pv-cnt" id="achCount"></span></div>
+        <span class="pv-bar pv-achbar" aria-hidden="true"><i id="achFill"></i></span>
+        <div class="pv-achs" id="achGrid"></div>
+        <button type="button" class="pv-all" id="achAll" aria-expanded="false" aria-controls="achGrid">Show all</button>
+      </section>
     </div>
   </div>
-
   <div class="card panel page" id="settingsCard" hidden>
     <header class="pg-top"><button class="lb-icon back" type="button" aria-label="Back to the lobby"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><h2>Settings</h2></header>
     <div class="sg-wrap">
@@ -6123,6 +6233,7 @@ function applyWallet(w){
   if(typeof w.rating==='number'){wallet.rating=w.rating;wallet.tier=w.tier||wallet.tier;}wallet.runs=w.runs|0;
   if(typeof w.aiRating==='number'){wallet.aiRating=w.aiRating;wallet.aiTier=w.aiTier||wallet.aiTier;wallet.aiRuns=w.aiRuns|0;} // the AI rating: bots only (a server from before it has none)
   if(typeof w.level==='number')Object.assign(wallet,{xp:w.xp|0,level:w.level,levelXp:w.levelXp|0,levelNeed:w.levelNeed|0});else wallet.level=null; // a server from before levels: no level shown
+  if('stats' in w)wallet.stats=w.stats||null;if('trophies' in w)wallet.trophies=Array.isArray(w.trophies)?w.trophies:null; // lifetime stats and rank trophies (the Profile)
   renderRank();renderProfile();
   if('account' in w){wallet.account=w.account||null;renderAccount();}
   if('pass' in w)wallet.pass=w.pass||null;
@@ -6442,48 +6553,106 @@ $('deleteGo').addEventListener('click',async()=>{
 });
 $('deleteDone').addEventListener('click',()=>location.reload());
 function loadHistory(){try{const a=JSON.parse(localStorage.getItem('mitosis.history')||'[]');return Array.isArray(a)?a:[];}catch(e){return[];}}
-function recordRun(e){const h=loadHistory();h.push(e);try{localStorage.setItem('mitosis.history',JSON.stringify(h.slice(-12)));}catch(err){}}
+function recordRun(e){const h=loadHistory();h.push(e);try{localStorage.setItem('mitosis.history',JSON.stringify(h.slice(-40)));}catch(err){}} // 40: enough for the Profile's rating line
 function updateRunDelta(delta,rating,ai){const h=loadHistory();const last=h[h.length-1];if(!last||last.delta!=null||Date.now()-last.t>60000)return;last.delta=delta;last.rating=rating;if(ai)last.ai=1;try{localStorage.setItem('mitosis.history',JSON.stringify(h));}catch(err){}}
-/* Profile page: a hero with the rank crest, stat tiles, the skins you own, achievement badges, recent runs and the account */
+/* Profile page: your cell, name and level, both ratings, then Overview (trophies, recent form, skins, account),
+   Stats (win and top-3 rings, the rating line, career numbers, recent runs) and Trophies (the next one, the ones you hold,
+   achievements) */
 const PF_IC={peak:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19.5l6.2-10 4.3 5.6 3-4.1 4.5 8.5z"/></svg>',time:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
   eat:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.9 4A8.5 8.5 0 1 0 20 9.1 3.9 3.9 0 0 1 14.9 4z"/></svg>'};
-const PF_GLYPH={Bronze:'<path d="M13 19.5l7 5 7-5"/>',Silver:'<path d="M13 16.5l7 5 7-5M13 22.5l7 5 7-5"/>',Gold:'<path d="M13 13.5l7 4.5 7-4.5M13 19l7 4.5 7-4.5M13 24.5l7 4.5 7-4.5"/>',
-  Platinum:'<path d="M14 17.5l3-4.5h6l3 4.5-6 9z"/><path d="M14 17.5h12"/>',Diamond:'<path d="M20 11.5l7 9.5-7 9.5-7-9.5z"/><path d="M13 21h14"/>',Legend:'<path d="M12.5 27l-1.5-10.5 5 4 4-7.5 4 7.5 5-4-1.5 10.5z"/>'};
 const fmtStat=n=>{n=Math.max(0,Math.round(+n||0));return n>=1e6?(n/1e6).toFixed(n<1e7?1:0).replace(/\.0$/,'')+'M':n>=1e5?Math.round(n/1e3)+'K':n.toLocaleString();};
 const bestMass=()=>{try{return Math.round(+localStorage.getItem('mitosis.best')||0);}catch(e){return 0;}};
 function renderRuns(){const el=$('runList'),f=$('runsField');if(!el||!f)return;const h=loadHistory().slice(-5).reverse();f.hidden=!h.length;
   el.innerHTML=h.map(r=>{const pl=r.place|0,dl=typeof r.delta==='number'?r.delta:null,
-    d=dl!=null?`<em class="${dl>0?'up':dl<0?'dn':''}">${r.ai?'AI ':''}${dl>0?'+':dl<0?'−':'±'}${Math.abs(dl)}</em>`:r.practice?'<em class="pr">Practice</em>':'<em class="nil"></em>',
+    d=dl!=null?`<em class="${dl<0?'dn':''}">${r.ai?'<small>AI</small>':''}${dl>0?'+':dl<0?'−':'±'}${Math.abs(dl)}</em>`:r.practice?'<em class="pr">Practice</em>':'<em></em>',
     lbl=`${pl?ordinal(pl)+' of '+r.of:'Unplaced'}, peak ${r.peak|0}, survived ${fmtT(r.sec|0)}, ate ${r.eaten|0}${dl!=null?(r.ai?', AI rating ':', rating ')+(dl>0?'+':'')+dl:r.practice?', practice':''}`;
-    return `<li aria-label="${escH(lbl)}"><span class="pf-pl${pl&&pl<4?' p'+pl:''}"><b>${pl?ordinal(pl):'—'}</b>${pl&&r.of?`<small>of ${r.of|0}</small>`:''}</span><span class="pf-m">${PF_IC.peak}<b>${(r.peak|0).toLocaleString()}</b></span><span class="pf-m">${PF_IC.time}<b>${fmtT(r.sec|0)}</b></span><span class="pf-m pf-eat">${PF_IC.eat}<b>${r.eaten|0}</b></span>${d}</li>`;}).join('');}
+    return `<li aria-label="${escH(lbl)}"><span class="pf-pl${pl===1?' p1':''}"><b>${pl?ordinal(pl):'—'}</b>${pl&&r.of?`<small>of ${r.of|0}</small>`:''}</span><span class="pf-m">${PF_IC.peak}<b>${(r.peak|0).toLocaleString()}</b></span><span class="pf-m">${PF_IC.time}<b>${fmtT(r.sec|0)}</b></span><span class="pf-m pf-eat">${PF_IC.eat}<b>${r.eaten|0}</b></span>${d}</li>`;}).join('');}
 function renderInv(){ // the skins you own, worn one first; tapping any opens Inventory
   const el=$('invStrip');if(!el)return;const sk=settings.skin|0,mine=PREMIUM.filter(S=>ownsSkin(S.id)),worn=mine.find(S=>S.id===sk);
-  $('pSkins').textContent=`${mine.length}/${PREMIUM.length}`;
+  $('pSkins').textContent=`${mine.length} of ${PREMIUM.length}`;
   const it=(k,name,cls,on)=>`<button type="button" class="pf-it${cls}${on?' on':''}" data-k="${k}" aria-label="${escH(name)}${on?', wearing':''}"><canvas width="144" height="144"></canvas><span>${escH(name)}</span></button>`;
   const def=it('def','Default','',sk<SKIN_FREE);
   el.innerHTML=(worn?it(worn.id,worn.name,' r-'+rarOf(worn),true)+def:def)+mine.filter(S=>S!==worn).map(S=>it(S.id,S.name,' r-'+rarOf(S),false)).join('')
     +(mine.length?'':'<button type="button" class="pf-it pf-get" data-k="shop" aria-label="Get skins in the shop"><i aria-hidden="true">+</i><span>Get skins</span></button>');
   drawInv();}
 function drawInv(){const el=$('invStrip');if(!el)return;for(const cv of el.querySelectorAll('canvas')){const k=cv.parentNode.dataset.k;if(k==='def')drawAvatar(cv,settings.pat|0);else{const S=PREMIUM[+k-SKIN_FREE];if(S)drawPreview(cv,S);}}}
-const miniCrest=t=>`<svg class="pf-mc" data-tier="${escH(t)}" viewBox="0 0 40 44"><path class="o" d="M20 2.5 35.5 8v13.5c0 9.6-6.6 16.4-15.5 20-8.9-3.6-15.5-10.4-15.5-20V8z"/><g class="g">${TIER_GLYPH[t]||''}</g></svg>`;
 let pfQueued=false,pfIntro=false,pfCount=0; // render after the caller finishes, so a wallet that brings the tier table shows its progress at once
 function renderProfile(){if(pfQueued||!$('profName'))return;pfQueued=true;Promise.resolve().then(()=>{pfQueued=false;renderProfileNow();});}
-function renderProfileNow(){renderRuns();renderAch();renderInv();
-  $('profName').textContent=cleanName($('nameIn').value)||settings.name||'Unnamed cell';
-  const t=wallet.tier,p=tierProgress(),rk=rankOf(wallet.rating|0),nx=rankNext(wallet.rating|0);
-  $('profileCard').dataset.tier=t;$('pTierTxt').textContent=rk.name;$('pTierTxt').style.color=rankCol(rk);$('pBadge').innerHTML=rankBadge(rk);$('pRating').textContent=wallet.rating;
-  {const ar=rankOf(wallet.aiRating|0);$('pAi').style.setProperty('--ac',rankCol(ar));$('pAiTier').textContent=ar.name;$('pAiRating').textContent=wallet.aiRating|0;$('pAiMc').innerHTML=rankBadge(ar,'pf-mc');} // the AI rating (bots only)
-  $('pCurMc').innerHTML=rankBadge(rk,'pf-mc');$('pNextMc').innerHTML=nx?rankBadge(nx,'pf-mc'):'';
-  const nums=[[$('pAtp'),wallet.balance],[$('pEarned'),wallet.earned],[$('pRuns'),(wallet.runs|0)+(wallet.aiRuns|0)],[$('pBest'),bestMass()]],fill=$('pFill'),xf=$('pLvFill'),intro=pfIntro&&!RM;pfIntro=false;cancelAnimationFrame(pfCount);
-  for(const[el,v]of nums)el.textContent=fmtStat(intro?0:v);
-  $('pProg').hidden=!p.text;$('pNext').textContent=p.text;
+const fmtDur=sec=>{const m=Math.floor(Math.max(0,sec|0)/60),h=Math.floor(m/60),d=Math.floor(h/24);return d?`${d}d ${h%24}h`:h?`${h}h ${m%60}m`:`${m}m`;};
+const fmtDay=t=>new Date(t).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'});
+const pfSteps=()=>{const c=wallet.catalog;return c&&Array.isArray(c.steps)&&c.steps.length?c.steps:RANK_STEPS;}; // [{key, name}], Amoeba first
+const stepAt=k=>{const r=rankTable().find(x=>x.step===k);return r?r.at:null;}; // the rating a step starts at
+function trophiesHeld(){ // [{step, at}] from the server; a server from before trophies: the steps up to the current one, undated
+  if(Array.isArray(wallet.trophies))return wallet.trophies;if(!((wallet.runs|0)>0))return[];
+  const S=pfSteps(),i=S.findIndex(st=>st.key===rankOf(wallet.rating|0).step);return S.slice(0,Math.max(0,i)+1).map(st=>({step:st.key,at:0}));}
+function trophyNext(S,held){ // the lowest step whose trophy you don't hold: its key, the rating it takes, how far along you are, and a note
+  const j=S.findIndex(st=>!held.has(st.key));if(j<0)return null;
+  const r=wallet.rating|0,k=S[j].key,at=j&&ladderOn()?stepAt(k):null,lo=j?stepAt(S[j-1].key)||0:0,need=at==null?null:Math.max(0,at-r);
+  return{k,j,at,need,pct:at==null?0:clamp((r-lo)/Math.max(1,at-lo),0,1),note:!j?'First ranked game':at==null?'Keep climbing':need>0?need.toLocaleString()+' to go':'Next ranked game'};}
+function renderTrophies(){const S=pfSteps(),held=new Map(trophiesHeld().map(t=>[t.step,t.at])),cur=rankOf(wallet.rating|0).step,nx=trophyNext(S,held);
+  $('pvShelfN').textContent=$('pvCaseN').textContent=`${held.size} of ${S.length}`;
+  const nm=k=>escH((S.find(st=>st.key===k)||rankStep(k)).name),got=S.filter(st=>held.has(st.key)).map(st=>st.key),last=S[S.length-1].key;
+  // Overview: your newest three trophies, then the next one as a pale ghost with what it takes (Trophies has them all)
+  const sh=$('pvShelf');sh.innerHTML=!got.length&&nx?`<div class="pv-first"><span class="pv-tt pv-ghost">${rankTrophy(nx.k)}</span><div><b>${nm(nx.k)}</b><small>Your first trophy comes with your first ranked game.</small></div></div>`
+    :got.slice(-3).map(k=>`<span class="pv-sh${k===cur?' cur':''}"><span class="pv-tt">${rankTrophy(k)}</span><b>${nm(k)}</b></span>`).join('')
+      +(nx?`<span class="pv-sh pv-ghost"><span class="pv-tt">${rankTrophy(nx.k)}</span><b>${nm(nx.k)}</b><small>${nx.note}</small></span>`:'');
+  // Trophies: the next one in the glass, the ones you hold with the day you won them, then the rest as small ghosts
+  $('pvNext').innerHTML=nx?`<span class="pv-tt pv-ghost">${rankTrophy(nx.k)}</span><div><small>Next trophy</small><b>${nm(nx.k)}</b>`
+      +(nx.at==null?`<strong>${nx.j?'Keep climbing to win it':'Play a ranked game to win it'}</strong>`:`<span class="pv-bar" aria-hidden="true"><i style="width:${(nx.pct*100).toFixed(1)}%"></i></span><small><strong>${nx.note}</strong> · at ${nx.at.toLocaleString()}</small>`)+'</div>'
+    :`<span class="pv-tt">${rankTrophy(last)}</span><div><small>Every trophy won</small><b>${nm(last)}</b><strong>The top of the ladder</strong></div>`;
+  const soon=S.filter(st=>!held.has(st.key)&&(!nx||st.key!==nx.k)).map(st=>st.key);
+  $('pvCase').innerHTML=(got.length?got.map(k=>{const at=held.get(k);return `<div class="pv-tc${k===cur?' cur':''}"><span class="pv-tt">${rankTrophy(k)}</span><b>${nm(k)}</b><small>${at?fmtDay(at):'Won'}</small></div>`;}).join('')
+      :'<p class="pv-empty">Your first trophy comes with your first ranked game.</p>')
+    +(soon.length?`<div class="pv-soon"><small>Still to come</small><div>${soon.map(k=>{const at=ladderOn()?stepAt(k):null;return `<span class="pv-sh pv-ghost"><span class="pv-tt">${rankTrophy(k)}</span><b>${nm(k)}</b><small>${at!=null?at.toLocaleString():''}</small></span>`;}).join('')}</div></div>`:'');}
+function renderForm(){const el=$('pvForm'),f=$('formField');const h=loadHistory().filter(r=>!r.practice).slice(-6).reverse();f.hidden=!h.length;
+  el.style.gridTemplateColumns=`repeat(${Math.max(1,h.length)},minmax(0,1fr))`;
+  el.innerHTML=h.map(r=>{const pl=r.place|0,d=typeof r.delta==='number'?r.delta:null;
+    return `<li class="${pl===1?'p1':''}" aria-label="${pl?ordinal(pl)+' of '+(r.of|0):'Unplaced'}${d!=null?(r.ai?', AI rating ':', rating ')+(d>0?'+':'')+d:''}"><b>${pl?ordinal(pl):'—'}</b><small>${r.ai&&d!=null?'AI ':''}${d==null?'·':d>0?'+'+d:d<0?'−'+(-d):'±0'}</small></li>`;}).join('');}
+function renderStats(){ // the server's lifetime stats; on a server without them, only what the wallet and this device know
+  const s=wallet.stats||null,pl=s?s.played|0:0,wins=s?s.wins|0:0,pod=s?s.podiums|0:0,pc=n=>s&&pl?Math.round(n/pl*100)+'%':'—';
+  const R=44,C=2*Math.PI*R,ring=(f,big,cap,sub)=>`<div class="pv-rg"><div class="pv-ring"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="tr" cx="50" cy="50" r="${R}"/>`
+    +(f>0?`<circle class="arc" cx="50" cy="50" r="${R}" stroke-dasharray="${(C*Math.min(1,f)).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 50 50)"/>`:'')+`</svg><b>${big}</b></div><span>${cap}</span><small>${sub}</small></div>`;
+  const rings=`<div class="pv-rings">${ring(pl?wins/pl:0,pc(wins),'Win rate',s?`${fmtStat(wins)} of ${fmtStat(pl)}`:'No games yet')}${ring(pl?pod/pl:0,pc(pod),'Top 3',s?`${fmtStat(pod)} of ${fmtStat(pl)}`:'No games yet')}</div>`;
+  // the rating line: your vs-players rating after each ranked game this device remembers (up to 40)
+  const h=loadHistory().filter(r=>!r.practice&&!r.ai&&typeof r.rating==='number'),pts=h.map(r=>r.rating);
+  if(h.length&&typeof h[0].delta==='number')pts.unshift(h[0].rating-h[0].delta);
+  let plot,head='';
+  if(pts.length<2)plot='<div class="pv-plot empty">Your rating line starts with your next ranked games.</div>';
+  else{const lo=Math.min(...pts),hi=Math.max(...pts),pad=Math.max(6,(hi-lo)*.14),y0=lo-pad,y1=hi+pad,n=pts.length-1,ch=pts[n]-pts[0];
+    const X=i=>(i/n*100).toFixed(2),Y=v=>((1-(v-y0)/(y1-y0))*100).toFixed(2),d=pts.map((v,i)=>`${i?'L':'M'}${X(i)} ${Y(v)}`).join('');
+    plot=`<div class="pv-plot"><div class="pv-pw"><svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="pvArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".16"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>`
+      +(hi>lo?`<line class="gl" x1="0" x2="100" y1="${Y(hi)}" y2="${Y(hi)}"/><line class="gl" x1="0" x2="100" y1="${Y(lo)}" y2="${Y(lo)}"/>`:'')
+      +`<path class="ar" d="${d}L100 100L0 100Z"/><path class="ln" d="${d}"/></svg><i style="left:${X(n)}%;top:${Y(pts[n])}%"></i></div>`
+      +(hi>lo?`<em style="top:${Y(hi)}%">${hi}</em><em style="top:${Y(lo)}%">${lo}</em>`:'')+'</div>';
+    head=`<strong>${ch>0?'+':ch<0?'−':'±'}${Math.abs(ch)}</strong><small>last ${n} game${n===1?'':'s'}</small>`;}
+  const chart=`<div class="pv-chart"><div class="pv-ch"><div><small>Rating vs players</small><b>${wallet.rating|0}</b></div><div>${head}</div></div>${plot}`
+    +(s&&s.peak?`<small class="pv-pk">Peak ${s.peak} · ${escH(rankOf(s.peak).name)}</small>`:'')+'</div>';
+  const nums=[['Games',fmtStat((wallet.runs|0)+(wallet.aiRuns|0))],['Time alive',s?fmtDur(s.alive):'—'],['Average life',s&&pl?fmtT(Math.round(s.alive/pl)):'—'],
+    ['Cells absorbed',s?fmtStat(s.eaten):'—'],['Best mass',fmtStat(bestMass())],['ATP earned',fmtStat(wallet.earned)]];
+  $('pvStats').innerHTML=rings+chart+`<dl class="pv-nums">${nums.map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>`;}
+function pvShow(id,focus){for(const b of document.querySelectorAll('#profileCard [role=tab]')){const on=b.dataset.pane===id;b.setAttribute('aria-selected',String(on));b.tabIndex=on?0:-1;if(on&&focus)b.focus();}
+  for(const p of['pvOv','pvSt','pvTr'])$(p).hidden=p!==id;}
+function renderProfileNow(){if($('profileCard').hidden)return; // only drawn while open: the trophies are a lot of SVG
+  renderRuns();renderAch();renderInv();renderTrophies();renderForm();renderStats();
+  {const n=cleanName($('nameIn').value)||settings.name||'Unnamed cell',el=$('profName');el.textContent=n;el.classList.toggle('long',n.length>14);} // a long name a size smaller
+  const rk=rankOf(wallet.rating|0),pal=rankStep(rk.step).pal,p=tierProgress(),a=wallet.account,fill=$('pFill'),xf=$('pLvFill'),intro=pfIntro&&!RM,card=$('profileCard');pfIntro=false;
+  card.dataset.step=rk.step;card.style.setProperty('--tc',pal[1]);card.style.setProperty('--tg',pal[1]+'2e'); // your step tints the light behind the cell and the rating bar
+  $('pTierTxt').textContent=rk.name;$('pRating').textContent=wallet.rating;$('pNext').textContent=p.text;
+  if($('pBadge').dataset.rank!==rk.name){$('pBadge').dataset.rank=rk.name;$('pBadge').innerHTML=rankBadge(rk);}
+  $('pvSub').textContent=a?'Signed in with '+(a.provider==='apple'?'Apple':'Google'):wallet.online?'':'Offline'; // guests: nothing (the Account row says it)
+  {const ar=rankOf(wallet.aiRating|0),e=$('pAiMc');$('pAiTier').textContent=ar.name;$('pAiRating').textContent=wallet.aiRating|0; // the AI rating: bots only
+    if(e.dataset.rank!==ar.name){e.dataset.rank=ar.name;e.innerHTML=rankBadge(ar);}}
   const lv=wallet.level!=null;$('pLv').hidden=!lv;
-  if(lv){$('pLvN').textContent=$('pLvN2').textContent=wallet.level;$('pLvXp').textContent=`${fmtStat(wallet.levelXp)} / ${fmtStat(wallet.levelNeed)} XP`;$('pLvNext').textContent=`${fmtStat(wallet.levelNeed-wallet.levelXp)} XP to level ${wallet.level+1}`;}
-  if(intro)for(const f of[fill,xf]){f.style.transition='none';f.style.width='0%';void f.offsetWidth;f.style.transition='';} // opening the page: the bars fill and the numbers count up
-  fill.style.width=p.pct+'%';xf.style.width=(lv?xpPct(wallet):0).toFixed(1)+'%';drawAvatar($('profCv'));
-  if(intro){const t0=performance.now(),tick=now=>{const k=clamp((now-t0)/700,0,1),e=1-Math.pow(1-k,3);for(const[el,v]of nums)el.textContent=fmtStat(Math.round((+v||0)*e));if(k<1)pfCount=requestAnimationFrame(tick);};pfCount=requestAnimationFrame(tick);}}
-$('profBtn').addEventListener('click',()=>{pfIntro=true;renderProfile();renderAccount();showCard('profileCard');});
-$('profShop').addEventListener('click',()=>openStore());
+  if(lv){$('pLvN').textContent=wallet.level;$('pLvXp').textContent=`${fmtStat(wallet.levelXp)} / ${fmtStat(wallet.levelNeed)} XP`;}
+  if(intro)for(const f of[fill,xf]){f.style.transition='none';f.style.width='0%';void f.offsetWidth;f.style.transition='';} // opening the page: the bars fill
+  fill.style.width=p.pct+'%';xf.style.width=(lv?xpPct(wallet):0).toFixed(1)+'%';drawAvatar($('profCv'));}
+$('profBtn').addEventListener('click',()=>{pfIntro=true;pvShow('pvOv');showCard('profileCard');renderProfile();renderAccount();$('profileCard').scrollTop=0;});
+document.querySelector('#profileCard .pv-tabs').addEventListener('click',e=>{const b=e.target.closest('[role=tab]');if(b)pvShow(b.dataset.pane);});
+document.querySelector('#profileCard .pv-tabs').addEventListener('keydown',e=>{const k=['ArrowLeft','ArrowRight'].indexOf(e.key);if(k<0)return;const ids=['pvOv','pvSt','pvTr'],cur=ids.findIndex(p=>!$(p).hidden);
+  pvShow(ids[(cur+(k?1:2))%3],true);e.preventDefault();});
+$('profileCard').addEventListener('click',e=>{const g=e.target.closest('[data-go]');if(g)pvShow(g.dataset.go);});
+$('pvRank').addEventListener('click',()=>pvShow('pvTr'));
+$('profSet').addEventListener('click',()=>$('setBtn').click()); // Settings, as from the lobby
 $('invOpen').addEventListener('click',()=>$('lookBtn').click());
 $('invStrip').addEventListener('click',e=>{const b=e.target.closest('.pf-it');if(!b)return;if(b.dataset.k==='shop')openStore();else $('lookBtn').click();});
 setInterval(()=>{if(!document.hidden&&!RM&&!$('profileCard').hidden)drawInv();},100); // premium skins are animated
@@ -8639,18 +8808,24 @@ const ACH_IC={ // one badge glyph per achievement
   levi:'<path d="M12 3.5a7.3 7.3 0 0 0-4.5 13.1v3.4h9v-3.4A7.3 7.3 0 0 0 12 3.5z"/><circle cx="9.4" cy="11.2" r="1.5"/><circle cx="14.6" cy="11.2" r="1.5"/><path d="M10.6 20v-2.2M13.4 20v-2.2"/>',
   evolve:'<path d="M7.5 3c0 4.5 9 4.5 9 9s-9 4.5-9 9M16.5 3c0 4.5-9 4.5-9 9s9 4.5 9 9M9 6.2h6M9 17.8h6"/>',
   bloom:'<circle cx="12" cy="12" r="2.3"/><path d="M12 3.5c2 2.2 2 4.3 0 6-2-1.7-2-3.8 0-6zM12 14.5c2 1.7 2 3.8 0 6-2-2.2-2-4.3 0-6zM3.5 12c2.2-2 4.3-2 6 0-1.7 2-3.8 2-6 0zM14.5 12c1.7-2 3.8-2 6 0-2.2 2-4.3 2-6 0z"/>'};
-let achSel=-1; // the badge whose name and goal show under the grid
-function renderAch(){ // the Profile's badges: earned ones lit gold; tap one to read it
-  const g=$('achGrid');if(!g)return;
-  $('achCount').textContent=`${ACH.filter(a=>achGot.has(a.id)).length}/${ACH.length}`;
-  if(!ACH[achSel])achSel=Math.max(0,ACH.findIndex(a=>!achGot.has(a.id)));
-  g.innerHTML=ACH.map((a,i)=>{const got=achGot.has(a.id);return `<button type="button" class="pf-ach ${got?'got':'locked'}" data-i="${i}" aria-pressed="false" aria-label="${escH(a.name)}, ${got?'earned':'locked'}"><i><svg viewBox="0 0 24 24" aria-hidden="true">${ACH_IC[a.id]||''}</svg></i></button>`;}).join('');
-  achInfo();
+let achAll=false; // the Profile shows every achievement, not just the next few
+const achProg=a=>{ // how far along a locked achievement is, where this device can tell: {f 0-1, t text}
+  if(a.id==='m500'||a.id==='m2000'){const g=a.id==='m500'?500:2000,b=bestMass();return{f:b/g,t:`${fmtStat(Math.min(b,g))} / ${fmtStat(g)}`};}
+  if(a.id==='surv5'){const b=Math.max(0,...loadHistory().map(r=>r.sec|0));return{f:b/300,t:`${fmtT(Math.min(b,300))} / 5:00`};}
+  return null;};
+function renderAch(){ // the Profile's achievements: how many you have, their badges, then the next three to go for (or all of them)
+  const g=$('achGrid');if(!g)return;const got=ACH.filter(a=>achGot.has(a.id)),n=got.length;
+  $('achCount').textContent=`${n} of ${ACH.length}`;$('achFill').style.width=(n/ACH.length*100).toFixed(1)+'%';
+  const hx=a=>`<i class="pv-hx" aria-hidden="true"><svg viewBox="0 0 24 24">${ACH_IC[a.id]||''}</svg></i>`;
+  const row=a=>{const ok=achGot.has(a.id),p=ok?null:achProg(a);
+    return `<div class="pv-a${ok?' got':''}">${hx(a)}<b>${escH(a.name)}</b><span>${escH(a.desc)}</span>`
+      +(ok?'<em>Earned</em>':p?`<em>${p.t}</em><span class="pv-bar" aria-hidden="true"><i style="width:${(clamp(p.f,0,1)*100).toFixed(1)}%"></i></span>`:'')+'</div>';};
+  g.innerHTML=achAll?ACH.map(row).join('')
+    :(n?`<div class="pv-got">${got.map(a=>`<span title="${escH(a.name)}: ${escH(a.desc)}" aria-label="${escH(a.name)}, earned">${hx(a)}</span>`).join('')}</div>`:'')
+      +ACH.filter(a=>!achGot.has(a.id)).slice(0,3).map(row).join('');
+  const b=$('achAll');b.hidden=ACH.length<=3;b.setAttribute('aria-expanded',String(achAll));b.textContent=achAll?'Show less':`Show all ${ACH.length}`;
 }
-function achInfo(){const a=ACH[achSel],el=$('achInfo');if(!a||!el)return;const got=achGot.has(a.id);el.classList.toggle('got',got);
-  el.innerHTML=`<b>${escH(a.name)}</b><span>${escH(a.desc)}</span><em>${got?'Earned':'Locked'}</em>`;
-  for(const b of $('achGrid').children)b.setAttribute('aria-pressed',String(+b.dataset.i===achSel));}
-$('achGrid').addEventListener('click',e=>{const b=e.target.closest('.pf-ach');if(!b)return;achSel=+b.dataset.i;achInfo();});
+$('achAll').addEventListener('click',()=>{achAll=!achAll;renderAch();});
 achLine();
 const diffEl=$('diff');const syncDiff=()=>{[...diffEl.children].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.d===settings.diff)));};
 diffEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.diff=b.dataset.d;syncDiff();});syncDiff();

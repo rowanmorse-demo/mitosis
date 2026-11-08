@@ -174,7 +174,22 @@ const tierOf = r => TIERS.find(t => r < t[0])[1];
 // The old values are kept in rating_v1 / ai_rating_v1. Server start-up runs this (flag 'ladder').
 function ladderReset(store) {
   if (store.flag('ladder') === '1') return false;
-  store.resetRatings(RATING.start); store.setFlag('ladder', '1'); return true;
+  store.resetRatings(RATING.start); store.setFlag('ladder', '1'); return true; // the peak rating and rank trophies start again with it
+}
+// Rank trophies: one per step of the ladder (amoeba … mitosis), won with the date the first time a competitive life starts
+// or ends at that step or above; the steps below come with it, so the shelf fills from the bottom. Only lives from now on
+// count (the ladder started everyone again), so nobody gets a trophy without a ranked life on the new ladder.
+const stepsUpTo = r => LADDER.filter(st => r >= st.at[0]).map(st => st.key);
+// Lifetime stats for the Profile (and the permanent quests), over lives under ranked rules (not Casual). A life under
+// RULES.minSec counts for nothing, so instant start/end pairs can't pile up lives. A win or a top-3 finish counts on the same
+// terms as XP's placing (4+ in the round); time alive is the server-capped survival; cells absorbed are capped at
+// eatBase + eatPerMin for each minute of the life.
+const STATS = { eatBase: 10, eatPerMin: 15 };
+function lifeStats({ survived, place, of, eaten }) {
+  const sec = Math.max(0, Math.min(RULES.maxRunSec, +survived || 0)), n = Math.floor(+of || 0), pl = Math.floor(+place || 0);
+  if (sec < RULES.minSec) return { played: 0, wins: 0, podiums: 0, alive: 0, eaten: 0 };
+  const placed = n >= XP.minOf && pl >= 1 && pl <= n, cap = Math.floor(STATS.eatBase + STATS.eatPerMin * sec / 60);
+  return { played: 1, wins: placed && pl === 1 ? 1 : 0, podiums: placed && pl <= 3 ? 1 : 0, alive: Math.round(sec), eaten: Math.max(0, Math.min(cap, Math.floor(+eaten || 0))) };
 }
 function ratingDelta(rating, survived, eaten, place, of, life = 0, mult = 1) { // mult scales the gain only (RATING_AI.skill)
   // placing: 1st of N earns the full bonus, last earns none; needs at least 4 in the round to count. Winning adds more.
@@ -375,8 +390,11 @@ class ApiError extends Error { constructor(status, msg) { super(msg); this.statu
 const hash = s => crypto.createHash('sha256').update(String(s)).digest('hex');
 // The sign-in a wallet belongs to (Apple or Google), or null for a device-only wallet.
 const accountOf = (store, p) => { const i = store.identities(p.id)[0]; return i ? { provider: i.provider, email: i.email || null, since: Number(i.at) } : null; };
+// stats: lifetime totals (peak: the best competitive rating since the ladder, at least the current one); trophies: [{ step, at }] up the ladder
+const statsOf = p => ({ played: Number(p.played || 0), wins: Number(p.wins || 0), podiums: Number(p.podiums || 0), alive: Number(p.alive || 0), eaten: Number(p.eaten || 0), peak: Math.max(Number(p.peak || 0), Number(p.rating ?? RATING.start)) });
+const trophiesOf = (store, p) => { const at = new Map(store.trophies(p.id).map(t => [t.step, Number(t.at)])); return LADDER.filter(st => at.has(st.key)).map(st => ({ step: st.key, at: at.get(st.key) })); };
 const wallet = (store, p) => ({ playerId: p.id, balance: Number(p.balance), earned: Number(p.earned), skins: store.skins(p.id), rating: Number(p.rating ?? RATING.start), tier: tierOf(Number(p.rating ?? RATING.start)), rank: rankOf(Number(p.rating ?? RATING.start)).name, runs: Number(p.runs || 0),
-  aiRating: Number(p.ai_rating ?? RATING.start), aiTier: tierOf(Number(p.ai_rating ?? RATING.start)), aiRank: rankOf(Number(p.ai_rating ?? RATING.start)).name, aiRuns: Number(p.ai_runs || 0), ...levelOf(p.xp), pass: passOf(store, p), quests: questsOf(store, p), account: accountOf(store, p) });
+  aiRating: Number(p.ai_rating ?? RATING.start), aiTier: tierOf(Number(p.ai_rating ?? RATING.start)), aiRank: rankOf(Number(p.ai_rating ?? RATING.start)).name, aiRuns: Number(p.ai_runs || 0), ...levelOf(p.xp), stats: statsOf(p), trophies: trophiesOf(store, p), pass: passOf(store, p), quests: questsOf(store, p), account: accountOf(store, p) });
 
 /* ---------- handlers: each gets (store, body, player?) and returns a JSON-able object ---------- */
 function session(store, body) {
@@ -471,6 +489,10 @@ function runEnd(store, body, p, ctx = {}) {
   if (vsBots) { store.setAiRating(p.id, rating, name); p.ai_rating = rating; p.ai_runs = Number(p.ai_runs || 0) + 1; }
   else { store.setRating(p.id, rating, name); p.rating = rating; p.runs = Number(p.runs || 0) + 1; }
   p.name = name;
+  // lifetime stats (ranked rules, so not Casual) and rank trophies (competitive lives only; the rating it started from counts too)
+  const top = vsBots ? Number(p.rating ?? RATING.start) : Math.max(before, rating);
+  if (!casual) { const st = lifeStats({ ...life, eaten: body.eaten }); store.addStats(p.id, st, top); for (const k of ['played', 'wins', 'podiums', 'alive', 'eaten']) p[k] = Number(p[k] || 0) + st[k]; p.peak = Math.max(Number(p.peak || 0), top); }
+  if (!vsBots) store.addTrophies(p.id, stepsUpTo(top), now);
   // kind: who the life was against (comp, ai, casual; legacy for apps that don't say); ratingDelta and aiDelta: how each
   // rating moved (one is 0); winBonus: the part of payout a win or top 3 paid; winCapped: the day's cap cut it; skill: the bots';
   // xpParts: where the XP came from (time alive, placing, the win); levelUp: how many levels this life gained;
@@ -556,4 +578,4 @@ function passAdmin(store, on, tester) {
 
 function leaderboard(store) { return { top: store.top(10).map((r, i) => ({ rank: i + 1, name: (r.name && !nameBlocked(r.name) && r.name) || 'Unnamed cell', rating: r.rating, tier: tierOf(r.rating), rankName: rankOf(r.rating).name, runs: r.runs })) }; }
 
-module.exports = { SKINS, PACKS, RULES, RATING, RATING_AI, WINS, LADDER, RANKS, rankOf, ladderReset, winBonus, runKind, XP, SEASONS, seasonOpen, PASS, PASS_SEASONS, passSeason, passLive, passAdmin, QUESTS, QUEST_SLOTS, questsAt, questsOf, questsTick, isoWeekOf, catalog, payoutFor, ratingDelta, xpFor, levelOf, xpAtLevel, xpToNext, tierOf, nameBlocked, ApiError, auth, handlers: { deleteAccount, session, runStart, runEnd, buySkin, iapApple, iapGoogle, leaderboard, signInApple, signInGoogle, signOut, passView, passPremium, passClaim } };
+module.exports = { SKINS, PACKS, RULES, RATING, RATING_AI, WINS, LADDER, RANKS, rankOf, ladderReset, stepsUpTo, STATS, lifeStats, winBonus, runKind, XP, SEASONS, seasonOpen, PASS, PASS_SEASONS, passSeason, passLive, passAdmin, QUESTS, QUEST_SLOTS, questsAt, questsOf, questsTick, isoWeekOf, catalog, payoutFor, ratingDelta, xpFor, levelOf, xpAtLevel, xpToNext, tierOf, nameBlocked, ApiError, auth, handlers: { deleteAccount, session, runStart, runEnd, buySkin, iapApple, iapGoogle, leaderboard, signInApple, signInGoogle, signOut, passView, passPremium, passClaim } };
