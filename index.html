@@ -2804,18 +2804,60 @@ body:not(.playing) #toasts .toast .tt{display:contents!important}body:not(.playi
 @keyframes svPop{0%{transform:scale(.8)}55%{transform:scale(1.1)}100%{transform:scale(1)}}
 /* portrait: the Skins / ATP switch a size smaller, so the page starts sooner */
 @media (orientation:portrait){#storeCard .sv-tabs{padding:3px}#storeCard .sv-tabs button{height:36px;font-size:14.5px}#storeCard .sv-top{row-gap:10px}}
-/* landscape and big screens: Featured two at a time, more per row, the sheet from the right */
+/* landscape (the app is landscape only): two panels under the top bar, nothing to scroll past. Home: the Featured stage on the
+   left, the collections on the right. A collection: a slim column with its art, name and sort; four or five prizes a row beside
+   it. Each panel scrolls on its own; search is the full width. The skin sheet comes in from the right. */
 @media (orientation:landscape){
   #storeCard .sv-top{grid-template-columns:auto auto 1fr auto auto}#storeCard .sv-tabs{grid-row:1;grid-column:3}#storeCard .st-findb{grid-column:4}#storeCard .sv-bal{grid-column:5}
-  #storeCard .sv-list{margin:0;padding:0 2px 32px}#storeCard .st-find{margin:0 -2px;padding:4px 2px 12px}
-  #storeCard .st-hero{margin:4px 0 0}#storeCard .st-hs{gap:14px;border-radius:28px}
-  #storeCard .st-slide{flex:0 0 calc(50% - 7px);height:250px;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:none;padding:20px 18px 20px 14px;border-radius:28px;text-align:left;
-    background:radial-gradient(55% 80% at 30% 50%,hsl(var(--h) var(--s) 55% / .4),transparent 72%),linear-gradient(160deg,hsl(var(--h) var(--sd) 18% / .9),hsl(var(--h) var(--sd) 8% / .95))}
-  #storeCard .st-art{width:min(100%,190px)}#storeCard .st-tx{justify-items:start;min-width:0}#storeCard .st-hn{font-size:28px}#storeCard .st-cta{min-width:0;max-width:100%;height:48px;padding:0 18px 0 14px;font-size:19px}
-  #storeCard .st-slide{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);column-gap:14px;min-height:0;max-height:none;padding-top:34px}
-  #storeCard .st-dots{display:none}
-  #storeCard .st-cols{grid-template-columns:repeat(auto-fill,minmax(190px,1fr))}
-  #storeCard .st-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+  #storeCard .sv-list{display:flex;flex-direction:column;overflow:hidden;margin:0;padding:0}
+  #storeCard .st-find{flex:none;margin:0;padding:0 0 12px;background:none}
+  #storeCard #skins.skins{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:16px}
+  #storeCard[data-v=list] #skins.skins{grid-template-columns:minmax(196px,.34fr) minmax(0,1fr)}
+  #storeCard[data-v=search] #skins.skins{display:block;overflow:auto;overscroll-behavior:contain;scrollbar-width:none;padding:0 2px 24px}
+  #storeCard .st-side{min-height:0;display:flex;flex-direction:column;gap:10px}
+  #storeCard .st-main{min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:2px 2px 28px}
+  #storeCard :is(.st-main,#skins)::-webkit-scrollbar{display:none}
+  #storeCard .st-main>.st-h:first-child{margin-top:2px}
+  /* the Featured stage fills the left panel: the skin as large as the panel allows, the name and one price button under it */
+  #storeCard .st-hero{flex:1;min-height:0;margin:0;border-radius:28px;overflow:hidden;isolation:isolate;
+    background:radial-gradient(70% 55% at 50% 38%,hsl(var(--hh) 70% 55% / .28),transparent 72%),linear-gradient(170deg,rgba(255,255,255,.06),rgba(255,255,255,.015));box-shadow:inset 0 1px 0 rgba(255,255,255,.1),inset 0 0 0 1px rgba(255,255,255,.05)}
+  #storeCard .st-hs{height:100%;gap:0}
+  #storeCard .st-slide{flex:0 0 100%;height:100%;min-height:0;max-height:none;container-type:size;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:10px 16px 12px;border-radius:0;text-align:center;
+    background:radial-gradient(60% 50% at 50% 40%,hsl(var(--h) var(--s) 55% / .32),transparent 72%)}
+  #storeCard .st-slide .st-art{flex:none;width:min(80cqw,calc(100cqh - 104px));min-width:80px}
+  #storeCard .st-slide.long .st-art{width:min(80cqw,calc(100cqh - 132px))}
+  #storeCard .st-tag{left:14px;top:14px;height:26px;font-size:12.5px}
+  #storeCard .st-tx{gap:8px;max-width:100%}
+  #storeCard .st-rar{display:none} /* the gem is on the tile; the stage keeps its room for the skin */
+  #storeCard .st-hn{font-size:27px;max-width:100%}#storeCard .st-slide.long .st-hn{font-size:23px}
+  #storeCard .st-cta{min-width:150px;height:48px;margin-top:2px;padding:0 20px 0 16px;font-size:20px}
+  #storeCard .st-cta .sv-coin{font-size:21px}
+  #storeCard .st-dots{left:auto;right:16px;top:20px;bottom:auto}
+  /* collections: two a row, shorter cards */
+  #storeCard .st-h{margin:16px 2px 12px}#storeCard .st-h h4{font-size:21px}
+  #storeCard .st-cols{grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:10px}
+  #storeCard .st-c{height:156px;padding:0 14px 19px;border-radius:22px}
+  #storeCard .st-ca{height:96px}#storeCard .st-ca i{top:30px;width:54px;height:54px}#storeCard .st-ca i.m{left:calc(50% - 27px);top:18px}
+  #storeCard .st-ca i.l{left:calc(50% - 66px)}#storeCard .st-ca i.r{left:calc(50% + 12px)}
+  #storeCard .st-cols>.st-c:last-child:nth-child(odd) .st-ca i.l{left:calc(50% - 84px)}#storeCard .st-cols>.st-c:last-child:nth-child(odd) .st-ca i.r{left:calc(50% + 30px)}
+  #storeCard .st-c b{font-size:17px}#storeCard .st-c small{font-size:12.5px}
+  /* a collection: its column holds the art, name, owned and the sort */
+  #storeCard .st-ban{flex:1;min-height:0;flex-direction:column;align-items:center;justify-content:center;gap:4px;margin:0;padding:14px 14px 16px;border-radius:24px;text-align:center;
+    background:radial-gradient(90% 60% at 50% 32%,hsl(var(--h) var(--s) 58% / .5),transparent 72%),linear-gradient(170deg,hsl(var(--h) var(--sd) 20%),hsl(var(--h) var(--sd) 8%) 85%)}
+  #storeCard .st-ba{position:relative;right:auto;top:auto;flex:1 1 0;min-height:60px;width:100%;max-width:none;aspect-ratio:auto;transform:none;display:flex;align-items:center;justify-content:center}
+  #storeCard .st-ba i{position:relative;left:auto!important;right:auto;top:auto;flex:none;width:30%;max-width:62px;height:auto;aspect-ratio:1;transform:rotate(-9deg)}
+  #storeCard .st-ba i.l{order:1;margin-right:-7%}#storeCard .st-ba i.m{order:2;z-index:2;width:44%;max-width:92px;transform:translateY(-6%)}#storeCard .st-ba i.r{order:3;margin-left:-7%;transform:rotate(9deg)}
+  #storeCard .st-bt{max-width:100%;justify-items:center;gap:6px}
+  #storeCard .st-bt b{font-size:26px}#storeCard .st-bt small{font-size:12.5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  #storeCard .st-own{font-size:12.5px;gap:8px}
+  #storeCard .st-sortrow{flex:none;margin:0;justify-content:center}#storeCard .st-sortrow>span{display:none}
+  #storeCard .st-sort{width:100%}#storeCard .st-sort button{flex:1;height:36px}
+  /* the prizes: four or five a row */
+  #storeCard .st-main .st-grid{grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:16px 12px}
+  #storeCard[data-v=search] .st-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:16px 12px}
+  #storeCard .st-p{border-radius:22px}#storeCard .st b{font-size:14.5px}#storeCard .st-m{font-size:13.5px}#storeCard .st-m.pr{font-size:17px}#storeCard .st-m .sv-coin{font-size:16px}
+  #storeCard[data-v=search] .st-rows{grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+  /* the skin sheet: a side panel from the right */
   #storeCard .sv-feat{left:auto;top:0;bottom:0;right:-48px;width:min(470px,50vw);max-height:none;align-content:center;gap:6px;
     padding:22px calc(48px + max(22px,env(safe-area-inset-right))) 22px 24px;border-radius:32px 0 0 32px;transform:translateX(105%)}
   #storeCard .sv-grab{display:none}
@@ -2823,16 +2865,14 @@ body:not(.playing) #toasts .toast .tt{display:contents!important}body:not(.playi
   #storeCard .sv-stage{width:min(76%,300px)}
 }
 @media (orientation:landscape) and (max-height:520px){
-  #storeCard .st-slide{height:226px}#storeCard .st-tag{top:12px;left:14px}#storeCard .st-hn{font-size:27px}
-  #storeCard .st-h{margin-top:22px}#storeCard .st-h h4{font-size:22px}
-  #storeCard .st-ban{min-height:124px;padding:14px 20px;flex:none}#storeCard .st-ba{max-width:180px}#storeCard .st-bt b{font-size:28px}
-  #storeCard .sv-feat{grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);align-items:center;gap:0 16px;width:min(590px,66vw);padding:16px calc(48px + max(18px,env(safe-area-inset-right))) 16px 14px}
+  #storeCard .sv-feat{grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);align-items:center;gap:0 16px;width:min(590px,68vw);padding:16px calc(48px + max(18px,env(safe-area-inset-right))) 16px 14px}
   #storeCard .sv-stage{width:100%;max-width:230px;justify-self:center}
   #storeCard .sv-info{gap:8px;justify-items:start;text-align:left}#storeCard .sv-badges{justify-content:flex-start}
   #storeCard .sv-info h3{font-size:28px}#storeCard #featDesc{-webkit-line-clamp:2;font-size:13.5px;margin:0}
   #storeCard .sv-buy{height:52px;font-size:19px}
 }
-@media (min-width:1100px){#storeCard .st-cols{grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}#storeCard .st-slide{height:300px}}
+@media (orientation:landscape) and (max-height:400px){#storeCard .sv-tabs button{min-width:92px;height:34px}#storeCard .sv-title{font-size:24px}}
+@media (min-width:1100px) and (min-height:600px){#storeCard #skins.skins{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:24px}#storeCard .st-hn{font-size:36px}#storeCard .st-main .st-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}}
 @media (prefers-reduced-motion:reduce){#storeCard .st-ball,#storeCard .st-gl::after,#storeCard .st-rays,#storeCard .st-pool,#storeCard .st-sheen,#storeCard .st-sheen::before,#storeCard .sv-bg i,#storeCard .sv-bg::after{animation:none!important}}
 body.saver #storeCard .st-ball,body.saver #storeCard .st-gl::after,body.saver #storeCard .st-rays,body.saver #storeCard .st-pool,body.saver #storeCard .st-sheen,body.saver #storeCard .st-sheen::before,body.saver #storeCard .sv-bg i,body.saver #storeCard .sv-bg::after{animation:none!important}
 /* @ui:shop2 end */
@@ -6979,18 +7019,18 @@ function stHero(sh,all){
   if(!slides.length)return '';
   return `<section class="st-hero" aria-label="Featured skins"><div class="st-hs" id="heroTrack">${slides.map(x=>{const S=x.S,own=ownsSkin(S.id),how=skinHow(S),r=rarOf(S);
     const cta=own?'<span class="st-cta how">Owned</span>':how==='pass'?'<span class="st-cta how">Battle Pass</span>':how==='event'?`<span class="st-cta how">Back ${seasonFrom(S.season)}</span>`:`<span class="st-cta"><i class="sv-coin"></i>${S.price.toLocaleString()}</span>`;
-    return `<button type="button" class="st-slide" data-id="${S.id}" data-r="${r}" style="${skinTint(S)}" aria-label="${escH(x.tag)}: ${escH(S.name)}, ${rarLabel(r)}"><span class="st-tag">${escH(x.tag)}${x.ends?`<span class="st-clk" data-ends="${x.ends}"><span>${svClock(x.ends-Date.now())}</span></span>`:''}</span><span class="st-art" aria-hidden="true"><i class="st-rays"></i><i class="st-pool"></i>${stBall(S,'hero')}<i class="st-sheen"></i></span><span class="st-tx"><b class="st-hn">${escH(S.name)}</b><span class="st-rar" data-r="${r}"><i></i>${rarLabel(r)}</span>${cta}</span></button>`;}).join('')}</div>${slides.length>1?`<div class="st-dots" aria-hidden="true">${slides.map((x,i)=>`<i${i===heroAt?' class="on"':''}></i>`).join('')}</div>`:''}</section>`;}
+    return `<button type="button" class="st-slide${S.name.length>15?' long':''}" data-id="${S.id}" data-r="${r}" style="${skinTint(S)}" aria-label="${escH(x.tag)}: ${escH(S.name)}, ${rarLabel(r)}"><span class="st-tag">${escH(x.tag)}${x.ends?`<span class="st-clk" data-ends="${x.ends}"><span>${svClock(x.ends-Date.now())}</span></span>`:''}</span><span class="st-art" aria-hidden="true"><i class="st-rays"></i><i class="st-pool"></i>${stBall(S,'hero')}<i class="st-sheen"></i></span><span class="st-tx"><b class="st-hn">${escH(S.name)}</b><span class="st-rar" data-r="${r}"><i></i>${rarLabel(r)}</span>${cta}</span></button>`;}).join('')}</div>${slides.length>1?`<div class="st-dots" aria-hidden="true">${slides.map((x,i)=>`<i${i===heroAt?' class="on"':''}></i>`).join('')}</div>`:''}</section>`;}
 function stHome(sh){const all=sh.flatMap(c=>c.list); // one strong Featured, then the collections: nothing else
-  return stHero(sh,all)+`<div class="st-h"><h4>Collections</h4><span>${sh.length}</span></div><div class="st-cols">${sh.map((c,i)=>stColCard(c,i)).join('')}</div>`;}
+  return `<div class="st-side">${stHero(sh,all)}</div><div class="st-main"><div class="st-h"><h4>Collections</h4><span>${sh.length}</span></div><div class="st-cols">${sh.map((c,i)=>stColCard(c,i)).join('')}</div></div>`;} // landscape: side by side; portrait (mobile web): one after the other
 function stList(sh,o){const all=sh.flatMap(c=>c.list);let list,title,line='',col=null;
   if(o.kind==='col'){col=sh.find(c=>c.key===o.key);if(!col)return null;list=col.list;title=col.name;line=col.open?'':col.line||'';} // an open season shows its Limited tag instead
   else if(o.kind==='own'){list=all.filter(S=>ownsSkin(S.id));title='Owned';line='Tap one to wear it';}
   else{list=all.filter(S=>rarOf(S)===o.key);title=rarLabel(o.key);line=o.key==='mythic'?'The rarest there is':o.key==='legendary'?'The best of every collection':`Every ${rarLabel(o.key).toLowerCase()} skin`;}
   if(!list.length)return null;
   const own=list.filter(S=>ownsSkin(S.id)).length,sorted=[...list].sort(shopSort==='price'?byCheapest:byRarest);
-  return `<section class="st-ban" style="${skinTint([...list].sort(byRarest)[0])}"><span class="st-ca st-ba" aria-hidden="true">${stArt(list,'cc')}</span><span class="st-bt"><b>${escH(title)}</b>${line?`<small>${escH(line)}</small>`:''}${col&&col.open?`<span class="st-tag st-ltd">Limited<span class="st-clk" data-ends="${col.open.ends}"><span>${svClock(col.open.ends-Date.now())}</span></span></span>`:''}<span class="st-own"><i><i style="width:${(own/list.length*100).toFixed(1)}%"></i></i>${own} of ${list.length} owned</span></span></section>`
-    +`<div class="st-sortrow"><span>${list.length} skin${list.length>1?'s':''}</span><div class="st-sort" role="group" aria-label="Sort"><button type="button" data-sort="rar" aria-pressed="${shopSort!=='price'}">Rarest</button><button type="button" data-sort="price" aria-pressed="${shopSort==='price'}">Cheapest</button></div></div>`
-    +`<div class="st-grid">${sorted.map((S,i)=>stTile(S,'st',i)).join('')}</div>`;}
+  return `<div class="st-side"><section class="st-ban" style="${skinTint([...list].sort(byRarest)[0])}"><span class="st-ca st-ba" aria-hidden="true">${stArt(list,'cc')}</span><span class="st-bt"><b>${escH(title)}</b>${line?`<small>${escH(line)}</small>`:''}${col&&col.open?`<span class="st-tag st-ltd">Limited<span class="st-clk" data-ends="${col.open.ends}"><span>${svClock(col.open.ends-Date.now())}</span></span></span>`:''}<span class="st-own"><i><i style="width:${(own/list.length*100).toFixed(1)}%"></i></i>${own} of ${list.length} owned</span></span></section>`
+    +`<div class="st-sortrow"><span>${list.length} skin${list.length>1?'s':''}</span><div class="st-sort" role="group" aria-label="Sort"><button type="button" data-sort="rar" aria-pressed="${shopSort!=='price'}">Rarest</button><button type="button" data-sort="price" aria-pressed="${shopSort==='price'}">Cheapest</button></div></div></div>`
+    +`<div class="st-main"><div class="st-grid">${sorted.map((S,i)=>stTile(S,'st',i)).join('')}</div></div>`;}
 function stSearch(sh,raw){const n=normQ(raw),all=sh.flatMap(c=>c.list),nOwn=all.filter(S=>ownsSkin(S.id)).length;
   const row=(a,name,sub,list,q)=>{const S=[...list].sort(byRarest)[0];return `<button type="button" class="st-row" ${a} style="${skinTint(S)}"><span class="st-p">${stBall(S,'row')}</span><span class="st-rt"><b>${stMark(name,q)}</b><small>${sub}</small></span>${ST_CHEV}</button>`;};
   if(!n){const rars=RAR_TOP.filter(r=>all.some(S=>rarOf(S)===r)); // nothing typed: browse by rarity, and what you own
