@@ -1903,6 +1903,7 @@ img.sk-im{display:block;-webkit-user-drag:none;user-select:none;-webkit-touch-ca
 #rankCard .rk-steps li:is(.done,.cur)::before{background:linear-gradient(90deg,rgba(255,255,255,.3),var(--tc))}
 #rankCard .rk-steps .emb{position:relative;z-index:1;width:50px;height:50px}
 #rankCard .rk-steps b{font-size:11px}
+#rankCard .rk-steps li.up .emb{filter:drop-shadow(0 3px 5px rgba(0,0,0,.45));opacity:1} /* the locked silhouette already reads as locked: no grey-out on top */
 #rankCard .rk-rn{color:var(--tc)}
 #rankCard .rk-me .rk-bar{grid-column:1/-1}#rankCard .rk-me .rk-next{grid-column:1/-1;justify-self:start;margin-top:-2px} /* rank names are longer than the metals were: the next rank gets its own line */
 #rankCard .rk-divs{display:grid;gap:11px;padding:12px 12px 13px;border-radius:16px;background:rgba(0,0,0,.24);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05)}
@@ -6339,7 +6340,7 @@ function renderTierLegend(){ // your rank and the next, the 9 steps of the ladde
     +`<div class="rk-bar"><i style="width:${Math.round(rankPct(r)*100)}%"></i></div><small class="rk-next">${N?`<b>${N.at-r}</b> to ${escH(N.name)}`:'Top rank'}</small>`;
   const ai=$('rkAi'),ar=wallet.aiRating|0,A=rankOf(ar); // the AI rating: bots only, never the ladder or the leaderboard
   if(ai){ai.style.setProperty('--tc',rankStep(A.step).pal[1]);ai.innerHTML=`<div class="rk-ai-e">${rankBadge(A,'emb')}</div><div class="rk-me-t"><small class="rk-k">vs AI</small><span class="tier rk-rn">${escH(A.name)}</span></div><b class="rk-ai-r">${ar}</b>`;}
-  el.innerHTML=RANK_STEPS.map((s,k)=>`<li class="${k<si?'done':k===si?'cur':'up'}" style="--tc:${s.pal[1]}"${k===si?' aria-current="step"':''}>${rankBadge({step:s.key,div:0},'emb')}<b>${escH(s.name)}</b><span>${s.at[0]}</span></li>`).join('');
+  el.innerHTML=RANK_STEPS.map((s,k)=>`<li class="${k<si?'done':k===si?'cur':'up'}" style="--tc:${s.pal[1]}"${k===si?' aria-current="step"':''}>${rankBadge({step:s.key,div:0},'emb',k>si?{locked:1}:null)}<b>${escH(s.name)}</b><span>${s.at[0]}</span></li>`).join(''); // steps above yours: a clean locked silhouette
   requestAnimationFrame(()=>{const c=el.querySelector('.cur');if(c)el.scrollLeft=c.offsetLeft-(el.clientWidth-c.offsetWidth)/2;});
   const dv=$('rkDivs'),D=rankTable().filter(x=>x.step===R.step);if(!dv)return;dv.style.setProperty('--tc',st.pal[1]);dv.hidden=D.length<2;if(D.length<2)return;
   dv.innerHTML=`<div class="rk-dh"><b>${escH(st.name)}</b><span>${N?`${N.at-r} to ${escH(N.name)}`:'Top rank'}</span></div><ol class="rk-dv">${D.map((d,k)=>{const nx=D[k+1]||rankNext(d.at),f=r<d.at?0:nx?clamp((r-d.at)/(nx.at-d.at),0,1):1;
