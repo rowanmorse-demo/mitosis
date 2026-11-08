@@ -231,12 +231,20 @@
     at.forEach(([x, y, z], i) => { const g = new T.Mesh(new T.OctahedronGeometry(1, 0), new T.MeshPhysicalMaterial({ color: C(cols[i]), emissive: C(cols[i]), emissiveIntensity: 0.6, roughness: 0.05, clearcoat: 1, flatShading: true, ior: 2.2 }));
       g.scale.set(0.08, 0.15, 0.08); g.position.set(x, y, z); g.rotation.set(0.3 * i, 0.5 * i, 0.2); glowOf(g, cols[i], 0.9); root.add(g); });
   }
+  function finial(m, fi, root) { // on top of the orb, so each step has its own outline: a knob (Interphase), a tall gem spire (Telophase)
+    const t = ORB.y + ORB.r - 0.04;
+    if (fi === 2) { root.add(lathe([[0, t], [0.2, t], [0.22, t + 0.05], [0.12, t + 0.12], [0.07, t + 0.2], [0.09, t + 0.26], [0, t + 0.3]], m.bright, 48)); const g = gemMesh(m, 0.1, 0.13, 0.1); g.position.set(0, t + 0.4, 0); root.add(g); }
+    if (fi === 6) { root.add(lathe([[0, t], [0.28, t], [0.3, t + 0.06], [0.16, t + 0.14], [0.1, t + 0.24], [0, t + 0.26]], m.bright, 48));
+      const g = gemMesh(m, 0.17, 0.34, 0.17); g.position.set(0, t + 0.58, 0); root.add(g);
+      for (const sx of [-1, 1]) { const s2 = new T.Mesh(new T.ConeGeometry(0.05, 0.36, 8), m.metal); s2.position.set(sx * 0.2, t + 0.3, 0); s2.rotation.z = -sx * 0.5; root.add(s2); } }
+  }
   function buildTrophy(fi) {
     const m = materials(fi), root = new T.Group();
     plinth(m, fi, root); cup(m, fi, root); orb(m, fi, root);
     if (fi === 3 || fi === 4) laurel(m, fi, root);
     if (fi >= 5) wings(m, fi, root);
     if (fi >= 6) rings(m, fi, root);
+    if (fi === 2 || fi === 6) finial(m, fi, root);
     if (fi >= 7) crown(m, fi, root);
     if (fi === 8) shards(root);
     return { root, m };
