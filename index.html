@@ -807,7 +807,7 @@ body.saver .lb-bg *{animation:none!important}
 /* portrait: the chip takes what the ATP pill leaves, tier over rating */
 @media (orientation:portrait){
   .lobby .lb-pcard{flex:1 1 0;min-width:0}.lobby .lb-me{width:100%;padding-right:14px}.lobby .lb-me-txt{min-width:0;overflow:hidden}
-  .lobby .lb-me-sub{flex-wrap:wrap;row-gap:4px}.lobby .lb-me-sub .lb-rt{flex-basis:100%}.lobby .lb-me-sub .tier{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .lobby .lb-me-sub{flex-wrap:wrap;row-gap:4px}.lobby .lb-me-sub .tier{letter-spacing:.06em}.lobby .lb-me-sub .lb-rt{flex-basis:100%}.lobby .lb-me-sub .tier{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 }
 @media (orientation:portrait) and (max-width:399px){.lobby .lb-crest{display:none}}
 @media (min-width:1100px) and (min-height:700px){.lobby .lb-hero .lb-name{font-size:26px}}
@@ -6376,7 +6376,8 @@ function renderMe(){const n=$('meName');if(n)n.textContent=cleanName($('nameIn')
 function renderLevel(){ // the level badge on the lobby's portrait (the profile card opens the Profile, which has the XP bar)
   const c=$('lvChip');if(!c)return;c.hidden=wallet.level==null;$('profBtn').setAttribute('aria-label',c.hidden?'Profile':`Profile, level ${wallet.level}`);if(c.hidden)return;
   $('heroLv').textContent=wallet.level;c.title=`Level ${wallet.level}, ${wallet.levelXp} of ${wallet.levelNeed} XP to the next`;}
-function renderRank(){renderTierLegend();renderMe();renderLevel();$('rankVal').textContent=wallet.rating;const rkName=rankOf(wallet.rating).name;{const ht=$('heroTier');if(ht){ht.textContent=rkName;ht.dataset.tier=wallet.tier;$('heroRating').textContent=wallet.rating;}}$('rankTier').textContent=rkName;$('rankTier').dataset.tier=wallet.tier;
+function renderRank(){renderTierLegend();renderMe();renderLevel();const rk=rankOf(wallet.rating),rkName=rk.name; // the chip shows the step, and the division beside the rating, so long names fit a phone
+  $('rankVal').textContent=(rk.div?['I','II','III'][rk.div-1]+' · ':'')+wallet.rating;{const ht=$('heroTier');if(ht){ht.textContent=rkName;ht.dataset.tier=wallet.tier;$('heroRating').textContent=wallet.rating;}}$('rankTier').textContent=rankStep(rk.step).name;$('rankTier').dataset.tier=wallet.tier;
   const p=tierProgress(),nx=$('rankNext'),fill=$('tierFill');if(nx)nx.textContent=p.text;if(fill)fill.style.width=p.pct+'%';
 }
 function tierAtRating(r){const k=rankOf(r);return{name:k.name,pct:rankPct(r)};} // the rank and progress through it, for the results card
