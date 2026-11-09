@@ -1,0 +1,166 @@
+<!doctype html><meta charset="utf-8"><title>Mitosis app icon</title>
+<!-- The Mitosis app icon ("King"). Rendered by render.js in this folder; open this file in a browser to preview it. -->
+<style>html,body{margin:0;background:#333}canvas{display:block;width:512px;height:512px}</style>
+<canvas id="c" width="2048" height="2048"></canvas>
+<script>
+'use strict';
+// Mitosis app icon "King": the round's leader (pink, as in play) wearing the game's three-point crown, smug, on a gold sunburst.
+// Drawn in 1024 units on a 2048 canvas. Layers can be drawn separately for Android's adaptive icon (bg / fg).
+const TAU = Math.PI * 2, K = 2;
+const rad = (g, x, y, r, st, fx = x, fy = y, fr = 0) => { const u = g.createRadialGradient(fx, fy, fr, x, y, r); for (let i = 0; i < st.length; i += 2) u.addColorStop(st[i], st[i + 1]); return u; };
+const lin = (g, x0, y0, x1, y1, st) => { const u = g.createLinearGradient(x0, y0, x1, y1); for (let i = 0; i < st.length; i += 2) u.addColorStop(st[i], st[i + 1]); return u; };
+const disc = (g, x, y, r) => { g.beginPath(); g.arc(x, y, r, 0, TAU); };
+const layer = () => { const c = document.createElement('canvas'); c.width = c.height = 2048; const g = c.getContext('2d'); g.setTransform(K, 0, 0, K, 0, 0); return [c, g]; };
+
+// ---------------- background: gold sunburst ----------------
+function background(g, o = {}) {
+  const cx = 512, cy = o.cy || 560;
+  g.fillStyle = rad(g, cx, cy - 60, 820, [0, '#fff6b8', .22, '#ffdc55', .5, '#ffb92a', .78, '#ff9014', 1, '#e8600c']); g.fillRect(0, 0, 1024, 1024);
+  // rays, brighter toward the middle
+  const [L, lg] = layer();
+  lg.save(); lg.translate(cx, cy); const N = 18;
+  for (let i = 0; i < N; i++) { const a0 = i / N * TAU, a1 = a0 + TAU / N * .5; lg.beginPath(); lg.moveTo(0, 0); lg.arc(0, 0, 1100, a0, a1); lg.closePath(); lg.fillStyle = '#fff'; lg.fill(); }
+  lg.restore();
+  lg.globalCompositeOperation = 'destination-in'; lg.fillStyle = rad(lg, cx, cy, 760, [0, 'rgba(0,0,0,.34)', .5, 'rgba(0,0,0,.2)', 1, 'rgba(0,0,0,.05)']); lg.fillRect(0, 0, 1024, 1024);
+  g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(L, 0, 0); g.restore();
+  // warm vignette
+  g.fillStyle = rad(g, cx, cy - 40, 760, [0, 'rgba(160,40,0,0)', .7, 'rgba(160,40,0,0)', 1, 'rgba(150,35,0,.32)']); g.fillRect(0, 0, 1024, 1024);
+}
+function sparkle(g, x, y, s, a = 1) { // a four-point glint
+  g.save(); g.translate(x, y); g.globalAlpha = a;
+  const gl = rad(g, 0, 0, s * 1.6, [0, 'rgba(255,255,240,.7)', 1, 'rgba(255,255,240,0)']); g.fillStyle = gl; disc(g, 0, 0, s * 1.6); g.fill();
+  g.beginPath(); for (let i = 0; i < 4; i++) { const a0 = i * Math.PI / 2; g.lineTo(Math.cos(a0) * s, Math.sin(a0) * s); g.lineTo(Math.cos(a0 + Math.PI / 4) * s * .18, Math.sin(a0 + Math.PI / 4) * s * .18); }
+  g.closePath(); g.fillStyle = '#fffef4'; g.fill(); g.restore();
+}
+
+// ---------------- the cell ----------------
+function body(g, x, y, r) {
+  // contact shadow on the dish
+  g.save(); g.filter = `blur(${26 * K}px)`; g.fillStyle = 'rgba(120,30,0,.45)'; g.beginPath(); g.ellipse(x + 10, y + r * .9, r * .82, r * .2, 0, 0, TAU); g.fill(); g.restore();
+  g.save(); g.filter = `blur(${18 * K}px)`; g.fillStyle = 'rgba(150,40,10,.35)'; disc(g, x + 8, y + 18, r); g.fill(); g.restore();
+  // body
+  disc(g, x, y, r); g.fillStyle = rad(g, x, y, r, [0, '#ffd2df', .2, '#ff9bbb', .5, '#ff6693', .78, '#f2437a', 1, '#cf2560'], x - r * .38, y - r * .42, r * .04); g.fill();
+  g.save(); disc(g, x, y, r); g.clip();
+  // organelles, faint, as in play (kept clear of the face)
+  for (const [ox, oy, s, light] of [[-.5, .74, .055, 1], [.56, .7, .045, 0]]) { disc(g, x + ox * r, y + oy * r, s * r); g.fillStyle = light ? 'rgba(255,215,230,.32)' : 'rgba(190,20,80,.26)'; g.fill(); }
+  // occlusion low right, warm bounce from the gold dish along the lower edge, cool rim light upper left
+  g.fillStyle = rad(g, x, y, r * 1.02, [0, 'rgba(0,0,0,0)', .72, 'rgba(90,0,30,.04)', 1, 'rgba(90,0,30,.32)'], x - r * .2, y - r * .25, r * .45); g.fillRect(x - r, y - r, r * 2, r * 2);
+  g.fillStyle = rad(g, x - r * .3, y - r * .45, r * 1.55, [0, 'rgba(255,190,90,0)', .84, 'rgba(255,190,90,0)', 1, 'rgba(255,196,96,.62)']); g.fillRect(x - r, y - r, r * 2, r * 2);
+  g.fillStyle = rad(g, x + r * .35, y + r * .4, r * 1.5, [0, 'rgba(255,255,255,0)', .86, 'rgba(255,255,255,0)', 1, 'rgba(255,240,248,.5)']); g.fillRect(x - r, y - r, r * 2, r * 2);
+  g.restore();
+  // membrane
+  disc(g, x, y, r - 7); g.lineWidth = 15; g.strokeStyle = 'rgba(176,22,78,.95)'; g.stroke();
+  disc(g, x, y, r * .9); g.lineWidth = 3; g.strokeStyle = 'rgba(255,255,255,.16)'; g.stroke();
+  // gloss: a soft window upper left and a hot spot
+  g.save(); g.translate(x - r * .4, y - r * .46); g.rotate(-.7); g.scale(r * .34, r * .15); disc(g, 0, 0, 1);
+  g.fillStyle = rad(g, 0, 0, 1, [0, 'rgba(255,255,255,.75)', .5, 'rgba(255,255,255,.28)', 1, 'rgba(255,255,255,0)']); g.fill(); g.restore();
+  disc(g, x - r * .58, y - r * .44, r * .05); g.fillStyle = rad(g, x - r * .58, y - r * .44, r * .05, [0, 'rgba(255,255,255,.95)', 1, 'rgba(255,255,255,0)']); g.fill();
+  g.beginPath(); g.arc(x, y, r * .95, Math.PI * 1.05, Math.PI * 1.6); g.lineWidth = 6; g.lineCap = 'round'; g.strokeStyle = 'rgba(255,240,246,.55)'; g.stroke();
+}
+
+// smug face: heavy upper lids, one brow up, a sideways smirk, a little blush
+function face(g, x, y, r) {
+  const ink = '#5e0a2e';
+  // blush
+  for (const sx of [-1, 1]) { g.save(); g.translate(x + sx * r * .5, y + r * .2); g.scale(1, .55); disc(g, 0, 0, r * .16); g.fillStyle = rad(g, 0, 0, r * .16, [0, 'rgba(255,60,110,.42)', 1, 'rgba(255,60,110,0)']); g.fill(); g.restore(); }
+  const eyes = [[x - r * .29, y - r * .1, -1], [x + r * .29, y - r * .12, 1]];
+  for (const [ex, ey, side] of eyes) {
+    const rx = r * .2, ry = r * .225;
+    g.save(); g.beginPath(); g.ellipse(ex, ey, rx, ry, 0, 0, TAU);
+    g.fillStyle = rad(g, ex, ey, ry * 1.1, [0, '#ffffff', .75, '#fbf2f6', 1, '#e2c6d4'], ex - rx * .3, ey - ry * .3); g.fill();
+    g.save(); g.clip();
+    // iris and pupil, looking a touch to the side and up: sure of itself
+    const ix = ex + rx * .18, iy = ey + ry * .12, ir = rx * .62;
+    disc(g, ix, iy, ir); g.fillStyle = rad(g, ix, iy, ir, [0, '#7a2a54', .55, '#4a1030', 1, '#22061a'], ix - ir * .2, iy - ir * .35); g.fill();
+    disc(g, ix, iy, ir * .5); g.fillStyle = '#120310'; g.fill();
+    disc(g, ix - ir * .34, iy - ir * .1, ir * .24); g.fillStyle = '#fff'; g.fill();
+    disc(g, ix + ir * .3, iy + ir * .34, ir * .1); g.fill();
+    // the heavy upper lid, body pink, tilted down toward the outside
+    g.translate(ex, ey); g.rotate(side * .1);
+    const lidY = -ry * .14;
+    g.fillStyle = lin(g, 0, -ry, 0, lidY, [0, '#ff8fb1', 1, '#f25787']); g.fillRect(-rx * 1.6, -ry * 1.6, rx * 3.2, ry * 1.6 + lidY);
+    g.restore();
+    // lash line over the lid edge
+    g.save(); g.translate(ex, ey); g.rotate(side * .1);
+    g.beginPath(); g.ellipse(0, 0, rx, ry, 0, Math.PI + .02, TAU - .02); // clip shape reference
+    g.restore();
+    g.save(); g.beginPath(); g.ellipse(ex, ey, rx, ry, 0, 0, TAU); g.clip(); g.translate(ex, ey); g.rotate(side * .1);
+    g.fillStyle = ink; g.fillRect(-rx * 1.6, lidY - ry * .1, rx * 3.2, ry * .14); g.restore();
+    g.beginPath(); g.ellipse(ex, ey, rx, ry, 0, 0, TAU); g.lineWidth = r * .028; g.strokeStyle = ink; g.stroke();
+    // a lash flick at the outer corner
+    g.restore();
+  }
+  // brows: left raised, right level
+  g.lineCap = 'round'; g.strokeStyle = ink; g.lineWidth = r * .05;
+  g.beginPath(); g.moveTo(x - r * .47, y - r * .37); g.quadraticCurveTo(x - r * .32, y - r * .6, x - r * .12, y - r * .47); g.stroke();
+  g.beginPath(); g.moveTo(x + r * .13, y - r * .37); g.quadraticCurveTo(x + r * .3, y - r * .43, x + r * .46, y - r * .4); g.stroke();
+  // smirk, higher on the right, with a dimple
+  g.beginPath(); g.moveTo(x - r * .27, y + r * .27); g.bezierCurveTo(x - r * .1, y + r * .47, x + r * .2, y + r * .45, x + r * .34, y + r * .2);
+  g.lineWidth = r * .056; g.stroke();
+  g.beginPath(); g.moveTo(x - r * .31, y + r * .23); g.quadraticCurveTo(x - r * .3, y + r * .29, x - r * .24, y + r * .3); g.lineWidth = r * .028; g.stroke();
+  g.beginPath(); g.moveTo(x + r * .27, y + r * .2); g.quadraticCurveTo(x + r * .36, y + r * .22, x + r * .37, y + r * .3); g.lineWidth = r * .03; g.stroke();
+}
+
+// ---------------- the crown: the game's three-point crown (CROWN svg) in bevelled gold ----------------
+function crown(g, x, y, w, rot) {
+  g.save(); g.translate(x, y); g.rotate(rot); const u = w / 12; g.scale(u, u); g.translate(-8, -8.6);
+  const P = [[2, 5.2], [5.2, 7.8], [8, 3], [10.8, 7.8], [14, 5.2], [12.7, 12.3], [3.3, 12.3]];
+  const path = () => { g.beginPath(); P.forEach((p, i) => i ? g.lineTo(...p) : g.moveTo(...p)); g.closePath(); };
+  g.lineJoin = 'round'; g.lineCap = 'round';
+  // shadow on the cell
+  g.save(); g.filter = `blur(${10 * K}px)`; g.translate(.25, .9); path(); g.fillStyle = 'rgba(120,10,40,.5)'; g.fill(); g.restore();
+  // body
+  path(); g.fillStyle = lin(g, 0, 3, 0, 12.3, [0, '#fff6c4', .25, '#ffd54f', .6, '#f4a51f', 1, '#b8620a']); g.fill();
+  // bevel: lighter left faces, darker right faces
+  g.save(); path(); g.clip();
+  g.beginPath(); g.moveTo(8, 3); g.lineTo(5.2, 7.8); g.lineTo(2, 5.2); g.lineTo(3.3, 12.3); g.lineTo(8, 12.3); g.closePath(); g.fillStyle = 'rgba(255,250,220,.22)'; g.fill();
+  g.beginPath(); g.moveTo(8, 3); g.lineTo(10.8, 7.8); g.lineTo(14, 5.2); g.lineTo(12.7, 12.3); g.lineTo(8, 12.3); g.closePath(); g.fillStyle = 'rgba(140,60,0,.16)'; g.fill();
+  // a gloss streak
+  g.beginPath(); g.moveTo(3.1, 6.6); g.lineTo(3.9, 11.4); g.lineWidth = .32; g.strokeStyle = 'rgba(255,255,255,.75)'; g.stroke();
+  g.beginPath(); g.moveTo(7.4, 5.2); g.lineTo(6.9, 8.4); g.lineWidth = .24; g.strokeStyle = 'rgba(255,255,255,.6)'; g.stroke();
+  g.restore();
+  path(); g.lineWidth = .42; g.strokeStyle = '#6e3a04'; g.stroke();
+  // band
+  g.beginPath(); g.roundRect(2.9, 10.6, 10.2, 2.5, .7); g.fillStyle = lin(g, 0, 10.6, 0, 13.1, [0, '#ffe796', .45, '#f6b02b', 1, '#a95806']); g.fill();
+  g.lineWidth = .42; g.strokeStyle = '#6e3a04'; g.stroke();
+  g.beginPath(); g.moveTo(3.6, 11.15); g.lineTo(12.4, 11.15); g.lineWidth = .18; g.strokeStyle = 'rgba(255,255,230,.7)'; g.stroke();
+  // tips
+  for (const [tx, ty, tr] of [[2, 5.05, .72], [8, 2.75, .82], [14, 5.05, .72]]) {
+    disc(g, tx, ty, tr); g.fillStyle = rad(g, tx, ty, tr, [0, '#fffbe6', .45, '#ffd54f', 1, '#c27010'], tx - tr * .35, ty - tr * .4); g.fill(); g.lineWidth = .36; g.strokeStyle = '#6e3a04'; g.stroke();
+    disc(g, tx - tr * .32, ty - tr * .34, tr * .22); g.fillStyle = '#fff'; g.fill(); }
+  // jewels on the band: a pink one in the middle (the player's colour), teal either side
+  const jewel = (jx, jy, jr, c0, c1, c2) => { disc(g, jx, jy, jr); g.fillStyle = rad(g, jx, jy, jr, [0, c0, .5, c1, 1, c2], jx - jr * .3, jy - jr * .35); g.fill(); g.lineWidth = .28; g.strokeStyle = '#6e3a04'; g.stroke();
+    g.beginPath(); g.moveTo(jx - jr * .45, jy - jr * .1); g.lineTo(jx - jr * .1, jy - jr * .5); g.lineWidth = jr * .22; g.strokeStyle = 'rgba(255,255,255,.85)'; g.stroke(); };
+  jewel(8, 11.85, .95, '#ffd0de', '#ff3d7f', '#a3123f');
+  jewel(4.9, 11.85, .6, '#d6fff6', '#2fd3c0', '#0b6b62');
+  jewel(11.1, 11.85, .6, '#d6fff6', '#2fd3c0', '#0b6b62');
+  g.restore();
+}
+
+// ---------------- compose ----------------
+const SCENE = { x: 512, y: 612, r: 352, cx: 560, cy: 272, cw: 360, crot: .16 };
+function foreground(g, s = SCENE) {
+  body(g, s.x, s.y, s.r);
+  face(g, s.x, s.y + s.r * .06, s.r);
+  crown(g, s.cx, s.cy, s.cw, s.crot);
+}
+// Draws a part ('full' | 'bg' | 'fg') at N px and returns its raw RGBA pixels as base64 (render.js encodes the PNGs).
+function drawPart(part, opt = {}) {
+  const cv = document.getElementById('c'), g = cv.getContext('2d');
+  g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, 2048, 2048); g.setTransform(K, 0, 0, K, 0, 0); g.filter = 'none'; g.globalAlpha = 1;
+  const s = { ...SCENE, ...(opt.scene || {}) };
+  if (part !== 'fg') { background(g); for (const [sx, sy, ss, a] of [[150, 190, 30, .95], [880, 150, 22, .9], [905, 470, 16, .8], [110, 520, 18, .8], [235, 95, 12, .7]]) sparkle(g, sx, sy, ss, a); }
+  if (part !== 'bg') { if (opt.fgScale) { g.translate(512, 512); g.scale(opt.fgScale, opt.fgScale); g.translate(-512, -512); } foreground(g, s); }
+  return cv;
+}
+window.pixels = (part, N, opt = {}) => {
+  const cv = drawPart(part, opt);
+  // downsample in halving steps for a clean small icon
+  let src = cv, w = 2048;
+  while (w / 2 >= N) { const t = document.createElement('canvas'); t.width = t.height = w / 2; const tg = t.getContext('2d'); tg.imageSmoothingQuality = 'high'; tg.drawImage(src, 0, 0, w / 2, w / 2); src = t; w /= 2; }
+  const fin = document.createElement('canvas'); fin.width = fin.height = N; const fg = fin.getContext('2d'); fg.imageSmoothingQuality = 'high'; fg.drawImage(src, 0, 0, N, N);
+  const d = fg.getImageData(0, 0, N, N).data; let bin = ''; for (let i = 0; i < d.length; i += 32768) bin += String.fromCharCode.apply(null, d.subarray(i, i + 32768));
+  return btoa(bin);
+};
+window.addEventListener('load', () => { const cv = drawPart('full'); }); // preview when opened in a browser
+</script>
