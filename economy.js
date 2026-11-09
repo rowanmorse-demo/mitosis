@@ -126,13 +126,14 @@ const RUN_MODES = ['arena', 'bots', 'casual', 'classic'];
 // on the byRank table, once the life lasts minSec (a quick respawn earns nothing), and earns XP for its time alive (no
 // placing part). Like every ATP since Nov 9, there is no daily cap. It never moves a rating.
 const CLASSIC = { minSec: 60 };
-// Extra lives (Rowan, Nov 9): "spend atp on getting an extra life double each time up to 16 times", "only 5 seconds to use it".
+// Extra lives (Rowan, Nov 9): "spend atp on getting an extra life double each time", "only 5 seconds to use it", and the prices
+// "10-20-40-80-160-320-640-1280 and that is last option".
 // When a player loses their last life in a round that is still open, the game offers one more for ATP for `window` seconds.
 // The first costs `base`, each next one `factor` times the last, at most `max` a game. A bought life continues the run
 // (the run is ended and rated once, after the offer is declined or runs out), so the run counts them: run/life takes the ATP
 // and the count together, priced from the count, and a repeated tap (the same n) is answered without charging again.
 // Modes: where lives run out (Classic has no limit; Nearby isn't reported). The catalogue sends this, so it can change here.
-const EXTRA_LIFE = { base: 100, factor: 2, max: 16, window: 5, modes: ['arena', 'bots', 'casual'] };
+const EXTRA_LIFE = { base: 10, factor: 2, max: 8, window: 5, modes: ['arena', 'bots', 'casual'] };
 const lifePrice = n => EXTRA_LIFE.base * Math.pow(EXTRA_LIFE.factor, n); // the price of the (n+1)th extra life in a game
 // mode: what the game said at run/start; metSince(t): whether the relay saw another player alive beside this one since t
 function runKind(run, metSince) {

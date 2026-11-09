@@ -88,7 +88,7 @@ Ranks (Rowan, Nov 7): nine steps through the life of a dividing cell, each with 
 
 The life must last 2 minutes on the server's clock in a round of 8 or more cells, so an early death, a quit (no placing) or a life never ended pays nothing. There is no daily cap on what an account can earn. `WINS` in economy.js.
 
-**Extra lives.** A player who loses their last life while the round is still open is offered one more for ATP, for 5 seconds. The first costs 100 ATP, and each one after that in the same game costs double (100, 200, 400 … 3,276,800 for the 16th); 16 is the most a game. This works in Ranked against players and bots (Casual has endless lives, Classic no limit, Nearby isn't reported). The bought life continues the same run, so the run is rated once, after the offer is declined or runs out. `EXTRA_LIFE` in economy.js (sent in the catalogue) sets the price, factor, cap, window and modes. `POST /api/run/life` takes the ATP and the count together, and charges once for a repeated tap.
+**Extra lives.** A player who loses their last life while the round is still open is offered one more for ATP, for 5 seconds. The first costs 10 ATP, and each one after that in the same game costs double: 10, 20, 40, 80, 160, 320, 640, 1,280, and that is the last (8 a game). This works in Ranked against players and bots (Casual has endless lives, Classic no limit, Nearby isn't reported). The bought life continues the same run, so the run is rated once, after the offer is declined or runs out. `EXTRA_LIFE` in economy.js (sent in the catalogue) sets the price, factor, cap, window and modes. `POST /api/run/life` takes the ATP and the count together, and charges once for a repeated tap.
 
 ## Levels and XP
 

@@ -1,4 +1,4 @@
-// Extra lives for ATP (economy.js EXTRA_LIFE, buyLife): the price doubles, 16 a game at most, short ATP, double taps, and
+// Extra lives for ATP (economy.js EXTRA_LIFE, buyLife): 10 ATP doubling to 1,280, 8 a game at most, short ATP, double taps, and
 // runs that are wrong or over. Both stores, then through the server. Run:  node extralife.test.js
 'use strict';
 const { spawn } = require('child_process'), path = require('path'), fs = require('fs'), os = require('os'), assert = require('assert'), crypto = require('crypto');
@@ -6,8 +6,8 @@ const economy = require('./economy'), { EXTRA_LIFE, lifePrice } = economy, buyLi
 const { SqliteStore, JsonStore } = require('./store');
 
 /* ---------- the rules ---------- */
-assert.deepEqual([EXTRA_LIFE.base, EXTRA_LIFE.factor, EXTRA_LIFE.max, EXTRA_LIFE.window], [100, 2, 16, 5]);
-assert.deepEqual([0, 1, 2, 15].map(lifePrice), [100, 200, 400, 3276800], 'each life costs double the last: 100 … 3,276,800 for the 16th');
+assert.deepEqual([EXTRA_LIFE.base, EXTRA_LIFE.factor, EXTRA_LIFE.max, EXTRA_LIFE.window], [10, 2, 8, 5], 'Rowan: 10-20-40-80-160-320-640-1280, 5 seconds');
+assert.deepEqual([0, 1, 2, 3, 4, 5, 6, 7].map(lifePrice), [10, 20, 40, 80, 160, 320, 640, 1280], 'each life costs double the last, 1,280 the last one');
 assert.ok(JSON.parse(JSON.stringify(economy.catalog(null))).extraLife.modes.includes('arena'), 'the apps get the rules in the catalogue');
 assert.ok(!EXTRA_LIFE.modes.includes('classic'), 'Classic has no lives limit, so no extra lives');
 
@@ -20,34 +20,34 @@ for (const kind of sqlite ? ['sqlite', 'json'] : ['json']) {
   const give = (id, atp) => { const q = st.player(id); st.setWallet(id, { balance: atp, earned: Number(q.earned), hour_at: Number(q.hour_at), hour_sum: Number(q.hour_sum) }); };
   const me = id => st.player(id);
   st.createPlayer('a', 'ha', 1); st.createPlayer('b', 'hb', 1);
-  give('a', 10000000); st.createRun('r1', 'a', Date.now(), 'arena', null);
+  give('a', 3000); st.createRun('r1', 'a', Date.now(), 'arena', null);
 
   // doubling, all the way to the cap
   let spent = 0;
-  for (let n = 0; n < 16; n++) { const w = buyLife(st, { runId: 'r1', n }, me('a')); spent += lifePrice(n);
-    assert.deepEqual([w.lives, w.price, w.balance], [n + 1, lifePrice(n), 10000000 - spent], k('life ' + (n + 1) + ' costs ' + lifePrice(n)));
-    assert.equal(w.next, n + 1 < 16 ? lifePrice(n + 1) : null, k('and says the next price')); }
-  assert.equal(spent, 6553500, k('16 lives: 100 + 200 + … + 3,276,800'));
-  assert.equal(Number(st.run('r1', 'a').lives), 16, k('the run counts them'));
-  fails(() => buyLife(st, { runId: 'r1', n: 16 }, me('a')), 403, k('a 17th is refused'));
-  assert.equal(Number(me('a').balance), 10000000 - spent, k('and costs nothing'));
+  for (let n = 0; n < 8; n++) { const w = buyLife(st, { runId: 'r1', n }, me('a')); spent += lifePrice(n);
+    assert.deepEqual([w.lives, w.price, w.balance], [n + 1, lifePrice(n), 3000 - spent], k('life ' + (n + 1) + ' costs ' + lifePrice(n)));
+    assert.equal(w.next, n + 1 < 8 ? lifePrice(n + 1) : null, k('and says the next price (none after the 8th)')); }
+  assert.equal(spent, 2550, k('8 lives: 10 + 20 + … + 1,280'));
+  assert.equal(Number(st.run('r1', 'a').lives), 8, k('the run counts them'));
+  fails(() => buyLife(st, { runId: 'r1', n: 8 }, me('a')), 403, k('a 9th is refused: 1,280 was the last'));
+  assert.equal(Number(me('a').balance), 3000 - spent, k('and costs nothing'));
 
   // a double tap: the same n again is told it has it, and pays once
-  st.createRun('r2', 'a', Date.now(), 'bots', null); give('a', 1000);
-  let w = buyLife(st, { runId: 'r2', n: 0 }, me('a')); assert.deepEqual([w.lives, w.balance, !!w.duplicate], [1, 900, false]);
-  w = buyLife(st, { runId: 'r2', n: 0 }, me('a')); assert.deepEqual([w.lives, w.balance, w.duplicate], [1, 900, true], k('the same tap twice pays once'));
+  st.createRun('r2', 'a', Date.now(), 'bots', null); give('a', 100);
+  let w = buyLife(st, { runId: 'r2', n: 0 }, me('a')); assert.deepEqual([w.lives, w.balance, !!w.duplicate], [1, 90, false]);
+  w = buyLife(st, { runId: 'r2', n: 0 }, me('a')); assert.deepEqual([w.lives, w.balance, w.duplicate], [1, 90, true], k('the same tap twice pays once'));
   fails(() => buyLife(st, { runId: 'r2', n: 3 }, me('a')), 409, k('a count ahead of the run is out of step'));
   fails(() => buyLife(st, { runId: 'r2', n: -1 }, me('a')), 400, k('a negative count is refused'));
-  w = buyLife(st, { runId: 'r2', n: 1 }, me('a')); assert.deepEqual([w.lives, w.price, w.balance], [2, 200, 700], k('then the next costs 200'));
+  w = buyLife(st, { runId: 'r2', n: 1 }, me('a')); assert.deepEqual([w.lives, w.price, w.balance], [2, 20, 70], k('then the next costs 20'));
   // a tap that raced: the run moved on between reading it and paying
-  assert.equal(st.buyLife('r2', 'a', 1, 400), false, k('the store refuses a stale count'));
-  assert.equal(Number(me('a').balance), 700, k('and takes nothing'));
+  assert.equal(st.buyLife('r2', 'a', 1, 40), false, k('the store refuses a stale count'));
+  assert.equal(Number(me('a').balance), 70, k('and takes nothing'));
 
   // not enough ATP: refused with how much more, nothing taken, the count unchanged
-  st.createRun('r3', 'a', Date.now(), 'casual', null); give('a', 60);
-  const e = fails(() => buyLife(st, { runId: 'r3', n: 0 }, me('a')), 402, k('60 ATP cannot buy a 100 ATP life'));
-  assert.match(e.message, /40 more/, k('the message says how much more'));
-  assert.deepEqual([Number(me('a').balance), Number(st.run('r3', 'a').lives)], [60, 0], k('and nothing changed'));
+  st.createRun('r3', 'a', Date.now(), 'casual', null); give('a', 6);
+  const e = fails(() => buyLife(st, { runId: 'r3', n: 0 }, me('a')), 402, k('6 ATP cannot buy a 10 ATP life'));
+  assert.match(e.message, /4 more/, k('the message says how much more'));
+  assert.deepEqual([Number(me('a').balance), Number(st.run('r3', 'a').lives)], [6, 0], k('and nothing changed'));
 
   // wrong or finished runs, and modes without extra lives
   fails(() => buyLife(st, { runId: 'nope', n: 0 }, me('a')), 404, k('an unknown run'));
@@ -69,15 +69,15 @@ const post = async (p, body, auth) => { const r = await fetch(base + '/api/' + p
   try {
     for (let i = 0; i < 150; i++) { if (child.exitCode != null) throw new Error('server exited (port ' + PORT + ' in use?)'); try { if ((await fetch(base + '/health')).ok) break; } catch (e) {} await new Promise(r => setTimeout(r, 100)); }
     let r = await post('session', { secret });
-    assert.equal(r.body.catalog.extraLife.base, 100, 'the session sends the extra-life rules');
+    assert.deepEqual([r.body.catalog.extraLife.base, r.body.catalog.extraLife.max], [10, 8], 'the session sends the extra-life rules');
     const db = sqlite ? new sqlite.DatabaseSync(path.join(dataDir, 'mitosis.sqlite')) : null;
-    if (db) db.prepare('UPDATE players SET balance = 1000').run(); else return console.log('extra life tests passed (json store; no server section)');
+    if (db) db.prepare('UPDATE players SET balance = 100').run(); else return console.log('extra life tests passed (json store; no server section)');
     const id = (await post('run/start', { mode: 'bots' }, secret)).body.runId;
-    r = await post('run/life', { runId: id, n: 0 }, secret); assert.deepEqual([r.status, r.body.lives, r.body.price, r.body.balance, r.body.next], [200, 1, 100, 900, 200], 'the first extra life: 100 ATP');
+    r = await post('run/life', { runId: id, n: 0 }, secret); assert.deepEqual([r.status, r.body.lives, r.body.price, r.body.balance, r.body.next], [200, 1, 10, 90, 20], 'the first extra life: 10 ATP');
     const [a, b] = await Promise.all([post('run/life', { runId: id, n: 1 }, secret), post('run/life', { runId: id, n: 1 }, secret)]);
     assert.deepEqual([a.status, b.status], [200, 200], 'two taps at once both answer');
-    assert.equal(Math.min(a.body.balance, b.body.balance), 700, 'but only one paid for the second life (200)');
-    assert.equal(Number(db.prepare('SELECT balance FROM players').get().balance), 700);
+    assert.equal(Math.min(a.body.balance, b.body.balance), 70, 'but only one paid for the second life (20)');
+    assert.equal(Number(db.prepare('SELECT balance FROM players WHERE balance > 0').get().balance), 70);
     const other = 'someone' + 'y'.repeat(24); await post('session', { secret: other });
     r = await post('run/life', { runId: id, n: 2 }, other); assert.equal(r.status, 404, 'another player cannot buy on this run');
     db.prepare('UPDATE runs SET started = started - 200000 WHERE id = ?').run(id);
