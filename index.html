@@ -2097,7 +2097,7 @@ img.sk-im{display:block;-webkit-user-drag:none;user-select:none;-webkit-touch-ca
 #settingsCard .st-key.listen{border-color:var(--accent);color:#fff;background:rgba(255,92,138,.12);animation:stKey 1s ease-in-out infinite}
 @keyframes stKey{50%{border-color:rgba(255,92,138,.3)}}
 @media (hover:hover){#settingsCard .st-key:not(.listen):hover{border-color:rgba(170,235,225,.3)}}
-@media (pointer:fine){#settingsCard .st-grp.touch-only+.st-grp{margin-top:8px}}
+@media (pointer:fine) and (orientation:portrait),(pointer:fine) and (max-width:759px){#settingsCard .st-grp.touch-only+.st-grp.touch-only+.st-grp{margin-top:8px}} /* one column: the first group shown */
 #settingsCard .srow.inv{cursor:pointer;flex-wrap:nowrap}
 #settingsCard .srow.inv .sl{display:grid;gap:3px}
 #settingsCard #inviteUrl{appearance:none;display:block;width:100%;box-sizing:border-box;margin:0;padding:0;border:0;border-radius:0;background:none;color:var(--dim);font:400 11px/1.25 var(--mono);text-overflow:ellipsis;cursor:text}
@@ -2130,6 +2130,17 @@ img.sk-im{display:block;-webkit-user-drag:none;user-select:none;-webkit-touch-ca
 #settingsCard .st-del:active{transform:scale(.99);background:rgba(255,107,120,.1)}
 @media (hover:hover){#settingsCard .st-del:hover{border-color:rgba(255,107,120,.34);background:rgba(255,107,120,.08)}}
 @media (min-width:700px){#settingsCard .srow{min-height:48px;font-size:14.5px}}
+/* landscape (the apps only run in landscape) and desktop: a tab's groups two abreast, so most tabs fit on one screen; the
+   SE's 667 px keeps one column, where Bots and Max ping would not fit a half-width row */
+@media (orientation:landscape) and (min-width:760px){
+  #settingsCard .st-panel{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 16px;align-items:start;padding-top:8px}
+  #settingsCard .st-panels .st-panel>.st-grp{margin-top:0}
+  #settingsCard :is(.st-foot,.st-end){grid-column:1/-1}
+  #settingsCard .st-foot{margin-top:0}
+  #settingsCard .st-end{margin-top:6px}
+  #settingsCard .seg button{padding:0 9px;min-width:38px} /* Bots and Max ping fit a half-width row */
+}
+@media (orientation:landscape) and (max-height:520px){#settingsCard .srow{min-height:44px;padding-top:5px;padding-bottom:5px}#settingsCard .seg button{height:28px}#settingsCard .st-grp{margin-top:16px}#settingsCard .st-end{padding-top:18px}}
 @media (max-width:420px){#settingsCard .seg button{padding:0 8px;font-size:12px;min-width:36px}}
 /* Friends page, its own look: your code card (in landscape a sticky left column), then invites, party and friends */
 #overlay>#friendsCard.page .fr-wrap{grid-column:1/-1}
@@ -3234,20 +3245,24 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
         <div class="st-foot"><button type="button" class="st-reset"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5v5h5"/><path d="M4.6 14.5A8 8 0 1 0 6.3 6.3L4 10"/></svg>Reset to defaults</button></div>
       </section>
       <section class="st-panel" id="stControls" role="tabpanel" aria-labelledby="stTabControls" hidden>
-        <div class="st-grp touch-only"><h3 class="st-h">Touch</h3><div class="st-list">
+        <div class="st-grp touch-only"><h3 class="st-h">Layout</h3><div class="st-list">
           <div class="srow"><span class="sl">Joystick</span>
             <div class="seg two" id="joySeg"><button type="button" data-j="fixed" data-def>Fixed</button><button type="button" data-j="float">Floating</button></div></div>
           <div class="srow"><span class="sl">Button side</span>
             <div class="seg two" id="handSeg"><button type="button" data-l="1">Left</button><button type="button" data-l="0" data-def>Right</button></div></div>
+        </div></div>
+        <div class="st-grp touch-only"><h3 class="st-h">Size &amp; opacity</h3><div class="st-list">
           <div class="srow"><span class="sl">Button size</span>
             <div class="seg" id="actSeg"><button type="button" data-sz="small">Small</button><button type="button" data-sz="normal" data-def>Normal</button><button type="button" data-sz="large">Large</button></div></div>
           <div class="srow"><span class="sl">Opacity</span>
             <div class="seg" id="opSeg"><button type="button" data-op="100" data-def>100%</button><button type="button" data-op="75">75%</button><button type="button" data-op="50">50%</button></div></div>
         </div></div>
-        <div class="st-grp kbd-only"><h3 class="st-h">Keyboard</h3><div class="st-list">
+        <div class="st-grp kbd-only"><h3 class="st-h">Moves</h3><div class="st-list">
           <div class="srow"><span class="sl">Split</span><button type="button" class="st-key" data-k="split">Space</button></div>
           <div class="srow"><span class="sl">Eject mass</span><button type="button" class="st-key" data-k="eject">W</button></div>
           <div class="srow"><span class="sl">Dash</span><button type="button" class="st-key" data-k="dash">Shift</button></div>
+        </div></div>
+        <div class="st-grp kbd-only"><h3 class="st-h">General</h3><div class="st-list">
           <div class="srow"><span class="sl">Pause</span><button type="button" class="st-key" data-k="pause">P</button></div>
           <div class="srow"><span class="sl">Mute sound</span><button type="button" class="st-key" data-k="mute">M</button></div>
         </div>
