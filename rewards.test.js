@@ -1,7 +1,7 @@
 // Win rewards and the AI rating: the rules, then the API against a throwaway server with real relay games. Run:  node rewards.test.js
 'use strict';
 const { spawn } = require('child_process'), path = require('path'), fs = require('fs'), os = require('os'), assert = require('assert');
-const economy = require('./economy'), { WINS, RATING_AI, winBonus, runKind, ratingDelta } = economy;
+const economy = require('./economy'), { WINS, RATING_AI, CLASSIC, winBonus, runKind, ratingDelta, XP } = economy;
 
 /* ---------- the rules ---------- */
 const won = (kind, place, extra = {}) => winBonus({ kind, survived: 300, place, of: 20, ...extra });
@@ -23,6 +23,7 @@ assert.equal(won('cap', 1), 0, 'only the three kinds pay');
 assert.equal(runKind({ mode: null, started: 1 }), 'legacy', 'no mode: an app from before this change');
 assert.equal(runKind({ mode: 'casual', started: 1 }, () => true), 'casual', 'Casual stays Casual, met or not');
 assert.equal(runKind({ mode: 'bots', started: 1 }, () => true), 'ai', 'a bot game the game says is a bot game');
+assert.equal(runKind({ mode: 'classic', started: 1 }, () => true), 'classic', 'Classic stays Classic, met or not');
 assert.equal(runKind({ mode: 'arena', started: 1 }), 'ai', 'the arena without the relay\'s word: bots only');
 assert.equal(runKind({ mode: 'arena', started: 1 }, () => false), 'ai', 'the arena with nobody else alive in it');
 let asked = null; assert.equal(runKind({ mode: 'arena', started: 1234 }, t => { asked = t; return true; }), 'comp', 'the arena beside another player');
@@ -109,6 +110,7 @@ const game = () => new Promise((res, rej) => { const ws = new WebSocket(base.rep
   let r = await post('/api/session', { secret: s1 });
   assert.deepEqual([r.body.rating, r.body.rank, r.body.aiRating, r.body.aiTier, r.body.aiRank, r.body.aiRuns], [0, 'Amoeba I', 0, 'Bronze', 'Amoeba I', 0], 'a new player starts at the bottom of both ladders');
   assert.deepEqual(r.body.catalog.wins, WINS, 'the catalogue carries the win rules'); assert.deepEqual(r.body.catalog.ratingAi, RATING_AI);
+  assert.ok(r.body.catalog.modes.includes('classic'), 'the catalogue says the server knows Classic runs (older servers would rate them as ranked)');
 
   if (!db) console.log('(JSON store: skipping the backdated lives)');
   else {
@@ -146,6 +148,18 @@ const game = () => new Promise((res, rej) => { const ws = new WebSocket(base.rep
     assert.deepEqual([r.body.skill, r.body.payout], ['hard', 9], 'build 12 sends the skill at the end: Hard pays 9');
     ({ r } = await life(s1, 300, { mode: 'casual', skill: 'master' }, { place: 2, of: 20 })); assert.equal(r.body.payout, 12, 'Master 2nd: 12');
     ({ r } = await life(s1, 300, { mode: 'casual', skill: 'master' }, { place: 3, of: 20 })); assert.equal(r.body.payout, 10, 'Master 3rd: 10');
+
+    // Classic: ATP for the best leaderboard rank, XP for the time alive, no rating, and no daily cap (like all ATP since Nov 9)
+    const before = (await post('/api/session', { secret: s1 })).body;
+    ({ r } = await life(s1, 300, { mode: 'classic' }, { bestRank: 1, place: 1, of: 20 }));
+    assert.deepEqual([r.body.kind, r.body.payout, r.body.winBonus, r.body.ratingDelta, r.body.aiDelta], ['classic', 25, 0, 0, 0], 'a Classic life that topped the board: 25 ATP, no win bonus, no rating');
+    assert.deepEqual([r.body.rating, r.body.aiRating, r.body.runs, r.body.aiRuns], [before.rating, before.aiRating, before.runs, before.aiRuns], 'neither rating nor its run count moves');
+    assert.deepEqual([r.body.xpGained, r.body.xpParts.place, r.body.xpParts.win], [Math.floor(300 / 10) * XP.perTenSec, 0, 0], 'XP for the time alive only: a placing the game claims counts for nothing');
+    ({ r } = await life(s1, 300, { mode: 'classic' }, { bestRank: 12 })); assert.equal(r.body.payout, 3, 'a best rank of 12: 3 ATP');
+    ({ r } = await life(s1, CLASSIC.minSec - 5, { mode: 'classic' }, { bestRank: 1 })); assert.equal(r.body.payout, 0, 'a Classic life under a minute pays no ATP');
+    assert.ok(r.body.xpGained > 0, 'but still earns its XP');
+    for (let i = 0; i < 5; i++) ({ r } = await life(s1, 300, { mode: 'classic' }, { bestRank: 1 }));
+    assert.deepEqual([r.body.payout, r.body.winCapped], [25, false], 'the 8th Classic life of the day (over 150 ATP) still pays in full');
 
     // the arena: the game's word is not enough, the relay must have seen another player alive in the room
     ({ r } = await life(s1, 300, { mode: 'arena' }, { place: 1, of: 20 }));

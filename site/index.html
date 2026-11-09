@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mitosis: Cell Arena — eat, split and evolve in a live cell arena</title>
+<meta name="description" content="A fast, free multiplayer cell arena. Absorb anything smaller, divide to strike and be the last cell standing in a ten-minute round. Play in your browser, on iPhone or on Android, with one account.">
+<meta name="theme-color" content="#020809">
+<link rel="canonical" href="https://mitosisgame.com/">
+<link rel="icon" href="/assets/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="/assets/icon-192.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Mitosis: Cell Arena">
+<meta property="og:description" content="Eat, split and evolve in a live ten-minute cell arena. Last cell standing wins. Free on the web, iPhone and Android.">
+<meta property="og:url" content="https://mitosisgame.com/">
+<meta property="og:image" content="https://mitosisgame.com/assets/og.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="apple-itunes-app" content="app-id=6818890370">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/assets/site.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Mitosis: Cell Arena","url":"https://mitosisgame.com/","description":"A fast, free multiplayer cell arena: absorb, divide and be the last cell standing.","genre":["Action","Arcade"],"gamePlatform":["Web browser","iOS","Android"],"applicationCategory":"Game","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"publisher":{"@type":"Organization","name":"Catapult Consulting, LLC"}}</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="/"><img src="/assets/icon-192.png" alt="" width="34" height="34"><span>Mitosis <small>Cell Arena</small></span></a>
+    <nav class="nav" aria-label="Main">
+      <a href="#how">How it works</a>
+      <a href="#features">Features</a>
+      <a href="#account">Your account</a>
+      <a href="#faq">FAQ</a>
+      <a class="cta" href="/play">Play now</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+<section class="hero" aria-labelledby="title">
+  <canvas id="dish" aria-hidden="true"></canvas>
+  <div class="wrap">
+    <div>
+      <span class="eyebrow">Live multiplayer cell arena</span>
+      <h1 id="title">Mitosis <em>Cell Arena</em></h1>
+      <p class="lead">Absorb anything smaller than you, divide to strike, and keep clear of anything bigger. Rounds last ten minutes, the arena closes in, and the last cell standing wins.</p>
+      <div class="btns">
+        <a class="btn primary" href="/play">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>
+          Play in your browser
+        </a>
+        <a class="btn ghost" href="https://apps.apple.com/app/id6818890370" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.37 12.6c-.02-2.2 1.8-3.26 1.88-3.31-1.03-1.5-2.62-1.7-3.18-1.73-1.35-.14-2.64.8-3.33.8-.69 0-1.74-.78-2.86-.76-1.47.02-2.83.86-3.59 2.17-1.53 2.66-.39 6.6 1.1 8.75.73 1.05 1.6 2.24 2.73 2.2 1.1-.05 1.51-.71 2.84-.71 1.32 0 1.7.71 2.85.69 1.18-.02 1.93-1.07 2.65-2.13.84-1.22 1.18-2.4 1.2-2.47-.03-.01-2.3-.88-2.3-3.5zM14.2 6.1c.6-.73 1.01-1.75.9-2.76-.87.04-1.92.58-2.54 1.31-.56.65-1.05 1.69-.92 2.68.97.08 1.96-.49 2.56-1.23z"/></svg>
+          <span class="two"><small>Download on the</small>App Store</span>
+        </a>
+        <span class="btn soon" title="The Android app is on its way to Google Play">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.6 9.48l1.84-3.18a.38.38 0 0 0-.66-.38l-1.86 3.22A11.4 11.4 0 0 0 12 8.08c-1.77 0-3.43.4-4.92 1.06L5.22 5.92a.38.38 0 1 0-.66.38L6.4 9.48A10.8 10.8 0 0 0 1 18h22a10.8 10.8 0 0 0-5.4-8.52zM7 15.25a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5zm10 0a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5z"/></svg>
+          <span class="two"><small>Coming soon to</small>Google Play</span>
+        </span>
+      </div>
+      <div class="badges"><span>Free to play</span><span>No ads</span><span>No chat</span><span>One account everywhere</span></div>
+    </div>
+    <div class="device"><img src="/assets/shot-arena.jpg" alt="A round of Mitosis: a pink player cell among food, rival cells and green phages, with the round clock and leaderboard" width="1600" height="736" fetchpriority="high"></div>
+  </div>
+</section>
+
+<section class="block" id="how" aria-labelledby="how-h">
+  <div class="wrap">
+    <span class="kicker">How a round works</span>
+    <h2 id="how-h">Ten minutes. One dish. Last cell wins.</h2>
+    <p class="sub">Every round starts with the whole dish open. Grow, hunt and survive while the safe zone shrinks toward the centre.</p>
+    <div class="grid3">
+      <article class="card glow" style="--c:60,190,175">
+        <div class="icon"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><circle cx="13" cy="16" r="9" fill="#3cbeaf" fill-opacity=".35" stroke="#3cbeaf" stroke-width="2"/><circle cx="25" cy="9" r="2" fill="#dcefe9"/><circle cx="26" cy="17" r="1.6" fill="#dcefe9"/><circle cx="23" cy="24" r="2.2" fill="#dcefe9"/></svg></div>
+        <span class="num">01</span>
+        <h3>Absorb</h3>
+        <p>Eat food and anything smaller than you to grow. Bigger cells are slower, so size is power and a target at once.</p>
+      </article>
+      <article class="card glow" style="--c:255,92,138">
+        <div class="icon"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><circle cx="10" cy="16" r="7" fill="#ff5c8a" fill-opacity=".35" stroke="#ff5c8a" stroke-width="2"/><circle cx="23" cy="16" r="5" fill="#ff5c8a" fill-opacity=".35" stroke="#ff5c8a" stroke-width="2"/><path d="M15 10l3 -3M15 22l3 3" stroke="#ff8fb0" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <span class="num">02</span>
+        <h3>Divide to strike</h3>
+        <p>Split to launch half your mass at a cell in reach, shoot mass to bait or feed, and boost out of trouble.</p>
+      </article>
+      <article class="card glow" style="--c:154,140,255">
+        <div class="icon"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><circle cx="16" cy="16" r="12" stroke="#9a8cff" stroke-width="2" stroke-dasharray="3 3"/><circle cx="16" cy="16" r="6" fill="#9a8cff" fill-opacity=".4" stroke="#9a8cff" stroke-width="2"/></svg></div>
+        <span class="num">03</span>
+        <h3>Outlast the dish</h3>
+        <p>The arena closes in and anything outside dissolves. When only one player's cells are left, the round is theirs.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="features" aria-labelledby="feat-h">
+  <div class="wrap">
+    <span class="kicker">What's in the dish</span>
+    <h2 id="feat-h">More than eat or be eaten</h2>
+    <p class="sub">A living world that changes every round, a rating that means something, and skins worth showing off.</p>
+    <div class="grid3">
+      <article class="card">
+        <div class="icon" style="--c:247,187,58"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 4l3.2 7.6 8.1.7-6.2 5.3 1.9 8L16 21.4 9 25.6l1.9-8-6.2-5.3 8.1-.7z" fill="#f7bb3a" fill-opacity=".35" stroke="#f7bb3a" stroke-width="2" stroke-linejoin="round"/></svg></div>
+        <h3>A rating that means something</h3>
+        <p>Survive, absorb and place high to climb the ranked ladder. Every round shows your placement and how your rating moved.</p>
+      </article>
+      <article class="card">
+        <div class="icon" style="--c:60,190,175"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><circle cx="16" cy="16" r="10" fill="#3cbeaf" fill-opacity=".3" stroke="#3cbeaf" stroke-width="2"/><path d="M16 6v-3M16 29v-3M6 16h-3M29 16h-3M9 9l-2-2M25 25l-2-2M9 23l-2 2M25 7l-2 2" stroke="#3cbeaf" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <h3>Evolve as you grow</h3>
+        <p>At mass milestones your cell mutates: faster flagella, a tougher membrane, digestive enzymes and more. Read a rival's traits before you commit.</p>
+      </article>
+      <article class="card">
+        <div class="icon" style="--c:120,220,110"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><circle cx="16" cy="16" r="7" fill="#78dc6e" fill-opacity=".35" stroke="#78dc6e" stroke-width="2"/><path d="M16 4v5M16 23v5M4 16h5M23 16h5M7.5 7.5l3.5 3.5M21 21l3.5 3.5M7.5 24.5l3.5-3.5M21 11l3.5-3.5" stroke="#78dc6e" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <h3>A living world</h3>
+        <p>Nutrient blooms, antibiotic tides, phage swarms and the Leviathan. The leader wears a crown and pays a bounty to whoever takes it.</p>
+      </article>
+      <article class="card">
+        <div class="icon" style="--c:255,92,138"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><circle cx="16" cy="16" r="11" fill="url(#g1)" stroke="#ff8fb0" stroke-width="2"/><defs><radialGradient id="g1" cx=".35" cy=".3"><stop offset="0" stop-color="#ffd1df"/><stop offset="1" stop-color="#ff5c8a" stop-opacity=".4"/></radialGradient></defs></svg></div>
+        <h3>Skins worth showing off</h3>
+        <p>Earn ATP by playing and spend it in the shop on hand-drawn premium skins. Everyone in the round sees what you wear.</p>
+      </article>
+      <article class="card">
+        <div class="icon" style="--c:154,140,255"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><circle cx="11" cy="13" r="5" stroke="#9a8cff" stroke-width="2"/><circle cx="22" cy="13" r="5" stroke="#9a8cff" stroke-width="2"/><path d="M3 27c1-4.5 4.5-7 8-7s7 2.5 8 7M15 27c.8-3 3.3-5.5 7-5.5s6.2 2.5 7 5.5" stroke="#9a8cff" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <h3>Play with friends</h3>
+        <p>Add friends with a code, form a party and drop into the same arena. Allies can't eat each other.</p>
+      </article>
+      <article class="card">
+        <div class="icon" style="--c:60,190,175"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 4l10 4v7c0 6.5-4.3 11.2-10 13-5.7-1.8-10-6.5-10-13V8z" fill="#3cbeaf" fill-opacity=".25" stroke="#3cbeaf" stroke-width="2" stroke-linejoin="round"/><path d="M11.5 16l3 3 6-6" stroke="#dcefe9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <h3>Fair and quiet</h3>
+        <p>No ads, no chat, no tracking. Bots fill empty slots so you never wait, and practice against bots works offline.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="block" aria-labelledby="shots-h">
+  <div class="wrap">
+    <span class="kicker">From the dish</span>
+    <h2 id="shots-h">See it in play</h2>
+    <p class="sub">The same game in your browser, on iPhone and on Android.</p>
+    <div class="shots">
+      <figure><img src="/assets/shot-lobby.jpg" alt="The lobby: your cell, rank and ATP, with Play and the Inventory, Shop, Ranks and Friends tabs" width="1600" height="736" loading="lazy"><figcaption>Into a live arena in seconds</figcaption></figure>
+      <figure><img src="/assets/shot-shop.jpg" alt="The shop, showing premium skins to unlock with ATP" width="1600" height="736" loading="lazy"><figcaption>Unlock skins with ATP you earn</figcaption></figure>
+      <figure><img src="/assets/shot-arena2.jpg" alt="A later moment in a round, with rival cells and the shrinking arena" width="1600" height="736" loading="lazy"><figcaption>Outlast everyone as the dish closes</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="account" aria-labelledby="acct-h">
+  <div class="wrap split">
+    <div>
+      <span class="kicker">One account, everywhere</span>
+      <h2 id="acct-h">Your cell follows you</h2>
+      <p class="sub" style="margin-bottom:28px">Sign in with Apple or Google and your progress is the same on the web, iPhone and Android. Everyone plays in the same live arenas.</p>
+      <ul>
+        <li><span><b>ATP and skins</b> you earn or buy come with you.</span></li>
+        <li><span><b>Your rating, level and history</b> carry over between devices.</span></li>
+        <li><span><b>Friends and parties</b> work across every platform.</span></li>
+        <li><span><b>Not signed in?</b> Everything stays on your device until you are.</span></li>
+      </ul>
+    </div>
+    <div class="platforms">
+      <a class="platform" href="/play" style="text-decoration:none;color:inherit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        <div><b>Web browser</b><small>Any modern browser, no install</small></div><span class="tag">Play now</span>
+      </a>
+      <a class="platform" href="https://apps.apple.com/app/id6818890370" rel="noopener" style="text-decoration:none;color:inherit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/></svg>
+        <div><b>iPhone and iPad</b><small>App Store · haptics, Nearby play</small></div><span class="tag">Available</span>
+      </a>
+      <div class="platform">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M10 5h4"/></svg>
+        <div><b>Android</b><small>Google Play</small></div><span class="tag soon">Coming soon</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="faq" aria-labelledby="faq-h">
+  <div class="wrap">
+    <span class="kicker">Questions</span>
+    <h2 id="faq-h">Good to know</h2>
+    <div class="faq">
+      <details><summary>Is Mitosis free?</summary><p>Yes. Every mode is free to play. ATP, the game's currency, is earned by playing; in the apps you can also buy ATP packs if you want a shortcut. There are no ads.</p></details>
+      <details><summary>Do I need an account?</summary><p>No. You can tap Play straight away and your progress is kept on that device. Sign in with Apple or Google when you want it on other devices too.</p></details>
+      <details><summary>Can I play with friends?</summary><p>Add each other with a friend code, make a party and you'll land in the same arena, whether you're on the web, iPhone or Android.</p></details>
+      <details><summary>What do I need to play in a browser?</summary><p>A recent Chrome, Safari, Edge or Firefox on a computer, tablet or phone. Use the mouse (or a finger) to steer, Space to split, W to shoot mass and Shift to boost.</p></details>
+      <details><summary>Can I play offline?</summary><p>Practice against bots at Easy, Normal, Hard or Expert works without a connection. Ranked and live rounds need the internet.</p></details>
+      <details><summary>How do I delete my account?</summary><p>In the game: Settings › Account › Delete account. It's removed from our server straight away. <a href="/delete-account">More on deleting your data</a>.</p></details>
+    </div>
+  </div>
+</section>
+
+<section class="final" aria-labelledby="final-h">
+  <div class="wrap">
+    <h2 id="final-h">The dish is open</h2>
+    <div class="btns">
+      <a class="btn primary" href="/play"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>Play in your browser</a>
+      <a class="btn ghost" href="https://apps.apple.com/app/id6818890370" rel="noopener">Get it on iPhone</a>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <a class="brand" href="/"><img src="/assets/icon-192.png" alt="" width="34" height="34"><span>Mitosis</span></a>
+    <nav aria-label="Footer">
+      <a href="/play">Play</a>
+      <a href="/support">Support</a>
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+      <a href="/delete-account">Delete account</a>
+    </nav>
+    <span class="copy">© 2026 Catapult Consulting, LLC</span>
+  </div>
+</footer>
+
+<script>
+// The hero's petri dish: a few slow cells and food drifting behind the headline. Still when motion is reduced or the tab is hidden.
+(() => {
+  const cv = document.getElementById('dish'), cx = cv.getContext('2d');
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const COLORS = [[255, 92, 138], [60, 190, 175], [154, 140, 255], [247, 187, 58], [120, 220, 110]];
+  let W = 0, H = 0, dpr = 1, cells = [], food = [], last = 0, raf = 0;
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  function size() {
+    dpr = Math.min(2, devicePixelRatio || 1); W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = W * dpr; cv.height = H * dpr; cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const n = Math.round(W * H / 52000);
+    cells = Array.from({ length: Math.max(6, Math.min(16, n)) }, (_, i) => ({ x: rnd(0, W), y: rnd(0, H), r: rnd(14, i < 2 ? 70 : 42), vx: rnd(-12, 12), vy: rnd(-10, 10), c: COLORS[i % COLORS.length], p: rnd(0, 6.28) }));
+    food = Array.from({ length: Math.round(W * H / 5200) }, () => ({ x: rnd(0, W), y: rnd(0, H), r: rnd(1.4, 3), c: COLORS[(Math.random() * COLORS.length) | 0] }));
+  }
+  function draw(t) {
+    const dt = Math.min(.05, (t - last) / 1000 || 0); last = t;
+    cx.clearRect(0, 0, W, H);
+    cx.strokeStyle = 'rgba(160,230,215,.045)'; cx.lineWidth = 1;
+    for (let x = 0; x < W; x += 48) { cx.beginPath(); cx.moveTo(x + .5, 0); cx.lineTo(x + .5, H); cx.stroke(); }
+    for (let y = 0; y < H; y += 48) { cx.beginPath(); cx.moveTo(0, y + .5); cx.lineTo(W, y + .5); cx.stroke(); }
+    for (const f of food) { cx.fillStyle = `rgba(${f.c},.75)`; cx.beginPath(); cx.arc(f.x, f.y, f.r, 0, 6.283); cx.fill(); }
+    for (const c of cells) {
+      if (!still) { c.x += c.vx * dt; c.y += c.vy * dt; c.p += dt; if (c.x < -c.r) c.x = W + c.r; if (c.x > W + c.r) c.x = -c.r; if (c.y < -c.r) c.y = H + c.r; if (c.y > H + c.r) c.y = -c.r; }
+      const r = c.r * (1 + Math.sin(c.p * 1.3) * .02), g = cx.createRadialGradient(c.x - r * .35, c.y - r * .4, r * .1, c.x, c.y, r);
+      g.addColorStop(0, `rgba(${c.c.map(v => Math.min(255, v + 90))},.95)`); g.addColorStop(.7, `rgba(${c.c},.75)`); g.addColorStop(1, `rgba(${c.c.map(v => v * .55 | 0)},.85)`);
+      cx.shadowColor = `rgba(${c.c},.55)`; cx.shadowBlur = r * .6; cx.fillStyle = g; cx.beginPath(); cx.arc(c.x, c.y, r, 0, 6.283); cx.fill(); cx.shadowBlur = 0;
+      cx.strokeStyle = `rgba(${c.c.map(v => v * .5 | 0)},.9)`; cx.lineWidth = Math.max(1.5, r * .07); cx.stroke();
+      cx.fillStyle = `rgba(${c.c.map(v => v * .55 | 0)},.8)`; cx.beginPath(); cx.arc(c.x - r * .08, c.y + r * .02, r * .3, 0, 6.283); cx.fill();
+    }
+    if (!still && !document.hidden) raf = requestAnimationFrame(draw);
+  }
+  size(); addEventListener('resize', () => { size(); if (still) draw(0); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && !still) { cancelAnimationFrame(raf); last = performance.now(); raf = requestAnimationFrame(draw); } });
+  raf = requestAnimationFrame(draw);
+})();
+</script>
+</body>
+</html>

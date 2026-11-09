@@ -42,6 +42,7 @@ const ROUTES = {
   'POST /api/session': { fn: economy.handlers.session, auth: false },
   'POST /api/run/start': { fn: (store, body, p) => { const r = economy.handlers.runStart(store, body, p); players.runStarted(r.runId); runRelay(r.runId, body.relay); return r; }, auth: true },
   'POST /api/run/end': { fn: (store, body, p) => { const r = economy.handlers.runEnd(store, body, p, { metSince: t => metSince(body.runId, body.relay, t) }); players.runEnded(body.runId); runConns.delete(String(body.runId)); return r; }, auth: true },
+  'POST /api/run/life': { fn: economy.handlers.buyLife, auth: true },   // an extra life for ATP (economy.js EXTRA_LIFE)
   'POST /api/skins/buy': { fn: economy.handlers.buySkin, auth: true },
   'POST /api/iap/apple': { fn: economy.handlers.iapApple, auth: true },
   'POST /api/iap/google': { fn: economy.handlers.iapGoogle, auth: true },
@@ -181,9 +182,37 @@ async function api(req, res, url) {
   }
 }
 
+// The website (site/, built by site-src/build.js) for requests addressed to mitosisgame.com, which reach this server
+// through a reverse proxy that handles HTTPS (see README › Website). Its home page is at /, the game at /play, and the
+// game's own paths (/ws, /api, /updates, /health, /admin) work as on any address. Requests to the server's IP address
+// (the apps, and http://<server>:3000) are unchanged: the game at /.
+const SITE_DIR = path.join(__dirname, 'site');
+const SITE_HOSTS = new Set((process.env.SITE_HOSTS || 'mitosisgame.com,www.mitosisgame.com').split(',').map(h => h.trim().toLowerCase()).filter(Boolean));
+const SITE_TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.webp': 'image/webp', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8', '.xml': 'application/xml' };
+const isGamePath = url => url === '/ws' || url === '/health' || url === '/admin' || /^\/(api|updates|admin)\//.test(url);
+/** Answers a request for the website and returns true, or returns false to let the game's routes handle it. */
+function sendSite(req, res, url) {
+  const host = String(req.headers.host || '').toLowerCase().replace(/:\d+$/, '');
+  if (!SITE_HOSTS.has(host) || isGamePath(url)) return false;
+  if (host.startsWith('www.')) { res.writeHead(301, { Location: 'https://' + host.slice(4) + (req.url || '/') }); res.end(); return true; }
+  if (url === '/play' || url === '/play/') { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }); res.end(page); return true; }
+  if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405, { Allow: 'GET, HEAD' }); res.end(); return true; }
+  let rel; try { rel = decodeURIComponent(url); } catch (e) { rel = '/'; }
+  const base = path.normalize(path.join(SITE_DIR, rel));
+  const file = base.startsWith(SITE_DIR) && [base, base + '.html', path.join(base, 'index.html')].find(f => { try { return fs.statSync(f).isFile(); } catch (e) { return false; } });
+  const out = file || path.join(SITE_DIR, '404.html');
+  fs.readFile(out, (err, buf) => {
+    if (err) { res.writeHead(404, { 'Content-Type': 'text/plain' }); res.end('Not found'); return; }
+    res.writeHead(file ? 200 : 404, { 'Content-Type': SITE_TYPES[path.extname(out)] || 'application/octet-stream', 'Cache-Control': /[/\\]assets[/\\]/.test(out) ? 'public, max-age=86400' : 'no-cache' });
+    res.end(req.method === 'HEAD' ? undefined : buf);
+  });
+  return true;
+}
+
 const server = http.createServer((req, res) => {
   const url = (req.url || '/').split('?')[0];
   if (url.startsWith('/api/')) { api(req, res, url); return; }
+  if (sendSite(req, res, url)) return;
   if (url === '/' || url === '/index.html') {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
     res.end(page);
@@ -292,16 +321,18 @@ function onData(c, d) {
 // room with the most players in the arena (or searching for a round), then the fullest, so newcomers find company and
 // overflow rooms empty out as their players leave. A room opens when every other is full and closes when it empties.
 // A game in a party (hello.party, see social.js) joins the room its party already plays in, while that room has space.
-function roomFor(now, party) {
-  if (party) for (const r of rooms) if (r.size < ROOM_SIZE && [...r].some(o => o.party === party)) return r;
+// Rooms are per mode (hello.mode): Classic games only meet Classic games, and every game that names no mode (all apps
+// before Classic) plays Battle Royale, so those never land in a Classic room.
+function roomFor(now, party, mode = 'br') {
+  if (party) for (const r of rooms) if (r.mode === mode && r.size < ROOM_SIZE && [...r].some(o => o.party === party)) return r;
   let best = null, score = -1;
   for (const r of rooms) {
-    if (r.size >= ROOM_SIZE) continue;
+    if (r.mode !== mode || r.size >= ROOM_SIZE) continue;
     let active = 0; for (const o of r) { const a = live.activityOf(o, now); if (a === 'arena' || a === 'searching') active++; }
     const sc = active * (ROOM_SIZE + 1) + r.size; // most in the arena first, then the fullest; ties go to the oldest room
     if (sc > score) { best = r; score = sc; }
   }
-  if (!best && rooms.length < MAX_ROOMS) { best = new Set(); rooms.push(best); }
+  if (!best && rooms.length < MAX_ROOMS) { best = new Set(); best.mode = mode; rooms.push(best); }
   return best;
 }
 const roomNo = c => rooms.indexOf(c.room) + 1;
@@ -318,14 +349,15 @@ function onMessage(c, text) {
   if (m.t === 'ping') { c.pingAt = now; send(c, { t: 'pong', c: typeof m.c === 'number' ? m.c : 0 }); return; } // the game measures its round trip with these
   if (m.t === 'hello' && !c.id) {
     c.party = typeof m.party === 'string' && /^[a-z0-9]{6,16}$/.test(m.party) ? m.party : null;
-    const room = roomFor(now, c.party);
+    c.mode = m.mode === 'classic' ? 'classic' : 'br';
+    const room = roomFor(now, c.party, c.mode);
     if (!room) { players.turnedAway(); send(c, { t: 'full' }); setTimeout(() => kill(c), 200); return; }
     let id = typeof m.id === 'string' && /^[a-z0-9]{6,20}$/.test(m.id) ? m.id : crypto.randomBytes(6).toString('hex');
     while ([...clients].some(o => o.id === id)) id += Math.floor(Math.random() * 10);
     c.id = id; c.pAt = c.pingAt = now; c.room = room; room.add(c); clients.add(c); players.tick();
     c.key = crypto.randomBytes(12).toString('hex'); byKey.set(c.key, c);
-    send(c, { t: 'welcome', id, key: c.key, peers: [...room].filter(o => o !== c && o.p).map(o => ({ id: o.id, p: o.p })), lan: lanUrls() });
-    log(`+ player joined room ${roomNo(c)} (${room.size} there, ${clients.size} online in ${rooms.length} room${rooms.length === 1 ? '' : 's'})`);
+    send(c, { t: 'welcome', id, key: c.key, mode: room.mode, peers: [...room].filter(o => o !== c && o.p).map(o => ({ id: o.id, p: o.p })), lan: lanUrls() });
+    log(`+ player joined ${room.mode} room ${roomNo(c)} (${room.size} there, ${clients.size} online in ${rooms.length} room${rooms.length === 1 ? '' : 's'})`);
   } else if (m.t === 'p' && c.id && m.p && typeof m.p === 'object' && !Array.isArray(m.p)) {
     c.p = m.p; c.pAt = now;
     if (m.p.a === 1) meet(c, now);
