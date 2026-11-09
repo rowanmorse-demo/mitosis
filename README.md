@@ -86,7 +86,7 @@ Ranks (Rowan, Nov 7): nine steps through the life of a dividing cell, each with 
 | Bots, ranked rules (Master bots) | +25 | +5 | 50 ATP |
 | Bots, Casual (no placement payout) | Easy 3, Normal 6, Hard 9, Expert 12, Master 15 | 2nd: 2 / 5 / 7 / 10 / 12; 3rd: 2 / 4 / 6 / 8 / 10 | 15 ATP on Master |
 
-The life must last 2 minutes on the server's clock in a round of 8 or more cells, so an early death, a quit (no placing) or a life never ended pays nothing. Bonuses stop for the day (UTC) at 200 ATP from bots (ranked and Casual together) and 400 ATP against players. `WINS` in economy.js.
+The life must last 2 minutes on the server's clock in a round of 8 or more cells, so an early death, a quit (no placing) or a life never ended pays nothing. There is no daily cap on what an account can earn. `WINS` in economy.js.
 
 ## Levels and XP
 
