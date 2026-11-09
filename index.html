@@ -551,7 +551,7 @@ body:not(.playing) #tip{display:none}
 .lobby .lb-me-txt{display:grid;align-content:center;min-width:0;padding-top:24px}
 .lobby .lb-me-txt>b{display:none}
 .lobby .lb-me-sub{display:flex;align-items:center;gap:6px;font:inherit;color:inherit}
-.lb-crest{width:16px;height:18px;flex:none;filter:drop-shadow(0 1px 4px color-mix(in srgb,var(--tc) 50%,transparent))}
+.lb-crest{width:16px;height:18px;flex:none;filter:drop-shadow(0 1px 4px color-mix(in srgb,var(--tc) 50%,transparent))}.lb-crest.lb-rk{width:26px;height:26px;margin:-5px -2px -5px -3px}
 .lb-crest .s1{stop-color:var(--tc1)}.lb-crest .s2{stop-color:var(--tc2)}.lb-crest .o{fill:url(#lbgCrest)}.lb-crest .i{fill:rgba(3,12,14,.55)}.lb-crest .g{fill:var(--tc1)}
 .lobby .lb-me-sub .tier{font:700 10px/1 var(--mono);letter-spacing:.13em;text-transform:uppercase;color:var(--tc)}
 .lb-rt{font:800 14px/1 var(--display);letter-spacing:-.01em;color:var(--ink);font-variant-numeric:tabular-nums}
@@ -756,7 +756,7 @@ body:not(.playing) #tip{display:none}
   .lb-modebtn{height:54px;font-size:16px}.lb-modebtn .ic{width:38px;height:38px}.lb-switch{height:54px;width:66px}
   .lobby .lb-go{height:86px;font-size:38px;border-radius:26px}.lobby .lb-go::before{width:44px;height:44px;background-size:18px}
   .lb-cards{align-self:center;height:min(100%,520px)}.lb-mpick b{font-size:28px}
-  .lobby .lb-me-sub .tier{font-size:11px}.lb-rt{font-size:16px}.lb-crest{width:19px;height:21px}
+  .lobby .lb-me-sub .tier{font-size:11px}.lb-rt{font-size:16px}.lb-crest{width:19px;height:21px}.lb-crest.lb-rk{width:30px;height:30px}
 }
 /* level: a badge on the portrait in the profile card */
 .lobby .lb-ava{position:relative}
@@ -6326,6 +6326,8 @@ function renderLevel(){ // the level badge on the lobby's portrait (the profile 
   $('heroLv').textContent=wallet.level;c.title=`Level ${wallet.level}, ${wallet.levelXp} of ${wallet.levelNeed} XP to the next`;}
 function renderRank(){renderTierLegend();renderMe();renderLevel();const rk=rankOf(wallet.rating),rkName=rk.name; // the chip shows the step, and the division beside the rating, so long names fit a phone
   $('rankVal').textContent=(rk.div?['I','II','III'][rk.div-1]+' · ':'')+wallet.rating;{const ht=$('heroTier');if(ht){ht.textContent=rkName;ht.dataset.tier=wallet.tier;$('heroRating').textContent=wallet.rating;}}$('rankTier').textContent=rankStep(rk.step).name;$('rankTier').dataset.tier=wallet.tier;
+  {const lc=document.querySelector('#profBtn .lb-crest');if(lc&&lc.dataset.rank!==rk.name){const t=document.createElement('template');t.innerHTML=rankBadge(rk,'lb-crest lb-rk');const n=t.content.firstElementChild;n.dataset.rank=rk.name;lc.replaceWith(n);}} // the chip's crest is your rank's
+  {const c=$('lbCard'),pl=rankStep(rk.step).pal;if(c){c.style.setProperty('--tc',pl[1]);c.style.setProperty('--tc1',pl[0]);c.style.setProperty('--tc2',`color-mix(in srgb,${pl[1]} 55%,${pl[2]})`);}} // and its colours your step's, not the old metal tier's
   const p=tierProgress(),nx=$('rankNext'),fill=$('tierFill');if(nx)nx.textContent=p.text;if(fill)fill.style.width=p.pct+'%';
 }
 function tierAtRating(r){const k=rankOf(r);return{name:k.name,pct:rankPct(r)};} // the rank and progress through it, for the results card
