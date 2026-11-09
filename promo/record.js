@@ -10,7 +10,8 @@
 // Each take is the game's canvas (no cursor, browser or HUD; you still see the HUD), written to promo/rec/<date-time>.mp4
 // as 60 fps H.264, with <date-time>.json: every game sound it played and when (edit.js renders the sound from it). The window can be any size: the canvas is drawn at the take's resolution.
 // Skin ids: 5 Nebula, 6 Magma, 10 Glacier, 11 Toxic, 12 Eyeball, 13 Galaxy, 14 Gilded, 15 Black Hole, 17 Aurora, 18 Koi,
-// 19 Plasma, 20 Geode, 21 Sakura, 22 Supernova, 23 Glitch.
+// 19 Plasma, 20 Geode, 21 Sakura, 22 Supernova, 23 Glitch, 44 Dragon, 45 Phoenix, 53 Total Eclipse, 56 Wormhole, 63 Imperial Egg
+// (all on sale today are owned, so any can be worn from the lobby too).
 'use strict';
 const fs = require('fs'), path = require('path'), http = require('http'), os = require('os'), { spawn, execFileSync } = require('child_process');
 const { buildGamePage, ROOT } = require('./lib/game'), { ensureFonts } = require('./lib/fonts'), recorder = require('./lib/recorder');
@@ -24,7 +25,8 @@ const WORK = path.join(__dirname, '.work'), OUT = path.join(__dirname, 'rec');
 const LAND = arg.shape !== 'portrait';
 const TARGET = LAND ? { w: 2340, h: 1080 } : { w: 1080, h: 1920 };
 const WIN = LAND ? { w: 1280, h: 591 + 28 } : { w: 405, h: 720 + 28 }; // the window, in points (28: its title bar)
-const ON_SALE = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23];
+// every skin on sale today (not the Halloween or battle-pass ones: the pass is not launched, keep it out of ads)
+const ON_SALE = econ.catalog().skins.filter(k => k.price > 0 && !k.pass && !k.season && !k.sale).map(k => k.id);
 const SKIN = +(arg.skin || 15);
 
 function api() {
