@@ -1,8 +1,8 @@
 # Mitosis: Cell Arena — Privacy Policy
 
-_Last updated: 30 October 2026_
+_Last updated: 9 November 2026_
 
-Mitosis: Cell Arena ("Mitosis", "the game") is made by Catapult Consulting, LLC. This policy explains what the game stores, why, and how to remove it. It applies to the iPhone and Android apps and to the website.
+Mitosis: Cell Arena ("Mitosis", "the game") is made by Catapult Consulting, LLC. This policy explains what the game stores, why, and how to remove it. It applies to the iPhone and Android apps and to the website, mitosisgame.com.
 
 ## What the game stores
 
@@ -41,7 +41,7 @@ The Mitosis server stores wallets, accounts, run results, purchase identifiers a
 - If you signed in with Apple, you can also stop using your Apple Account with the game in iPhone Settings › your name › Sign in with Apple.
 - **Sign out** in the game's Profile (tap your name on the home screen) detaches your device from your account and gives the device a fresh wallet.
 - **Deleting the app** or clearing the website's site data removes the device identity from your device; a new one is created next time you play.
-- If you can no longer open the game, you can ask for deletion by opening an issue at https://github.com/rowanmorse-demo/mitosis/issues or contacting the developer through the App Store listing. Those requests are completed within 30 days.
+- If you can no longer open the game, ask for deletion at https://mitosisgame.com/delete-account, by email to support@mitosisgame.com, or by opening an issue at https://github.com/rowanmorse-demo/mitosis/issues. Those requests are completed within 30 days.
 
 ## Children
 

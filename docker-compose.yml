@@ -31,5 +31,27 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
+  # The website and HTTPS for mitosisgame.com (Caddyfile). Off unless asked for, so a deploy changes nothing until the
+  # domain's DNS points here: put COMPOSE_PROFILES=web in .env (or run docker compose --profile web up -d).
+  # Needs ports 80 and 443 free on the server. SITE_DOMAIN in .env overrides the domain.
+  caddy:
+    image: caddy:2-alpine
+    container_name: caddy
+    profiles: ["web"]
+    depends_on: [mitosis]
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:-mitosisgame.com}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./site:/srv/site:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    restart: unless-stopped
 volumes:
   mitosis-data:
+  caddy-data:
+  caddy-config:

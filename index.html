@@ -9036,7 +9036,7 @@ for(const b of document.querySelectorAll('#actions .act,#stats,#boardToggle,#rou
 const APP_STORE_URL='https://apps.apple.com/app/id6818890370';
 function inviteLinks(){const N=window.__mitosisNet;if(!N)return[];const h=location.hostname;
   if(!/^https?:$/.test(location.protocol))return[Native.platform==='ios'?APP_STORE_URL:window.MITOSIS_SERVER]; // in the app: the App Store page, or the public site
-  if(h==='localhost'||h==='127.0.0.1'||h==='[::1]'||h==='::1')return N.lan||[];return[location.origin];}
+  if(h==='localhost'||h==='127.0.0.1'||h==='[::1]'||h==='::1')return N.lan||[];return[location.origin+location.pathname.replace(/\/index\.html$|\/$/,'')];} // the page's own address: mitosisgame.com/play, or the server's root
 function netUI(){
   const pill=$('netPill'),line=$('netLine'),others=peerCount-1,N=window.__mitosisNet;
   pill.hidden=!(room&&myPeer&&others>0);setTxt(pill,String(others+1));pill.title=`${others+1} players live`;
