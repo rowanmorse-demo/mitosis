@@ -1899,7 +1899,7 @@ img.sk-im{display:block;-webkit-user-drag:none;user-select:none;-webkit-touch-ca
 #fontCard .nf-tn{display:block;padding-right:16px;font:800 22px/1.25 var(--display);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #fontCard .nf-t.on{border-color:var(--accent);background:linear-gradient(180deg,rgba(255,92,138,.17),rgba(255,92,138,.05));box-shadow:0 0 0 1px var(--accent),0 8px 22px rgba(255,92,138,.18)}
 #fontCard .nf-t.on::after{content:"✓";position:absolute;top:8px;right:8px;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:var(--accent-ink);font:800 11px/1 var(--display)}
-#fontCard .nf-t.lk .nf-tn{opacity:.42}
+#fontCard .nf-t.on .nf-tn{padding-right:24px}#fontCard .nf-t.lk .nf-tn{opacity:.42}
 #fontCard .nf-lk{position:absolute;top:8px;right:8px;display:inline-flex;align-items:center;gap:4px;padding:4px 7px;border-radius:999px;background:rgba(0,0,0,.45);font:700 10px/1 var(--mono);font-style:normal;color:var(--amber)}
 #fontCard .nf-lk svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
 #fontCard .nf-buy{position:sticky;bottom:max(12px,env(safe-area-inset-bottom));z-index:2;display:flex;align-items:center;gap:12px;padding:10px 10px 10px 16px;border-radius:16px;border:1px solid rgba(242,177,52,.4);background:rgba(18,15,6,.95);box-shadow:0 12px 30px rgba(0,0,0,.5);font:600 14px/1.25 var(--display)}
@@ -1916,7 +1916,7 @@ img.sk-im{display:block;-webkit-user-drag:none;user-select:none;-webkit-touch-ca
 }
 @media (orientation:landscape) and (max-height:520px){
   #fontCard .nf-stage{top:62px;gap:6px;padding:12px}#fontCard .nf-cell{width:112px}#fontCard .nf-why{display:none}
-  #fontCard .nf-grid{grid-template-columns:repeat(auto-fill,minmax(136px,1fr));gap:8px}#fontCard .nf-t{min-height:64px;padding:10px 12px 9px;gap:6px}#fontCard .nf-tn{font-size:20px}
+  #fontCard .nf-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}#fontCard .nf-t{min-height:64px;padding:10px 12px 9px;gap:6px}#fontCard .nf-tn{font-size:20px}
 }
 /* Victory: your name under the place, in your font */
 #deathCard .res-who{margin:-4px 0 0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:800 clamp(20px,1.4vw + 12px,30px)/1.2 var(--display);color:#ffe7a8;text-shadow:0 0 18px rgba(242,177,52,.35),0 2px 10px rgba(0,0,0,.5);animation:res-up .5s cubic-bezier(.2,.9,.25,1) .12s both}
@@ -7635,7 +7635,16 @@ function nfGrid(){
   $('nfCats').innerHTML=NF_CATS.map(([k,t])=>`<button type="button" class="nf-cat" data-c="${k}" aria-pressed="${k===nfCat}">${t}</button>`).join('');
   $('nfGrid').innerHTML=list.map(f=>{const L=nfLock(f.id),on=f.id===me;
     return`<button type="button" class="nf-t${on?' on':''}${L?' lk':''}" data-id="${f.id}" role="option" aria-selected="${on}" aria-label="${escH(f.n)}${L?', '+escH(nfLockText(L)):''}"><span class="nf-tn"${nfAttr(f.id)}>${nm}</span><small>${escH(f.n)}</small>${L?`<i class="nf-lk">${NF_LOCK_ICO}${escH(nfLockText(L))}</i>`:''}</button>`;}).join('');
-  $('nfCount').textContent=NAME_FONTS.length+' fonts';}
+  $('nfCount').textContent=NAME_FONTS.length+' fonts';requestAnimationFrame(nfFitTiles);}
+// Each tile shows your whole name: a name wider than its tile (a long name, or a wide font) is set smaller until it fits,
+// down to 11 px. Again once the faces have loaded (they change the widths) and when the screen turns or resizes.
+function nfFitTiles(){const els=[...$('nfGrid').querySelectorAll('.nf-tn')];if(!els.length||$('fontCard').hidden)return;
+  for(const el of els)el.style.fontSize='';
+  const rg=document.createRange(),m=els.map(el=>{const cs=getComputedStyle(el);rg.selectNodeContents(el); // the text's exact width: an ellipsis shows for a fraction of a pixel too
+    return[el.clientWidth-(parseFloat(cs.paddingLeft)||0)-(parseFloat(cs.paddingRight)||0)-2,rg.getBoundingClientRect().width,parseFloat(cs.fontSize)];});
+  els.forEach((el,i)=>{const[room,need,px]=m[i];if(need>room&&room>0)el.style.fontSize=Math.max(11,Math.floor(px*room/need*10)/10)+'px';});}
+if(document.fonts&&document.fonts.addEventListener)document.fonts.addEventListener('loadingdone',()=>{if(!$('fontCard').hidden)nfFitTiles();});
+addEventListener('resize',()=>{if(!$('fontCard').hidden)nfFitTiles();});
 function nfPick(id){
   if(id!==myFont()||settings.nfSync){settings.nameFont=id;settings.nfSync=1;saveSettings();Native.haptic('selection');}
   nfApply();nfGrid();nfPush();}
