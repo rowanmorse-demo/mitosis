@@ -7215,7 +7215,7 @@ function resFill(kind,pb,sub){ // kind: dead | arena (dissolved by the closing a
   const who=$('resWho');who.hidden=kind!=='win';if(kind==='win'){who.textContent=human.name;nfEl(who,myFont());}
   const dA=$('dAch');dA.hidden=!runAch.length;dA.innerHTML=runAch.slice(0,2).map(n=>`<span>★ ${escH(n)}</span>`).join('')+(runAch.length>2?`<span>+${runAch.length-2}</span>`:'');
   $('dPeak').textContent=Math.round(s.peak).toLocaleString();$('dPeak').dataset.v=Math.round(s.peak);$('dBest').hidden=!pb;$('dEaten').textContent=s.eaten|0;$('dEaten').dataset.v=s.eaten|0;$('dTime').textContent=fmtT(T-s.born);
-  $('resChart').hidden=!un;
+  $('resChart').hidden=!un||!$('dXp').hidden; // the mass chart fills the space of the XP tile (Casual, Nearby); Classic earns XP, so the tile stays and the buttons fit a phone
 }
 function resShow(hist){showCard('deathCard');resS.at=performance.now();syncResPlay();if(!$('resChart').hidden)drawChart(hist);resPlayRank();resPlayEarn();resPlayXp();
   for(const x of $('deathCard').querySelectorAll('.res-fx'))x.remove();if(RM)return;
@@ -7233,11 +7233,12 @@ function syncResPlay(){ // the big button: Respawn while lives are left, Play ag
   if(queued){k='search';const ms=searchUntil-performance.now();sub='0:'+String(Math.max(0,Math.ceil(ms/1000))).padStart(2,'0');b.style.setProperty('--sp',(clamp(ms/(SEARCH_MAX*1000),0,1)*100).toFixed(1)+'%');}
   else if(local||!isOffline()){
     if(!spawnOpen())k='again'; // no respawn left: Play again starts the next game, or searches for one
+    else if(CL){if($('deathCard').classList.contains('dead'))k='respawn';} // Classic: no lives limit, so Respawn every time and no life dots
     else if(local!=='practice'){left=MAX_RESPAWNS+1-livesUsed();if(left<=MAX_RESPAWNS&&$('deathCard').classList.contains('dead'))k='respawn';}}
   if(b.dataset.k!==k){b.dataset.k=k;b.className='res-play '+k;$('resPlayIco').innerHTML=RES_ICO[k==='search'||k==='find'?'find':k==='respawn'?'respawn':'play'];
     $('resPlayLbl').textContent={again:'Play again',respawn:'Respawn',find:'Find game',search:'Searching'}[k];}
   if($('resPlaySub').textContent!==sub)$('resPlaySub').textContent=sub;
-  lv.hidden=k!=='respawn';if(!lv.hidden)[...lv.children].forEach((d,i)=>d.classList.toggle('on',i<left));
+  lv.hidden=k!=='respawn'||CL;if(!lv.hidden)[...lv.children].forEach((d,i)=>d.classList.toggle('on',i<left));
   const card=$('deathCard'),fin=local!=='practice'&&!spawnOpen(); // out of respawns: the whole game's rating, Play again or Return to lobby
   if(card.classList.contains('final')!==fin){card.classList.toggle('final',fin);const t=$('dTitle');
     if(fin){card.dataset.t0=t.textContent;if(spawnBlockReason()==='lives'&&card.classList.contains('dead'))t.textContent='Out of lives';}else if(card.dataset.t0)t.textContent=card.dataset.t0;
