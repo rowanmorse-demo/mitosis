@@ -29,11 +29,13 @@ for (const kind of sqlite ? ['sqlite', 'json'] : ['json']) {
   st.createPlayer('a', 'ha', 1); st.createPlayer('b', 'hb', 1);
   assert.deepEqual([Number(st.player('a').rating), Number(st.player('a').ai_rating)], [0, 0], k('a new player starts at 0 on both ratings'));
   st.setRating('a', 1234, 'Ann'); st.setAiRating('a', 1500, 'Ann'); st.setRating('b', 980, null);
+  st.addStats('a', { played: 3, rounds: 2, wins: 1, podiums: 2, alive: 400, eaten: 20 }); st.setPeak('a', 1234); st.addTrophies('a', ['amoeba', 'colony'], 5);
   assert.equal(ladderReset(st), true, k('the first start-up resets'));
   const a = st.player('a'), b = st.player('b');
   assert.deepEqual([a.rating, a.ai_rating, b.rating, b.ai_rating].map(Number), [0, 0, 0, 0], k('everyone starts again'));
   assert.deepEqual([a.rating_v1, a.ai_rating_v1, b.rating_v1].map(Number), [1234, 1500, 980], k('the old ratings are kept'));
   assert.deepEqual([Number(a.runs), a.name], [1, 'Ann'], k('lives played and names stay'));
+  assert.deepEqual([a.peak, st.trophies('a'), Number(a.played), Number(a.alive)], [null, [], 3, 400], k('the peak and the rank trophies start again too; lifetime stats stay'));
   st.setRating('a', 60, 'Ann');
   assert.equal(ladderReset(st), false, k('later start-ups leave ratings alone')); assert.equal(Number(st.player('a').rating), 60);
   if (kind === 'sqlite') st.db.close();
