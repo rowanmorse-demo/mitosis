@@ -3443,7 +3443,7 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
     </aside>
     <section class="lb-hero">
       <button type="button" class="hero-cell" id="avatarBtn" aria-label="Change your skin in Inventory"><canvas id="avatarCv" width="320" height="320" aria-hidden="true"></canvas><span class="hero-edit" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5.5v13M5.5 12h13"/></svg></span></button>
-      <label class="lb-name"><input id="nameIn" type="text" maxlength="16" placeholder="Name your cell" autocomplete="off" spellcheck="false" enterkeyhint="go" aria-label="Your name"><span class="lb-measure" id="nameMeasure" aria-hidden="true"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg></label>
+      <label class="lb-name"><input id="nameIn" type="text" maxlength="16" placeholder="Name your cell" autocomplete="off" spellcheck="false" enterkeyhint="done" aria-label="Your name"><span class="lb-measure" id="nameMeasure" aria-hidden="true"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg></label>
     </section>
     <nav class="lb-nav" aria-label="Menu">
       <button class="lb-tab" id="lookBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 5.3V4.5a2.5 2.5 0 0 1 5 0v.8"/><path d="M6 10.8A5.8 5.8 0 0 1 11.8 5h.4a5.8 5.8 0 0 1 5.8 5.8V19a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2z"/><rect x="9" y="13.5" width="6" height="4.5" rx="1.3"/><path d="M6 13H4.5v4.5H6M18 13h1.5v4.5H18"/></svg><span>Inventory</span></button>
@@ -9990,8 +9990,7 @@ function startGame(){
     toast('Search','Searching for a game',`Up to ${SEARCH_MAX} s — empty slots are filled with bots`);return;
   }
   queued=false;livesUsed();lives.used++;tipRuns++;try{localStorage.setItem('mitosis.tipRuns',String(tipRuns));}catch(e){}
-  const typed=$('nameIn').value.trim();settings.name=cleanName(typed);
-  if(typed&&!settings.name){$('nameIn').value='';renderMe();toast('Name','Pick another name','That name is not allowed in Mitosis, so you are playing as Unnamed cell.');}
+  commitName();
   try{localStorage.setItem('mitosis.settings',JSON.stringify(settings));}catch(e){}
   initAudio();if(actx&&actx.state==='suspended')actx.resume();
   syncBots();removeHuman();
@@ -10187,7 +10186,26 @@ const joySegEl=$('joySeg'),handSegEl=$('handSeg'),syncControls=()=>{const fl=set
   [...joySegEl.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.j==='float')===fl)));[...handSegEl.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.l==='1')===lh)));};
 joySegEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.joyMode=b.dataset.j==='float'?'float':'fixed';saveSettings();syncControls();});
 handSegEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.lefty=b.dataset.l==='1';saveSettings();syncControls();});syncControls();
-$('nameIn').value=settings.name||'';$('nameIn').addEventListener('input',renderMe);$('atpChip').addEventListener('click',()=>{openStore();shopTab('atp');}); // the + on the currency bar opens the ATP packs
+$('nameIn').value=settings.name||'';$('nameIn').addEventListener('input',renderMe);
+// Your name is saved as soon as you finish it (Done, Return or tapping away), not only when you press Play, so it is
+// still there next time. Spaces are tidied; a refused name goes back to your last good one, with a note.
+function commitName(){const inp=$('nameIn');if(!inp)return settings.name||'';
+  const typed=inp.value.replace(/\s+/g,' ').trim(),n=cleanName(typed);
+  if(typed&&!n){inp.value=settings.name||'';toast('Name','Pick another name',settings.name?`That name is not allowed in Mitosis, so you are still ${settings.name}.`:'That name is not allowed in Mitosis, so you are playing as Unnamed cell.');}
+  else{if(inp.value!==n)inp.value=n;if(n!==(settings.name||'')){settings.name=n;saveSettings();}}
+  renderMe();lbFit='';fitName();try{nfApply();}catch(e){}return settings.name||'';}
+$('nameIn').addEventListener('blur',()=>{commitName();nameLift();});
+// A landscape phone's keyboard covers the bottom half of the screen, where the name sits, so while you type the name is
+// lifted into what the keyboard leaves (the visual viewport). If iOS has already scrolled it into view, nothing moves.
+function nameLift(){const inp=$('nameIn'),lb=inp&&inp.closest('.lb-name'),vv=window.visualViewport;if(!lb)return;lb.style.transform='';
+  if(document.activeElement!==inp||!vv||vv.height>innerHeight*.85)return;
+  const r=lb.getBoundingClientRect(),up=r.bottom-(vv.offsetTop+vv.height-10),room=r.top-(vv.offsetTop+8);
+  if(up>0)lb.style.transform=`translateY(${-Math.round(Math.min(up,Math.max(0,room)))}px)`;}
+$('nameIn').addEventListener('focus',()=>{nameLift();setTimeout(nameLift,350);}); // again once the keyboard is up
+if(window.visualViewport){visualViewport.addEventListener('resize',nameLift);visualViewport.addEventListener('scroll',nameLift);}
+// iOS scrolls the whole page up to keep a field above the keyboard and can leave it there when the keyboard goes,
+// so the lobby sits too high and taps land in the wrong place. Nothing in the game scrolls the page itself.
+addEventListener('focusout',e=>{if(!e.target||e.target.tagName!=='INPUT')return;setTimeout(()=>{const a=document.activeElement;if(!(a&&a.tagName==='INPUT')&&(scrollX||scrollY||document.documentElement.scrollTop||document.body.scrollTop)){scrollTo(0,0);document.documentElement.scrollTop=document.body.scrollTop=0;}},120);},true);$('atpChip').addEventListener('click',()=>{openStore();shopTab('atp');}); // the + on the currency bar opens the ATP packs
 let heroT=0;(function heroLoop(now){if(!$('startCard').hidden&&!document.hidden&&!RM&&now-heroT>=30){heroT=now;drawAvatar();}requestAnimationFrame(heroLoop);})(0);renderMe();
 /* Lobby Play: one big button and a mode picker. Ranked = the live arena, rated, needs the server; Casual = you and bots on
    this device, unrated, works offline (the old Practice); Nearby = phones around you (iOS app). #go plays Ranked and
@@ -10398,11 +10416,11 @@ $('lbToCasual').addEventListener('click',()=>{setPlayMode('casual');Native.hapti
 $('lbSkill').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.botSkill=b.dataset.k;saveSettings();syncSkill();setPlayMode('casual');});
 $('lbSkinCard').addEventListener('click',()=>{const F=lbFeatSkin();openStore('',F?{skin:F.id}:null);}); // the NEW card opens that skin's sheet
 $('nameIn').addEventListener('input',fitName);
-// Enter on the lobby (or Go on the name keyboard) presses Play for the chosen mode; Escape closes the mode select
+// Enter on the lobby presses Play for the chosen mode (in the name field it only finishes the name); Escape closes the mode select
 addEventListener('keydown',e=>{if($('startCard').hidden||mode==='play')return;const t=e.target,tag=t&&t.tagName,sh=!$('modeSheet').hidden;
   if(e.key==='Escape'&&sh){e.preventDefault();e.stopImmediatePropagation();modeSheet(false);return;}
   if(e.key!=='Enter'||tag==='BUTTON'||tag==='TEXTAREA'||(tag==='INPUT'&&t.id!=='nameIn'))return;
-  e.preventDefault();e.stopImmediatePropagation();if(tag==='INPUT')t.blur();if(sh)modeSheet(false);else lobbyPlay();},true);
+  e.preventDefault();e.stopImmediatePropagation();if(tag==='INPUT'){t.blur();return;}if(sh)modeSheet(false);else lobbyPlay();},true); // in the name field, Return (Done) only finishes the name
 $('go').addEventListener('click',lobbyPlay);
 $('practiceBtn').addEventListener('click',()=>startLocal('practice'));
 // Nearby (iOS app): play the phones around you over Bluetooth and peer-to-peer Wi-Fi, with no server or internet. Unranked.
@@ -10583,7 +10601,7 @@ $('boardSeg').addEventListener('click',e=>{const b=e.target.closest('button');if
 $('boardSeg').querySelector(`[data-bm="${TOUCH_UI?1:0}"]`).toggleAttribute('data-def',true); // the default: folded on phones, open on desktop
 addEventListener('keydown',e=>{
   const tag=e.target&&e.target.tagName;
-  if(tag==='INPUT'){if(e.key==='Enter'&&e.target.id==='nameIn')startGame();return;}
+  if(tag==='INPUT'){if(e.key==='Enter'&&e.target.id==='nameIn')e.target.blur();return;}
   if(keyIs(e,'mute')){toggleSnd();return;}
   if(mode==='play'&&(e.key==='Escape'||keyIs(e,'pause'))){e.preventDefault();setPaused(!paused);return;}
   if(mode!=='play'||paused){if(e.key==='Enter'&&tag!=='BUTTON'&&!$('startCard').hidden)startGame();return;}
