@@ -701,6 +701,15 @@ body:not(.playing) #tip{display:none}
 .lb-near{display:none;gap:4px;margin:0 0 8px;padding:9px 10px 9px 13px;border-radius:16px;background:rgba(108,184,255,.08);box-shadow:inset 0 0 0 1px rgba(108,184,255,.22)}
 .lb-play[data-mode=nearby] .lb-near{display:grid}
 .lobby #go.lb-wait{filter:saturate(.3) brightness(.72)}
+.lobby .lb-go{white-space:nowrap;min-width:0} /* a label never wraps out of the button */
+.lobby .lb-gt{display:grid;justify-items:start;gap:5px;min-width:0;text-align:left}
+.lobby .lb-gt b{font:inherit;font-size:.78em;line-height:1;letter-spacing:.04em;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.lobby .lb-gt small{font:700 11.5px/1 var(--mono);letter-spacing:.06em;text-transform:none;color:rgba(43,7,21,.72);text-shadow:none;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.lobby #go.queued{white-space:nowrap}
+.lobby #go.queued:has(.lb-gt)::after{display:none} /* the small line says it */
+.lobby #go.queued .lb-gt{justify-items:center;text-align:center}
+.lobby #go.queued .lb-gt b{font-size:1em;letter-spacing:0}
+.lobby #go.queued .lb-gt small{color:rgba(225,220,255,.78);font-weight:500;letter-spacing:.02em}
 .lb-near-top{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
 .lb-near-who{min-width:0;font:700 14px/1.2 var(--display);color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lb-near-sum{margin:0;font-size:12px;line-height:1.3;color:var(--muted)}
@@ -7970,13 +7979,14 @@ function updateSpawnLock(){
     if(open){queued=false;startGame();return;}                                    // the round opened: in you go
     if(performance.now()>=searchUntil){queued=false;startLocal('auto');return;}   // nothing to join in time: bots fill the slots
   }
-  let goT=!local&&isOffline()?'Play offline':'Play',agT='Re-inoculate';
-  if(queued){const left=Math.max(0,Math.ceil((searchUntil-performance.now())/1000));goT=agT=`Searching… 0:${String(left).padStart(2,'0')}${queuedPeers?' · '+(queuedPeers+1)+' waiting':''}`;}
-  else if(!open){const why=spawnBlockReason();goT=agT=(why==='lives'?'No lives left · ':'Round closed · ')+'find a game';}
+  let goT=!local&&isOffline()?'Play offline':'Play',goS='',agT='Re-inoculate'; // goS: a small second line under the big word
+  if(queued){const left=Math.max(0,Math.ceil((searchUntil-performance.now())/1000));goT=`Searching… 0:${String(left).padStart(2,'0')}`;agT=goT+(queuedPeers?' · '+(queuedPeers+1)+' waiting':'');goS=(queuedPeers?(queuedPeers+1)+' waiting · tap':'Tap')+' to cancel';} // the wait on the small line
+  else if(!open){const why=spawnBlockReason();agT=(why==='lives'?'No lives left · ':'Round closed · ')+'find a game';goT='Find game';goS=why==='lives'?'No lives left':'Round closed';} // the action big, why under it
   else{const left=MAX_RESPAWNS+1-livesUsed();if(!local&&left<=MAX_RESPAWNS)agT=`Re-inoculate · ${left} ${left===1?'life':'lives'} left`;}
   if(nearMode()&&!queued)goT=nearLabel();
   go.classList.toggle('lb-wait',nearMode()&&!near.m&&!nearHost()); // a guest waits for the host to start
-  if(go.textContent!==goT)go.textContent=goT;if(ag.textContent!==agT)ag.textContent=agT;
+  const gk=goT+'|'+goS;if(go.dataset.k!==gk){go.dataset.k=gk;if(goS){go.innerHTML=`<span class="lb-gt"><b>${escH(goT)}</b><small>${escH(goS)}</small></span>`;go.setAttribute('aria-label',goT+', '+goS);}else{go.textContent=goT;go.removeAttribute('aria-label');}}
+  if(ag.textContent!==agT)ag.textContent=agT;
   go.classList.toggle('queued',queued);ag.classList.toggle('queued',queued);ag.classList.add('sm');
   if(queued){const sp=clamp((searchUntil-performance.now())/(SEARCH_MAX*1000),0,1)*100+'%';go.style.setProperty('--sp',sp);ag.style.setProperty('--sp',sp);}
 }
