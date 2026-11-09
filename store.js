@@ -66,6 +66,8 @@ class SqliteStore {
       'ALTER TABLE runs ADD COLUMN mode TEXT', 'ALTER TABLE runs ADD COLUMN kind TEXT', 'ALTER TABLE runs ADD COLUMN bonus INTEGER',
       // the rank ladder: the bots' skill per run, and the ratings from before the ladder's reset (economy.js ladderReset)
       'ALTER TABLE runs ADD COLUMN skill TEXT', 'ALTER TABLE players ADD COLUMN rating_v1 INTEGER', 'ALTER TABLE players ADD COLUMN ai_rating_v1 INTEGER',
+      // extra lives bought in a run (economy.js buyLife)
+      'ALTER TABLE runs ADD COLUMN lives INTEGER NOT NULL DEFAULT 0',
       // lifetime stats (economy.js lifeStats): lives counted, battle royale rounds with a placing, wins and top-3 finishes in
       // them, seconds alive, cells absorbed, and the best competitive rating reached (null: none yet)
       'ALTER TABLE players ADD COLUMN played INTEGER NOT NULL DEFAULT 0', 'ALTER TABLE players ADD COLUMN wins INTEGER NOT NULL DEFAULT 0', 'ALTER TABLE players ADD COLUMN podiums INTEGER NOT NULL DEFAULT 0',
@@ -88,6 +90,7 @@ class SqliteStore {
       insRun: p('INSERT INTO runs(id, player, started, mode, skill) VALUES(?, ?, ?, ?, ?)'),
       run: p('SELECT * FROM runs WHERE id = ? AND player = ?'),
       endRun: p('UPDATE runs SET ended = ?, payout = ?, xp = ?, kind = ?, bonus = ? WHERE id = ?'),
+      lifeRun: p('UPDATE runs SET lives = lives + 1 WHERE id = ? AND player = ? AND ended IS NULL AND lives = ?'), lifePay: p('UPDATE players SET balance = balance - ? WHERE id = ? AND balance >= ?'),
       bonusSince: p('SELECT COALESCE(SUM(bonus), 0) AS n FROM runs WHERE player = ? AND started >= ? AND kind = ?'),
       openRuns: p('SELECT COUNT(*) AS n FROM runs WHERE player = ? AND ended IS NULL AND started > ?'),
       purchase: p('SELECT * FROM purchases WHERE id = ?'),
@@ -210,6 +213,14 @@ class SqliteStore {
   resetRatings(start) { this.q.resetRatings.run(start, start); this.q.resetTrophies.run(); } // the peak and the rank trophies go with them
   run(id, player) { return this.q.run.get(id, player) || null; }
   endRun(id, now, payout, xp = 0, kind = null, bonus = 0) { this.q.endRun.run(now, payout, xp, kind, bonus, id); }
+  /** An extra life: one more on the open run (still at `had`) and its price off the balance, both or neither. */
+  buyLife(run, player, had, price) {
+    this.db.exec('BEGIN');
+    try {
+      if (!this.q.lifeRun.run(run, player, had).changes || !this.q.lifePay.run(price, player, price).changes) { this.db.exec('ROLLBACK'); return false; }
+      this.db.exec('COMMIT'); return true;
+    } catch (e) { this.db.exec('ROLLBACK'); throw e; }
+  }
   /** ATP that the player's runs of this kind, started from `since` on, paid as win bonuses (economy.js WINS caps it per day). */
   bonusSince(player, since, kind) { return Number(this.q.bonusSince.get(player, since, kind).n); }
   openRuns(player, since) { return Number(this.q.openRuns.get(player, since).n); }
@@ -341,9 +352,10 @@ class JsonStore {
   setFont(id, font) { const p = this.d.players[id]; if (p) { p.name_font = font; this.save(); } }
   fonts(id) { return ((this.d.fonts || {})[id] || []).slice().sort((a, b) => a - b); }
   addFont(id, font, now) { const m = this.d.fonts || (this.d.fonts = {}), s = m[id] || (m[id] = []); if (!s.includes(font)) { s.push(font); this.save(); } }
-  createRun(id, player, now, mode = null, skill = null) { this.d.runs[id] = { id, player, started: now, ended: null, payout: null, xp: null, mode, skill, kind: null, bonus: null }; this.prune(); this.save(); }
+  createRun(id, player, now, mode = null, skill = null) { this.d.runs[id] = { id, player, started: now, ended: null, payout: null, xp: null, mode, skill, kind: null, bonus: null, lives: 0 }; this.prune(); this.save(); }
   resetRatings(start) { for (const p of Object.values(this.d.players)) { p.rating_v1 = p.rating ?? 1000; p.ai_rating_v1 = p.ai_rating ?? 1000; p.rating = start; p.ai_rating = start; p.peak = null; } this.d.trophies = {}; this.save(); }
   run(id, player) { const r = this.d.runs[id]; return r && r.player === player ? { ...r } : null; }
+  buyLife(run, player, had, price) { const r = this.d.runs[run], a = this.d.players[player]; if (!r || r.player !== player || r.ended || (r.lives || 0) !== had || !a || Number(a.balance) < price) return false; r.lives = had + 1; a.balance = Number(a.balance) - price; this.save(); return true; }
   endRun(id, now, payout, xp = 0, kind = null, bonus = 0) { const r = this.d.runs[id]; if (r) { r.ended = now; r.payout = payout; r.xp = xp; r.kind = kind; r.bonus = bonus; this.save(); } }
   bonusSince(player, since, kind) { let n = 0; for (const r of Object.values(this.d.runs)) if (r.player === player && r.started >= since && r.kind === kind) n += r.bonus || 0; return n; }
   openRuns(player, since) { let n = 0; for (const r of Object.values(this.d.runs)) if (r.player === player && r.ended == null && r.started > since) n++; return n; }

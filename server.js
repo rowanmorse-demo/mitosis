@@ -42,6 +42,7 @@ const ROUTES = {
   'POST /api/session': { fn: economy.handlers.session, auth: false },
   'POST /api/run/start': { fn: (store, body, p) => { const r = economy.handlers.runStart(store, body, p); players.runStarted(r.runId); runRelay(r.runId, body.relay); return r; }, auth: true },
   'POST /api/run/end': { fn: (store, body, p) => { const r = economy.handlers.runEnd(store, body, p, { metSince: t => metSince(body.runId, body.relay, t) }); players.runEnded(body.runId); runConns.delete(String(body.runId)); return r; }, auth: true },
+  'POST /api/run/life': { fn: economy.handlers.buyLife, auth: true },   // an extra life for ATP (economy.js EXTRA_LIFE)
   'POST /api/skins/buy': { fn: economy.handlers.buySkin, auth: true },
   'POST /api/iap/apple': { fn: economy.handlers.iapApple, auth: true },
   'POST /api/iap/google': { fn: economy.handlers.iapGoogle, auth: true },

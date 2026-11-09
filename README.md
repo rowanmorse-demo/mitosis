@@ -88,6 +88,8 @@ Ranks (Rowan, Nov 7): nine steps through the life of a dividing cell, each with 
 
 The life must last 2 minutes on the server's clock in a round of 8 or more cells, so an early death, a quit (no placing) or a life never ended pays nothing. There is no daily cap on what an account can earn. `WINS` in economy.js.
 
+**Extra lives.** A player who loses their last life while the round is still open is offered one more for ATP, for 5 seconds. The first costs 100 ATP, and each one after that in the same game costs double (100, 200, 400 … 3,276,800 for the 16th); 16 is the most a game. This works in Ranked against players and bots (Casual has endless lives, Classic no limit, Nearby isn't reported). The bought life continues the same run, so the run is rated once, after the offer is declined or runs out. `EXTRA_LIFE` in economy.js (sent in the catalogue) sets the price, factor, cap, window and modes. `POST /api/run/life` takes the ATP and the count together, and charges once for a repeated tap.
+
 ## Levels and XP
 
 Every ranked life earns XP when it ends, worked out by the server:
@@ -259,6 +261,7 @@ All endpoints take and return JSON. Authenticated ones need `Authorization: Bear
 | `POST /api/session` `{secret}` | Create or load the player; returns wallet, owned skins and the catalogue |
 | `POST /api/run/start` `{mode, relay}` | Begin a run (server timestamps it). `mode`: `arena`, `bots` (a ranked game of bots on the device) or `casual`; `relay`: the relay connection's key from its welcome. Both optional (older apps send neither) |
 | `POST /api/run/end` `{runId, survived, eaten, peak, place, of, bestRank, name, relay, skill}` | Pay out the run by placement plus any win bonus and adjust the rating it was against; idempotent. `kind` says who it was against (`comp`, `ai`, `casual`, or `legacy` for older apps), `ratingDelta` and `aiDelta` how each rating moved (one is 0), `winBonus` the part of `payout` the win paid and `winCapped` whether the day's cap cut it. While the battle pass is on it also fills the pass and moves the quests on: `questsDone` and `questXp` are the quests this life finished, `passUp` the tiers it gained |
+| `POST /api/run/life` `{runId, n}` | Buy an extra life on an open run for ATP: n is how many the game has bought (0 for the first), so a repeated tap is answered without paying twice. The price is `base × factor^n`, at most `max` a game. 402 not enough ATP (the message says how much more), 403 the cap or a mode without extra lives, 409 an ended run or a count out of step. |
 | `POST /api/skins/buy` `{skinId}` | Spend ATP on a skin (battle pass skins are not for sale) |
 | `POST /api/pass` | The battle pass: your tier (`pass.level`; the game says Tier so it is not mixed up with the profile level), Battle Stars, Battle Pass (premium) and claims, plus the season's pages, and `quests`: today's and this week's quests with their progress (`pass`, `quests` and `catalog.pass` are `null` while it is off). Every wallet response carries `quests` |
 | `POST /api/pass/premium` `{bundle}` | Buy the Battle Pass for this season with ATP, or the Battle Bundle (the pass plus 10 tiers); once a season |
