@@ -14,7 +14,11 @@ import kotlin.concurrent.thread
  * (POST /api/crash) on the next launch, where they land in the server log and DATA_DIR/crashes.
  */
 object CrashReporter {
-    fun start(context: Context) {
+    @Volatile private var server = BuildConfig.SERVER_URL
+
+    /** [server] is the game server the page talks to (a development build can be pointed elsewhere). */
+    fun start(context: Context, server: String) {
+        this.server = server
         val dir = File(context.filesDir, "crashes").apply { mkdirs() }
         val previous = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { t, e ->
@@ -33,11 +37,16 @@ object CrashReporter {
         }
     }
 
+    /** Small events worth seeing next to crashes (the WebView renderer dying) go straight up, as on iOS. */
+    fun note(kind: String, text: String) {
+        thread(name = "crash-note", isDaemon = true) { runCatching { upload(kind, text) } }
+    }
+
     private fun upload(kind: String, report: String) {
         val body = JSONObject().put("platform", "android").put("kind", kind)
             .put("app", "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})").put("os", "Android ${Build.VERSION.RELEASE}")
             .put("device", Build.MODEL).put("report", report.take(400_000))
-        val c = URL(BuildConfig.SERVER_URL + "/api/crash").openConnection() as HttpURLConnection
+        val c = URL(server + "/api/crash").openConnection() as HttpURLConnection
         c.requestMethod = "POST"; c.setRequestProperty("Content-Type", "application/json")
         c.doOutput = true; c.connectTimeout = 8000; c.readTimeout = 8000
         c.outputStream.use { it.write(body.toString().toByteArray()) }
