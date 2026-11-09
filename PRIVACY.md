@@ -24,6 +24,8 @@ Mitosis: Cell Arena ("Mitosis", "the game") is made by Catapult Consulting, LLC.
 
 **Diagnostics.** If the app crashes or stalls, a technical report (device model, OS version, app version and a stack trace) is sent to the server so the problem can be fixed. Reports contain no personal information.
 
+**Website visits.** mitosisgame.com is served through Cloudflare, which counts page views with Cloudflare Web Analytics: the page visited, the referring site, the country, and the browser and device type. It uses no cookies and no visitor identifier, and Cloudflare does not use it to track you across sites. The apps do not use it.
+
 ## What the game does not do
 
 - No advertising, no ad identifiers, no advertising networks.
