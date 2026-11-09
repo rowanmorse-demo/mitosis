@@ -16,7 +16,7 @@ A multiplayer cell-eating arena set in a giant petri well. Absorb anything small
 - **Levels**: every ranked life earns XP for how long you stay alive and where you place, and XP adds up into a profile level. The lobby and the Profile show your level with a bar toward the next one; the results screen counts the XP in, shows where it came from and celebrates a level-up
 - **A lobby that knows you**: a live portrait of your cell, your level and your rating with progress to the next tier, who is in the room and the round clock. First launch shows a three-step welcome card (Settings can bring it back). The tab bar along the bottom holds Inventory, Shop, Ranks and Friends; tapping your name card at the top opens the Profile, which keeps your last runs with placement, time, peak mass and rating change
 - **Background** in Settings: a black dish (the default) or a white one
-- **Effects toggle** in Settings (Full or Reduced) for older phones; the game also drops to reduced effects on its own when frames run long
+- **Effects toggle** in Settings (Full or Reduced) for older phones; the game also drops to reduced effects on its own when frames run long, and in the Android app while battery saver is on or the phone runs hot
 - **Rounds of ten minutes**: the arena is full size for the first minute, then closes in to 3% of the dish by 9:30. Anything caught outside dissolves. Bots stop respawning at 7:00, and the round ends as soon as one player's cells are all that is left: the last cell standing wins
 - **Practice and offline play** against bots at four difficulties (Easy, Normal, Hard, Expert). With no connection, Play starts a bot game straight away
 - **Nearby play** (iPhone app): phones in the same room play each other over Bluetooth and peer-to-peer Wi-Fi, no internet needed, in a lobby where the host sets bot difficulty, bots, round length and lives
@@ -224,13 +224,12 @@ Regenerate the icon with `swift ios/tools/make-icon.swift ios/Mitosis/Assets.xca
 
 ## Android app
 
-`android/` is a native Kotlin app that bundles `index.html` in a full-screen `WebView` and adds Google Play Billing and haptics. The build copies the page from the repo root, so the app always ships the current game.
+`android/` is a native Kotlin app that bundles `index.html` in a full-screen, landscape `WebView`. It speaks the same bridge messages as the iOS app: Google Play Billing (Play Billing Library 8), Sign in with Google, haptics, the Play in-app review card, page logs and app foreground/background events. It also reports battery saver and the thermal state so the page can reduce effects. Nearby play and game recording are iPhone-only, and the page hides them on Android. The build copies the page from the repo root, so the app always ships the current game. Version 2.3.0 (versionCode 10), targetSdk 36.
 
-- Open `android/` in Android Studio (Ladybug or newer, Android SDK 35) and run, or `cd android && ./gradlew assembleDebug`.
-- The server address is `SERVER_URL` in `android/app/build.gradle.kts`. For a local server from the emulator use `http://10.0.2.2:3000`.
-- **Play Console:** create the app with package `com.mitosisgame.app`, add four in-app products with the ids above, upload a signed build to a testing track, and add your Google account as a license tester so purchases are free. Create a service account with *View financial data* and set the `GOOGLE_*` variables on the server.
-- Release builds need a signing key: add a `signingConfigs` block in `app/build.gradle.kts` or use Android Studio's *Generate Signed Bundle*.
-- **Sign in with Google:** in Google Cloud Console create a *Web* OAuth client and an *Android* client (package `com.mitosisgame.app`, the signing key's SHA-1). Put the web client id in `GOOGLE_WEB_CLIENT_ID` in `app/build.gradle.kts` and in the server's `GOOGLE_CLIENT_IDS`. The app uses Credential Manager; Apple sign-in is not offered on Android until the server has an https domain.
+- **Builds without an Android SDK:** the *Android* GitHub Actions workflow (`.github/workflows/android.yml`) builds a debug APK and an **unsigned** release AAB on every push that touches `android/` or `index.html`. It then plays the debug build in an emulator (`android/tools/emulator-test.sh`) and keeps the screenshots.
+- **Locally:** open `android/` in Android Studio, or run `cd android && ./gradlew assembleDebug bundleRelease`.
+- **Server:** the address is `SERVER_URL` in `android/app/build.gradle.kts` (or `-Pmitosis.serverUrl=…`). Debug builds also take one at launch: `adb shell am start -n com.mitosisgame.app/.MainActivity --es server http://10.0.2.2:3000` reaches a local `node server.js` from the emulator.
+- **Signing and Play Console:** release builds are signed with your upload key from `android/keystore.properties`, which git ignores. Signing, the five ATP products, purchase verification, Sign in with Google and the store listing are covered step by step in [`android/RELEASE.md`](android/RELEASE.md).
 
 ## How it works
 
