@@ -9969,6 +9969,7 @@ addEventListener('keydown',e=>{if(e.key!=='Escape'||!$('bpSheet').hidden||!['sto
   const c=$(shownCard),b=shownCard==='storeCard'?$('storeBack'):shownCard==='passCard'?$('passBack'):shownCard==='deleteCard'?$('deleteCancel'):c.querySelector('.back');
   if(c.hidden||!b||b.closest('[hidden]'))return;e.preventDefault();e.stopImmediatePropagation();b.click();},true);
 function showCard(id){
+  if(id){try{releaseInput();}catch(e){}} // a card over the arena: nothing stays pressed (it can run before the input code exists)
   if(id==='startCard'&&shownCard!=='startCard'){lobbyAt=performance.now();setTimeout(lbBgPaint,0);}
   // diagnostic: a report of what sends the page from Settings back to the start card (Settings → Account → sign in)
   if(id==='startCard'&&shownCard==='settingsCard')reportHitch('settings->start via '+String(new Error().stack||'').split('\n').slice(1,4).map(s=>s.trim()).join(' | '));
@@ -9999,7 +10000,7 @@ function startGame(){
   const m0=/[?&]autopilot=1/.test(location.search)&&/[?&]big=1/.test(location.search)?2500:25;
   spawn(human,m0);cam.x=human.cells[0].x;cam.y=human.cells[0].y;dispMass=m0;shownMass=-1;histT=0;
   pointer.x=W/2;pointer.y=H/2;mode='play';paused=false;slow=1;feed.length=0;renderFeed();
-  showCard(null);document.body.classList.add('playing');cv.focus({preventScroll:true});recStart();
+  releaseInput();showCard(null);document.body.classList.add('playing');cv.focus({preventScroll:true});recStart(); // every life starts with nothing pressed
   setTimeout(()=>sfx('start'),30);
 }
 function setPaused(v){
@@ -10015,6 +10016,7 @@ addEventListener('keydown',e=>{if(keyIs(e,'mute'))setTimeout(syncPause,0);});
 $('pauseSet').addEventListener('click',()=>showCard('settingsCard'));
 $('settingsCard').addEventListener('click',e=>{if(mode==='play'&&paused&&e.target.closest('.back')){e.stopPropagation();showCard('pauseCard');syncPause();}},true);
 function die(){
+  try{releaseInput();}catch(e){}
   mode='dead';if(!multi())slow=.22;sfx('die');Native.haptic('error');const s=human.stats;human.hist.push(0);paused=false;
   const pb=notePeak(s.peak);
   const pl=CL?{place:0,of:0}:placeOf();s.place=pl.place;s.of=pl.of; // Classic has no placings
@@ -10534,18 +10536,43 @@ function joySet(ex,ey){const r=joyEl.getBoundingClientRect(),cx=r.left+r.width/2
   const R=joy.R,k=d>R?R/d:1;dx*=k;dy*=k;joy.m=d<R*.12?0:Math.min(1,d/R);joy.ux=d?(ex-cx)/d:0;joy.uy=d?(ey-cy)/d:0;if(joy.m>0){joy.lx=joy.ux;joy.ly=joy.uy;}joyKnob.style.transform=`translate(${dx.toFixed(1)}px,${dy.toFixed(1)}px)`;
   joyEl.style.setProperty('--ja',Math.atan2(dy,dx).toFixed(3)+'rad');joyEl.style.setProperty('--jm',joy.m.toFixed(2));}
 let joyDownAt=0;
-joyEl.addEventListener('pointerdown',e=>{if(joy.id!==null)return;joy.id=e.pointerId;joyDownAt=performance.now();joyEl.classList.add('active');try{joyEl.setPointerCapture(e.pointerId);}catch(_){}joySet(e.clientX,e.clientY);e.preventDefault();});
+joyEl.addEventListener('pointerdown',e=>{joy.id=e.pointerId; // a new touch always takes the stick: an older one it still holds can only be a lost lift
+  joyDownAt=performance.now();joyEl.classList.add('active');try{joyEl.setPointerCapture(e.pointerId);}catch(_){}joySet(e.clientX,e.clientY);e.preventDefault();});
 joyEl.addEventListener('pointermove',e=>{if(e.pointerId!==joy.id)return;joySet(e.clientX,e.clientY);});
 const joyEnd=e=>{if(e.pointerId!==joy.id)return;if(e.type!=='pointerup')reportHitch('joystick '+e.type+' after '+Math.round(performance.now()-joyDownAt)+'ms hold');joy.id=null;joy.m=0;joy.ux=joy.uy=0;joyEl.classList.remove('active');joyKnob.style.transform='';joyEl.style.setProperty('--jm','0');};
 joyEl.addEventListener('pointerup',joyEnd);joyEl.addEventListener('pointercancel',joyEnd);joyEl.addEventListener('lostpointercapture',joyEnd);
 // Floating stick (Settings): it jumps to wherever the thumb lands on its side of the screen, and goes home on release
 const zoneEl=$('joyZone');
-zoneEl.addEventListener('pointerdown',e=>{if(joy.id!==null)return;joy.id=e.pointerId;joyDownAt=performance.now();
+zoneEl.addEventListener('pointerdown',e=>{joy.id=e.pointerId;joyDownAt=performance.now();
   joyEl.style.left=clamp(e.clientX-75,0,innerWidth-150)+'px';joyEl.style.top=clamp(e.clientY-75,0,innerHeight-150)+'px';joyEl.style.right=joyEl.style.bottom='auto';
   joyEl.classList.add('active');try{zoneEl.setPointerCapture(e.pointerId);}catch(_){}joySet(e.clientX,e.clientY);e.preventDefault();});
 zoneEl.addEventListener('pointermove',e=>{if(e.pointerId===joy.id)joySet(e.clientX,e.clientY);});
 const zoneEnd=e=>{if(e.pointerId!==joy.id)return;joyEnd(e);joyEl.style.left=joyEl.style.top=joyEl.style.right=joyEl.style.bottom='';};
 zoneEl.addEventListener('pointerup',zoneEnd);zoneEl.addEventListener('pointercancel',zoneEnd);zoneEl.addEventListener('lostpointercapture',zoneEnd);
+// Nothing stays pressed without a finger on the glass. The stick hides (display:none) the moment you die, a round ends or a
+// card opens, and on iOS a thumb lifted then can lose its pointerup. Nothing else reset the stick, and a new touch was
+// ignored while it still thought a finger was down, so it stayed pushed and dead until the app restarted (Rowan, build 13:
+// "the joystick got stuck ... and was locked"). Now the stick also lets go when its touch leaves the screen's touch list
+// (touchend/touchcancel anywhere), when its pointer ends anywhere, when the app loses focus or goes to the background, when
+// a card opens, when you die and when a life starts; and a new touch on it always takes it over (above). With no finger
+// left on the glass, the aiming touch on the arena and a held Shoot let go too.
+function releaseInput(all=true){
+  if(joy.id!==null||joy.m){joy.id=null;joy.m=0;joy.ux=joy.uy=0;joyEl.classList.remove('active');joyKnob.style.transform='';joyEl.style.setProperty('--jm','0');
+    joyEl.style.left=joyEl.style.top=joyEl.style.right=joyEl.style.bottom='';}
+  joy.tid=null;
+  if(all){if(touchId!==null){touchId=null;pointer.x=W/2;pointer.y=H/2;}ejHold.stop();}
+}
+{ const stickTouch=e=>{const t=e.changedTouches&&e.changedTouches[0];if(t)joy.tid=t.identifier;}; // the touch (not pointer) id: touch lists are what WebKit always keeps right
+  joyEl.addEventListener('touchstart',stickTouch,{passive:true});zoneEl.addEventListener('touchstart',stickTouch,{passive:true});
+  const touchGone=e=>{const ts=e.touches||[];
+    if(joy.tid!=null&&![...ts].some(t=>t.identifier===joy.tid))releaseInput(false);
+    if(!ts.length)releaseInput(true);};
+  addEventListener('touchend',touchGone,true);addEventListener('touchcancel',touchGone,true);
+  const ptrGone=e=>{if(e.pointerId===joy.id)releaseInput(false);if(e.pointerId===touchId){touchId=null;pointer.x=W/2;pointer.y=H/2;}};
+  addEventListener('pointerup',ptrGone,true);addEventListener('pointercancel',ptrGone,true);
+  addEventListener('blur',()=>releaseInput());addEventListener('pagehide',()=>releaseInput());
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)releaseInput();});
+}
 // collapsible leaderboard (remembered)
 const boardBox=$('board'),boardTg=$('boardToggle');
 const syncBoard=()=>{if(settings.boardMin===undefined)settings.boardMin=TOUCH_UI; // phones start with the ranking folded
