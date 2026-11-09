@@ -100,7 +100,7 @@ const FAKE_BRIDGE = `window.__sent=[];window.MitosisAndroid={post(j){const m=JSO
   if(m.type==='auth')r({id:m.id,ok:true,providers:[]});
   else if(m.type==='products'||m.type==='buy')r({id:m.id,ok:false,error:'Google Play is not available'});
   else if(m.type==='record')r({id:m.id,ok:false,error:'Recording is only in the iPhone app'});
-  else if(m.type==='ready')r({type:'power',low:false,thermal:'nominal'});}};`;
+  else if(m.type==='ready')r({type:'power',low:false,thermal:0});}};`;
 
 async function startChrome(url) {
   const exe = process.env.CHROME || '/opt/pw-browsers/chromium', profile = fs.mkdtempSync(path.join(os.tmpdir(), 'mitosis-cdp-'));
@@ -171,7 +171,7 @@ async function run() {
   // ---- battery saver on and off, for real
   if (ADB) {
     adb('shell', 'dumpsys', 'battery', 'unplug');
-    const on = `window.__rx.some(m=>m.type==='power'&&m.low===true&&/^(nominal|fair|serious|critical)$/.test(m.thermal))`;
+    const on = `window.__rx.some(m=>m.type==='power'&&m.low===true&&Number.isInteger(m.thermal)&&m.thermal>=0&&m.thermal<=3)`;
     adb('shell', 'cmd', 'power', 'set-mode', '1');   // battery saver on
     if (!(await waitFor(on, 8000))) adb('shell', 'settings', 'put', 'global', 'low_power', '1'); // the older switch, if this image wants it
     check('battery saver on reaches the page', await waitFor(on, 15000), await ev(`JSON.stringify(window.__rx.filter(m=>m.type==='power'))`) + ' low_power=' + adb('shell', 'settings', 'get', 'global', 'low_power'));
@@ -210,7 +210,7 @@ async function run() {
   if (!check(ADB ? 'back key closes the shop' : 'Esc closes the shop', await waitFor(`${VIS}('#startCard')`, 6000), backDiag)) { await tap('#storeBack'); await waitFor(`${VIS}('#startCard')`, 4000); }
 
   // ---- the menus
-  for (const [btn, card, name] of [['#setBtn', '#settingsCard', 'settings'], ['#lookBtn', '#lookCard', 'skins'], ['#rankBtn', '#rankCard', 'rank'], ['#friendsBtn', '#friendsCard', 'friends'], ['#navProf', '#profileCard', 'profile']]) {
+  for (const [btn, card, name] of [['#setBtn', '#settingsCard', 'settings'], ['#lookBtn', '#lookCard', 'skins'], ['#rankBtn', '#rankCard', 'rank'], ['#friendsBtn', '#friendsCard', 'friends'], ['#profBtn', '#profileCard', 'profile']]) {
     await tap(btn);
     const open = check(`${name} opens`, await waitFor(`${VIS}(${JSON.stringify(card)})`, 6000));
     await sleep(900); await shot(name);
@@ -243,6 +243,13 @@ async function run() {
   check('results back to the lobby', await waitFor(`${VIS}('#startCard')`, 6000));
 
   if (ADB) {
+    // ---- back on the lobby with nothing open: the app goes to the background, like any app's first screen
+    const bg0 = await ev(`window.__rx.filter(m=>m.type==='app'&&m.text==='background').length`);
+    await backKey();
+    check('back key on the lobby goes to the background', await waitFor(`window.__rx.filter(m=>m.type==='app'&&m.text==='background').length>${bg0}`, 8000), backDiag);
+    adb('shell', 'am', 'start', '-n', `${PKG}/.MainActivity`); await sleep(3000);
+    check('back from the background: same process, lobby showing', pid() === pid0 && await vis('#startCard'), `${pid0} → ${pid()}`);
+
     // ---- leaving and returning to the app: the page hears resignActive, background, becomeActive
     adb('shell', 'input', 'keyevent', 'KEYCODE_HOME');
     await waitFor(`window.__rx.some(m=>m.type==='app'&&m.text==='background')`, 10000);
