@@ -3562,13 +3562,14 @@ const speedOf=r=>SPEED_K*Math.pow(r,-SPEED_EXP);
 // most of the risk out of splitting. The Mitotic trait still cuts it by 40%.
 const MERGE_BASE=30,MERGE_PER_MASS=.01;
 const mergeDelay=m=>MERGE_BASE+m*MERGE_PER_MASS;
-// Splitting: the new half leaves at SPLIT_SPEED and slows by CELL_DRAG per second, a lunge of SPLIT_SPEED/CELL_DRAG ≈ 480
-// units however big the cell is. Agar-style servers lunge ~800 of their units, but their cells are 1.6× as wide as ours
-// (radius 10√m against 4+6√m), so 480 here is the same reach in radii: a mass-200 split lands its half 5.8 parent radii out
-// (it was 720 units, 8.7 radii, which flung pieces far past anything they were aimed at). Pieces of one player are solid to
+// Splitting: the new half leaves at SPLIT_SPEED and slows by CELL_DRAG per second, a lunge of SPLIT_SPEED/CELL_DRAG = 650
+// units however big the cell is. That matches agar's split on screen: on a landscape phone our camera shows more of the
+// arena than agar's, and 650 units is the same share of the screen width as agar's ~800-unit boost (36% at mass 100, 31% at
+// 200, 25% at 500). It was 720 at first; 485 (the same reach in cell radii) felt "too short / weak" on Rowan's iPhone
+// (Nov 9). The bots' split reach and the burst pieces follow SPLIT_SPEED. Pieces of one player are solid to
 // each other (pushed apart at SIB_STIFF per second) until they may fuse, except in a new piece's first SPLIT_GRACE s, so a half
 // flies clear of its parent instead of shoving it back, as on those servers (13 ticks there).
-const SPLIT_SPEED=1550,CELL_DRAG=3.2,SPLIT_GRACE=.5,SIB_STIFF=30;
+const SPLIT_SPEED=2080,CELL_DRAG=3.2,SPLIT_GRACE=.5,SIB_STIFF=30;
 const SPLIT_KILL_SEC=1.2; // a cell a just-launched piece absorbs within this long counts as a split-kill (the lunge is 90% done by 0.72 s)
 const splitReach=m=>SPLIT_SPEED/CELL_DRAG*.4+.75*radius(m/2); // how far past its edge the bots reckon a mass-m cell's split can catch something
 function randInDish(margin=0,rad=arenaR()){if(CL){const L=Math.max(150,CL_HALF-margin);return{x:(Math.random()*2-1)*L,y:(Math.random()*2-1)*L};}const rr=Math.max(150,rad-margin)*Math.sqrt(Math.random()),t=Math.random()*TAU;return{x:Math.cos(t)*rr,y:Math.sin(t)*rr};}
