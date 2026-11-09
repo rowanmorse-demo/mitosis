@@ -32,6 +32,7 @@ ios/store-art/chrome-*/
 # promo video: rendered output and working files (re-render with node promo/render.js)
 promo/out/
 promo/.work/
+promo/rec/
 
 # rank trophy renders (re-render with node tools/trophies/render.js)
 tools/trophies/out/

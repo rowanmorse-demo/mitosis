@@ -4,18 +4,28 @@
 //   node promo/capture.js --only=chain    just those takes (comma-separated)
 //   node promo/capture.js --preview       768×432, quick, into promo/.work/preview/<id>/ (same gameplay, frame for frame)
 //   --every=N   keep every Nth frame only (fast checks)      --frames=N   stop after N recorded frames
+//   --takes=hd  film the takes in hd/takes.js instead        --set=v      film them as set v (see SETS) into .work/v/<id>/
+//   --hud=controls   what the takes marked hud: 'clean' show instead (board | controls | full)
 // Each take folder gets frames/000000.jpg… and meta.json: per-frame track (where the hero is on screen, speed),
 // marks the take set (split1, kill…), and the log of every sfx(kind, amount) the game played, by frame.
 'use strict';
 const fs = require('fs'), path = require('path');
 const { launch } = require('./lib/chrome'), clock = require('./lib/clock'), { buildGamePage, ROOT } = require('./lib/game'), { ensureFonts } = require('./lib/fonts');
 const econ = require(path.join(ROOT, 'economy.js'));
-const TAKES = require('./takes'), world = require('./lib/world');
+const world = require('./lib/world');
 
 const arg = Object.fromEntries(process.argv.slice(2).map(a => { const m = a.match(/^--(\w+)(?:=(.*))?$/); return m ? [m[1], m[2] === undefined ? true : m[2]] : [a, true]; }));
+const TAKES = require(arg.takes ? './' + arg.takes + '/takes' : './takes');
 const PREVIEW = !!arg.preview, EVERY = +arg.every || 1, MAXF = +arg.frames || Infinity;
-const VIEW = { w: 768, h: 432 }, DSF = PREVIEW ? 1 : 10 / 3; // 768×432 CSS px (a phone in landscape) → 2560×1440
-const WORK = path.join(__dirname, '.work'), OUT = path.join(WORK, PREVIEW ? 'preview' : 'takes');
+// a set is a viewport the takes are filmed in: the CSS px the game lays out for, and the scale its frames are kept at
+const SETS = {
+  takes: { w: 768, h: 432, dsf: 10 / 3 }, // a phone in landscape → 2560×1440 (the October trailers)
+  v: { w: 432, h: 768, dsf: 2.75 }, // 9:16 for TikTok, Reels and Shorts → 1188×2112 (1080×1920 with room to punch in)
+  h: { w: 852, h: 393, dsf: 2.5 }, // an iPhone 16 Pro in landscape → 2130×983 (App Store previews are 1920×886)
+};
+const SET = arg.set || 'takes'; if (!SETS[SET]) throw new Error('no set ' + SET + ' (sets: ' + Object.keys(SETS).join(', ') + ')');
+const VIEW = { w: SETS[SET].w, h: SETS[SET].h };
+const WORK = path.join(__dirname, '.work'), OUT = path.join(WORK, SET === 'takes' ? (PREVIEW ? 'preview' : 'takes') : SET + (PREVIEW ? '-preview' : ''));
 const EPOCH = Date.parse('2026-10-30T19:30:00'); // inside the Halloween season, so its skins and banner are live
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const PILOT = fs.readFileSync(path.join(__dirname, 'pilot.js'), 'utf8');
@@ -27,8 +37,8 @@ function fakeApi(tk) {
     return { ...W, 'run/start': { runId: 'promo-run' } };
   }
   const catalog = JSON.parse(JSON.stringify(econ.catalog()));
-  for (const k in catalog.seasons) catalog.seasons[k].open = true;
-  const w = { playerId: 'promo0000000000', balance: 4850, earned: 31200, skins: [11, 13, 14, 15, 16, 17, 18, 21, 22, 23, 24, 25, 26, 27], rating: 1388, tier: 'Gold', runs: 214, account: null };
+  if (!tk.epoch) for (const k in catalog.seasons) catalog.seasons[k].open = true; // the October takes are filmed at Halloween
+  const w = { playerId: 'promo0000000000', balance: 4850, earned: 31200, skins: tk.owned || [11, 13, 14, 15, 16, 17, 18, 21, 22, 23, 24, 25, 26, 27], rating: 1388, tier: 'Gold', runs: 214, account: null };
   const end = tk.result || { payout: 25, rating: 1412, ratingDelta: 24 };
   return {
     session: { ...w, catalog },
@@ -54,7 +64,9 @@ async function film(browser, tk) {
   const s = await browser.newPage();
   try {
     await s.send('Page.enable'); await s.send('Runtime.enable');
-    await s.send('Emulation.setDeviceMetricsOverride', { width: VIEW.w, height: VIEW.h, deviceScaleFactor: DSF, mobile: true, screenOrientation: { type: 'landscapePrimary', angle: 90 } });
+    // a take can be filmed sharper than its set (dsf: { v: 3.5 }) when the edit punches in a long way (the results screen)
+    const DSF = PREVIEW ? 1 : (tk.dsf && tk.dsf[SET]) || SETS[SET].dsf;
+    await s.send('Emulation.setDeviceMetricsOverride', { width: VIEW.w, height: VIEW.h, deviceScaleFactor: DSF, mobile: true, screenOrientation: VIEW.w > VIEW.h ? { type: 'landscapePrimary', angle: 90 } : { type: 'portraitPrimary', angle: 0 } });
     await s.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
     await s.send('Emulation.setEmulatedMedia', { features: [{ name: 'pointer', value: 'coarse' }, { name: 'hover', value: 'none' }, { name: 'prefers-reduced-motion', value: 'no-preference' }] });
     await s.send('Page.addScriptToEvaluateOnNewDocument', { source: clock({ seed: tk.seed, epoch: tk.epoch ? Date.parse(tk.epoch) : EPOCH, api: fakeApi(tk) }) });
@@ -68,7 +80,9 @@ async function film(browser, tk) {
       '400 12px "IBM Plex Mono"','500 12px "IBM Plex Mono"','600 12px "IBM Plex Mono"'].map(f=>document.fonts.load(f).catch(()=>[]))).then(()=>document.fonts.check('800 16px "Bricolage Grotesque"')&&document.fonts.check('500 12px "IBM Plex Mono"'))`);
     if (!fonts) console.warn('  warning: the game fonts did not load (no network?)');
     await s.eval(PILOT);
-    await s.eval(`__promo.setTake({id:${JSON.stringify(tk.id)},brain:${fnSrc(tk.brain)},ui:${fnSrc(tk.ui)}})`);
+    if (arg.hud && tk.hud === 'clean') tk = { ...tk, hud: arg.hud === 'full' ? undefined : arg.hud }; // --hud=controls: what the clean takes show instead
+    const opts = ['hud', 'cam', 'skins', 'skinMap', 'premiumShare'].filter(k => tk[k] != null).map(k => `${k}:${JSON.stringify(tk[k])}`).join(',');
+    await s.eval(`__promo.setTake({id:${JSON.stringify(tk.id)},brain:${fnSrc(tk.brain)},ui:${fnSrc(tk.ui)}${opts ? ',' + opts : ''}})`);
     for (let i = 0; i < 90; i++) { // lobby: wait until the live room has given up (offline) and the wallet has loaded
       await s.eval('__promo.frame()');
       if (i > 5 && await s.eval("__mitosisNet.state==='offline'&&__promo.G.wallet.online")) break;
@@ -77,11 +91,13 @@ async function film(browser, tk) {
     else await s.eval(`(()=>{const {G,P,S}=__promo;G.startLocal('auto');S.calm();S.dressBots(${tk.seed | 0});S.clearToasts();S.clearFeed();${fnSrc(tk.setup)}(G,P,S);return 1})()`);
     for (let i = 0; i < (tk.preroll || 0); i++) await s.eval('__promo.frame()');
     await s.eval('__promo.resetLog()');
-    const track = [], total = Math.min(tk.frames, MAXF), writes = [];
+    // a take can differ by set (frames: { v: 200, h: 420 }); skip: don't keep the frames before this one (disk)
+    const bySet = x => x && typeof x === 'object' ? x[SET] : x, skip = bySet(tk.skip) || 0;
+    const track = [], total = Math.min(bySet(tk.frames), MAXF), writes = [];
     const t0 = Date.now();
     for (let i = 0; i < total; i++) {
       const m = await s.eval('__promo.frame(true)'); track.push(m);
-      if (i % EVERY === 0) {
+      if (i % EVERY === 0 && i >= skip) {
         const shot = await s.send('Page.captureScreenshot', { format: 'jpeg', quality: PREVIEW ? 82 : 93, optimizeForSpeed: true });
         writes.push(fs.promises.writeFile(path.join(fdir, String(i).padStart(6, '0') + '.jpg'), Buffer.from(shot.data, 'base64')));
         if (writes.length > 24) await Promise.all(writes.splice(0));
@@ -92,7 +108,7 @@ async function film(browser, tk) {
     }
     await Promise.all(writes);
     const sfx = await s.eval('__promo.sfx()'), marks = await s.eval('__promo.marks()');
-    const meta = { id: tk.id, fps: 60, view: VIEW, dsf: DSF, size: [Math.round(VIEW.w * DSF), Math.round(VIEW.h * DSF)], every: EVERY, frames: track.length, marks, sfx, track };
+    const meta = { id: tk.id, set: SET, fps: 60, view: VIEW, dsf: DSF, size: [Math.round(VIEW.w * DSF), Math.round(VIEW.h * DSF)], every: EVERY, frames: track.length, marks, sfx, track };
     fs.writeFileSync(path.join(dir, 'meta.json'), JSON.stringify(meta));
     console.log(`  ${tk.id}: ${track.length} frames, ${sfx.length} sounds, marks ${marks.map(m => m.name + '@' + m.f).join(' ') || '-'}`);
   } finally { await s.close(); }
@@ -105,7 +121,7 @@ let GAME;
   if (!list.length) throw new Error('no takes match ' + arg.only);
   await ensureFonts(WORK);
   GAME = buildGamePage(path.join(WORK, 'game.html'));
-  console.log(`capture: ${list.map(t => t.id).join(', ')} at ${Math.round(VIEW.w * DSF)}×${Math.round(VIEW.h * DSF)}${PREVIEW ? ' (preview)' : ''}`);
+  console.log(`capture: ${list.map(t => t.id).join(', ')} at ${VIEW.w}×${VIEW.h} CSS px ×${PREVIEW ? 1 : SETS[SET].dsf}${PREVIEW ? ' (preview)' : ''} into ${path.relative(__dirname, OUT)}`);
   const browser = await launch({ gpu: true });
   try { for (const tk of list) { const t0 = Date.now(); await film(browser, tk); console.log(`  (${((Date.now() - t0) / 1000).toFixed(0)} s)`); } }
   finally { browser.close(); }

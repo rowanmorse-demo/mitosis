@@ -4,22 +4,30 @@
 //   node promo/edit.js              all cuts, from promo/.work/takes (run capture.js first)
 //   node promo/edit.js --preview    from the 768×432 preview takes (fast, soft: for checking timing)
 //   node promo/edit.js --only=mitosis-trailer-15s-9x16
+//   node promo/edit.js --cuts=hd       the cuts in hd/cuts.js (filmed with capture.js --takes=hd --set=v / --set=h)
+// A cut can set: set (which filmed set its takes come from), fps (30 for App Store previews), enc ('appstore': H.264 High
+// 4.0 at 10-12 Mbps), secs (an exact length), grade (vignette strength), and per shot xin (a transition into it).
+// A shot can also come from a recording of real play (record.js): rec: '<name in promo/rec>', t: the second of the
+// recording at the shot's first frame (then rate, zoom, punch… as usual); its sound is the game's, from the recording's log.
 'use strict';
 const fs = require('fs'), path = require('path'), { spawn, execFileSync } = require('child_process');
 const { launch } = require('./lib/chrome'), { ensureFonts } = require('./lib/fonts'), { renderAudio } = require('./lib/audio'), { ROOT } = require('./lib/game');
 const EDITOR = require('./lib/editor-page');
-const { BPM, cuts } = require('./cuts');
+const arg0 = Object.fromEntries(process.argv.slice(2).map(a => { const m = a.match(/^--(\w+)(?:=(.*))?$/); return m ? [m[1], m[2] === undefined ? true : m[2]] : [a, true]; }));
+const { BPM, cuts } = require(!arg0.cuts ? './cuts' : path.isAbsolute(arg0.cuts) ? arg0.cuts : './' + arg0.cuts + '/cuts'); // --cuts=hd, or a path to a cuts file
 
 const arg = Object.fromEntries(process.argv.slice(2).map(a => { const m = a.match(/^--(\w+)(?:=(.*))?$/); return m ? [m[1], m[2] === undefined ? true : m[2]] : [a, true]; }));
 const FFMPEG = process.env.FFMPEG || '/opt/homebrew/bin/ffmpeg';
-const FPS = 60, SPB = 60 / BPM, SR = 48000;
-const WORK = path.join(__dirname, '.work'), SRC = path.join(WORK, arg.preview ? 'preview' : 'takes'), OUT = path.join(__dirname, 'out');
+const TFPS = 60, SPB = 60 / BPM, SR = 48000; // takes are filmed at 60 fps; a cut plays at its own rate (cut.fps)
+const WORK = path.join(__dirname, '.work'), OUT = process.env.PROMO_OUT || path.join(__dirname, 'out');
+const srcDir = set => path.join(WORK, !set || set === 'takes' ? (arg.preview ? 'preview' : 'takes') : set + (arg.preview ? '-preview' : ''));
+let SRC = srcDir();
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 // ---------- takes ----------
 const metas = {};
 function meta(id) {
-  if (metas[id]) return metas[id];
+  const key = SRC + '/' + id; if (metas[key]) return metas[key];
   const file = path.join(SRC, id, 'meta.json');
   if (!fs.existsSync(file)) throw new Error(`no take "${id}" in ${SRC}: run node promo/capture.js${arg.preview ? ' --preview' : ''} first`);
   const m = JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -38,8 +46,31 @@ function meta(id) {
     for (let f = 0; f < n; f++) { let sx = 0, sy = 0, sw = 0; for (let j = -R; j <= R; j++) { const q = raw[k][Math.max(0, Math.min(n - 1, f + j))], w = 1 - Math.abs(j) / (R + 1); sx += q[0] * w; sy += q[1] * w; sw += w; } out.push([sx / sw, sy / sw]); }
     m.focus[k] = out;
   }
-  return (metas[id] = m);
+  return (metas[key] = m);
 }
+// ---------- recordings of real play (promo/rec/<name>.mp4, 60 fps): frames are pulled out for just the stretches a cut uses
+const REC = path.join(__dirname, 'rec');
+function recMeta(name) {
+  const key = 'rec:' + name; if (metas[key]) return metas[key];
+  const file = path.join(REC, name + '.mp4'); if (!fs.existsSync(file)) throw new Error('no recording ' + file + ' (record one with node promo/record.js)');
+  const [w, h, dur] = execFileSync(FFMPEG.replace(/ffmpeg$/, 'ffprobe'), ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=width,height:format=duration', '-of', 'csv=p=0:s=,', file]).toString().split(/[,\n]/).filter(Boolean).map(Number);
+  const log = path.join(REC, name + '.json'), sfx = fs.existsSync(log) ? JSON.parse(fs.readFileSync(log, 'utf8')).sfx.map(e => ({ f: e.t * TFPS, k: e.k, a: e.a })) : [];
+  const m = { rec: true, file, dir: path.join(WORK, 'recf', name), frames: Math.floor(dur * TFPS), size: [w, h], dsf: 1, view: { w, h }, marks: [], sfx, track: [], focus: {}, have: [] };
+  m.markF = () => 0;
+  return (metas[key] = m);
+}
+// make sure frames [f0, f1] of a recording are on disk (one ffmpeg pass per stretch, kept between runs)
+function recFrames(m, f0, f1) {
+  f0 = Math.max(0, Math.floor(f0) - 2); f1 = Math.min(m.frames - 1, Math.ceil(f1) + 2);
+  if (m.have.some(([a, b]) => a <= f0 && b >= f1)) return;
+  fs.mkdirSync(m.dir, { recursive: true });
+  let missing = false; for (let f = f0; f <= f1; f += 15) if (!fs.existsSync(path.join(m.dir, String(f).padStart(6, '0') + '.jpg'))) { missing = true; break; }
+  if (missing) ff(['-ss', (f0 / TFPS).toFixed(4), '-i', m.file, '-frames:v', String(f1 - f0 + 1), '-vf', 'fps=60', '-q:v', '2', '-start_number', String(f0), path.join(m.dir, '%06d.jpg')]);
+  m.have.push([f0, f1]);
+}
+// every take a cut uses is there, and the stretches of recordings it uses are pulled out as frames
+function prepare(cut) { for (const s of cut.shots) { const m = takeOf(s); if (s.rec) recFrames(m, srcFrame(s, m, 0), srcFrame(s, m, s.to - s.from)); } }
+const takeOf = shot => shot.rec ? recMeta(shot.rec) : meta(shot.take);
 const frameFile = (m, f) => { const i = Math.max(0, Math.min(m.frames - 1, Math.round(f))); return path.join(m.dir, String(i - (i % (m.every || 1))).padStart(6, '0') + '.jpg'); };
 
 // ---------- curves ----------
@@ -59,14 +90,14 @@ function rateIntegral(rate, b0, b1) { // ∫ rate over [b0, b1] in beats (rate: 
   return sign * sum;
 }
 // the take frame on screen at beat b of a shot (b relative to the shot's start)
-const srcFrame = (shot, m, b) => m.markF(shot.anchor) + rateIntegral(shot.rate, shot.at, b) * SPB * FPS;
+const srcFrame = (shot, m, b) => shot.rec ? shot.t * TFPS + rateIntegral(shot.rate, 0, b) * SPB * TFPS : m.markF(shot.anchor) + rateIntegral(shot.rate, shot.at, b) * SPB * TFPS;
 function hits(list, b) { let v = 0; for (const [b0, a] of list || []) { const dt = (b - b0) * SPB; if (dt >= 0) v += a * Math.exp(-dt / .16) * Math.min(1, dt / .03 + .4); } return v; }
 const noise = (t, s) => Math.sin(t * 61.3 + s) * .6 + Math.sin(t * 97.1 + s * 2.3) * .4;
 
 // ---------- one output frame ----------
 function frameSpec(cut, i) {
-  const t = i / FPS, B = t / SPB, shot = cut.shots.find(s => B >= s.from && B < s.to) || cut.shots[cut.shots.length - 1];
-  const b = B - shot.from, m = meta(shot.take), f = srcFrame(shot, m, b), fi = Math.max(0, Math.min(m.frames - 1, Math.round(f)));
+  const FPS = cut.fps || 60, t = i / FPS, B = t / SPB, shot = cut.shots.find(s => B >= s.from && B < s.to) || cut.shots[cut.shots.length - 1];
+  const b = B - shot.from, m = takeOf(shot), f = srcFrame(shot, m, b), fi = Math.max(0, Math.min(m.frames - 1, Math.round(f)));
   const SW = m.size[0], SH = m.size[1], dsf = m.dsf, aspect = cut.w / cut.h;
   let z = keyed(shot.zoom, b, 1) * (1 + hits(shot.punch, b));
   const sh = hits(shot.shake, b) * (cut.w / 1920); // px of output
@@ -74,7 +105,8 @@ function frameSpec(cut, i) {
   const margin = Math.abs(sh) * 1.4 * (cw / cut.w); z = Math.max(z, cw / Math.max(1, cw - 2 * margin));
   cw /= z; ch /= z;
   let fx, fy;
-  if (shot.focus === 'pan') { fx = keyed(shot.pan, b, m.view.w / 2) * dsf; fy = SH / 2; }
+  if (shot.focus === 'center') { fx = SW / 2; fy = SH / 2; } // the take's own (directed) camera framed it
+  else if (shot.focus === 'pan') { fx = keyed(shot.pan, b, m.view.w / 2) * dsf; fy = SH / 2; }
   else if (Array.isArray(shot.focus)) { fx = shot.focus[0] * dsf; fy = shot.focus[1] * dsf; }
   else {
     let p;
@@ -95,15 +127,19 @@ function frameSpec(cut, i) {
     const lt = (B - o.from) * SPB; overlays.push({ ...o, lt, dur: (o.to - o.from) * SPB });
     if (o.style === 'slam' || o.style === 'stack') flash = Math.max(flash, .32 * Math.max(0, 1 - lt / .1));
   }
-  return { src: 'file://' + frameFile(m, f), sx: +sx.toFixed(2), sy: +sy.toFixed(2), sw: +cw.toFixed(2), sh: +ch.toFixed(2), dim: shot.dim || 0, blur: shot.blur || 0, overlays, flash };
+  // a cut into this shot: a white pop, and a zoom or whip that settles in a few frames
+  const st = b * SPB; if (shot.flash) flash = Math.max(flash, shot.flash * Math.max(0, 1 - st / .12));
+  const xd = shot.xdur || .16, xin = shot.xin && st < xd ? { kind: shot.xin, k: +(st / xd).toFixed(3), dir: shot.xdir || [0, 1] } : null;
+  return { src: 'file://' + frameFile(m, f), sx: +sx.toFixed(2), sy: +sy.toFixed(2), sw: +cw.toFixed(2), sh: +ch.toFixed(2), dim: shot.dim || 0, blur: shot.blur || 0, overlays, flash,
+    xin, grade: cut.grade || 0, mass: (m.track[fi] || {}).m || 0, spb: SPB };
 }
 
 // ---------- the sound: every logged game sound that plays on screen, at the moment it shows ----------
 function soundEvents(cut) {
-  const ev = [], total = cut.beats * SPB * FPS;
+  const FPS = cut.fps || 60, ev = [], total = Math.round(cutSecs(cut) * FPS);
   for (let i = 0; i < total; i++) {
     const B = i / FPS / SPB, shot = cut.shots.find(s => B >= s.from && B < s.to); if (!shot) continue;
-    if (shot.mute) continue; const m = meta(shot.take), b = B - shot.from;
+    if (shot.mute) continue; const m = takeOf(shot), b = B - shot.from;
     const f1 = srcFrame(shot, m, b), f0 = (B - 1 / FPS / SPB < shot.from) ? f1 - .51 : srcFrame(shot, m, b - 1 / FPS / SPB);
     if (f1 <= f0) continue;
     for (const s of m.sfx) if (s.f > f0 && s.f <= f1) ev.push({ t: (i - (f1 - s.f) / (f1 - f0)) / FPS, k: s.k, a: s.a });
@@ -112,6 +148,15 @@ function soundEvents(cut) {
   return ev.sort((a, b) => a.t - b.t);
 }
 
+const cutSecs = cut => cut.secs || cut.beats * SPB;
+// H.264 in BT.709, limited range, tagged as such (the screenshots are full-range JPEG: converted, not just relabelled)
+const COLOR = ['-vf', 'scale=in_range=full:out_range=tv:in_color_matrix=bt601:out_color_matrix=bt709,format=yuv420p', '-color_range', 'tv', '-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709'];
+const ENC = {
+  // for TikTok, Reels and Shorts: they re-encode, so give them as clean a source as they accept
+  social: fps => ['-c:v', 'libx264', '-preset', arg.preview ? 'veryfast' : 'slow', '-crf', arg.preview ? '22' : '15', '-aq-mode', '3', '-profile:v', 'high', '-level', '4.2', '-r', String(fps)],
+  // App Store app previews: H.264 High Profile up to Level 4.0, 10-12 Mbps, progressive, at most 30 fps
+  appstore: fps => ['-c:v', 'libx264', '-preset', arg.preview ? 'veryfast' : 'slow', '-b:v', '11M', '-maxrate', '12M', '-bufsize', '12M', '-aq-mode', '3', '-profile:v', 'high', '-level', '4.0', '-r', String(Math.min(30, fps))],
+};
 function ff(args) { execFileSync(FFMPEG, ['-hide_banner', '-v', 'error', '-y', ...args], { stdio: ['ignore', 'ignore', 'inherit'] }); }
 function loudness(file) {
   const r = require('child_process').spawnSync(FFMPEG, ['-hide_banner', '-i', file, '-af', 'loudnorm=I=-14:TP=-1.5:LRA=11:print_format=json', '-f', 'null', '-'], { encoding: 'utf8' });
@@ -126,14 +171,46 @@ function normalize(inp, out, I) {
   }
 }
 
+// the compositor page, sized for the cut
+async function openEditor(browser, cut) {
+  const page = await browser.newPage();
+  await page.send('Page.enable'); await page.send('Runtime.enable');
+  await page.send('Emulation.setDeviceMetricsOverride', { width: cut.w, height: cut.h, deviceScaleFactor: 1, mobile: false });
+  const html = path.join(WORK, 'editor.html'); fs.writeFileSync(html, EDITOR);
+  fs.copyFileSync(path.join(ROOT, 'ios/Mitosis/Assets.xcassets/AppIcon.appiconset/icon-1024.png'), path.join(WORK, 'icon.png'));
+  await page.send('Page.navigate', { url: 'file://' + html });
+  for (let i = 0; ; i++) { if (await page.eval('typeof window.frame==="function"&&document.readyState==="complete"').catch(() => false)) break; if (i > 300) throw new Error('editor page did not load'); await sleep(200); }
+  if (!await page.eval('ready()')) console.warn('  warning: the game fonts did not load in the editor');
+  await page.eval(`size(${cut.w}, ${cut.h})`);
+  return page;
+}
+
+// --stills=0,.5,1.2: single frames (seconds into the cut) as JPEGs in out/stills/, to check a look without a render
+async function stills(browser, cut) {
+  SRC = srcDir(cut.set); prepare(cut);
+  const FPS = cut.fps || 60, dir = path.join(OUT, 'stills'); fs.mkdirSync(dir, { recursive: true });
+  const page = await openEditor(browser, cut);
+  try {
+    for (const t of String(arg.stills).split(',').map(Number)) {
+      await page.eval(`frame(${JSON.stringify(frameSpec(cut, Math.round(t * FPS)))})`);
+      const shot = await page.send('Page.captureScreenshot', { format: 'jpeg', quality: 90 });
+      const file = path.join(dir, `${cut.name}-${t.toFixed(2)}s.jpg`); fs.writeFileSync(file, Buffer.from(shot.data, 'base64')); console.log('  wrote', path.relative(ROOT, file));
+    }
+  } finally { await page.close(); }
+}
+
 async function render(browser, cut) {
-  const total = Math.round(cut.beats * SPB * FPS), dur = total / FPS, tmp = path.join(WORK, 'edit', cut.name);
+  if (arg.stills) return stills(browser, cut);
+  SRC = srcDir(cut.set);
+  // --secs=5: just the opening (a quick look at the hook), written as <name>-first5s.mp4
+  const FPS = cut.fps || 60, total = Math.round(Math.min(cutSecs(cut), +arg.secs || Infinity) * FPS), dur = total / FPS, tmp = path.join(WORK, 'edit', cut.name);
+  const name = cut.name + (arg.secs ? `-first${arg.secs}s` : '');
   fs.mkdirSync(tmp, { recursive: true }); fs.mkdirSync(OUT, { recursive: true });
-  for (const s of cut.shots) meta(s.take);
-  console.log(`${cut.name}: ${cut.w}×${cut.h}, ${dur.toFixed(2)} s, ${cut.shots.length} shots`);
+  prepare(cut);
+  console.log(`${name}: ${cut.w}×${cut.h} at ${FPS} fps, ${dur.toFixed(2)} s, ${cut.shots.length} shots`);
 
   // sound first (quick): the sfx bed and the music, then the two mixes
-  const events = soundEvents(cut);
+  const events = soundEvents(cut).filter(e => e.t < dur);
   const a = await renderAudio(browser, { events, dur, score: cut.music ? { ...cut.music, bpm: BPM } : null, sr: SR });
   const sfxWav = path.join(tmp, 'sfx.wav'), musWav = path.join(tmp, 'music.wav');
   fs.writeFileSync(sfxWav, a.sfx); if (a.music) fs.writeFileSync(musWav, a.music);
@@ -149,19 +226,11 @@ async function render(browser, cut) {
   }
 
   // picture
-  const page = await browser.newPage();
+  const page = await openEditor(browser, cut);
   const video = path.join(tmp, 'video.mp4');
   try {
-    await page.send('Page.enable'); await page.send('Runtime.enable');
-    await page.send('Emulation.setDeviceMetricsOverride', { width: cut.w, height: cut.h, deviceScaleFactor: 1, mobile: false });
-    const html = path.join(WORK, 'editor.html'); fs.writeFileSync(html, EDITOR);
-    fs.copyFileSync(path.join(ROOT, 'ios/Mitosis/Assets.xcassets/AppIcon.appiconset/icon-1024.png'), path.join(WORK, 'icon.png'));
-    await page.send('Page.navigate', { url: 'file://' + html });
-    for (let i = 0; ; i++) { if (await page.eval('typeof window.frame==="function"&&document.readyState==="complete"').catch(() => false)) break; if (i > 300) throw new Error('editor page did not load'); await sleep(200); }
-    if (!await page.eval('ready()')) console.warn('  warning: the game fonts did not load in the editor');
-    await page.eval(`size(${cut.w}, ${cut.h})`);
     const enc = spawn(FFMPEG, ['-hide_banner', '-v', 'error', '-y', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-',
-      '-c:v', 'libx264', '-preset', arg.preview ? 'veryfast' : 'slow', '-crf', arg.preview ? '22' : '16', '-pix_fmt', 'yuv420p', '-profile:v', 'high', '-r', String(FPS), '-movflags', '+faststart', video], { stdio: ['pipe', 'ignore', 'inherit'] });
+      ...COLOR, ...ENC[cut.enc || 'social'](FPS), '-movflags', '+faststart', video], { stdio: ['pipe', 'ignore', 'inherit'] });
     const done = new Promise((res, rej) => enc.on('exit', c => c === 0 ? res() : rej(new Error('ffmpeg exited ' + c))));
     const t0 = Date.now();
     for (let i = 0; i < total; i++) {
@@ -176,9 +245,9 @@ async function render(browser, cut) {
 
   // the two versions: same picture, with and without the music
   const outs = [];
-  const mux = (wav, file) => { ff(['-i', video, '-i', wav, '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '256k', '-ar', String(SR), '-shortest', '-movflags', '+faststart', file]); outs.push(file); };
-  if (a.music) mux(mixMu, path.join(OUT, cut.name + '.mp4'));
-  mux(mixNo, path.join(OUT, cut.name + '-nomusic.mp4'));
+  const mux = (wav, file) => { ff(['-i', video, '-i', wav, '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '256k', '-ar', String(SR), '-ac', '2', '-shortest', '-movflags', '+faststart', file]); outs.push(file); };
+  if (a.music) mux(mixMu, path.join(OUT, name + '.mp4'));
+  if (!arg.secs) mux(mixNo, path.join(OUT, name + '-nomusic.mp4'));
   for (const o of outs) console.log('  wrote', path.relative(ROOT, o));
 }
 
