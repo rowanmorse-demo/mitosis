@@ -696,6 +696,15 @@ body:not(.playing) #tip{display:none}
 .lb-bots{position:relative;z-index:2;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:3px;padding:3px;border-radius:14px;background:rgba(0,0,0,.4);box-shadow:inset 0 1px 2px rgba(0,0,0,.5)}
 .lb-bots button{appearance:none;border:0;background:none;min-width:0;height:38px;padding:0 2px;border-radius:11px;color:var(--muted);font:700 12px/1 var(--display);cursor:pointer;transition:background .2s,color .2s,box-shadow .2s}
 .lb-bots button[aria-checked=true]{color:var(--k);background:linear-gradient(180deg,rgba(255,255,255,.15),rgba(255,255,255,.05));box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 3px 10px -3px rgba(0,0,0,.5)}
+/* Casual: the host picks bot difficulty and density on the card (not in Settings; ranked always plays standard). With
+   two rows here, every card's foot grows to match so the titles stay level */
+.lb-cards:has(#lbDens) .lb-mcard{grid-template-rows:minmax(0,1fr) 80px}
+.lb-cset{position:relative;z-index:2;display:grid;gap:6px;align-content:center;min-width:0}
+.lb-crow{display:grid;grid-template-columns:76px minmax(0,1fr);align-items:center;gap:8px;min-width:0}
+.lb-crow>span{font:600 9.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.lb-crow .lb-bots button{height:34px}
+#lbDens{grid-template-columns:repeat(3,minmax(0,1fr));--k:var(--ink)}
+@media (max-width:720px){.lb-crow{grid-template-columns:56px minmax(0,1fr);gap:6px}.lb-crow>span{font-size:8.5px;letter-spacing:.04em}.lb-crow .lb-bots button{font-size:11px}} /* the SE: five difficulties in a narrow card */
 .lb-bots [data-k=easy]{--k:var(--lb-mint)}.lb-bots [data-k=normal]{--k:var(--ink)}.lb-bots [data-k=hard]{--k:#ffc04d}.lb-bots [data-k=expert]{--k:#ff7aa0}.lb-bots [data-k=master]{--k:#c9a4ff}
 /* Nearby lobby: who is here, the match settings, and the host who picks them */
 .lb-near{display:none;gap:4px;margin:0 0 8px;padding:9px 10px 9px 13px;border-radius:16px;background:rgba(108,184,255,.08);box-shadow:inset 0 0 0 1px rgba(108,184,255,.22)}
@@ -2985,7 +2994,7 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
         <div class="lb-mcard" data-m="ranked"><button type="button" class="lb-mpick" role="radio" data-m="ranked" aria-checked="true"><span class="lb-mart"><svg viewBox="0 0 200 120" aria-hidden="true"><g stroke="#ffcf5c" stroke-width="2" stroke-linecap="round" stroke-dasharray="2 6" opacity=".45"><path d="M100 64L34 18M100 64L166 18M100 64L18 64M100 64L182 64M100 64L66 4M100 64L134 4"/></g><circle cx="38" cy="90" r="10" fill="#ff5c8a" opacity=".55"/><circle cx="164" cy="34" r="6" fill="#9a8cff" opacity=".7"/><circle cx="160" cy="96" r="13" fill="#5fe0a8" opacity=".3"/><circle cx="46" cy="30" r="4" fill="#ffcf5c" opacity=".8"/><path d="M63 50l17 16 20-29 20 29 17-16-6 42H69z" fill="url(#lbgGold)" stroke="#6e4304" stroke-width="2.5" stroke-linejoin="round"/><rect x="67" y="96" width="66" height="10" rx="4" fill="url(#lbgGold)" stroke="#6e4304" stroke-width="2.5"/><circle cx="100" cy="34" r="5.5" fill="#fff6d6" stroke="#6e4304" stroke-width="2"/><circle cx="61" cy="47" r="4.5" fill="#fff6d6" stroke="#6e4304" stroke-width="2"/><circle cx="139" cy="47" r="4.5" fill="#fff6d6" stroke="#6e4304" stroke-width="2"/><circle cx="100" cy="78" r="7" fill="#ff5c8a" stroke="#6e4304" stroke-width="2"/></svg></span><b>Ranked</b><small>Online · rated</small></button>
           <div class="lb-mstat" id="lbRankStat"><p id="netLine" class="lb-netline"><i></i><span>Connecting…</span></p><p id="roundLine" hidden></p><p class="lb-need" id="lbNeed">Needs Wi-Fi or cellular</p></div></div>
         <div class="lb-mcard" data-m="casual"><button type="button" class="lb-mpick" role="radio" data-m="casual" aria-checked="false"><span class="lb-mart"><svg viewBox="0 0 200 120" aria-hidden="true"><circle cx="36" cy="42" r="12" fill="#ff8a5c" opacity=".65"/><circle cx="166" cy="80" r="14" fill="#9a8cff" opacity=".55"/><circle cx="46" cy="96" r="7" fill="#ffcf5c" opacity=".6"/><circle cx="158" cy="30" r="6" fill="#ff5c8a" opacity=".75"/><circle cx="24" cy="70" r="4" fill="#6cb8ff" opacity=".7"/><path d="M100 40V24" stroke="#0b4d33" stroke-width="3.5" stroke-linecap="round"/><circle cx="100" cy="19" r="7" fill="url(#lbgMint)" stroke="#0b4d33" stroke-width="2.5"/><rect x="57" y="58" width="10" height="22" rx="5" fill="#1b8d61" stroke="#0b4d33" stroke-width="2.5"/><rect x="133" y="58" width="10" height="22" rx="5" fill="#1b8d61" stroke="#0b4d33" stroke-width="2.5"/><rect x="65" y="38" width="70" height="60" rx="20" fill="url(#lbgMint)" stroke="#0b4d33" stroke-width="2.5"/><rect x="77" y="54" width="46" height="26" rx="13" fill="#062018"/><circle cx="90" cy="67" r="5.5" fill="#8cf3c8"/><circle cx="110" cy="67" r="5.5" fill="#8cf3c8"/></svg></span><b>Casual</b><small>Bots · offline</small></button>
-          <div class="lb-bots" id="lbSkill" role="radiogroup" aria-label="Bot difficulty"><button type="button" role="radio" data-k="easy">Easy</button><button type="button" role="radio" data-k="normal">Normal</button><button type="button" role="radio" data-k="hard">Hard</button><button type="button" role="radio" data-k="expert">Expert</button><button type="button" role="radio" data-k="master">Master</button></div></div>
+          <div class="lb-cset"><div class="lb-crow"><span id="lbSkillL">Difficulty</span><div class="lb-bots" id="lbSkill" role="radiogroup" aria-labelledby="lbSkillL"><button type="button" role="radio" data-k="easy">Easy</button><button type="button" role="radio" data-k="normal">Normal</button><button type="button" role="radio" data-k="hard">Hard</button><button type="button" role="radio" data-k="expert">Expert</button><button type="button" role="radio" data-k="master">Master</button></div></div><div class="lb-crow"><span id="lbDensL">Density</span><div class="lb-bots" id="lbDens" role="radiogroup" aria-labelledby="lbDensL"><button type="button" role="radio" data-d="calm">Calm</button><button type="button" role="radio" data-d="standard">Normal</button><button type="button" role="radio" data-d="hostile">Hostile</button></div></div></div></div>
         <div class="lb-mcard" data-m="nearby" hidden><button type="button" class="lb-mpick" role="radio" data-m="nearby" aria-checked="false"><span class="lb-mart"><svg viewBox="0 0 200 120" aria-hidden="true"><g fill="none" stroke="#6cb8ff" stroke-width="3" stroke-linecap="round"><path d="M80 47a19 19 0 0 1 0 26M120 47a19 19 0 0 0 0 26" opacity=".95"/><path d="M88 38a32 32 0 0 1 0 44M112 38a32 32 0 0 0 0 44" opacity=".55"/></g><circle cx="100" cy="60" r="6" fill="url(#lbgBlue)"/><rect x="28" y="26" width="40" height="70" rx="10" fill="#0a1a2c" stroke="url(#lbgBlue)" stroke-width="3"/><rect x="35" y="35" width="26" height="44" rx="4" fill="#163a63"/><circle cx="48" cy="57" r="7" fill="#ff5c8a"/><rect x="132" y="26" width="40" height="70" rx="10" fill="#0a1a2c" stroke="url(#lbgBlue)" stroke-width="3"/><rect x="139" y="35" width="26" height="44" rx="4" fill="#163a63"/><circle cx="152" cy="57" r="7" fill="#5fe0a8"/><circle cx="48" cy="88" r="2.5" fill="#6cb8ff"/><circle cx="152" cy="88" r="2.5" fill="#6cb8ff"/></svg></span><b>Nearby</b><small>Phones around you</small></button>
           <div class="lb-mstat" id="lbNearStat"></div></div>
       </div>
@@ -2996,7 +3005,7 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
         <p class="lb-near-note" id="nearNote"></p>
         <div class="lb-near-rows">
           <div class="lb-near-row"><span id="nearKL">Bot difficulty</span><div class="lb-bots" data-set="k" role="radiogroup" aria-labelledby="nearKL"><button type="button" role="radio" data-v="easy" data-k="easy">Easy</button><button type="button" role="radio" data-v="normal" data-k="normal">Normal</button><button type="button" role="radio" data-v="hard" data-k="hard">Hard</button><button type="button" role="radio" data-v="expert" data-k="expert">Expert</button><button type="button" role="radio" data-v="master" data-k="master">Master</button></div></div>
-          <div class="lb-near-row"><span id="nearBL">Bots</span><div class="lb-bots c4" data-set="b" role="radiogroup" aria-labelledby="nearBL"><button type="button" role="radio" data-v="none">None</button><button type="button" role="radio" data-v="few">Few</button><button type="button" role="radio" data-v="normal">Normal</button><button type="button" role="radio" data-v="lots">Lots</button></div></div>
+          <div class="lb-near-row"><span id="nearBL">Density</span><div class="lb-bots c4" data-set="b" role="radiogroup" aria-labelledby="nearBL"><button type="button" role="radio" data-v="none">None</button><button type="button" role="radio" data-v="few">Few</button><button type="button" role="radio" data-v="normal">Normal</button><button type="button" role="radio" data-v="lots">Lots</button></div></div>
           <div class="lb-near-row"><span id="nearLL">Round</span><div class="lb-bots c3" data-set="len" role="radiogroup" aria-labelledby="nearLL"><button type="button" role="radio" data-v="180">3 min</button><button type="button" role="radio" data-v="300">5 min</button><button type="button" role="radio" data-v="600">10 min</button></div></div>
           <div class="lb-near-row"><span id="nearVL">Lives</span><div class="lb-bots c3" data-set="lives" role="radiogroup" aria-labelledby="nearVL"><button type="button" role="radio" data-v="1">1</button><button type="button" role="radio" data-v="3">3</button><button type="button" role="radio" data-v="5">5</button></div></div>
           <div class="lb-near-row"><span>Players</span><ul class="lb-near-list" id="nearList"></ul></div>
@@ -3147,12 +3156,6 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
       <div class="st-tabs" id="stTabs" role="tablist" aria-label="Settings"><button type="button" role="tab" id="stTabGame" aria-controls="stGame" aria-selected="true">Game</button><button type="button" role="tab" id="stTabControls" aria-controls="stControls" aria-selected="false" tabindex="-1">Controls</button><button type="button" role="tab" id="stTabVideo" aria-controls="stVideo" aria-selected="false" tabindex="-1">Video</button><button type="button" role="tab" id="stTabAudio" aria-controls="stAudio" aria-selected="false" tabindex="-1">Audio</button><button type="button" role="tab" id="stTabAccount" aria-controls="stAccount" aria-selected="false" tabindex="-1">Account</button></div></header>
     <div class="st-panels">
       <section class="st-panel" id="stGame" role="tabpanel" aria-labelledby="stTabGame">
-        <div class="st-grp"><h3 class="st-h">Match</h3><div class="st-list">
-          <div class="srow"><span class="sl">Density</span>
-            <div class="seg" id="diff"><button type="button" data-d="calm">Calm</button><button type="button" data-d="standard" data-def>Normal</button><button type="button" data-d="hostile">Hostile</button></div></div>
-          <div class="srow"><span class="sl">Bots</span>
-            <div class="seg five" id="skillSeg"><button type="button" data-k="easy">Easy</button><button type="button" data-k="normal" data-def>Normal</button><button type="button" data-k="hard">Hard</button><button type="button" data-k="expert">Expert</button><button type="button" data-k="master">Master</button></div></div>
-        </div></div>
         <div class="st-grp"><h3 class="st-h">Online</h3><div class="st-list">
           <div class="srow" title="With a ping over this, Play in Ranked starts a bot game"><span class="sl">Max ping</span>
             <div class="seg four" id="pingSeg"><button type="button" data-ms="100" data-def>100 ms</button><button type="button" data-ms="150">150 ms</button><button type="button" data-ms="250">250 ms</button><button type="button" data-ms="0">Any</button></div></div>
@@ -3567,6 +3570,7 @@ const SKILL={easy:{label:'Easy',aggr:.3,think:.44,caution:.55},normal:{label:'No
 // Nearby match settings: the host phone picks them in the lobby and the others follow (see nearIngest)
 const NEAR_BOTS={none:0,few:20,normal:40,lots:60},NEAR_LEN=[180,300,600],NEAR_LIVES=[1,3,5],near={k:'normal',b:'normal',len:300,lives:3,m:0,heard:false,tx:0,sq:0,txn:0,txb:0,rx:0,rxb:0,logAt:0,fN:0,sqAt:new Map(),was:null,wasName:''};
 const nearMode=()=>{const N=window.__mitosisNet;return !local&&!!N&&N.mode==='nearby';};
+const diffNow=()=>DIFF[local==='practice'&&DIFF[settings.diff]?settings.diff:'standard']; // Density is Casual's alone: ranked (live or vs bots) and the rest play standard
 const skillNow=()=>SKILL[local==='practice'?(settings.botSkill||'normal'):local==='auto'?'master':nearMode()?near.k:'normal']||SKILL.normal; // ranked games of bots: Master (Rowan, Nov 7)
 const STAINS=[[340,100,68],[250,100,76],[174,62,54],[40,90,58],[18,100,64],[200,25,88]];
 /* ================= skin art ================= */
@@ -9095,7 +9099,7 @@ function becomeClient(){
 function becomeHost(){
   if(isHost)return;isHost=true;
   if(!ev.type)evNext=T+rand(40,70);
-  for(const [,pl] of botProx){pl.remote=false;pl.boss=pl.bid===BOSS_BID;if(pl.boss){pl.ai.pers=PERS.boss;}else pl.ai.pers=PERS[PERS_LIST[Math.floor(h32(pl.bid*31+7)*PERS_LIST.length)]];pl.ai.t=0;pl.ai.aggr=clamp(DIFF[settings.diff].aggr*rand(.6,1.3),.1,1);pl.respawnAt=T+2;pl.fx={magnet:0,shield:0,surge:0};pl.stats.born=T;
+  for(const [,pl] of botProx){pl.remote=false;pl.boss=pl.bid===BOSS_BID;if(pl.boss){pl.ai.pers=PERS.boss;}else pl.ai.pers=PERS[PERS_LIST[Math.floor(h32(pl.bid*31+7)*PERS_LIST.length)]];pl.ai.t=0;pl.ai.aggr=clamp(skillNow().aggr*rand(.6,1.3),.1,1.2);pl.respawnAt=T+2;pl.fx={magnet:0,shield:0,surge:0};pl.stats.born=T;
     for(const c of pl.cells){c.vx=c.vy=0;c.mergeAt=T+4;}}
   botProx.clear();
   for(const v of freeV){v.vx=v.vy=0;vidC=Math.max(vidC,v.id+1);}
@@ -9188,10 +9192,10 @@ function onRoomErr(){
 /* ================= flow ================= */
 const botSkin=b=>b===BOSS_BID?4:h32(b*53+3)<.45?0:1+Math.floor(h32(b*59+1)*4);
 // Every real player who joins replaces BOTS_PER_PLAYER microbes, down to 30% of the chosen density.
-function botTarget(){const n=nearMode()?NEAR_BOTS[near.b]:DIFF[settings.diff].bots;return Math.max(Math.round(n*.3),n-Math.max(0,peerCount-1)*BOTS_PER_PLAYER);}
+function botTarget(){const n=nearMode()?NEAR_BOTS[near.b]:diffNow().bots;return Math.max(Math.round(n*.3),n-Math.max(0,peerCount-1)*BOTS_PER_PLAYER);}
 function syncBots(){
   if(!isHost)return;
-  const cfg=DIFF[settings.diff];let want=botTarget(),bots=players.filter(p=>p.bot&&!p.remote&&!p.boss);
+  let want=botTarget(),bots=players.filter(p=>p.bot&&!p.remote&&!p.boss);
   const massOf=p=>p.cells.reduce((s,c)=>s+(c.dead?0:c.mass),0);bots.sort((a,b)=>massOf(b)-massOf(a));
   while(bots.length>want)removePlayer(bots.pop()); // the smallest microbes leave first
   cells=cells.filter(c=>!c.dead);
@@ -9340,8 +9344,9 @@ function renderAch(){ // the Profile's achievements: how many you have, their ba
 }
 $('achAll').addEventListener('click',()=>{achAll=!achAll;renderAch();});
 achLine();
-const diffEl=$('diff');const syncDiff=()=>{[...diffEl.children].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.d===settings.diff)));};
-diffEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.diff=b.dataset.d;syncDiff();});syncDiff();
+// Casual › Density (how many bots: Calm 40 · Normal 60 · Hostile 80), picked on the Casual card; ranked plays standard (diffNow)
+const densEl=$('lbDens'),syncDens=()=>[...densEl.children].forEach(b=>b.setAttribute('aria-checked',String(b.dataset.d===settings.diff)));
+densEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.diff=b.dataset.d;saveSettings();syncDens();setPlayMode('casual');});syncDens();
 const fxSegEl=$('fxSeg'),syncFxSeg=()=>[...fxSegEl.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.fx==='1')===!!settings.lowFx)));
 fxSegEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.lowFx=b.dataset.fx==='1';lowFx=settings.lowFx||saverOn;saveSettings();syncFxSeg();});syncFxSeg();
 /* battery saver: Settings, or the app reporting Low Power Mode or a hot phone: 30 fps in play, lighter effects, no glass
@@ -9691,12 +9696,12 @@ $('nearSheet').addEventListener('click',e=>{
   const key=b.parentElement.dataset.set;near[key]=key==='len'||key==='lives'?+b.dataset.v:b.dataset.v;nearApply();
   settings.nearby={k:near.k,b:near.b,len:near.len,lives:near.lives};saveSettings();nearSheetSync();nearSync();Native.haptic('light');});
 addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('nearSheet').hidden){e.preventDefault();e.stopImmediatePropagation();$('nearSheet').hidden=true;}},true);
-const syncSkill=()=>{const k=SKILL[settings.botSkill]?settings.botSkill:'normal';const b=$('skillBtn');b.textContent=SKILL[k].label;b.dataset.k=k;[...$('skillSeg').children].forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.k===k)));};
+const syncSkill=()=>{const k=SKILL[settings.botSkill]?settings.botSkill:'normal';const b=$('skillBtn');b.textContent=SKILL[k].label;b.dataset.k=k;};
 $('skillBtn').addEventListener('click',()=>{const i=SKILL_LIST.indexOf(settings.botSkill||'normal');settings.botSkill=SKILL_LIST[(i+1)%SKILL_LIST.length];saveSettings();syncSkill();toast('Bots',`${SKILL[settings.botSkill].label} bots`,'Used in practice and offline games');});
 if(settings.maxPing==null){settings.maxPing=settings.highPing?0:100;delete settings.highPing;saveSettings();} // was one Allow high ping switch
 {const seg=$('pingSeg'),sync=()=>[...seg.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.ms|0)===(settings.maxPing|0))));
   seg.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.maxPing=b.dataset.ms|0;saveSettings();sync();});sync();}
-$('skillSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.botSkill=b.dataset.k;saveSettings();syncSkill();});syncSkill();
+syncSkill();
 $('resPlay').addEventListener('click',startGame);
 $('setup').addEventListener('click',()=>{leaveLocal();mode='attract';achLine();showCard('startCard');});
 $('resume').addEventListener('click',()=>setPaused(false));
