@@ -943,6 +943,7 @@ body.saver .lb-bg *{animation:none!important}
 #storeCard .sv-atp>*{flex:none}#storeCard .sv-atp::before,#storeCard .sv-atp::after{content:"";flex:1 1 0}
 #storeCard .sv-atp::-webkit-scrollbar{display:none}
 #storeCard .sv-atp .packs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) minmax(0,1.3fr);gap:12px;width:100%;max-width:1000px}
+#storeCard .sv-atp .packs.n4{grid-template-columns:repeat(4,minmax(0,1fr))} /* the top pack is not on sale in this store yet: four across */
 #storeCard .sv-pack{--pg:.2;appearance:none;position:relative;overflow:hidden;display:grid;grid-template-rows:minmax(0,1fr) auto auto;justify-items:center;gap:6px;min-width:0;padding:26px 10px 10px;border-radius:22px;cursor:pointer;color:var(--ink);text-align:center;
   border:1px solid rgba(242,177,52,.3);background:radial-gradient(90% 60% at 50% 34%,rgba(255,180,60,var(--pg)),transparent 72%),linear-gradient(180deg,rgba(38,30,12,.88),rgba(8,14,14,.94));
   box-shadow:inset 0 1px 0 rgba(255,230,170,.14),0 12px 28px rgba(0,0,0,.42);transition:transform .12s,box-shadow .15s,border-color .15s}
@@ -1024,7 +1025,7 @@ body.saver .lb-bg *{animation:none!important}
   #storeCard .svc .sn{font-size:11.5px;padding:0 2px}
   #storeCard .svc .sp{font-size:11px;padding:0 7px 0 5px}
   #storeCard .sv-atp{grid-row:2/-1;padding-top:14px}#storeCard .sv-atp::before{display:none}
-  #storeCard .sv-atp .packs{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  #storeCard .sv-atp .packs,#storeCard .sv-atp .packs.n4{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
   #storeCard .sv-pack{padding:24px 8px 8px;gap:4px;border-radius:20px}#storeCard .pk-art svg{max-height:86px}#storeCard .pk-amt b{font-size:24px}#storeCard .sv-pack .pr{height:40px}
   #storeCard .sv-pack.t5{grid-column:1/-1;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:1fr auto;align-items:center;column-gap:12px;padding:24px 12px 12px}#storeCard .sv-pack.t5 .pk-art svg{max-height:100px}
   #storeCard .sv-pack.t5 .pk-art{grid-row:1/3}
@@ -3779,7 +3780,7 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
     <section class="sv-atp" id="packSec" role="tabpanel" aria-labelledby="tabAtp" hidden>
       <p class="sv-need" id="storeNeed" hidden></p>
       <div class="packs" id="packs"></div>
-      <div class="sv-earn"><span class="sv-earn-h">Earn in ranked</span><ul id="earnList"></ul></div>
+      
       <p class="hint" id="storeHint"></p>
     </section>
   </div>
@@ -8240,7 +8241,8 @@ for(const id of['bpQuests'])$(id).addEventListener('click',e=>{const b=e.target.
 $('qsAll').addEventListener('click',()=>qsClaim({all:true},$('qsAll')));
 function renderEarn(){ // the placement payouts, from the server's rules when we have them: medals for the podium, then the top-N brackets
   const br=(wallet.catalog&&wallet.catalog.rules&&wallet.catalog.rules.byRank)||[[1,25],[2,20],[3,16],[10,5],[30,1]],at=n=>(br.find(([r])=>n<=r)||[0,0])[1],last=br[br.length-1][0];
-  $('earnList').innerHTML=[1,2,3,10,last].map(n=>`<li class="${n<=3?'m'+n:'top'}" aria-label="${ordinal(n)} place, ${at(n)} ATP">${n<=3?`<i class="md" aria-hidden="true">${n}</i>`:`<span aria-hidden="true">Top ${n}</span>`}<b aria-hidden="true">+${at(n)}</b><i class="sv-coin" aria-hidden="true"></i></li>`).join('');
+  const el=$('earnList');if(!el)return; // the Shop no longer shows the payouts (Rowan, Nov 9)
+  el.innerHTML=[1,2,3,10,last].map(n=>`<li class="${n<=3?'m'+n:'top'}" aria-label="${ordinal(n)} place, ${at(n)} ATP">${n<=3?`<i class="md" aria-hidden="true">${n}</i>`:`<span aria-hidden="true">Top ${n}</span>`}<b aria-hidden="true">+${at(n)}</b><i class="sv-coin" aria-hidden="true"></i></li>`).join('');
 }
 // ATP store (packs are sold through the App Store / Google Play from inside the apps)
 let storeNeed=null,storeMsg=''; // storeNeed: what the player is short of ATP for ({price,name}); the note goes once the wallet covers it
@@ -8275,9 +8277,10 @@ function packPrices(){try{const c=JSON.parse(localStorage.getItem('mitosis.packP
 function renderPacks(products,loading){
   const el=$('packs'),cache=packPrices(),live=!!(products&&products.length),can=live&&wallet.online,anyCache=ATP_PACKS.some(P=>cache[P.id]);let html='';if(!loading)packList=products;
   storeMsg=products===null?storeMsg:loading?'':can?'':!wallet.online?'Offline · connect to buy':anyCache?(Native.platform==='android'?'Google Play':'App Store')+' unavailable · connect to buy':'Standard US prices · connect to buy';showStoreHint();
-  ATP_PACKS.forEach((P,i)=>{const lp=live&&products.find(x=>x.id===P.id),pr=lp?{price:lp.price}:products===null?null:{price:cache[P.id]||PACK_USD[P.id]},ok=!!(lp&&can),tg=P.tag?' tg-'+P.tag.toLowerCase().replace(/\W+/g,'-'):'';
+  ATP_PACKS.forEach((P,i)=>{const lp=live&&products.find(x=>x.id===P.id);if(live&&!lp)return; // the store answered without this pack (not on sale there yet): leave it out, not "Connect to buy"
+    const pr=lp?{price:lp.price}:products===null?null:{price:cache[P.id]||PACK_USD[P.id]},ok=!!(lp&&can),tg=P.tag?' tg-'+P.tag.toLowerCase().replace(/\W+/g,'-'):'';
     html+=`<button type="button" class="pack sv-pack t${i+1}${tg}${!ok&&pr?' wait':''}" data-id="${P.id}"${ok?'':' disabled'} aria-label="${P.atp.toLocaleString()} ATP, ${escH(P.label)}${pr?', '+escH(pr.price):''}${!ok&&pr&&!loading?', connect to buy':''}">${P.tag?'<span class="tag">'+escH(P.tag)+'</span>':''}<span class="pk-art" aria-hidden="true">${packArt(i)}</span><span class="pk-amt"><b>${P.atp.toLocaleString()}</b><small>${escH(P.label)}</small></span><span class="pr">${pr?escH(pr.price):'In the app'}${!ok&&pr&&!loading?'<small>Connect to buy</small>':''}</span></button>`;});
-  el.innerHTML=html;
+  el.innerHTML=html;el.classList.toggle('n4',el.children.length===4);
 }
 let buying=false,packList=null; // packList: the products the store last returned
 async function buyPack(id){
