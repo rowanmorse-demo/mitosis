@@ -102,8 +102,23 @@ async function post(url, body, secret) {
     }
     const big = levelOf(1e12); assert.ok(big.levelXp >= 0 && big.levelXp < big.levelNeed && xpAtLevel(big.level) + big.levelXp === 1e12, 'huge XP still lands inside a level');
   }
+  { // lifetime stats and rank trophies
+    const { lifeStats, stepsUpTo, LADDER, XP, QUESTS } = require('./economy');
+    assert.deepEqual(lifeStats({ survived: 300, place: 1, of: 20, eaten: 12 }), { played: 1, rounds: 1, wins: 1, podiums: 1, alive: 300, eaten: 12 }, 'a win is also a top-3 finish');
+    assert.deepEqual(lifeStats({ survived: 300, place: 3, of: 20 }), { played: 1, rounds: 1, wins: 0, podiums: 1, alive: 300, eaten: 0 });
+    assert.deepEqual(lifeStats({ survived: 300, place: 4, of: 20 }), { played: 1, rounds: 1, wins: 0, podiums: 0, alive: 300, eaten: 0 });
+    assert.deepEqual(lifeStats({ survived: 19, place: 1, of: 20, eaten: 5 }), { played: 0, rounds: 0, wins: 0, podiums: 0, alive: 0, eaten: 0 }, 'a life under 20 s counts for nothing');
+    assert.equal(lifeStats({ survived: 20 }).played, 1, '20 s counts'); assert.deepEqual(['rounds', 'wins'].map(k => lifeStats({ survived: 300, place: 1, of: 3 })[k]), [0, 0], 'a round of 3 is no round and wins nothing');
+    assert.deepEqual([60, 600].map(sec => lifeStats({ survived: sec, eaten: 1e6 }).eaten), [25, 160], 'cells absorbed: at most 10 + 15 a minute of the life');
+    assert.equal(lifeStats({ survived: 1e9 }).alive, XP.timeCapSec, 'a ranked life counts up to one round');
+    assert.deepEqual(lifeStats({ survived: 1e9, place: 1, of: 20, eaten: 50, mode: 'classic' }), { played: 1, rounds: 0, wins: 0, podiums: 0, alive: QUESTS.classicSec, eaten: 50 }, 'Classic: a life, its time and cells, no placing');
+    assert.deepEqual([stepsUpTo(0), stepsUpTo(74), stepsUpTo(75)], [['amoeba'], ['amoeba'], ['amoeba', 'colony']], 'a step trophy comes with its first division');
+    assert.deepEqual(stepsUpTo(1400), ['amoeba', 'colony', 'interphase', 'prophase', 'metaphase', 'anaphase']); assert.deepEqual(stepsUpTo(99999), LADDER.map(st => st.key), 'Mitosis brings every trophy');
+  }
   // rating: that run (15 s on the server clock, 10 kills) is a quick death: +0.5 survival +20 kills -7.5 penalty = +13
-  assert.equal(r.body.ratingDelta, 13); assert.equal(r.body.rating, 1013); assert.equal(r.body.tier, 'Silver');
+  assert.equal(r.body.ratingDelta, 13); assert.equal(r.body.rating, 13, 'from the start of 0'); assert.equal(r.body.tier, 'Bronze'); assert.equal(r.body.rank, 'Amoeba I');
+  assert.deepEqual(r.body.stats, { played: 0, rounds: 0, wins: 0, podiums: 0, alive: 0, eaten: 0, peak: 13 }, 'lifetime stats: a 15 s life counts for nothing, the peak still moves');
+  assert.deepEqual(r.body.trophies.map(t => t.step), ['amoeba'], 'a first ranked life wins the Amoeba trophy'); assert.ok(r.body.trophies.every(t => Math.abs(t.at - Date.now()) < 60e3), 'dated');
   // XP is capped the same way: ~15 s of time, so 2 XP however long the client says it lived
   assert.equal(r.body.xpGained, 2); assert.deepEqual(r.body.xpParts, { time: 2, place: 0, win: 0 }); assert.equal(r.body.xp, 2); assert.equal(r.body.level, 1); assert.equal(r.body.levelXp, 2); assert.equal(r.body.levelNeed, 100); assert.equal(r.body.levelUp, 0);
   r = await post('/api/run/end', { runId, survived: 9999, eaten: 10, peak: 800 }, secret);
@@ -111,8 +126,8 @@ async function post(url, body, secret) {
   r = await post('/api/run/end', { runId: 'nope' }, secret); assert.equal(r.status, 404);
   // an instant death with no kills loses rating
   r = await post('/api/run/start', {}, secret); const run2 = r.body.runId;
-  r = await post('/api/run/end', { runId: run2, survived: 0, eaten: 0, peak: 25, name: 'Tester' }, secret); assert.equal(r.body.ratingDelta, -10); assert.equal(r.body.rating, 1003);
-  const lb = await (await fetch(base + '/api/leaderboard')).json(); assert.equal(lb.top[0].name, 'Tester'); assert.equal(lb.top[0].rating, 1003);
+  r = await post('/api/run/end', { runId: run2, survived: 0, eaten: 0, peak: 25, name: 'Tester' }, secret); assert.equal(r.body.ratingDelta, -10); assert.equal(r.body.rating, 3);
+  const lb = await (await fetch(base + '/api/leaderboard')).json(); assert.equal(lb.top[0].name, 'Tester'); assert.equal(lb.top[0].rating, 3); assert.equal(lb.top[0].rankName, 'Amoeba I');
   { // connection report: the relay echoes pings, reports are checked and kept anonymously, and only the token opens the report
     const ws = new WebSocket(base.replace(/^http/, 'ws') + '/ws'); await new Promise((res, rej) => { ws.onopen = res; ws.onerror = rej; });
     const pong = new Promise(res => { ws.onmessage = e => { const m = JSON.parse(e.data); if (m.t === 'pong') res(m); }; });
@@ -263,6 +278,7 @@ async function post(url, body, secret) {
     const sec4 = 'xpsecret' + 'd'.repeat(24), store = (await (await fetch(base + '/health')).json()).store;
     r = await post('/api/session', { secret: sec4 }); assert.deepEqual([r.body.xp, r.body.level, r.body.levelXp, r.body.levelNeed], [0, 1, 0, 100], 'a new player is level 1 with no XP');
     assert.deepEqual(r.body.catalog.xp, require('./economy').XP, 'the catalogue carries the XP rules');
+    assert.deepEqual([r.body.trophies, r.body.stats], [[], { played: 0, rounds: 0, wins: 0, podiums: 0, alive: 0, eaten: 0, peak: 0 }], 'a new player has no trophies yet');
     r = await post('/api/run/start', {}, sec4); r = await post('/api/run/end', { runId: r.body.runId, survived: 9999, place: 1, of: 20, bestRank: 999 }, sec4);
     assert.equal(r.body.xpGained, 2, 'claiming a long winning life right after starting it earns only the time that passed');
     if (store === 'sqlite') {
@@ -277,6 +293,14 @@ async function post(url, body, secret) {
       r = await post('/api/run/start', {}, sec4); backdate(r.body.runId, 250);
       r = await post('/api/run/end', { runId: r.body.runId, survived: 200, place: 4, of: 7, bestRank: 999 }, sec4);
       assert.deepEqual([r.body.xpGained, r.body.levelUp], [40 + 30, 0], 'the client may claim less than the server saw');
+      assert.deepEqual([r.body.stats.played, r.body.stats.rounds, r.body.stats.wins, r.body.stats.podiums, r.body.stats.alive], [3, 3, 1, 1, 415 + 600 + 200], 'the 15 s life is not counted; last and 4th place are not podiums; time alive adds up, a life up to one round (600 s)');
+      // trophies come only from lives: a rating raised some other way waits for the next competitive life, which wins every step up to it
+      const won = r.body.trophies, h4 = require('crypto').createHash('sha256').update(sec4).digest('hex'); db.prepare('UPDATE players SET rating = 1850 WHERE secret = ?').run(h4);
+      r = await post('/api/session', { secret: sec4 }); assert.deepEqual(r.body.trophies, won, 'not at a session');
+      r = await post('/api/run/start', {}, sec4); r = await post('/api/run/end', { runId: r.body.runId, survived: 0, bestRank: 999 }, sec4);
+      assert.deepEqual(r.body.trophies.map(t => t.step), ['amoeba', 'colony', 'interphase', 'prophase', 'metaphase', 'anaphase'], 'a life from Anaphase III wins every step up to Anaphase, even when it loses rating');
+      assert.deepEqual(r.body.trophies.slice(0, won.length), won, 'the ones already won keep their date'); assert.ok(r.body.rating < 1850 && r.body.stats.peak === 1850, 'a loss lowers the rating, not the peak');
+      r = await post('/api/run/start', {}, sec4); r = await post('/api/run/end', { runId: r.body.runId, survived: 0, bestRank: 999 }, sec4); assert.equal(r.body.trophies.length, 6, 'nor the trophies');
       db.close();
       r = await post('/api/session', { secret: sec4 }); assert.deepEqual([r.body.xp, r.body.level, r.body.levelXp], [374, 3, 124], 'XP is stored');
     } else console.log('(JSON store: skipping the backdated XP lives)');
@@ -312,16 +336,18 @@ async function post(url, body, secret) {
   r = await post('/api/auth/apple', { identityToken: apple().slice(0, -6) + 'AAAAAA', nonce: 'n1' }, secret); assert.equal(r.status, 401, 'tampered signature rejected');
   r = await post('/api/auth/apple', { identityToken: 'not.a.token', nonce: 'n1' }, secret); assert.equal(r.status, 401);
   r = await post('/api/session', { secret }); assert.equal(r.body.account.provider, 'apple', 'the account shows on every session');
-  const acctXp = r.body.xp; assert.ok(acctXp > 0, 'the account has XP from its runs');
+  const acctXp = r.body.xp, acctStats = r.body.stats, acctTrophies = r.body.trophies; assert.ok(acctXp > 0, 'the account has XP from its runs'); assert.ok(acctTrophies.length > 0);
 
   // A second device signs in with the same Apple account: it joins the account and brings its own ATP along
   const secret2 = 'secondsecret' + 'b'.repeat(20);
   r = await post('/api/session', { secret: secret2 }); assert.equal(r.body.balance, 0); assert.equal(r.body.account, null);
   r = await post('/api/iap/google', { purchaseToken: 'tok3', productId: 'atp_500', orderId: 'GPA.3' }, secret2); assert.equal(r.body.balance, 500);
-  r = await post('/api/run/start', {}, secret2); r = await post('/api/run/end', { runId: r.body.runId, survived: 9999, eaten: 0, peak: 25, bestRank: 999 }, secret2); assert.equal(r.body.xp, 2);
+  r = await post('/api/run/start', {}, secret2); r = await post('/api/run/end', { runId: r.body.runId, survived: 9999, eaten: 0, peak: 25, bestRank: 999 }, secret2); assert.equal(r.body.xp, 2); const dev2 = r.body;
   r = await post('/api/font', { font: 30 }, secret2); assert.equal(r.body.nameFont, 30);
   r = await post('/api/auth/apple', { identityToken: apple(), nonce: 'n1' }, secret2);
-  assert.equal(r.status, 200); assert.equal(r.body.merged, true); assert.equal(r.body.balance, 2200, 'the two wallets merge'); assert.equal(r.body.xp, acctXp + 2, 'and so does their XP'); assert.deepEqual(r.body.skins, [9]); assert.equal(r.body.account.provider, 'apple');
+  assert.equal(r.status, 200); assert.equal(r.body.merged, true); assert.equal(r.body.balance, 2200, 'the two wallets merge'); assert.equal(r.body.xp, acctXp + 2, 'and so does their XP');
+  assert.deepEqual(r.body.stats, { ...Object.fromEntries(['played', 'rounds', 'wins', 'podiums', 'alive', 'eaten'].map(k => [k, acctStats[k] + dev2.stats[k]])), peak: Math.max(acctStats.peak, dev2.stats.peak, r.body.rating) }, 'and their lifetime stats');
+  assert.deepEqual(r.body.trophies, acctTrophies, 'trophies both had keep the earlier date'); assert.ok(dev2.trophies[0].at >= acctTrophies[0].at); assert.deepEqual(r.body.skins, [9]); assert.equal(r.body.account.provider, 'apple');
   r = await post('/api/session', { secret: secret2 }); assert.equal(r.body.balance, 2200, 'the second device now opens the account'); assert.equal(r.body.nameFont, 12, 'the account keeps its own font');
   r = await post('/api/session', { secret }); assert.equal(r.body.balance, 2200, 'and so does the first');
   r = await post('/api/skins/buy', { skinId: 10 }, secret2); assert.equal(r.status, 200); assert.equal(r.body.balance, 1850, 'the joined device can spend');
@@ -353,7 +379,7 @@ async function post(url, body, secret) {
   r = await post('/api/account/delete', { confirm: 'DELETE' }); assert.equal(r.status, 401, 'deletion needs the player');
   r = await post('/api/account/delete', { confirm: 'DELETE' }, secret); assert.equal(r.status, 200); assert.equal(r.body.deleted, true);
   r = await post('/api/session', { secret: secret3 }); assert.equal(r.body.balance, 0, 'a device that had joined the account starts fresh'); assert.equal(r.body.account, null); assert.deepEqual(r.body.skins, []);
-  assert.deepEqual([r.body.xp, r.body.level], [0, 1], 'the XP went with the account');
+  assert.deepEqual([r.body.xp, r.body.level], [0, 1], 'the XP went with the account'); assert.deepEqual([r.body.trophies, r.body.stats.alive], [[], 0], 'and so did the trophies and stats');
   r = await post('/api/iap/apple', { transactionId: 't1', jws }, secret3); assert.equal(r.body.duplicate, true, 'an old receipt cannot be credited again after deletion'); assert.equal(r.body.balance, 0);
   r = await post('/api/auth/apple', { identityToken: apple(), nonce: 'n1' }, secret3); assert.equal(r.status, 200); assert.equal(r.body.merged, false, 'the Apple ID no longer leads to the deleted account'); assert.equal(r.body.balance, 0);
   { const lb = await (await fetch(base + '/api/leaderboard')).json(); assert.ok(Array.isArray(lb.top) && lb.top.every(t => t.runs !== undefined), 'leaderboard still answers'); assert.equal(lb.top.length, 0, 'the deleted player is gone from the leaderboard'); }
@@ -462,94 +488,128 @@ async function post(url, body, secret) {
     r = await post('/api/account/delete', { confirm: 'DELETE' }, sq); assert.equal(r.body.deleted, true);
     assert.equal(await flip(false), 303);
   }
-  { // Quests: daily and weekly goals counted from ranked lives on the server while the pass is live; each pays its XP to the pass once
-    const { QUESTS, questsAt, PASS } = require('./economy'), at = Date.parse, today = at('2026-11-20T12:00:00Z');
+  { // Quests: daily, weekly and permanent goals for ranked lives, counted on the server and shown without the battle pass; a finished quest waits to be claimed, then pays its ATP (and pass XP while the pass is live) once
+    const { QUESTS, questsAt, PASS, PERMANENT, PERM_ATP } = require('./economy'), at = Date.parse, today = at('2026-11-20T12:00:00Z');
     const token = fs.readFileSync(path.join(dataDir, 'admin-token'), 'utf8').trim(), store = (await (await fetch(base + '/health')).json()).store;
-    const flip = async on => (await fetch(base + '/admin/pass?token=' + token, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'on=' + (on ? 1 : 0), redirect: 'manual' })).status;
+    const form = async body => (await fetch(base + '/admin/pass?token=' + token, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body, redirect: 'manual' })).status;
+    const flip = on => form('on=' + (on ? 1 : 0)), flipQuests = on => form('quests=' + (on ? 1 : 0));
     const admin = async () => (await fetch(base + '/admin/pass?format=json&token=' + token)).json();
     const post = async (url, body, secret) => { const headers = { 'Content-Type': 'application/json', 'X-Forwarded-For': '10.9.9.8' }; if (secret) headers.Authorization = 'Bearer ' + secret;
       const res = await fetch(base + url, { method: 'POST', headers, body: JSON.stringify(body || {}) }); return { status: res.status, body: await res.json() }; };
     const sx = 'questsecret' + 'x'.repeat(21), sy = 'questsecret' + 'y'.repeat(21), D = questsAt('day', today), W = questsAt('week', today);
-    const find = (w, id) => [...w.quests.daily.quests, ...w.quests.weekly.quests].find(q => q.id === id);
-    const life = async (secret, body) => post('/api/run/end', { runId: (await post('/api/run/start', {}, secret)).body.runId, ...body }, secret);
-    // off: no quests in the wallet, and lives move none on
-    r = await post('/api/session', { secret: sx }); assert.equal(r.body.quests, null, 'no quests while the pass is off');
-    r = await life(sx, { survived: 9999, place: 1, of: 10 }); assert.deepEqual([r.body.questXp, r.body.questsDone, r.body.quests], [0, [], null], 'lives while off finish no quests');
-    // on: four for the day, seven for the week, the same for everyone, new at midnight UTC and on Monday
-    assert.equal(await flip(true), 303);
+    const find = (w, id) => [...w.quests.daily.quests, ...w.quests.weekly.quests].find(q => q.id === id), line = (w, id) => w.quests.permanent.find(q => q.line === id);
+    const life = async (secret, body, mode) => post('/api/run/end', { runId: (await post('/api/run/start', mode ? { mode } : {}, secret)).body.runId, claims: 1, ...body }, secret); // claims: 1, as pages with the Claim button send
+    const claim = (secret, body) => post('/api/quests/claim', body, secret);
+    assert.deepEqual([QUESTS.atp, QUESTS.xp, PERM_ATP], [{ day: 30, week: 100 }, { day: 100, week: 300 }, [100, 300, 1000, 3000]], 'Rowan\'s choice: 30 / 100 ATP, 100 / 300 pass XP, permanent tiers 100 to 3,000 ATP');
+    // on from the start, with the battle pass off: four for the day, seven for the week, the permanent ladders; the same for everyone
     r = await post('/api/session', { secret: sx }); let Q = r.body.quests;
-    assert.deepEqual([Q.daily.key, Q.daily.ends, Q.weekly.key, Q.weekly.ends], ['2026-11-20', at('2026-11-21'), '2026-W47', at('2026-11-23')], 'today (UTC) and this ISO week, with when each ends');
-    assert.deepEqual([Q.daily.quests.length, Q.weekly.quests.length], [4, 7], 'four daily quests and seven weekly ones');
-    assert.deepEqual(Q.daily.quests.map(q => [q.id, q.text, q.goal, q.xp]), D.list.map(q => [q.id, q.text, q.goal, QUESTS.xp.day]), 'the day\'s quests');
-    assert.deepEqual(Q.weekly.quests.map(q => [q.id, q.text, q.goal, q.xp]), W.list.map(q => [q.id, q.text, q.goal, QUESTS.xp.week]), 'the week\'s quests');
-    assert.ok([...Q.daily.quests, ...Q.weekly.quests].every(q => q.progress === 0 && q.done === false), 'nothing done yet (the life while off did not count)');
+    assert.deepEqual([r.body.pass, (await admin()).quests.on], [null, true], 'the pass is off, quests are on');
+    assert.deepEqual([Q.daily.key, Q.daily.ends, Q.daily.period, Q.weekly.key, Q.weekly.ends, Q.weekly.period], ['2026-11-20', at('2026-11-21'), D.period, '2026-W47', at('2026-11-23'), W.period], 'today (UTC) and this ISO week, with when each ends');
+    assert.deepEqual(Q.daily.quests.map(q => [q.id, q.text, q.goal, q.atp, q.xp, q.done, q.claimed]), D.list.map(q => [q.id, q.text, q.goal, 30, 0, false, false]), 'the day\'s quests: 30 ATP each, no pass XP while the pass is off');
+    assert.deepEqual(Q.weekly.quests.map(q => [q.id, q.goal, q.atp, q.xp]), W.list.map(q => [q.id, q.goal, 100, 0]), 'the week\'s: 100 ATP each');
+    assert.deepEqual(Q.permanent.map(q => [q.id, q.tier, q.tiers, q.progress, q.goal, q.atp, q.done]), PERMANENT.map(L => [L.id + '-1', 1, 4, 0, L.tiers[0], 100, false]), 'each permanent ladder at its first tier');
+    assert.deepEqual([Q.earlier, Q.claimable], [[], 0], 'nothing waiting');
     assert.deepEqual((await post('/api/session', { secret: sy })).body.quests.daily.quests.map(q => q.id), Q.daily.quests.map(q => q.id), 'another player has the same quests');
-    assert.deepEqual([QUESTS.xp.day, QUESTS.xp.week], [100, 300], 'Rowan\'s choice: 100 XP a daily quest, 300 a weekly one');
     // the client's claims are not believed: a "long winning life" sent right after starting is 15 s on the server's clock
-    r = await life(sx, { survived: 9999, place: 1, of: 10, quests: 99, questXp: 5000 });
-    const dLives = D.list.find(q => q.kind === 'lives'), dTime = D.list.find(q => q.kind === 'time'), dLife = D.list.find(q => q.kind === 'life'), wLives = W.list.find(q => q.kind === 'lives');
-    assert.deepEqual([r.body.questXp, find(r.body, dLives.id).progress, find(r.body, dTime.id).progress, r.body.quests.daily.quests.filter(q => q.kind === 'top').map(q => q.progress)], [0, 0, 0, [0]],
-      'a 15 s life is not a life for the quests: no life, no time, no placing');
+    const dLives = D.list.find(q => q.kind === 'lives'), wTime = W.list.find(q => q.kind === 'time'), wLives = W.list.find(q => q.kind === 'lives'), wWin = W.list.find(q => q.kind === 'win');
+    r = await life(sx, { survived: 9999, place: 1, of: 10, eaten: 50, quests: 99, questXp: 5000 });
+    assert.deepEqual([r.body.questXp, find(r.body, dLives.id).progress, find(r.body, wTime.id).progress, line(r.body, 'lives').progress, line(r.body, 'eaten').progress, line(r.body, 'wins').progress], [0, 0, 0, 0, 0, 0],
+      'a 15 s life is not a life: no life, time, cells or placing');
     r = await post('/api/pass', { quests: { daily: { quests: [] } }, questXp: 9000 }, sx); assert.equal(find(r.body, dLives.id).progress, 0, 'the client cannot set its quests');
+    for (const [b, status, why] of [[{ period: D.period, id: dLives.id }, 409, 'not finished'], [{ period: D.period, id: 'nope-1' }, 404, 'no such quest'], [{ period: 'x', id: dLives.id }, 404, 'no such period'],
+      [{ period: 'perm', id: 'lives-1' }, 409, 'a tier not reached'], [{ period: 'perm', id: 'lives-9' }, 404, 'no such tier'], [{}, 404, 'nothing named']]) assert.equal((await claim(sx, b)).status, status, 'claim: ' + why);
+    assert.equal((await post('/api/quests/claim', { all: true })).status, 401, 'claiming needs the player');
+    // casual lives count for no quests (endless lives)
+    r = await life(sx, { survived: 9999 }, 'casual'); assert.deepEqual([find(r.body, dLives.id).progress, line(r.body, 'lives').progress], [0, 0], 'casual counts for nothing');
     if (store === 'sqlite') {
       const db = new (require('node:sqlite').DatabaseSync)(path.join(dataDir, 'mitosis.sqlite'));
       const lifeFor = async (secret, sec, body = {}) => { const id = (await post('/api/run/start', {}, secret)).body.runId; db.prepare('UPDATE runs SET started = started - ? WHERE id = ?').run(sec * 1000, id);
-        return post('/api/run/end', { runId: id, survived: sec, ...body }, secret); };
-      // progress: lives of 25 s move only the lives and time quests; the one that reaches the goal pays 100 XP to the pass, once
-      for (let i = 1; i < dLives.goal; i++) { r = await lifeFor(sx, 25); assert.deepEqual([r.body.questXp, find(r.body, dLives.id).progress, find(r.body, dLives.id).done], [0, i, false], 'life ' + i); }
-      assert.equal(find(r.body, dTime.id).progress, 25 * (dLives.goal - 1), 'time adds up across lives');
-      let pass0 = r.body.pass, xp0 = r.body.xp;
-      const last = (await post('/api/run/start', {}, sx)).body.runId; db.prepare('UPDATE runs SET started = started - 25000 WHERE id = ?').run(last);
-      r = await post('/api/run/end', { runId: last, survived: 25 }, sx);
-      assert.deepEqual([r.body.questXp, r.body.questsDone], [QUESTS.xp.day, [{ id: dLives.id, text: dLives.text, xp: QUESTS.xp.day, kind: 'day' }]], 'the life that finishes it pays its XP');
-      assert.deepEqual([find(r.body, dLives.id).progress, find(r.body, dLives.id).done], [dLives.goal, true]);
-      assert.equal(r.body.pass.xp, pass0.xp + r.body.xpGained + QUESTS.xp.day, 'to the battle pass');
-      assert.equal(r.body.xp, xp0 + r.body.xpGained, 'but not to the profile');
+        return post('/api/run/end', { runId: id, survived: sec, claims: 1, ...body }, secret); };
+      // progress: lives of 25 s move the lives and time quests; the one that reaches the goal finishes it, and nothing is paid until it is claimed
+      for (let i = 1; i < dLives.goal; i++) { r = await lifeFor(sx, 25); assert.deepEqual([r.body.questsDone, find(r.body, dLives.id).progress, find(r.body, dLives.id).done], [[], i, false], 'life ' + i); }
+      assert.equal(find(r.body, wTime.id).progress, 25 * (dLives.goal - 1), 'time adds up across lives');
+      const bal0 = r.body.balance, last = (await post('/api/run/start', {}, sx)).body.runId; db.prepare('UPDATE runs SET started = started - 25000 WHERE id = ?').run(last);
+      r = await post('/api/run/end', { runId: last, survived: 25, claims: 1 }, sx);
+      assert.deepEqual(r.body.questsDone, [{ id: dLives.id, text: dLives.text, atp: 30, xp: 0, kind: 'day', period: D.period }], 'the life that finishes it says so');
+      assert.deepEqual([find(r.body, dLives.id).done, find(r.body, dLives.id).claimed, r.body.quests.claimable, r.body.balance - bal0], [true, false, 1, r.body.payout], 'it waits to be claimed: nothing paid but the life\'s own ATP');
       assert.equal(find(r.body, wLives.id).progress, dLives.goal, 'the week counts the same lives');
-      pass0 = r.body.pass;
-      r = await post('/api/run/end', { runId: last, survived: 25 }, sx); assert.deepEqual([r.body.duplicate, r.body.pass.xp], [true, pass0.xp], 'a repeated run/end pays nothing more');
-      r = await lifeFor(sx, 25); assert.deepEqual([r.body.questXp, find(r.body, dLives.id).progress, r.body.pass.xp], [0, dLives.goal, pass0.xp + r.body.xpGained], 'a finished quest pays once');
-      // placings count with 4 or more in the round, like XP; a win moves every top-N quest on
-      r = await lifeFor(sx, 30, { place: 1, of: 3 }); assert.ok(r.body.quests.weekly.quests.filter(q => q.kind === 'top' || q.kind === 'win').every(q => q.progress === 0), 'a win among 3 does not count');
-      pass0 = r.body.pass;
-      r = await lifeFor(sx, 30, { place: 1, of: 10 }); const tops = [...r.body.quests.daily.quests, ...r.body.quests.weekly.quests].filter(q => q.kind === 'top' || q.kind === 'win');
+      r = await post('/api/run/end', { runId: last, survived: 25, claims: 1 }, sx); assert.deepEqual([r.body.duplicate, r.body.quests.claimable], [true, 1], 'a repeated run/end finishes nothing more');
+      // claiming: pays its ATP once, even when asked five times at once
+      const bal1 = r.body.balance, earned1 = r.body.earned;
+      const five = await Promise.all([1, 2, 3, 4, 5].map(() => claim(sx, { period: D.period, id: dLives.id })));
+      assert.equal(five.filter(x => x.body.claimed && x.body.claimed.length).length, 1, 'five claims at once pay once');
+      r = await post('/api/session', { secret: sx }); assert.deepEqual([r.body.balance, r.body.earned, find(r.body, dLives.id).claimed, r.body.quests.claimable], [bal1 + 30, earned1 + 30, true, 0], '30 ATP, claimed');
+      r = await claim(sx, { period: D.period, id: dLives.id }); assert.deepEqual([r.body.already, r.body.balance], [true, bal1 + 30], 'and only once');
+      // placings count with 4 or more in the round, like XP; a win moves every top-N quest on, and the lifetime wins and top 3
+      r = await lifeFor(sx, 30, { place: 1, of: 3 }); assert.ok(r.body.quests.weekly.quests.filter(q => q.kind === 'top' || q.kind === 'win').every(q => q.progress === 0) && line(r.body, 'wins').progress === 0, 'a win among 3 does not count');
+      r = await lifeFor(sx, 30, { place: 1, of: 10, eaten: 9999 }); const tops = [...r.body.quests.daily.quests, ...r.body.quests.weekly.quests].filter(q => q.kind === 'top' || q.kind === 'win');
       assert.ok(tops.length >= 2 && tops.every(q => q.progress === 1 && q.done === (q.goal === 1)), 'a win among 10: one for each top-N and win quest, done where one is enough');
-      assert.ok(tops.some(q => q.kind === 'win'), 'the week has a win quest');
-      assert.equal(r.body.questXp, r.body.questsDone.reduce((n, q) => n + q.xp, 0)); assert.equal(r.body.pass.xp, pass0.xp + r.body.xpGained + r.body.questXp);
-      assert.deepEqual(r.body.questsDone.map(q => q.id).sort(), tops.filter(q => q.goal === 1).map(q => q.id).sort(), 'and pays for those');
-      assert.equal(r.body.passUp, Math.floor(r.body.pass.xp / PASS.levelXp) - Math.floor(pass0.xp / PASS.levelXp), 'passUp counts the levels the quests gave');
-      // survive in one life: a second short of it is not enough
-      r = await lifeFor(sx, dLife.sec - 1); assert.equal(find(r.body, dLife.id).done, false, 'a second short');
-      r = await lifeFor(sx, dLife.sec); assert.equal(find(r.body, dLife.id).done, true, 'long enough'); assert.ok(r.body.questsDone.some(q => q.id === dLife.id));
-      // the switch page counts quests done today and this week
-      let a = await admin(); assert.ok(a.stats.quests.today >= 2 && a.stats.quests.week >= 1, 'the switch page counts finished quests');
-      assert.match(await (await fetch(base + '/admin/pass?token=' + token)).text(), /Quests done today/);
-      // off: frozen, then back with the progress kept
+      assert.deepEqual(r.body.questsDone.map(q => q.id).sort(), tops.filter(q => q.goal === 1).map(q => q.id).sort(), 'and says which it finished');
+      assert.deepEqual([line(r.body, 'wins').total, line(r.body, 'top3').total, line(r.body, 'eaten').total], [1, 1, 10 + Math.floor(30 / 60 * 15)], 'lifetime: a win, a top 3, and cells capped by the life\'s length');
+      assert.ok(r.body.questTiers.some(q => q.id === 'wins-1'), 'the first win reaches the first wins tier');
+      // the battle pass on: daily and weekly quests also pay pass XP when claimed
+      assert.equal(await flip(true), 303); r = await post('/api/session', { secret: sx }); const pass0 = r.body.pass.xp, bal2 = r.body.balance;
+      assert.deepEqual([find(r.body, wWin.id).xp, line(r.body, 'wins').atp], [300, 100], 'pass XP shows while the pass is live');
+      assert.equal(wWin.goal, 1, 'this week\'s win quest takes one win');
+      r = await claim(sx, { period: W.period, id: wWin.id }); assert.deepEqual([r.body.atp, r.body.xp, r.body.balance, r.body.pass.xp], [100, 300, bal2 + 100, pass0 + 300], 'a weekly quest: 100 ATP and 300 pass XP');
+      // claim all: everything ready, permanent tiers too; the ladder moves on to its next tier
+      r = await post('/api/session', { secret: sx }); const ready = r.body.quests.claimable, bal3 = r.body.balance;
+      assert.ok(ready >= 2 && line(r.body, 'wins').done, 'some daily and permanent rewards are ready');
+      r = await claim(sx, { all: true }); assert.equal(r.body.claimed.length, ready, 'claim all takes every one');
+      assert.ok(r.body.claimed.some(c => c.period === 'perm' && c.id === 'wins-1' && c.atp === 100), 'including the first wins tier, 100 ATP');
+      assert.deepEqual([r.body.balance, r.body.quests.claimable, line(r.body, 'wins').tier, line(r.body, 'wins').goal], [bal3 + r.body.atp, 0, 2, 10], 'paid, and wins moves to tier 2: 10 wins');
+      assert.equal((await claim(sx, { period: 'perm', id: 'wins-1' })).body.already, true, 'a tier pays once');
+      r = await claim(sx, { all: true }); assert.deepEqual([r.body.claimed, r.body.atp, r.body.already], [[], 0, undefined], 'claim all with nothing ready');
+      assert.equal(await flip(false), 303);
+      // a reward not claimed by the end of its day waits: it shows under earlier and can still be claimed (an old variant id is left out)
+      const old = 'd2026-11-19', oldQ = questsAt('day', at('2026-11-19T12:00:00Z')).list[0];
+      db.prepare('INSERT INTO quests(player, period, quest, progress, done, at) VALUES(?, ?, ?, ?, ?, ?)').run(r.body.playerId, old, oldQ.id, oldQ.goal, 5, 5);
+      db.prepare('INSERT INTO quests(player, period, quest, progress, done, at) VALUES(?, ?, ?, ?, ?, ?)').run(r.body.playerId, old, 'gone-7', 1, 5, 5);
+      r = await post('/api/session', { secret: sx }); assert.deepEqual([r.body.quests.earlier, r.body.quests.claimable], [[{ period: old, id: oldQ.id, kind: oldQ.kind, text: oldQ.text, atp: 30, xp: 0, from: 'day', modes: oldQ.modes }], 1], 'yesterday\'s reward waits');
+      const bal4 = r.body.balance; r = await claim(sx, { period: old, id: oldQ.id }); assert.deepEqual([r.body.atp, r.body.balance, r.body.quests.earlier], [30, bal4 + 30, []], 'and is paid when claimed');
+      assert.equal((await claim(sx, { period: old, id: 'gone-7' })).status, 404, 'a quest that no longer exists cannot be claimed');
+      // the switch page counts quests finished today and this week; the quests switch hides them, lifetime totals keep counting
+      let a = await admin(); assert.ok(a.stats.quests.today >= 2 && a.stats.quests.week >= 1 && a.quests.today === a.stats.quests.today, 'the switch page counts finished quests');
+      assert.match(await (await fetch(base + '/admin/pass?token=' + token)).text(), /<h2>Quests<\/h2>[\s\S]*Turn quests off/);
       const kept = (await post('/api/pass', {}, sx)).body.quests;
-      assert.equal(await flip(false), 303); r = await lifeFor(sx, 200, { place: 1, of: 10 }); assert.deepEqual([r.body.quests, r.body.questXp], [null, 0], 'lives while off move nothing');
-      assert.equal(await flip(true), 303); assert.deepEqual((await post('/api/pass', {}, sx)).body.quests, kept, 'on again: just as it was');
-      // merging: progress adds up; a quest done on either device stays done and is not paid again; one the two finish together pays then
+      assert.equal(await flipQuests(false), 303); assert.equal((await admin()).quests.on, false);
+      r = await lifeFor(sx, 200, { place: 1, of: 10 }); assert.deepEqual([r.body.quests, r.body.questsDone], [null, []], 'off: hidden, and lives finish no quest');
+      assert.equal((await claim(sx, { all: true })).status, 404, 'and nothing can be claimed');
+      assert.equal(await flipQuests(true), 303); r = await post('/api/pass', {}, sx);
+      assert.deepEqual([r.body.quests.daily, r.body.quests.weekly], [kept.daily, kept.weekly], 'on again: daily and weekly just as they were');
+      assert.equal(line(r.body, 'lives').total, line({ quests: kept }, 'lives').total + 1, 'the lifetime totals kept counting');
+      assert.match(await (await fetch(base + '/admin/pass?token=' + token)).text(), /Turn quests off/);
+      // merging: progress and lifetime totals add up; a quest done or claimed on either side stays so and does not pay twice
       r = await lifeFor(sy, 25); assert.deepEqual([find(r.body, dLives.id).progress, find(r.body, wLives.id).progress], [1, 1]);
-      const ax = (await post('/api/auth/apple', { identityToken: apple({ sub: 'apple-quest' }), nonce: 'n1' }, sx)).body, wTime = W.list.find(q => q.kind === 'time');
+      const ax = (await post('/api/auth/apple', { identityToken: apple({ sub: 'apple-quest' }), nonce: 'n1' }, sx)).body;
       for (let left = wTime.goal - find(ax, wTime.id).progress - 25; left > 0; left -= 600) await lifeFor(sy, Math.max(20, Math.min(600, left))); // the other device brings just the rest of the weekly time
       const ay = (await post('/api/pass', {}, sy)).body; assert.equal(find(ay, wTime.id).done, false);
       r = await post('/api/auth/apple', { identityToken: apple({ sub: 'apple-quest' }), nonce: 'n1' }, sy); assert.equal(r.body.merged, true);
-      assert.deepEqual([find(r.body, dLives.id).done, find(r.body, wLives.id).progress], [true, Math.min(wLives.goal, find(ax, wLives.id).progress + find(ay, wLives.id).progress)], 'merged: weekly lives added up, the daily one still done');
-      const together = [...ax.quests.daily.quests, ...ax.quests.weekly.quests].filter(q => { const y = find(ay, q.id); return !q.done && !y.done && q.progress + y.progress >= q.goal; });
-      assert.ok(together.some(q => q.id === wTime.id), 'the weekly time quest is finished by the two together');
-      assert.ok(together.every(q => find(r.body, q.id).done), 'and is done after the merge');
-      assert.equal(r.body.pass.xp, ax.pass.xp + ay.pass.xp + together.reduce((n, q) => n + q.xp, 0), 'pass XP: both added, plus what the merge finished; nothing paid twice');
-      r = await post('/api/pass', {}, sy); assert.equal(r.body.pass.xp, ax.pass.xp + ay.pass.xp + together.reduce((n, q) => n + q.xp, 0), 'and only once');
-      // deleting the account deletes its quests
+      assert.deepEqual([find(r.body, dLives.id).claimed, find(r.body, wLives.id).progress], [true, Math.min(wLives.goal, find(ax, wLives.id).progress + find(ay, wLives.id).progress)], 'merged: weekly lives added up, the claimed daily still claimed');
+      assert.deepEqual(PERMANENT.map(L => line(r.body, L.id).total), PERMANENT.map(L => line(ax, L.id).total + line(ay, L.id).total), 'lifetime totals added up');
+      assert.ok(find(r.body, wTime.id).done && !find(r.body, wTime.id).claimed, 'the weekly time quest the two finished together is ready to claim');
+      assert.equal(r.body.balance, ax.balance + ay.balance, 'nothing paid by the merge itself');
+      // deleting the account deletes its quests and lifetime totals
       r = await post('/api/account/delete', { confirm: 'DELETE' }, sy); assert.equal(r.body.deleted, true);
       a = await admin(); assert.deepEqual([a.stats.quests.today, a.stats.quests.week], [0, 0], 'deleting the account deletes its quests');
-      r = await post('/api/session', { secret: sy }); assert.ok([...r.body.quests.daily.quests, ...r.body.quests.weekly.quests].every(q => q.progress === 0 && !q.done), 'a device of the deleted account starts afresh');
+      r = await post('/api/session', { secret: sy }); assert.ok([...r.body.quests.daily.quests, ...r.body.quests.weekly.quests, ...r.body.quests.permanent].every(q => q.progress === 0 && !q.done), 'a device of the deleted account starts afresh');
       db.close();
     } else console.log('(JSON store: skipping the backdated quest lives)');
-    // old apps: run/end sends what they read; the quest fields are extra
+    // old apps: run/end sends what they read; the quest fields are extra. Without claims (no Claim button) every ready reward is claimed for them
     await post('/api/session', { secret: sx }); // (a fresh wallet: its account was deleted above)
-    r = await life(sx, { survived: 30, eaten: 1, peak: 40, bestRank: 3, place: 5, of: 9, life: 0, show: 1, name: 'Old app' });
-    for (const k of ['payout', 'ratingDelta', 'balance', 'earned', 'skins', 'rating', 'tier', 'runs', 'playerId', 'passUp']) assert.ok(k in r.body, 'run/end still sends ' + k);
+    r = await post('/api/run/end', { runId: (await post('/api/run/start', {}, sx)).body.runId, survived: 30, eaten: 1, peak: 40, bestRank: 3, place: 5, of: 9, life: 0, show: 1, name: 'Old app' }, sx);
+    for (const k of ['payout', 'ratingDelta', 'balance', 'earned', 'skins', 'rating', 'tier', 'runs', 'playerId', 'passUp', 'questXp', 'questsDone']) assert.ok(k in r.body, 'run/end still sends ' + k);
+    if (store === 'sqlite') {
+      const db = new (require('node:sqlite').DatabaseSync)(path.join(dataDir, 'mitosis.sqlite')), old = async (sec, body = {}) => { const id = (await post('/api/run/start', {}, sx)).body.runId; db.prepare('UPDATE runs SET started = started - ? WHERE id = ?').run(sec * 1000, id); return post('/api/run/end', { runId: id, survived: sec, ...body }, sx); };
+      assert.equal(await flip(true), 303);
+      for (let i = 1; i < dLives.goal; i++) await old(25);
+      const b0 = (await post('/api/pass', {}, sx)).body; r = await old(25);
+      assert.deepEqual([r.body.questsDone.map(q => q.id), r.body.questAtp, r.body.questXp, find(r.body, dLives.id).claimed], [[dLives.id], 30, 100, true], 'an old app\'s finished quest is claimed at once: 30 ATP and 100 pass XP');
+      assert.deepEqual([r.body.balance, r.body.pass.xp], [b0.balance + r.body.payout + 30, b0.pass.xp + r.body.xpGained + 100], 'paid into its wallet and pass, as before claiming');
+      r = await old(25); assert.deepEqual([r.body.questAtp, r.body.questXp], [0, 0], 'and only once');
+      r = await life(sx, { survived: 9999 }); assert.equal(r.body.questAtp, 0, 'a page with claims gets nothing claimed for it');
+      db.close(); assert.equal(await flip(false), 303);
+    }
     for (const sec of [sx, sy]) await post('/api/account/delete', { confirm: 'DELETE' }, sec);
     assert.equal(await flip(false), 303);
   }
@@ -615,87 +675,162 @@ async function post(url, body, secret) {
       if (kind === 'sqlite') st.db.close();
     }
   }
-  { // quests at chosen times, in both stores: the sets, progress, paying once, the daily and weekly resets, the switch, the season's end, merges and deletion
-    const { questsAt, questsOf, questsTick, isoWeekOf, QUESTS, PASS_SEASONS } = require('./economy'), { SqliteStore, JsonStore } = require('./store'), at = Date.parse, s1 = PASS_SEASONS[0];
+  { // quests at chosen times, in both stores: the sets, finishing once, claiming once, the daily and weekly resets, rewards that wait, the switch, permanent tiers, merges and deletion
+    const E = require('./economy'), { questsAt, questsOf, questsTick, isoWeekOf, questTotals, QUESTS, PASS_SEASONS, PERMANENT, PERM_ATP } = E, claim = E.handlers.questClaim;
+    const { SqliteStore, JsonStore } = require('./store'), at = Date.parse, s1 = PASS_SEASONS[0];
     for (const [d, w] of [['2026-11-16', '2026-W47'], ['2026-11-22', '2026-W47'], ['2026-11-23', '2026-W48'], ['2026-12-31', '2026-W53'], ['2027-01-03', '2026-W53'], ['2027-01-04', '2027-W01'], ['2024-12-30', '2025-W01'], ['2021-01-03', '2020-W53']])
       assert.equal(isoWeekOf(at(d + 'T12:00:00Z')).key, w, 'ISO week of ' + d);
     const fri = at('2026-11-20T12:00:00Z'), sets = new Set();
     for (let t = at(s1.from); t < at(s1.to); t += 864e5) for (const kind of ['day', 'week']) {
       const Q = questsAt(kind, t); sets.add(Q.list.map(q => q.id).join());
       assert.equal(Q.list.length, kind === 'day' ? 4 : 7); assert.equal(new Set(Q.list.map(q => q.id)).size, Q.list.length, Q.period + ': no quest twice');
-      assert.ok(Q.list.every(q => q.goal >= 1 && q.text && q.xp === QUESTS.xp[kind]), Q.period + ': each has a goal, words and its XP');
+      assert.ok(Q.list.every(q => q.goal >= 1 && q.text && q.xp === QUESTS.xp[kind] && q.atp === QUESTS.atp[kind]), Q.period + ': each has a goal, words, its ATP and XP');
     }
     assert.ok(sets.size > 8, 'the sets change from day to day and week to week');
     assert.deepEqual([questsAt('day', at('2026-11-20T00:00:00Z')), questsAt('day', at('2026-11-20T23:59:59.999Z'))], [questsAt('day', fri), questsAt('day', fri)], 'one set all day (UTC)');
     assert.deepEqual([questsAt('week', at('2026-11-16T00:00:00Z')), questsAt('week', at('2026-11-22T23:59:59.999Z'))], [questsAt('week', fri), questsAt('week', fri)], 'one set all week, Monday to Sunday (UTC)');
+    assert.equal(PERM_ATP.length, 4); for (const L of PERMANENT) assert.ok(L.tiers.length === 4 && L.tiers.every((g, i) => !i || g > L.tiers[i - 1]) && L.tiers.every(g => L.text(g)), L.id + ': four rising tiers, each with words');
+    assert.deepEqual(PERMANENT.find(L => L.id === 'eaten').tiers.slice(1), [1000, 10000, 100000], 'Rowan\'s example: eat 1,000 / 10,000 / 100,000 cells');
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mitosis-quests-')); let sqlite = null; try { sqlite = require('node:sqlite'); } catch (e) {}
     const open = kind => kind === 'json' ? new JsonStore(path.join(dir, 'q.json')) : new SqliteStore(sqlite, path.join(dir, 'q.sqlite'));
-    const L = (survived, place, of) => ({ survived, place, of });
+    const L = (survived, place, of, eaten) => ({ survived, place, of, eaten }), T2f = o => questTotals(o, o.player('f')).lives;
+    const withClassic = (E.catalog().modes || []).includes('classic'), splitWas = QUESTS.splitKills;
+    assert.equal(QUESTS.splitKills, withClassic, 'split-kill quests come on with Classic, whose game reports splitKills');
+    QUESTS.splitKills = false; assert.ok([questsAt('day', fri), questsAt('week', fri)].every(Q => Q.list.every(q => q.kind !== 'splitkill')), 'none while they are off');
+    QUESTS.splitKills = true; // as once the game sends splitKills (set back below)
+    const dayWith = (kind, from) => { for (let t = at(from + 'T12:00:00Z'), i = 0; i < 400; i++, t += 864e5) { const q = questsAt('day', t).list.find(x => x.kind === kind); if (q) return { t, q, period: questsAt('day', t).period }; } throw new Error('no day with ' + kind); };
+    assert.equal(questsAt('day', fri).list.filter(q => q.modes.includes('classic')).length >= 2 && questsAt('week', fri).list.filter(q => q.modes.includes('classic')).length, 3, 'every set has quests Classic can do: 2 or more a day, 3 a week');
+    for (let t = at(s1.from); t < at(s1.to); t += 864e5) { assert.ok(questsAt('day', t).list.filter(q => q.modes.includes('classic')).length >= 2); assert.equal(questsAt('week', t).list.filter(q => q.modes.includes('classic')).length, 3); }
     for (const kind of sqlite ? ['sqlite', 'json'] : ['json']) {
       let st = open(kind); const k = m => kind + ': ' + m, reopen = async () => { if (kind === 'json') await new Promise(res => setTimeout(res, 400)); else st.db.close(); st = open(kind); };
-      st.setFlag('pass', 'on'); st.createPlayer('a', 'ha', 1); const a = st.player('a'), passXp = id => Number((st.passRow(id, 's1') || {}).xp) || 0;
-      const view = (p, t) => questsOf(st, p, t), get = (v, id) => [...v.daily.quests, ...v.weekly.quests].find(q => q.id === id);
-      const D = questsAt('day', fri), lives = D.list.find(q => q.kind === 'lives'), W = questsAt('week', fri), wLives = W.list.find(q => q.kind === 'lives');
-      // progress, and the life that reaches the goal pays the pass once
-      for (let i = 1; i < lives.goal; i++) assert.deepEqual(questsTick(st, a, L(30), fri), { xp: 0, done: [] }, k('life ' + i));
-      assert.deepEqual(questsTick(st, a, L(30), fri), { xp: 100, done: [{ id: lives.id, text: lives.text, xp: 100, kind: 'day' }] }, k('the last life finishes it'));
-      assert.equal(passXp('a'), 100, k('its XP is in the pass')); assert.equal(Number(st.player('a').xp), 0, k('not in the profile'));
-      assert.deepEqual(questsTick(st, a, L(30), fri), { xp: 0, done: [] }, k('a done quest pays once')); assert.equal(passXp('a'), 100);
+      st.createPlayer('a', 'ha', 1); const a = st.player('a'), bal = id => Number(st.player(id).balance), P = id => st.player(id);
+      const view = (p, t) => questsOf(st, p, t), get = (v, id) => [...v.daily.quests, ...v.weekly.quests].find(q => q.id === id), line = (v, id) => v.permanent.find(q => q.line === id);
+      const D = questsAt('day', fri), lives = D.list.find(q => q.kind === 'lives'), dLife = D.list.find(q => q.kind === 'life'), W = questsAt('week', fri), wLives = W.list.find(q => q.kind === 'lives');
+      // on without the battle pass (its switch has never been touched): no pass XP, nothing ready
+      let v = view(a, fri); assert.ok(v && v.claimable === 0 && v.daily.quests.every(q => q.xp === 0 && q.atp === 30) && v.weekly.quests.every(q => q.atp === 100), k('quests without the pass'));
+      // progress: the life that reaches the goal finishes it, once; nothing is paid until it is claimed
+      for (let i = 1; i < lives.goal; i++) assert.deepEqual(questsTick(st, a, L(30), fri).done, [], k('life ' + i));
+      assert.deepEqual(questsTick(st, a, L(30), fri).done, [{ id: lives.id, text: lives.text, atp: 30, xp: 0, kind: 'day', period: D.period }], k('the last life finishes it'));
+      v = view(a, fri); assert.deepEqual([get(v, lives.id).done, get(v, lives.id).claimed, v.claimable, bal('a')], [true, false, 1, 0], k('finished, waiting, unpaid'));
+      assert.deepEqual(questsTick(st, a, L(30), fri).done, [], k('a done quest finishes once'));
       assert.equal(st.questDone('a', D.period, lives.id, 9), false, k('the store marks a quest done once'));
-      assert.equal(questsTick(st, a, L(19), fri).xp, 0); assert.equal(get(view(a, fri), wLives.id).progress, lives.goal + 1, k('a life under 20 s is not counted'));
-      assert.equal(get(view(a, fri), D.list.find(q => q.kind === 'time').id).progress, 30 * (lives.goal + 1), k('nor is its time'));
+      questsTick(st, a, L(19), fri); assert.equal(get(view(a, fri), wLives.id).progress, lives.goal + 1, k('a life under 20 s is not counted'));
+      assert.equal(get(view(a, fri), W.list.find(q => q.kind === 'time').id).progress, 30 * (lives.goal + 1), k('nor is its time'));
       await reopen(); assert.deepEqual([get(view(a, fri), lives.id).done, get(view(a, fri), wLives.id).progress], [true, lives.goal + 1], k('kept'));
-      // a new set at midnight UTC; the week's progress carries on until Monday
-      let v = view(a, at('2026-11-20T23:59:59.999Z')); assert.deepEqual([v.daily.key, get(v, lives.id).done], ['2026-11-20', true], k('still today at 23:59:59'));
+      // claiming pays its ATP once; it must be finished, and real
+      let r = claim(st, { period: D.period, id: lives.id }, P('a'));
+      assert.deepEqual([r.claimed, r.atp, r.balance, r.earned], [[{ period: D.period, id: lives.id, text: lives.text, atp: 30, xp: 0 }], 30, 30, 30], k('claimed: 30 ATP'));
+      r = claim(st, { period: D.period, id: lives.id }, P('a')); assert.deepEqual([r.already, r.balance], [true, 30], k('once'));
+      assert.equal(st.questClaim('a', D.period, lives.id, 9), false, k('the store pays a quest once'));
+      for (const [b, status] of [[{ period: D.period, id: dLife.id }, 409], [{ period: D.period, id: 'nope' }, 404], [{ period: 'q', id: lives.id }, 404], [{ period: 'perm', id: 'lives-1' }, 409], [{ period: 'perm', id: 'x-1' }, 404]])
+        assert.throws(() => claim(st, b, P('a')), e => e.status === status, k('claim ' + JSON.stringify(b)));
+      // a finished quest no longer in the day's set (the sets changed with an update) waits under earlier at once
+      st.createPlayer('o', 'ho', 1); const gone = E.QUEST_SLOTS.day.flat().map(q => [q.kind, q.top || q.sec || q.mass, q.goal].filter(x => x != null).join('-')).find(id => !D.list.some(q => q.id === id));
+      st.questSave('o', D.period, gone, 1, 1); st.questDone('o', D.period, gone, 1);
+      assert.deepEqual([view(P('o'), fri).earlier.map(e => [e.period, e.id]), view(P('o'), fri).claimable], [[[D.period, gone]], 1], k('a reward from a quest the set no longer has'));
+      // a new set at midnight UTC, and Friday's finished but unclaimed quest waits under earlier
+      questsTick(st, a, L(dLife.sec), fri); assert.equal(get(view(a, fri), dLife.id).done, true);
+      v = view(a, at('2026-11-20T23:59:59.999Z')); assert.deepEqual([v.daily.key, get(v, dLife.id).done, v.earlier], ['2026-11-20', true, []], k('still today at 23:59:59'));
       v = view(a, at('2026-11-21T00:00:00Z')); assert.equal(v.daily.key, '2026-11-21');
-      assert.ok(v.daily.quests.every(q => q.progress === 0 && !q.done), k('a fresh day at midnight')); assert.equal(get(v, wLives.id).progress, lives.goal + 1, k('the week goes on'));
+      assert.ok(v.daily.quests.every(q => q.progress === 0 && !q.done), k('a fresh day at midnight')); assert.equal(get(v, wLives.id).progress, lives.goal + 2, k('the week goes on'));
+      assert.deepEqual([v.earlier.map(e => [e.period, e.id, e.atp, e.from]), v.claimable], [[[D.period, dLife.id, 30, 'day']], 1], k('Friday\'s reward waits'));
+      r = claim(st, { period: D.period, id: dLife.id }, P('a')); assert.deepEqual([r.atp, bal('a')], [30, 60], k('and is paid on Saturday'));
+      assert.deepEqual(view(a, at('2026-11-21T00:00:00Z')).earlier, [], k('then it is gone'));
       const sat = at('2026-11-21T09:00:00Z'), satLives = questsAt('day', sat).list.find(q => q.kind === 'lives');
-      let paid = 0; for (let i = 0; i < satLives.goal; i++) paid += questsTick(st, a, L(30), sat).xp; assert.equal(paid, 100, k('the new day\'s lives quest pays again'));
-      v = view(a, at('2026-11-22T23:59:59.999Z')); assert.deepEqual([v.weekly.key, get(v, wLives.id).progress], ['2026-W47', lives.goal + 1 + satLives.goal], k('the week counts both days'));
+      let fin = 0; for (let i = 0; i < satLives.goal; i++) fin += questsTick(st, a, L(30), sat).done.filter(q => q.id === satLives.id).length; assert.equal(fin, 1, k('the new day\'s lives quest finishes again'));
+      v = view(a, at('2026-11-22T23:59:59.999Z')); assert.deepEqual([v.weekly.key, get(v, wLives.id).progress], ['2026-W47', lives.goal + 2 + satLives.goal], k('the week counts both days'));
       v = view(a, at('2026-11-23T00:00:00Z')); assert.equal(v.weekly.key, '2026-W48', k('Monday 00:00 UTC'));
       assert.ok([...v.daily.quests, ...v.weekly.quests].every(q => q.progress === 0 && !q.done), k('a fresh week on Monday'));
-      // the switch: while off there are no quests and lives move nothing; back on, it is as it was
-      const mon = at('2026-11-23T12:00:00Z'); questsTick(st, a, L(30), mon); const before = view(a, mon), xpBefore = passXp('a');
-      st.setFlag('pass', 'off'); assert.equal(view(a, mon), null, k('no quests while off'));
-      assert.deepEqual(questsTick(st, a, L(600, 1, 10), mon), { xp: 0, done: [] }, k('lives while off do nothing'));
-      st.setFlag('pass', 'on'); assert.deepEqual(view(a, mon), before, k('on again: as it was')); assert.equal(passXp('a'), xpBefore);
-      // outside the season there are none, and they end with it
-      assert.equal(view(a, at('2026-12-28T00:00:00Z')), null, k('none after the season')); assert.equal(view(a, at('2026-11-15T23:00:00Z')), null, k('none before it'));
-      assert.deepEqual(questsTick(st, a, L(600, 1, 10), at('2026-12-28T01:00:00Z')), { xp: 0, done: [] });
-      v = view(a, at('2026-12-27T12:00:00Z')); assert.deepEqual([v.daily.ends, v.weekly.ends], [at('2026-12-28'), at(s1.to)], k('the last day and week end with the season'));
-      // merging: progress adds up; done on either side stays done; what the two finish together pays when the merge is settled, once
-      const tue = at('2026-11-24T12:00:00Z'), T = questsAt('day', tue), tLives = T.list.find(q => q.kind === 'lives'), tLife = T.list.find(q => q.kind === 'life');
-      st.createPlayer('b', 'hb', 1); st.createPlayer('c', 'hc', 1); const b = st.player('b'), c = st.player('c');
+      // quests don't need a season: they run before, between and after them
+      assert.ok(view(a, at('2026-11-01T12:00:00Z')) && view(a, at('2027-03-01T12:00:00Z')), k('no season needed'));
+      // the switch: while off there are no quests and lives finish none, but lifetime totals count; back on, it is as it was
+      const mon = at('2026-11-23T12:00:00Z'); questsTick(st, a, L(30), mon); const before = view(a, mon), livesBefore = questTotals(st, P('a')).lives;
+      st.setFlag('quests', 'off'); assert.equal(view(a, mon), null, k('no quests while off'));
+      assert.deepEqual(questsTick(st, a, L(600, 1, 10), mon), { xp: 0, done: [], tiers: [] }, k('lives while off finish nothing'));
+      assert.throws(() => claim(st, { all: true }, P('a')), e => e.status === 404, k('and claim nothing'));
+      st.setFlag('quests', 'on'); v = view(a, mon); assert.deepEqual([v.daily, v.weekly], [before.daily, before.weekly], k('on again: as it was'));
+      assert.equal(questTotals(st, P('a')).lives, livesBefore + 1, k('the lifetime totals kept counting'));
+      // permanent quests: lifetime totals in tiers; a life past a tier reaches it once; claiming pays its tier once and moves the ladder on
+      st.createPlayer('e', 'he', 1);
+      r = questsTick(st, P('e'), L(800, 1, 10, 9999), mon);
+      const dl = r.done.filter(q => q.kind === 'day').length; assert.ok(dl >= 2, k('the life finishes some daily quests'));
+      assert.deepEqual(questTotals(st, P('e')), { lives: 1, time: 600, eaten: 10 + 600 / 60 * 15, wins: 1, top3: 1, dailies: dl }, k('one long winning life: time capped at 10 min, cells by its length, and the daily quests it finished'));
+      assert.deepEqual(r.tiers.map(t => t.id).sort(), ['eaten-1', 'wins-1'], k('it reaches the first cells and wins tiers'));
+      assert.deepEqual(questsTick(st, P('e'), L(30, 5, 10, 3), mon).tiers, [], k('each tier is reached once'));
+      v = view(P('e'), mon); assert.deepEqual([line(v, 'wins').done, line(v, 'wins').tier, line(v, 'lives').done, line(v, 'lives').progress, line(v, 'lives').goal], [true, 1, false, 2, 10]);
+      r = claim(st, { period: 'perm', id: 'wins-1' }, P('e')); assert.deepEqual([r.atp, r.balance], [100, 100], k('the first wins tier pays 100 ATP'));
+      v = view(P('e'), mon); assert.deepEqual([line(v, 'wins').tier, line(v, 'wins').goal, line(v, 'wins').progress, line(v, 'wins').done], [2, 10, 1, false], k('then wins asks for 10'));
+      assert.equal(claim(st, { period: 'perm', id: 'wins-1' }, P('e')).already, true, k('a tier pays once'));
+      assert.throws(() => claim(st, { period: 'perm', id: 'wins-2' }, P('e')), e => e.status === 409, k('not before it is reached'));
+      { // the lifetime totals move onto the player's lifetime stats (economy.js questTotals): a store from before them opens with
+        // each player's lives counted from the ratings' lives, and the totals the quests kept in the stats table moved over, once
+        const file = path.join(dir, 'old-' + kind), old = () => kind === 'json' ? new JsonStore(file + '.json') : new SqliteStore(sqlite, file + '.sqlite');
+        let o = old(); o.createPlayer('f', 'hf', 1); for (let i = 0; i < 30; i++) o.setRating('f', 1000, null); for (let i = 0; i < 5; i++) o.setAiRating('f', 1000, null);
+        o.createPlayer('f2', 'hf2', 1); for (let i = 0; i < 9; i++) o.setRating('f2', 1000, null); o.statsAdd('f2', { lives: 12, time: 700, eaten: 40, wins: 2, top3: 3, dailies: 4 }, 1);
+        if (kind === 'json') { for (const id of ['f', 'f2']) delete o.d.players[id].played; o.save(); await new Promise(res => setTimeout(res, 400)); }
+        else { o.db.exec('ALTER TABLE players DROP COLUMN played'); o.db.close(); }
+        for (let n = 0; n < 2; n++) {
+          o = old(); const T2 = id => questTotals(o, o.player(id));
+          assert.deepEqual([T2('f').lives, T2('f').time], [35, 0], k('35 ranked lives before: the lives line starts there'));
+          assert.deepEqual(T2('f2'), { dailies: 4, lives: 12, time: 700, eaten: 40, wins: 2, top3: 3 }, k('the totals the quests kept move over' + (n ? ', once' : '')));
+          assert.deepEqual(o.stats('f2'), { dailies: 4 }, k('and leave the stats table; dailies stay'));
+          if (kind === 'json') await new Promise(res => setTimeout(res, 400)); else o.db.close();
+        }
+        o = old(); assert.deepEqual([line(questsOf(o, o.player('f'), mon), 'lives').done, line(questsOf(o, o.player('f'), mon), 'lives').total], [true, 35], k('the first lives tier is ready at once'));
+        questsTick(o, o.player('f'), L(30), mon); assert.equal(T2f(o), 36, k('kept from the first life on'));
+        r = claim(o, { all: true }, o.player('f')); assert.deepEqual([r.claimed.map(c => c.id), r.atp], [['lives-1'], 100], k('claim all'));
+        if (kind === 'sqlite') o.db.close();
+      }
+      // merging: progress and lifetime totals add up; done or claimed on either side stays so; settling finishes (not pays) what they finished together
+      const { t: tue, q: tLife } = dayWith('life', '2026-11-24'), T = questsAt('day', tue), tLives = T.list.find(q => q.kind === 'lives');
+      st.createPlayer('b', 'hb', 1); st.createPlayer('c', 'hc', 1); const b = P('b'), c = P('c');
       for (let i = 0; i < tLives.goal - 2; i++) questsTick(st, b, L(30), tue);
       assert.ok(questsTick(st, b, L(tLife.sec), tue).done.some(q => q.id === tLife.id), k('b finishes the one-life quest'));
+      claim(st, { period: T.period, id: tLife.id }, P('b'));
       questsTick(st, c, L(30), tue);
-      const vb = view(b, tue), vc = view(c, tue), xb = passXp('b'), xc = passXp('c');
+      const vb = view(b, tue), vc = view(c, tue), sb = questTotals(st, P('b')), sc = questTotals(st, P('c')), mb = bal('b'), mc = bal('c');
       assert.deepEqual([get(vb, tLives.id).progress, get(vc, tLives.id).progress], [tLives.goal - 1, 1], k('neither has finished the lives quest'));
       const together = [...vb.daily.quests, ...vb.weekly.quests].filter(q => !q.done && !get(vc, q.id).done && q.progress + get(vc, q.id).progress >= q.goal);
       assert.ok(together.some(q => q.id === tLives.id), k('but together they have'));
       st.mergePlayers('b', 'c'); await reopen();
-      v = view(c, tue); assert.deepEqual([get(v, tLife.id).done, get(v, tLives.id).progress, get(v, tLives.id).done], [true, tLives.goal, false], k('merged: done kept, progress added'));
-      assert.deepEqual(view(st.player('c'), tue).weekly.quests.map(q => q.progress), vb.weekly.quests.map((q, i) => Math.min(q.goal, q.progress + vc.weekly.quests[i].progress)), k('the week adds up too'));
-      const settled = questsTick(st, st.player('c'), null, tue);
-      assert.deepEqual(settled.done.map(q => q.id).sort(), together.map(q => q.id).sort(), k('settling pays what they finished together'));
-      assert.equal(passXp('c'), xb + xc + settled.xp, k('to the pass, on top of both'));
-      assert.deepEqual(questsTick(st, st.player('c'), null, tue), { xp: 0, done: [] }, k('once'));
-      assert.deepEqual(st.questRows('b', T.period), [], k('nothing left under the merged player'));
+      v = view(P('c'), tue); assert.deepEqual([get(v, tLife.id).claimed, get(v, tLives.id).progress, get(v, tLives.id).done], [true, tLives.goal, false], k('merged: claimed kept, progress added'));
+      assert.deepEqual(questTotals(st, P('c')), Object.fromEntries(Object.keys({ ...sb, ...sc }).map(x => [x, (sb[x] || 0) + (sc[x] || 0)])), k('lifetime totals added up'));
+      const settled = questsTick(st, P('c'), null, tue);
+      assert.deepEqual(settled.done.map(q => q.id).sort(), together.map(q => q.id).sort(), k('settling finishes what they finished together'));
+      assert.equal(bal('c'), mb + mc, k('without paying: it waits to be claimed'));
+      assert.deepEqual(questsTick(st, P('c'), null, tue).done, [], k('once'));
+      assert.deepEqual([st.questRows('b', T.period), st.stats('b'), P('b')], [[], {}, null], k('nothing left under the merged player'));
+      // Classic lives (the endless arena): lives, time (up to an hour a life), cells, mass and split-kills count; quests that need a round don't
+      st.createPlayer('g', 'hg', 1); const C = { survived: 2400, place: 1, of: 10, eaten: 500, peak: 50000, splitKills: 9, mode: 'classic' };
+      for (const kind of ['eat', 'mass', 'splitkill', 'life', 'top']) {
+        const { t, q, period } = dayWith(kind, '2026-12-01'), before = (st.questRows('g', period).find(r => r.quest === q.id) || {}).progress || 0;
+        questsTick(st, P('g'), C, t); const after = Math.min(q.goal, (st.questRows('g', period).find(r => r.quest === q.id) || {}).progress || 0);
+        const want = { eat: Math.min(q.goal, before + 500), mass: 1, splitkill: Math.min(q.goal, before + 9), life: 0, top: 0 }[kind];
+        assert.equal(after, want, k(`Classic: ${q.text} (${q.modes.join(' + ')})`));
+        assert.deepEqual(q.modes, ['life', 'top'].includes(kind) ? ['ranked'] : ['ranked', 'classic'], k(q.kind + ': where it counts'));
+      }
+      assert.deepEqual([questTotals(st, P('g')).time, questTotals(st, P('g')).wins, questTotals(st, P('g')).top3, P('g').rounds], [5 * 2400, 0, 0, 0], k('a Classic life counts up to an hour of time, and never a win or a top 3'));
+      v = view(P('g'), fri); assert.deepEqual([line(v, 'wins').modes, line(v, 'eaten').modes], [['ranked'], ['ranked', 'classic']], k('the permanent lines say where they count'));
+      // the client's cells, mass and split-kills are capped by the life's length; split-kills by its cells
+      st.createPlayer('h', 'hh', 1); const m = dayWith('mass', '2026-12-01'), sk = dayWith('splitkill', '2026-12-01');
+      questsTick(st, P('h'), { survived: 20, peak: 99999, eaten: 2, splitKills: 50 }, m.t); assert.equal((st.questRows('h', m.period).find(r => r.quest === m.q.id) || {}).progress || 0, 300 + Math.floor(20 / 60 * 1500) >= m.q.mass ? 1 : 0, k('a 20 s life cannot claim a huge mass'));
+      questsTick(st, P('h'), { survived: 60, eaten: 4, splitKills: 50 }, sk.t); assert.equal((st.questRows('h', sk.period).find(r => r.quest === sk.q.id) || {}).progress, Math.min(sk.q.goal, 4), k('split-kills no more than the cells eaten'));
       // testers: they see the pass while it is off and, before a season starts, the next one; nobody else does
-      const { passLive } = require('./economy'), pre = at('2026-11-01T12:00:00Z'), A = { id: 'a' }, B = { id: 'b' };
+      const { passLive } = E, pre = at('2026-11-01T12:00:00Z'), A = { id: 'a' }, B = { id: 'b' };
       st.setFlag('pass', 'off'); st.setFlag('passTesters', JSON.stringify(['a']));
       assert.deepEqual([passLive(st, pre, A)?.key, passLive(st, pre, B), passLive(st, pre), passLive(st, fri, A)?.key, passLive(st, fri, B)], ['s1', null, null, 's1', null], k('off: only the tester, who gets the next season before it starts'));
       st.setFlag('pass', 'on');
       assert.deepEqual([passLive(st, pre, A)?.key, passLive(st, pre, B), passLive(st, fri, B)?.key], ['s1', null, 's1'], k('on: everyone in the season, only the tester before it'));
       assert.equal(passLive(st, at('2027-06-01T00:00:00Z'), A), null, k('no season left, nothing to test'));
-      v = questsOf(st, a, pre); assert.ok(v && v.daily.quests.length === 4 && v.weekly.ends <= at(s1.to), k('a tester has quests before the season'));
+      assert.deepEqual([view(a, pre).daily.quests[0].xp, view(B, pre).daily.quests[0].xp], [100, 0], k('pass XP shows only to whom the pass is live'));
       st.setFlag('passTesters', 'not json'); assert.equal(passLive(st, pre, A), null, k('a broken list is no testers'));
       // deletion
-      st.deletePlayer('c'); assert.deepEqual(st.questRows('c', T.period), [], k('deleting the player deletes its quests')); assert.equal(st.questStats(T.period), 0);
-      await reopen(); assert.deepEqual(st.questRows('c', T.period), [], k('and stays deleted'));
+      st.deletePlayer('c'); assert.deepEqual([st.questRows('c', T.period), st.questRows('c', 'perm'), st.stats('c')], [[], [], {}], k('deleting the player deletes its quests and totals')); assert.equal(st.questStats(T.period), 0);
+      await reopen(); assert.deepEqual([st.questRows('c', T.period), st.stats('c')], [[], {}], k('and stays deleted'));
       assert.ok(st.questStats(D.period) >= 1, k('quest stats per period'));
       if (kind === 'sqlite') st.db.close();
     }
+    QUESTS.splitKills = splitWas;
   }
   { // both stores keep XP, add it up, carry it through a merge and drop it with the player; old databases gain the column
     const { SqliteStore, JsonStore } = require('./store'), dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mitosis-xp-'));
@@ -719,9 +854,16 @@ async function post(url, body, secret) {
       await reopen();
       assert.deepEqual(['old', 'a', 'b'].map(id => Number(st.player(id).xp)), [40, 150, 500], kind + ': XP adds up and is kept');
       assert.equal(Number(st.run('r1', 'a').xp), 42, kind + ': a run keeps the XP it earned');
+      st.addStats('a', { played: 5, rounds: 4, wins: 2, podiums: 3, alive: 600, eaten: 9 }); st.setPeak('a', 1500); st.addStats('b', { played: 2, rounds: 2, wins: 1, podiums: 1, alive: 100, eaten: 1 }); st.setPeak('b', 1200); st.setPeak('b', 900);
+      st.addTrophies('a', ['amoeba', 'colony', 'interphase', 'prophase'], 50); st.addTrophies('b', ['amoeba', 'colony'], 20); st.addTrophies('b', ['amoeba'], 99);
+      await reopen();
+      assert.deepEqual(st.trophies('b').sort((x, y) => x.at - y.at || (x.step < y.step ? -1 : 1)), [{ step: 'amoeba', at: 20 }, { step: 'colony', at: 20 }], kind + ': a trophy is won once, with its first date');
       st.mergePlayers('a', 'b'); assert.equal(st.player('a'), null); assert.equal(Number(st.player('b').xp), 650, kind + ': merging adds the XP together');
+      assert.deepEqual(['played', 'rounds', 'wins', 'podiums', 'alive', 'eaten', 'peak'].map(k => Number(st.player('b')[k])), [7, 6, 3, 4, 700, 10, 1500], kind + ': merging adds the stats and keeps the best peak');
+      assert.deepEqual(Object.fromEntries(st.trophies('b').map(t => [t.step, t.at])), { amoeba: 20, colony: 20, interphase: 50, prophase: 50 }, kind + ': merging joins the trophies, earliest date first');
+      assert.deepEqual(st.trophies('a'), [], kind + ': none are left behind');
       assert.equal(Number(st.playerBySecret('ha').xp), 650, kind + ': the merged device opens the summed XP');
-      st.deletePlayer('b'); assert.equal(st.player('b'), null, kind + ': deleting removes the player and its XP'); assert.equal(st.playerBySecret('ha'), null);
+      st.deletePlayer('b'); assert.equal(st.player('b'), null, kind + ': deleting removes the player and its XP'); assert.deepEqual(st.trophies('b'), [], kind + ': and its trophies'); assert.equal(st.playerBySecret('ha'), null);
       st.createPlayer('b2', 'hb', 3); assert.equal(Number(st.player('b2').xp), 0, kind + ': a new wallet on the same device starts from 0');
       await reopen(); st.addXp('b2', 7); await reopen(); // the only change in its save, so it must save itself
       assert.equal(Number(st.player('b2').xp), 7, kind + ': adding XP saves it');
