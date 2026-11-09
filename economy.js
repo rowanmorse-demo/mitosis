@@ -112,11 +112,9 @@ const RATING_AI = { skill: { easy: .5, normal: 1, hard: 1.2, expert: 1.35, maste
 // Casual pays by the bots' skill instead, [1st, 2nd, 3rd]: Master tops out at 15 (Rowan, Nov 7) and each easier skill pays
 // a fifth less. The skill is the one the game gave at run/start (apps from before that send it with run/end; none is Normal).
 // Only a placing of minOf or more cells counts, and only a life of minSec or more on the server's clock, so a quit
-// (no placing), an early death or an abandoned life (never ended) pays nothing. Each day (UTC) bonuses stop at the cap:
-// bots (ai and casual together) and comp (friends could trade wins) each have their own.
-const WINS = { comp: [50, 15], ai: [25, 5], casual: { easy: [3, 2, 2], normal: [6, 5, 4], hard: [9, 7, 6], expert: [12, 10, 8], master: [15, 12, 10] }, minSec: 120, minOf: 8, cap: { bots: 200, comp: 400 } };
+// (no placing), an early death or an abandoned life (never ended) pays nothing. There is no daily cap (Rowan, Nov 9).
+const WINS = { comp: [50, 15], ai: [25, 5], casual: { easy: [3, 2, 2], normal: [6, 5, 4], hard: [9, 7, 6], expert: [12, 10, 8], master: [15, 12, 10] }, minSec: 120, minOf: 8 };
 const SKILLS = Object.keys(WINS.casual), skillOf = v => (SKILLS.includes(v) ? v : null);
-const WIN_POOLS = { bots: ['ai', 'casual'], comp: ['comp'] }, winPool = kind => (kind === 'comp' ? 'comp' : 'bots');
 function winBonus({ kind, survived, place, of, skill }) {
   const t = kind === 'casual' ? WINS.casual[skillOf(skill) || 'normal'] : Array.isArray(WINS[kind]) ? WINS[kind] : null; if (!t) return 0;
   const n = Math.floor(+of || 0), pl = Math.floor(+place || 0);
@@ -452,11 +450,7 @@ function runEnd(store, body, p, ctx = {}) {
   // Casual pays only for a win or a top-3 finish, and earns no XP (it has endless lives)
   const kind = runKind(run, ctx.metSince), casual = kind === 'casual', life = { survived, place: body.place, of: body.of };
   const vsBots = kind === 'ai' || casual, skill = vsBots ? skillOf(run.skill) || skillOf(body.skill) || 'normal' : null;
-  let bonus = winBonus({ kind, ...life, skill }), capped = false;
-  if (bonus) {
-    const pool = winPool(kind), day = dayOf(now).starts, used = WIN_POOLS[pool].reduce((n, k) => n + store.bonusSince(p.id, day, k), 0);
-    const left = Math.max(0, WINS.cap[pool] - used); if (bonus > left) { bonus = left; capped = true; }
-  }
+  const bonus = winBonus({ kind, ...life, skill });
   const payout = (casual ? 0 : payoutFor({ survived, bestRank: body.bestRank, place: body.place })) + bonus;
   const xp = casual ? { time: 0, place: 0, win: 0, total: 0 } : xpFor(life), level = levelOf(p.xp).level;
   const w = { balance: Number(p.balance) + payout, earned: Number(p.earned) + payout, hour_at: Number(p.hour_at), hour_sum: Number(p.hour_sum) };
@@ -472,11 +466,11 @@ function runEnd(store, body, p, ctx = {}) {
   else { store.setRating(p.id, rating, name); p.rating = rating; p.runs = Number(p.runs || 0) + 1; }
   p.name = name;
   // kind: who the life was against (comp, ai, casual; legacy for apps that don't say); ratingDelta and aiDelta: how each
-  // rating moved (one is 0); winBonus: the part of payout a win or top 3 paid; winCapped: the day's cap cut it; skill: the bots';
+  // rating moved (one is 0); winBonus: the part of payout a win or top 3 paid; winCapped: always false (there was a daily cap; older apps read it); skill: the bots';
   // xpParts: where the XP came from (time alive, placing, the win); levelUp: how many levels this life gained;
   // passUp: pass levels from the life and its quests; questXp and questsDone: the quests it finished
   const out = wallet(store, p);
-  return { payout, kind, skill, winBonus: bonus, winCapped: capped, ratingDelta: vsBots ? 0 : delta, aiDelta: vsBots ? delta : 0, xpGained: xp.total, xpParts: { time: xp.time, place: xp.place, win: xp.win }, levelUp: out.level - level,
+  return { payout, kind, skill, winBonus: bonus, winCapped: false, ratingDelta: vsBots ? 0 : delta, aiDelta: vsBots ? delta : 0, xpGained: xp.total, xpParts: { time: xp.time, place: xp.place, win: xp.win }, levelUp: out.level - level,
     passUp: passUp + (passMid && out.pass ? out.pass.level - passMid.level : 0), questXp: q.xp, questsDone: q.done, ...out };
 }
 function buySkin(store, body, p) {

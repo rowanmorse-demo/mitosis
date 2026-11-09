@@ -188,24 +188,23 @@ const game = () => new Promise((res, rej) => { const ws = new WebSocket(base.rep
     assert.ok(lb.top.some(t => t.name === 'Winner') && !lb.top.some(t => t.name === 'Botter'), 'the leaderboard lists competitive players only');
     r = await post('/api/session', { secret: s2 }); assert.deepEqual([r.body.runs, r.body.rating], [0, 0], 'ten bot wins: no competitive lives, the rating where it started');
     assert.ok(r.body.aiRating > 300, 'the AI rating climbed'); assert.equal(r.body.aiRuns, 10);
-    // the daily cap: bot wins (ranked and Casual together) stop paying their bonus at 200 ATP a day
-    // (ranked 25 and Casual-on-Master 15 in turn: ten wins make exactly 200)
+    // no daily cap (Rowan, Nov 9): ten bot wins (ranked 25 and Casual-on-Master 15 in turn) make 200, and more keep paying in full
     const paid = db.prepare("SELECT COALESCE(SUM(bonus), 0) AS n FROM runs WHERE player = (SELECT id FROM players WHERE secret = ?) AND kind IN ('ai', 'casual')").get(require('crypto').createHash('sha256').update(s2).digest('hex')).n;
-    assert.equal(Number(paid), WINS.cap.bots, 'win bonuses from bots stop at the day\'s cap');
+    assert.equal(Number(paid), 200, 'ten bot wins paid their whole bonus');
     ({ r } = await life(s2, 200, { mode: 'bots' }, { place: 1, of: 12 }));
-    assert.deepEqual([r.body.payout, r.body.winBonus, r.body.winCapped], [25, 0, true], 'past the cap a ranked bot win pays its placement only, and says why');
-    ({ r } = await life(s2, 200, { mode: 'casual' }, { place: 1, of: 12 })); assert.deepEqual([r.body.payout, r.body.winCapped], [0, true], 'and a Casual win nothing');
-    // the cap for wins against players is separate
+    assert.deepEqual([r.body.payout, r.body.winBonus, r.body.winCapped], [50, 25, false], 'the eleventh ranked bot win still pays its bonus');
+    ({ r } = await life(s2, 200, { mode: 'casual', skill: 'master' }, { place: 1, of: 12 })); assert.deepEqual([r.body.payout, r.body.winCapped], [15, false], 'and so does a Casual win on Master');
+    // wins against players are uncapped too
     const E = await game(), F = await game();
     id = (await post('/api/run/start', { mode: 'arena', relay: E.key }, s2)).body.runId; db.prepare('UPDATE runs SET started = started - 200000 WHERE id = ?').run(id);
     E.alive(true); F.alive(true); await sleep(600); E.alive(true); await sleep(100);
-    r = await post('/api/run/end', { runId: id, survived: 200, place: 1, of: 12 }, s2); assert.deepEqual([r.body.kind, r.body.winBonus], ['comp', 50], 'wins against players have their own cap');
+    r = await post('/api/run/end', { runId: id, survived: 200, place: 1, of: 12 }, s2); assert.deepEqual([r.body.kind, r.body.winBonus], ['comp', 50], 'a win against players pays its bonus');
     for (let i = 0; i < 7; i++) { id = (await post('/api/run/start', { mode: 'arena', relay: E.key }, s2)).body.runId; db.prepare('UPDATE runs SET started = started - 200000 WHERE id = ?').run(id);
       await sleep(550); E.alive(true); F.alive(true); await sleep(80); E.alive(true); r = await post('/api/run/end', { runId: id, survived: 200, place: 1, of: 12 }, s2); }
-    assert.deepEqual([r.body.winBonus, r.body.winCapped], [50, false], 'eight competitive wins: 400 ATP, the whole cap');
+    assert.deepEqual([r.body.winBonus, r.body.winCapped], [50, false], 'eight competitive wins: 400 ATP');
     id = (await post('/api/run/start', { mode: 'arena', relay: E.key }, s2)).body.runId; db.prepare('UPDATE runs SET started = started - 200000 WHERE id = ?').run(id);
     await sleep(550); E.alive(true); F.alive(true); await sleep(80); E.alive(true);
-    r = await post('/api/run/end', { runId: id, survived: 200, place: 1, of: 12 }, s2); assert.deepEqual([r.body.kind, r.body.payout, r.body.winBonus, r.body.winCapped], ['comp', 25, 0, true], 'the ninth pays its placement only');
+    r = await post('/api/run/end', { runId: id, survived: 200, place: 1, of: 12 }, s2); assert.deepEqual([r.body.kind, r.body.payout, r.body.winBonus, r.body.winCapped], ['comp', 75, 50, false], 'the ninth pays in full: no daily cap');
     E.ws.close(); F.ws.close();
     db.close();
   }
