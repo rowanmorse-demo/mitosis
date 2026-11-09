@@ -1,6 +1,6 @@
 // Remote page updates: signing (tools/page-update.js), what the app accepts, and the server route. Run:  node updates.test.js
 'use strict';
-const { spawn } = require('child_process'), path = require('path'), fs = require('fs'), os = require('os'), assert = require('assert'), crypto = require('crypto');
+const { spawn, execFileSync } = require('child_process'), path = require('path'), fs = require('fs'), os = require('os'), assert = require('assert'), crypto = require('crypto');
 const pu = require('./tools/page-update');
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mitosis-updates-'));
@@ -55,6 +55,50 @@ assert.throws(() => pu.publish({ out, pagePath: bad, keyFile, max: 11 }), /boote
 assert.throws(() => pu.publish({ out, pagePath: pageFile, keyFile, min: 12, max: 11 }), /build range/);
 assert.throws(() => pu.publish({ out, pagePath: pageFile, keyFile: path.join(tmp, 'nokey.pem'), max: 11 }), /keygen/);
 assert.equal(read()[0].v, 3, 'refused publishes leave the last update alone');
+
+/* ---------- Android: the same key, its own signed text ---------- */
+const androidOut = path.join(tmp, 'android-out');
+const am = pu.publish({ platform: 'android', out: androidOut, pagePath: pageFile, keyFile, min: 10, max: 10 });
+const androidPage = fs.readFileSync(path.join(androidOut, 'page.html'));
+assert.match(pu.message(am, 'android'), /^mitosis-page-update\/1\nplatform=android\nv=1\n/, 'Android updates count from 1 in their own folder');
+assert.deepEqual(pu.verify(am, androidPage, pub, 'android'), [], 'an Android update verifies as Android');
+assert.ok(pu.verify(am, androidPage, pub, 'ios').some(e => /signature/.test(e)), 'an Android update is no good to the iOS app');
+assert.ok(pu.verify(onDisk, null, pub, 'android').some(e => /signature/.test(e)), 'and an iOS one is no good to Android');
+assert.equal(pu.PLATFORMS.android.first, 10, 'Android page updates start with versionCode 10 (2.3.0)');
+const kt = fs.existsSync(pu.PLATFORMS.android.app) ? fs.readFileSync(pu.PLATFORMS.android.app, 'utf8') : null;
+if (kt) { // PageUpdates.kt is in this checkout: it must sign-check the same text and trust the same key as the iOS app
+  const ktBlock = kt.match(/listOf\(("mitosis-page-update\/1"[\s\S]*?)\)\.joinToString\("\\n"\)/)[1];
+  const ktText = [...ktBlock.matchAll(/"([^"]*)"/g)].map(m => m[1].replace(/\$(\w+)/g, (_, k) => k === 'PLATFORM' ? 'android' : sample[k])).join('\n');
+  assert.equal(ktText, pu.message(sample, 'android'), 'PageUpdates.kt checks exactly the text the tool signs');
+  assert.equal(pu.appKey('android'), pu.appKey('ios'), 'both apps trust the same key');
+  assert.match(kt, /const val PLATFORM = "android"/);
+}
+
+/* ---------- rollback: the page that was out before, or index.html at a commit ---------- */
+const repo = fs.mkdtempSync(path.join(os.tmpdir(), 'mitosis-rollback-')), ro = path.join(repo, 'updates', 'ios'), repoPage = path.join(repo, 'index.html');
+const g = (...args) => execFileSync('git', args, { cwd: repo, stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+g('init', '-q'); g('config', 'user.email', 'test@example.com'); g('config', 'user.name', 'test'); g('config', 'commit.gpgsign', 'false');
+const commitPage = (tag, publishToo) => {
+  fs.writeFileSync(repoPage, `<script>/*${tag}*/Native.send({type:'booted'});</script>`); g('add', '-A'); g('commit', '-qm', tag);
+  if (publishToo) { pu.publish({ out: ro, pagePath: repoPage, keyFile, min: 11, max: 11 }); g('add', '-A'); g('commit', '-qm', 'publish ' + tag); }
+  return g('rev-parse', '--short', 'HEAD');
+};
+const revA = commitPage('A', true);
+assert.throws(() => pu.previousPage('ios', undefined, repo, ro), /No earlier iOS page/, 'one page out: nothing to roll back to');
+commitPage('B', true);
+commitPage('C', false); // committed, never published
+assert.match(pu.previousPage('ios', undefined, repo, ro).page.toString(), /\/\*A\*\//, 'rollback goes back to the page out before this one');
+pu.publish({ out: ro, keyFile, min: 11, max: 11, off: true }); g('add', '-A'); g('commit', '-qm', 'off');
+assert.match(pu.previousPage('ios', undefined, repo, ro).page.toString(), /\/\*B\*\//, 'after "off", rollback brings back the last page that was out');
+const toA = pu.previousPage('ios', revA, repo, ro);
+assert.match(toA.page.toString(), /\/\*A\*\//, '--to <commit> takes index.html as it was then');
+assert.equal(toA.from, revA);
+const again = pu.publish({ out: ro, pagePath: (fs.writeFileSync(path.join(tmp, 'rb.html'), toA.page), path.join(tmp, 'rb.html')), keyFile, min: 11, max: 11, commit: toA.from });
+assert.equal(again.v, 4, 'a rollback is a new, higher version, so apps that took B still move');
+assert.equal(again.commit, revA, 'and it says where the page came from');
+assert.throws(() => pu.previousPage('ios', 'no-such-rev', repo, ro), /No index.html at no-such-rev/);
+assert.throws(() => pu.previousPage('ios', 'x; touch pwned', repo, ro), /--to takes/, 'only plain revision names reach git');
+fs.rmSync(repo, { recursive: true, force: true });
 
 /* ---------- the server hands out the files ---------- */
 pu.publish({ out, pagePath: pageFile, keyFile, min: 11, max: 11 });
