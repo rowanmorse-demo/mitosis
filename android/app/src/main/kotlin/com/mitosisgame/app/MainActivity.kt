@@ -83,11 +83,16 @@ class MainActivity : AppCompatActivity() {
         if (BuildConfig.DEBUG) WebView.setWebContentsDebuggingEnabled(true)
 
         // Android's back button is Esc to the page: it closes the open page or sheet, else pauses the game.
+        // When nothing in the page takes it (the lobby with nothing open), the app goes to the background like any
+        // app's first screen: dispatchEvent answers false once a handler called preventDefault.
         // On Android 13+ back arrives here through the platform's back callback (enableOnBackInvokedCallback in the
         // manifest); older versions are caught in dispatchKeyEvent, before the focused WebView can swallow the key.
         onBackPressedDispatcher.addCallback(this) {
-            if (BuildConfig.DEBUG) Log.i(TAG, "back → Escape")
-            web?.evaluateJavascript("document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))", null)
+            val w = web ?: return@addCallback
+            w.evaluateJavascript("document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}))") { notTaken ->
+                if (BuildConfig.DEBUG) Log.i(TAG, "back → Escape (${if (notTaken == "true") "not taken: to the background" else "taken by the page"})")
+                if (notTaken == "true" && !isFinishing) moveTaskToBack(true)
+            }
         }
 
         createWebView()

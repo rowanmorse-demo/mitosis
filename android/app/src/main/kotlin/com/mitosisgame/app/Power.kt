@@ -12,12 +12,12 @@ import androidx.core.content.ContextCompat
 
 /**
  * Battery saver and the thermal state, for the page ({type:'power', low, thermal}): it switches to reduced
- * effects while battery saver is on or the phone is hot. `thermal` uses iOS's names (ProcessInfo.ThermalState):
- * "nominal", "fair", "serious" or "critical".
+ * effects while battery saver is on or the phone is hot. `thermal` is iOS's ProcessInfo.ThermalState raw value, which the
+ * page reads as a number: 0 nominal, 1 fair, 2 serious, 3 critical.
  */
-class Power(private val activity: Activity, private val send: (low: Boolean, thermal: String) -> Unit) {
+class Power(private val activity: Activity, private val send: (low: Boolean, thermal: Int) -> Unit) {
     private val pm = activity.getSystemService(PowerManager::class.java)
-    private var last: Pair<Boolean, String>? = null
+    private var last: Pair<Boolean, Int>? = null
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) = report()
     }
@@ -31,7 +31,7 @@ class Power(private val activity: Activity, private val send: (low: Boolean, the
     /** Sends the state when it changed since the last report, or always when [force] (a freshly loaded page). */
     fun report(force: Boolean = false) {
         val low = pm?.isPowerSaveMode == true
-        val thermal = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && pm != null) Thermal.name(pm) else "nominal"
+        val thermal = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && pm != null) Thermal.level(pm) else 0
         val now = low to thermal
         if (!force && now == last) return
         last = now
@@ -47,11 +47,11 @@ class Power(private val activity: Activity, private val send: (low: Boolean, the
 
     @RequiresApi(Build.VERSION_CODES.Q)
     private object Thermal {
-        fun name(pm: PowerManager) = when (pm.currentThermalStatus) {
-            PowerManager.THERMAL_STATUS_NONE -> "nominal"
-            PowerManager.THERMAL_STATUS_LIGHT -> "fair"
-            PowerManager.THERMAL_STATUS_MODERATE -> "serious"
-            else -> "critical"   // severe, critical, emergency, shutdown
+        fun level(pm: PowerManager) = when (pm.currentThermalStatus) {
+            PowerManager.THERMAL_STATUS_NONE -> 0       // nominal
+            PowerManager.THERMAL_STATUS_LIGHT -> 1      // fair
+            PowerManager.THERMAL_STATUS_MODERATE -> 2   // serious: the page turns on battery saver from here
+            else -> 3                                   // critical (severe, critical, emergency, shutdown)
         }
 
         fun listen(activity: Activity, pm: PowerManager, changed: () -> Unit): Any {
