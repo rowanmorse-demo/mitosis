@@ -703,7 +703,7 @@ body:not(.playing) #tip{display:none}
 .lobby #go.lb-wait{filter:saturate(.3) brightness(.72)}
 .lobby .lb-go{white-space:nowrap;min-width:0} /* a label never wraps out of the button */
 .lobby .lb-gt{display:grid;justify-items:start;gap:5px;min-width:0;text-align:left}
-.lobby .lb-gt b{font:inherit;font-size:.78em;line-height:1;letter-spacing:.04em;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.lobby .lb-gt b{font:inherit;font-size:.9em;line-height:1;letter-spacing:.04em;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .lobby .lb-gt small{font:700 11.5px/1 var(--mono);letter-spacing:.06em;text-transform:none;color:rgba(43,7,21,.72);text-shadow:none;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .lobby #go.queued{white-space:nowrap}
 .lobby #go.queued:has(.lb-gt)::after{display:none} /* the small line says it */
@@ -7981,7 +7981,7 @@ function updateSpawnLock(){
   }
   let goT=!local&&isOffline()?'Play offline':'Play',goS='',agT='Re-inoculate'; // goS: a small second line under the big word
   if(queued){const left=Math.max(0,Math.ceil((searchUntil-performance.now())/1000));goT=`Searching… 0:${String(left).padStart(2,'0')}`;agT=goT+(queuedPeers?' · '+(queuedPeers+1)+' waiting':'');goS=(queuedPeers?(queuedPeers+1)+' waiting · tap':'Tap')+' to cancel';} // the wait on the small line
-  else if(!open){const why=spawnBlockReason();agT=(why==='lives'?'No lives left · ':'Round closed · ')+'find a game';goT='Find game';goS=why==='lives'?'No lives left':'Round closed';} // the action big, why under it
+  else if(!open){const why=spawnBlockReason();agT=(why==='lives'?'No lives left · ':'Round closed · ')+'find a game';goT='Play';goS=why==='lives'?'No lives left':'Round closed';} // Play stays the big word (Rowan); why under it
   else{const left=MAX_RESPAWNS+1-livesUsed();if(!local&&left<=MAX_RESPAWNS)agT=`Re-inoculate · ${left} ${left===1?'life':'lives'} left`;}
   if(nearMode()&&!queued)goT=nearLabel();
   go.classList.toggle('lb-wait',nearMode()&&!near.m&&!nearHost()); // a guest waits for the host to start
