@@ -59,9 +59,9 @@ keytool -printcert -jarfile mitosis-2.3.0-10-release.aab
 
 Everything here happens in [Play Console](https://play.google.com/console). Nothing in this repo does it for you.
 
-1. **The app.** If it doesn't exist yet, create it (*Create app*): name *Mitosis: Cell Arena*, a game, free, with in-app purchases. Leave **Play App Signing** on (the default) and let Google generate the app signing key. The package name is fixed by the first upload: `com.mitosisgame.app`. If an earlier build is already in Play with a versionCode of 10 or more, raise `versionCode` in `app/build.gradle.kts` first.
+1. **The app.** Create it in the **organization** developer account (Catapult Consulting, LLC), not the personal "RowanMorse" one (*Create app*; field-by-field text in PLAY-LISTING.md): name *Mitosis: Cell Arena*, a game, free, with in-app purchases. Leave **Play App Signing** on (the default) and let Google generate the app signing key. The package name is fixed by the first upload: `com.mitosisgame.app`. If an earlier build is already in Play with a versionCode of 10 or more, raise `versionCode` in `app/build.gradle.kts` first.
 2. **Payments profile.** *Settings › Payments profile*: needed before you can sell anything.
-3. **The ATP packs.** *Monetize with Play › Products › One-time products*: create five, with these exact ids, and activate them. The app consumes each purchase after the server credits it, so they can be bought again. These prices match the App Store:
+3. **The ATP packs.** Only once step 4 is done: a pack bought before the server can verify Google purchases is paid for but not credited. The app keeps handing it to the server on later launches, but Google refunds any purchase not consumed within 3 days. Until the products exist, the Android shop says packs aren't on sale yet. *Monetize with Play › Products › One-time products*: create five, with these exact ids, and activate them. The app consumes each purchase after the server credits it, so they can be bought again. These prices match the App Store:
 
    | Product id | ATP | Price (US) |
    |---|---|---|
@@ -93,7 +93,7 @@ Everything here happens in [Play Console](https://play.google.com/console). Noth
 9. **Test, then release.**
    - Upload the signed AAB to **Internal testing**, add your testers and roll it out.
    - Install from the Play link and check four things: a purchase with a license tester (ATP arrives and the pack can be bought again), sign-in, the shop prices, and a Ranked game.
-   - New personal developer accounts must also run a **closed test** with at least 12 testers for 14 days before Play opens production access.
+   - New personal developer accounts must also run a **closed test** with at least 12 testers for 14 days before Play opens production access. Organization accounts (D-U-N-S verified) don't have that rule.
    - Then promote the release to Production.
 
 ## What the app sends the page (for reference)
