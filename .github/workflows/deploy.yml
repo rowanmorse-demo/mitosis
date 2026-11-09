@@ -5,11 +5,6 @@ name: Deploy
 
 on:
   workflow_dispatch:
-    inputs:
-      site:
-        description: 'Also serve mitosisgame.com over HTTPS (turns on the caddy service once; it stays on after)'
-        type: boolean
-        default: false
 
 concurrency: deploy
 
@@ -29,7 +24,7 @@ jobs:
           chmod 600 ~/.ssh/deploy
           echo '51.81.81.166 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBYWTgJ31gp1V88ymqZ31K+NM8O+/8gPgwM6KoAP5Sux' > ~/.ssh/known_hosts
           ssh -i ~/.ssh/deploy -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=20 \
-            ubuntu@51.81.81.166 "cd /opt/mitosis && ${{ inputs.site && 'sudo touch .env && (grep -q \"^COMPOSE_PROFILES=\" .env || echo COMPOSE_PROFILES=web | sudo tee -a .env >/dev/null) && ' || '' }}sudo ./deploy.sh"
+            ubuntu@51.81.81.166 "cd /opt/mitosis && sudo ./deploy.sh"
           rm -f ~/.ssh/deploy
 
       - name: Check the server is serving this commit
@@ -40,8 +35,3 @@ jobs:
           else echo "::error::The server's index.html differs from ${GITHUB_SHA::7}"; exit 1; fi
           curl -fsS --max-time 15 http://51.81.81.166:3000/health; echo
 
-      - name: Check the website (when it was turned on)
-        if: ${{ inputs.site }}
-        run: |
-          for i in $(seq 12); do curl -fsS --max-time 15 https://mitosisgame.com/health && exit 0; sleep 10; done
-          echo "::error::https://mitosisgame.com/health didn't answer: is DNS pointing here, and are ports 80 and 443 free?"; exit 1

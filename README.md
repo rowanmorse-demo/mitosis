@@ -200,12 +200,19 @@ Then set that https address as `MITOSIS_SERVER` in `ios/project.yml`, `SERVER_UR
 
 ### Website (mitosisgame.com)
 
-`site/` is the public website: the home page, `privacy`, `terms`, `support`, `delete-account` and a 404 page. The legal pages are built from `PRIVACY.md` and `TERMS.md` (and `site-src/pages/*.md`) by `node site-src/build.js`; run it after editing any of them and commit `site/`. Preview everything locally, game included, with `node site-src/preview.js` (it routes like the server: the game at `/play`, `/ws` and `/api` to `npm run dev` on port 3000).
+`site/` is the public website: the home page, `privacy`, `terms`, `support`, `delete-account` and a 404 page. The legal pages are built from `PRIVACY.md` and `TERMS.md` (and `site-src/pages/*.md`) by `node site-src/build.js`; run it after editing any of them and commit `site/`. Preview everything locally, game included, with `node site-src/preview.js` (the game at `/play`, `/ws` and `/api` from `npm run dev` on port 3000), or run the server with `SITE_HOSTS=localhost`.
 
-On the server, the `caddy` service in `docker-compose.yml` serves the site over HTTPS and passes the game through, so the web game, iPhone and Android share accounts and arenas. It stays off until you ask for it:
+The game server serves the website itself for requests addressed to `mitosisgame.com` (`SITE_HOSTS`, default `mitosisgame.com,www.mitosisgame.com`): the home page at `/`, the game at `/play`, `www` redirected, and `/ws`, `/api`, `/updates`, `/health`, `/admin` as usual. Requests to the server's IP address are unchanged, so the apps and `http://<server>:3000` keep the game at `/`. HTTPS comes from a reverse proxy in front:
 
-1. Point the domain at the server: DNS `A` records for `mitosisgame.com` and `www` to the server's address.
-2. Deploy with the site switched on: Actions › Deploy › Run workflow with **site** ticked (`gh workflow run deploy.yml -f site=true`). That adds `COMPOSE_PROFILES=web` to `/opt/mitosis/.env` once (it stays on for later deploys) and checks `https://mitosisgame.com/health`. On the server itself: add the line to `.env` and run `./deploy.sh`. Caddy fetches the certificate on its first request. Ports 80 and 443 must be free.
+1. Point the domain at the server: DNS `A` records for `mitosisgame.com` and `www` to the server's address (DNS only, so the proxy can get its own certificate).
+2. If the server already runs a reverse proxy on ports 80 and 443 (the OVH server does: another project's Caddy), add a block to its Caddyfile and reload it:
+   ```
+   mitosisgame.com, www.mitosisgame.com {
+   	encode zstd gzip
+   	reverse_proxy 51.81.81.166:3000
+   }
+   ```
+   On a server with nothing on 80/443, use the `caddy` service in `docker-compose.yml` instead (`COMPOSE_PROFILES=web` in `.env`, then deploy).
 3. For sign-in on the website, add `GOOGLE_WEB_CLIENT_ID` (a Web OAuth client with `https://mitosisgame.com` as an authorised origin) and `APPLE_SERVICES_ID` (a Services ID with the domain verified and `https://mitosisgame.com/` as a return URL; the page signs in with a popup) to `.env`.
 
 The apps keep talking to `http://<server>:3000` until a store build points them at the https address.
