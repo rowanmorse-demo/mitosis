@@ -1,0 +1,44 @@
+# mitosisgame.com over HTTPS, in front of the game server (docker compose --profile web; see README › Website).
+# Caddy gets and renews the certificates by itself once the domain's DNS points at this server.
+#   /                      the website (site/: home, privacy, terms, support, delete-account)
+#   /play                  the web game (the server's index.html)
+#   /ws /api /updates …    the game server, unchanged, so the web game and the apps share accounts and arenas
+# The apps keep using http://<server>:3000 directly; nothing about them changes.
+{$SITE_DOMAIN:mitosisgame.com} {
+	encode zstd gzip
+
+	@game path /ws /api/* /updates/* /health /admin /admin/*
+	handle @game {
+		reverse_proxy mitosis:3000
+	}
+
+	# the web game; /play/ and /index.html land here too
+	@play path /play /play/ /index.html
+	handle @play {
+		rewrite * /
+		reverse_proxy mitosis:3000
+	}
+
+	handle {
+		root * /srv/site
+		header /assets/* Cache-Control "public, max-age=86400"
+		try_files {path} {path}.html {path}/index.html
+		file_server
+	}
+
+	handle_errors 404 {
+		rewrite * /404.html
+		root * /srv/site
+		file_server
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+	}
+}
+
+www.{$SITE_DOMAIN:mitosisgame.com} {
+	redir https://{$SITE_DOMAIN:mitosisgame.com}{uri} permanent
+}
