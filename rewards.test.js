@@ -7,14 +7,17 @@ const economy = require('./economy'), { WINS, RATING_AI, CLASSIC, winBonus, runK
 const won = (kind, place, extra = {}) => winBonus({ kind, survived: 300, place, of: 20, ...extra });
 assert.deepEqual([1, 2, 3, 4].map(p => won('comp', p)), [50, 15, 15, 0], 'against players: 50 for a win, 15 for 2nd or 3rd');
 assert.deepEqual([1, 2, 3, 4].map(p => won('ai', p)), [25, 5, 5, 0], 'ranked against bots: 25 and 5');
-assert.deepEqual([1, 2, 3, 4].map(p => won('casual', p)), [20, 5, 5, 0], 'Casual: 20 and 5');
+assert.deepEqual([1, 2, 3, 4].map(p => won('casual', p)), [6, 5, 4, 0], 'Casual with no skill given: Normal, 6, 5 and 4');
+for (const [skill, want] of [['easy', [3, 2, 2]], ['normal', [6, 5, 4]], ['hard', [9, 7, 6]], ['expert', [12, 10, 8]], ['master', [15, 12, 10]], ['godlike', [6, 5, 4]]])
+  assert.deepEqual([1, 2, 3, 4].map(p => won('casual', p, { skill })), [...want, 0], 'Casual on ' + skill + ' bots');
+assert.equal(won('ai', 1, { skill: 'easy' }), 25, 'ranked games of bots pay the same whatever the skill');
 assert.equal(won('legacy', 1), 0, 'older apps get the placement payout only, as before');
 assert.equal(won('comp', 1, { survived: WINS.minSec - 1 }), 0, 'a life shorter than two minutes wins nothing');
 assert.equal(won('comp', 1, { survived: WINS.minSec }), 50);
 assert.equal(won('ai', 1, { of: WINS.minOf - 1 }), 0, 'a round of fewer than 8 cells wins nothing');
 assert.equal(won('casual', 0), 0, 'a quit has no placing');
 assert.equal(won('casual', 3, { of: 2 }), 0, 'a placing below the field is nonsense');
-assert.equal(won('casual', 1, { place: '1', of: '20' }), 20, 'numbers sent as strings still count');
+assert.equal(won('casual', 1, { place: '1', of: '20' }), 6, 'numbers sent as strings still count');
 assert.equal(won('cap', 1), 0, 'only the three kinds pay');
 
 assert.equal(runKind({ mode: null, started: 1 }), 'legacy', 'no mode: an app from before this change');
@@ -48,7 +51,8 @@ async function storeTests() {
     let st = open();
     const reopen = async () => { if (kind === 'json') await new Promise(res => setTimeout(res, 400)); else st.db.close(); st = open(); };
     const w = economy.handlers.passView(st, {}, st.player('old'));
-    assert.deepEqual([w.rating, w.aiRating, w.aiTier, w.aiRuns, w.runs], [1234, 1000, 'Silver', 0, 12], k('a player from before has the AI rating at 1000'));
+    assert.deepEqual([w.rating, w.aiRuns, w.runs], [1234, 0, 12], k('a player from before keeps their numbers in the store (the ladder reset is the server start-up\'s job)'));
+    assert.equal(w.aiTier, economy.tierOf(w.aiRating), k('the AI tier follows the AI rating'));
     assert.equal(st.bonusSince('old', 0, 'casual'), 0, k('old runs paid no win bonus'));
     st.createPlayer('a', 'ha', 1); st.createPlayer('b', 'hb', 1);
     st.setAiRating('a', 1180, 'Ann'); st.setAiRating('a', 1200, 'Ann'); st.setAiRating('b', 1100, null); st.setRating('b', 1050, 'Bo');
@@ -58,7 +62,7 @@ async function storeTests() {
     st.createRun('r3', 'a', t0 - 10, 'casual'); st.endRun('r3', t0 - 5, 20, 0, 'casual', 20);   // yesterday, say
     st.createRun('r4', 'a', t0 + 4, 'arena'); st.endRun('r4', t0 + 5, 75, 10, 'comp', 50);
     await reopen();
-    assert.deepEqual([Number(st.player('a').ai_rating), Number(st.player('a').ai_runs), Number(st.player('a').runs), Number(st.player('a').rating)], [1200, 2, 0, 1000], k('the AI rating moves on its own'));
+    assert.deepEqual([Number(st.player('a').ai_rating), Number(st.player('a').ai_runs), Number(st.player('a').runs), Number(st.player('a').rating)], [1200, 2, 0, 0], k('the AI rating moves on its own'));
     assert.equal(st.player('a').name, 'Ann', k('an AI life keeps the name too'));
     assert.deepEqual(['casual', 'ai', 'comp'].map(x => st.bonusSince('a', t0, x)), [20, 5, 50], k('win bonuses add up by kind from a time on'));
     const r2 = st.run('r2', 'a'); assert.deepEqual([r2.mode, r2.kind, Number(r2.bonus)], ['bots', 'ai', 5], k('a run keeps its mode, kind and bonus'));
@@ -104,7 +108,7 @@ const game = () => new Promise((res, rej) => { const ws = new WebSocket(base.rep
 
   const s1 = 'winsecret' + 'a'.repeat(24);
   let r = await post('/api/session', { secret: s1 });
-  assert.deepEqual([r.body.aiRating, r.body.aiTier, r.body.aiRuns], [1000, 'Silver', 0], 'a new player has an AI rating of 1000');
+  assert.deepEqual([r.body.rating, r.body.rank, r.body.aiRating, r.body.aiTier, r.body.aiRank, r.body.aiRuns], [0, 'Amoeba I', 0, 'Bronze', 'Amoeba I', 0], 'a new player starts at the bottom of both ladders');
   assert.deepEqual(r.body.catalog.wins, WINS, 'the catalogue carries the win rules'); assert.deepEqual(r.body.catalog.ratingAi, RATING_AI);
   assert.ok(r.body.catalog.modes.includes('classic'), 'the catalogue says the server knows Classic runs (older servers would rate them as ranked)');
 
@@ -112,16 +116,16 @@ const game = () => new Promise((res, rej) => { const ws = new WebSocket(base.rep
   else {
     // an app from before this: no mode, rated on the competitive rating and paid by placement, as always
     let { r } = await life(s1, 300, {}, { place: 1, of: 20 });
-    assert.deepEqual([r.body.kind, r.body.payout, r.body.winBonus, r.body.aiDelta, r.body.aiRating], ['legacy', 25, 0, 0, 1000], 'an older app: 25 for the win, no bonus, the AI rating untouched');
-    assert.ok(r.body.ratingDelta > 0 && r.body.rating === 1000 + r.body.ratingDelta, 'and its rating moves as before');
+    assert.deepEqual([r.body.kind, r.body.payout, r.body.winBonus, r.body.aiDelta, r.body.aiRating], ['legacy', 25, 0, 0, 0], 'an older app: 25 for the win, no bonus, the AI rating untouched');
+    assert.ok(r.body.ratingDelta > 0 && r.body.rating === r.body.ratingDelta, 'and its rating moves as before');
     for (const k of ['payout', 'ratingDelta', 'balance', 'earned', 'skins', 'rating', 'tier', 'runs', 'playerId', 'xpGained']) assert.ok(k in r.body, 'run/end still sends ' + k);
     const comp0 = r.body.rating, runs0 = r.body.runs;
 
     // Casual: a win pays 20, earns no XP, and moves only the AI rating
     ({ r } = await life(s1, 300, { mode: 'casual' }, { place: 1, of: 20, skill: 'normal' }));
-    assert.deepEqual([r.body.kind, r.body.payout, r.body.winBonus, r.body.winCapped, r.body.xpGained], ['casual', 20, 20, false, 0], 'a Casual win pays 20 ATP and no XP');
+    assert.deepEqual([r.body.kind, r.body.payout, r.body.winBonus, r.body.winCapped, r.body.xpGained], ['casual', 6, 6, false, 0], 'a Casual win on Normal bots pays 6 ATP and no XP');
     assert.deepEqual([r.body.ratingDelta, r.body.rating, r.body.runs], [0, comp0, runs0], 'bots never move the competitive rating');
-    assert.ok(r.body.aiDelta > 0, 'the AI rating rises'); assert.deepEqual([r.body.aiRating, r.body.aiRuns], [1000 + r.body.aiDelta, 1]);
+    assert.ok(r.body.aiDelta > 0, 'the AI rating rises'); assert.deepEqual([r.body.aiRating, r.body.aiRuns], [r.body.aiDelta, 1]);
     const easy = (await life(s1, 300, { mode: 'casual' }, { place: 1, of: 20, skill: 'easy' })).r.body.aiDelta;
     assert.ok(easy > 0 && easy < r.body.aiDelta, 'Easy bots raise it less');
     ({ r } = await life(s1, 300, { mode: 'casual' }, { place: 2, of: 20 })); assert.equal(r.body.payout, 5, 'Casual 2nd: 5 ATP and nothing for the placing itself');
@@ -132,13 +136,20 @@ const game = () => new Promise((res, rej) => { const ws = new WebSocket(base.rep
     ({ r } = await life(s1, 0, { mode: 'casual' }, { survived: 4, eaten: 0, place: 0, of: 0 })); assert.ok(r.body.aiDelta < 0, 'a quick death lowers the AI rating');
 
     // ranked against bots (nobody found, or ping over Max ping): the placement payout as before, plus 25 for the win
-    ({ r } = await life(s1, 300, { mode: 'bots' }, { place: 1, of: 20, skill: 'master' }));
+    ({ r } = await life(s1, 300, { mode: 'bots', skill: 'master' }, { place: 1, of: 20 }));
     assert.deepEqual([r.body.kind, r.body.payout, r.body.winBonus, r.body.ratingDelta, r.body.rating], ['ai', 50, 25, 0, comp0], 'a ranked bot win: 25 + 25 ATP, competitive rating untouched');
     assert.ok(r.body.xpGained > 0, 'ranked bot games still earn XP');
-    const aiNormal = ratingDelta(r.body.aiRating - r.body.aiDelta, 300, 3, 1, 20, 0);
-    assert.equal(r.body.aiDelta, aiNormal, 'ranked bot games always count as Normal bots, whatever the game says');
+    assert.equal(r.body.aiDelta, ratingDelta(r.body.aiRating - r.body.aiDelta, 300, 3, 1, 20, 0, RATING_AI.skill.master), 'ranked games of bots have Master bots: Master gains');
+    assert.equal(r.body.skill, 'master');
+    // the skill given at run/start is the one paid; a claim at run/end can't raise it (older apps send it only then)
+    ({ r } = await life(s1, 300, { mode: 'casual', skill: 'easy' }, { place: 1, of: 20, skill: 'master' }));
+    assert.deepEqual([r.body.skill, r.body.payout], ['easy', 3], 'started on Easy, paid as Easy');
+    ({ r } = await life(s1, 300, { mode: 'casual' }, { place: 1, of: 20, skill: 'hard' }));
+    assert.deepEqual([r.body.skill, r.body.payout], ['hard', 9], 'build 12 sends the skill at the end: Hard pays 9');
+    ({ r } = await life(s1, 300, { mode: 'casual', skill: 'master' }, { place: 2, of: 20 })); assert.equal(r.body.payout, 12, 'Master 2nd: 12');
+    ({ r } = await life(s1, 300, { mode: 'casual', skill: 'master' }, { place: 3, of: 20 })); assert.equal(r.body.payout, 10, 'Master 3rd: 10');
 
-    // Classic: ATP for the best leaderboard rank, XP for the time alive, no rating, and a daily cap on its ATP
+    // Classic: ATP for the best leaderboard rank, XP for the time alive, no rating, and no daily cap (like all ATP since Nov 9)
     const before = (await post('/api/session', { secret: s1 })).body;
     ({ r } = await life(s1, 300, { mode: 'classic' }, { bestRank: 1, place: 1, of: 20 }));
     assert.deepEqual([r.body.kind, r.body.payout, r.body.winBonus, r.body.ratingDelta, r.body.aiDelta], ['classic', 25, 0, 0, 0], 'a Classic life that topped the board: 25 ATP, no win bonus, no rating');
@@ -147,10 +158,8 @@ const game = () => new Promise((res, rej) => { const ws = new WebSocket(base.rep
     ({ r } = await life(s1, 300, { mode: 'classic' }, { bestRank: 12 })); assert.equal(r.body.payout, 3, 'a best rank of 12: 3 ATP');
     ({ r } = await life(s1, CLASSIC.minSec - 5, { mode: 'classic' }, { bestRank: 1 })); assert.equal(r.body.payout, 0, 'a Classic life under a minute pays no ATP');
     assert.ok(r.body.xpGained > 0, 'but still earns its XP');
-    let clPaid = 25 + 3;
-    while (clPaid + 25 <= CLASSIC.dayCap) { ({ r } = await life(s1, 300, { mode: "classic" }, { bestRank: 1 })); assert.equal(r.body.payout, 25); clPaid += 25; }
-    ({ r } = await life(s1, 300, { mode: 'classic' }, { bestRank: 1 }));
-    assert.deepEqual([r.body.payout, r.body.winCapped], [CLASSIC.dayCap - clPaid, true], 'Classic ATP stops at the day\'s cap');
+    for (let i = 0; i < 5; i++) ({ r } = await life(s1, 300, { mode: 'classic' }, { bestRank: 1 }));
+    assert.deepEqual([r.body.payout, r.body.winCapped], [25, false], 'the 8th Classic life of the day (over 150 ATP) still pays in full');
 
     // the arena: the game's word is not enough, the relay must have seen another player alive in the room
     ({ r } = await life(s1, 300, { mode: 'arena' }, { place: 1, of: 20 }));
@@ -188,29 +197,28 @@ const game = () => new Promise((res, rej) => { const ws = new WebSocket(base.rep
 
     // the competitive leaderboard is for the competitive rating: a player who only played bots is not on it
     const s2 = 'botsonly' + 'b'.repeat(24); await post('/api/session', { secret: s2 });
-    for (let i = 0; i < 10; i++) ({ r } = await life(s2, 200, { mode: i % 2 ? 'casual' : 'bots' }, { place: 1, of: 12, name: 'Botter' }));
+    for (let i = 0; i < 10; i++) ({ r } = await life(s2, 200, { mode: i % 2 ? 'casual' : 'bots', skill: 'master' }, { place: 1, of: 12, name: 'Botter' }));
     const lb = await (await fetch(base + '/api/leaderboard')).json();
     assert.ok(lb.top.some(t => t.name === 'Winner') && !lb.top.some(t => t.name === 'Botter'), 'the leaderboard lists competitive players only');
-    r = await post('/api/session', { secret: s2 }); assert.deepEqual([r.body.runs, r.body.rating], [0, 1000], 'ten bot wins: no competitive lives, the rating where it started');
-    assert.ok(r.body.aiRating > 1100, 'the AI rating climbed'); assert.equal(r.body.aiRuns, 10);
-    // the daily cap: bot wins (ranked and Casual together) stop paying their bonus at 200 ATP a day
-    // (ranked 25 and Casual 20 in turn: after eight wins 180, the ninth gets 20 of its 25 and the tenth nothing)
+    r = await post('/api/session', { secret: s2 }); assert.deepEqual([r.body.runs, r.body.rating], [0, 0], 'ten bot wins: no competitive lives, the rating where it started');
+    assert.ok(r.body.aiRating > 300, 'the AI rating climbed'); assert.equal(r.body.aiRuns, 10);
+    // no daily cap (Rowan, Nov 9): ten bot wins (ranked 25 and Casual-on-Master 15 in turn) make 200, and more keep paying in full
     const paid = db.prepare("SELECT COALESCE(SUM(bonus), 0) AS n FROM runs WHERE player = (SELECT id FROM players WHERE secret = ?) AND kind IN ('ai', 'casual')").get(require('crypto').createHash('sha256').update(s2).digest('hex')).n;
-    assert.equal(Number(paid), WINS.cap.bots, 'win bonuses from bots stop at the day\'s cap');
+    assert.equal(Number(paid), 200, 'ten bot wins paid their whole bonus');
     ({ r } = await life(s2, 200, { mode: 'bots' }, { place: 1, of: 12 }));
-    assert.deepEqual([r.body.payout, r.body.winBonus, r.body.winCapped], [25, 0, true], 'past the cap a ranked bot win pays its placement only, and says why');
-    ({ r } = await life(s2, 200, { mode: 'casual' }, { place: 1, of: 12 })); assert.deepEqual([r.body.payout, r.body.winCapped], [0, true], 'and a Casual win nothing');
-    // the cap for wins against players is separate
+    assert.deepEqual([r.body.payout, r.body.winBonus, r.body.winCapped], [50, 25, false], 'the eleventh ranked bot win still pays its bonus');
+    ({ r } = await life(s2, 200, { mode: 'casual', skill: 'master' }, { place: 1, of: 12 })); assert.deepEqual([r.body.payout, r.body.winCapped], [15, false], 'and so does a Casual win on Master');
+    // wins against players are uncapped too
     const E = await game(), F = await game();
     id = (await post('/api/run/start', { mode: 'arena', relay: E.key }, s2)).body.runId; db.prepare('UPDATE runs SET started = started - 200000 WHERE id = ?').run(id);
     E.alive(true); F.alive(true); await sleep(600); E.alive(true); await sleep(100);
-    r = await post('/api/run/end', { runId: id, survived: 200, place: 1, of: 12 }, s2); assert.deepEqual([r.body.kind, r.body.winBonus], ['comp', 50], 'wins against players have their own cap');
+    r = await post('/api/run/end', { runId: id, survived: 200, place: 1, of: 12 }, s2); assert.deepEqual([r.body.kind, r.body.winBonus], ['comp', 50], 'a win against players pays its bonus');
     for (let i = 0; i < 7; i++) { id = (await post('/api/run/start', { mode: 'arena', relay: E.key }, s2)).body.runId; db.prepare('UPDATE runs SET started = started - 200000 WHERE id = ?').run(id);
       await sleep(550); E.alive(true); F.alive(true); await sleep(80); E.alive(true); r = await post('/api/run/end', { runId: id, survived: 200, place: 1, of: 12 }, s2); }
-    assert.deepEqual([r.body.winBonus, r.body.winCapped], [50, false], 'eight competitive wins: 400 ATP, the whole cap');
+    assert.deepEqual([r.body.winBonus, r.body.winCapped], [50, false], 'eight competitive wins: 400 ATP');
     id = (await post('/api/run/start', { mode: 'arena', relay: E.key }, s2)).body.runId; db.prepare('UPDATE runs SET started = started - 200000 WHERE id = ?').run(id);
     await sleep(550); E.alive(true); F.alive(true); await sleep(80); E.alive(true);
-    r = await post('/api/run/end', { runId: id, survived: 200, place: 1, of: 12 }, s2); assert.deepEqual([r.body.kind, r.body.payout, r.body.winBonus, r.body.winCapped], ['comp', 25, 0, true], 'the ninth pays its placement only');
+    r = await post('/api/run/end', { runId: id, survived: 200, place: 1, of: 12 }, s2); assert.deepEqual([r.body.kind, r.body.payout, r.body.winBonus, r.body.winCapped], ['comp', 75, 50, false], 'the ninth pays in full: no daily cap');
     E.ws.close(); F.ws.close();
     db.close();
   }

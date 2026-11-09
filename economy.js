@@ -98,33 +98,34 @@ const RULES = { byRank: [[1, 25], [2, 20], [3, 16], [4, 13], [5, 11], [6, 9], [7
 const HOUR = 3600 * 1000;
 // Rating (Elo-like): survival, kills and a high placing raise it, dying quickly lowers it. Gains
 // shrink and losses grow as the rating climbs, so it settles instead of inflating forever.
-// Everyone starts at 1000.
+// Everyone starts at 0 (start), the bottom of the ladder; gains count in full up to base, then shrink.
 // winBonus: finishing 1st of 4+; lifePenalty: each respawn already used this round trims the gain (dying less pays more).
-const RATING = { base: 1000, perTenSec: .5, survCap: 25, perKill: 2, killCap: 30, placeBonus: 8, winBonus: 10, lifePenalty: .25, quickDeathSec: 60, quickPenalty: 10, scale: 2000 };
+const RATING = { start: 0, base: 1000, perTenSec: .5, survCap: 25, perKill: 2, killCap: 30, placeBonus: 8, winBonus: 10, lifePenalty: .25, quickDeathSec: 60, quickPenalty: 10, scale: 2000 };
 // Who a life was against decides which rating it moves and what a win pays. The server decides it (runKind), never the
 // game: 'comp' only when the relay saw another player alive in the same arena room during the life (server.js metSince);
 // 'ai' is ranked rules against bots only (nobody found in the search, ping over Max ping, or alone in the arena); 'casual'
 // is Casual. Apps from before this (no mode in run/start) are rated as they always were, on the competitive rating.
-// The AI rating works like the competitive one, from its own 1000, and bots can never move the competitive one. Its
-// gains (not its losses) scale with the bots' skill, so beating Easy bots climbs slowly.
+// The AI rating works like the competitive one, from its own start, and bots can never move the competitive one. Its
+// gains (not its losses) scale with the bots' skill, so beating Easy bots climbs slowly. Ranked games of bots use Master bots.
 const RATING_AI = { skill: { easy: .5, normal: 1, hard: 1.2, expert: 1.35, master: 1.5 } };
 // Wins: on top of the placement payout (none in Casual), 1st place pays win[0] and 2nd or 3rd pays win[1], by kind.
+// Casual pays by the bots' skill instead, [1st, 2nd, 3rd]: Master tops out at 15 (Rowan, Nov 7) and each easier skill pays
+// a fifth less. The skill is the one the game gave at run/start (apps from before that send it with run/end; none is Normal).
 // Only a placing of minOf or more cells counts, and only a life of minSec or more on the server's clock, so a quit
-// (no placing), an early death or an abandoned life (never ended) pays nothing. Each day (UTC) bonuses stop at the cap:
-// bots (ai and casual together) and comp (friends could trade wins) each have their own.
-const WINS = { comp: [50, 15], ai: [25, 5], casual: [20, 5], minSec: 120, minOf: 8, cap: { bots: 200, comp: 400 } };
-const WIN_POOLS = { bots: ['ai', 'casual'], comp: ['comp'] }, winPool = kind => (kind === 'comp' ? 'comp' : 'bots');
-function winBonus({ kind, survived, place, of }) {
-  const t = Array.isArray(WINS[kind]) ? WINS[kind] : null; if (!t) return 0;
+// (no placing), an early death or an abandoned life (never ended) pays nothing. There is no daily cap (Rowan, Nov 9).
+const WINS = { comp: [50, 15], ai: [25, 5], casual: { easy: [3, 2, 2], normal: [6, 5, 4], hard: [9, 7, 6], expert: [12, 10, 8], master: [15, 12, 10] }, minSec: 120, minOf: 8 };
+const SKILLS = Object.keys(WINS.casual), skillOf = v => (SKILLS.includes(v) ? v : null);
+function winBonus({ kind, survived, place, of, skill }) {
+  const t = kind === 'casual' ? WINS.casual[skillOf(skill) || 'normal'] : Array.isArray(WINS[kind]) ? WINS[kind] : null; if (!t) return 0;
   const n = Math.floor(+of || 0), pl = Math.floor(+place || 0);
   if ((+survived || 0) < WINS.minSec || n < WINS.minOf || pl < 1 || pl > 3 || pl > n) return 0;
-  return pl === 1 ? t[0] : t[1];
+  return kind === 'casual' ? t[pl - 1] : pl === 1 ? t[0] : t[1];
 }
 const RUN_MODES = ['arena', 'bots', 'casual', 'classic'];
 // Classic (the endless agar-style arena: no rounds, so no placings) pays ATP for the best leaderboard rank a life reached,
-// on the byRank table, once the life lasts minSec, and earns XP for its time alive (no placing part). Its ATP stops at
-// dayCap a day (UTC), because its lives are endless and a quick respawn must not farm it. It never moves a rating.
-const CLASSIC = { minSec: 60, dayCap: 100 };
+// on the byRank table, once the life lasts minSec (a quick respawn earns nothing), and earns XP for its time alive (no
+// placing part). Like every ATP since Nov 9, there is no daily cap. It never moves a rating.
+const CLASSIC = { minSec: 60 };
 // mode: what the game said at run/start; metSince(t): whether the relay saw another player alive beside this one since t
 function runKind(run, metSince) {
   if (!run.mode) return 'legacy';
@@ -156,8 +157,44 @@ function levelOf(xp) {
   while (xpAtLevel(level + 1) <= xp) level++;
   return { xp, level, levelXp: xp - xpAtLevel(level), levelNeed: xpToNext(level) };
 }
-const TIERS = [[900, 'Bronze'], [1100, 'Silver'], [1400, 'Gold'], [1800, 'Platinum'], [2300, 'Diamond'], [Infinity, 'Legend']];
+// The rank ladder (Rowan, Nov 7): nine steps through the life of a dividing cell, from Amoeba to Mitosis. Each step but the
+// last has three divisions (I is the lowest); Mitosis is one rank. `at` is where each division starts; everyone starts at
+// Amoeba I. The first steps are quick (an average player reaches Colony in about 4 lives) and later ones slower.
+// Apps from before the ladder know only six metal tiers and draw the tier list the server sends, so `tier`, `tiers` and
+// `tierAt` keep those six, spread over the steps (Amoeba = Bronze … Metaphase = Diamond, Anaphase and up = Legend).
+const LADDER = [
+  { key: 'amoeba', name: 'Amoeba', at: [0, 25, 50] }, { key: 'colony', name: 'Colony', at: [75, 100, 150] },
+  { key: 'interphase', name: 'Interphase', at: [200, 250, 325] }, { key: 'prophase', name: 'Prophase', at: [425, 525, 650] },
+  { key: 'metaphase', name: 'Metaphase', at: [800, 1000, 1200] }, { key: 'anaphase', name: 'Anaphase', at: [1400, 1600, 1800] },
+  { key: 'telophase', name: 'Telophase', at: [2000, 2200, 2400] }, { key: 'cytokinesis', name: 'Cytokinesis', at: [2600, 2850, 3150] },
+  { key: 'mitosis', name: 'Mitosis', at: [3500] },
+];
+const RANKS = LADDER.flatMap(st => st.at.map((at, d) => ({ name: st.at.length > 1 ? `${st.name} ${['I', 'II', 'III'][d]}` : st.name, step: st.key, div: st.at.length > 1 ? d + 1 : 0, at })));
+const rankOf = r => { let k = RANKS[0]; for (const x of RANKS) if (r >= x.at) k = x; return k; };
+const TIERS = [[75, 'Bronze'], [200, 'Silver'], [425, 'Gold'], [800, 'Platinum'], [1400, 'Diamond'], [Infinity, 'Legend']];
 const tierOf = r => TIERS.find(t => r < t[0])[1];
+// Rowan chose "everyone starts again" for the ladder: once per database, every rating and AI rating goes to the start.
+// The old values are kept in rating_v1 / ai_rating_v1. Server start-up runs this (flag 'ladder').
+function ladderReset(store) {
+  if (store.flag('ladder') === '1') return false;
+  store.resetRatings(RATING.start); store.setFlag('ladder', '1'); return true; // the peak rating and rank trophies start again with it
+}
+// Rank trophies: one per step of the ladder (amoeba … mitosis), won with the date the first time a competitive life starts
+// or ends at that step or above; the steps below come with it, so the shelf fills from the bottom. Only lives from now on
+// count (the ladder started everyone again), so nobody gets a trophy without a ranked life on the new ladder.
+const stepsUpTo = r => LADDER.filter(st => r >= st.at[0]).map(st => st.key);
+// Lifetime stats, kept on the player: the Profile shows them (statsOf) and the permanent quests count from them (questTotals).
+// A life adds what the quests say it is worth (lifeFacts, under Quests): nothing under RULES.minSec, so instant start/end
+// pairs can't pile up lives; Classic lives count for lives, time and cells; only a battle royale round with XP.minOf
+// players gives a placing (rounds, wins, top-3 finishes), so the win rate is wins over rounds. Time is the server-capped
+// survival, up to one round a life; cells are capped by how long the life lasted. Casual counts for none (runEnd).
+const STAT_KEYS = ['played', 'rounds', 'wins', 'podiums', 'alive', 'eaten'];
+function lifeStats(life) {
+  const f = lifeFacts(life), placed = f.placed ? 1 : 0;
+  return { played: f.counts ? 1 : 0, rounds: placed, wins: placed && f.pl === 1 ? 1 : 0, podiums: placed && f.pl <= 3 ? 1 : 0, alive: f.counts ? Math.floor(f.sec) : 0, eaten: f.eaten };
+}
+// adds a life to the player's lifetime stats, in the store and on p
+function lifeAdd(store, p, st) { store.addStats(p.id, st); for (const k of STAT_KEYS) p[k] = Number(p[k] || 0) + st[k]; }
 function ratingDelta(rating, survived, eaten, place, of, life = 0, mult = 1) { // mult scales the gain only (RATING_AI.skill)
   // placing: 1st of N earns the full bonus, last earns none; needs at least 4 in the round to count. Winning adds more.
   const n = Math.max(0, of | 0), pl = Math.max(1, place | 0), placing = n >= 4 && pl <= n ? RATING.placeBonus * (1 - (pl - 1) / (n - 1)) : 0;
@@ -182,6 +219,15 @@ function nameBlocked(s) {
   if (NAME_BAD_ANY.some(w => flat.includes(w) || squash.includes(squashName(w))) || NAME_BAD_WORD.includes(flat) || NAME_BAD_WORD.includes(squash)) return true;
   return low.split(/[^a-z]+/).some(w => w && (NAME_BAD_WORD.includes(w) || NAME_BAD_WORD.includes(squashName(w))));
 }
+// Name fonts: a style for your name. The faces are bundled in index.html (NAME_FONTS, fonts/README.md has their licences);
+// the server only keeps the id. It travels with your name in play (presence nf), in the leaderboard and among friends.
+// 0 is the game's own font, and a game that doesn't know an id shows the plain name. Every font is free unless FONT_LOCKS
+// gives it a rule: lv (reach that profile level), price (buy it once with ATP) or pass (a battle pass reward { font: id }
+// unlocks it). The catalogue sends the rules, so the picker shows the locks.
+const FONT_MAX = 255;
+const FONT_LOCKS = {}; // for example { 47: { lv: 10 }, 60: { price: 1500 }, 69: { pass: 's1' } }
+const fontId = v => Number.isInteger(v) && v >= 0 && v <= FONT_MAX ? v : null; // a number: null, '' and true are not fonts
+const fontOpen = (store, p, id) => { const L = FONT_LOCKS[id]; return !L || (L.lv > 0 && levelOf(p.xp).level >= L.lv) || store.fonts(p.id).includes(id); };
 const cleanName = s => { const n = String(s || '').replace(/[^\p{L}\p{N} _.\-'!?]/gu, '').trim().slice(0, 16); return n && !nameBlocked(n) ? n : null; };
 
 const skinById = id => SKINS.find(s => s.id === id);
@@ -366,18 +412,12 @@ function questStep(q, life) {
   if (q.kind === 'life' || q.kind === 'lasts') return f.sec >= q.sec ? 1 : 0;
   return f.placed && f.pl <= (q.kind === 'win' ? 1 : q.top) ? 1 : 0;
 }
-// Lifetime totals. Ranked lives played before permanent quests existed count: the first time a player's totals are
-// written, lives starts from the ranked lives the rating has counted.
+// Lifetime totals for the permanent quests: lives, time, cells, wins and top-3 finishes are the player's lifetime stats
+// (statsOf; lives played before the quests existed were counted in when those columns were added, see store.js); the
+// stats table keeps the rest (dailies).
 function questTotals(store, p) {
-  const s = store.stats(p.id);
-  if (s.lives == null) s.lives = Number(p.runs || 0) + Number(p.ai_runs || 0);
-  return s;
-}
-function statsAdd(store, p, add) {
-  const had = store.stats(p.id), d = { ...add };
-  if (had.lives == null) d.lives = (d.lives || 0) + Number(p.runs || 0) + Number(p.ai_runs || 0);
-  for (const k of Object.keys(d)) if (!(d[k] > 0) && had[k] != null) delete d[k];
-  if (Object.keys(d).length) store.statsAdd(p.id, d, Date.now());
+  const s = statsOf(p);
+  return { ...store.stats(p.id), lives: s.played, time: s.alive, eaten: s.eaten, wins: s.wins, top3: s.podiums };
 }
 // A player's quests: today's, this week's, the permanent ladders (the lowest tier not claimed yet), the rewards still
 // waiting from earlier days and weeks, and how many are ready to claim. Null while quests are switched off.
@@ -421,15 +461,16 @@ function questsTick(store, p, life, t = now()) {
     }
   }
   if (!life && !dailies) return out;
-  const before = questTotals(store, p), f = life ? lifeFacts(life) : { counts: false };
-  const add = { dailies, lives: f.counts ? 1 : 0, time: f.counts ? Math.floor(f.sec) : 0, eaten: f.eaten || 0, wins: f.placed && f.pl === 1 ? 1 : 0, top3: f.placed && f.pl <= 3 ? 1 : 0 };
-  statsAdd(store, p, add);
+  const before = questTotals(store, p), st = life ? lifeStats(life) : null;
+  const add = { dailies, lives: st ? st.played : 0, time: st ? st.alive : 0, eaten: st ? st.eaten : 0, wins: st ? st.wins : 0, top3: st ? st.podiums : 0 };
+  if (dailies) store.statsAdd(p.id, { dailies }, Date.now());
+  if (st) lifeAdd(store, p, st);   // before the claims that follow in runEnd, so a tier this life reaches can be claimed at once
   if (on) for (const L of PERMANENT) { const a = Number(before[L.stat] || 0), b = a + (add[L.stat] || 0);
     L.tiers.forEach((g, i) => { if (a < g && b >= g) out.tiers.push({ id: `${L.id}-${i + 1}`, text: L.text(g), atp: PERM_ATP[i], tier: i + 1 }); }); }
   return out;
 }
 const packById = id => PACKS.find(p => p.id === id);
-const catalog = (store, p = null) => ({ skins: SKINS, seasons: Object.fromEntries(Object.entries(SEASONS).map(([k, s]) => [k, { ...s, open: seasonOpen(k) }])), pass: passCatalog(passLive(store, now(), p)), packs: PACKS, rules: RULES, rating: RATING, ratingAi: RATING_AI, wins: WINS, xp: XP, modes: ['classic'], classic: CLASSIC, tiers: TIERS.map(t => t[1]), tierAt: TIERS.map(t => t[0]), iap: iap.status(), auth: signin.status() });
+const catalog = (store, p = null) => ({ skins: SKINS, seasons: Object.fromEntries(Object.entries(SEASONS).map(([k, s]) => [k, { ...s, open: seasonOpen(k) }])), pass: passCatalog(passLive(store, now(), p)), packs: PACKS, rules: RULES, rating: RATING, ratingAi: RATING_AI, wins: WINS, xp: XP, modes: ['classic'], classic: CLASSIC, tiers: TIERS.map(t => t[1]), tierAt: TIERS.map(t => t[0]), ranks: RANKS, steps: LADDER.map(st => ({ key: st.key, name: st.name })), iap: iap.status(), auth: signin.status(), fonts: { max: FONT_MAX, locks: FONT_LOCKS } });
 
 function payoutFor({ survived, bestRank, place }) {
   const sec = Math.max(0, Math.min(RULES.maxRunSec, +survived || 0));
@@ -443,8 +484,11 @@ class ApiError extends Error { constructor(status, msg) { super(msg); this.statu
 const hash = s => crypto.createHash('sha256').update(String(s)).digest('hex');
 // The sign-in a wallet belongs to (Apple or Google), or null for a device-only wallet.
 const accountOf = (store, p) => { const i = store.identities(p.id)[0]; return i ? { provider: i.provider, email: i.email || null, since: Number(i.at) } : null; };
-const wallet = (store, p) => ({ playerId: p.id, balance: Number(p.balance), earned: Number(p.earned), skins: store.skins(p.id), rating: Number(p.rating ?? RATING.base), tier: tierOf(Number(p.rating ?? RATING.base)), runs: Number(p.runs || 0),
-  aiRating: Number(p.ai_rating ?? RATING.base), aiTier: tierOf(Number(p.ai_rating ?? RATING.base)), aiRuns: Number(p.ai_runs || 0), ...levelOf(p.xp), pass: passOf(store, p), quests: questsOf(store, p), account: accountOf(store, p) });
+// stats: lifetime totals (peak: the best competitive rating since the ladder, at least the current one); trophies: [{ step, at }] up the ladder
+const statsOf = p => ({ played: Number(p.played || 0), rounds: Number(p.rounds || 0), wins: Number(p.wins || 0), podiums: Number(p.podiums || 0), alive: Number(p.alive || 0), eaten: Number(p.eaten || 0), peak: Math.max(Number(p.peak || 0), Number(p.rating ?? RATING.start)) });
+const trophiesOf = (store, p) => { const at = new Map(store.trophies(p.id).map(t => [t.step, Number(t.at)])); return LADDER.filter(st => at.has(st.key)).map(st => ({ step: st.key, at: at.get(st.key) })); };
+const wallet = (store, p) => ({ playerId: p.id, balance: Number(p.balance), earned: Number(p.earned), skins: store.skins(p.id), rating: Number(p.rating ?? RATING.start), tier: tierOf(Number(p.rating ?? RATING.start)), rank: rankOf(Number(p.rating ?? RATING.start)).name, runs: Number(p.runs || 0),
+  aiRating: Number(p.ai_rating ?? RATING.start), aiTier: tierOf(Number(p.ai_rating ?? RATING.start)), aiRank: rankOf(Number(p.ai_rating ?? RATING.start)).name, aiRuns: Number(p.ai_runs || 0), ...levelOf(p.xp), stats: statsOf(p), trophies: trophiesOf(store, p), pass: passOf(store, p), quests: questsOf(store, p), account: accountOf(store, p), nameFont: Number(p.name_font || 0), fonts: store.fonts(p.id) });
 
 /* ---------- handlers: each gets (store, body, player?) and returns a JSON-able object ---------- */
 function session(store, body) {
@@ -475,7 +519,6 @@ async function signInWith(verify, store, body, p) {
   const now = Date.now(), existing = store.identity(ident.provider, ident.subject);
   let player = p, merged = false;
   if (existing && existing.player !== p.id && store.player(existing.player)) {
-    statsAdd(store, p, {}); statsAdd(store, store.player(existing.player), {});   // both sides' lives from before permanent quests
     store.mergePlayers(p.id, existing.player); player = store.player(existing.player); merged = true;
     passTesterMove(store, p.id, player.id);
     questsTick(store, player, null);   // progress from both devices may finish a quest together
@@ -505,7 +548,8 @@ function runStart(store, body, p) {
   const now = Date.now();
   if (store.openRuns(p.id, now - HOUR) > 20) throw new ApiError(429, 'too many open runs');
   const id = crypto.randomBytes(8).toString('hex');
-  store.createRun(id, p.id, now, RUN_MODES.includes(body.mode) ? body.mode : null);   // mode: the game's word for where it is played, checked at run/end
+  // mode: the game's word for where it is played, checked at run/end; skill: the bots' skill in a game of bots, fixed from here on
+  store.createRun(id, p.id, now, RUN_MODES.includes(body.mode) ? body.mode : null, skillOf(body.skill));
   return { runId: id };
 }
 // ctx (from server.js): metSince(t), whether the relay saw this game alive beside another player since t
@@ -519,43 +563,58 @@ function runEnd(store, body, p, ctx = {}) {
   const survived = Math.min(+body.survived || 0, elapsed);
   // Casual pays only for a win or a top-3 finish, and earns no XP (it has endless lives)
   const kind = runKind(run, ctx.metSince), casual = kind === 'casual', classic = kind === 'classic', life = { survived, place: classic ? 0 : body.place, of: classic ? 0 : body.of };
-  let bonus = winBonus({ kind, ...life }), capped = false;
-  if (bonus) {
-    const pool = winPool(kind), day = dayOf(now).starts, used = WIN_POOLS[pool].reduce((n, k) => n + store.bonusSince(p.id, day, k), 0);
-    const left = Math.max(0, WINS.cap[pool] - used); if (bonus > left) { bonus = left; capped = true; }
-  }
-  let payout = (casual ? 0 : payoutFor({ survived, bestRank: body.bestRank, place: life.place })) + bonus;
-  if (classic) { // its ATP goes in the run's bonus column too, so the day's total is one sum
-    if (survived < CLASSIC.minSec) payout = 0;
-    const left = Math.max(0, CLASSIC.dayCap - store.bonusSince(p.id, dayOf(now).starts, 'classic'));
-    if (payout > left) { payout = left; capped = true; }
-  }
+  const vsBots = kind === 'ai' || casual, skill = vsBots ? skillOf(run.skill) || skillOf(body.skill) || 'normal' : null;
+  const bonus = winBonus({ kind, ...life, skill });
+  // Classic has no placings: it pays on the best leaderboard rank the life reached, and only for a life of CLASSIC.minSec
+  const payout = classic && survived < CLASSIC.minSec ? 0 : (casual ? 0 : payoutFor({ survived, bestRank: body.bestRank, place: life.place })) + bonus;
   const xp = casual ? { time: 0, place: 0, win: 0, total: 0 } : xpFor(life), level = levelOf(p.xp).level;
   const w = { balance: Number(p.balance) + payout, earned: Number(p.earned) + payout, hour_at: Number(p.hour_at), hour_sum: Number(p.hour_sum) };
-  store.setWallet(p.id, w); store.addXp(p.id, xp.total); store.endRun(run.id, now, payout, xp.total, kind, classic ? payout : bonus);
+  store.setWallet(p.id, w); store.addXp(p.id, xp.total); store.endRun(run.id, now, payout, xp.total, kind, bonus);
   // the same XP fills the battle pass while a season is on; a ranked life also moves the quests and lifetime totals on (claimed later)
   const passUp = passAddXp(store, p, xp.total), q = casual ? { xp: 0, done: [], tiers: [] } : questsTick(store, p, { ...life, eaten: body.eaten, peak: body.peak, splitKills: body.splitKills, mode: kind === 'classic' ? 'classic' : 'ranked' });
   Object.assign(p, w); p.xp = Number(p.xp || 0) + xp.total;
   // apps with a Claim button send claims: 1. For the others (builds before quest claiming, and lives queued by older pages)
   // every reward that is ready is claimed here, as quests used to pay at once, so their players still get it.
   const auto = !body.claims && questsOn(store) ? questClaim(store, { all: true }, p) : null;
-  // rating: bots move only the AI rating. Ranked bot games always have Normal bots; Casual says which it had.
-  const name = cleanName(body.name) || p.name || null, vsBots = kind === 'ai' || casual;
-  const before = Number((vsBots ? p.ai_rating : p.rating) ?? RATING.base), mult = casual ? RATING_AI.skill[body.skill] || 1 : 1;
+  // rating: bots move only the AI rating, its gains scaled by the bots' skill (ranked games of bots have Master bots)
+  const name = cleanName(body.name) || p.name || null;
+  const before = Number((vsBots ? p.ai_rating : p.rating) ?? RATING.start), mult = vsBots ? RATING_AI.skill[skill] : 1;
   // Classic moves no rating (delta 0, nothing written); it shares the answer below, where its winBonus and deltas come out 0
   const delta = classic ? 0 : ratingDelta(before, survived, body.eaten, body.place, body.of, body.life, mult), rating = Math.max(0, before + delta);
   if (classic) { /* no rating, no run count */ }
   else if (vsBots) { store.setAiRating(p.id, rating, name); p.ai_rating = rating; p.ai_runs = Number(p.ai_runs || 0) + 1; }
   else { store.setRating(p.id, rating, name); p.rating = rating; p.runs = Number(p.runs || 0) + 1; }
   p.name = name;
+  // the best rating (this life's lifetime stats went in with the quests, above) and rank trophies (competitive lives only;
+  // the rating it started from counts too)
+  const top = vsBots ? Number(p.rating ?? RATING.start) : Math.max(before, rating);
+  if (!casual) { store.setPeak(p.id, top); p.peak = Math.max(Number(p.peak || 0), top); }
+  if (!vsBots) store.addTrophies(p.id, stepsUpTo(top), now);
   // kind: who the life was against (comp, ai, casual; legacy for apps that don't say); ratingDelta and aiDelta: how each
-  // rating moved (one is 0); winBonus: the part of payout a win or top 3 paid; winCapped: the day's cap cut it;
+  // rating moved (one is 0); winBonus: the part of payout a win or top 3 paid; winCapped: always false (there was a daily cap; older apps read it); skill: the bots';
   // xpParts: where the XP came from (time alive, placing, the win); levelUp: how many levels this life gained;
   // passUp: pass levels from the life (and, for apps without claims, from the quests claimed for them); questsDone and
   // questTiers: the quests and permanent tiers it finished; questXp and questAtp: what was claimed for an app without claims
   const out = wallet(store, p);
-  return { payout, kind, winBonus: bonus, winCapped: capped, ratingDelta: vsBots ? 0 : delta, aiDelta: vsBots ? delta : 0, xpGained: xp.total, xpParts: { time: xp.time, place: xp.place, win: xp.win }, levelUp: out.level - level,
+  return { payout, kind, skill, winBonus: bonus, winCapped: false, ratingDelta: vsBots ? 0 : delta, aiDelta: vsBots ? delta : 0, xpGained: xp.total, xpParts: { time: xp.time, place: xp.place, win: xp.win }, levelUp: out.level - level,
     passUp: passUp + (auto ? auto.passUp : 0), questXp: auto ? auto.xp : 0, questAtp: auto ? auto.atp : 0, questsDone: q.done, questTiers: q.tiers, ...out };
+}
+function setFont(store, body, p) {
+  const id = fontId(body.font);
+  if (id == null) throw new ApiError(400, `font must be 0-${FONT_MAX}`);
+  const L = FONT_LOCKS[id];
+  if (!fontOpen(store, p, id)) throw new ApiError(403, L.lv ? `that font opens at level ${L.lv}` : L.price ? 'buy that font first' : 'that font comes from the battle pass');
+  store.setFont(p.id, id); p.name_font = id;
+  return wallet(store, p);
+}
+function buyFont(store, body, p) {
+  const id = fontId(body.font), L = id ? FONT_LOCKS[id] : null;
+  if (!L || !(L.price > 0)) throw new ApiError(404, 'that font is not for sale');
+  if (store.fonts(p.id).includes(id)) return { ...wallet(store, p), already: true };
+  if (Number(p.balance) < L.price) throw new ApiError(402, `need ${L.price - Number(p.balance)} more ATP`);
+  const w = { balance: Number(p.balance) - L.price, earned: Number(p.earned), hour_at: Number(p.hour_at), hour_sum: Number(p.hour_sum) };
+  store.setWallet(p.id, w); store.addFont(p.id, id, Date.now()); Object.assign(p, w);
+  return { ...wallet(store, p), boughtFont: id };
 }
 function buySkin(store, body, p) {
   const skin = skinById(body.skinId | 0);
@@ -654,6 +713,7 @@ function passClaim(store, body, p) {
   let atp = r.atp || 0, skin = r.skin || null, refund = 0;
   if (skin && store.skins(p.id).includes(skin)) { refund = (skinById(skin) || {}).price || 0; atp += refund; skin = null; } // owned already: its shop price instead
   if (skin) store.addSkin(p.id, skin, now);
+  if (fontId(r.font)) store.addFont(p.id, r.font, now); // a font reward (FONT_LOCKS pass)
   if (atp) { const w = { balance: Number(p.balance) + atp, earned: Number(p.earned) + atp, hour_at: Number(p.hour_at), hour_sum: Number(p.hour_sum) }; store.setWallet(p.id, w); Object.assign(p, w); }
   return { ...wallet(store, p), claimed: { reward: r.id, atp, skin, refund } };
 }
@@ -669,6 +729,6 @@ function passAdmin(store, on, tester) {
   return { on: store.flag('pass') === 'on', live: !!passLive(store), season: passCatalog(s), next: next ? { key: next.key, name: next.name, starts: Date.parse(next.from) } : null, stats: s ? { ...store.passStats(s.key), quests } : null, quests, testers, recent };
 }
 
-function leaderboard(store) { return { top: store.top(10).map((r, i) => ({ rank: i + 1, name: (r.name && !nameBlocked(r.name) && r.name) || 'Unnamed cell', rating: r.rating, tier: tierOf(r.rating), runs: r.runs })) }; }
+function leaderboard(store) { return { top: store.top(10).map((r, i) => ({ rank: i + 1, name: (r.name && !nameBlocked(r.name) && r.name) || 'Unnamed cell', rating: r.rating, tier: tierOf(r.rating), rankName: rankOf(r.rating).name, runs: r.runs, font: r.font || 0 })) }; }
 
-module.exports = { RANKED_ONLY, PERMANENT, PERM_ATP, questsOn, questsSwitch, questById, questTotals, SKINS, PACKS, RULES, RATING, RATING_AI, WINS, CLASSIC, winBonus, runKind, XP, SEASONS, seasonOpen, PASS, PASS_SEASONS, passSeason, passLive, passAdmin, QUESTS, QUEST_SLOTS, questsAt, questsOf, questsTick, isoWeekOf, catalog, payoutFor, ratingDelta, xpFor, levelOf, xpAtLevel, xpToNext, tierOf, nameBlocked, ApiError, auth, handlers: { questClaim, deleteAccount, session, runStart, runEnd, buySkin, iapApple, iapGoogle, leaderboard, signInApple, signInGoogle, signOut, passView, passPremium, passClaim } };
+module.exports = { RANKED_ONLY, PERMANENT, PERM_ATP, questsOn, questsSwitch, questById, questTotals, SKINS, PACKS, RULES, RATING, RATING_AI, WINS, CLASSIC, LADDER, RANKS, rankOf, ladderReset, stepsUpTo, STAT_KEYS, lifeStats, winBonus, runKind, XP, SEASONS, seasonOpen, PASS, PASS_SEASONS, passSeason, passLive, passAdmin, QUESTS, QUEST_SLOTS, questsAt, questsOf, questsTick, isoWeekOf, catalog, payoutFor, ratingDelta, xpFor, levelOf, xpAtLevel, xpToNext, tierOf, nameBlocked, FONT_MAX, FONT_LOCKS, fontId, ApiError, auth, handlers: { questClaim, deleteAccount, session, runStart, runEnd, buySkin, iapApple, iapGoogle, leaderboard, signInApple, signInGoogle, signOut, passView, passPremium, passClaim, setFont, buyFont } };

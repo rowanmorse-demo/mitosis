@@ -12,7 +12,7 @@ Mitosis: Cell Arena ("Mitosis", "the game") is made by Catapult Consulting, LLC.
 
 **Purchases.** ATP packs are sold through the App Store and Google Play. The store processes the payment; the game receives only a signed purchase receipt, which the server verifies with Apple or Google before crediting ATP. The server keeps the transaction identifier to prevent the same purchase being credited twice. The game never sees your payment details.
 
-**Gameplay.** Run results (how long you survived, cells absorbed, placement, chosen name) are sent to the server to pay out ATP, update your rating and add XP toward your level. The display name you type is shown to other players in live rounds and on the leaderboard.
+**Gameplay.** Run results (how long you survived, cells absorbed, placement, chosen name) are sent to the server to pay out ATP, update your rating, add XP toward your level and keep your lifetime stats and rank trophies. The display name you type, and the font you pick for it, are shown to other players in live rounds, on the leaderboard and to your friends.
 
 **Nearby play (iPhone app).** If you switch the lobby to Nearby, the app uses Bluetooth and peer-to-peer Wi-Fi (Apple's local network permission) to find other phones running Mitosis close by. While you play, your display name, chosen look and the positions of your cells go directly to those phones and nowhere else; nothing from a nearby game is sent to the server or stored, and nearby games do not pay ATP or change your rating. Turning Nearby off disconnects at once.
 
@@ -37,7 +37,7 @@ The Mitosis server stores wallets, accounts, run results, purchase identifiers a
 
 ## Deleting your data
 
-- **Delete account** in the game (Profile › Account › Delete account, or Settings › Account & data) permanently deletes your account from the server straight away: rating, XP and level, ATP, skins, battle pass progress, run history, display name, and any Sign in with Apple or Google link. Records of App Store and Google Play purchases are kept only as anonymous transaction ids, so a purchase cannot be credited twice; they are no longer linked to you. The game then clears its data on your device and starts you fresh.
+- **Delete account** in the game (Profile › Account › Delete account, or Settings › Account & data) permanently deletes your account from the server straight away: rating, XP and level, lifetime stats and trophies, ATP, skins, battle pass progress, run history, display name and its font, and any Sign in with Apple or Google link. Records of App Store and Google Play purchases are kept only as anonymous transaction ids, so a purchase cannot be credited twice; they are no longer linked to you. The game then clears its data on your device and starts you fresh.
 - If you signed in with Apple, you can also stop using your Apple Account with the game in iPhone Settings › your name › Sign in with Apple.
 - **Sign out** in the game's Profile (tap your name on the home screen) detaches your device from your account and gives the device a fresh wallet.
 - **Deleting the app** or clearing the website's site data removes the device identity from your device; a new one is created next time you play.

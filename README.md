@@ -14,6 +14,7 @@ A multiplayer cell-eating arena set in a giant petri well. Absorb anything small
 - **Hunter phages** that breach the rim and inject cells; the cell bursts into up to 16 pieces 8–10 s later
 - **ATP and skins**: earn ATP by placing well (or buy it in the apps) and spend it in a full-screen shop on nineteen premium skins, up to the 12,000,000 ATP One Cell to Rule Them All
 - **Levels**: every ranked life earns XP for how long you stay alive and where you place, and XP adds up into a profile level. The lobby and the Profile show your level with a bar toward the next one; the results screen counts the XP in, shows where it came from and celebrates a level-up
+- **A profile with your cell up front**: in landscape (where the app lives) a stage card on the left, lit by your rank's metal, holds your cell as big as the screen's height allows, breathing in a halo with motes of light drifting up, then your name, level and one rank block (crest, rank, rating and how far to the next); the tabs are on the right in the Shop's pill, each scrolling on its own. Overview: your best trophy on a stage between the one before it and the next to win, your skins, account. Stats: win-rate and top-3 rings (over battle royale rounds), your rating over your last ranked games on this device, your rating against AI, games, time alive and cells absorbed (the same lifetime totals the permanent quests count), and recent runs. Trophies: all nine rank trophies on one shelf you swipe along, opening on your best (a 3×3 cabinet in portrait), the ones you hold with the day you won them, the rest as silhouettes with the rating each takes; then achievements. Delete account is the last thing on Overview and asks to confirm
 - **A lobby that knows you**: a live portrait of your cell, your level and your rating with progress to the next tier, who is in the room and the round clock. First launch shows a three-step welcome card (Settings can bring it back). The tab bar along the bottom holds Inventory, Shop, Ranks and Friends; tapping your name card at the top opens the Profile, which keeps your last runs with placement, time, peak mass and rating change
 - **Background** in Settings: a black dish (the default) or a white one
 - **Effects toggle** in Settings (Full or Reduced) for older phones; the game also drops to reduced effects on its own when frames run long
@@ -62,7 +63,7 @@ On phones, drag to steer and use the on-screen buttons. In the Android app the b
 
 ## Rating
 
-Every player has an Elo-style rating, starting at 1000, adjusted by the server at the end of each run:
+Every player has an Elo-style rating, starting at 0 (the bottom of the rank ladder), adjusted by the server at the end of each run:
 
 | Factor | Effect |
 | --- | --- |
@@ -73,7 +74,7 @@ Every player has an Elo-style rating, starting at 1000, adjusted by the server a
 | Dying inside the first minute | up to −10, the sooner the worse |
 | Rating above 1000 | gains shrink and losses grow (at 2000, gains ×0.5 and losses ×1.5), so ratings settle rather than inflate |
 
-Tiers: Bronze (under 900), Silver (900+), Gold (1100+), Platinum (1400+), Diamond (1800+), Legend (2300+). The lobby shows your rating and the top ten, and the results screen after every run (death or Return to lobby) shows the change. `GET /api/leaderboard` returns the top ten.
+Ranks (Rowan, Nov 7): nine steps through the life of a dividing cell, each with divisions I to III (I lowest), and Mitosis alone at the top, 25 ranks in all. Amoeba 0 / 25 / 50, Colony 75 / 100 / 150, Interphase 200 / 250 / 325, Prophase 425 / 525 / 650, Metaphase 800 / 1,000 / 1,200, Anaphase 1,400 / 1,600 / 1,800, Telophase 2,000 / 2,200 / 2,400, Cytokinesis 2,600 / 2,850 / 3,150, Mitosis 3,500. Badges are a faceted crest per step with chevrons for the division (`rankBadge` in index.html), and each step has a trophy (`rankTrophy`), won with the date the first time a competitive life starts or ends at that step or above, the steps below coming with it (wallet `trophies: [{step, at}]`; only lives on the new ladder count). Each wallet also carries `stats`: lives played (20 s or more under ranked rules), wins and top-3 finishes (4+ in the round), seconds alive, cells absorbed (at most 10 + 15 a minute of each life) and the peak rating since the ladder, which the Profile and the permanent quests read. The server sends the ladder as `catalog.ranks` and each wallet's `rank` / `aiRank`; apps from before the ladder still get six metal tiers (`tier`, `tiers`, `tierAt`) spread over the steps: Bronze is Amoeba, Silver Colony, Gold Interphase, Platinum Prophase, Diamond Metaphase, Legend Anaphase and up. When the ladder first starts on a database, every rating and AI rating goes back to 0 (Rowan: everyone starts again); the old values are kept in `rating_v1` / `ai_rating_v1`. `GET /api/leaderboard` returns the top ten with `rankName`.
 
 **Two ratings: vs players and vs AI.** The rating above (labelled *vs players*) moves only for arena lives where the server saw another player alive in the same arena room during the life. Every other life is against bots and moves the separate **AI rating** (*vs AI*), worked out the same way from its own 1000: Casual, ranked games of bots after a search or over Max ping, and arena lives with nobody else alive in the room. Bots can never move the competitive rating. The game can't claim a real opponent: each relay connection gets a secret key in its welcome, `run/start` and `run/end` send it, and the relay notes when that game was alive in the arena while another game in its room was too (`metSince` in server.js, `runKind` in economy.js). Apps from before this send no mode and are rated as they always were. The Profile, the Ranks page and the results screen show both, labelled; the leaderboard is vs players only.
 
@@ -82,10 +83,10 @@ Tiers: Bronze (under 900), Silver (900+), Gold (1100+), Platinum (1400+), Diamon
 | Against | Win | 2nd or 3rd | A ranked win in all |
 | --- | --- | --- | --- |
 | Players (arena, another player alive in the room) | +50 | +15 | 75 ATP |
-| Bots, ranked rules | +25 | +5 | 50 ATP |
-| Bots, Casual (no placement payout) | +20 | +5 | 20 ATP |
+| Bots, ranked rules (Master bots) | +25 | +5 | 50 ATP |
+| Bots, Casual (no placement payout) | Easy 3, Normal 6, Hard 9, Expert 12, Master 15 | 2nd: 2 / 5 / 7 / 10 / 12; 3rd: 2 / 4 / 6 / 8 / 10 | 15 ATP on Master |
 
-The life must last 2 minutes on the server's clock in a round of 8 or more cells, so an early death, a quit (no placing) or a life never ended pays nothing. Bonuses stop for the day (UTC) at 200 ATP from bots (ranked and Casual together) and 400 ATP against players. `WINS` in economy.js.
+The life must last 2 minutes on the server's clock in a round of 8 or more cells, so an early death, a quit (no placing) or a life never ended pays nothing. There is no daily cap on what an account can earn. `WINS` in economy.js.
 
 ## Levels and XP
 

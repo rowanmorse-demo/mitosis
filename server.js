@@ -19,6 +19,7 @@ const API_RATE = 120;               // API requests per minute per IP
 const page = fs.readFileSync(path.join(__dirname, 'index.html'));
 const UPDATES_DIR = process.env.UPDATES_DIR || path.join(__dirname, 'updates'); // signed page updates for the apps (tools/page-update.js)
 const store = openStore();
+if (economy.ladderReset(store)) console.log('rank ladder: every rating starts again at ' + economy.RATING.start); // once per database (economy.js)
 const friends = social.create({ file: path.join(DATA_DIR, 'social.json'), nameBlocked: economy.nameBlocked });
 // signing in can fold this device's player into an existing account: its friends move along
 const signIn = fn => async (store, body, p) => {
@@ -47,6 +48,8 @@ const ROUTES = {
   'POST /api/auth/apple': { fn: signIn(economy.handlers.signInApple), auth: true },
   'POST /api/auth/google': { fn: signIn(economy.handlers.signInGoogle), auth: true },
   'POST /api/auth/signout': { fn: economy.handlers.signOut, auth: true },
+  'POST /api/font': { fn: economy.handlers.setFont, auth: true },          // the font your name is shown in (economy.js FONT_LOCKS)
+  'POST /api/font/buy': { fn: economy.handlers.buyFont, auth: true },
   'POST /api/account/delete': { fn: (store, body, p) => { const r = economy.handlers.deleteAccount(store, body, p); friends.forget(p.id); return r; }, auth: true },
   'POST /api/pass': { fn: economy.handlers.passView, auth: true },
   'POST /api/pass/premium': { fn: economy.handlers.passPremium, auth: true },

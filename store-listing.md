@@ -24,7 +24,7 @@ PLAY NEARBY, EVEN OFFLINE
 No internet? Play the bots at Easy, Normal, Hard or Expert, or switch to Nearby and play the phones in the same room over Bluetooth and Wi-Fi.
 
 A RATING THAT MEANS SOMETHING
-Climb from Silver through Gold, Platinum and Diamond to Legend. Surviving, absorbing and placing high raise your rating; dying fast lowers it. Winning a round pays a bonus, and runs on your second or third life earn less, so careful play is rewarded.
+Climb 25 ranks, from Amoeba through every stage of cell division to Mitosis. Surviving, absorbing and placing high raise your rating; dying fast lowers it. Winning a round pays a bonus, and runs on your second or third life earn less, so careful play is rewarded.
 
 EVOLVE SIX TIMES A LIFE
 At mass milestones your cell mutates on its own: faster flagella, a tougher membrane, enzymes that digest faster, cilia, mitotic splits, a vacuole, metabolism, photosynthesis. Every cell wears a badge for each trait it carries, so you can read an opponent before you commit.
