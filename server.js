@@ -17,7 +17,9 @@ const MAX_RATE = 90;                // messages per second per player
 const MAX_BODY = 64 * 1024;         // bytes per API request
 const API_RATE = 120;               // API requests per minute per IP
 const page = fs.readFileSync(path.join(__dirname, 'index.html'));
+const UPDATES_DIR = process.env.UPDATES_DIR || path.join(__dirname, 'updates'); // signed page updates for the apps (tools/page-update.js)
 const store = openStore();
+if (economy.ladderReset(store)) console.log('rank ladder: every rating starts again at ' + economy.RATING.start); // once per database (economy.js)
 const friends = social.create({ file: path.join(DATA_DIR, 'social.json'), nameBlocked: economy.nameBlocked });
 // signing in can fold this device's player into an existing account: its friends move along
 const signIn = fn => async (store, body, p) => {
@@ -46,10 +48,13 @@ const ROUTES = {
   'POST /api/auth/apple': { fn: signIn(economy.handlers.signInApple), auth: true },
   'POST /api/auth/google': { fn: signIn(economy.handlers.signInGoogle), auth: true },
   'POST /api/auth/signout': { fn: economy.handlers.signOut, auth: true },
+  'POST /api/font': { fn: economy.handlers.setFont, auth: true },          // the font your name is shown in (economy.js FONT_LOCKS)
+  'POST /api/font/buy': { fn: economy.handlers.buyFont, auth: true },
   'POST /api/account/delete': { fn: (store, body, p) => { const r = economy.handlers.deleteAccount(store, body, p); friends.forget(p.id); return r; }, auth: true },
   'POST /api/pass': { fn: economy.handlers.passView, auth: true },
   'POST /api/pass/premium': { fn: economy.handlers.passPremium, auth: true },
   'POST /api/pass/claim': { fn: economy.handlers.passClaim, auth: true },
+  'POST /api/quests/claim': { fn: economy.handlers.questClaim, auth: true },
   // friends and parties (social.js): each answers with the caller's friends, requests, party and invites
   'POST /api/social/me': { fn: friends.handlers.me, auth: true },
   'POST /api/social/add': { fn: friends.handlers.add, auth: true },
@@ -100,6 +105,7 @@ async function passPage(req, res) {
     let body = ''; for await (const d of req) { body += d; if (body.length > 1024) break; }
     const f = new URLSearchParams(body);
     if (f.has('tester')) { try { economy.passAdmin(store, null, { id: f.get('tester'), on: f.get('add') === '1' }); } catch (e) {} } // a player who is gone, or too many testers: nothing changes
+    else if (f.has('quests')) economy.questsSwitch(store, f.get('quests') === '1');
     else economy.passAdmin(store, f.get('on') === '1');
     res.writeHead(303, { Location: '/admin/pass?token=' + encodeURIComponent(q.get('token')) }); return res.end();
   }
@@ -122,6 +128,9 @@ h2{font-size:19px;margin:32px 0 4px}h3{font-size:15px;margin:20px 0 8px;color:#d
 ${st ? `<dl><dt>Players with progress</dt><dd>${st.players}</dd><dt>Bought the Battle Pass</dt><dd>${st.premium}</dd><dt>Rewards claimed</dt><dd>${st.claims}</dd><dt>XP earned</dt><dd>${st.xp.toLocaleString()}</dd><dt>Quests done today</dt><dd>${st.quests.today}</dd><dt>Quests done this week</dt><dd>${st.quests.week}</dd></dl>` : ''}
 <form method="post"><input type="hidden" name="on" value="${a.on ? 0 : 1}"><button>${a.on ? 'Turn off (hide it)' : 'Turn on'}</button></form>
 <p>Players see the pass only while it is on and a season is running. Turning it off hides it; progress and rewards stay.</p>
+<h2>Quests</h2><p><span class="st" style="background:${a.quests.on ? '#1f6f4f' : '#5b2330'}">${a.quests.on ? 'On' : 'Off (hidden)'}</span> · ${a.quests.today} done today · ${a.quests.week} this week</p>
+<p>Daily, weekly and permanent quests for ranked lives. They don't need the battle pass: they pay ATP when claimed, and pass XP too while the pass is live. Turning them off hides them; lifetime totals keep counting and unclaimed rewards wait.</p>
+<form method="post"><input type="hidden" name="quests" value="${a.quests.on ? 0 : 1}"><button>${a.quests.on ? 'Turn quests off' : 'Turn quests on'}</button></form>
 <h2>Testers</h2><p>Testers see the pass now: while it is off, and before its season starts. What they earn and claim is real and carries into the season. To add a phone, open the game on it, reload this page and press Make tester beside it.</p>
 ${a.testers.length ? `<ul class="pl">${a.testers.map(r => row(r, false)).join('')}</ul>` : '<p>No testers yet.</p>'}
 <h3>Opened the game in the last 30 minutes</h3>${recent.length ? `<ul class="pl">${recent.map(r => row(r, true)).join('')}</ul>` : '<p>Nobody else.</p>'}</main>`);
@@ -188,6 +197,8 @@ const server = http.createServer((req, res) => {
     passPage(req, res).catch(e => { console.error(e); res.end(); });
   } else if (url === '/admin/live/stream') {
     if (adminOk(req, res)) players.stream(req, res);
+  } else if (/^\/updates\/(ios|android)\/(manifest\.json|page\.html)$/.test(url)) {
+    sendUpdate(res, url);
   } else if (url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ players: clients.size, rooms: rooms.length, accounts: store.playerCount(), store: store.kind, iap: economy.catalog().iap }));
@@ -196,6 +207,16 @@ const server = http.createServer((req, res) => {
     res.end('Not found');
   }
 });
+
+// Remote page updates (tools/page-update.js): the apps read a signed manifest and download the page it describes. The files
+// are read on every request, so a git pull publishes one without a restart. Plain HTTP is fine: the apps check the signature.
+function sendUpdate(res, url) {
+  fs.readFile(path.join(UPDATES_DIR, url.slice('/updates/'.length)), (err, buf) => {
+    if (err) { res.writeHead(404, { 'Content-Type': 'text/plain' }); res.end('Not found'); return; }
+    res.writeHead(200, { 'Content-Type': url.endsWith('.json') ? 'application/json' : 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
+    res.end(buf);
+  });
+}
 
 /* ---------- minimal WebSocket (RFC 6455) ---------- */
 const clients = new Set(), rooms = []; // every game that said hello; the arena rooms they are in (see the relay below)

@@ -6,7 +6,8 @@
 const fs = require('fs'), path = require('path');
 
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
-const QUEST_KEEP = 15 * 864e5;   // quest progress is kept this long after its last change (a week's quests last 7 days)
+const QUEST_KEEP = 15 * 864e5;   // quest progress is kept this long after its last change (a week's quests last 7 days); rewards
+                                 // not claimed yet and permanent quests are kept for good
 
 function openStore() {
   try { fs.mkdirSync(DATA_DIR, { recursive: true }); } catch (e) {}
@@ -18,6 +19,10 @@ function openStore() {
   }
   return new JsonStore(path.join(DATA_DIR, 'mitosis.json'));
 }
+
+// the permanent quests' lifetime totals (economy.js questTotals) and the player column each now lives in
+const STAT_FOLD = { lives: 'played', time: 'alive', eaten: 'eaten', wins: 'wins', top3: 'podiums' };
+const STAT_COLS = ['played', 'rounds', 'wins', 'podiums', 'alive', 'eaten'];
 
 /* ---------- SQLite ---------- */
 class SqliteStore {
@@ -44,25 +49,43 @@ class SqliteStore {
       CREATE TABLE IF NOT EXISTS pass(player TEXT, season TEXT, xp INTEGER NOT NULL DEFAULT 0, premium INTEGER NOT NULL DEFAULT 0, at INTEGER, PRIMARY KEY(player, season));
       CREATE TABLE IF NOT EXISTS pass_claims(player TEXT, season TEXT, reward TEXT, at INTEGER, PRIMARY KEY(player, season, reward));
       CREATE TABLE IF NOT EXISTS flags(name TEXT PRIMARY KEY, value TEXT);
-      -- quests (economy.js QUESTS): progress per player, period ('d2026-11-20' or 'w2026-W47') and quest; done is when it paid
+      -- rank trophies: one row per step of the ladder (economy.js LADDER) a player has reached in a competitive life, with when
+      CREATE TABLE IF NOT EXISTS trophies(player TEXT, step TEXT, at INTEGER, PRIMARY KEY(player, step));
+      -- quests (economy.js QUESTS): progress per player, period ('d2026-11-20', 'w2026-W47', or 'perm' for permanent tiers) and
+      -- quest; done is when it was finished and claimed when its reward was paid. stats: each player's lifetime totals.
       CREATE TABLE IF NOT EXISTS quests(player TEXT, period TEXT, quest TEXT, progress INTEGER NOT NULL DEFAULT 0, done INTEGER, at INTEGER, PRIMARY KEY(player, period, quest));
-      CREATE INDEX IF NOT EXISTS quests_at ON quests(at);`);
+      CREATE INDEX IF NOT EXISTS quests_at ON quests(at);
+      CREATE TABLE IF NOT EXISTS stats(player TEXT, stat TEXT, n INTEGER NOT NULL DEFAULT 0, at INTEGER, PRIMARY KEY(player, stat));
+      -- name fonts (economy.js FONT_LOCKS): the ones a player unlocked by ATP or the battle pass; the font in use is players.name_font
+      CREATE TABLE IF NOT EXISTS fonts(player TEXT, font INTEGER, at INTEGER, PRIMARY KEY(player, font));`);
+    const hadPlayed = this.db.prepare('PRAGMA table_info(players)').all().some(c => c.name === 'played');
     for (const sql of ['ALTER TABLE players ADD COLUMN rating INTEGER NOT NULL DEFAULT 1000', 'ALTER TABLE players ADD COLUMN name TEXT', 'ALTER TABLE players ADD COLUMN runs INTEGER NOT NULL DEFAULT 0',
       'ALTER TABLE players ADD COLUMN xp INTEGER NOT NULL DEFAULT 0', 'ALTER TABLE runs ADD COLUMN xp INTEGER',
       // the AI rating (bots only) beside the competitive one, and per run: the mode the game said, who it was against (kind) and its win bonus
       'ALTER TABLE players ADD COLUMN ai_rating INTEGER NOT NULL DEFAULT 1000', 'ALTER TABLE players ADD COLUMN ai_runs INTEGER NOT NULL DEFAULT 0',
-      'ALTER TABLE runs ADD COLUMN mode TEXT', 'ALTER TABLE runs ADD COLUMN kind TEXT', 'ALTER TABLE runs ADD COLUMN bonus INTEGER'])
+      'ALTER TABLE runs ADD COLUMN mode TEXT', 'ALTER TABLE runs ADD COLUMN kind TEXT', 'ALTER TABLE runs ADD COLUMN bonus INTEGER',
+      // the rank ladder: the bots' skill per run, and the ratings from before the ladder's reset (economy.js ladderReset)
+      'ALTER TABLE runs ADD COLUMN skill TEXT', 'ALTER TABLE players ADD COLUMN rating_v1 INTEGER', 'ALTER TABLE players ADD COLUMN ai_rating_v1 INTEGER',
+      // lifetime stats (economy.js lifeStats): lives counted, battle royale rounds with a placing, wins and top-3 finishes in
+      // them, seconds alive, cells absorbed, and the best competitive rating reached (null: none yet)
+      'ALTER TABLE players ADD COLUMN played INTEGER NOT NULL DEFAULT 0', 'ALTER TABLE players ADD COLUMN wins INTEGER NOT NULL DEFAULT 0', 'ALTER TABLE players ADD COLUMN podiums INTEGER NOT NULL DEFAULT 0',
+      'ALTER TABLE players ADD COLUMN alive INTEGER NOT NULL DEFAULT 0', 'ALTER TABLE players ADD COLUMN eaten INTEGER NOT NULL DEFAULT 0', 'ALTER TABLE players ADD COLUMN peak INTEGER',
+      'ALTER TABLE players ADD COLUMN rounds INTEGER NOT NULL DEFAULT 0',
+      'ALTER TABLE quests ADD COLUMN claimed INTEGER',
+      'ALTER TABLE players ADD COLUMN name_font INTEGER NOT NULL DEFAULT 0'])
       try { this.db.exec(sql); } catch (e) {} // already migrated
+    this.foldStats(hadPlayed);
     const p = s => this.db.prepare(s);
     this.q = {
       bySecret: p('SELECT * FROM players WHERE secret = ?'),
       byId: p('SELECT * FROM players WHERE id = ?'),
-      insPlayer: p('INSERT INTO players(id, secret, created, seen) VALUES(?, ?, ?, ?)'),
+      insPlayer: p('INSERT INTO players(id, secret, created, seen, rating, ai_rating) VALUES(?, ?, ?, ?, 0, 0)'),
+      resetRatings: p('UPDATE players SET rating_v1 = rating, ai_rating_v1 = ai_rating, rating = ?, ai_rating = ?, peak = NULL'), resetTrophies: p('DELETE FROM trophies'),
       touch: p('UPDATE players SET seen = ? WHERE id = ?'),
       setWallet: p('UPDATE players SET balance = ?, earned = ?, hour_at = ?, hour_sum = ? WHERE id = ?'),
       skins: p('SELECT skin FROM skins WHERE player = ? ORDER BY skin'),
       addSkin: p('INSERT OR IGNORE INTO skins(player, skin, at) VALUES(?, ?, ?)'),
-      insRun: p('INSERT INTO runs(id, player, started, mode) VALUES(?, ?, ?, ?)'),
+      insRun: p('INSERT INTO runs(id, player, started, mode, skill) VALUES(?, ?, ?, ?, ?)'),
       run: p('SELECT * FROM runs WHERE id = ? AND player = ?'),
       endRun: p('UPDATE runs SET ended = ?, payout = ?, xp = ?, kind = ?, bonus = ? WHERE id = ?'),
       bonusSince: p('SELECT COALESCE(SUM(bonus), 0) AS n FROM runs WHERE player = ? AND started >= ? AND kind = ?'),
@@ -74,7 +97,13 @@ class SqliteStore {
       setAiRating: p('UPDATE players SET ai_rating = ?, name = ?, ai_runs = ai_runs + 1 WHERE id = ?'),
       mergeAi: p('UPDATE players SET ai_rating = MAX(ai_rating, ?), ai_runs = ai_runs + ? WHERE id = ?'),
       addXp: p('UPDATE players SET xp = xp + ? WHERE id = ?'),
-      top: p('SELECT name, rating, runs FROM players WHERE runs > 0 ORDER BY rating DESC, runs DESC LIMIT ?'),
+      addStats: p('UPDATE players SET played = played + ?, rounds = rounds + ?, wins = wins + ?, podiums = podiums + ?, alive = alive + ?, eaten = eaten + ? WHERE id = ?'),
+      setPeak: p('UPDATE players SET peak = MAX(COALESCE(peak, 0), ?) WHERE id = ?'),
+      trophies: p('SELECT step, at FROM trophies WHERE player = ?'),
+      insTrophy: p('INSERT OR IGNORE INTO trophies(player, step, at) VALUES(?, ?, ?)'),
+      moveTrophies: p('INSERT INTO trophies(player, step, at) SELECT ?, step, at FROM trophies WHERE player = ? ON CONFLICT(player, step) DO UPDATE SET at = MIN(at, excluded.at)'),
+      delTrophies: p('DELETE FROM trophies WHERE player = ?'),
+      top: p('SELECT name, rating, runs, name_font FROM players WHERE runs > 0 ORDER BY rating DESC, runs DESC LIMIT ?'),
       recent: p('SELECT id, name, seen, runs, xp FROM players WHERE seen > ? ORDER BY seen DESC LIMIT ?'),
       device: p('SELECT player FROM devices WHERE secret = ?'),
       insDevice: p('INSERT OR REPLACE INTO devices(secret, player, created, seen) VALUES(?, ?, ?, ?)'),
@@ -83,9 +112,15 @@ class SqliteStore {
       identities: p('SELECT provider, subject, email, at FROM identities WHERE player = ? ORDER BY at'),
       insIdentity: p('INSERT OR IGNORE INTO identities(provider, subject, player, email, at) VALUES(?, ?, ?, ?, ?)'),
       // merging one player into another (a device signing in to an account it did not create)
-      mergeWallet: p('UPDATE players SET balance = balance + ?, earned = earned + ?, runs = runs + ?, xp = xp + ?, rating = MAX(rating, ?), name = COALESCE(name, ?) WHERE id = ?'),
+      mergeWallet: p('UPDATE players SET balance = balance + ?, earned = earned + ?, runs = runs + ?, xp = xp + ?, played = played + ?, rounds = rounds + ?, wins = wins + ?, podiums = podiums + ?, alive = alive + ?, eaten = eaten + ?, peak = MAX(COALESCE(peak, 0), ?), rating = MAX(rating, ?), name = COALESCE(name, ?) WHERE id = ?'),
       moveSkins: p('INSERT OR IGNORE INTO skins(player, skin, at) SELECT ?, skin, at FROM skins WHERE player = ?'),
       delSkins: p('DELETE FROM skins WHERE player = ?'),
+      setFont: p('UPDATE players SET name_font = ? WHERE id = ?'),
+      mergeFont: p('UPDATE players SET name_font = ? WHERE id = ? AND name_font = 0'),
+      fonts: p('SELECT font FROM fonts WHERE player = ? ORDER BY font'),
+      addFont: p('INSERT OR IGNORE INTO fonts(player, font, at) VALUES(?, ?, ?)'),
+      moveFonts: p('INSERT OR IGNORE INTO fonts(player, font, at) SELECT ?, font, at FROM fonts WHERE player = ?'),
+      delFonts: p('DELETE FROM fonts WHERE player = ?'),
       moveRuns: p('UPDATE runs SET player = ? WHERE player = ?'),
       movePurchases: p('UPDATE purchases SET player = ? WHERE player = ?'),
       moveIdentities: p('UPDATE OR IGNORE identities SET player = ? WHERE player = ?'),
@@ -107,13 +142,20 @@ class SqliteStore {
       delPass: p('DELETE FROM pass WHERE player = ?'),
       movePassClaims: p('INSERT OR IGNORE INTO pass_claims(player, season, reward, at) SELECT ?, season, reward, at FROM pass_claims WHERE player = ?'),
       delPassClaims: p('DELETE FROM pass_claims WHERE player = ?'),
-      questRows: p('SELECT quest, progress, done FROM quests WHERE player = ? AND period = ?'),
+      questRows: p('SELECT quest, progress, done, claimed FROM quests WHERE player = ? AND period = ?'),
+      questUnclaimed: p("SELECT period, quest FROM quests WHERE player = ? AND done IS NOT NULL AND claimed IS NULL AND period != 'perm' ORDER BY done LIMIT 100"),
+      questClaim: p('UPDATE quests SET claimed = ?, at = ? WHERE player = ? AND period = ? AND quest = ? AND done IS NOT NULL AND claimed IS NULL'),
+      questClaimPerm: p("INSERT OR IGNORE INTO quests(player, period, quest, progress, done, claimed, at) VALUES(?, 'perm', ?, 0, ?, ?, ?)"),
+      stats: p('SELECT stat, n FROM stats WHERE player = ?'),
+      statAdd: p('INSERT INTO stats(player, stat, n, at) VALUES(?, ?, ?, ?) ON CONFLICT(player, stat) DO UPDATE SET n = n + excluded.n, at = excluded.at'),
+      moveStats: p('INSERT INTO stats(player, stat, n, at) SELECT ?, stat, n, at FROM stats WHERE player = ? ON CONFLICT(player, stat) DO UPDATE SET n = n + excluded.n, at = MAX(at, excluded.at)'),
+      delStats: p('DELETE FROM stats WHERE player = ?'),
       questSave: p('INSERT INTO quests(player, period, quest, progress, at) VALUES(?, ?, ?, ?, ?) ON CONFLICT(player, period, quest) DO UPDATE SET progress = excluded.progress, at = excluded.at'),
       questDone: p('INSERT INTO quests(player, period, quest, progress, done, at) VALUES(?, ?, ?, 0, ?, ?) ON CONFLICT(player, period, quest) DO UPDATE SET done = excluded.done, at = excluded.at WHERE done IS NULL'),
       questStats: p('SELECT COUNT(*) AS n FROM quests WHERE period = ? AND done IS NOT NULL'),
-      pruneQuests: p('DELETE FROM quests WHERE at < ?'),
-      // a merge adds the progress up and keeps the quest done if either side finished it (the earlier time)
-      moveQuests: p('INSERT INTO quests(player, period, quest, progress, done, at) SELECT ?, period, quest, progress, done, at FROM quests WHERE player = ? ON CONFLICT(player, period, quest) DO UPDATE SET progress = progress + excluded.progress, done = COALESCE(MIN(done, excluded.done), done, excluded.done), at = MAX(at, excluded.at)'),
+      pruneQuests: p("DELETE FROM quests WHERE at < ? AND period != 'perm' AND (done IS NULL OR claimed IS NOT NULL)"),
+      // a merge adds the progress up and keeps the quest done, or its reward claimed, if either side did (the earlier time)
+      moveQuests: p('INSERT INTO quests(player, period, quest, progress, done, claimed, at) SELECT ?, period, quest, progress, done, claimed, at FROM quests WHERE player = ? ON CONFLICT(player, period, quest) DO UPDATE SET progress = progress + excluded.progress, done = COALESCE(MIN(done, excluded.done), done, excluded.done), claimed = COALESCE(MIN(claimed, excluded.claimed), claimed, excluded.claimed), at = MAX(at, excluded.at)'),
       delQuests: p('DELETE FROM quests WHERE player = ?'),
       flag: p('SELECT value FROM flags WHERE name = ?'),
       setFlag: p('INSERT OR REPLACE INTO flags(name, value) VALUES(?, ?)'),
@@ -128,28 +170,30 @@ class SqliteStore {
   linkIdentity(provider, subject, player, email, now) { this.q.insIdentity.run(provider, subject, player, email, now); }
   addDevice(h, player, now) { this.q.insDevice.run(h, player, now, now); }
   forgetDevice(h) { this.q.delDevice.run(h); }
-  /** Folds player `from` into `to`: wallet, XP, skins, battle pass (XP adds up, claims join), quests (progress adds up), history, sign-ins and device secrets all move; `from` is deleted. */
+  /** Folds player `from` into `to`: wallet, XP, lifetime stats, rank trophies (the earlier date wins), skins, battle pass (XP adds up, claims join), quests (progress and totals add up), history, sign-ins and device secrets all move; `from` is deleted. */
   mergePlayers(from, to) {
     const a = this.player(from), b = this.player(to); if (!a || !b || from === to) return;
     this.db.exec('BEGIN');
     try {
-      this.q.mergeWallet.run(Number(a.balance), Number(a.earned), Number(a.runs || 0), Number(a.xp || 0), Number(a.rating ?? 1000), a.name || null, to);
-      this.q.mergeAi.run(Number(a.ai_rating ?? 1000), Number(a.ai_runs || 0), to);
+      this.q.mergeWallet.run(Number(a.balance), Number(a.earned), Number(a.runs || 0), Number(a.xp || 0), Number(a.played || 0), Number(a.rounds || 0), Number(a.wins || 0), Number(a.podiums || 0), Number(a.alive || 0), Number(a.eaten || 0), Math.max(Number(a.peak || 0), Number(a.rating ?? 0)), Number(a.rating ?? 0), a.name || null, to);
+      this.q.moveTrophies.run(to, from); this.q.delTrophies.run(from);
+      this.q.mergeAi.run(Number(a.ai_rating ?? 0), Number(a.ai_runs || 0), to);
       this.q.moveSkins.run(to, from); this.q.delSkins.run(from);
+      this.q.mergeFont.run(Number(a.name_font || 0), to); this.q.moveFonts.run(to, from); this.q.delFonts.run(from); // the account keeps its font unless it had none
       this.q.moveRuns.run(to, from); this.q.movePurchases.run(to, from);
       this.q.moveIdentities.run(to, from); this.q.delIdentities.run(from);
       this.q.moveDevices.run(to, from);
       this.q.movePass.run(to, from); this.q.delPass.run(from); this.q.movePassClaims.run(to, from); this.q.delPassClaims.run(from);
-      this.q.moveQuests.run(to, from); this.q.delQuests.run(from);
+      this.q.moveQuests.run(to, from); this.q.delQuests.run(from); this.q.moveStats.run(to, from); this.q.delStats.run(from);
       this.q.delPlayer.run(from);                       // frees a.secret, which becomes a device of `to`
       this.q.insDevice.run(a.secret, to, Number(a.created) || Date.now(), Date.now());
       this.db.exec('COMMIT');
     } catch (e) { this.db.exec('ROLLBACK'); throw e; }
   }
-  /** Deletes a player and everything linked to them (skins, runs, battle pass, quests, sign-ins, devices); purchase receipts are kept without the player. */
+  /** Deletes a player and everything linked to them (skins, trophies, runs, battle pass, quests, sign-ins, devices); purchase receipts are kept without the player. */
   deletePlayer(id) {
     this.db.exec('BEGIN');
-    try { this.q.delSkins.run(id); this.q.delRuns.run(id); this.q.delIdentities.run(id); this.q.delDevicesOf.run(id); this.q.anonPurchases.run(id); this.q.delPass.run(id); this.q.delPassClaims.run(id); this.q.delQuests.run(id); this.q.delPlayer.run(id); this.db.exec('COMMIT'); }
+    try { this.q.delSkins.run(id); this.q.delFonts.run(id); this.q.delRuns.run(id); this.q.delIdentities.run(id); this.q.delDevicesOf.run(id); this.q.anonPurchases.run(id); this.q.delPass.run(id); this.q.delPassClaims.run(id); this.q.delQuests.run(id); this.q.delTrophies.run(id); this.q.delStats.run(id); this.q.delPlayer.run(id); this.db.exec('COMMIT'); }
     catch (e) { this.db.exec('ROLLBACK'); throw e; }
   }
   player(id) { return this.q.byId.get(id) || null; }
@@ -158,7 +202,12 @@ class SqliteStore {
   setWallet(id, w) { this.q.setWallet.run(w.balance, w.earned, w.hour_at, w.hour_sum, id); }
   skins(id) { return this.q.skins.all(id).map(r => Number(r.skin)); }
   addSkin(id, skin, now) { this.q.addSkin.run(id, skin, now); }
-  createRun(id, player, now, mode = null) { this.q.insRun.run(id, player, now, mode); }
+  setFont(id, font) { this.q.setFont.run(font, id); }
+  fonts(id) { return this.q.fonts.all(id).map(r => Number(r.font)); }
+  addFont(id, font, now) { this.q.addFont.run(id, font, now); }
+  createRun(id, player, now, mode = null, skill = null) { this.q.insRun.run(id, player, now, mode, skill); }
+  /** Puts every player's ratings back to `start`, keeping the old ones in rating_v1 / ai_rating_v1 (economy.js ladderReset). */
+  resetRatings(start) { this.q.resetRatings.run(start, start); this.q.resetTrophies.run(); } // the peak and the rank trophies go with them
   run(id, player) { return this.q.run.get(id, player) || null; }
   endRun(id, now, payout, xp = 0, kind = null, bonus = 0) { this.q.endRun.run(now, payout, xp, kind, bonus, id); }
   /** ATP that the player's runs of this kind, started from `since` on, paid as win bonuses (economy.js WINS caps it per day). */
@@ -170,7 +219,24 @@ class SqliteStore {
   setRating(id, rating, name) { this.q.setRating.run(rating, name, id); }
   setAiRating(id, rating, name) { this.q.setAiRating.run(rating, name, id); }
   addXp(id, n) { this.q.addXp.run(n, id); }
-  top(n) { return this.q.top.all(n).map(r => ({ name: r.name, rating: Number(r.rating), runs: Number(r.runs) })); }
+  addStats(id, s) { this.q.addStats.run(s.played, s.rounds, s.wins, s.podiums, s.alive, s.eaten, id); }
+  setPeak(id, peak) { this.q.setPeak.run(peak, id); }
+  /** The lifetime totals the permanent quests kept in the stats table (lives, time, eaten, wins, top3) move onto the player's
+   * columns once, and those rows go. When the columns are new, a player without a lives row starts from the lives the
+   * ratings have counted (runs + ai_runs), as the quests' lives line did. */
+  foldStats(hadPlayed) {
+    this.db.exec('BEGIN');
+    try {
+      if (!hadPlayed) this.db.exec("UPDATE players SET played = runs + ai_runs WHERE id NOT IN (SELECT player FROM stats WHERE stat = 'lives')");
+      for (const [stat, col] of Object.entries(STAT_FOLD))
+        this.db.exec(`UPDATE players SET ${col} = ${col} + (SELECT n FROM stats WHERE player = players.id AND stat = '${stat}') WHERE id IN (SELECT player FROM stats WHERE stat = '${stat}')`);
+      this.db.exec(`DELETE FROM stats WHERE stat IN (${Object.keys(STAT_FOLD).map(k => `'${k}'`).join(', ')})`);
+      this.db.exec('COMMIT');
+    } catch (e) { this.db.exec('ROLLBACK'); throw e; }
+  }
+  trophies(id) { return this.q.trophies.all(id).map(r => ({ step: r.step, at: Number(r.at) })); }
+  addTrophies(id, steps, at) { for (const k of steps) this.q.insTrophy.run(id, k, at); }
+  top(n) { return this.q.top.all(n).map(r => ({ name: r.name, rating: Number(r.rating), runs: Number(r.runs), font: Number(r.name_font || 0) })); }
   /** Players who opened the game since `since`, latest first (for picking battle pass testers). */
   recentPlayers(since, n) { return this.q.recent.all(since, n).map(r => ({ id: r.id, name: r.name, seen: Number(r.seen), runs: Number(r.runs), xp: Number(r.xp || 0) })); }
   passRow(player, season) { return this.q.passRow.get(player, season) || null; }
@@ -180,7 +246,16 @@ class SqliteStore {
   /** Records a claimed reward; false if it was claimed already, so each reward is paid once. */
   passClaim(player, season, reward, now) { return Number(this.q.passClaim.run(player, season, reward, now).changes) > 0; }
   passStats(season) { const r = this.q.passStats.get(season); return { players: Number(r.players), premium: Number(r.premium), xp: Number(r.xp), claims: Number(this.q.passClaimCount.get(season).n) }; }
-  questRows(player, period) { return this.q.questRows.all(player, period).map(r => ({ quest: r.quest, progress: Number(r.progress), done: r.done == null ? null : Number(r.done) })); }
+  questRows(player, period) { return this.q.questRows.all(player, period).map(r => ({ quest: r.quest, progress: Number(r.progress), done: r.done == null ? null : Number(r.done), claimed: r.claimed == null ? null : Number(r.claimed) })); }
+  /** Daily and weekly quests finished but not claimed, oldest first. */
+  questUnclaimed(player) { return this.q.questUnclaimed.all(player).map(r => ({ period: r.period, quest: r.quest })); }
+  /** Pays a finished quest's reward once: false if it is not finished or was claimed already. */
+  questClaim(player, period, quest, now) { return Number(this.q.questClaim.run(now, now, player, period, quest).changes) > 0; }
+  /** Records a permanent tier as claimed; false if it was claimed already. */
+  questClaimPerm(player, quest, now) { return Number(this.q.questClaimPerm.run(player, quest, now, now, now).changes) > 0; }
+  stats(player) { const o = {}; for (const r of this.q.stats.all(player)) o[r.stat] = Number(r.n); return o; }
+  /** Adds to a player's lifetime totals ({ eaten: 3, lives: 1, ... }). */
+  statsAdd(player, add, now) { this.db.exec('BEGIN'); try { for (const [k, n] of Object.entries(add)) this.q.statAdd.run(player, k, Math.floor(n) || 0, now); this.db.exec('COMMIT'); } catch (e) { this.db.exec('ROLLBACK'); throw e; } }
   /** Keeps a quest's progress; now and then drops quests from periods long over. */
   questSave(player, period, quest, progress, now) { this.q.questSave.run(player, period, quest, progress, now); if (Math.random() < .01) this.q.pruneQuests.run(now - QUEST_KEEP); }
   /** Marks a quest done; false if it was done already, so each quest pays once. */
@@ -196,8 +271,16 @@ class SqliteStore {
 class JsonStore {
   constructor(file) {
     this.kind = 'json'; this.file = file; this.timer = null;
-    this.d = { players: {}, secrets: {}, skins: {}, runs: {}, purchases: {}, identities: {}, devices: {}, net: [], pass: {}, flags: {}, quests: {} };
+    this.d = { players: {}, secrets: {}, skins: {}, runs: {}, purchases: {}, identities: {}, devices: {}, net: [], pass: {}, flags: {}, quests: {}, trophies: {}, stats: {}, fonts: {} };
     try { const raw = JSON.parse(fs.readFileSync(file, 'utf8')); if (raw && raw.players) this.d = Object.assign(this.d, raw); } catch (e) {}
+    // as SqliteStore.foldStats: the quests' lifetime totals move onto the player once; a player from before the lifetime
+    // stats without a lives total starts from the lives the ratings counted
+    for (const [id, p] of Object.entries(this.d.players)) {
+      const st = this.d.stats[id] || {}, fresh = p.played == null;
+      for (const k of STAT_COLS) p[k] = Number(p[k] || 0);
+      if (fresh && st.lives == null) p.played = Number(p.runs || 0) + Number(p.ai_runs || 0);
+      for (const [stat, col] of Object.entries(STAT_FOLD)) if (st[stat] != null) { p[col] += Number(st[stat]) || 0; delete st[stat]; }
+    }
   }
   save() {
     if (this.timer) return;
@@ -216,9 +299,12 @@ class JsonStore {
   forgetDevice(h) { delete this.d.devices[h]; this.save(); }
   mergePlayers(from, to) {
     const a = this.d.players[from], b = this.d.players[to]; if (!a || !b || from === to) return;
-    b.balance += a.balance; b.earned += a.earned; b.runs = (b.runs || 0) + (a.runs || 0); b.xp = (b.xp || 0) + (a.xp || 0); b.rating = Math.max(b.rating ?? 1000, a.rating ?? 1000); b.name = b.name || a.name || null;
-    b.ai_rating = Math.max(b.ai_rating ?? 1000, a.ai_rating ?? 1000); b.ai_runs = (b.ai_runs || 0) + (a.ai_runs || 0);
+    b.balance += a.balance; b.earned += a.earned; b.runs = (b.runs || 0) + (a.runs || 0); b.xp = (b.xp || 0) + (a.xp || 0);
+    for (const k of STAT_COLS) b[k] = (b[k] || 0) + (a[k] || 0); b.peak = Math.max(b.peak || 0, a.peak || 0, a.rating ?? 0);
+    const tr = this.d.trophies[to] || (this.d.trophies[to] = {}); for (const [k, at] of Object.entries(this.d.trophies[from] || {})) tr[k] = tr[k] == null ? at : Math.min(tr[k], at); delete this.d.trophies[from]; b.rating = Math.max(b.rating ?? 0, a.rating ?? 0); b.name = b.name || a.name || null;
+    b.ai_rating = Math.max(b.ai_rating ?? 0, a.ai_rating ?? 0); b.ai_runs = (b.ai_runs || 0) + (a.ai_runs || 0);
     const s = this.d.skins[to] || (this.d.skins[to] = []); for (const k of this.d.skins[from] || []) if (!s.includes(k)) s.push(k); delete this.d.skins[from];
+    b.name_font = b.name_font || a.name_font || 0; const fo = this.d.fonts[to] || (this.d.fonts[to] = []); for (const k of this.d.fonts[from] || []) if (!fo.includes(k)) fo.push(k); delete this.d.fonts[from];
     for (const r of Object.values(this.d.runs)) if (r.player === from) r.player = to;
     for (const p of Object.values(this.d.purchases)) if (p.player === from) p.player = to;
     for (const i of Object.values(this.d.identities)) if (i.player === from) i.player = to;
@@ -228,15 +314,16 @@ class JsonStore {
     delete this.d.pass[from];
     const qs = this.d.quests[to] || (this.d.quests[to] = {});
     for (const [period, m] of Object.entries(this.d.quests[from] || {})) { const t = qs[period] || (qs[period] = {});
-      for (const [quest, r] of Object.entries(m)) { const o = t[quest]; if (!o) { t[quest] = r; continue; } o.progress += r.progress; o.done = o.done == null ? r.done : r.done == null ? o.done : Math.min(o.done, r.done); o.at = Math.max(o.at, r.at); } }
+      for (const [quest, r] of Object.entries(m)) { const o = t[quest]; if (!o) { t[quest] = r; continue; } o.progress += r.progress; o.done = o.done == null ? r.done : r.done == null ? o.done : Math.min(o.done, r.done); o.claimed = o.claimed == null ? r.claimed ?? null : r.claimed == null ? o.claimed : Math.min(o.claimed, r.claimed); o.at = Math.max(o.at, r.at); } }
     delete this.d.quests[from];
+    const ss = this.d.stats[to] || (this.d.stats[to] = {}); for (const [k, n] of Object.entries(this.d.stats[from] || {})) ss[k] = (ss[k] || 0) + n; delete this.d.stats[from];
     delete this.d.secrets[a.secret]; delete this.d.players[from];
     this.d.devices[a.secret] = { player: to, created: a.created, seen: Date.now() };
     this.save();
   }
   deletePlayer(id) {
     const a = this.d.players[id]; if (!a) return;
-    delete this.d.skins[id]; delete this.d.pass[id]; delete this.d.quests[id]; delete this.d.secrets[a.secret]; delete this.d.players[id];
+    delete this.d.skins[id]; delete this.d.fonts[id]; delete this.d.pass[id]; delete this.d.quests[id]; delete this.d.trophies[id]; delete this.d.stats[id]; delete this.d.secrets[a.secret]; delete this.d.players[id];
     for (const [k, r] of Object.entries(this.d.runs)) if (r.player === id) delete this.d.runs[k];
     for (const [k, i] of Object.entries(this.d.identities)) if (i.player === id) delete this.d.identities[k];
     for (const [k, d] of Object.entries(this.d.devices)) if (d.player === id) delete this.d.devices[k];
@@ -244,14 +331,18 @@ class JsonStore {
     this.save();
   }
   createPlayer(id, h, now) {
-    this.d.players[id] = { id, secret: h, created: now, seen: now, balance: 0, earned: 0, hour_at: 0, hour_sum: 0, rating: 1000, name: null, runs: 0, xp: 0, ai_rating: 1000, ai_runs: 0 };
+    this.d.players[id] = { id, secret: h, created: now, seen: now, balance: 0, earned: 0, hour_at: 0, hour_sum: 0, rating: 0, name: null, runs: 0, xp: 0, ai_rating: 0, ai_runs: 0, played: 0, rounds: 0, wins: 0, podiums: 0, alive: 0, eaten: 0, peak: null };
     this.d.secrets[h] = id; this.save(); return this.player(id);
   }
   touch(id, now) { const p = this.d.players[id]; if (p) { p.seen = now; this.save(); } }
   setWallet(id, w) { const p = this.d.players[id]; if (p) { Object.assign(p, { balance: w.balance, earned: w.earned, hour_at: w.hour_at, hour_sum: w.hour_sum }); this.save(); } }
   skins(id) { return (this.d.skins[id] || []).slice().sort((a, b) => a - b); }
   addSkin(id, skin, now) { const s = this.d.skins[id] || (this.d.skins[id] = []); if (!s.includes(skin)) { s.push(skin); this.save(); } }
-  createRun(id, player, now, mode = null) { this.d.runs[id] = { id, player, started: now, ended: null, payout: null, xp: null, mode, kind: null, bonus: null }; this.prune(); this.save(); }
+  setFont(id, font) { const p = this.d.players[id]; if (p) { p.name_font = font; this.save(); } }
+  fonts(id) { return ((this.d.fonts || {})[id] || []).slice().sort((a, b) => a - b); }
+  addFont(id, font, now) { const m = this.d.fonts || (this.d.fonts = {}), s = m[id] || (m[id] = []); if (!s.includes(font)) { s.push(font); this.save(); } }
+  createRun(id, player, now, mode = null, skill = null) { this.d.runs[id] = { id, player, started: now, ended: null, payout: null, xp: null, mode, skill, kind: null, bonus: null }; this.prune(); this.save(); }
+  resetRatings(start) { for (const p of Object.values(this.d.players)) { p.rating_v1 = p.rating ?? 1000; p.ai_rating_v1 = p.ai_rating ?? 1000; p.rating = start; p.ai_rating = start; p.peak = null; } this.d.trophies = {}; this.save(); }
   run(id, player) { const r = this.d.runs[id]; return r && r.player === player ? { ...r } : null; }
   endRun(id, now, payout, xp = 0, kind = null, bonus = 0) { const r = this.d.runs[id]; if (r) { r.ended = now; r.payout = payout; r.xp = xp; r.kind = kind; r.bonus = bonus; this.save(); } }
   bonusSince(player, since, kind) { let n = 0; for (const r of Object.values(this.d.runs)) if (r.player === player && r.started >= since && r.kind === kind) n += r.bonus || 0; return n; }
@@ -262,8 +353,12 @@ class JsonStore {
   setRating(id, rating, name) { const p = this.d.players[id]; if (p) { p.rating = rating; p.name = name; p.runs = (p.runs || 0) + 1; this.save(); } }
   setAiRating(id, rating, name) { const p = this.d.players[id]; if (p) { p.ai_rating = rating; p.name = name; p.ai_runs = (p.ai_runs || 0) + 1; this.save(); } }
   addXp(id, n) { const p = this.d.players[id]; if (p) { p.xp = (p.xp || 0) + n; this.save(); } }
+  addStats(id, s) { const p = this.d.players[id]; if (!p) return; for (const k of STAT_COLS) p[k] = (p[k] || 0) + s[k]; this.save(); }
+  setPeak(id, peak) { const p = this.d.players[id]; if (!p) return; p.peak = Math.max(p.peak || 0, peak); this.save(); }
+  trophies(id) { return Object.entries((this.d.trophies || {})[id] || {}).map(([step, at]) => ({ step, at })); }
+  addTrophies(id, steps, at) { const m = this.d.trophies || (this.d.trophies = {}), t = m[id] || (m[id] = {}); let n = 0; for (const k of steps) if (t[k] == null) { t[k] = at; n++; } if (n) this.save(); }
   recentPlayers(since, n) { return Object.values(this.d.players).filter(p => p.seen > since).sort((a, b) => b.seen - a.seen).slice(0, n).map(p => ({ id: p.id, name: p.name, seen: p.seen, runs: p.runs || 0, xp: p.xp || 0 })); }
-  top(n) { return Object.values(this.d.players).filter(p => p.runs > 0).sort((a, b) => (b.rating - a.rating) || (b.runs - a.runs)).slice(0, n).map(p => ({ name: p.name, rating: p.rating, runs: p.runs })); }
+  top(n) { return Object.values(this.d.players).filter(p => p.runs > 0).sort((a, b) => (b.rating - a.rating) || (b.runs - a.runs)).slice(0, n).map(p => ({ name: p.name, rating: p.rating, runs: p.runs, font: p.name_font || 0 })); }
   passEntry(player, season, now) { const m = this.d.pass[player] || (this.d.pass[player] = {}); return m[season] || (m[season] = { xp: 0, premium: 0, at: now, claims: [] }); }
   passRow(player, season) { const r = (this.d.pass[player] || {})[season]; return r ? { xp: r.xp, premium: r.premium } : null; }
   passAddXp(player, season, n, now) { this.passEntry(player, season, now).xp += n; this.save(); }
@@ -271,11 +366,16 @@ class JsonStore {
   passClaims(player, season) { const r = (this.d.pass[player] || {})[season]; return r ? r.claims.slice() : []; }
   passClaim(player, season, reward, now) { const r = this.passEntry(player, season, now); if (r.claims.includes(reward)) return false; r.claims.push(reward); this.save(); return true; }
   passStats(season) { const o = { players: 0, premium: 0, xp: 0, claims: 0 }; for (const m of Object.values(this.d.pass)) { const r = m[season]; if (r) { o.players++; o.premium += r.premium ? 1 : 0; o.xp += r.xp; o.claims += r.claims.length; } } return o; }
-  questRows(player, period) { return Object.entries(((this.d.quests[player] || {})[period]) || {}).map(([quest, r]) => ({ quest, progress: r.progress, done: r.done ?? null })); }
-  questEntry(player, period, quest, now) { const m = this.d.quests[player] || (this.d.quests[player] = {}), pm = m[period] || (m[period] = {}); return pm[quest] || (pm[quest] = { progress: 0, done: null, at: now }); }
+  questRows(player, period) { return Object.entries(((this.d.quests[player] || {})[period]) || {}).map(([quest, r]) => ({ quest, progress: r.progress, done: r.done ?? null, claimed: r.claimed ?? null })); }
+  questUnclaimed(player) { const o = []; for (const [period, pm] of Object.entries(this.d.quests[player] || {})) if (period !== 'perm') for (const [quest, r] of Object.entries(pm)) if (r.done != null && r.claimed == null) o.push({ period, quest, done: r.done }); return o.sort((a, b) => a.done - b.done).slice(0, 100).map(({ period, quest }) => ({ period, quest })); }
+  questClaim(player, period, quest, now) { const r = ((this.d.quests[player] || {})[period] || {})[quest]; if (!r || r.done == null || r.claimed != null) return false; r.claimed = now; r.at = now; this.save(); return true; }
+  questClaimPerm(player, quest, now) { const r = this.questEntry(player, 'perm', quest, now); if (r.claimed != null) return false; r.done = r.done ?? now; r.claimed = now; this.save(); return true; }
+  stats(player) { return { ...(this.d.stats[player] || {}) }; }
+  statsAdd(player, add, now) { const s = this.d.stats[player] || (this.d.stats[player] = {}); for (const [k, n] of Object.entries(add)) s[k] = (s[k] || 0) + (Math.floor(n) || 0); this.save(); }
+  questEntry(player, period, quest, now) { const m = this.d.quests[player] || (this.d.quests[player] = {}), pm = m[period] || (m[period] = {}); return pm[quest] || (pm[quest] = { progress: 0, done: null, claimed: null, at: now }); }
   questSave(player, period, quest, progress, now) {
     const r = this.questEntry(player, period, quest, now); r.progress = progress; r.at = now;
-    const m = this.d.quests[player]; for (const [k, pm] of Object.entries(m)) if (Object.values(pm).every(x => x.at < now - QUEST_KEEP)) delete m[k]; // periods long over
+    const m = this.d.quests[player]; for (const [k, pm] of Object.entries(m)) if (k !== 'perm' && Object.values(pm).every(x => x.at < now - QUEST_KEEP && (x.done == null || x.claimed != null))) delete m[k]; // periods long over, rewards paid
     this.save();
   }
   questDone(player, period, quest, now) { const r = this.questEntry(player, period, quest, now); if (r.done != null) return false; r.done = now; r.at = now; this.save(); return true; }

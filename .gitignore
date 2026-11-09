@@ -33,3 +33,6 @@ ios/store-art/chrome-*/
 promo/out/
 promo/.work/
 promo/rec/
+
+# rank trophy renders (re-render with node tools/trophies/render.js)
+tools/trophies/out/
