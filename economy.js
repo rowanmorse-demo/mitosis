@@ -121,11 +121,16 @@ function winBonus({ kind, survived, place, of, skill }) {
   if ((+survived || 0) < WINS.minSec || n < WINS.minOf || pl < 1 || pl > 3 || pl > n) return 0;
   return kind === 'casual' ? t[pl - 1] : pl === 1 ? t[0] : t[1];
 }
-const RUN_MODES = ['arena', 'bots', 'casual'];
+const RUN_MODES = ['arena', 'bots', 'casual', 'classic'];
+// Classic (the endless agar-style arena: no rounds, so no placings) pays ATP for the best leaderboard rank a life reached,
+// on the byRank table, once the life lasts minSec (a quick respawn earns nothing), and earns XP for its time alive (no
+// placing part). Like every ATP since Nov 9, there is no daily cap. It never moves a rating.
+const CLASSIC = { minSec: 60 };
 // mode: what the game said at run/start; metSince(t): whether the relay saw another player alive beside this one since t
 function runKind(run, metSince) {
   if (!run.mode) return 'legacy';
   if (run.mode === 'casual') return 'casual';
+  if (run.mode === 'classic') return 'classic';
   return run.mode === 'arena' && typeof metSince === 'function' && metSince(Number(run.started)) ? 'comp' : 'ai';
 }
 // XP and profile levels: every ranked life earns XP for the time it lasted plus a bonus for where it placed, and XP
@@ -465,7 +470,7 @@ function questsTick(store, p, life, t = now()) {
   return out;
 }
 const packById = id => PACKS.find(p => p.id === id);
-const catalog = (store, p = null) => ({ skins: SKINS, seasons: Object.fromEntries(Object.entries(SEASONS).map(([k, s]) => [k, { ...s, open: seasonOpen(k) }])), pass: passCatalog(passLive(store, now(), p)), packs: PACKS, rules: RULES, rating: RATING, ratingAi: RATING_AI, wins: WINS, xp: XP, tiers: TIERS.map(t => t[1]), tierAt: TIERS.map(t => t[0]), ranks: RANKS, steps: LADDER.map(st => ({ key: st.key, name: st.name })), iap: iap.status(), auth: signin.status(), fonts: { max: FONT_MAX, locks: FONT_LOCKS } });
+const catalog = (store, p = null) => ({ skins: SKINS, seasons: Object.fromEntries(Object.entries(SEASONS).map(([k, s]) => [k, { ...s, open: seasonOpen(k) }])), pass: passCatalog(passLive(store, now(), p)), packs: PACKS, rules: RULES, rating: RATING, ratingAi: RATING_AI, wins: WINS, xp: XP, modes: ['classic'], classic: CLASSIC, tiers: TIERS.map(t => t[1]), tierAt: TIERS.map(t => t[0]), ranks: RANKS, steps: LADDER.map(st => ({ key: st.key, name: st.name })), iap: iap.status(), auth: signin.status(), fonts: { max: FONT_MAX, locks: FONT_LOCKS } });
 
 function payoutFor({ survived, bestRank, place }) {
   const sec = Math.max(0, Math.min(RULES.maxRunSec, +survived || 0));
@@ -557,10 +562,11 @@ function runEnd(store, body, p, ctx = {}) {
   const elapsed = (now - Number(run.started)) / 1000 + 15;
   const survived = Math.min(+body.survived || 0, elapsed);
   // Casual pays only for a win or a top-3 finish, and earns no XP (it has endless lives)
-  const kind = runKind(run, ctx.metSince), casual = kind === 'casual', life = { survived, place: body.place, of: body.of };
+  const kind = runKind(run, ctx.metSince), casual = kind === 'casual', classic = kind === 'classic', life = { survived, place: classic ? 0 : body.place, of: classic ? 0 : body.of };
   const vsBots = kind === 'ai' || casual, skill = vsBots ? skillOf(run.skill) || skillOf(body.skill) || 'normal' : null;
   const bonus = winBonus({ kind, ...life, skill });
-  const payout = (casual ? 0 : payoutFor({ survived, bestRank: body.bestRank, place: body.place })) + bonus;
+  // Classic has no placings: it pays on the best leaderboard rank the life reached, and only for a life of CLASSIC.minSec
+  const payout = classic && survived < CLASSIC.minSec ? 0 : (casual ? 0 : payoutFor({ survived, bestRank: body.bestRank, place: life.place })) + bonus;
   const xp = casual ? { time: 0, place: 0, win: 0, total: 0 } : xpFor(life), level = levelOf(p.xp).level;
   const w = { balance: Number(p.balance) + payout, earned: Number(p.earned) + payout, hour_at: Number(p.hour_at), hour_sum: Number(p.hour_sum) };
   store.setWallet(p.id, w); store.addXp(p.id, xp.total); store.endRun(run.id, now, payout, xp.total, kind, bonus);
@@ -573,8 +579,10 @@ function runEnd(store, body, p, ctx = {}) {
   // rating: bots move only the AI rating, its gains scaled by the bots' skill (ranked games of bots have Master bots)
   const name = cleanName(body.name) || p.name || null;
   const before = Number((vsBots ? p.ai_rating : p.rating) ?? RATING.start), mult = vsBots ? RATING_AI.skill[skill] : 1;
-  const delta = ratingDelta(before, survived, body.eaten, body.place, body.of, body.life, mult), rating = Math.max(0, before + delta);
-  if (vsBots) { store.setAiRating(p.id, rating, name); p.ai_rating = rating; p.ai_runs = Number(p.ai_runs || 0) + 1; }
+  // Classic moves no rating (delta 0, nothing written); it shares the answer below, where its winBonus and deltas come out 0
+  const delta = classic ? 0 : ratingDelta(before, survived, body.eaten, body.place, body.of, body.life, mult), rating = Math.max(0, before + delta);
+  if (classic) { /* no rating, no run count */ }
+  else if (vsBots) { store.setAiRating(p.id, rating, name); p.ai_rating = rating; p.ai_runs = Number(p.ai_runs || 0) + 1; }
   else { store.setRating(p.id, rating, name); p.rating = rating; p.runs = Number(p.runs || 0) + 1; }
   p.name = name;
   // the best rating (this life's lifetime stats went in with the quests, above) and rank trophies (competitive lives only;
@@ -723,4 +731,4 @@ function passAdmin(store, on, tester) {
 
 function leaderboard(store) { return { top: store.top(10).map((r, i) => ({ rank: i + 1, name: (r.name && !nameBlocked(r.name) && r.name) || 'Unnamed cell', rating: r.rating, tier: tierOf(r.rating), rankName: rankOf(r.rating).name, runs: r.runs, font: r.font || 0 })) }; }
 
-module.exports = { RANKED_ONLY, PERMANENT, PERM_ATP, questsOn, questsSwitch, questById, questTotals, SKINS, PACKS, RULES, RATING, RATING_AI, WINS, LADDER, RANKS, rankOf, ladderReset, stepsUpTo, STAT_KEYS, lifeStats, winBonus, runKind, XP, SEASONS, seasonOpen, PASS, PASS_SEASONS, passSeason, passLive, passAdmin, QUESTS, QUEST_SLOTS, questsAt, questsOf, questsTick, isoWeekOf, catalog, payoutFor, ratingDelta, xpFor, levelOf, xpAtLevel, xpToNext, tierOf, nameBlocked, FONT_MAX, FONT_LOCKS, fontId, ApiError, auth, handlers: { questClaim, deleteAccount, session, runStart, runEnd, buySkin, iapApple, iapGoogle, leaderboard, signInApple, signInGoogle, signOut, passView, passPremium, passClaim, setFont, buyFont } };
+module.exports = { RANKED_ONLY, PERMANENT, PERM_ATP, questsOn, questsSwitch, questById, questTotals, SKINS, PACKS, RULES, RATING, RATING_AI, WINS, CLASSIC, LADDER, RANKS, rankOf, ladderReset, stepsUpTo, STAT_KEYS, lifeStats, winBonus, runKind, XP, SEASONS, seasonOpen, PASS, PASS_SEASONS, passSeason, passLive, passAdmin, QUESTS, QUEST_SLOTS, questsAt, questsOf, questsTick, isoWeekOf, catalog, payoutFor, ratingDelta, xpFor, levelOf, xpAtLevel, xpToNext, tierOf, nameBlocked, FONT_MAX, FONT_LOCKS, fontId, ApiError, auth, handlers: { questClaim, deleteAccount, session, runStart, runEnd, buySkin, iapApple, iapGoogle, leaderboard, signInApple, signInGoogle, signOut, passView, passPremium, passClaim, setFont, buyFont } };

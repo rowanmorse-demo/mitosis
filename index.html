@@ -74,6 +74,8 @@ body{margin:0;background:var(--void);color:var(--ink);font-family:var(--display)
 .act.flash{background:rgba(255,92,138,.22)}
 #dashBtn::after{content:"";position:absolute;inset:0;background:rgba(255,255,255,.08);transform:scaleX(var(--cd,0));transform-origin:left;pointer-events:none}
 #dashBtn.ready{border-color:rgba(255,92,138,.6)}
+/* Classic mode is plain agar: none of Battle Royale's HUD (Boost, the round clock, lives, evolution, mutation chips) */
+body.classic #dashBtn,body.classic #roundClock,body.classic .livesrow,body.classic #evolve,body.classic #fx{display:none!important}
 
 body:not(.playing) #stats, body:not(.playing) #actions, body:not(.playing) #scale, body:not(.playing) #feed{display:none}
 
@@ -701,6 +703,15 @@ body:not(.playing) #tip{display:none}
 .lb-near{display:none;gap:4px;margin:0 0 8px;padding:9px 10px 9px 13px;border-radius:16px;background:rgba(108,184,255,.08);box-shadow:inset 0 0 0 1px rgba(108,184,255,.22)}
 .lb-play[data-mode=nearby] .lb-near{display:grid}
 .lobby #go.lb-wait{filter:saturate(.3) brightness(.72)}
+.lobby .lb-go{white-space:nowrap;min-width:0} /* a label never wraps out of the button */
+.lobby .lb-gt{display:grid;justify-items:start;gap:5px;min-width:0;text-align:left}
+.lobby .lb-gt b{font:inherit;font-size:.9em;line-height:1;letter-spacing:.04em;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.lobby .lb-gt small{font:700 11.5px/1 var(--mono);letter-spacing:.06em;text-transform:none;color:rgba(43,7,21,.72);text-shadow:none;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.lobby #go.queued{white-space:nowrap}
+.lobby #go.queued:has(.lb-gt)::after{display:none} /* the small line says it */
+.lobby #go.queued .lb-gt{justify-items:center;text-align:center}
+.lobby #go.queued .lb-gt b{font-size:1em;letter-spacing:0}
+.lobby #go.queued .lb-gt small{color:rgba(225,220,255,.78);font-weight:500;letter-spacing:.02em}
 .lb-near-top{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
 .lb-near-who{min-width:0;font:700 14px/1.2 var(--display);color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lb-near-sum{margin:0;font-size:12px;line-height:1.3;color:var(--muted)}
@@ -3449,11 +3460,11 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
     if(nearby)return;
     N.state=N.state==='full'?'full':'connecting';
     try{ws=new WebSocket(SERVER.replace(/^http/,'ws')+'/ws');}catch(e){later();return;}
-    ws.onopen=()=>{retry=0;ws.send(JSON.stringify(N.party?{t:'hello',id:myId,party:N.party}:{t:'hello',id:myId}));}; // party: the server seats party members in one arena
+    ws.onopen=()=>{retry=0;const h={t:'hello',id:myId};if(N.party)h.party=N.party;if(N.gameMode==='classic')h.mode='classic';ws.send(JSON.stringify(h));}; // party: the server seats party members in one arena; mode: Classic games get rooms of their own
     ws.onmessage=ev=>{const w0=performance.now();try{onMsg(ev);}finally{const w=performance.now()-w0;if(window.__wsTime)window.__wsTime(w);}};
   function onMsg(ev){if(nearby)return;let m;try{m=JSON.parse(ev.data);}catch(e){return;}if(!m||typeof m!=='object')return;
       if(m.t==='welcome'){others.clear();for(const q of Array.isArray(m.peers)?m.peers:[])if(q&&typeof q.id==='string'&&q.p&&typeof q.p==='object'){others.set(q.id,Object.freeze(q.p));gotAt.set(q.id,performance.now());}
-        N.lan=Array.isArray(m.lan)?m.lan.filter(u=>typeof u==='string'):[];N.key=typeof m.key==='string'?m.key:null;N.state='live';rebuild();setConn(true);flush();}
+        N.lan=Array.isArray(m.lan)?m.lan.filter(u=>typeof u==='string'):[];N.key=typeof m.key==='string'?m.key:null;N.roomMode=typeof m.mode==='string'?m.mode:null;N.state='live';rebuild();setConn(true);flush();}
       else if(m.t==='p'&&typeof m.id==='string'&&m.p&&typeof m.p==='object'){got(m.id,Object.freeze(m.p),performance.now());rebuild();}
       else if(m.t==='bye'&&typeof m.id==='string'){others.delete(m.id);rebuild();}
       else if(m.t==='pong'&&typeof m.c==='number'&&pings.delete(m.c)){const rtt=performance.now()-m.c;if(rtt>=0&&rtt<60000){NS.rtts.push(rtt);if(NS.rtts.length>300)NS.rtts.shift();NS.pongs++;N.rtt=N.rtt==null?rtt:N.rtt*.7+rtt*.3;}}
@@ -3470,7 +3481,10 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
   });
   // Nearby play (iOS app): the app finds phones over Bluetooth and peer-to-peer Wi-Fi and relays presence between them.
   // useNearby(send) switches to it (send posts one presence string to every phone); useNearby(null) goes back to the server.
-  N.id=myId;N.mode='server';N.party=null;
+  N.id=myId;N.mode='server';N.party=null;N.roomMode=null; // roomMode: what the server says our room is for (servers before Classic say nothing)
+  N.gameMode=(()=>{if(/[?&]mode=classic\b/.test(location.search))return 'classic';if(/[?&]mode=br\b/.test(location.search))return 'br';
+    try{const s=JSON.parse(localStorage.getItem('mitosis.settings')||'null');return s&&s.mode==='classic'?'classic':'br';}catch(e){return 'br';}})();
+  N.setGameMode=m=>{m=m==='classic'?'classic':'br';if(m===N.gameMode)return;N.gameMode=m;N.roomMode=null;if(ws&&ws.readyState===1)ws.close();}; // say hello again for a room of that mode
   // joining or leaving a party: say hello again so the server can seat us with the party (the game calls this only
   // from the menus, since reconnecting drops the arena for a moment)
   N.setParty=id=>{id=id||null;if(id===N.party)return;N.party=id;if(ws&&ws.readyState===1)ws.close();};
@@ -3516,6 +3530,15 @@ addEventListener('resize',resize);resize();
 const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const R=6800,TAU=Math.PI*2,NP=40,OFF=R+2000;
 const MAX_CELLS=16,VIRUS_M=100,VSLOTS=140,MAX_FREEV=16,PELLETS=19200,MAX_PU=24;
+// Classic mode (settings.mode 'classic', set from the lobby with setGameMode; ?mode=classic for tests): plain agar in a
+// fixed square arena CL_HALF from the centre to each wall (about the dish's area, so food is as dense), endless, with
+// none of Battle Royale's extras (rounds, lives, shrinking, events, hunters, mutations, traits, Boost, the crown).
+// The rest of the game asks CL and goes through the helpers below instead of assuming the round dish.
+let CL=false;const CL_HALF=6000;
+const wallGap=(x,y)=>CL?CL_HALF-Math.max(Math.abs(x),Math.abs(y)):R-Math.hypot(x,y); // room left to the arena wall
+function wallClamp(o,m){ // keep o's centre at least m inside the wall
+  if(CL){const L=Math.max(0,CL_HALF-m);if(o.x>L)o.x=L;else if(o.x<-L)o.x=-L;if(o.y>L)o.y=L;else if(o.y<-L)o.y=-L;return;}
+  const d=Math.hypot(o.x,o.y),L=Math.max(0,R-m);if(d>L){o.x*=L/d;o.y*=L/d;}}
 // No gameplay cap on a single cell's mass: MAX_MASS is only the ceiling the network packet can carry
 // (23 bits; the 24th bit of the field flags an infected cell), far beyond anything reachable in play.
 const MAX_MASS=8388607,INF_FLAG=8388608;
@@ -3526,19 +3549,40 @@ const MAX_HUNTERS=6,HUNTER_R=42,INF_MIN=8,INF_MAX=10,PROTO=6,SEED=90210; // PROT
 let ROUND_SEC=+((location.search.match(/[?&]round=(\d+)/)||[])[1])||600,ROUND_GRACE=Math.round(ROUND_SEC*.1),ROUND_HOLD=Math.round(ROUND_SEC*.05),BOT_CUTOFF=Math.round(ROUND_SEC*.7);const R_MIN=R*.03,ROUND_GAP=6; // arena full for the first minute, closed to 3% by 9:30; bots stop respawning at 7:00
 let round={id:1,start:0,n:0,synced:false,over:false};
 // Balance: a cell is absorbed once EAT_COVER of its diameter is inside a cell at least 10% heavier (see need()).
-// Ejecting costs EJECT_COST and makes a blob of EJECT_MASS, at most once every EJECT_GAP seconds. The blob leaves at
-// EJECT_SPEED and slows by EJECT_DRAG per second, so it flies EJECT_SPEED/EJECT_DRAG ≈ 480 units: about 7.5 radii of a
-// mass-100 cell, as far as agar.io shoots (it was 172, short of the phages bots aim at from 460 out).
-const EAT_COVER=.3,EJECT_COST=16,EJECT_MASS=15,EJECT_GAP=.06,EJECT_SPEED=1450,EJECT_DRAG=3,BOTS_PER_PLAYER=5,SKIN_FREE=5;
+// Ejecting works like the classic agar-style servers (Ogar / MultiOgar defaults): a shot costs EJECT_COST and makes a
+// blob of EJECT_MASS, so feeding passes on 72% of what you spend, and holding it fires once every EJECT_GAP s (about 8 a
+// second; it was 16). The blob leaves at EJECT_SPEED, up to EJECT_SPREAD rad either side of the aim (the servers use .3;
+// half of that keeps phages and hunters hittable from a few radii out), and slows by EJECT_DRAG per second, so it flies
+// EJECT_SPEED/EJECT_DRAG ≈ 480 units: about 7.5 radii of a mass-100 cell, as far as agar shoots. EJECT_R is its drawn size:
+// a third of a mass-100 cell's radius, like agar's blobs (it was 14, a fifth).
+const EAT_COVER=.3,EJECT_COST=18,EJECT_MASS=13,EJECT_GAP=.12,EJECT_SPEED=1450,EJECT_DRAG=3,EJECT_SPREAD=.15,EJECT_R=21,BOTS_PER_PLAYER=5,SKIN_FREE=5;
 const COS=new Float32Array(NP),SIN=new Float32Array(NP);for(let i=0;i<NP;i++){COS[i]=Math.cos(i/NP*TAU);SIN[i]=Math.sin(i/NP*TAU);}
 const PX=new Float32Array(NP),PY=new Float32Array(NP),TMP=new Float32Array(NP);
 const rand=(a,b)=>a+Math.random()*(b-a);
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const num=v=>typeof v==='number'&&isFinite(v)?v:0;
 const radius=m=>4+Math.sqrt(m)*6;
-const speedOf=r=>1000*Math.pow(r,-0.45);
-const mergeDelay=m=>15+m*0.006; // seconds before split pieces may fuse: ~20-30 s at everyday sizes
-function randInDish(margin=0,rad=arenaR()){const rr=Math.max(150,rad-margin)*Math.sqrt(Math.random()),t=Math.random()*TAU;return{x:Math.cos(t)*rr,y:Math.sin(t)*rr};}
+// Speed (units/s) for a radius. Fitted so a cell crosses as many of its own radii per second as on agar-style servers
+// (2200·r^-0.45 there, with r = 10√m) from mass 25 to 6000, within 3%. It was 1000·r^-0.45, which left small cells 20%
+// slower than that (mass 25: 205 → 252 units/s, 100: 154 → 181, 1000: 93 → 102, 4000: 69 → 72).
+const SPEED_K=1567,SPEED_EXP=.519;
+const speedOf=r=>SPEED_K*Math.pow(r,-SPEED_EXP);
+// Merging: pieces split from a mass-m cell may fuse after MERGE_BASE + MERGE_PER_MASS·m seconds, the classic agar rule of
+// 30 s plus 2% of each half's mass (Ogar; MultiOgar's max(30, 2√m) is within a few seconds of it at everyday sizes):
+// 32 s after splitting a mass-200 cell, 40 s for 1000, 50 s for 2000. It was 15 s + 0.6%, about half that, which took
+// most of the risk out of splitting. The Mitotic trait still cuts it by 40%.
+const MERGE_BASE=30,MERGE_PER_MASS=.01;
+const mergeDelay=m=>MERGE_BASE+m*MERGE_PER_MASS;
+// Splitting: the new half leaves at SPLIT_SPEED and slows by CELL_DRAG per second, a lunge of SPLIT_SPEED/CELL_DRAG ≈ 480
+// units however big the cell is. Agar-style servers lunge ~800 of their units, but their cells are 1.6× as wide as ours
+// (radius 10√m against 4+6√m), so 480 here is the same reach in radii: a mass-200 split lands its half 5.8 parent radii out
+// (it was 720 units, 8.7 radii, which flung pieces far past anything they were aimed at). Pieces of one player are solid to
+// each other (pushed apart at SIB_STIFF per second) until they may fuse, except in a new piece's first SPLIT_GRACE s, so a half
+// flies clear of its parent instead of shoving it back, as on those servers (13 ticks there).
+const SPLIT_SPEED=1550,CELL_DRAG=3.2,SPLIT_GRACE=.5,SIB_STIFF=30;
+const SPLIT_KILL_SEC=1.2; // a cell a just-launched piece absorbs within this long counts as a split-kill (the lunge is 90% done by 0.72 s)
+const splitReach=m=>SPLIT_SPEED/CELL_DRAG*.4+.75*radius(m/2); // how far past its edge the bots reckon a mass-m cell's split can catch something
+function randInDish(margin=0,rad=arenaR()){if(CL){const L=Math.max(150,CL_HALF-margin);return{x:(Math.random()*2-1)*L,y:(Math.random()*2-1)*L};}const rr=Math.max(150,rad-margin)*Math.sqrt(Math.random()),t=Math.random()*TAU;return{x:Math.cos(t)*rr,y:Math.sin(t)*rr};}
 const col=(c,dl=0,a=1)=>`hsla(${c[0]},${c[1]}%,${clamp(c[2]+dl,0,100)}%,${a})`;
 // Canvas gradients are native objects. Making hundreds per frame (every cell, virus and blob) left WebKit's
 // garbage collector with millions to finalize and froze phones for seconds. Each gradient is now built once
@@ -3564,7 +3608,7 @@ function nameBlocked(s) {
 }
 const cleanName=s=>{const n=typeof s==='string'?s.replace(/[\u0000-\u001f\u007f-\u009f­​-‏‪-‮⁠-⁯﻿]/g,'').trim().slice(0,16):'';return n&&!nameBlocked(n)?n:'';}; // a refused name shows as the default
 function h32(a){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}
-function hpos(k,margin){const rr=(R-margin)*Math.sqrt(h32(k)),t=h32(k+1)*TAU;return{x:Math.cos(t)*rr,y:Math.sin(t)*rr};}
+function hpos(k,margin){if(CL){const L=CL_HALF-margin;return{x:(h32(k)*2-1)*L,y:(h32(k+1)*2-1)*L};}const rr=(R-margin)*Math.sqrt(h32(k)),t=h32(k+1)*TAU;return{x:Math.cos(t)*rr,y:Math.sin(t)*rr};}
 /* compact base-64 packing for the live room (4 KiB per participant) */
 const B64='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
 const DEC=new Int16Array(128).fill(-1);for(let i=0;i<64;i++)DEC[B64.charCodeAt(i)]=i;
@@ -6564,6 +6608,9 @@ let settings={name:'',stain:0,diff:'standard',skin:0,lowFx:false,haptics:true}; 
 try{const s=JSON.parse(localStorage.getItem('mitosis.settings')||'null');if(s&&typeof s==='object')settings=Object.assign(settings,s);}catch(e){}
 if(!DIFF[settings.diff])settings.diff='standard';settings.stain=clamp(settings.stain|0,0,STAINS.length-1);settings.skin=clamp(settings.skin|0,0,SKIN_COUNT-1);
 const saveSettings=()=>{try{localStorage.setItem('mitosis.settings',JSON.stringify(settings));}catch(e){}};
+if(settings.mode!=='classic')settings.mode='br';
+CL=(window.__mitosisNet?window.__mitosisNet.gameMode:settings.mode)==='classic'; // the net module read the same setting (and ?mode=) before this ran
+document.body.dataset.mode=CL?'classic':'br';document.body.classList.toggle('classic',CL);
 /* ---- Name fonts: the font your name is shown in (Profile › Name style; settings.nameFont). The faces are the <style id="nameFonts">
    block in <head>: tools/name-fonts.py builds it and this catalogue from fonts/fonts.json (fonts/CREDITS.md: who made them and their
    licences). n: label, c: category, s: the face's size-adjust, k: its cap height as a share of the font size (both after the adjust).
@@ -6677,15 +6724,16 @@ async function econInit(){
 // an older server would count it as ranked. Nearby is never reported.
 let runId=null,runPromise=null,game=null; // game: this game's lives as the server answers them {key, n started, lives:[{d,to,ai}], miss, late}
 const isNearby=()=>{const N=window.__mitosisNet;return !!N&&N.mode==='nearby';};
-const casualRated=()=>!!(wallet.catalog&&wallet.catalog.wins),runMode=()=>local==='practice'?'casual':local?'bots':'arena',relayKey=()=>{const N=window.__mitosisNet;return(N&&N.key)||undefined;};
-const runOff=()=>isNearby()||(local==='practice'&&!casualRated());
+const casualRated=()=>!!(wallet.catalog&&wallet.catalog.wins),classicRated=()=>!!(wallet.catalog&&Array.isArray(wallet.catalog.modes)&&wallet.catalog.modes.includes('classic')),
+  runMode=()=>CL?'classic':local==='practice'?'casual':local?'bots':'arena',relayKey=()=>{const N=window.__mitosisNet;return(N&&N.key)||undefined;};
+const runOff=()=>isNearby()||(CL?!classicRated():local==='practice'&&!casualRated());
 function econRunStart(){runId=null;if(runOff()){runPromise=null;return;}
-  const gk=(local||'arena')+':'+round.id;if(!game||game.key!==gk)game={key:gk,n:0,lives:[]};game.n++; /* a new round or mode is a new game */
-  runPromise=api('run/start',{mode:runMode(),relay:relayKey(),skill:local==='practice'?settings.botSkill||'normal':local?'master':undefined}).then(r=>{runId=r.runId;return r.runId;}).catch(()=>null);}
+  const gk=(CL?'classic':local||'arena')+':'+round.id;if(!game||game.key!==gk)game={key:gk,n:0,lives:[]};game.n++; /* a new round or mode is a new game */
+  runPromise=api('run/start',{mode:runMode(),relay:relayKey(),skill:CL?undefined:local==='practice'?settings.botSkill||'normal':local?'master':undefined}).then(r=>{runId=r.runId;return r.runId;}).catch(()=>null);}
 async function econRunEnd(){
-  if(!human)return;const unranked=isNearby()?'nearby':local==='practice'?'practice':'',off=runOff();resPrep(unranked,off);if(off)return;
-  const s=human.stats,rep={claims:1,survived:Math.max(0,T-s.born),eaten:s.eaten|0,peak:Math.round(s.peak),bestRank:s.bestRank||999,place:s.place|0,of:s.of|0,life:Math.max(0,livesUsed()-1),show:1,relay:relayKey()};
-  if(unranked)rep.skill=settings.botSkill||'normal'; // Casual: the bots' skill scales AI rating gains
+  if(!human)return;const unranked=CL?'classic':isNearby()?'nearby':local==='practice'?'practice':'',off=runOff();resPrep(unranked,off);if(off)return;
+  const s=human.stats,rep={claims:1,survived:Math.max(0,T-s.born),eaten:s.eaten|0,splitKills:s.splitKills|0,peak:Math.round(s.peak),bestRank:s.bestRank||999,place:s.place|0,of:s.of|0,life:Math.max(0,livesUsed()-1),show:1,relay:relayKey()};
+  if(unranked&&!CL)rep.skill=settings.botSkill||'normal'; // Casual: the bots' skill scales AI rating gains
   rep.name=human.name;const rid=runId||(runPromise?await runPromise:null);runId=null;runPromise=null;
   if(!rid){if(game)game.miss=1;showEarn(wallet.online?null:{k:'offline'});showXp(null);resPlayRank();return;}
   rep.runId=rid;if(game)rep.g=game.key;const a=loadPending();a.push(rep);savePending(a);flushRuns();
@@ -6703,8 +6751,8 @@ const RES_ICO={
 let resS={mode:'',earn:null,rank:null,xp:null,at:0,t:0,t2:0,t3:0}; // at: when the screen appeared, so the count-ups start once it is in view
 function resPrep(unranked,off){ // a run just ended (econRunEnd): reset the rating and reward panels for it. unranked: '' | 'practice' | 'nearby'; off: not reported
   clearTimeout(resS.t);clearTimeout(resS.t2);clearTimeout(resS.t3);cancelAnimationFrame(rankAnim);cancelAnimationFrame(xpAnim);resS={mode:unranked,earn:null,rank:null,xp:null,at:0,t:0,t2:0,t3:0};
-  xpPrep(!unranked);
-  const el=$('dRank');el.hidden=!!off;el.classList.remove('promo','dn');const chip=el.querySelector('.rr-delta');chip.className='rr-delta';chip.textContent='';el.querySelector('.rr-next').textContent='';el.querySelector('.rr-num').classList.remove('bump','go');
+  xpPrep(!unranked||unranked==='classic'&&!off); // Classic earns XP (and ATP), but moves no rating
+  const el=$('dRank');el.hidden=!!off||unranked==='classic';el.classList.remove('promo','dn');const chip=el.querySelector('.rr-delta');chip.className='rr-delta';chip.textContent='';el.querySelector('.rr-next').textContent='';el.querySelector('.rr-num').classList.remove('bump','go');
   const ai=!!unranked||!!local;rrKind(ai);const r=ai?wallet.aiRating:wallet.rating;rrSet(r,tierAtRating(r));showEarn(off?null:{k:'wait'}); // until the server says, bot games on this device move the AI rating
 }
 function rrKind(ai){const k=$('dRank').querySelector('.rr-k');k.textContent=ai?'vs AI':'vs players';$('dRank').classList.toggle('ai',ai);} // which rating the card shows
@@ -7157,7 +7205,7 @@ function resFill(kind,pb,sub){ // kind: dead | arena (dissolved by the closing a
   const s=human.stats,card=$('deathCard'),un=resS.mode;
   card.className='res '+(kind==='arena'?'dead arena':kind)+(un?' unranked':'')+(s.place>=1&&s.place<=3?' m'+(s.place|0):'');
   $('dTitle').textContent={dead:'Eliminated',arena:'Dissolved',win:'Victory',round:'Round over',quit:'Run ended'}[kind];$('resIco').innerHTML=RES_ICO[kind];
-  const md=$('resMode');md.hidden=!un;md.textContent=un==='nearby'?'Nearby':'Casual';
+  const md=$('resMode');md.hidden=!un;md.textContent=un==='nearby'?'Nearby':un==='classic'?'Classic':'Casual';
   const place=s.place|0,shown=place||(kind==='quit'?s.bestRank|0:0);$('dPlace').hidden=!shown;
   $('resPlaceN').textContent=shown;$('dPlace').classList.toggle('n2',shown>=10);$('resPlaceOf').textContent=place?'of '+s.of:'best';
   const why=$('deathWhy'),k=s.killerRef;
@@ -7210,7 +7258,7 @@ async function flushRuns(){ // report finished runs; keep them queued while the 
   try{let a=loadPending();while(a.length){const rep=a[0];
     try{const w=await api('run/end',rep);applyWallet(w);if(rep.show){const R=(wallet.catalog&&wallet.catalog.rules)||{};const W=wallet.catalog&&wallet.catalog.wins,cas=w.kind==='casual',pl=rep.place|0;
       const sk=cas&&w.skill&&SKILL[w.skill]?SKILL[w.skill].label:'';
-      showEarn(w.payout?{k:'atp',n:w.payout,full:!!(sk&&w.winBonus>0&&!w.winCapped),tag:w.winCapped?'capped':w.winBonus>0?(sk?sk+' '+(pl===1?'win':ordinal(pl)):pl===1?'Win':'Top 3'):''}:{k:'none',why:w.winCapped?'Daily cap':cas?(W&&rep.survived<W.minSec?`Survive ${Math.round(W.minSec/60)} min`:'Top 3 only'):rep.survived<(R.minSec||20)?`Survive ${R.minSec||20}s`:`Top ${(R.byRank||[[30]]).slice(-1)[0][0]} only`});showRank(w,rep);showXp(w);
+      showEarn(w.payout?{k:'atp',n:w.payout,full:!!(sk&&w.winBonus>0&&!w.winCapped),tag:w.winCapped?'capped':w.winBonus>0?(sk?sk+' '+(pl===1?'win':ordinal(pl)):pl===1?'Win':'Top 3'):''}:{k:'none',why:w.winCapped?'Daily cap':w.kind==='classic'&&rep.survived<((wallet.catalog&&wallet.catalog.classic&&wallet.catalog.classic.minSec)||60)?`Survive ${Math.round(((wallet.catalog&&wallet.catalog.classic&&wallet.catalog.classic.minSec)||60)/60)} min`:cas?(W&&rep.survived<W.minSec?`Survive ${Math.round(W.minSec/60)} min`:'Top 3 only'):rep.survived<(R.minSec||20)?`Survive ${R.minSec||20}s`:`Top ${(R.byRank||[[30]]).slice(-1)[0][0]} only`});showRank(w,rep);showXp(w);
       const qd=Array.isArray(w.questsDone)?w.questsDone:[],up=w.passUp>0&&bpOn()?`Tier ${w.pass.level}, +${w.passUp*wallet.catalog.pass.stars} Battle Stars`:'';
       const qt=Array.isArray(w.questTiers)?w.questTiers:[],fin=[...qd,...qt.map(t=>({...t,period:'perm'}))];
       if(fin.length&&qsOn()){for(const q of fin)bqJust.add(q.period+'/'+q.id);toast('Quests',`${fin.length>1?fin.length+' quests':'Quest'} complete · claim ${fin.reduce((n,q)=>n+(q.atp|0),0).toLocaleString()} ATP`,fin.length>1?fin.map(q=>q.text).join(' · '):fin[0].text);} // phones show only the title
@@ -7760,7 +7808,7 @@ let players=[],cells=[],pellets=[],ejected=[],freeV=[],viruses=[],powerups=[],hu
 const vslots=[];
 let ev={type:0,id:0,end:0,x:0,y:0},evNext=40,evIdC=1,evoOffer=null,runAch=[],lysedAt=0,emSeq=0;
 let achGot=new Set();try{const a=JSON.parse(localStorage.getItem('mitosis.ach')||'[]');if(Array.isArray(a))achGot=new Set(a);}catch(e){}
-let T=0,nextId=1,nidC=1,vidC=1,puC=1,hidC=1,human=null,mode='attract',leader=null,paused=false,lowFx=!!settings.lowFx,histT=0,hunterT=12,slow=1;
+let T=0,nextId=1,nidC=1,vidC=1,puC=1,hidC=1,human=null,mode='attract',leader=null,paused=false,lowFx=!!settings.lowFx||CL,histT=0,hunterT=12,slow=1;
 const cam={x:0,y:0,z:.6,shake:0};let shakeK=1; // Settings › Video › Screen shake scales it
 const pointer={x:innerWidth/2,y:innerHeight/2};
 // Touch devices steer with the on-screen joystick (bottom left) instead of the finger position.
@@ -7769,7 +7817,7 @@ const joy={id:null,ux:0,uy:0,m:0,R:46,lx:1,ly:0};
 // live room
 let local=null,queued=false,searchUntil=0,queuedPeers=0; // local: null | 'practice' (unranked) | 'auto' (a bot-filled game after a search)
 let lives={round:0,used:0};                               // spawns used in the current round
-let lastPeerCount=1,room=null,netState='pending',myPeer=null,isHost=true,claimReady=false,roomAt=-1,netSendT=0,seq=0,recs=[],peLog=[],peerCount=1,hostPeer=null,yielded=false,netNames=[];
+let clTx=0,lastPeerCount=1,room=null,netState='pending',myPeer=null,isHost=true,claimReady=false,roomAt=-1,netSendT=0,seq=0,recs=[],peLog=[],peerCount=1,hostPeer=null,yielded=false,netNames=[];
 const proxies=new Map(),botProx=new Map(),remoteEj=new Map(),lastSeen=new Map(),seenAt=new Map(),lastSeq=new Map(),vSup=new Map(),wSup=new Map(),puSup=new Map(),hSup=new Map();
 const now=()=>performance.now()/1000;
 const myKey=()=>myPeer||'me';
@@ -7785,7 +7833,7 @@ function makePlayer(name,color,bot){
 function makeOrg(){const o=[];for(let i=0;i<6;i++)o.push({a:rand(0,TAU),d:rand(.3,.64),s:rand(.045,.1),sp:rand(-.35,.35),l:Math.random()<.5?18:-20});return o;}
 function addCell(p,x,y,mass,vx=0,vy=0){
   const r=radius(mass);
-  const c={id:nextId++,nid:(nidC++%4095)+1,owner:p,x,y,px:x,py:y,svx:0,svy:0,mass,r,dr:r,vx,vy,mergeAt:0,wob:Math.random()*TAU,dead:false,inf:0,infVis:false,
+  const c={id:nextId++,nid:(nidC++%4095)+1,owner:p,x,y,px:x,py:y,svx:0,svy:0,mass,r,dr:r,vx,vy,mergeAt:0,born:T,wob:Math.random()*TAU,dead:false,inf:0,infVis:false,
     tx:x,ty:y,tt:0,nvx:0,nvy:0,ex:0,ey:0,pts:new Float32Array(NP).fill(1),pv:new Float32Array(NP),lim:new Float32Array(NP),org:makeOrg()};
   p.cells.push(c);cells.push(c);return c;
 }
@@ -7800,24 +7848,30 @@ function spawn(p,mass){
     if(!(md<=bestD)){bestD=md;bestS=s;}if(md>900)break;
   }
   p.cells=[];const c=addCell(p,bestS.x,bestS.y,mass);c.dr=3;
-  p.alive=true;p.fx={magnet:0,shield:2.5,surge:0};p.dashCd=0;p.combo=0;p.hist=[mass];p.pk=0;p.evo=0;p.bloomEats=0;
-  p.stats={eaten:0,peak:mass,born:T,killer:'',killerRef:null};p.target={x:bestS.x,y:bestS.y};
+  p.alive=true;p.fx={magnet:0,shield:CL?0:2.5,surge:0};p.dashCd=CL?Infinity:0;p.combo=0;p.hist=[mass];p.pk=0;p.evo=0;p.bloomEats=0;
+  p.stats={eaten:0,splitKills:0,peak:mass,born:T,killer:'',killerRef:null};p.target={x:bestS.x,y:bestS.y};
 }
 // food: deterministic positions from (index, generation) so every player sees the same pellets
 function placePellet(pl){const k=(pl.i*7919+pl.g*104729+SEED)|0,s=hpos(k,14);pl.x=s.x;pl.y=s.y;pl.m=h32(k+2)<.07?3:1;pl.r=pl.m===3?8:5;pl.h=Math.floor(h32(k+3)*PH);pl.born=T;if(pl.gk!==undefined)gridMove(pl);}
 function eatPellet(pl){peLog.push({i:pl.i,g:pl.g,t:T,x:pl.x,y:pl.y});pl.g=(pl.g+1)%262143;placePellet(pl);}
 // phage slots: deterministic positions from (slot, generation)
 function placeSlot(v){const k=(v.slot*15485863+v.g*32452843+SEED*7)|0,s=hpos(k,300);v.x=v.tx=s.x;v.y=v.ty=s.y;}
-function setVM(v){v.mass=VIRUS_M+v.feed*4;v.r=radius(v.mass);}
-// Viruses replicate on their own: the ring inside one closes a sixth at a time, as if fed (feedVirus), and when it
+// Feeding a phage works like an agar virus: each blob that hits one adds its mass (VIRUS_M 100 + 13 a feed, so it visibly
+// swells, up to 178), and the VIRUS_FEEDS-th fires a new phage along the shooter's aim while the fed one shrinks back.
+// The shot leaves the parent's centre at VSHOT_SPEED and slows by VSHOT_DRAG per second: VSHOT_SPEED/VSHOT_DRAG = 500
+// units, 7.8 phage radii, as far as agar-style servers fire one (it was 6 feeds of 4 mass, and 1140 with drag 5 from two
+// radii ahead: 228 units of flight, 3.6 radii). Since popping goes by mass, a swollen phage takes a bigger cell to burst.
+const VIRUS_FEEDS=7,VSHOT_SPEED=1500,VSHOT_DRAG=3;
+function setVM(v){v.mass=VIRUS_M+v.feed*EJECT_MASS;v.r=radius(v.mass);}
+// Viruses replicate on their own: the ring inside one closes a seventh at a time, as if fed (feedVirus), and when it
 // closes the virus splits off a copy. A full ring takes VREP_T s, and every copy makes that virus and its offspring
 // VREP_SLOW× slower. Host only: other players see the ring in whole sixths through the synced feed count.
 const VREP_T=45,VREP_SLOW=1.15,VREP_WAIT=30; // a new virus first waits up to VREP_WAIT s, so the 140 slots don't all split at once
-const vStep=v=>VREP_T*VREP_SLOW**(v.gen||0)/6;
-const vFill=v=>(v.feed+clamp((v.ft||0)/vStep(v),0,1))/6; // how far the ring has closed, 0..1
+const vStep=v=>VREP_T*VREP_SLOW**(v.gen||0)/VIRUS_FEEDS;
+const vFill=v=>(v.feed+clamp((v.ft||0)/vStep(v),0,1))/VIRUS_FEEDS; // how far the ring has closed, 0..1
 function growVirus(v,dt){
   v.ft=(v.ft||0)+dt;const step=vStep(v);
-  if(v.feed>=5&&freeV.length>=MAX_FREEV){v.ft=Math.min(v.ft,step*.97);return;} // no room for a copy: hold just short of closing
+  if(v.feed>=VIRUS_FEEDS-1&&freeV.length>=MAX_FREEV){v.ft=Math.min(v.ft,step*.97);return;} // no room for a copy: hold just short of closing
   if(v.ft>=step){v.ft-=step;const a=rand(0,TAU);feedVirus(v,Math.cos(a),Math.sin(a),null);}
 }
 function makeSlot(i){const v={kind:'s',slot:i,g:0,feed:0,gen:0,ft:-rand(0,VREP_WAIT),alive:true,respawnAt:0,x:0,y:0,tx:0,ty:0,vx:0,vy:0,mass:VIRUS_M,r:radius(VIRUS_M),spin:h32(i*31+5)*TAU,dead:false};placeSlot(v);return v;}
@@ -7845,22 +7899,22 @@ function split(p){
   for(const c of list){
     if(count>=MAX_CELLS)break;if(c.mass<36)continue;
     const[nx,ny]=aim(p,c);const half=c.mass/2;c.mass=half;c.r=radius(half);
-    const sp=2300; // Agar.io-style fixed boost: about 720 units of travel however big the cell is
-    const n=addCell(p,c.x+nx*c.r*.4,c.y+ny*c.r*.4,half,nx*sp,ny*sp);n.dr=c.dr*.78;n.org=c.org.map(o=>({...o,a:o.a+rand(-.5,.5)}));n.inf=c.inf;
+    const n=addCell(p,c.x+nx*c.r*.4,c.y+ny*c.r*.4,half,nx*SPLIT_SPEED,ny*SPLIT_SPEED);n.dr=c.dr*.78;n.org=c.org.map(o=>({...o,a:o.a+rand(-.5,.5)}));n.inf=c.inf;n.splitAt=T;
     c.mergeAt=n.mergeAt=T+mdel(p,half*2);kick(c,1.6);kick(n,2);count++;did=true;
   }
   if(did&&p===human){sfx('split');flash('splitBtn');Native.haptic('medium');cam.shake=Math.max(cam.shake,3);}
 }
 function eject(p){
-  if(!p||!p.alive||T-(p.ejectAt||-9)<EJECT_GAP)return;let did=false; // holding W repeats the key ~30×/s; cap it
+  if(!p||!p.alive)return;const since=T-(p.ejectAt??-9);if(since<EJECT_GAP-.005)return;let did=false; // held down, it's called every frame or so; cap it
   for(const c of p.cells){
-    if(c.dead||c.mass<35)continue;const[nx,ny]=aim(p,c);
+    if(c.dead||c.mass<35)continue;const[nx,ny]=aim(p,c),a=rand(-EJECT_SPREAD,EJECT_SPREAD),ca=Math.cos(a),sa=Math.sin(a),vx=nx*ca-ny*sa,vy=nx*sa+ny*ca;
     c.mass-=EJECT_COST;c.r=radius(c.mass);
-    ejected.push({x:c.x+nx*(c.r+10),y:c.y+ny*(c.r+10),vx:nx*EJECT_SPEED,vy:ny*EJECT_SPEED,dx:nx,dy:ny,mass:EJECT_MASS,r:14,color:p.color,owner:p,born:T,dead:false});
+    // dx,dy: the aim itself, which a phage fed by this blob fires along
+    ejected.push({x:c.x+nx*(c.r+10),y:c.y+ny*(c.r+10),vx:vx*EJECT_SPEED,vy:vy*EJECT_SPEED,dx:nx,dy:ny,mass:EJECT_MASS,r:EJECT_R,color:p.color,owner:p,born:T,dead:false});
     for(let i=0;i<NP;i++){const d=COS[i]*nx+SIN[i]*ny;if(d>.7)c.pv[i]+=1.6*d;}
     did=true;
   }
-  if(did)p.ejectAt=T;
+  if(did)p.ejectAt=since<EJECT_GAP*1.5?p.ejectAt+EJECT_GAP:T; // held: an even beat, not one lost frame per shot
   if(did&&p===human){sfx('eject');flash('ejectBtn');}
 }
 function dash(p){
@@ -7869,12 +7923,28 @@ function dash(p){
     for(let k=0;k<6&&parts.length<600;k++){const a=Math.atan2(-ny,-nx)+rand(-.5,.5),s=rand(80,220);parts.push({x:c.x-nx*c.r,y:c.y-ny*c.r,vx:Math.cos(a)*s,vy:Math.sin(a)*s,t:0,life:rand(.3,.6),color:col(p.color,10),r:rand(2,5)});}}
   if(p===human){sfx('dash');flash('dashBtn');Native.haptic('light');}
 }
-function pop(c){ // burst on a phage: half the mass sprays out
+// Bursting on a phage works like an agar virus: the cell (the phage's mass added) shatters into as many pieces as it has
+// free slots, up to MAX_CELLS in all. A small cell breaks into equal pieces; a bigger one keeps half, and the other half
+// flies off as a half of that, then a quarter, and so on while each slot left could still get POP_MIN, the rest shared
+// equally. Every piece leaves like a split (SPLIT_SPEED), fanned around the cell, so they scatter about a lunge away, and
+// each may fuse after the merge time for its own size. (It was half the mass in at most 10 equal pieces at 420-640 units/s,
+// which stayed within about one radius of the cell.)
+const POP_MIN=36;
+function popMasses(m,slots){ // the masses that fly off; the cell keeps the rest
+  const out=[];if(slots<1)return out;
+  if(m/slots<POP_MIN){let n=2;while(m/n>POP_MIN&&n*2<slots)n*=2;n=Math.min(n,slots);for(let i=0;i<n;i++)out.push(m/(n+1));return out;}
+  let left=m/2,n=slots;
+  while(n>1&&left/n>=POP_MIN){out.push(left/2);left/=2;n--;}
+  for(let i=0;i<n;i++)out.push(left/n);
+  return out;
+}
+function pop(c){ // burst on a phage
   const p=c.owner;const slots=MAX_CELLS-p.cells.filter(x=>!x.dead).length;if(slots<=0)return;
-  const give=c.mass*.5;const n=Math.min(slots,Math.floor(give/14),10);if(n<1)return;
-  const each=give/n;c.mass-=give;c.r=radius(c.mass);const md=T+mdel(p,c.mass+give);c.mergeAt=md;kick(c,3);
-  for(let i=0;i<n;i++){const a=i/n*TAU+Math.random()*.4,sp=rand(420,640);
-    const k=addCell(p,c.x+Math.cos(a)*c.r*.4,c.y+Math.sin(a)*c.r*.4,each,Math.cos(a)*sp,Math.sin(a)*sp);k.mergeAt=md;k.dr=k.r*.5;k.inf=c.inf;kick(k,2);}
+  const ms=popMasses(c.mass,slots);if(!ms.length)return;
+  for(const m of ms)c.mass-=m;c.r=radius(c.mass);c.mergeAt=T+mdel(p,c.mass*2);kick(c,3);
+  const a0=rand(0,TAU);
+  for(let i=0;i<ms.length;i++){const a=a0+i/ms.length*TAU+rand(-.3,.3),sp=SPLIT_SPEED*rand(.8,1);
+    const k=addCell(p,c.x+Math.cos(a)*c.r*.4,c.y+Math.sin(a)*c.r*.4,ms[i],Math.cos(a)*sp,Math.sin(a)*sp);k.mergeAt=T+mdel(p,ms[i]*2);k.dr=k.r*.5;k.inf=c.inf;kick(k,2);}
   if(p===human){sfx('pop');Native.haptic('heavy');cam.shake=Math.max(cam.shake,16);floatText(c.x,c.y-c.r,'Burst',PU.surge.c,22);}
 }
 function lyse(c){ // the infection's payoff: the whole cell ruptures into up to 16 pieces
@@ -7897,7 +7967,7 @@ function infect(c,delay){
 }
 
 /* ================= effects ================= */
-function burst(x,y,color,n,sp=260){for(let i=0;i<n&&parts.length<700;i++){const a=Math.random()*TAU,s=rand(sp*.25,sp);parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,t:0,life:rand(.35,.85),color,r:rand(2.5,8)});}}
+function burst(x,y,color,n,sp=260){if(CL)return;for(let i=0;i<n&&parts.length<700;i++){const a=Math.random()*TAU,s=rand(sp*.25,sp);parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,t:0,life:rand(.35,.85),color,r:rand(2.5,8)});}}
 function floatText(x,y,text,c,size=18){const z=cam.z||1;let n=0;for(const f of floats)if(f.t<.9&&Math.abs(f.x-x)<90/z&&Math.abs(f.y-y)<90/z)n++;y-=n*size*1.9/z; // a burst of announcements stacks upward instead of overprinting
   floats.push({x,y,text,c,size,t:0,life:1.2});}
 function pushFeed(html,you){feed.unshift({html,you,t:T});if(feed.length>5)feed.pop();renderFeed();}
@@ -7908,24 +7978,24 @@ function creditCell(c,mass,x,y,vcolor,vr,infRem=0,counts=true,bounty=false,boss=
   const bp=c.owner;c.mass=Math.min(MAX_MASS,c.mass+mass);c.r=radius(c.mass);
   if(infRem>0&&!has(bp,'lysozyme'))infect(c,Math.max(4,infRem));
   if(!counts){kick(c,.4);return;}
-  bp.stats.eaten++;
+  bp.stats.eaten++;if(c.splitAt!=null&&T-c.splitAt<SPLIT_KILL_SEC)bp.stats.splitKills=(bp.stats.splitKills|0)+1;
   ghosts.push({x,y,r:vr,color:vcolor,to:c,t:0,life:.2});
   kick(c,.5+Math.min(1.6,vr/c.r*2.2));
   burst(x,y,col(vcolor,8),Math.min(14,3+vr/10|0),180);
   if(T-bp.comboT<3)bp.combo++;else bp.combo=1;bp.comboT=T;
-  if(bp.combo>=3)bp.fx.surge=Math.max(bp.fx.surge,3);
+  if(bp.combo>=3&&!CL)bp.fx.surge=Math.max(bp.fx.surge,3); // Frenzy: a Battle Royale extra, not in Classic
   if(bp===human){
     floatText(x,y,'+'+Math.round(mass),bp.color,18);sfx('eat',vr);Native.haptic('light');unlock('first');
     cam.shake=Math.max(cam.shake,Math.min(9,2+vr*.05));
     if(bounty){floatText(x,y-40,'Bounty ×1.5',[45,95,60],24);unlock('bounty');}
     if(boss)unlock('levi');
-    if(bp.combo>=3){floatText(c.x,c.y-c.r-20,'Frenzy ×'+bp.combo,[340,100,70],26);sfx('frenzy');}
+    if(bp.combo>=3&&!CL){floatText(c.x,c.y-c.r-20,'Frenzy ×'+bp.combo,[340,100,70],26);sfx('frenzy');}
     if(bp.combo>=5)unlock('frenzy5');
   }
 }
 function resolveEat(big,sm){ // sm is always ours; its owner's client decides
   sm.dead=true;const sp=sm.owner,bp=big.owner,infRem=sm.inf?Math.max(0,sm.inf-T):0;
-  const bounty=sp===leader&&!sp.boss&&!bp.boss,mass=sm.mass*(bounty?1.5:1);
+  const bounty=!CL&&sp===leader&&!sp.boss&&!bp.boss,mass=sm.mass*(bounty?1.5:1);
   if(!bp.remote)creditCell(big,mass,sm.x,sm.y,sp.color,sm.dr,infRem,true,bounty,sp.boss);
   else{rec(['e',keyOf(bp),keyOf(sp),Math.round(mass),Math.round(sm.x),Math.round(sm.y),Math.round(sm.dr),+infRem.toFixed(1),bounty?1:0]);
     ghosts.push({x:sm.x,y:sm.y,r:sm.dr,color:sp.color,to:big,t:0,life:.2});burst(sm.x,sm.y,col(sp.color,8),6,180);}
@@ -7986,7 +8056,7 @@ let SPAWN_CUTOFF=Math.min(300,Math.round(ROUND_SEC*.5)),MAX_RESPAWNS=2;const SEA
 function setRoundLen(s){ROUND_SEC=s;ROUND_GRACE=Math.round(s*.1);ROUND_HOLD=Math.round(s*.05);BOT_CUTOFF=Math.round(s*.7);SPAWN_CUTOFF=Math.min(300,Math.round(s*.5));} // a Nearby match can be shorter
 function livesUsed(){if(lives.round!==round.id){lives.round=round.id;lives.used=0;}return lives.used;}
 function roundOpen(){if(multi()&&!isHost&&!round.synced)return true;return round.over||roundT()<ROUND_SEC-SPAWN_CUTOFF;}
-function spawnOpen(){if(local==='practice')return true;return roundOpen()&&livesUsed()<=MAX_RESPAWNS;}
+function spawnOpen(){if(local==='practice'||CL)return true;return roundOpen()&&livesUsed()<=MAX_RESPAWNS;}
 function spawnBlockReason(){return !roundOpen()?'closed':livesUsed()>MAX_RESPAWNS?'lives':null;}
 function spawnWait(){return round.over?Math.max(0,round.start-T):Math.max(0,ROUND_SEC-roundT())+ROUND_GAP;}
 function updateSpawnLock(){
@@ -7996,23 +8066,44 @@ function updateSpawnLock(){
     if(open){queued=false;startGame();return;}                                    // the round opened: in you go
     if(performance.now()>=searchUntil){queued=false;startLocal('auto');return;}   // nothing to join in time: bots fill the slots
   }
-  let goT=!local&&isOffline()?'Play offline':'Play',agT='Re-inoculate';
-  if(queued){const left=Math.max(0,Math.ceil((searchUntil-performance.now())/1000));goT=agT=`Searching… 0:${String(left).padStart(2,'0')}${queuedPeers?' · '+(queuedPeers+1)+' waiting':''}`;}
-  else if(!open){const why=spawnBlockReason();goT=agT=(why==='lives'?'No lives left · ':'Round closed · ')+'find a game';}
-  else{const left=MAX_RESPAWNS+1-livesUsed();if(!local&&left<=MAX_RESPAWNS)agT=`Re-inoculate · ${left} ${left===1?'life':'lives'} left`;}
+  let goT=!local&&isOffline()?'Play offline':'Play',goS='',agT=CL?'Respawn':'Re-inoculate'; // goS: a small second line under the big word
+  if(queued){const left=Math.max(0,Math.ceil((searchUntil-performance.now())/1000));goT=`Searching… 0:${String(left).padStart(2,'0')}`;agT=goT+(queuedPeers?' · '+(queuedPeers+1)+' waiting':'');goS=(queuedPeers?(queuedPeers+1)+' waiting · tap':'Tap')+' to cancel';} // the wait on the small line
+  else if(!open){const why=spawnBlockReason();agT=(why==='lives'?'No lives left · ':'Round closed · ')+'find a game';goT='Play';goS=why==='lives'?'No lives left':'Round closed';} // Play stays the big word (Rowan); why under it
+  else if(!CL){const left=MAX_RESPAWNS+1-livesUsed();if(!local&&left<=MAX_RESPAWNS)agT=`Re-inoculate · ${left} ${left===1?'life':'lives'} left`;}
   if(nearMode()&&!queued)goT=nearLabel();
   go.classList.toggle('lb-wait',nearMode()&&!near.m&&!nearHost()); // a guest waits for the host to start
-  if(go.textContent!==goT)go.textContent=goT;if(ag.textContent!==agT)ag.textContent=agT;
+  const gk=goT+'|'+goS;if(go.dataset.k!==gk){go.dataset.k=gk;if(goS){go.innerHTML=`<span class="lb-gt"><b>${escH(goT)}</b><small>${escH(goS)}</small></span>`;go.setAttribute('aria-label',goT+', '+goS);}else{go.textContent=goT;go.removeAttribute('aria-label');}}
+  if(ag.textContent!==agT)ag.textContent=agT;
   go.classList.toggle('queued',queued);ag.classList.toggle('queued',queued);ag.classList.add('sm');
   if(queued){const sp=clamp((searchUntil-performance.now())/(SEARCH_MAX*1000),0,1)*100+'%';go.style.setProperty('--sp',sp);ag.style.setProperty('--sp',sp);}
 }
 setInterval(updateSpawnLock,250);
+// The lobby's Battle Royale / Classic switch. Only between matches: it rebuilds the world for that arena (food and phages
+// placed for its shape, a fresh round, the bots dealt again) and has the relay seat us in a room of that mode.
+function setGameMode(m){
+  m=m==='classic'?'classic':'br';if(mode==='play'&&human&&human.alive)return false;
+  settings.mode=m;saveSettings();const cl=m==='classic',N=window.__mitosisNet;if(N&&N.setGameMode)N.setGameMode(m);
+  if(cl===CL)return true;
+  CL=cl;document.body.dataset.mode=m;document.body.classList.toggle('classic',CL);lowFx=!!settings.lowFx||saverOn||CL;
+  if(local)leaveLocal();removeHuman();isHost=true;claimReady=false;yielded=false;lastPeerCount=-1;
+  for(const p of players.filter(p=>!p.remote))removePlayer(p);cells=cells.filter(c=>!c.dead);
+  for(const pl of pellets)placePellet(pl);
+  for(const v of vslots){v.g=0;v.feed=0;v.gen=0;v.ft=-rand(0,VREP_WAIT);v.alive=true;v.respawnAt=0;setVM(v);placeSlot(v);}
+  freeV=[];ejected=[];powerups=[];hunters=[];hunterT=12;ev={type:0,id:0,end:0,x:0,y:0};evNext=T+rand(40,70);
+  round={id:(round.id%4095)+1,start:T,n:0,synced:!multi(),over:false};
+  if(!CL)for(let i=0;i<16;i++)addPU();
+  rebuildViruses();syncBots();return true;
+}
+// Classic online needs a server that gives it rooms of its own (its welcome names the room's mode). Until then, offline,
+// or over Nearby, Classic is played on this device with bots, so it never joins a Battle Royale room.
+const classicRoom=()=>{const N=window.__mitosisNet;return !!N&&N.mode==='server'&&N.roomMode==='classic';};
 function startLocal(kind){ // a game on this device only: bots fill every slot. 'practice' is unranked; 'auto' follows a search
   local=kind;queued=false;lastSeen.clear();
   for(const p of players.filter(p=>p.remote))removePlayer(p);
   round={id:(round.id%4095)+1,start:T,n:0,synced:true,over:false};isHost=true;claimReady=false;
   syncBots();
   const sk=SKILL[settings.botSkill]||SKILL.normal;
+  if(CL)toast('Classic','Endless arena with bots',isOffline()?'No connection needed':'Bots fill the arena on this device');else
   toast(kind==='practice'?(isOffline()?'Offline':'Practice'):'Game found',kind==='practice'?`${sk.label} bots${isOffline()?' · no connection needed':''}`:'Bots fill the empty slots',
     kind!=='practice'?'Ranked rules against Master bots: counts for your AI rating':casualRated()&&!isOffline()?'Counts for your AI rating · ATP for a top 3':'Unranked: no ATP, no rating change');
   startGame();
@@ -8023,7 +8114,8 @@ function leaveLocal(){ // back to the shared world
   round.synced=false;lastSeen.clear();lastPeerCount=-1;if(room&&myPeer){isHost=false;claimReady=false;yielded=false;}
 }
 function arenaR(){ // the round's safe radius: full for ROUND_GRACE s, then the safe AREA shrinks at a steady rate to R_MIN at ROUND_SEC-ROUND_HOLD
-  if(multi()&&!isHost&&!round.synced)return R;const t=roundT();if(t<ROUND_GRACE)return R;
+  if(CL||multi()&&!isHost&&!round.synced)return R; // Classic never closes in
+  const t=roundT();if(t<ROUND_GRACE)return R;
   const p=clamp((t-ROUND_GRACE)/(ROUND_SEC-ROUND_HOLD-ROUND_GRACE),0,1);return Math.sqrt(R*R-(R*R-R_MIN*R_MIN)*p);}
 function safeR(){return Math.min(tideSafe(),arenaR());}
 const ordinal=n=>{const t=n%10,h=n%100;return n+(t===1&&h!==11?'st':t===2&&h!==12?'nd':t===3&&h!==13?'rd':'th');};
@@ -8125,7 +8217,7 @@ function bestFood(me,safe){ // densest nearby patch of food, weighted by distanc
     if(x<0||y<0||x>=GN||y>=GN)continue;const b=grid[y*GN+x];if(!b.length)continue;
     const wx=(x+.5)*GS-R,wy=(y+.5)*GS-R,d=Math.hypot(wx-me.x,wy-me.y);if(d<me.r*.4)continue;
     let s=b.length/(1+d/350)*rand(.8,1.2);if(ev.type===1&&(wx-ev.x)**2+(wy-ev.y)**2<BLOOM_R2)s*=3;
-    if(Math.hypot(wx,wy)>safe-me.r)s*=.05;
+    if(wallGap(wx,wy)<me.r+R-safe)s*=.05;
     if(s>bs){bs=s;best={x:wx,y:wy};}
   }
   return best;
@@ -8154,11 +8246,11 @@ function think(p){
     const d=Math.hypot(dx,dy)||1,gap=d-c.r-me.r;
     if(!boss&&p.fx.shield<=0&&c.mass>me.mass*need(c.owner,p)){
       const canSplitKill=c.mass/2>me.mass*need(c.owner,p);
-      const reach=c.r+(canSplitKill?194+.75*radius(c.mass/2):50)+(c.owner.fx.surge>0?90:0)+(c.owner.dashCd<=0?60:0);
+      const reach=c.r+(canSplitKill?splitReach(c.mass):50)+(c.owner.fx.surge>0?90:0)+(c.owner.dashCd<=0?60:0);
       threats.push({x:c.x+c.svx*lead,y:c.y+c.svy*lead,reach,w:Math.min(4,c.mass/me.mass),m:c.mass});
       if(gap-reach+c.r<minGap)minGap=gap-reach+c.r;
     }else if(me.mass>c.mass*need(p,c.owner)&&c.owner.fx.shield<=0&&!((c.inf||c.infVis)&&!has(p,'lysozyme'))){
-      const edge=R-Math.hypot(c.x,c.y)-c.r;
+      const edge=wallGap(c.x,c.y)-c.r;
       let s=c.mass/(Math.max(gap,0)+160)*(edge<350?1.7:1)*(c.owner===leader?1.5:1)*(c.owner.bot?1:M?1.4:1.15);
       if(speedOf(c.r)>speedOf(me.r)*1.15&&gap>me.r*1.5&&edge>350)s*=.35; // it would just outrun me
       if(s>preyScore){preyScore=s;prey=c;}
@@ -8197,7 +8289,7 @@ function think(p){
       for(const t of threats){const ex=px-t.x,ey=py-t.y,e2=ex*ex+ey*ey;if(e2>=t.far)continue;const d=Math.sqrt(e2)-t.reach-mr6;if(d<520){const f=1-Math.max(0,d)/520;s-=t.w*f*f*2.2*caution*wq;}}
       for(const v of hz){const ex=px-v.x,ey=py-v.y,e2=ex*ex+ey*ey,o=90+v.r+mr8;if(e2>=o*o)continue;const d=Math.sqrt(e2)-v.r-mr8;s-=1.8*(1-Math.max(0,d)/90)*wq;}
       for(const v of cover){const ex=px-v.x,ey=py-v.y,e2=ex*ex+ey*ey;if(e2<67600)s+=.9*(1-Math.sqrt(e2)/260)*wq;}
-      const pr=Math.sqrt(px*px+py*py);if(pr>lim)s-=(pr-lim)/110*(ev.type===2?2.4:1.3)*wq;
+      const og=R-lim-wallGap(px,py);if(og>0)s-=og/110*(ev.type===2?2.4:1.3)*wq; // past the safe line, by how much
     }
     if(s>bestS){bestS=s;bestA=k/16*TAU;}
   }
@@ -8206,15 +8298,15 @@ function think(p){
   // ---- tactics
   if(minGap<70&&p.dashCd<=0&&Math.random()<.3+aggr*.35){dash(p);return;}           // escape burst
   if(mode==='hunt'&&!boss){
-    const d=Math.hypot(exact.x-me.x,exact.y-me.y),gap=d-me.r,half=me.mass/2,reach=194+.75*radius(half);
+    const d=Math.hypot(exact.x-me.x,exact.y-me.y),gap=d-me.r,half=me.mass/2,reach=splitReach(me.mass);
     let safeHalves=true;for(const t of threats)if(t.m>half*1.25&&Math.hypot(t.x-exact.x,t.y-exact.y)<t.reach+600){safeHalves=false;break;}
     let blocked=false;
     if(me.mass>VIRUS_M*1.3){const ux=exact.x-me.x,uy=exact.y-me.y,dd=d*d||1,hr=radius(half)*.6;
       for(const v of viruses){const t=((v.x-me.x)*ux+(v.y-me.y)*uy)/dd;if(t<=0||t>=1.2)continue;
         const ex=v.x-(me.x+ux*t),ey=v.y-(me.y+uy*t),o=v.r+hr;if(ex*ex+ey*ey<o*o){blocked=true;break;}}}
     if(half>prey.mass*need(p,prey.owner)&&gap<reach+me.r*.15&&safeHalves&&!blocked&&p.cells.length<=Math.ceil(2+4*aggr)&&Math.random()<.35+aggr*.35){p.target=exact;split(p);return;}
-    // Master: too far for one split but not for two (the halves have flown ~230 units when the second one goes)
-    if(M&&p.cells.length===1&&safeHalves&&!blocked&&me.mass/4>prey.mass*need(p,prey.owner)&&gap>=reach+me.r*.15&&gap<reach+210&&Math.random()<.5){
+    // Master: too far for one split but not for two (the halves have flown ~150 units when the second one goes)
+    if(M&&p.cells.length===1&&safeHalves&&!blocked&&me.mass/4>prey.mass*need(p,prey.owner)&&gap>=reach+me.r*.15&&gap<reach+SPLIT_SPEED/CELL_DRAG*(1-Math.exp(-CELL_DRAG*.12))*.9&&Math.random()<.5){
       let safeQ=true;for(const t of threats)if(t.m>me.mass/4*1.25&&Math.hypot(t.x-exact.x,t.y-exact.y)<t.reach+600){safeQ=false;break;}
       if(safeQ){p.target=exact;split(p);p.ai.split2={prey,t:T};p.ai.t=T+.12;return;}}
     if(gap<280&&p.dashCd<=0&&speedOf(prey.r)>=speedOf(me.r)*.95&&Math.random()<aggr*.3){p.target=exact;dash(p);return;}
@@ -8237,8 +8329,8 @@ function think(p){
 /* ================= simulation ================= */
 function feedVirus(v,dx,dy,owner){
   v.feed++;
-  if(v.feed>=6){v.feed=0;v.ft=0;v.gen=(v.gen||0)+1;if(freeV.length>=MAX_FREEV)freeV.shift(); // the new phage flies off along the last shot (range ~ speed / drag of 5)
-    const nv={kind:'f',id:(vidC++%4095)+1,x:v.x+dx*v.r*2,y:v.y+dy*v.r*2,vx:dx*1140,vy:dy*1140,feed:0,gen:v.gen,ft:0,spin:rand(0,TAU),dead:false,alive:true};nv.tx=nv.x;nv.ty=nv.y;setVM(nv);freeV.push(nv);
+  if(v.feed>=VIRUS_FEEDS){v.feed=0;v.ft=0;v.gen=(v.gen||0)+1;if(freeV.length>=MAX_FREEV)freeV.shift(); // the new phage flies off along the last shot
+    const nv={kind:'f',id:(vidC++%4095)+1,x:v.x,y:v.y,vx:dx*VSHOT_SPEED,vy:dy*VSHOT_SPEED,feed:0,gen:v.gen,ft:0,spin:rand(0,TAU),dead:false,alive:true};nv.tx=nv.x;nv.ty=nv.y;setVM(nv);freeV.push(nv);
     burst(v.x,v.y,'hsl(40,90%,62%)',10);if(owner===human){sfx('power');Native.haptic('light');}}
   setVM(v);
 }
@@ -8268,22 +8360,22 @@ function step(dt){
     if(p.remote)continue;
     for(const k in p.fx)if(p.fx[k]>0)p.fx[k]=Math.max(0,p.fx[k]-dt);
     if(p.dashCd>0)p.dashCd=Math.max(0,p.dashCd-dt);
-    if(p.bot&&isHost){if(p.alive&&T>=p.ai.t)aiDue.push(p);else if(!p.alive&&!p.boss&&T>=p.respawnAt&&roundT()<BOT_CUTOFF&&!round.over)spawn(p,rand(20,45));}
+    if(p.bot&&isHost){if(p.alive&&T>=p.ai.t)aiDue.push(p);else if(!p.alive&&!p.boss&&T>=p.respawnAt&&(CL||roundT()<BOT_CUTOFF&&!round.over))spawn(p,rand(20,45));}
   }
   if(aiDue.length){aiLook();aiDue.sort((a,b)=>a.ai.t-b.ai.t);for(const p of aiDue){if(aiTok<1)break;aiTok--;think(p);}} // longest waiting first
-  if(isHost){for(const p of players.filter(p=>p.boss&&!p.remote&&!p.alive))removePlayer(p);eventTick();}
-  if(isHost||!multi())roundTick();
+  if(isHost&&!CL){for(const p of players.filter(p=>p.boss&&!p.remote&&!p.alive))removePlayer(p);eventTick();}
+  if(!CL&&(isHost||!multi()))roundTick(); // Classic has no rounds or events
   for(const c of cells){c.px=c.x;c.py=c.y;}
   smoothRemote(dt);
   // movement (our own cells only; others arrive over the room)
-  const kd=Math.exp(-3.2*dt);
+  const kd=Math.exp(-CELL_DRAG*dt);
   for(const c of cells){
     const p=c.owner;if(p.remote)continue;
     let dx=p.target.x-c.x,dy=p.target.y-c.y;const d=Math.hypot(dx,dy);
     const sp=speedOf(c.r)*(p.fx.surge>0?1.45:1)*(has(p,'flagella')?1.12:1),f=Math.min(1,d/(c.r*.8+20));
     if(d>.01){dx/=d;dy/=d;}else{dx=dy=0;}
     c.x+=(dx*sp*f+c.vx)*dt;c.y+=(dy*sp*f+c.vy)*dt;c.vx*=kd;c.vy*=kd;
-    const dc=Math.hypot(c.x,c.y),lim=Math.max(0,R-c.r*.9);if(dc>lim){c.x*=lim/dc;c.y*=lim/dc;}
+    wallClamp(c,c.r*.9);
   }
   // siblings: push apart or fuse
   for(const p of players){
@@ -8298,8 +8390,8 @@ function step(dt){
           else{ // both ready: slide together at the smaller piece's own speed (faster once touching), the way agar.io pieces slurp back in
             const sm=a.mass<b.mass?a:b,touch=d<a.r+b.r,s=Math.min(d*.5,speedOf(sm.r)*(touch?1.1:.55)*dt),tot=a.mass+b.mass;
             a.x+=dx*s*2*(b.mass/tot);a.y+=dy*s*2*(b.mass/tot);b.x-=dx*s*2*(a.mass/tot);b.y-=dy*s*2*(a.mass/tot);}
-        }else{
-          const ov=a.r+b.r-d;if(ov>0){const tot=a.mass+b.mass,k=Math.min(1,dt*14)*ov;a.x-=dx*k*(b.mass/tot);a.y-=dy*k*(b.mass/tot);b.x+=dx*k*(a.mass/tot);b.y+=dy*k*(a.mass/tot);}
+        }else if(T-a.born>=SPLIT_GRACE&&T-b.born>=SPLIT_GRACE){ // solid, but a piece just split off may pass through to fly clear
+          const ov=a.r+b.r-d;if(ov>0){const tot=a.mass+b.mass,k=Math.min(1,dt*SIB_STIFF)*ov;a.x-=dx*k*(b.mass/tot);a.y-=dy*k*(b.mass/tot);b.x+=dx*k*(a.mass/tot);b.y+=dy*k*(a.mass/tot);}
         }
       }}
   }
@@ -8313,18 +8405,18 @@ function step(dt){
   }
   // ejected mass (ours). A Magnet pulls in other players' blobs as it does food: whoever shot a blob moves it, toward
   // local or remote magnets alike (remote players' fx bits carry the magnet), and the eat check below credits the catcher.
-  const ke=Math.exp(-5*dt),kj=Math.exp(-EJECT_DRAG*dt),mags=cells.filter(c=>!c.dead&&c.owner.fx.magnet>0);
+  const kv=Math.exp(-VSHOT_DRAG*dt),kj=Math.exp(-EJECT_DRAG*dt),mags=cells.filter(c=>!c.dead&&c.owner.fx.magnet>0);
   for(const e of ejected){
     e.x+=e.vx*dt;e.y+=e.vy*dt;e.vx*=kj;e.vy*=kj;
     for(const c of mags){if(c.owner===e.owner)continue;const dx=c.x-e.x,dy=c.y-e.y,d=Math.hypot(dx,dy);if(d<c.r+300&&d>1){const m=Math.min(d,560*dt);e.x+=dx/d*m;e.y+=dy/d*m;break;}}
-    const dc=Math.hypot(e.x,e.y);if(dc>R-e.r){e.x*=(R-e.r)/dc;e.y*=(R-e.r)/dc;}
+    wallClamp(e,e.r);
     for(const h of hunters){if(h.dead)continue;if(Math.hypot(h.x-e.x,h.y-e.y)<HUNTER_R+e.r){e.dead=true;
         if(isHost){h.hp--;if(h.hp<=0){lyseHunter(h);if(e.owner===human)unlock('hunter');}else burst(h.x,h.y,col(INF_C),5,160);}else{rec(['h',h.id]);if(h.hp<=1&&e.owner===human)unlock('hunter');h.hp--;burst(h.x,h.y,col(INF_C),5,160);}
         if(e.owner===human){sfx('hit');Native.haptic('light');}break;}}
     if(e.dead)continue;
     for(const v of viruses){if(Math.abs(v.x-e.x)>v.r||Math.abs(v.y-e.y)>v.r)continue;if(Math.hypot(v.x-e.x,v.y-e.y)<v.r){e.dead=true;
         if(isHost)feedVirus(v,e.dx,e.dy,e.owner);
-        else if(v.kind==='s'){rec(['f',v.slot,v.g,Math.round(e.dx*100),Math.round(e.dy*100)]);v.feed=Math.min(5,v.feed+1);setVM(v);}
+        else if(v.kind==='s'){rec(['f',v.slot,v.g,Math.round(e.dx*100),Math.round(e.dy*100)]);v.feed=Math.min(VIRUS_FEEDS-1,v.feed+1);setVM(v);}
         break;}}
     if(e.dead)continue;
     for(const c of cells){if(c.dead||c.mass<e.mass*1.1)continue;if(c.owner===e.owner&&T-e.born<.4)continue;
@@ -8336,10 +8428,11 @@ function step(dt){
   // phages
   if(isHost){
     for(const v of vslots)if(!v.alive&&T>=v.respawnAt){v.g=(v.g+1)%256;v.feed=0;v.gen=0;v.ft=-rand(0,VREP_WAIT);setVM(v);placeSlot(v);v.alive=true;}
-    for(const v of freeV){v.x+=v.vx*dt;v.y+=v.vy*dt;v.vx*=ke;v.vy*=ke;
-      const dc=Math.hypot(v.x,v.y);if(dc>R-v.r){v.x*=(R-v.r)/dc;v.y*=(R-v.r)/dc;v.vx*=-.5;v.vy*=-.5;}}
-    for(const v of vslots)if(v.alive)growVirus(v,dt);
-    for(const v of freeV.slice())if(!v.dead)growVirus(v,dt);
+    for(const v of freeV){v.x+=v.vx*dt;v.y+=v.vy*dt;v.vx*=kv;v.vy*=kv;
+      if(CL){const L=CL_HALF-v.r;if(Math.abs(v.x)>L){v.x=Math.sign(v.x)*L;v.vx*=-.5;}if(Math.abs(v.y)>L){v.y=Math.sign(v.y)*L;v.vy*=-.5;}}
+      else{const dc=Math.hypot(v.x,v.y);if(dc>R-v.r){v.x*=(R-v.r)/dc;v.y*=(R-v.r)/dc;v.vx*=-.5;v.vy*=-.5;}}}
+    if(!CL){for(const v of vslots)if(v.alive)growVirus(v,dt); // Classic phages only grow when fed, like agar's
+    for(const v of freeV.slice())if(!v.dead)growVirus(v,dt);}
   }
   rebuildViruses();
   for(const v of viruses){v.spin+=dt*.25;if(v.dead)continue;
@@ -8350,7 +8443,7 @@ function step(dt){
   rebuildViruses();
   // hunters
   if(isHost){
-    hunterT-=dt;if(hunterT<=0){hunterT=rand(10,20);if(hunters.length<MAX_HUNTERS)spawnHunter();}
+    hunterT-=dt;if(hunterT<=0&&!CL){hunterT=rand(10,20);if(hunters.length<MAX_HUNTERS)spawnHunter();}
     for(const h of hunters){hunterBrain(h,dt);moveHunter(h,dt);if(T-h.born>75||(!h.inside&&T-h.born>25)){h.dead=true;}}
   }
   for(const h of hunters){if(h.dead)continue;
@@ -8380,7 +8473,7 @@ function step(dt){
         if(!isHost){rec(['u',u.id]);puSup.set(u.id,T);}
         burst(u.x,u.y,col(def.c,10),12,200);if(p===human){sfx('power');Native.haptic('light');floatText(u.x,u.y,def.label,def.c,22);}break;}}}
   powerups=powerups.filter(u=>!u.dead);
-  if(isHost&&powerups.length<MAX_PU&&Math.random()<dt*.9)addPU();
+  if(isHost&&!CL&&powerups.length<MAX_PU&&Math.random()<dt*.9)addPU();
   // decay, infection clocks, radii, cleanup
   for(const c of cells){
     if(c.dead)continue;
@@ -8388,7 +8481,7 @@ function step(dt){
       if(c.mass>120)c.mass-=c.mass*(has(c.owner,'metabolism')?.0006:.0012)*dt;
       if(has(c.owner,'photo'))c.mass=Math.min(MAX_MASS,c.mass+1.5*dt);
       const aR=arenaR(),dC=Math.hypot(c.x,c.y)+Math.min(c.r*.3,aR*.5),outA=dC>aR,outT=dC>tideSafe(); // a cell bigger than the final arena still fits if it is centred
-      if(outA||outT){c.toxic=T;if(outA){c.mass-=(c.mass*(aR<=R_MIN+1?.6:.2)+12)*dt;if(c.mass<10)dissolve(c);}else c.mass=Math.max(8,c.mass-c.mass*.08*dt);
+      if(!CL&&(outA||outT)){c.toxic=T;if(outA){c.mass-=(c.mass*(aR<=R_MIN+1?.6:.2)+12)*dt;if(c.mass<10)dissolve(c);}else c.mass=Math.max(8,c.mass-c.mass*.08*dt);
         if(!c.dead&&Math.random()<dt*6&&parts.length<700){const a=rand(0,TAU);parts.push({x:c.x+Math.cos(a)*c.r,y:c.y+Math.sin(a)*c.r,vx:Math.cos(a)*60,vy:Math.sin(a)*60,t:0,life:.6,color:outA?'rgba(255,120,130,.9)':'rgba(170,150,255,.9)',r:rand(3,7)});}}
       if(c.inf&&T>=c.inf)lyse(c);
     }
@@ -8398,14 +8491,14 @@ function step(dt){
   cells=cells.filter(c=>!c.dead);
   for(const p of players){if(p.cells.some(c=>c.dead))p.cells=p.cells.filter(c=>!c.dead);
     if(p.alive&&!p.remote){const m=p.cells.reduce((s,c)=>s+c.mass,0);if(m>p.stats.peak)p.stats.peak=m;
-      if(p.evo<EVO.length&&m>=EVO[p.evo]){
+      if(!CL&&p.evo<EVO.length&&m>=EVO[p.evo]){
         if(p===human){if(!evoOffer)offerEvo();}
         else if(p.bot&&!p.boss){const pool=BOT_PERKS.filter(id=>!has(p,id));if(pool.length)p.pk|=PBIT[pool[Math.floor(Math.random()*pool.length)]];p.evo++;}
       }}}
   if(human&&human.alive){const m=human.cells.reduce((s,c)=>s+c.mass,0);if(m>=500)unlock('m500');if(m>=2000)unlock('m2000');
     if(T-human.stats.born>300)unlock('surv5');if(lysedAt&&T-lysedAt>20){lysedAt=0;unlock('lysis');}}
   if(human&&human.alive){histT+=dt;if(histT>=.5){histT=0;human.hist.push(human.cells.reduce((s,c)=>s+c.mass,0));}}
-  membranes(dt);
+  if(!CL)membranes(dt); // Classic cells stay plain circles: no soft-body pass
   for(const pt of parts){pt.t+=dt;pt.x+=pt.vx*dt;pt.y+=pt.vy*dt;pt.vx*=.92;pt.vy*=.92;}
   parts=parts.filter(pt=>pt.t<pt.life);
   for(const g of ghosts)g.t+=dt;ghosts=ghosts.filter(g=>g.t<g.life);
@@ -8431,7 +8524,10 @@ function membranes(dt){
     if(Math.abs(a.x-cam.x)>hw+a.dr||Math.abs(a.y-cam.y)>hh+a.dr)continue;
     const L=a.lim,ra=a.dr;L.fill(9);
     const p2=a.x*a.x+a.y*a.y;
-    if(Math.sqrt(p2)+ra>R){for(let i=0;i<NP;i++){const dp=a.x*COS[i]+a.y*SIN[i],disc=dp*dp-(p2-R*R);if(disc>0){const t=(-dp+Math.sqrt(disc))/ra;if(t<L[i])L[i]=t;}}}
+    if(CL){const Q=CL_HALF;if(Math.abs(a.x)+ra>Q||Math.abs(a.y)+ra>Q)for(let i=0;i<NP;i++){const cx=COS[i]*ra,cy=SIN[i]*ra;
+      if(cx>1e-6){const t=(Q-a.x)/cx;if(t<L[i])L[i]=t;}else if(cx<-1e-6){const t=(-Q-a.x)/cx;if(t<L[i])L[i]=t;}
+      if(cy>1e-6){const t=(Q-a.y)/cy;if(t<L[i])L[i]=t;}else if(cy<-1e-6){const t=(-Q-a.y)/cy;if(t<L[i])L[i]=t;}}}
+    else if(Math.sqrt(p2)+ra>R){for(let i=0;i<NP;i++){const dp=a.x*COS[i]+a.y*SIN[i],disc=dp*dp-(p2-R*R);if(disc>0){const t=(-dp+Math.sqrt(disc))/ra;if(t<L[i])L[i]=t;}}}
     const cs=a.owner.cells;
     if(cs.length>1&&!a.owner.remote)for(const b of cs){
       if(b===a||b.dead||(T>a.mergeAt&&T>b.mergeAt))continue;
@@ -8541,7 +8637,7 @@ function drawCell(c){
     fillUnit(ctx,grad(ctx,'shadow',g=>{const q=g.createRadialGradient(0,0,.75,0,0,1.28);q.addColorStop(0,'rgba(0,0,0,.36)');q.addColorStop(1,'rgba(0,0,0,0)');return q;}),sx,sy,r);
   }
   const sk=p.skin|0,SK=sk>=SKIN_FREE?PREMIUM[sk-SKIN_FREE]:null;if(SK&&SK.aura&&sr>12&&!lowFx)SK.aura(ctx,c,r,k,sr,c===p.cells[0]); // skins that burn past the membrane; the full show only on the lead cell
-  const pulse=sick?(.5+.5*Math.sin(T*(5+sick*16))):0,tok=SK&&!sick&&(sr<=14||lowFx&&p!==human&&sr<=48);
+  const pulse=sick?(.5+.5*Math.sin(T*(5+sick*16))):0,tok=SK&&!sick&&(sr<=14||CL||lowFx&&p!==human&&sr<=48); // Classic: every skin from its cached sprite
   if(tok){const e=r/.96;ctx.drawImage(bake(ctx,SK.tok[p.stain|0],sr*DPR*2/.96,tokenArt,1,p),c.x-e,c.y-e,2*e,2*e);}else{
   ctx.beginPath();membranePath(c,r,1);
   fillUnit(ctx,bodyGrad(k),c.x,c.y,r);
@@ -8692,6 +8788,12 @@ function draw(){
   if(!lowFx&&BG.bokeh&&!SKIP.has('bokeh'))drawBokeh(BOK_BACK);
   ctx.setTransform(DPR*z,0,0,DPR*z,DPR*(W/2-cam.x*z+shx),DPR*(H/2-cam.y*z+shy));
   const hw=W/2/z,hh=H/2/z,x0=cam.x-hw-20,x1=cam.x+hw+20,y0=cam.y-hh-20,y1=cam.y+hh+20;
+  if(CL){ // Classic: a flat square floor with the grid and a plain wall line, nothing to rebuild per frame
+    const Q=CL_HALF;ctx.fillStyle=BG.dish[1];ctx.fillRect(-Q,-Q,2*Q,2*Q);
+    const cx0=Math.max(x0,-Q),cy0=Math.max(y0,-Q),cx1=Math.min(x1,Q),cy1=Math.min(y1,Q);
+    if(cx1>cx0&&cy1>cy0&&settings.grid!==false&&!SKIP.has('grid'))drawGrid(cx0,cy0,cx1,cy1);
+    ctx.lineWidth=Math.max(2/z,4);ctx.strokeStyle=BG.rim[1];ctx.strokeRect(-Q,-Q,2*Q,2*Q);
+  }else{
   const g=ctx.createRadialGradient(0,0,0,0,0,R);g.addColorStop(0,BG.dish[0]);g.addColorStop(.85,BG.dish[1]);g.addColorStop(1,BG.dish[2]);
   ctx.beginPath();ctx.arc(0,0,R,0,TAU);ctx.fillStyle=g;ctx.fill();
   ctx.save();ctx.clip();
@@ -8700,7 +8802,7 @@ function draw(){
   ctx.restore();
   ctx.beginPath();ctx.arc(0,0,R+18,0,TAU);ctx.lineWidth=36;ctx.strokeStyle=BG.halo;ctx.stroke();
   const lg=ctx.createLinearGradient(-R,-R,R,R);lg.addColorStop(0,BG.rim[0]);lg.addColorStop(.5,BG.rim[1]);lg.addColorStop(1,BG.rim[2]);
-  ctx.beginPath();ctx.arc(0,0,R,0,TAU);ctx.lineWidth=Math.max(2/z,4);ctx.strokeStyle=lg;ctx.stroke();
+  ctx.beginPath();ctx.arc(0,0,R,0,TAU);ctx.lineWidth=Math.max(2/z,4);ctx.strokeStyle=lg;ctx.stroke();}
   drawBreaches();
   if(ev.type===1){const g2=ctx.createRadialGradient(ev.x,ev.y,0,ev.x,ev.y,BLOOM_R);g2.addColorStop(0,'rgba(242,193,78,.16)');g2.addColorStop(.75,'rgba(242,193,78,.06)');g2.addColorStop(1,'rgba(242,193,78,0)');
     ctx.fillStyle=g2;ctx.beginPath();ctx.arc(ev.x,ev.y,BLOOM_R,0,TAU);ctx.fill();ctx.save();ctx.setLineDash([30,22]);ctx.lineDashOffset=T*30;ctx.beginPath();ctx.arc(ev.x,ev.y,BLOOM_R,0,TAU);ctx.lineWidth=Math.max(1.5/z,4);ctx.strokeStyle='rgba(242,193,78,.45)';ctx.stroke();ctx.restore();}
@@ -8724,7 +8826,7 @@ function draw(){
       ctx.drawImage(PSPR[pl.h],pl.x-s/2,pl.y-s/2,s,s);}}
   }
   if(!SKIP.has('ej'))for(const e of ejected)if(e.x>x0-30&&e.x<x1+30&&e.y>y0-30&&e.y<y1+30)drawEj(e.x,e.y,e.r,e.color,e.vx,e.vy);
-  if(!SKIP.has('ej'))for(const [,list] of remoteEj)for(const e of list)if(e.x>x0-30&&e.x<x1+30&&e.y>y0-30&&e.y<y1+30)drawEj(e.x,e.y,14,e.color);
+  if(!SKIP.has('ej'))for(const [,list] of remoteEj)for(const e of list)if(e.x>x0-30&&e.x<x1+30&&e.y>y0-30&&e.y<y1+30)drawEj(e.x,e.y,EJECT_R,e.color);
   if(!SKIP.has('ent'))for(const u of powerups)if(u.x>x0-80&&u.x<x1+80&&u.y>y0-80&&u.y<y1+80)drawPU(u);
   const list=[];for(const c of cells)if(c.x+c.dr*1.3>x0&&c.x-c.dr*1.3<x1&&c.y+c.dr*1.3>y0&&c.y-c.dr*1.3<y1)list.push(c);
   for(const v of viruses)if(v.x+v.r*2>x0&&v.x-v.r*2<x1&&v.y+v.r*2>y0&&v.y-v.r*2<y1)list.push(v);
@@ -8747,8 +8849,8 @@ function draw(){
   ctx.globalAlpha=1;
   ctx.setTransform(DPR,0,0,DPR,0,0);
   if(!lowFx&&!SKIP.has('bokeh'))drawBokeh(BOK_FRONT);
-  const vg=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*.4,W/2,H/2,Math.hypot(W,H)*.6);
-  vg.addColorStop(0,'rgba(2,8,9,0)');vg.addColorStop(1,'rgba(2,8,9,.6)');if(!SKIP.has('vig')){ctx.fillStyle=vg;ctx.fillRect(0,0,W,H);}
+  if(!SKIP.has('vig')&&!CL){const vg=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*.4,W/2,H/2,Math.hypot(W,H)*.6); // Classic: no vignette
+  vg.addColorStop(0,'rgba(2,8,9,0)');vg.addColorStop(1,'rgba(2,8,9,.6)');ctx.fillStyle=vg;ctx.fillRect(0,0,W,H);}
   if(!SKIP.has('tags')){drawHunterArrows();drawAllyArrow();drawTags();}
   if(touchId!==null&&mode==='play'){ctx.beginPath();ctx.arc(pointer.x,pointer.y,26,0,TAU);ctx.lineWidth=1.5;ctx.strokeStyle='rgba(220,239,233,.35)';ctx.stroke();
     ctx.beginPath();ctx.arc(pointer.x,pointer.y,4,0,TAU);ctx.fillStyle='rgba(220,239,233,.6)';ctx.fill();}
@@ -8756,7 +8858,7 @@ function draw(){
 function drawTags(){ // crown on the leader, emote bubbles, in screen space
   const z=cam.z,sx=x=>(x-cam.x)*z+W/2,sy=y=>(y-cam.y)*z+H/2;
   const big=p=>{let b=null;for(const c of p.cells)if(!b||c.mass>b.mass)b=c;return b;};
-  if(leader&&leader.alive&&leader.cells.length){const c=big(leader),x=sx(c.x),y=sy(c.y-c.dr)-6,s=clamp(c.dr*z*.35,12,34);
+  if(!CL&&leader&&leader.alive&&leader.cells.length){const c=big(leader),x=sx(c.x),y=sy(c.y-c.dr)-6,s=clamp(c.dr*z*.35,12,34);
     if(x>-50&&x<W+50&&y>-50&&y<H+60){ctx.beginPath();ctx.moveTo(x-s,y);ctx.lineTo(x-s*.9,y-s*.75);ctx.lineTo(x-s*.45,y-s*.35);ctx.lineTo(x,y-s*.95);ctx.lineTo(x+s*.45,y-s*.35);ctx.lineTo(x+s*.9,y-s*.75);ctx.lineTo(x+s,y);ctx.closePath();
       ctx.fillStyle='#f2c14e';ctx.fill();ctx.lineWidth=2;ctx.lineJoin='round';ctx.strokeStyle='rgba(60,40,0,.6)';ctx.stroke();}}
   ctx.font='600 13px "Bricolage Grotesque",system-ui,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
@@ -8793,7 +8895,7 @@ function drawAllyArrow(){ // where your party ally is while they're off screen: 
 function drawMini(){
   const s=mini.width,h=s/2,SR=R+500,k=(h-3)/SR,rr=R*k;mctx.setTransform(1,0,0,1,0,0);mctx.clearRect(0,0,s,s);
   mctx.beginPath();mctx.arc(h,h,h-2,0,TAU);mctx.fillStyle='rgba(2,8,9,.7)';mctx.fill();
-  mctx.beginPath();mctx.arc(h,h,rr,0,TAU);mctx.fillStyle='rgba(6,20,22,.9)';mctx.fill();mctx.lineWidth=DPR;mctx.strokeStyle='rgba(140,210,200,.35)';mctx.stroke();
+  mctx.beginPath();if(CL){const q=CL_HALF*k;mctx.rect(h-q,h-q,2*q,2*q);}else mctx.arc(h,h,rr,0,TAU);mctx.fillStyle='rgba(6,20,22,.9)';mctx.fill();mctx.lineWidth=DPR;mctx.strokeStyle='rgba(140,210,200,.35)';mctx.stroke();
   mctx.beginPath();mctx.moveTo(h,h-rr);mctx.lineTo(h,h+rr);mctx.moveTo(h-rr,h);mctx.lineTo(h+rr,h);mctx.strokeStyle='rgba(140,210,200,.08)';mctx.stroke();
   for(const p of players){if(!p.alive||p===human)continue;const tm=p.cells.reduce((a,c)=>a+c.mass,0);const humanish=p.remote&&!p.bot;if(tm<300&&p!==leader&&!humanish)continue;
     for(const c of p.cells){mctx.beginPath();mctx.arc(h+c.x*k,h+c.y*k,Math.max((humanish?2.2:1.4)*DPR,c.r*k),0,TAU);mctx.fillStyle=col(p.color,0,p===leader||humanish?.95:.55);mctx.fill();
@@ -8827,7 +8929,7 @@ let tipSeen=new Set(),tipAt=-99,tipRuns=0;try{tipSeen=new Set(JSON.parse(localSt
 const TIPS=[
   {id:'move',when:()=>T-human.stats.born>2,text:()=>TOUCH_UI?'Stick to move':'Steer with the mouse'},
   {id:'split',when:()=>T-human.stats.born>15&&human.cells.some(c=>c.mass>=70),text:()=>TOUCH_UI?'Split: launch half your mass':keyName(settings.keys.split)+': launch half your mass'},
-  {id:'merge',when:()=>human.cells.length>1,text:()=>'Pieces merge back in 20 s'},
+  {id:'merge',when:()=>human.cells.length>1,text:()=>`Pieces merge back in about ${Math.round(MERGE_BASE)} s`},
   {id:'virus',when:()=>human.cells.some(c=>c.mass>150&&viruses.some(v=>Math.hypot(v.x-c.x,v.y-c.y)<c.r+500)),text:()=>'Big cells pop on phages'},
   {id:'arena',when:()=>arenaR()<R-1,text:()=>'Arena shrinking: stay inside'},
   {id:'pause',when:()=>T-human.stats.born>45,text:()=>TOUCH_UI?'Tap your mass to pause':'Esc to pause'},
@@ -8856,7 +8958,7 @@ function hud(){
   clockUI();
   // ranking: a chip with your place; the list drops down under it (short phones 5 rows, portrait 6, desktop 10)
   const small=phone.matches||shortScreen.matches,cap=shortScreen.matches?5:phone.matches?6:10;let html='';
-  const row=(r,i)=>{const hu=r.p.remote&&!r.p.bot;return`<li class="${r.p===human?'me':''}"><span class="rk">${i===0?CROWN:i+1}</span><span class="dot" style="background:${col(r.p.color)}"></span><span class="nm"${nfAttr(fontOf(r.p))}>${esc(r.p.name)}</span>${r.p.boss?'<span class="tag boss">Boss</span>':hu?'<span class="tag" title="Player"></span>':''}<span class="ms">${kfmt(r.m)}</span></li>`;};
+  const row=(r,i)=>{const hu=r.p.remote&&!r.p.bot;return`<li class="${r.p===human?'me':''}"><span class="rk">${i===0&&!CL?CROWN:i+1}</span><span class="dot" style="background:${col(r.p.color)}"></span><span class="nm"${nfAttr(fontOf(r.p))}>${esc(r.p.name)}</span>${r.p.boss?'<span class="tag boss">Boss</span>':hu?'<span class="tag" title="Player"></span>':''}<span class="ms">${kfmt(r.m)}</span></li>`;};
   const hi=ranked.findIndex(r=>r.p===human);if(human&&human.alive&&hi>=0){const rk=hi+1;if(!human.stats.bestRank||rk<human.stats.bestRank)human.stats.bestRank=rk;}
   const N=hi>=cap?cap-2:cap;ranked.slice(0,N).forEach((r,i)=>{html+=row(r,i);});
   if(hi>=N)html+=`<li class="gap" aria-hidden="true"></li>`+row(ranked[hi],hi);
@@ -9094,7 +9196,7 @@ function ingestWorld(P,sT){
   if(typeof P.vs==='string'){for(let i=0;i<VSLOTS&&i*2+2<=P.vs.length;i++){const code=dec(P.vs,i*2,2);if(Number.isNaN(code))break;
       const v=vslots[i],g=code>>4,feed=(code>>1)&7;let alive=!!(code&1);
       if(v.g!==g){v.g=g;placeSlot(v);}const sup=vSup.get(i+':'+g);if(sup!==undefined&&T-sup<3)alive=false;
-      v.alive=alive;v.feed=Math.min(5,feed);setVM(v);}}
+      v.alive=alive;v.feed=Math.min(VIRUS_FEEDS-1,feed);setVM(v);}}
   if(typeof P.vw==='string'){const m=new Map(freeV.map(v=>[v.id,v])),out=[];
     for(let o=0;o+8<=P.vw.length;o+=8){const id=dec(P.vw,o,2),x=dec(P.vw,o+2,3)-OFF,y=dec(P.vw,o+5,3)-OFF;if(Number.isNaN(id+x+y))break;
       const sup=wSup.get(id);if(sup!==undefined&&T-sup<3)continue;
@@ -9133,7 +9235,7 @@ function send(){
   const P={v:PROTO,h:(isHost&&claimReady&&!yielded)?1:0,n:(human?human.name:(cleanName($('nameIn').value)||'Unnamed cell')).slice(0,16),s:settings.stain|0,
     a:human&&human.alive?1:0,f:human?fxBits(human):0,k:wireSkin(human?human.skin:settings.skin),ks:human?human.skin:settings.skin,nf:myFont()||undefined,q:queued?1:0,bp:null,em:null,ev:null,rd:null,cl:null,ej:null,r:null,pe:null,b:null,vs:null,vw:null,pu:null,hv:null,
     pt:soc&&soc.party?soc.party.id:null, // pt: your party, so your ally's game treats you as an ally (older games ignore it)
-    ts:enc(Math.floor(performance.now())%TS_WRAP,4),sq:nearMode()?enc(++near.sq%4096,2):null}; // ts: our clock, for smoothing (sampleTime); sq: Nearby counts lost messages
+    ts:enc(Math.floor(performance.now())%TS_WRAP,4),sq:nearMode()?enc(++near.sq%4096,2):null,md:CL?'c':null}; // md: Classic (older games send none and are Battle Royale) // ts: our clock, for smoothing (sampleTime); sq: Nearby counts lost messages
   if(human&&human.alive)P.cl=human.cells.slice(0,MAX_CELLS).map(encCell).join('');
   if(ejected.length)P.ej=ejected.slice(-16).map(e=>enc(e.x+OFF,3)+enc(e.y+OFF,3)).join('');
   recs=recs.filter(r=>T-r.t<3).slice(-20);if(recs.length)P.r=recs.map(r=>r.d);
@@ -9142,14 +9244,14 @@ function send(){
   const peL=nv?peLog.filter(p=>T-p.t<.11||p.x==null||inView(nv,p.x,p.y,0)):peLog; // ...far eats go once, near ones are repeated
   const peStr=n=>peL.slice(-n).map(p=>enc(p.i,3)+enc(p.g,3)).join('');
   P.pe=peL.length?peStr(120):null;
-  if(local){P.h=0;P.a=0;P.cl=null;P.ej=null;P.r=null;P.pe=null;}   // a local game is invisible to the room
+  if(local||CL&&!classicRoom()){P.h=0;P.a=0;P.cl=null;P.ej=null;P.r=null;P.pe=null;}   // a local game is invisible to the room
   P.lb=nearMode()&&isHost?nearWire():null;   // Nearby: the match settings and whether a match is on
   const host=P.h===1;
   const bots=(perCell,keep)=>{let s='';for(const b of players){if(!b.bot||b.remote||!b.alive||!b.cells.length||(keep&&!keep(b)))continue;
       const cs=b.cells.slice().sort((a,c)=>c.mass-a.mass).slice(0,perCell);s+=enc(b.bid,2)+enc(fxBits(b),3)+enc(cs.length,1)+cs.map(encCell).join('');}return s;};
   if(host){
     P.b=nv?bots(2,b=>(b.bid+near.tx)%4===0||b.cells.some(c=>inView(nv,c.x,c.y,c.r))):bots(4);if(nv)P.bp=1; // bp: only the bots near the other phones, and a quarter of the rest in turn
-    P.vs=vslots.map(v=>enc(v.g*16+Math.min(5,v.feed)*2+(v.alive?1:0),2)).join('');
+    P.vs=vslots.map(v=>enc(v.g*16+Math.min(VIRUS_FEEDS-1,v.feed)*2+(v.alive?1:0),2)).join(''); // 3 bits of feed; games before VIRUS_FEEDS 7 read at most 5
     P.vw=freeV.map(v=>enc(v.id,2)+enc(v.x+OFF,3)+enc(v.y+OFF,3)).join('');
     P.pu=powerups.map(u=>enc(u.id,2)+enc(u.x+OFF,3)+enc(u.y+OFF,3)+enc(PUK.indexOf(u.type),1)).join('');
     P.ev=ev.type?enc(ev.type,1)+enc(ev.id,2)+enc(Math.max(0,ev.end-T)*10,2)+enc(ev.x+OFF,3)+enc(ev.y+OFF,3):'';
@@ -9157,6 +9259,7 @@ function send(){
     P.hv=hunters.map(h=>enc(h.id,2)+enc(h.x+OFF,3)+enc(h.y+OFF,3)+enc(h.kind,1)+enc(Math.max(0,h.hp),1)).join('');
   }
   if(host&&nearMode()&&++near.tx%4){P.vs=null;P.pu=null;} // Nearby: virus slots and power-ups change slowly, so they go in every 4th message
+  if(host&&CL){P.pu=P.ev=P.rd=P.hv=null;if(++clTx%4)P.vs=null;} // Classic has none of these, and its phage slots change slowly
   let js=JSON.stringify(P),budget=3900;
   if(js.length>budget){P.pe=peL.length?peStr(40):null;js=JSON.stringify(P);}
   if(js.length>budget&&host&&!nv){P.b=bots(2);js=JSON.stringify(P);}
@@ -9173,8 +9276,8 @@ function netTick(dt){
   const me=peers.find(p=>p.sameTab);if(me&&!myPeer){myPeer=me.peer;roomAt=T;}
   if(!myPeer)return;
   const N=window.__mitosisNet,inbox=N&&N.take?N.take():[]; // every message since the last frame, oldest first
-  if(local){peerCount=1;queuedPeers=0;return;}   // a local game ignores the room until you leave it
-  const others=peers.filter(p=>!p.sameTab&&p.kind==='viewer'&&p.presence&&p.presence.v===PROTO);
+  if(local||CL&&!classicRoom()){peerCount=1;queuedPeers=0;return;}   // a local game (or Classic on a server without Classic rooms) ignores the room
+  const others=peers.filter(p=>!p.sameTab&&p.kind==='viewer'&&p.presence&&p.presence.v===PROTO&&(p.presence.md==='c')===CL); // only games of our mode
   peerCount=1+others.length;queuedPeers=others.filter(p=>p.presence.q===1).length;netNames=others.map(p=>cleanName(p.presence.n)||'Guest cell');
   if(peerCount!==lastPeerCount){lastPeerCount=peerCount;if(isHost)syncBots();}
   const claims=others.filter(p=>p.presence.h===1&&T-(seenAt.get(p.peer)??T)<3).map(p=>p.peer).sort(); // stalled hosts are ignored
@@ -9231,7 +9334,7 @@ function syncBots(){
 function init(){
   for(let i=0;i<PELLETS;i++){const pl={i,g:0};placePellet(pl);gridAdd(pl);pellets.push(pl);}
   for(let i=0;i<VSLOTS;i++)vslots.push(makeSlot(i));
-  for(let i=0;i<16;i++)addPU();
+  if(!CL)for(let i=0;i<16;i++)addPU();
   rebuildViruses();syncBots();
 }
 function removeHuman(){if(!human)return;removePlayer(human);cells=cells.filter(c=>!c.dead);human=null;}
@@ -9248,6 +9351,7 @@ const isOffline=()=>{const N=window.__mitosisNet;return !N||N.state==='offline';
 const pingNow=()=>{const N=window.__mitosisNet,r=N&&N.stats&&N.stats.rtts;return r&&r.length>=3?median(r.slice(-5)):null;};
 const pingOver=()=>{const N=window.__mitosisNet,L=settings.maxPing|0,p=pingNow();return L>0&&!!N&&N.mode!=='nearby'&&p!=null&&p>L;};
 function startGame(){
+  if(CL&&!local&&!classicRoom()){startLocal('practice');return;} // Classic without a Classic room: bots on this device
   if(nearMode()&&!nearGate())return; // Nearby: the host starts the match from the lobby, the others join it
   if(!local&&isOffline()){startLocal('practice');return;} // no connection: play the bots right away, unranked
   if(!spawnOpen()){
@@ -9284,7 +9388,8 @@ $('settingsCard').addEventListener('click',e=>{if(mode==='play'&&paused&&e.targe
 function die(){
   mode='dead';if(!multi())slow=.22;sfx('die');Native.haptic('error');const s=human.stats;human.hist.push(0);paused=false;
   const pb=notePeak(s.peak);
-  const pl=placeOf();s.place=pl.place;s.of=pl.of;if(BISECT.auto)reportHitch(`autopilot died place=${pl.place} of=${pl.of} by=${s.killer} t=${fmtT(T-s.born)} roundT=${roundT().toFixed(0)}`);recordRun({t:Date.now(),place:s.place,of:s.of,peak:Math.round(s.peak),eaten:s.eaten,sec:Math.round(T-s.born),practice:local==='practice'});
+  const pl=CL?{place:0,of:0}:placeOf();s.place=pl.place;s.of=pl.of; // Classic has no placings
+  if(BISECT.auto)reportHitch(`autopilot died place=${pl.place} of=${pl.of} by=${s.killer} t=${fmtT(T-s.born)} roundT=${roundT().toFixed(0)}`);recordRun({t:Date.now(),place:s.place,of:s.of,peak:Math.round(s.peak),eaten:s.eaten,sec:Math.round(T-s.born),practice:local==='practice'});
   evoOffer=null;renderEvo();lysedAt=0;
   econRunEnd();recStop(1500);resFill(s.killer==='the collapse'?'arena':'dead',pb);
   const hist=human.hist.slice();
@@ -9369,13 +9474,13 @@ achLine();
 const diffEl=$('diff');const syncDiff=()=>{[...diffEl.children].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.d===settings.diff)));};
 diffEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.diff=b.dataset.d;syncDiff();});syncDiff();
 const fxSegEl=$('fxSeg'),syncFxSeg=()=>[...fxSegEl.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.fx==='1')===!!settings.lowFx)));
-fxSegEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.lowFx=b.dataset.fx==='1';lowFx=settings.lowFx||saverOn;saveSettings();syncFxSeg();});syncFxSeg();
+fxSegEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.lowFx=b.dataset.fx==='1';lowFx=settings.lowFx||saverOn||CL;saveSettings();syncFxSeg();});syncFxSeg();
 /* battery saver: Settings, or the app reporting Low Power Mode or a hot phone: 30 fps in play, lighter effects, no glass
    blur and a lower canvas resolution */
 const power={low:false,thermal:0},saverEl=$('saverSeg');
 function syncSaver(){const on=!!settings.saver||power.low||power.thermal>=2;
   [...saverEl.children].forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.sv==='1')===!!settings.saver)));
-  if(on===saverOn)return;saverOn=on;document.body.classList.toggle('saver',on);lowFx=!!settings.lowFx||on;resize();}
+  if(on===saverOn)return;saverOn=on;document.body.classList.toggle('saver',on);lowFx=!!settings.lowFx||on||CL;resize();}
 saverEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.saver=b.dataset.sv==='1';saveSettings();syncSaver();});
 window.__onPower=m=>{power.low=!!m.low;power.thermal=m.thermal|0;syncSaver();};syncSaver(); // the app sends {low, thermal 0-3} on load and on change
 const bgSegEl=$('bgSeg'),syncBgSeg=()=>{BG=BGS[settings.bg]||BGS.black;document.body.dataset.bg=BG===BGS.white?'white':'black';[...bgSegEl.children].forEach(b=>b.setAttribute('aria-pressed',String(BGS[b.dataset.bg]===BG)));};
@@ -9744,12 +9849,12 @@ cv.addEventListener('contextmenu',e=>e.preventDefault());
 const bindAct=(id,fn)=>$(id).addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();if(mode==='play'&&!paused)fn(human);});
 $('evOpts').addEventListener('pointerdown',e=>{const b=e.target.closest('.evo');if(!b)return;e.preventDefault();e.stopPropagation();takeEvo(+b.dataset.i);});
 bindAct('splitBtn',split);bindAct('dashBtn',dash);
-{ // Shoot: a tap fires once; holding keeps firing, faster and faster (180 ms down to 70 ms between shots)
-  const b=$('ejectBtn');let timer=null,held=0;
-  const stop=e=>{if(e&&e.type==='pointercancel')reportHitch('shoot pointercancel');if(timer){clearTimeout(timer);timer=null;}};
-  const fire=()=>{if(mode!=='play'||paused||!human){stop();return;}eject(human);held++;timer=setTimeout(fire,65);};
-  b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();try{b.setPointerCapture(e.pointerId);}catch(_){}stop();held=0;fire();});
-  for(const ev of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(ev,stop);
+// Shoot (the button or W): a tap fires once; holding keeps firing. This only asks often; eject() keeps the beat (EJECT_GAP).
+const ejHold={timer:null,stop(e){if(e&&e.type==='pointercancel')reportHitch('shoot pointercancel');if(ejHold.timer){clearTimeout(ejHold.timer);ejHold.timer=null;}},
+  fire(){if(mode!=='play'||paused||!human){ejHold.stop();return;}eject(human);ejHold.timer=setTimeout(ejHold.fire,25);},start(){ejHold.stop();ejHold.fire();}};
+{ const b=$('ejectBtn');
+  b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();try{b.setPointerCapture(e.pointerId);}catch(_){}ejHold.start();});
+  for(const ev of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(ev,ejHold.stop);
 }
 // virtual joystick
 const joyEl=$('joy'),joyKnob=joyEl.querySelector('.knob');
@@ -9784,10 +9889,11 @@ addEventListener('keydown',e=>{
   if(mode==='play'&&(e.key==='Escape'||keyIs(e,'pause'))){e.preventDefault();setPaused(!paused);return;}
   if(mode!=='play'||paused){if(e.key==='Enter'&&tag!=='BUTTON'&&!$('startCard').hidden)startGame();return;}
   if(keyIs(e,'split')){e.preventDefault();if(!e.repeat)split(human);}
-  else if(keyIs(e,'eject'))eject(human);
+  else if(keyIs(e,'eject')){if(!e.repeat)ejHold.start();}
   else if(keyIs(e,'dash')||e.code==='KeyE'&&!keyBound('KeyE')){if(!e.repeat)dash(human);}
   else if(/^Digit[123]$/.test(e.code)&&evoOffer){takeEvo(+e.code.slice(5)-1);}
 });
+addEventListener('keyup',e=>{if(keyIs(e,'eject'))ejHold.stop();});addEventListener('blur',()=>ejHold.stop());
 document.addEventListener('visibilitychange',()=>{reportHitch('visibility '+(document.hidden?'hidden':'visible'));
   if(document.hidden){
     if(mode==='play'&&!paused)setPaused(true);
