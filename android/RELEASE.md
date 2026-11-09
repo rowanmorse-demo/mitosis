@@ -12,7 +12,12 @@ The app is `com.mitosisgame.app`: `index.html` from the repo root in a full-scre
 - **emulator-results**: screenshots, logcat and `results.json` from the emulator run.
 - **ci-release-test-apk-NOT-FOR-UPLOAD**: a release APK signed with a key made up for that run, pointed at the runner's own server. It exists only so CI can test the minified build. Never upload it: Play rejects anything not signed with your upload key.
 
-**On your Mac:** install Android Studio (it brings the SDK and JDK 17+), then:
+**On your Mac (Android Studio):** *File › Open* the `android/` folder (not the repo root). The build runs on Java 21
+(`gradle/gradle-daemon-jvm.properties`): Android Studio's own Java 25 is too new for this Gradle, so keep a JDK 21 installed
+(it is, in `~/Library/Java/JavaVirtualMachines`). Run the app on the emulator with the green ▶. For the Play build use
+*Build › Generate Signed App Bundle or APK › Android App Bundle*, step 2 below.
+
+**From the command line** (with `JAVA_HOME` pointing at a JDK 17–24):
 
 ```bash
 cd android
@@ -31,6 +36,8 @@ keytool -genkeypair -v -keystore ~/keys/mitosis-upload.jks -alias upload -keyalg
 ```
 
 With Play App Signing, Google holds the key that signs what users install. Your key only proves an upload came from you, and if it's ever lost or leaked, Play Console can reset it (*Test and release › App integrity › Request upload key reset*).
+
+**In Android Studio (the simplest):** *Build › Generate Signed App Bundle or APK › Android App Bundle › Next*. Under *Key store path* choose *Create new…*, save it **outside the repository** (for example `~/keys/mitosis-upload.jks`), give it a password, alias `upload` and a key password, then pick the **release** build variant and *Create*. The signed bundle lands in `android/app/release/app-release.aab` (git ignores it). Don't tick *Export encrypted key* (that is for apps not using Play App Signing). Studio offers to remember the passwords in the macOS keychain.
 
 **A. Let Gradle sign it.** Create `android/keystore.properties` (git ignores it):
 
@@ -118,7 +125,8 @@ From versionCode 10 the app takes signed page updates from the game server, on t
 iOS app: `/updates/android/manifest.json` + `page.html`, published with `node tools/page-update.js publish` (see
 docs/PAGE-UPDATES.md). The app (PageUpdates.kt) checks when it opens and at most every 30 minutes when it returns, checks the
 Ed25519 signature (Ed25519.kt, since Android has it built in only from Android 13) and the SHA-256, and loads the page on the next
-launch in place of `file:///android_asset/index.html`, at the same address, so the player's localStorage stays. A page that
+launch at the built-in page's address, `file:///android_asset/index.html` (as the document's text, `loadDataWithBaseURL`), so the
+player's localStorage stays. A page that
 doesn't send `booted` within 5 s of loading, or that the app is killed twice before it does, is dropped and the built-in page
 used again. Google Play allows this: its Device and Network Abuse policy exempts JavaScript running in a WebView from the
 ban on downloaded code, as long as the code doesn't break another Play policy.

@@ -4,12 +4,9 @@ import android.content.Context
 import android.os.SystemClock
 import android.util.Base64
 import android.util.Log
-import android.webkit.WebResourceRequest
-import android.webkit.WebResourceResponse
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.io.File
-import java.io.FileInputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.security.MessageDigest
@@ -26,16 +23,18 @@ import java.util.concurrent.atomic.AtomicBoolean
  * has taken, and meant for this versionCode, it downloads the page, checks its size and SHA-256, and keeps it for the
  * next launch.
  *
- * The downloaded page is served in place of file:///android_asset/index.html (see [intercept]), so the page keeps
- * the same address and with it the player's localStorage (secret, settings, wallet cache).
+ * MainActivity loads the downloaded page ([loadedHtml]) with loadDataWithBaseURL at the built-in page's address,
+ * file:///android_asset/index.html, so it has the same origin and with it the player's localStorage (secret, settings,
+ * wallet cache). WebView doesn't offer file:///android_asset loads to shouldInterceptRequest, so serving the file in
+ * place of the asset doesn't work (tried on WebView 145, Android 17: the built-in page showed).
  *
  * It has to send {type:'booted'} (the last line of the page's script): MainActivity gives it [BOOT_GRACE_MS] after
  * the WebView finishes loading it, or [BOOT_TIMEOUT_MS] in the foreground if it never finishes. If it doesn't, or the
  * app is killed twice before it does, that version is dropped for good and the built-in page is loaded again; the next
  * update fixes it. The server is plain HTTP, so the signature is what keeps anyone on the network from swapping the page.
  *
- * Threads: [pageToLoad], [booted], [failed] and [check] are called on the main thread; the download runs on a worker
- * and [intercept] on the WebView's IO thread. The state below is guarded by `this`.
+ * Threads: [pageToLoad], [loadedHtml], [booted], [failed] and [check] are called on the main thread; the download runs
+ * on a worker. The state below is guarded by `this`.
  */
 class PageUpdates(context: Context, private val build: Int, private val report: (kind: String, text: String) -> Unit) {
     companion object {
@@ -79,7 +78,7 @@ class PageUpdates(context: Context, private val build: Int, private val report: 
     private val checking = AtomicBoolean(false)
     private var checkedAt = 0L
 
-    /** The downloaded page now loaded, or null for the built-in one. Read by [intercept] on the WebView's IO thread. */
+    /** The downloaded page now loaded, or null for the built-in one. */
     @Volatile var loaded: Manifest? = null
         private set
 
@@ -153,14 +152,9 @@ class PageUpdates(context: Context, private val build: Int, private val report: 
         // the file stays until the next load: a reload of the running page still finds it
     }
 
-    /**
-     * WebViewClient.shouldInterceptRequest: while a page update is loaded, the request for the built-in page is
-     * answered with the downloaded one. Everything else (and a missing file) goes to the WebView as usual.
-     */
-    fun intercept(request: WebResourceRequest): WebResourceResponse? {
-        if (loaded == null || request.url.scheme != "file" || request.url.path != "/android_asset/index.html") return null
-        return runCatching { WebResourceResponse("text/html", "utf-8", FileInputStream(activeFile)) }.getOrNull()
-    }
+    /** The text of the page update [pageToLoad] chose, or null if its file can't be read (MainActivity then drops it). */
+    @Synchronized
+    fun loadedHtml(): String? = if (loaded == null) null else read(activeFile)?.toString(Charsets.UTF_8)
 
     // MARK: Checking
 

@@ -141,7 +141,9 @@ the range. An "off" manifest has an empty `sha256`.
 
 The app keeps the downloaded page in its own storage and loads it at the same address as the built-in one:
 - **iOS:** a `file://` page. WebKit gives every `file://` page the same origin.
-- **Android:** served in place of `file:///android_asset/index.html`.
+- **Android:** loaded as the document's text (`loadDataWithBaseURL`) at `file:///android_asset/index.html`, the built-in
+  page's address. (Serving it in place of the asset through `shouldInterceptRequest` doesn't work: WebView doesn't offer
+  `file:///android_asset` loads to it.)
 
 So localStorage carries over: the player's secret, settings and wallet cache.
 

@@ -23,6 +23,7 @@ android/.idea/
 android/*.iml
 android/app/*.iml
 android/.kotlin/
+android/app/release/
 # the Play upload key and its passwords stay on Rowan's machine (see android/RELEASE.md)
 android/keystore.properties
 *.jks

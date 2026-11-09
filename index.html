@@ -6365,7 +6365,7 @@ $('deleteGo').addEventListener('click',async()=>{
   try{for(const k of Object.keys(localStorage))if(k.startsWith('mitosis.')&&k!=='mitosis.intro')localStorage.removeItem(k);}catch(e){}
   $('deleteCard').classList.add('done');$('delTitle').textContent='Account deleted';$('delBody').textContent='All your data is gone. You start fresh as a new cell.';$('delApple').hidden=true;$('delRow').hidden=true;$('deleteDone').hidden=false;
 });
-$('deleteDone').addEventListener('click',()=>location.reload());
+$('deleteDone').addEventListener('click',()=>{if(Native.platform==='android')Native.send({type:'reload'});else location.reload();}); // the Android app reloads a page update the way it loaded it
 function loadHistory(){try{const a=JSON.parse(localStorage.getItem('mitosis.history')||'[]');return Array.isArray(a)?a:[];}catch(e){return[];}}
 function recordRun(e){const h=loadHistory();h.push(e);try{localStorage.setItem('mitosis.history',JSON.stringify(h.slice(-12)));}catch(err){}}
 function updateRunDelta(delta,rating,ai){const h=loadHistory();const last=h[h.length-1];if(!last||last.delta!=null||Date.now()-last.t>60000)return;last.delta=delta;last.rating=rating;if(ai)last.ai=1;try{localStorage.setItem('mitosis.history',JSON.stringify(h));}catch(err){}}

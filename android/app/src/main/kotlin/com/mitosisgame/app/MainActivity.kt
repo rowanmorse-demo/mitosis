@@ -19,7 +19,6 @@ import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
-import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
@@ -136,10 +135,6 @@ class MainActivity : AppCompatActivity() {
                 return true
             }
 
-            // A page update is served in place of the built-in page, at the same address (PageUpdates.intercept).
-            override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? =
-                pageUpdates.intercept(request)
-
             override fun onPageFinished(view: WebView, url: String) {
                 if (view !== web) return
                 power.report(force = true)
@@ -174,7 +169,9 @@ class MainActivity : AppCompatActivity() {
     /** Loads the game page: a downloaded page update when there is a good one (PageUpdates), else the built-in copy. */
     private fun loadGame() {
         val w = web ?: return
-        val update = pageUpdates.pageToLoad()
+        var update = pageUpdates.pageToLoad()
+        val html = update?.let { pageUpdates.loadedHtml() }
+        if (update != null && html == null) { pageUpdates.failed("its saved file couldn't be read"); update = null }
         booted = false
         pageLoaded = false
         main.removeCallbacks(bootCheck)
@@ -184,7 +181,11 @@ class MainActivity : AppCompatActivity() {
         // Development builds: `adb shell am start -n com.mitosisgame.app/.MainActivity --ez autopilot true`
         // makes the page play by itself (soak testing without touching the phone).
         if (BuildConfig.DEBUG && intent.getBooleanExtra("autopilot", false)) q.append("&autopilot=1")
-        w.loadUrl(PageUpdates.PAGE_URL + q)
+        // A page update goes in as the document's text at the built-in page's address: the same origin, so the player's
+        // localStorage (secret, settings, wallet cache) is the same, and location.search still carries server and app.
+        // (WebView doesn't offer file:///android_asset loads to shouldInterceptRequest, so it can't be swapped on the way.)
+        val url = PageUpdates.PAGE_URL + q
+        if (html != null) w.loadDataWithBaseURL(url, html, "text/html", "utf-8", null) else w.loadUrl(url)
         watchBoot()
         // look for a newer page once this one is up (it is used from the next launch)
         main.postDelayed({ pageUpdates.check(serverUrl()) }, 8_000)
@@ -312,6 +313,8 @@ class MainActivity : AppCompatActivity() {
             "review" -> requestReview()
             "haptic" -> haptics.play(msg.optString("style"))
             "log" -> Log.i(TAG, "[page] " + msg.optString("text"))
+            // the page wants a fresh start (after deleting the account): load it again the way it was loaded
+            "reload" -> loadGame()
             // Recording and Nearby are iOS-only and the page hides them here; a stray call gets an answer
             // straight away instead of waiting out the page's timeout.
             "record" -> if (id >= 0) reply(JSONObject().put("id", id).put("ok", false).put("error", "Recording is only in the iPhone app"))
