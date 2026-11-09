@@ -226,8 +226,8 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
             bootTimer?.invalidate()
             PageUpdates.shared.booted()
         case "ready":
-            Store.shared.onPurchase = { [weak self] purchase in self?.reply(["type": "purchase", "purchase": purchase]) }
-            Task { await Store.shared.deliverUnfinished() }
+            // the page reached the server: it gets every paid purchase that isn't credited yet, including ones held since launch
+            Task { await Store.shared.pageReady { [weak self] purchase in self?.reply(["type": "purchase", "purchase": purchase]) } }
         case "products":
             let ids = msg["ids"] as? [String] ?? []
             Task {

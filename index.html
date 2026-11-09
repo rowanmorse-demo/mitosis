@@ -6746,7 +6746,7 @@ const Native=(()=>{
       setTimeout(()=>{if(waits.delete(id))rej(new Error('No reply from the app'));},type==='buy'||type==='signin'||type==='record'?600000:20000);});}
   window.MitosisBridge={onNative(m){if(!m||typeof m!=='object')return;
     if(m.id&&waits.has(m.id)){const w=waits.get(m.id);waits.delete(m.id);if(m.ok===false)w.rej(new Error(m.error||'Failed'));else w.res(m);return;}
-    if(m.type==='purchase'&&m.purchase)redeem(m.purchase).catch(()=>{});
+    if(m.type==='purchase'&&m.purchase)redeemOwed(m.purchase);
     if(m.type==='app')reportHitch('app '+m.text);
     if(m.type==='power'&&window.__onPower)window.__onPower(m);
     if(m.type==='nearby'){const N=window.__mitosisNet;if(m.ev==='join'||m.ev==='bye')nearLog(m.ev+' '+m.id);
@@ -7554,7 +7554,7 @@ $('featBuy').addEventListener('click',async()=>{
   if(skinHow(S)==='pass'){openPassAt(S.id);return;}
   if(skinHow(S))return; // a closed event, or not sold yet: the button says which
   if(!wallet.online){toast('ATP','Not connected','Skins can be bought once the server is reachable.');return;}
-  if(wallet.balance<S.price){storeNote=`${(S.price-wallet.balance).toLocaleString()} more for ${S.name}`;showStoreHint();shopTab('atp');return;}
+  if(wallet.balance<S.price){storeNeed={price:S.price,name:S.name};showStoreHint();shopTab('atp');return;}
   if(confirmSkin!==id||performance.now()-confirmT>4000){confirmSkin=id;confirmT=performance.now();renderFeat();setTimeout(()=>{if(confirmSkin===id)renderFeat();},4100);return;}
   confirmSkin=0;b.disabled=true;
   try{const w=await api('skins/buy',{skinId:id});applyWallet(w);settings.skin=id;saveSettings();syncPats();toast('ATP','Skin unlocked',S.name+' is yours');Native.haptic('success');}
@@ -7668,7 +7668,7 @@ function renderBpSheet(){if(!bpOn())return;const C=wallet.catalog.pass,pages=C.p
 async function bpBuy(bundle){
   const C=wallet.catalog.pass,price=bundle?C.bundle:C.premium,name=bundle?'Battle Bundle':'Battle Pass';
   if(!wallet.online){$('bpSheetMsg').textContent='Connect to buy the Battle Pass.';return;}
-  if(wallet.balance<price){bpSheet(false);openStore(`${(price-wallet.balance).toLocaleString()} more for the ${name}`);return;}
+  if(wallet.balance<price){bpSheet(false);openStore({price,name:'the '+name});return;}
   if(bpConfirm!==bundle||performance.now()-bpConfirmT>4000){bpConfirm=bundle;bpConfirmT=performance.now();renderBpSheet();setTimeout(()=>{if(bpConfirm===bundle)renderBpSheet();},4100);return;}
   bpConfirm=-1;for(const b of $('bpOffers').children)b.disabled=true;
   try{const w=await api('pass/premium',{bundle:!!bundle});applyWallet(w);bpSheet(false);Native.haptic('success');toast('Battle Pass',`${name} unlocked`,bundle?`+${C.bundleLevels} tiers. Every reward is yours to claim.`:'Every reward is yours to claim.');}
@@ -7759,11 +7759,12 @@ function renderEarn(){ // the placement payouts, from the server's rules when we
   $('earnList').innerHTML=[1,2,3,10,last].map(n=>`<li class="${n<=3?'m'+n:'top'}" aria-label="${ordinal(n)} place, ${at(n)} ATP">${n<=3?`<i class="md" aria-hidden="true">${n}</i>`:`<span aria-hidden="true">Top ${n}</span>`}<b aria-hidden="true">+${at(n)}</b><i class="sv-coin" aria-hidden="true"></i></li>`).join('');
 }
 // ATP store (packs are sold through the App Store / Google Play from inside the apps)
-let storeNote='',storeMsg='';
-const showStoreHint=()=>{const nd=$('storeNeed');nd.hidden=!storeNote;nd.innerHTML=storeNote?'<i class="sv-coin"></i>'+escH(storeNote):'';$('storeHint').textContent=storeMsg;};
-async function openStore(note){
-  storeNote=note||'';{const sel=PREMIUM.find(x=>x.id===shopSel);if(!sel||sel.pass){const w=PREMIUM.find(x=>x.id===settings.skin);shopSel=w&&!w.pass?w.id:PREMIUM[0].id;}}confirmSkin=0;
-  showCard('storeCard');shopTab(note?'atp':'skins');renderSkins();renderEarn();renderPacks([],true);
+let storeNeed=null,storeMsg=''; // storeNeed: what the player is short of ATP for ({price,name}); the note goes once the wallet covers it
+const showStoreHint=()=>{const nd=$('storeNeed'),short=storeNeed?storeNeed.price-wallet.balance:0;if(short<=0)storeNeed=null;
+  nd.hidden=!storeNeed;nd.innerHTML=storeNeed?'<i class="sv-coin"></i>'+escH(`${short.toLocaleString()} more for ${storeNeed.name}`):'';$('storeHint').textContent=storeMsg;};
+async function openStore(need){
+  storeNeed=need||null;{const sel=PREMIUM.find(x=>x.id===shopSel);if(!sel||sel.pass){const w=PREMIUM.find(x=>x.id===settings.skin);shopSel=w&&!w.pass?w.id:PREMIUM[0].id;}}confirmSkin=0;
+  showCard('storeCard');shopTab(need?'atp':'skins');renderSkins();renderEarn();renderPacks([],true);
   $('skinSec').scrollTop=0; // every visit starts at the top, not where the last one was left
   if(!Native.platform){renderPacks(null);storeMsg='Packs are sold in the iPhone and Android app';showStoreHint();return;}
   storeMsg='';showStoreHint();
@@ -7790,14 +7791,35 @@ function renderPacks(products,loading){
 let buying=false;
 async function buyPack(id){
   if(buying)return;buying=true;const btns=[...$('packs').children];btns.forEach(b=>b.disabled=true);
-  try{const r=await Native.call('buy',{productId:id});if(r&&r.purchase)await redeem(r.purchase);}
-  catch(e){toast('ATP','Purchase failed',e.message);}
+  let r;
+  try{r=await Native.call('buy',{productId:id});}
+  catch(e){toast('ATP','Purchase failed',e.message);} // nothing was charged
   finally{buying=false;btns.forEach(b=>b.disabled=false);}
+  if(r&&r.purchase)redeemOwed(r.purchase,true);
 }
-async function redeem(p){ // server verifies with Apple/Google, credits ATP, then the app finishes the transaction
+// A paid purchase becomes ATP once the server has checked it with Apple/Google and credited it; then the app finishes it.
+// Until then it is owed: if the server can't be reached it is retried here, and the app keeps it unfinished and hands it
+// over again on the next launch. The same purchase can arrive twice (the reply to buy, then StoreKit's update): one redeem.
+const owed=new Map(),paid=new Set();let owedTimer=0,owedTold=false;
+const payKey=p=>p.transactionId||p.purchaseToken||'';
+function redeemOwed(p,bought){const k=payKey(p);if(!k||owed.has(k))return;
+  if(paid.has(k)){Native.send({type:'finish',transactionId:p.transactionId||'',purchaseToken:p.purchaseToken||''});return;} // credited already this session
+  owed.set(k,{p,busy:false});payOwed(k,bought);}
+async function payOwed(k,bought){
+  const o=owed.get(k);if(!o||o.busy)return;o.busy=true;
+  try{await redeem(o.p);owed.delete(k);paid.add(k);}
+  catch(e){
+    if(e.status&&e.status<500&&e.status!==429){owed.delete(k);toast('ATP','Purchase not verified',e.message,6000);return;} // the server refused it; the app tries it again next launch
+    if(bought||!owedTold){owedTold=true;toast('ATP','Paid · ATP adds once online','Your ATP will be added as soon as the game reaches the server.',6000);}
+    if(!owedTimer)owedTimer=setTimeout(()=>{owedTimer=0;for(const k of owed.keys())payOwed(k);},20000);
+  }
+  finally{const o2=owed.get(k);if(o2)o2.busy=false;}
+}
+async function redeem(p){
   const w=await api(p.platform==='ios'?'iap/apple':'iap/google',p);applyWallet(w);
   Native.send({type:'finish',transactionId:p.transactionId||'',purchaseToken:p.purchaseToken||''});
-  if(w.credited){toast('ATP','ATP added',`+${w.credited} ATP — ${w.balance} in your wallet`);Native.haptic('success');}
+  if(w.credited){toast('ATP','ATP added',`+${w.credited} ATP — ${w.balance} in your wallet`);Native.haptic('success');owedTold=false;}
+  showStoreHint();
 }
 $('packs').addEventListener('click',e=>{const b=e.target.closest('.pack');if(b&&!b.disabled)buyPack(b.dataset.id);});
 const BISECT={tag:(location.search.match(/[?&]tag=([\w-]+)/)||[])[1]||''};for(const k of ['nocanvas','nohud','noeject','nosend','lowfx','norestart'])BISECT[k]=new RegExp('[?&]'+k+'=1').test(location.search);
@@ -8110,11 +8132,11 @@ function unlock(id){
   achGot.add(id);runAch.push(a.name);try{localStorage.setItem('mitosis.ach',JSON.stringify([...achGot]));}catch(e){}
   toast('Achievement',a.name,a.desc);sfx('ach');Native.haptic('success');
 }
-function toast(kind,title,desc){
+function toast(kind,title,desc,ms){ // ms: how long it stays (payments stay longer than the default)
   const el=document.createElement('div');el.className='toast';el.dataset.k=/^Mutation/.test(kind)?'mut':/^Achievement/.test(kind)?'ach':'info';el.dataset.kind=String(kind).split(' ')[0].toLowerCase();
   el.innerHTML=`<i class="ti" aria-hidden="true"></i><span class="tt"><span class="label">${esc(kind)}</span><b>${esc(title)}</b><span class="td">${esc(desc)}</span></span>`;
   const box=$('toasts');box.appendChild(el);while(box.children.length>(TOUCH_UI?1:3))box.firstChild.remove(); // phones: one at a time, briefer
-  setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),400);},TOUCH_UI?1600:3800); // phones: a quick one-line pill
+  setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),400);},ms||(TOUCH_UI?1600:3800)); // phones: a quick one-line pill
 }
 // HUD connection chip: signal bars and the ping while an online game runs slow, or "Reconnecting" once the server drops
 function netChip(){
