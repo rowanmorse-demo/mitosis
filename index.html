@@ -2284,6 +2284,16 @@ img.sk-im{display:block;-webkit-user-drag:none;user-select:none;-webkit-touch-ca
 #deathCard .rr-emb{background:none;clip-path:none;width:26px;height:26px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}#deathCard .rr-emb svg{width:100%;height:100%;display:block}
 #deathCard #dRank.promo .rr-head .rr-emb{animation:res-bump .6s cubic-bezier(.2,1.6,.4,1)}
 #deathCard .rr-delta{margin-left:auto;display:inline-flex;align-items:center;height:30px;padding:0 12px;border-radius:999px;font:800 16px/1 var(--display);font-variant-numeric:tabular-nums;opacity:0;transform:scale(.4)}
+#deathCard .rr-game{margin:1px 0 0;font:600 11px/1.25 var(--mono);letter-spacing:.06em;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#deathCard.final #dRank{border-color:rgba(160,225,215,.3);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 0 0 1px rgba(160,225,215,.08),0 14px 34px rgba(0,0,0,.4)}
+#deathCard.final .rr-delta{height:38px;padding:0 16px;font-size:22px}
+#deathCard.final .rr-track{display:none} /* out of lives the line below takes its place: how each life of the game moved the rating */
+#deathCard.final .rr-game{margin-top:4px;font-size:12px;color:var(--ink2,#b9cfcb)}
+#deathCard .rg-k,#deathCard .rl-short{display:none}
+@media (max-width:760px){ /* a small phone: the rating's kind moves into the line below, the chip shrinks, the lobby button says Lobby */
+  #deathCard.final .rr-k{display:none}#deathCard.final .rg-k{display:inline}#deathCard.final .rg-t{display:none}
+  #deathCard.final .rr-delta{height:32px;padding:0 12px;font-size:18px}
+  #deathCard .rl-long{display:none}#deathCard .rl-short{display:inline}}
 #deathCard .rr-delta.show{opacity:1;transform:none;transition:transform .5s cubic-bezier(.2,1.8,.4,1),opacity .2s}
 #deathCard .rr-delta.up{color:#04170f;background:linear-gradient(180deg,#9ff5cf,#45d394);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 0 22px rgba(95,224,168,.4)}
 #deathCard .rr-delta.eq{color:var(--ink);background:rgba(255,255,255,.1);box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
@@ -3391,6 +3401,7 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
           <div class="rr-head"><i class="rr-emb tier" aria-hidden="true"></i><span class="rr-tier tier"></span><span class="rr-next"></span></div>
           <div class="rr-mid"><b class="rr-num">0</b><span class="rr-k">vs players</span><span class="rr-delta"></span></div>
           <div class="rr-track"><div class="rr-bar"><i></i></div><i class="rr-emb rr-to tier" aria-hidden="true"></i></div>
+          <p class="rr-game" hidden></p>
         </div>
         <div class="res-card res-atp" id="dEarn" hidden><i class="coin" aria-hidden="true"></i><b class="ra-n"></b><span class="ra-l">ATP</span></div>
         <div class="res-card res-xp" id="dXp" hidden>
@@ -3406,7 +3417,7 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
         <div class="res-card rs"><b id="dTime">0:00</b><span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 10v3.5l2.3 1.6M9.5 3h5"/></svg>Time</span></div>
       </div>
       <div class="res-actions">
-        <button id="setup" class="res-lobby" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-6.5 8 6.5"/><path d="M6.5 9.5V19h11V9.5"/></svg>Lobby</button>
+        <button id="setup" class="res-lobby" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-6.5 8 6.5"/><path d="M6.5 9.5V19h11V9.5"/></svg><span id="resLobbyLbl">Lobby</span></button>
         <button id="resPlay" class="res-play" type="button"><svg class="rp-ico" id="resPlayIco" viewBox="0 0 24 24" aria-hidden="true"></svg><span class="rp-txt"><b id="resPlayLbl">Play again</b><small id="resPlaySub"></small></span><span class="rp-lives" id="resLives" hidden><i></i><i></i><i></i></span></button>
         <span id="again" hidden></span><!-- updateSpawnLock() writes its long label here; syncResPlay() draws the button -->
       </div>
@@ -6664,18 +6675,20 @@ async function econInit(){
 // sends its relay key, and the arena counts as against players only if the server saw another player alive beside us.
 // Bots move only the AI rating. Casual is reported only to a server that rates it (its catalogue has the win rules);
 // an older server would count it as ranked. Nearby is never reported.
-let runId=null,runPromise=null;
+let runId=null,runPromise=null,game=null; // game: this game's lives as the server answers them {key, n started, lives:[{d,to,ai}], miss, late}
 const isNearby=()=>{const N=window.__mitosisNet;return !!N&&N.mode==='nearby';};
 const casualRated=()=>!!(wallet.catalog&&wallet.catalog.wins),runMode=()=>local==='practice'?'casual':local?'bots':'arena',relayKey=()=>{const N=window.__mitosisNet;return(N&&N.key)||undefined;};
 const runOff=()=>isNearby()||(local==='practice'&&!casualRated());
-function econRunStart(){runId=null;if(runOff()){runPromise=null;return;}runPromise=api('run/start',{mode:runMode(),relay:relayKey(),skill:local==='practice'?settings.botSkill||'normal':local?'master':undefined}).then(r=>{runId=r.runId;return r.runId;}).catch(()=>null);}
+function econRunStart(){runId=null;if(runOff()){runPromise=null;return;}
+  const gk=(local||'arena')+':'+round.id;if(!game||game.key!==gk)game={key:gk,n:0,lives:[]};game.n++; /* a new round or mode is a new game */
+  runPromise=api('run/start',{mode:runMode(),relay:relayKey(),skill:local==='practice'?settings.botSkill||'normal':local?'master':undefined}).then(r=>{runId=r.runId;return r.runId;}).catch(()=>null);}
 async function econRunEnd(){
   if(!human)return;const unranked=isNearby()?'nearby':local==='practice'?'practice':'',off=runOff();resPrep(unranked,off);if(off)return;
   const s=human.stats,rep={claims:1,survived:Math.max(0,T-s.born),eaten:s.eaten|0,peak:Math.round(s.peak),bestRank:s.bestRank||999,place:s.place|0,of:s.of|0,life:Math.max(0,livesUsed()-1),show:1,relay:relayKey()};
   if(unranked)rep.skill=settings.botSkill||'normal'; // Casual: the bots' skill scales AI rating gains
   rep.name=human.name;const rid=runId||(runPromise?await runPromise:null);runId=null;runPromise=null;
-  if(!rid){showEarn(wallet.online?null:{k:'offline'});showXp(null);return;}
-  rep.runId=rid;const a=loadPending();a.push(rep);savePending(a);flushRuns();
+  if(!rid){if(game)game.miss=1;showEarn(wallet.online?null:{k:'offline'});showXp(null);resPlayRank();return;}
+  rep.runId=rid;if(game)rep.g=game.key;const a=loadPending();a.push(rep);savePending(a);flushRuns();
 }
 /* ---- results screen (#deathCard): placement, rating count-up, ATP reward, run stats and the play-again button ---- */
 const RES_ICO={
@@ -6857,12 +6870,21 @@ function tierAtRating0(r){ // the old metal tier and progress through it, from t
   if(!names.length||at.length!==names.length)return{name:wallet.tier||'',pct:0};let i=at.findIndex(v=>r<v);if(i<0)i=names.length-1;
   const hi=at[i],lo=i>0?at[i-1]:Math.min(at[0]-300,r);return{name:names[i],pct:isFinite(hi)?clamp((r-lo)/(hi-lo),0,1):1};}
 let rankAnim=0;
-function showRank(w){ // the server's answer for this run: count the rating it moved up (or down) once the results screen is in view. Bots move only the AI rating.
+function showRank(w,rep){ // the server's answer for this run: count the rating it moved up (or down) once the results screen is in view. Bots move only the AI rating.
   const ai=w.kind==='ai'||w.kind==='casual',d=ai?w.aiDelta:w.ratingDelta,to=ai?w.aiRating:w.rating;if(typeof d!=='number'||typeof to!=='number')return;
+  if(rep&&game&&rep.g===game.key)game.lives.push({d,to,ai});
   updateRunDelta(d,to,ai);rrKind(ai);resS.rank={d,to};if(resS.at)resPlayRank();}
-function resPlayRank(){const w=resS.rank,el=$('dRank');if(!w||el.hidden)return;clearTimeout(resS.t);
-  resS.t=setTimeout(()=>{if(resS.rank!==w)return;const d=w.d,to=w.to,from=to-d,a=tierAtRating(from),b=tierAtRating(to),chip=el.querySelector('.rr-delta');
-    rrSet(from,a);chip.textContent=d>0?'+'+d:d<0?'−'+-d:'±0';chip.className='rr-delta '+(d>0?'up':d<0?'dn':'eq');void chip.offsetWidth;chip.classList.add('show');el.classList.toggle('dn',d<0);
+const fmtDelta=d=>d>0?'+'+d:d<0?'\u2212'+-d:'\u00b10';
+function gameSum(){ // the whole game's rating change once the server has answered for every life: {d, to, ds (each life), ai} | null (not yet)
+  if(!game||game.miss||!game.lives.length||game.lives.length<game.n)return null;const L=game.lives,ai=L[L.length-1].ai,mine=L.filter(x=>x.ai===ai);
+  return{d:mine.reduce((n,x)=>n+x.d,0),to:L[L.length-1].to,ds:mine.map(x=>x.d),ai};}
+function resPlayRank(){let w=resS.rank;const el=$('dRank'),cap=el.querySelector('.rr-game'),fin=$('deathCard').classList.contains('final');
+  if(fin){const g=gameSum();cap.hidden=false;if(!g){cap.textContent=game&&(game.late||game.miss)?'Updates once online':'Waiting for result\u2026';return;}
+    w={d:g.d,to:g.to};rrKind(g.ai);cap.innerHTML='<span class="rg-k">'+(g.ai?'vs AI':'vs players')+' \u00b7 </span><span class="rg-t">This game \u00b7 </span>'+(g.ds.length>1?g.ds.map(fmtDelta).join(' '):'1 life');}
+  else cap.hidden=true;
+  if(!w||el.hidden)return;clearTimeout(resS.t);const tok=resS.rk=(resS.rk|0)+1;
+  resS.t=setTimeout(()=>{if(resS.rk!==tok)return;const d=w.d,to=w.to,from=to-d,a=tierAtRating(from),b=tierAtRating(to),chip=el.querySelector('.rr-delta');
+    rrSet(from,a);chip.textContent=fmtDelta(d);chip.className='rr-delta '+(d>0?'up':d<0?'dn':'eq');void chip.offsetWidth;chip.classList.add('show');el.classList.toggle('dn',d<0);
     const num=el.querySelector('.rr-num');num.classList.add('go');
     const finish=()=>{rrSet(to,b);num.classList.remove('go');num.classList.add('bump');if(a.name!==b.name){el.querySelector('.rr-next').textContent=d>0?'Promoted':'Demoted';el.classList.toggle('promo',d>0);if(d>0)sfx('ach');}};
     cancelAnimationFrame(rankAnim);if(RM||!d){finish();return;}
@@ -7162,12 +7184,16 @@ function syncResPlay(){ // the big button: Respawn while lives are left, Play ag
   let k='again',sub='',left=-1;const lv=$('resLives');
   if(queued){k='search';const ms=searchUntil-performance.now();sub='0:'+String(Math.max(0,Math.ceil(ms/1000))).padStart(2,'0');b.style.setProperty('--sp',(clamp(ms/(SEARCH_MAX*1000),0,1)*100).toFixed(1)+'%');}
   else if(local||!isOffline()){
-    if(!spawnOpen()){k='find';sub=spawnBlockReason()==='lives'?'No lives left':'Round closed';}
+    if(!spawnOpen())k='again'; // no respawn left: Play again starts the next game, or searches for one
     else if(local!=='practice'){left=MAX_RESPAWNS+1-livesUsed();if(left<=MAX_RESPAWNS&&$('deathCard').classList.contains('dead'))k='respawn';}}
   if(b.dataset.k!==k){b.dataset.k=k;b.className='res-play '+k;$('resPlayIco').innerHTML=RES_ICO[k==='search'||k==='find'?'find':k==='respawn'?'respawn':'play'];
     $('resPlayLbl').textContent={again:'Play again',respawn:'Respawn',find:'Find game',search:'Searching'}[k];}
   if($('resPlaySub').textContent!==sub)$('resPlaySub').textContent=sub;
   lv.hidden=k!=='respawn';if(!lv.hidden)[...lv.children].forEach((d,i)=>d.classList.toggle('on',i<left));
+  const card=$('deathCard'),fin=local!=='practice'&&!spawnOpen(); // out of respawns: the whole game's rating, Play again or Return to lobby
+  if(card.classList.contains('final')!==fin){card.classList.toggle('final',fin);const t=$('dTitle');
+    if(fin){card.dataset.t0=t.textContent;if(spawnBlockReason()==='lives'&&card.classList.contains('dead'))t.textContent='Out of lives';}else if(card.dataset.t0)t.textContent=card.dataset.t0;
+    $('resLobbyLbl').innerHTML=fin?'<span class="rl-long">Return to lobby</span><span class="rl-short">Lobby</span>':'Lobby';clearTimeout(resS.t);cancelAnimationFrame(rankAnim);resPlayRank();}
 }
 setInterval(syncResPlay,250);
 function maybeAskReview(place){ // after a top-3 finish, now and then, let iOS offer an App Store rating (iOS itself shows it at most 3 times a year)
@@ -7184,12 +7210,12 @@ async function flushRuns(){ // report finished runs; keep them queued while the 
   try{let a=loadPending();while(a.length){const rep=a[0];
     try{const w=await api('run/end',rep);applyWallet(w);if(rep.show){const R=(wallet.catalog&&wallet.catalog.rules)||{};const W=wallet.catalog&&wallet.catalog.wins,cas=w.kind==='casual',pl=rep.place|0;
       const sk=cas&&w.skill&&SKILL[w.skill]?SKILL[w.skill].label:'';
-      showEarn(w.payout?{k:'atp',n:w.payout,full:!!(sk&&w.winBonus>0&&!w.winCapped),tag:w.winCapped?'capped':w.winBonus>0?(sk?sk+' '+(pl===1?'win':ordinal(pl)):pl===1?'Win':'Top 3'):''}:{k:'none',why:w.winCapped?'Daily cap':cas?(W&&rep.survived<W.minSec?`Survive ${Math.round(W.minSec/60)} min`:'Top 3 only'):rep.survived<(R.minSec||20)?`Survive ${R.minSec||20}s`:`Top ${(R.byRank||[[30]]).slice(-1)[0][0]} only`});showRank(w);showXp(w);
+      showEarn(w.payout?{k:'atp',n:w.payout,full:!!(sk&&w.winBonus>0&&!w.winCapped),tag:w.winCapped?'capped':w.winBonus>0?(sk?sk+' '+(pl===1?'win':ordinal(pl)):pl===1?'Win':'Top 3'):''}:{k:'none',why:w.winCapped?'Daily cap':cas?(W&&rep.survived<W.minSec?`Survive ${Math.round(W.minSec/60)} min`:'Top 3 only'):rep.survived<(R.minSec||20)?`Survive ${R.minSec||20}s`:`Top ${(R.byRank||[[30]]).slice(-1)[0][0]} only`});showRank(w,rep);showXp(w);
       const qd=Array.isArray(w.questsDone)?w.questsDone:[],up=w.passUp>0&&bpOn()?`Tier ${w.pass.level}, +${w.passUp*wallet.catalog.pass.stars} Battle Stars`:'';
       const qt=Array.isArray(w.questTiers)?w.questTiers:[],fin=[...qd,...qt.map(t=>({...t,period:'perm'}))];
       if(fin.length&&qsOn()){for(const q of fin)bqJust.add(q.period+'/'+q.id);toast('Quests',`${fin.length>1?fin.length+' quests':'Quest'} complete · claim ${fin.reduce((n,q)=>n+(q.atp|0),0).toLocaleString()} ATP`,fin.length>1?fin.map(q=>q.text).join(' · '):fin[0].text);} // phones show only the title
       else if(up)toast('Battle Pass',`Tier ${w.pass.level}`,`+${w.passUp*wallet.catalog.pass.stars} Battle Stars to spend`);}}
-    catch(e){if(!e.status||e.status>=500){if(rep.show){showEarn({k:'later'});showXp({later:1});}break;}}
+    catch(e){const mine=game&&rep.g===game.key;if(!e.status||e.status>=500){if(mine)game.late=1;if(rep.show){showEarn({k:'later'});showXp({later:1});}resPlayRank();break;}if(mine){game.miss=1;resPlayRank();}}
     a.shift();savePending(a);}}
   finally{flushing=false;}
 }
@@ -9709,7 +9735,7 @@ $('copyInvite').addEventListener('click',()=>{const b=$('copyInvite'),i=$('invit
 /* ================= input ================= */
 let touchId=null;
 // ?debug=1: a handle on the game state for headless tests (movement, merging); never used by the game itself
-if(/[?&]debug=1/.test(location.search))window.__mt={get human(){return human;},get players(){return players;},get isHost(){return isHost;},get cam(){return cam;},get T(){return T;},split:()=>split(human),sfx:(k,a)=>sfx(k,a),audio:()=>({state:actx&&actx.state,live:liveNodes}),netReport:()=>netReport()};
+if(/[?&]debug=1/.test(location.search))window.__mt={get human(){return human;},get players(){return players;},get isHost(){return isHost;},get cam(){return cam;},get T(){return T;},split:()=>split(human),sfx:(k,a)=>sfx(k,a),audio:()=>({state:actx&&actx.state,live:liveNodes}),netReport:()=>netReport(),kill:()=>{if(human&&human.alive)killed(human,players.find(p=>p!==human&&p.alive)||human);},lives:()=>({used:livesUsed(),max:MAX_RESPAWNS+1,open:spawnOpen(),why:spawnBlockReason()})};
 cv.addEventListener('pointermove',e=>{if(e.pointerType==='touch'&&e.pointerId!==touchId)return;pointer.x=e.clientX;pointer.y=e.clientY;});
 cv.addEventListener('pointerdown',e=>{if(e.pointerType==='touch'){if(touchId!==null)return;touchId=e.pointerId;try{cv.setPointerCapture(e.pointerId);}catch(_){}}pointer.x=e.clientX;pointer.y=e.clientY;});
 const release=e=>{if(e.pointerId===touchId){touchId=null;pointer.x=W/2;pointer.y=H/2;}};
