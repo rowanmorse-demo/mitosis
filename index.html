@@ -10571,6 +10571,160 @@ function netReport(){
 setInterval(netReport,180000);document.addEventListener('visibilitychange',()=>{if(document.hidden)netReport();});
 function perfHudTick(){if(!settings.perfHud)return;const N=window.__mitosisNet,fm=median(FG.slice(-90)),fps=fm?Math.round(1000/fm):0,p=N&&N.rtt!=null&&N.mode!=='nearby'?Math.round(N.rtt):null;
   $('perfHud').innerHTML=`<b class="${fps>=50?'ok':fps>=35?'warn':'bad'}">${fps}</b> fps`+(p==null?'':` · <b class="${p<90?'ok':p<160?'warn':'bad'}">${p}</b> ms`);}
+/* ---- push notifications (app: ios/Mitosis/Push.swift; server: push.js) ----
+   The app never asks iOS for permission at launch. The page asks, with its own card first, when notifications mean
+   something: after the player makes a friend or invites one, after a few games, or when they switch them on in
+   Settings › Notifications. Only "Turn on" shows iOS's own prompt, which iOS shows once ever. With permission the app
+   hands over its device token, and the page registers it with the server along with the time zone (no news at night).
+   A tap on a notification opens the screen its link names (pushRoute); one that arrives while the game is open is a
+   toast. Apps without this (older builds, Android for now, the website) never answer, so none of it shows there. */
+const PUSH={st:null,token:'',env:'',view:null,regFor:'',busy:false,noServer:false,retryAt:0,route:null,routeUntil:0,played:false,lobbyAt:0,friends:-1,invited:-1};
+let pushMem={asked:0,at:0,games:0};try{Object.assign(pushMem,JSON.parse(localStorage.getItem('mitosis.push')||'{}'));}catch(e){}
+const pushSave=()=>{try{localStorage.setItem('mitosis.push',JSON.stringify(pushMem));}catch(e){}};
+const pushAllowed=()=>PUSH.st==='authorized'||PUSH.st==='provisional'||PUSH.st==='ephemeral';
+const pushOff=()=>(PUSH.view&&PUSH.view.off)||[];
+const pushTz=()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone||'';}catch(e){return'';}};
+async function pushState(){
+  if(!Native.platform)return;
+  try{const r=await Native.call('push',{cmd:'state'});PUSH.st=r.status||null;if(r.token&&pushAllowed())pushToken(r.token,r.env);}catch(e){}
+  pushRender();
+}
+async function pushToken(token,env){
+  PUSH.token=token;PUSH.env=env||'';if(!wallet.online||!wallet.playerId||PUSH.busy||PUSH.noServer)return; // pushTick tries again once the session is in
+  if(PUSH.regFor===wallet.playerId&&PUSH.regTok===token)return; // already registered for this player
+  PUSH.busy=true;const who=wallet.playerId;
+  try{PUSH.view=await api('push/register',{platform:Native.platform,token,env:PUSH.env,app:APP_VER,tz:pushTz()});PUSH.regFor=who;PUSH.regTok=token;}
+  catch(e){if(e.status===404)PUSH.noServer=true;else{PUSH.regFor='';PUSH.retryAt=Date.now()+30000;}}
+  finally{PUSH.busy=false;}
+  pushRender();
+}
+async function pushPrefs(off){
+  const was=PUSH.view;if(was)PUSH.view={...was,off};pushRender();
+  try{PUSH.view=await api('push/prefs',{off});}catch(e){PUSH.view=was;toast('Notifications',"Couldn't save that",e.status===0?'No connection to the server':e.message||'');if(e.status===404)PUSH.noServer=true;}
+  pushRender();
+}
+// native → page (the bridge's messages without an id)
+{const on=window.MitosisBridge&&window.MitosisBridge.onNative;if(on)window.MitosisBridge.onNative=m=>{if(m&&m.type==='push'&&!m.id){pushEvent(m);return;}on(m);};}
+function pushEvent(m){
+  if(m.ev==='token'){pushToken(m.token,m.env);pushState();}
+  else if(m.ev==='open')pushRoute(m.link);
+  else if(m.ev==='foreground'){toast(PUSH_LABEL[m.kind]||'Mitosis',m.title||'',m.body||'');if(m.kind==='party'||m.kind==='friends')socNext=0;}
+  else if(m.ev==='error')Native.send({type:'log',text:'push registration failed: '+m.text});
+}
+// A tap: open the screen once the game can show it. Not in the middle of a match (it waits for the lobby), and the
+// battle pass and quests wait for the wallet to come in (up to 20 s, else the lobby).
+const PUSH_LABEL={party:'Party',friends:'Friends',quests:'Quests',pass:'Battle Pass',shop:'Shop'};
+const PUSH_TABS={friends:'friendsBtn',shop:'shopBtn',ranks:'rankBtn',profile:'profBtn',settings:'setBtn'};
+const PUSH_MENU=new Set(['startCard','friendsCard','storeCard','passCard','lookCard','rankCard','settingsCard','profileCard']);
+function pushRoute(link){
+  PUSH.route=String(link||'home');PUSH.routeUntil=Date.now()+600000;PUSH.routeAt=Date.now();
+  if(mode==='play'&&human&&human.alive)toast('Notifications','Opens after this game','');
+  pushGo();
+}
+function pushGo(){
+  const L=PUSH.route;if(!L)return;
+  if(Date.now()>PUSH.routeUntil){PUSH.route=null;return;}
+  if((mode==='play'&&human&&human.alive)||!PUSH_MENU.has(shownCard))return;
+  if((L==='pass'||L==='quests')&&!bpOn()){if(Date.now()-PUSH.routeAt<20000)return;PUSH.route=null;showCard('startCard');return;}
+  PUSH.route=null;
+  if(L==='pass'||L==='quests'){openPass();if(L==='quests'){const q=document.querySelector('#bpMode [data-m="quests"]');if(q&&!$('bpMode').hidden)q.click();}}
+  else if(PUSH_TABS[L]&&$(PUSH_TABS[L]))$(PUSH_TABS[L]).click();
+  else showCard('startCard');
+}
+// The game's own card before iOS's prompt. why: 'friends' or 'games'.
+function pushAsk(why){
+  let c=$('pushCard');
+  if(!c){
+    const css=document.createElement('style');css.textContent=`#overlay>#pushCard.modal{max-width:380px;gap:14px}#pushCard>h2{font-size:30px}
+#pushCard .ov-badge{color:#ffcf5c;background:radial-gradient(circle at 50% 30%,rgba(255,207,92,.3),rgba(255,207,92,.08) 70%);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 0 0 1px rgba(255,207,92,.35),0 10px 30px rgba(255,207,92,.2)}
+#pushCard #pushBody{margin:-4px 0 0;font:500 14.5px/1.45 var(--display);color:var(--muted);text-wrap:balance}#pushCard #pushRow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+@media (orientation:landscape) and (max-height:520px){#pushCard>h2{font-size:26px}#overlay>#pushCard.modal{gap:10px}#pushCard #pushBody{font-size:13.5px}#pushCard .ov-badge{width:50px;height:50px}}`;
+    document.head.appendChild(css);
+    c=document.createElement('div');c.className='card panel modal';c.id='pushCard';c.hidden=true;c.setAttribute('role','dialog');c.setAttribute('aria-modal','true');c.setAttribute('aria-labelledby','pushTitle');
+    c.innerHTML=`<span class="ov-badge" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.6 2.2H4.4z"/><path d="M10 20.6a2.1 2.1 0 0 0 4 0"/></svg></span><h2 id="pushTitle"></h2><p class="hint" id="pushBody"></p>
+<div class="row" id="pushRow"><button class="ghost ov-btn" id="pushLater" type="button">Not now</button><button class="primary ov-btn" id="pushYes" type="button">Turn on</button></div>`;
+    $('overlay').appendChild(c);
+    const close=()=>{c.hidden=true;if(shownCard==='pushCard')showCard(PUSH.back||'startCard');};
+    $('pushLater').addEventListener('click',()=>{Native.haptic('light');close();});
+    $('pushYes').addEventListener('click',async()=>{Native.haptic('light');close();await pushTurnOn();});
+  }
+  $('pushTitle').textContent=why==='friends'?'Know when friends invite you':'Turn on notifications?';
+  $('pushBody').textContent=why==='friends'?'Mitosis can tell you when a friend invites you to a party, even with the game closed. A few a day at most, never at night.'
+    :'Hear when a friend invites you to play and when something new is waiting for you. A few a day at most, never at night.';
+  pushMem.asked++;pushMem.at=Date.now();pushSave();
+  PUSH.back=shownCard;showCard('pushCard');c.hidden=false;
+}
+async function pushTurnOn(){
+  if(PUSH.st==='denied'){Native.call('push',{cmd:'settings'}).catch(()=>{});return;} // iOS won't ask twice: its Settings can
+  try{const r=await Native.call('push',{cmd:'ask'});PUSH.st=r.status||PUSH.st;}catch(e){}
+  if(pushAllowed()){if(pushOff().includes('all'))pushPrefs(pushOff().filter(k=>k!=='all'));toast('Notifications','Notifications on','Change them any time in Settings');}
+  pushRender();
+}
+// Settings › Notifications, built once in the look of the Sound section beside it (or in #pushSec if the page has one)
+const PUSH_ICONS={all:'<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.6 2.2H4.4z"/><path d="M10 20.6a2.1 2.1 0 0 0 4 0"/>',
+  party:'<circle cx="8.5" cy="9" r="3.2"/><circle cx="16" cy="9.5" r="2.7"/><path d="M3 19a5.5 5.5 0 0 1 11 0M14 14.6a4.6 4.6 0 0 1 7 4.4"/>',
+  friends:'<circle cx="9.5" cy="8.5" r="3.5"/><path d="M3 19.5a6.5 6.5 0 0 1 13 0M19 8v6M16 11h6"/>',
+  quests:'<rect x="5" y="4" width="14" height="17" rx="2.5"/><path d="M9 9.5l1.5 1.5L13.5 8M9 15.5h6"/>',
+  pass:'<path d="M12 3.2l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.6l-5.2 2.8 1-5.9-4.3-4.1 5.9-.8z"/>',
+  shop:'<path d="M5.5 8h13l-1 12.5h-11z"/><path d="M9 10.5V7a3 3 0 0 1 6 0v3.5"/>'};
+function pushSettings(){
+  let sec=$('pushSec');if(sec&&sec.dataset.built)return sec;
+  const seg=$('sndSeg'),snd=seg&&(seg.closest('.st-grp,.sg,.ds-sec')||seg.closest('section')),tpl=seg&&seg.closest('.srow');if(!snd||!tpl)return null; // the Sound group
+  if(!sec){sec=snd.cloneNode(false);sec.id='pushSec';snd.after(sec);}else if(!sec.className)sec.className=snd.className; // a spot the Settings page keeps for it has its own class
+  sec.innerHTML='';sec.hidden=true;
+  const head=snd.firstElementChild.cloneNode(true),word=[head,...head.querySelectorAll('*')].reverse().find(e=>!e.children.length&&e.textContent.trim());
+  if(word)word.textContent='Notifications';sec.appendChild(head);
+  const box=snd.querySelector('.sg-list,.st-list'),list=box?box.cloneNode(false):document.createElement('div');sec.appendChild(list);
+  const row=(key,label)=>{const r=tpl.cloneNode(true);r.removeAttribute('id');r.removeAttribute('title');r.hidden=false;r.dataset.push=key;
+    r.querySelector('.sl').textContent=label;const i=r.querySelector('.si svg');if(i)i.innerHTML=PUSH_ICONS[key]||PUSH_ICONS.all;
+    const sg=r.querySelector('.seg');sg.id=key==='all'?'pushSeg':'pushSeg-'+key;
+    for(const b of sg.children){const v=b.dataset.s;for(const k of Object.keys(b.dataset))delete b.dataset[k];b.dataset.v=v;b.setAttribute('aria-pressed','false');}
+    sg.addEventListener('click',e=>{const b=e.target.closest('button');if(b&&b.getAttribute('aria-pressed')!=='true'){Native.haptic('selection');pushFlip(key,b.dataset.v==='1');}});
+    // a tap anywhere else on the row flips it, like the Settings page's own rows (whose handler is bound before these exist)
+    r.addEventListener('click',e=>{if(e.target.closest('.seg'))return;e.stopPropagation();const o=sg.querySelector('button:not([aria-pressed="true"])');if(o)o.click();}); // the switch itself is handled above
+    list.appendChild(r);return r;};
+  row('all','Notifications');
+  const foot=document.createElement('p');foot.className=list.classList.contains('st-list')?'st-note':'sg-foot';foot.id='pushFoot';sec.appendChild(foot); // the note style of whichever Settings look
+  sec.dataset.built='1';sec._row=row;return sec;
+}
+function pushFlip(key,on){
+  if(key==='all'){
+    if(on&&!pushAllowed()){pushTurnOn();return;}
+    pushPrefs(on?pushOff().filter(k=>k!=='all'):[...new Set([...pushOff(),'all'])]);return;
+  }
+  pushPrefs(on?pushOff().filter(k=>k!==key):[...new Set([...pushOff(),key])]);
+}
+function pushRender(){
+  const sec=PUSH.st?pushSettings():$('pushSec');if(!sec)return;
+  sec.hidden=!PUSH.st||PUSH.st==='unknown'||PUSH.noServer;if(sec.hidden)return; // a server without push.js: nothing to switch on
+  const kinds=(PUSH.view&&PUSH.view.kinds)||[];
+  for(const k of kinds)if(!sec.querySelector(`[data-push="${k.id}"]`))sec._row(k.id,k.name);
+  const off=pushOff(),all=pushAllowed()&&!off.includes('all');
+  for(const r of sec.querySelectorAll('[data-push]')){const k=r.dataset.push,on=k==='all'?all:!off.includes(k);
+    if(k!=='all')r.hidden=!all||!kinds.some(x=>x.id===k);
+    for(const b of r.querySelectorAll('.seg button'))b.setAttribute('aria-pressed',String((b.dataset.v==='1')===on));}
+  $('pushFoot').textContent=PUSH.st==='denied'?'Notifications are off for Mitosis in iOS Settings. Switch on to open them there.'
+    :all?'Choose what Mitosis tells you about. A few a day at most, never at night.'
+    :'Know when a friend invites you to play, even with the game closed.';
+}
+// once a second: open a tapped notification's screen when it can be, keep the token with the current player, and
+// pick the moment to ask (at most 3 times, 3 days apart, never before 3 games or a friend)
+function pushTick(){
+  pushGo();
+  const c=$('pushCard');if(c&&!c.hidden&&shownCard!=='pushCard')c.hidden=true; // something else took over the screen
+  if(!PUSH.st)return;
+  if(Date.now()<PUSH.retryAt)return;
+  if(PUSH.token&&pushAllowed()&&wallet.online&&wallet.playerId&&PUSH.regFor!==wallet.playerId)pushToken(PUSH.token,PUSH.env); // signed in or out: the device follows the player
+  if(!PUSH.view&&wallet.online&&wallet.playerId&&!PUSH.busy&&!PUSH.noServer){PUSH.busy=true;api('push/prefs',{}).then(v=>{PUSH.view=v;},e=>{if(e.status===404)PUSH.noServer=true;else PUSH.retryAt=Date.now()+30000;}).finally(()=>{PUSH.busy=false;pushRender();});}
+  if(mode==='play'&&human)PUSH.played=true;
+  else if(PUSH.played&&shownCard==='startCard'){PUSH.played=false;pushMem.games++;pushSave();PUSH.lobbyAt=Date.now();}
+  const f=soc&&soc.friends?soc.friends.length:-1,inv=soc&&soc.party&&soc.party.invited?soc.party.invited.length:0;
+  const madeFriend=PUSH.friends>=0&&f>PUSH.friends,invited=PUSH.invited>=0&&inv>PUSH.invited;if(f>=0){PUSH.friends=f;PUSH.invited=inv;}
+  if(PUSH.st!=='notDetermined'||PUSH.noServer||pushMem.asked>=3||Date.now()-pushMem.at<3*864e5)return;
+  if((madeFriend||invited)&&shownCard==='friendsCard')pushAsk('friends');
+  else if(pushMem.games>=3&&shownCard==='startCard'&&PUSH.lobbyAt&&Date.now()-PUSH.lobbyAt>1500&&Date.now()-PUSH.lobbyAt<15000){PUSH.lobbyAt=0;pushAsk('games');}
+}
+if(Native.platform){setInterval(pushTick,1000);pushState();document.addEventListener('visibilitychange',()=>{if(!document.hidden)pushState();});}
 /* ================= loop ================= */
 init();
 for(let i=0;i<90;i++)step(1/30);

@@ -1,6 +1,8 @@
 # Deploy the game server from GitHub, for networks that can't reach it directly (ship or school Wi-Fi).
 # Runs only when started by hand: Actions › Deploy › Run workflow, or `gh workflow run deploy.yml`.
 # Needs the repository secret DEPLOY_SSH_KEY: the private key that logs in as ubuntu@51.81.81.166.
+# Optional secrets APNS_KEY (the .p8 file) and APNS_KEY_ID (its 10-character Key ID) install the push notification key
+# on the server (.secrets/apns.p8 and two lines in .env, see docs/PUSH.md). Without them nothing about push changes.
 name: Deploy
 
 on:
@@ -15,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Pull main and restart the container
+      - name: Log in to the server
         env:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
         run: |
@@ -23,6 +25,22 @@ jobs:
           printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy
           chmod 600 ~/.ssh/deploy
           echo '51.81.81.166 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBYWTgJ31gp1V88ymqZ31K+NM8O+/8gPgwM6KoAP5Sux' > ~/.ssh/known_hosts
+
+      - name: Install the push notification key (only when the APNS_KEY secrets are set)
+        env:
+          APNS_KEY: ${{ secrets.APNS_KEY }}
+          APNS_KEY_ID: ${{ secrets.APNS_KEY_ID }}
+        run: |
+          if [ -z "$APNS_KEY" ]; then echo "No APNS_KEY secret: push key left as it is"; exit 0; fi
+          if ! printf '%s' "$APNS_KEY_ID" | grep -Eq '^[A-Z0-9]{10}$'; then echo "::error::APNS_KEY_ID must be the 10-character Key ID"; exit 1; fi
+          if ! printf '%s' "$APNS_KEY" | grep -q 'BEGIN PRIVATE KEY'; then echo "::error::APNS_KEY must be the whole .p8 file"; exit 1; fi
+          ssh="ssh -i $HOME/.ssh/deploy -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=20 ubuntu@51.81.81.166"
+          printf '%s\n' "$APNS_KEY" | $ssh 'sudo install -d -m 700 /opt/mitosis/.secrets && sudo tee /opt/mitosis/.secrets/apns.p8 >/dev/null && sudo chmod 600 /opt/mitosis/.secrets/apns.p8'
+          $ssh "cd /opt/mitosis && sudo touch .env && sudo sed -i '/^APNS_KEY_ID=/d;/^APNS_KEY_FILE=/d' .env && printf 'APNS_KEY_ID=%s\nAPNS_KEY_FILE=/app/.secrets/apns.p8\n' $APNS_KEY_ID | sudo tee -a .env >/dev/null"
+          echo "Push key $APNS_KEY_ID installed"
+
+      - name: Pull main and restart the container
+        run: |
           ssh -i ~/.ssh/deploy -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=20 \
             ubuntu@51.81.81.166 "cd /opt/mitosis && sudo ./deploy.sh"
           rm -f ~/.ssh/deploy
