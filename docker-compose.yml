@@ -31,5 +31,27 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
+  # HTTPS for mitosisgame.com (Caddyfile), for a server with nothing else on ports 80 and 443: COMPOSE_PROFILES=web in
+  # .env (or docker compose --profile web up -d). The OVH server already runs another project's Caddy on 80/443, so
+  # there that Caddy passes mitosisgame.com to port 3000 instead and this stays off (README › Website).
+  caddy:
+    image: caddy:2-alpine
+    container_name: caddy
+    profiles: ["web"]
+    depends_on: [mitosis]
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:-mitosisgame.com}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./site:/srv/site:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    restart: unless-stopped
 volumes:
   mitosis-data:
+  caddy-data:
+  caddy-config:

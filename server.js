@@ -42,6 +42,7 @@ const ROUTES = {
   'POST /api/session': { fn: economy.handlers.session, auth: false },
   'POST /api/run/start': { fn: (store, body, p) => { const r = economy.handlers.runStart(store, body, p); players.runStarted(r.runId); runRelay(r.runId, body.relay); return r; }, auth: true },
   'POST /api/run/end': { fn: (store, body, p) => { const r = economy.handlers.runEnd(store, body, p, { metSince: t => metSince(body.runId, body.relay, t) }); players.runEnded(body.runId); runConns.delete(String(body.runId)); return r; }, auth: true },
+  'POST /api/run/life': { fn: economy.handlers.buyLife, auth: true },   // an extra life for ATP (economy.js EXTRA_LIFE)
   'POST /api/skins/buy': { fn: economy.handlers.buySkin, auth: true },
   'POST /api/iap/apple': { fn: economy.handlers.iapApple, auth: true },
   'POST /api/iap/google': { fn: economy.handlers.iapGoogle, auth: true },
@@ -181,9 +182,37 @@ async function api(req, res, url) {
   }
 }
 
+// The website (site/, built by site-src/build.js) for requests addressed to mitosisgame.com, which reach this server
+// through a reverse proxy that handles HTTPS (see README › Website). Its home page is at /, the game at /play, and the
+// game's own paths (/ws, /api, /updates, /health, /admin) work as on any address. Requests to the server's IP address
+// (the apps, and http://<server>:3000) are unchanged: the game at /.
+const SITE_DIR = path.join(__dirname, 'site');
+const SITE_HOSTS = new Set((process.env.SITE_HOSTS || 'mitosisgame.com,www.mitosisgame.com').split(',').map(h => h.trim().toLowerCase()).filter(Boolean));
+const SITE_TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.webp': 'image/webp', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8', '.xml': 'application/xml' };
+const isGamePath = url => url === '/ws' || url === '/health' || url === '/admin' || /^\/(api|updates|admin)\//.test(url);
+/** Answers a request for the website and returns true, or returns false to let the game's routes handle it. */
+function sendSite(req, res, url) {
+  const host = String(req.headers.host || '').toLowerCase().replace(/:\d+$/, '');
+  if (!SITE_HOSTS.has(host) || isGamePath(url)) return false;
+  if (host.startsWith('www.')) { res.writeHead(301, { Location: 'https://' + host.slice(4) + (req.url || '/') }); res.end(); return true; }
+  if (url === '/play' || url === '/play/') { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }); res.end(page); return true; }
+  if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405, { Allow: 'GET, HEAD' }); res.end(); return true; }
+  let rel; try { rel = decodeURIComponent(url); } catch (e) { rel = '/'; }
+  const base = path.normalize(path.join(SITE_DIR, rel));
+  const file = base.startsWith(SITE_DIR) && [base, base + '.html', path.join(base, 'index.html')].find(f => { try { return fs.statSync(f).isFile(); } catch (e) { return false; } });
+  const out = file || path.join(SITE_DIR, '404.html');
+  fs.readFile(out, (err, buf) => {
+    if (err) { res.writeHead(404, { 'Content-Type': 'text/plain' }); res.end('Not found'); return; }
+    res.writeHead(file ? 200 : 404, { 'Content-Type': SITE_TYPES[path.extname(out)] || 'application/octet-stream', 'Cache-Control': /[/\\]assets[/\\]/.test(out) ? 'public, max-age=86400' : 'no-cache' });
+    res.end(req.method === 'HEAD' ? undefined : buf);
+  });
+  return true;
+}
+
 const server = http.createServer((req, res) => {
   const url = (req.url || '/').split('?')[0];
   if (url.startsWith('/api/')) { api(req, res, url); return; }
+  if (sendSite(req, res, url)) return;
   if (url === '/' || url === '/index.html') {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
     res.end(page);

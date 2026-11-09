@@ -2295,6 +2295,40 @@ img.sk-im{display:block;-webkit-user-drag:none;user-select:none;-webkit-touch-ca
 #deathCard .rr-emb{background:none;clip-path:none;width:26px;height:26px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}#deathCard .rr-emb svg{width:100%;height:100%;display:block}
 #deathCard #dRank.promo .rr-head .rr-emb{animation:res-bump .6s cubic-bezier(.2,1.6,.4,1)}
 #deathCard .rr-delta{margin-left:auto;display:inline-flex;align-items:center;height:30px;padding:0 12px;border-radius:999px;font:800 16px/1 var(--display);font-variant-numeric:tabular-nums;opacity:0;transform:scale(.4)}
+#deathCard .rr-game{margin:1px 0 0;font:600 11px/1.25 var(--mono);letter-spacing:.06em;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#deathCard.final #dRank{border-color:rgba(160,225,215,.3);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 0 0 1px rgba(160,225,215,.08),0 14px 34px rgba(0,0,0,.4)}
+#deathCard.final .rr-delta{height:38px;padding:0 16px;font-size:22px}
+#deathCard.final .rr-track{display:none} /* out of lives the line below takes its place: how each life of the game moved the rating */
+#deathCard.final .rr-game{margin-top:4px;font-size:12px;color:var(--ink2,#b9cfcb)}
+#deathCard .rg-k,#deathCard .rl-short{display:none}
+@media (max-width:760px){ /* a small phone: the rating's kind moves into the line below, the chip shrinks, the lobby button says Lobby */
+  #deathCard.final .rr-k{display:none}#deathCard.final .rg-k{display:inline}#deathCard.final .rg-t{display:none}
+  #deathCard.final .rr-delta{height:32px;padding:0 12px;font-size:18px}
+  #deathCard .rl-long{display:none}#deathCard .rl-short{display:inline}}
+/* the extra-life offer (economy.js EXTRA_LIFE): it takes the tiles' place, and its buttons the usual ones', until it is taken or runs out */
+#deathCard .res-offer,#deathCard .res-actions .xl-no,#deathCard .res-actions .xl-buy{display:none} /* (outranks the buttons' own display) */
+#deathCard.offer .res-top,#deathCard.offer #setup,#deathCard.offer #resPlay{display:none}
+#deathCard.offer .res-actions .xl-no,#deathCard.offer .res-actions .xl-buy{display:flex}
+#deathCard.offer .res-offer{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:16px;padding:18px 20px;border-radius:var(--r);border:1px solid rgba(255,130,165,.42);
+  background:radial-gradient(120% 140% at 0% 0%,rgba(255,92,138,.22),rgba(255,92,138,0) 60%),linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.02)),rgba(14,16,22,.9);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 0 32px rgba(255,92,138,.18),0 14px 34px rgba(0,0,0,.4)}
+#deathCard .xo-ring{position:relative;width:64px;height:64px;display:grid;place-items:center}
+#deathCard .xo-ring svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+#deathCard .xo-bg{fill:rgba(0,0,0,.35);stroke:rgba(255,255,255,.1);stroke-width:4}
+#deathCard .xo-fg{fill:none;stroke:#ff6e97;stroke-width:4.5;stroke-linecap:round;stroke-dasharray:100;filter:drop-shadow(0 0 6px rgba(255,92,138,.7))}
+#deathCard .xo-ring b{position:relative;font:800 26px/1 var(--display);font-variant-numeric:tabular-nums;color:#fff}
+#deathCard .xo-t{display:grid;gap:5px;min-width:0}#deathCard .xo-t b{font:800 24px/1 var(--display);letter-spacing:-.02em;color:#fff}
+#deathCard .xo-t span{font:600 11px/1.2 var(--mono);letter-spacing:.06em;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#deathCard .xo-p{display:grid;justify-items:end;gap:6px}#deathCard .xo-price{display:flex;align-items:center;gap:7px}
+#deathCard .xo-price b{font:800 28px/1 var(--display);letter-spacing:-.03em;font-variant-numeric:tabular-nums;color:#ffe08a}#deathCard .xo-price span{font:700 11px/1 var(--mono);letter-spacing:.12em;color:#e8c56a}
+#deathCard .xo-coin{width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff6c8,#ffd36b 45%,#c98a12 100%);box-shadow:inset 0 -2px 0 rgba(120,70,0,.4),0 0 12px rgba(255,211,107,.45)}
+#deathCard .xo-p small{font:600 11px/1 var(--mono);letter-spacing:.04em;color:var(--muted);white-space:nowrap}
+#deathCard.xl-short .xo-p small{color:#ffb0bb}
+#deathCard.xl-short .res-offer{border-color:rgba(255,255,255,.14);background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02)),rgba(14,16,22,.9);box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+#deathCard.xl-short .xo-fg{stroke:rgba(255,255,255,.4);filter:none}#deathCard.xl-short .xo-price,#deathCard.xl-short .xo-t b{opacity:.5;filter:grayscale(1)}
+#deathCard .res-play.xl-buy{background:linear-gradient(90deg,rgba(255,255,255,.22) 0 var(--xl,100%),rgba(0,0,0,0) var(--xl,100%)),linear-gradient(180deg,#ff9fba 0%,#ff6e97 42%,#f04a7a 100%)}
+#deathCard .res-play.xl-buy:disabled{cursor:default;color:rgba(255,255,255,.55);filter:grayscale(1);opacity:.55;box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}#deathCard .res-play.xl-buy:disabled::after{display:none}
+#deathCard .xl-buy .rp-ico{fill:none}
+@media (max-width:760px){#deathCard.offer .res-offer{gap:12px;padding:14px 14px}#deathCard .xo-ring{width:54px;height:54px}#deathCard .xo-t b{font-size:21px}#deathCard .xo-price b{font-size:23px}#deathCard .xo-t span{display:none}}
 #deathCard .rr-delta.show{opacity:1;transform:none;transition:transform .5s cubic-bezier(.2,1.8,.4,1),opacity .2s}
 #deathCard .rr-delta.up{color:#04170f;background:linear-gradient(180deg,#9ff5cf,#45d394);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 0 22px rgba(95,224,168,.4)}
 #deathCard .rr-delta.eq{color:var(--ink);background:rgba(255,255,255,.1);box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
@@ -3397,11 +3431,17 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
       <p class="res-ach" id="dAch" hidden></p>
     </section>
     <section class="res-side">
+      <div class="res-offer" id="xlPanel" aria-live="polite">
+        <div class="xo-ring" aria-hidden="true"><svg viewBox="0 0 48 48"><circle class="xo-bg" cx="24" cy="24" r="21"/><circle class="xo-fg" id="xlRing" cx="24" cy="24" r="21" pathLength="100"/></svg><b id="xlSec">5</b></div>
+        <div class="xo-t"><b>Extra life</b><span id="xlCount">Respawn now</span></div>
+        <div class="xo-p"><span class="xo-price"><i class="xo-coin" aria-hidden="true"></i><b id="xlPrice">100</b><span>ATP</span></span><small id="xlHave"></small></div>
+      </div>
       <div class="res-top">
         <div class="res-card res-rating" id="dRank" hidden>
           <div class="rr-head"><i class="rr-emb tier" aria-hidden="true"></i><span class="rr-tier tier"></span><span class="rr-next"></span></div>
           <div class="rr-mid"><b class="rr-num">0</b><span class="rr-k">vs players</span><span class="rr-delta"></span></div>
           <div class="rr-track"><div class="rr-bar"><i></i></div><i class="rr-emb rr-to tier" aria-hidden="true"></i></div>
+          <p class="rr-game" hidden></p>
         </div>
         <div class="res-card res-atp" id="dEarn" hidden><i class="coin" aria-hidden="true"></i><b class="ra-n"></b><span class="ra-l">ATP</span></div>
         <div class="res-card res-xp" id="dXp" hidden>
@@ -3417,8 +3457,10 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
         <div class="res-card rs"><b id="dTime">0:00</b><span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 10v3.5l2.3 1.6M9.5 3h5"/></svg>Time</span></div>
       </div>
       <div class="res-actions">
-        <button id="setup" class="res-lobby" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-6.5 8 6.5"/><path d="M6.5 9.5V19h11V9.5"/></svg>Lobby</button>
+        <button id="setup" class="res-lobby" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-6.5 8 6.5"/><path d="M6.5 9.5V19h11V9.5"/></svg><span id="resLobbyLbl">Lobby</span></button>
         <button id="resPlay" class="res-play" type="button"><svg class="rp-ico" id="resPlayIco" viewBox="0 0 24 24" aria-hidden="true"></svg><span class="rp-txt"><b id="resPlayLbl">Play again</b><small id="resPlaySub"></small></span><span class="rp-lives" id="resLives" hidden><i></i><i></i><i></i></span></button>
+        <button id="xlNo" class="res-lobby xl-no" type="button">No thanks</button>
+        <button id="xlBuy" class="res-play xl-buy" type="button"><svg class="rp-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg><span class="rp-txt"><b id="xlBuyLbl">Extra life</b><small id="xlBuySub">100 ATP</small></span></button>
         <span id="again" hidden></span><!-- updateSpawnLock() writes its long label here; syncResPlay() draws the button -->
       </div>
     </section>
@@ -6712,19 +6754,27 @@ async function econInit(){
 // sends its relay key, and the arena counts as against players only if the server saw another player alive beside us.
 // Bots move only the AI rating. Casual is reported only to a server that rates it (its catalogue has the win rules);
 // an older server would count it as ranked. Nearby is never reported.
-let runId=null,runPromise=null;
+let runId=null,runPromise=null,game=null; // game: this game's lives as the server answers them {key, n started, lives:[{d,to,ai}], miss, late}
+// Extra lives for ATP (economy.js EXTRA_LIFE, the rules come in the catalogue): xl counts the ones bought this game (they all
+// go on its last run, which stays open while the offer is up); xlOffer is the offer on screen; xlKeep: the next spawn is a
+// bought life, so it continues the run instead of starting one.
+let xl={key:'',n:0},xlOffer=null,xlKeep=false;
+const xlRules=()=>wallet.catalog&&wallet.catalog.extraLife||null,xlPrice=n=>{const R=xlRules();return R?R.base*Math.pow(R.factor,n):0;};
+function xlBought(){try{return game&&xl.key===game.key?xl.n:0;}catch(e){return 0;}} // (spawnOpen can run before these lines do)
 const isNearby=()=>{const N=window.__mitosisNet;return !!N&&N.mode==='nearby';};
 const casualRated=()=>!!(wallet.catalog&&wallet.catalog.wins),classicRated=()=>!!(wallet.catalog&&Array.isArray(wallet.catalog.modes)&&wallet.catalog.modes.includes('classic')),
   runMode=()=>CL?'classic':local==='practice'?'casual':local?'bots':'arena',relayKey=()=>{const N=window.__mitosisNet;return(N&&N.key)||undefined;};
 const runOff=()=>isNearby()||(CL?!classicRated():local==='practice'&&!casualRated());
-function econRunStart(){runId=null;if(runOff()){runPromise=null;return;}runPromise=api('run/start',{mode:runMode(),relay:relayKey(),skill:CL?undefined:local==='practice'?settings.botSkill||'normal':local?'master':undefined}).then(r=>{runId=r.runId;return r.runId;}).catch(()=>null);}
+function econRunStart(){runId=null;if(runOff()){runPromise=null;return;}
+  const gk=(CL?'classic':local||'arena')+':'+round.id;if(!game||game.key!==gk)game={key:gk,n:0,lives:[]};game.n++; /* a new round or mode is a new game */
+  runPromise=api('run/start',{mode:runMode(),relay:relayKey(),skill:CL?undefined:local==='practice'?settings.botSkill||'normal':local?'master':undefined}).then(r=>{runId=r.runId;return r.runId;}).catch(()=>null);}
 async function econRunEnd(){
   if(!human)return;const unranked=CL?'classic':isNearby()?'nearby':local==='practice'?'practice':'',off=runOff();resPrep(unranked,off);if(off)return;
   const s=human.stats,rep={claims:1,survived:Math.max(0,T-s.born),eaten:s.eaten|0,splitKills:s.splitKills|0,peak:Math.round(s.peak),bestRank:s.bestRank||999,place:s.place|0,of:s.of|0,life:Math.max(0,livesUsed()-1),show:1,relay:relayKey()};
   if(unranked&&!CL)rep.skill=settings.botSkill||'normal'; // Casual: the bots' skill scales AI rating gains
   rep.name=human.name;const rid=runId||(runPromise?await runPromise:null);runId=null;runPromise=null;
-  if(!rid){showEarn(wallet.online?null:{k:'offline'});showXp(null);return;}
-  rep.runId=rid;const a=loadPending();a.push(rep);savePending(a);flushRuns();
+  if(!rid){if(game)game.miss=1;showEarn(wallet.online?null:{k:'offline'});showXp(null);resPlayRank();return;}
+  rep.runId=rid;if(game)rep.g=game.key;const a=loadPending();a.push(rep);savePending(a);flushRuns();
 }
 /* ---- results screen (#deathCard): placement, rating count-up, ATP reward, run stats and the play-again button ---- */
 const RES_ICO={
@@ -6906,12 +6956,21 @@ function tierAtRating0(r){ // the old metal tier and progress through it, from t
   if(!names.length||at.length!==names.length)return{name:wallet.tier||'',pct:0};let i=at.findIndex(v=>r<v);if(i<0)i=names.length-1;
   const hi=at[i],lo=i>0?at[i-1]:Math.min(at[0]-300,r);return{name:names[i],pct:isFinite(hi)?clamp((r-lo)/(hi-lo),0,1):1};}
 let rankAnim=0;
-function showRank(w){ // the server's answer for this run: count the rating it moved up (or down) once the results screen is in view. Bots move only the AI rating.
+function showRank(w,rep){ // the server's answer for this run: count the rating it moved up (or down) once the results screen is in view. Bots move only the AI rating.
   const ai=w.kind==='ai'||w.kind==='casual',d=ai?w.aiDelta:w.ratingDelta,to=ai?w.aiRating:w.rating;if(typeof d!=='number'||typeof to!=='number')return;
+  if(rep&&game&&rep.g===game.key)game.lives.push({d,to,ai});
   updateRunDelta(d,to,ai);rrKind(ai);resS.rank={d,to};if(resS.at)resPlayRank();}
-function resPlayRank(){const w=resS.rank,el=$('dRank');if(!w||el.hidden)return;clearTimeout(resS.t);
-  resS.t=setTimeout(()=>{if(resS.rank!==w)return;const d=w.d,to=w.to,from=to-d,a=tierAtRating(from),b=tierAtRating(to),chip=el.querySelector('.rr-delta');
-    rrSet(from,a);chip.textContent=d>0?'+'+d:d<0?'−'+-d:'±0';chip.className='rr-delta '+(d>0?'up':d<0?'dn':'eq');void chip.offsetWidth;chip.classList.add('show');el.classList.toggle('dn',d<0);
+const fmtDelta=d=>d>0?'+'+d:d<0?'\u2212'+-d:'\u00b10';
+function gameSum(){ // the whole game's rating change once the server has answered for every life: {d, to, ds (each life), ai} | null (not yet)
+  if(!game||game.miss||!game.lives.length||game.lives.length<game.n)return null;const L=game.lives,ai=L[L.length-1].ai,mine=L.filter(x=>x.ai===ai);
+  return{d:mine.reduce((n,x)=>n+x.d,0),to:L[L.length-1].to,ds:mine.map(x=>x.d),ai};}
+function resPlayRank(){let w=resS.rank;const el=$('dRank'),cap=el.querySelector('.rr-game'),fin=$('deathCard').classList.contains('final');
+  if(fin){const g=gameSum();cap.hidden=false;if(!g){cap.textContent=game&&(game.late||game.miss)?'Updates once online':'Waiting for result\u2026';return;}
+    w={d:g.d,to:g.to};rrKind(g.ai);cap.innerHTML='<span class="rg-k">'+(g.ai?'vs AI':'vs players')+' \u00b7 </span><span class="rg-t">This game \u00b7 </span>'+(g.ds.length>1?g.ds.map(fmtDelta).join(' '):'1 life');}
+  else cap.hidden=true;
+  if(!w||el.hidden)return;clearTimeout(resS.t);const tok=resS.rk=(resS.rk|0)+1;
+  resS.t=setTimeout(()=>{if(resS.rk!==tok)return;const d=w.d,to=w.to,from=to-d,a=tierAtRating(from),b=tierAtRating(to),chip=el.querySelector('.rr-delta');
+    rrSet(from,a);chip.textContent=fmtDelta(d);chip.className='rr-delta '+(d>0?'up':d<0?'dn':'eq');void chip.offsetWidth;chip.classList.add('show');el.classList.toggle('dn',d<0);
     const num=el.querySelector('.rr-num');num.classList.add('go');
     const finish=()=>{rrSet(to,b);num.classList.remove('go');num.classList.add('bump');if(a.name!==b.name){el.querySelector('.rr-next').textContent=d>0?'Promoted':'Demoted';el.classList.toggle('promo',d>0);if(d>0)sfx('ach');}};
     cancelAnimationFrame(rankAnim);if(RM||!d){finish();return;}
@@ -7194,7 +7253,7 @@ function resFill(kind,pb,sub){ // kind: dead | arena (dissolved by the closing a
   const who=$('resWho');who.hidden=kind!=='win';if(kind==='win'){who.textContent=human.name;nfEl(who,myFont());}
   const dA=$('dAch');dA.hidden=!runAch.length;dA.innerHTML=runAch.slice(0,2).map(n=>`<span>★ ${escH(n)}</span>`).join('')+(runAch.length>2?`<span>+${runAch.length-2}</span>`:'');
   $('dPeak').textContent=Math.round(s.peak).toLocaleString();$('dPeak').dataset.v=Math.round(s.peak);$('dBest').hidden=!pb;$('dEaten').textContent=s.eaten|0;$('dEaten').dataset.v=s.eaten|0;$('dTime').textContent=fmtT(T-s.born);
-  $('resChart').hidden=!un;
+  $('resChart').hidden=!un||!$('dXp').hidden; // the mass chart fills the space of the XP tile (Casual, Nearby); Classic earns XP, so the tile stays and the buttons fit a phone
 }
 function resShow(hist){showCard('deathCard');resS.at=performance.now();syncResPlay();if(!$('resChart').hidden)drawChart(hist);resPlayRank();resPlayEarn();resPlayXp();
   for(const x of $('deathCard').querySelectorAll('.res-fx'))x.remove();if(RM)return;
@@ -7211,12 +7270,17 @@ function syncResPlay(){ // the big button: Respawn while lives are left, Play ag
   let k='again',sub='',left=-1;const lv=$('resLives');
   if(queued){k='search';const ms=searchUntil-performance.now();sub='0:'+String(Math.max(0,Math.ceil(ms/1000))).padStart(2,'0');b.style.setProperty('--sp',(clamp(ms/(SEARCH_MAX*1000),0,1)*100).toFixed(1)+'%');}
   else if(local||!isOffline()){
-    if(!spawnOpen()){k='find';sub=spawnBlockReason()==='lives'?'No lives left':'Round closed';}
-    else if(local!=='practice'){left=MAX_RESPAWNS+1-livesUsed();if(left<=MAX_RESPAWNS&&$('deathCard').classList.contains('dead'))k='respawn';}}
+    if(!spawnOpen())k='again'; // no respawn left: Play again starts the next game, or searches for one
+    else if(CL){if($('deathCard').classList.contains('dead'))k='respawn';} // Classic: no lives limit, so Respawn every time and no life dots
+    else if(local!=='practice'){left=MAX_RESPAWNS+1+xlBought()-livesUsed();if(left<=MAX_RESPAWNS&&$('deathCard').classList.contains('dead'))k='respawn';}}
   if(b.dataset.k!==k){b.dataset.k=k;b.className='res-play '+k;$('resPlayIco').innerHTML=RES_ICO[k==='search'||k==='find'?'find':k==='respawn'?'respawn':'play'];
     $('resPlayLbl').textContent={again:'Play again',respawn:'Respawn',find:'Find game',search:'Searching'}[k];}
   if($('resPlaySub').textContent!==sub)$('resPlaySub').textContent=sub;
-  lv.hidden=k!=='respawn';if(!lv.hidden)[...lv.children].forEach((d,i)=>d.classList.toggle('on',i<left));
+  lv.hidden=k!=='respawn'||CL;if(!lv.hidden)[...lv.children].forEach((d,i)=>d.classList.toggle('on',i<left));
+  const card=$('deathCard'),fin=local!=='practice'&&!spawnOpen(); // out of respawns: the whole game's rating, Play again or Return to lobby
+  if(card.classList.contains('final')!==fin){card.classList.toggle('final',fin);const t=$('dTitle');
+    if(fin){card.dataset.t0=t.textContent;if(spawnBlockReason()==='lives'&&card.classList.contains('dead'))t.textContent='Out of lives';}else if(card.dataset.t0)t.textContent=card.dataset.t0;
+    $('resLobbyLbl').innerHTML=fin?'<span class="rl-long">Return to lobby</span><span class="rl-short">Lobby</span>':'Lobby';clearTimeout(resS.t);cancelAnimationFrame(rankAnim);resPlayRank();}
 }
 setInterval(syncResPlay,250);
 function maybeAskReview(place){ // after a top-3 finish, now and then, let iOS offer an App Store rating (iOS itself shows it at most 3 times a year)
@@ -7233,12 +7297,12 @@ async function flushRuns(){ // report finished runs; keep them queued while the 
   try{let a=loadPending();while(a.length){const rep=a[0];
     try{const w=await api('run/end',rep);applyWallet(w);if(rep.show){const R=(wallet.catalog&&wallet.catalog.rules)||{};const W=wallet.catalog&&wallet.catalog.wins,cas=w.kind==='casual',pl=rep.place|0;
       const sk=cas&&w.skill&&SKILL[w.skill]?SKILL[w.skill].label:'';
-      showEarn(w.payout?{k:'atp',n:w.payout,full:!!(sk&&w.winBonus>0&&!w.winCapped),tag:w.winCapped?'capped':w.winBonus>0?(sk?sk+' '+(pl===1?'win':ordinal(pl)):pl===1?'Win':'Top 3'):''}:{k:'none',why:w.winCapped?'Daily cap':w.kind==='classic'&&rep.survived<((wallet.catalog&&wallet.catalog.classic&&wallet.catalog.classic.minSec)||60)?`Survive ${Math.round(((wallet.catalog&&wallet.catalog.classic&&wallet.catalog.classic.minSec)||60)/60)} min`:cas?(W&&rep.survived<W.minSec?`Survive ${Math.round(W.minSec/60)} min`:'Top 3 only'):rep.survived<(R.minSec||20)?`Survive ${R.minSec||20}s`:`Top ${(R.byRank||[[30]]).slice(-1)[0][0]} only`});showRank(w);showXp(w);
+      showEarn(w.payout?{k:'atp',n:w.payout,full:!!(sk&&w.winBonus>0&&!w.winCapped),tag:w.winCapped?'capped':w.winBonus>0?(sk?sk+' '+(pl===1?'win':ordinal(pl)):pl===1?'Win':'Top 3'):''}:{k:'none',why:w.winCapped?'Daily cap':w.kind==='classic'&&rep.survived<((wallet.catalog&&wallet.catalog.classic&&wallet.catalog.classic.minSec)||60)?`Survive ${Math.round(((wallet.catalog&&wallet.catalog.classic&&wallet.catalog.classic.minSec)||60)/60)} min`:cas?(W&&rep.survived<W.minSec?`Survive ${Math.round(W.minSec/60)} min`:'Top 3 only'):rep.survived<(R.minSec||20)?`Survive ${R.minSec||20}s`:`Top ${(R.byRank||[[30]]).slice(-1)[0][0]} only`});showRank(w,rep);showXp(w);
       const qd=Array.isArray(w.questsDone)?w.questsDone:[],up=w.passUp>0&&bpOn()?`Tier ${w.pass.level}, +${w.passUp*wallet.catalog.pass.stars} Battle Stars`:'';
       const qt=Array.isArray(w.questTiers)?w.questTiers:[],fin=[...qd,...qt.map(t=>({...t,period:'perm'}))];
       if(fin.length&&qsOn()){for(const q of fin)bqJust.add(q.period+'/'+q.id);toast('Quests',`${fin.length>1?fin.length+' quests':'Quest'} complete · claim ${fin.reduce((n,q)=>n+(q.atp|0),0).toLocaleString()} ATP`,fin.length>1?fin.map(q=>q.text).join(' · '):fin[0].text);} // phones show only the title
       else if(up)toast('Battle Pass',`Tier ${w.pass.level}`,`+${w.passUp*wallet.catalog.pass.stars} Battle Stars to spend`);}}
-    catch(e){if(!e.status||e.status>=500){if(rep.show){showEarn({k:'later'});showXp({later:1});}break;}}
+    catch(e){const mine=game&&rep.g===game.key;if(!e.status||e.status>=500){if(mine)game.late=1;if(rep.show){showEarn({k:'later'});showXp({later:1});}resPlayRank();break;}if(mine){game.miss=1;resPlayRank();}}
     a.shift();savePending(a);}}
   finally{flushing=false;}
 }
@@ -8031,8 +8095,8 @@ let SPAWN_CUTOFF=Math.min(300,Math.round(ROUND_SEC*.5)),MAX_RESPAWNS=2;const SEA
 function setRoundLen(s){ROUND_SEC=s;ROUND_GRACE=Math.round(s*.1);ROUND_HOLD=Math.round(s*.05);BOT_CUTOFF=Math.round(s*.7);SPAWN_CUTOFF=Math.min(300,Math.round(s*.5));} // a Nearby match can be shorter
 function livesUsed(){if(lives.round!==round.id){lives.round=round.id;lives.used=0;}return lives.used;}
 function roundOpen(){if(multi()&&!isHost&&!round.synced)return true;return round.over||roundT()<ROUND_SEC-SPAWN_CUTOFF;}
-function spawnOpen(){if(local==='practice'||CL)return true;return roundOpen()&&livesUsed()<=MAX_RESPAWNS;}
-function spawnBlockReason(){return !roundOpen()?'closed':livesUsed()>MAX_RESPAWNS?'lives':null;}
+function spawnOpen(){if(local==='practice'||CL)return true;return roundOpen()&&livesUsed()<=MAX_RESPAWNS+xlBought();} // bought lives add to the round's
+function spawnBlockReason(){return !roundOpen()?'closed':livesUsed()>MAX_RESPAWNS+xlBought()?'lives':null;}
 function spawnWait(){return round.over?Math.max(0,round.start-T):Math.max(0,ROUND_SEC-roundT())+ROUND_GAP;}
 function updateSpawnLock(){
   const go=$('go'),ag=$('again');if(!go||!ag)return;
@@ -8044,7 +8108,7 @@ function updateSpawnLock(){
   let goT=!local&&isOffline()?'Play offline':'Play',goS='',agT=CL?'Respawn':'Re-inoculate'; // goS: a small second line under the big word
   if(queued){const left=Math.max(0,Math.ceil((searchUntil-performance.now())/1000));goT=`Searching… 0:${String(left).padStart(2,'0')}`;agT=goT+(queuedPeers?' · '+(queuedPeers+1)+' waiting':'');goS=(queuedPeers?(queuedPeers+1)+' waiting · tap':'Tap')+' to cancel';} // the wait on the small line
   else if(!open){const why=spawnBlockReason();agT=(why==='lives'?'No lives left · ':'Round closed · ')+'find a game';goT='Play';goS=why==='lives'?'No lives left':'Round closed';} // Play stays the big word (Rowan); why under it
-  else if(!CL){const left=MAX_RESPAWNS+1-livesUsed();if(!local&&left<=MAX_RESPAWNS)agT=`Re-inoculate · ${left} ${left===1?'life':'lives'} left`;}
+  else if(!CL){const left=MAX_RESPAWNS+1+xlBought()-livesUsed();if(!local&&left<=MAX_RESPAWNS)agT=`Re-inoculate · ${left} ${left===1?'life':'lives'} left`;}
   if(nearMode()&&!queued)goT=nearLabel();
   go.classList.toggle('lb-wait',nearMode()&&!near.m&&!nearHost()); // a guest waits for the host to start
   const gk=goT+'|'+goS;if(go.dataset.k!==gk){go.dataset.k=gk;if(goS){go.innerHTML=`<span class="lb-gt"><b>${escH(goT)}</b><small>${escH(goS)}</small></span>`;go.setAttribute('aria-label',goT+', '+goS);}else{go.textContent=goT;go.removeAttribute('aria-label');}}
@@ -8941,7 +9005,7 @@ function hud(){
   setHTML(boardEl,html);
   setHTML(boardMeEl,human&&human.alive&&hi>=0?`#${hi+1}<small>/${ranked.length}</small>`:'–');
   if(human&&human.alive){
-    const LV=$('lives');if(LV){const prac=local==='practice',left=prac?MAX_RESPAWNS+1:clamp(MAX_RESPAWNS+2-livesUsed(),0,MAX_RESPAWNS+1);[...LV.children].forEach((d,i)=>d.classList.toggle('on',i<left));LV.parentElement.classList.toggle('inf',prac);}
+    const LV=$('lives');if(LV){const prac=local==='practice',left=prac?MAX_RESPAWNS+1:clamp(MAX_RESPAWNS+2+xlBought()-livesUsed(),0,MAX_RESPAWNS+1);[...LV.children].forEach((d,i)=>d.classList.toggle('on',i<left));LV.parentElement.classList.toggle('inf',prac);}
     if(hi===0&&ranked.length>5)unlock('rank1');
     let fx='';for(const k in PU){const t=human.fx[k];if(t>0)fx+=hchip(col(PU[k].c),(t/PU[k].dur).toFixed(3),PU_ICON[k],Math.ceil(t)+'s');}
     let inf=0;for(const c of human.cells)if(c.inf&&(!inf||c.inf<inf))inf=c.inf;
@@ -8973,7 +9037,7 @@ for(const b of document.querySelectorAll('#actions .act,#stats,#boardToggle,#rou
 const APP_STORE_URL='https://apps.apple.com/app/id6818890370';
 function inviteLinks(){const N=window.__mitosisNet;if(!N)return[];const h=location.hostname;
   if(!/^https?:$/.test(location.protocol))return[Native.platform==='ios'?APP_STORE_URL:window.MITOSIS_SERVER]; // in the app: the App Store page, or the public site
-  if(h==='localhost'||h==='127.0.0.1'||h==='[::1]'||h==='::1')return N.lan||[];return[location.origin];}
+  if(h==='localhost'||h==='127.0.0.1'||h==='[::1]'||h==='::1')return N.lan||[];return[location.origin+location.pathname.replace(/\/index\.html$|\/$/,'')];} // the page's own address: mitosisgame.com/play, or the server's root
 function netUI(){
   const pill=$('netPill'),line=$('netLine'),others=peerCount-1,N=window.__mitosisNet;
   pill.hidden=!(room&&myPeer&&others>0);setTxt(pill,String(others+1));pill.title=`${others+1} players live`;
@@ -9341,7 +9405,7 @@ function startGame(){
   initAudio();if(actx&&actx.state==='suspended')actx.resume();
   syncBots();removeHuman();
   if(settings.skin>=SKIN_FREE&&!ownsSkin(settings.skin))settings.skin=0;
-  human=makePlayer(settings.name||'Unnamed cell',skinColor(settings.stain,settings.skin),false);human.skin=settings.skin;human.stain=settings.stain;players.push(human);evoOffer=null;runAch=[];lysedAt=0;econRunStart();
+  human=makePlayer(settings.name||'Unnamed cell',skinColor(settings.stain,settings.skin),false);human.skin=settings.skin;human.stain=settings.stain;players.push(human);evoOffer=null;runAch=[];lysedAt=0;if(xlKeep)xlKeep=false;else econRunStart(); // a bought life goes on the same run
   const m0=/[?&]autopilot=1/.test(location.search)&&/[?&]big=1/.test(location.search)?2500:25;
   spawn(human,m0);cam.x=human.cells[0].x;cam.y=human.cells[0].y;dispMass=m0;shownMass=-1;histT=0;
   pointer.x=W/2;pointer.y=H/2;mode='play';paused=false;slow=1;feed.length=0;renderFeed();
@@ -9366,12 +9430,42 @@ function die(){
   const pl=CL?{place:0,of:0}:placeOf();s.place=pl.place;s.of=pl.of; // Classic has no placings
   if(BISECT.auto)reportHitch(`autopilot died place=${pl.place} of=${pl.of} by=${s.killer} t=${fmtT(T-s.born)} roundT=${roundT().toFixed(0)}`);recordRun({t:Date.now(),place:s.place,of:s.of,peak:Math.round(s.peak),eaten:s.eaten,sec:Math.round(T-s.born),practice:local==='practice'});
   evoOffer=null;renderEvo();lysedAt=0;
-  econRunEnd();recStop(1500);resFill(s.killer==='the collapse'?'arena':'dead',pb);
+  const xo=xlCan();if(!xo)econRunEnd(); // an extra life on offer: the run is ended (and rated) only once it is declined or runs out
+  recStop(1500);resFill(s.killer==='the collapse'?'arena':'dead',pb);
   const hist=human.hist.slice();
   setTimeout(()=>{if(mode!=='dead')return;document.body.classList.remove('playing');
+    if(xo&&xlCan()){xlShow(hist);return;}if(xo)econRunEnd(); // (the round closed in the meantime: no offer)
     if(!local&&!spawnOpen()&&specStart(hist))return; // can't respawn and your party ally plays on: watch them; the results wait
     resShow(hist);$('resPlay').focus({preventScroll:true});},1200);
 }
+function xlCan(){ // an extra life to offer: lives used up in a round that is still open, a server run to put it on, the game under the cap
+  const R=xlRules();if(!R||CL||isNearby()||isOffline()||!Array.isArray(R.modes)||!R.modes.includes(runMode()))return false;
+  return !spawnOpen()&&spawnBlockReason()==='lives'&&!!(runId||runPromise)&&xlBought()<R.max;}
+function xlShow(hist){ // the offer, for R.window seconds: Extra life (ATP) or No thanks; short of ATP it is greyed out and runs out
+  const R=xlRules(),n=xlBought(),card=$('deathCard');
+  xlOffer={hist,n,price:xlPrice(n),ms:R.window*1000,until:performance.now()+R.window*1000,busy:false};
+  showCard('deathCard');card.classList.add('offer');resS.at=performance.now();
+  $('xlPrice').textContent=xlOffer.price.toLocaleString();$('xlCount').textContent=n?`${n+1} of ${R.max} this game`:'Respawn now';
+  xlSync();xlTick();xlOffer.iv=setInterval(xlTick,100);($('xlBuy').disabled?$('xlNo'):$('xlBuy')).focus({preventScroll:true});}
+function xlSync(){const o=xlOffer;if(!o)return;const bal=wallet.balance|0,short=Math.max(0,o.price-bal),b=$('xlBuy');
+  b.disabled=!!short||o.busy;$('deathCard').classList.toggle('xl-short',!!short);
+  $('xlHave').textContent=short?`Need ${short.toLocaleString()} more`:`You have ${bal.toLocaleString()}`;
+  $('xlBuyLbl').textContent=o.busy?'Buying\u2026':'Extra life';$('xlBuySub').textContent=short?'Not enough ATP':o.price.toLocaleString()+' ATP';}
+function xlTick(){const o=xlOffer;if(!o)return;const ms=Math.max(0,o.until-performance.now()),k=ms/o.ms;
+  $('deathCard').style.setProperty('--xl',(k*100).toFixed(1)+'%');$('xlRing').style.strokeDashoffset=(100-k*100).toFixed(1);
+  const sec=String(Math.ceil(ms/1000));if($('xlSec').textContent!==sec)$('xlSec').textContent=sec;
+  if(!o.busy&&(ms<=0||!roundOpen()))xlEnd();} // a purchase on its way is answered first
+function xlClose(){const o=xlOffer;if(o)clearInterval(o.iv);xlOffer=null;$('deathCard').classList.remove('offer','xl-short');}
+async function xlBuyNow(){const o=xlOffer;if(!o||o.busy||o.price>(wallet.balance|0))return;o.busy=true;xlSync();
+  try{const rid=runId||(runPromise?await runPromise:null);if(!rid){const e=new Error('This life is not on the server');e.status=0;throw e;}
+    const w=await api('run/life',{runId:rid,n:o.n});applyWallet(w);if(game)xl={key:game.key,n:w.lives|0};
+    if(xlOffer!==o)return;xlClose();Native.haptic('medium');xlKeep=true;startGame(); // back in, same game, same run
+  }catch(e){if(xlOffer!==o)return;o.busy=false;
+    if(e.status===402){wallet.balance=Math.min(wallet.balance|0,o.price-1);toast('Extra life','Not enough ATP',e.message);} // the server's balance is lower
+    else toast('Extra life','Couldn\'t buy it',e.message||'Try again');xlSync();xlTick();}}
+function xlEnd(){const o=xlOffer;if(!o||o.busy)return;xlClose();econRunEnd(); // declined or ran out: now the run ends and is rated
+  if(!local&&!spawnOpen()&&specStart(o.hist))return;resShow(o.hist);$('resPlay').focus({preventScroll:true});}
+$('xlBuy').addEventListener('click',xlBuyNow);$('xlNo').addEventListener('click',()=>{const o=xlOffer;if(o&&!o.busy){o.until=0;xlTick();}});
 function drawChart(h){ // mass over the run, for the results screen's chart tile
   const c=$('dChart'),w=c.clientWidth,ht=c.clientHeight;if(!w||!ht)return;c.width=Math.round(w*DPR);c.height=Math.round(ht*DPR);
   const g=c.getContext('2d');g.setTransform(DPR,0,0,DPR,0,0);g.clearRect(0,0,w,ht);
@@ -9815,7 +9909,7 @@ $('copyInvite').addEventListener('click',()=>{const b=$('copyInvite'),i=$('invit
 /* ================= input ================= */
 let touchId=null;
 // ?debug=1: a handle on the game state for headless tests (movement, merging); never used by the game itself
-if(/[?&]debug=1/.test(location.search))window.__mt={get human(){return human;},get players(){return players;},get isHost(){return isHost;},get cam(){return cam;},get T(){return T;},split:()=>split(human),sfx:(k,a)=>sfx(k,a),audio:()=>({state:actx&&actx.state,live:liveNodes}),netReport:()=>netReport()};
+if(/[?&]debug=1/.test(location.search))window.__mt={get human(){return human;},get players(){return players;},get isHost(){return isHost;},get cam(){return cam;},get T(){return T;},split:()=>split(human),sfx:(k,a)=>sfx(k,a),audio:()=>({state:actx&&actx.state,live:liveNodes}),netReport:()=>netReport(),kill:()=>{if(human&&human.alive)killed(human,players.find(p=>p!==human&&p.alive)||human);},lives:()=>({used:livesUsed(),max:MAX_RESPAWNS+1,bought:xlBought(),open:spawnOpen(),why:spawnBlockReason(),offer:xlOffer&&{price:xlOffer.price,n:xlOffer.n}})};
 cv.addEventListener('pointermove',e=>{if(e.pointerType==='touch'&&e.pointerId!==touchId)return;pointer.x=e.clientX;pointer.y=e.clientY;});
 cv.addEventListener('pointerdown',e=>{if(e.pointerType==='touch'){if(touchId!==null)return;touchId=e.pointerId;try{cv.setPointerCapture(e.pointerId);}catch(_){}}pointer.x=e.clientX;pointer.y=e.clientY;});
 const release=e=>{if(e.pointerId===touchId){touchId=null;pointer.x=W/2;pointer.y=H/2;}};

@@ -1,0 +1,9 @@
+# HTTPS for mitosisgame.com, for a server with nothing else on ports 80/443 (docker compose --profile web; README › Website).
+# The game server itself serves the website for mitosisgame.com (server.js sendSite: the home page at /, the game at
+# /play, www redirected), so all Caddy does is HTTPS and pass everything through. Caddy gets and renews the certificate
+# once the domain's DNS points at this server. A server that already runs a reverse proxy adds this block to that one
+# instead (with the game server's address in place of mitosis:3000).
+{$SITE_DOMAIN:mitosisgame.com}, www.{$SITE_DOMAIN:mitosisgame.com} {
+	encode zstd gzip
+	reverse_proxy mitosis:3000
+}

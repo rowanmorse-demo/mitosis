@@ -24,7 +24,7 @@ jobs:
           chmod 600 ~/.ssh/deploy
           echo '51.81.81.166 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBYWTgJ31gp1V88ymqZ31K+NM8O+/8gPgwM6KoAP5Sux' > ~/.ssh/known_hosts
           ssh -i ~/.ssh/deploy -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=20 \
-            ubuntu@51.81.81.166 'cd /opt/mitosis && sudo ./deploy.sh'
+            ubuntu@51.81.81.166 "cd /opt/mitosis && sudo ./deploy.sh"
           rm -f ~/.ssh/deploy
 
       - name: Check the server is serving this commit
@@ -34,3 +34,4 @@ jobs:
           if cmp -s served.html index.html; then echo "Live: index.html matches ${GITHUB_SHA::7}"
           else echo "::error::The server's index.html differs from ${GITHUB_SHA::7}"; exit 1; fi
           curl -fsS --max-time 15 http://51.81.81.166:3000/health; echo
+
