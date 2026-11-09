@@ -6459,8 +6459,8 @@ function syncResPlay(){ // the big button: Respawn while lives are left, Play ag
   lv.hidden=k!=='respawn';if(!lv.hidden)[...lv.children].forEach((d,i)=>d.classList.toggle('on',i<left));
 }
 setInterval(syncResPlay,250);
-function maybeAskReview(place){ // after a top-3 finish, now and then, let iOS offer an App Store rating (iOS itself shows it at most 3 times a year)
-  if(Native.platform!=='ios'||!place||place>3||local==='practice'||isNearby()||(wallet.runs|0)<5)return;
+function maybeAskReview(place){ // after a top-3 finish, now and then, let the app offer a store rating (iOS shows it at most 3 times a year; Google Play keeps its own quota)
+  if(!Native.platform||!place||place>3||local==='practice'||isNearby()||(wallet.runs|0)<5)return;
   let last=0;try{last=+localStorage.getItem('mitosis.reviewAt')||0;}catch(e){}
   if(Date.now()-last<90*864e5)return;try{localStorage.setItem('mitosis.reviewAt',String(Date.now()));}catch(e){}
   setTimeout(()=>Native.send({type:'review'}),2200); // once the rating count-up has settled
@@ -6886,7 +6886,7 @@ async function openStore(note){
   if(!Native.platform){renderPacks(null);storeMsg='Packs are sold in the iPhone and Android app';showStoreHint();return;}
   storeMsg='';showStoreHint();
   try{const r=await Native.call('products',{ids:ATP_PACKS.map(p=>p.id)});const ps=r.products||[];renderPacks(ps);
-    storeMsg=ps.length?'':'Store unavailable right now';showStoreHint();}
+    storeMsg=ps.length?'':Native.platform==='android'?'ATP packs aren\'t on sale in the Android app yet · win games to earn ATP':'Store unavailable right now';showStoreHint();}
   catch(e){renderPacks([]);storeMsg='Store unavailable · '+e.message;showStoreHint();}
 }
 function packArt(i){ // ATP orbs: more of them, and a bigger glow, the bigger the pack; the top pack is a whole radiant sphere
@@ -6900,19 +6900,30 @@ function packArt(i){ // ATP orbs: more of them, and a bigger glow, the bigger th
   return `<svg viewBox="0 0 120 96">${defs}${g}</svg>`;
 }
 function renderPacks(products,loading){
-  const el=$('packs');let html='';
+  const el=$('packs');let html='';if(!loading)packList=products;
   ATP_PACKS.forEach((P,i)=>{const pr=products&&products.find(x=>x.id===P.id),tg=P.tag?' tg-'+P.tag.toLowerCase().replace(/\W+/g,'-'):'';
     html+=`<button type="button" class="pack sv-pack t${i+1}${tg}" data-id="${P.id}"${pr?'':' disabled'} aria-label="${P.atp.toLocaleString()} ATP, ${escH(P.label)}${pr?', '+escH(pr.price):''}">${P.tag?'<span class="tag">'+escH(P.tag)+'</span>':''}<span class="pk-art" aria-hidden="true">${packArt(i)}</span><span class="pk-amt"><b>${P.atp.toLocaleString()}</b><small>${escH(P.label)}</small></span><span class="pr">${pr?escH(pr.price):loading?'<i class="sv-dots"></i>':products?'—':'In the app'}</span></button>`;});
   el.innerHTML=html;
 }
-let buying=false;
+let buying=false,packList=null; // packList: the products the store last returned
 async function buyPack(id){
-  if(buying)return;buying=true;const btns=[...$('packs').children];btns.forEach(b=>b.disabled=true);
-  try{const r=await Native.call('buy',{productId:id});if(r&&r.purchase)await redeem(r.purchase);}
+  if(buying)return;
+  if(!wallet.online){toast('ATP','Connect to buy ATP','');return;} // the store would take the money before the server could credit it
+  buying=true;[...$('packs').children].forEach(b=>b.disabled=true);
+  try{const r=await Native.call('buy',{productId:id});
+    if(r&&r.pending)toast('ATP','Payment pending','ATP is added when the payment completes');
+    if(r&&r.purchase){try{await redeem(r.purchase);}
+      catch(e){toast('ATP',e.status===0?'Paid: ATP comes when you\'re back online':'Paid: ATP not added yet',e.message);}}}
   catch(e){toast('ATP','Purchase failed',e.message);}
-  finally{buying=false;btns.forEach(b=>b.disabled=false);}
+  finally{buying=false;renderPacks(packList);} // packs without a store price stay disabled
 }
-async function redeem(p){ // server verifies with Apple/Google, credits ATP, then the app finishes the transaction
+// One at a time, and a purchase already on its way to the server isn't sent again: the Android app hands over
+// unfinished purchases on every return to the app, which can be the moment the payment sheet closes
+let redeemQ=Promise.resolve();const redeeming=new Map();
+function redeem(p){const k=p.transactionId||p.purchaseToken||'';if(k&&redeeming.has(k))return redeeming.get(k);
+  const r=redeemQ.then(()=>redeemOne(p));redeemQ=r.catch(()=>{});
+  if(k){redeeming.set(k,r);r.catch(()=>{}).finally(()=>redeeming.delete(k));}return r;}
+async function redeemOne(p){ // server verifies with Apple/Google, credits ATP, then the app finishes the transaction
   const w=await api(p.platform==='ios'?'iap/apple':'iap/google',p);applyWallet(w);
   Native.send({type:'finish',transactionId:p.transactionId||'',purchaseToken:p.purchaseToken||''});
   if(w.credited){toast('ATP','ATP added',`+${w.credited} ATP — ${w.balance} in your wallet`);Native.haptic('success');}
@@ -8155,9 +8166,9 @@ function hud(){
 // HUD buttons: a pressed state that follows the finger (iOS does not apply :active to these)
 for(const b of document.querySelectorAll('#actions .act,#stats,#boardToggle,#roundClock')){const up=()=>b.classList.remove('down');
   b.addEventListener('pointerdown',()=>b.classList.add('down'));for(const e of ['pointerup','pointercancel','pointerleave','lostpointercapture'])b.addEventListener(e,up);}
-const APP_STORE_URL='https://apps.apple.com/app/id6818890370';
+const APP_STORE_URL='https://apps.apple.com/app/id6818890370',PLAY_URL='https://play.google.com/store/apps/details?id=com.mitosisgame.app';
 function inviteLinks(){const N=window.__mitosisNet;if(!N)return[];const h=location.hostname;
-  if(!/^https?:$/.test(location.protocol))return[Native.platform==='ios'?APP_STORE_URL:window.MITOSIS_SERVER]; // in the app: the App Store page, or the public site
+  if(!/^https?:$/.test(location.protocol))return[Native.platform==='ios'?APP_STORE_URL:Native.platform==='android'?PLAY_URL:window.MITOSIS_SERVER]; // in the app: its store page, or the public site
   if(h==='localhost'||h==='127.0.0.1'||h==='[::1]'||h==='::1')return N.lan||[];return[location.origin];}
 function netUI(){
   const pill=$('netPill'),line=$('netLine'),others=peerCount-1,N=window.__mitosisNet;
@@ -8176,7 +8187,7 @@ function netUI(){
   const row=$('inviteRow'),inp=$('inviteUrl'),help=$('inviteHelp');row.hidden=!N;
   if(N){const links=inviteLinks(),v=links[0]||'No network address found';if(inp.value!==v)inp.value=v;
     const srv=window.MITOSIS_SERVER||'',priv=/^https?:\/\/(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|\[::1\])/.test(srv); // a server on this computer or LAN
-    const t=Native.platform==='ios'?'Sends the App Store link. Friends who install Mitosis play in the same live arena as you.':location.hostname.endsWith('trycloudflare.com')?'Anyone with this link can join while your server and share-online.bat are running.':(!priv||srv.startsWith('https:'))?'Anyone with this link can join.':'Send this link to a friend on the same Wi-Fi. For friends elsewhere, run share-online.bat and send the https link it prints.';
+    const t=Native.platform==='ios'?'Sends the App Store link. Friends who install Mitosis play in the same live arena as you.':Native.platform==='android'?'Sends the Google Play link. Friends who install Mitosis play in the same live arena as you, on Android or iPhone.':location.hostname.endsWith('trycloudflare.com')?'Anyone with this link can join while your server and share-online.bat are running.':(!priv||srv.startsWith('https:'))?'Anyone with this link can join.':'Send this link to a friend on the same Wi-Fi. For friends elsewhere, run share-online.bat and send the https link it prints.';
     if(help.textContent!==t)help.textContent=t;}
   else help.textContent='Multiplayer runs through the Mitosis server on your computer.';
 }
@@ -8498,6 +8509,12 @@ function init(){
 }
 function removeHuman(){if(!human)return;removePlayer(human);cells=cells.filter(c=>!c.dead);human=null;}
 let shownCard='startCard';
+// Escape, which is also Android's back button, closes the open page the way its own back button does. When nothing
+// takes it (the lobby with no sheet open), the Android app goes to the background, like any app's first screen. An open
+// battle pass sheet closes first (its own handler).
+addEventListener('keydown',e=>{if(e.key!=='Escape'||!$('bpSheet').hidden||!['storeCard','passCard','questsCard','lookCard','rankCard','settingsCard','friendsCard','profileCard','deleteCard'].includes(shownCard))return;
+  const c=$(shownCard),b=shownCard==='storeCard'?$('storeBack'):shownCard==='passCard'?$('passBack'):shownCard==='deleteCard'?$('deleteCancel'):c.querySelector('.back');
+  if(c.hidden||!b||b.closest('[hidden]'))return;e.preventDefault();e.stopImmediatePropagation();b.click();},true);
 function showCard(id){
   if(id==='startCard'&&shownCard!=='startCard'){lobbyAt=performance.now();setTimeout(lbBgPaint,0);}
   // diagnostic: a report of what sends the page from Settings back to the start card (Settings → Account → sign in)
