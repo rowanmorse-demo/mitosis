@@ -10,6 +10,7 @@ const live = require('./live');
 const social = require('./social');
 const pushes = require('./push');
 const pushTriggersMod = require('./push-triggers');
+const bugReports = require('./bugs');
 
 const PORT = Number(process.env.PORT) || 3000;
 const ROOM_SIZE = 16;                // games per arena room: each room has its own host, bots and round
@@ -26,6 +27,7 @@ let pushTriggers = null; // what sends notifications (push-triggers.js): friend 
 const friends = social.create({ file: path.join(DATA_DIR, 'social.json'), nameBlocked: economy.nameBlocked, onEvent: e => { if (pushTriggers) pushTriggers.onSocial(e).catch(err => console.error('push: ' + err.message)); } });
 const pushLog = s => console.log(new Date().toLocaleTimeString() + '  ' + s);
 const push = pushes.create({ store, dataDir: DATA_DIR, log: pushLog }); // push notifications (push.js): device tokens, switches, APNs / FCM
+const bugs = bugReports.create({ store, log: pushLog }); // bug reports from the game (bugs.js), read at /admin/bugs
 pushTriggers = pushTriggersMod.create({ store, push, economy, social: friends, log: pushLog });
 pushTriggers.start();
 // signing in can fold this device's player into an existing account: its friends move along
@@ -85,10 +87,13 @@ const ROUTES = {
   'POST /api/crash': { fn: crashReport, auth: false, body: 512 * 1024 },
   // connection quality from the games (ping, lost pings, frame rate, time-zone region); read it at /admin/net
   'POST /api/net': { fn: (store, body) => { const r = netstats.clean(body, Date.now()); if (r) store.addNet(r); return { ok: true }; }, auth: false },
+  // a player's bug report (Settings › Report a bug): signed in or not, limited per player and per address
+  'POST /api/bug': { fn: bugs.handlers.report, auth: 'optional', body: 16 * 1024 },
 };
 // deleting an account deletes its push devices and switches too
-{ const route = ROUTES['POST /api/account/delete'], del = route.fn; route.fn = (store, body, p) => { const r = del(store, body, p); push.forget(p.id); return r; }; }
-// The admin pages are for the operator: /admin/net?token=… (connection report), /admin/live?token=… (live players) and /admin/pass?token=… (the battle pass switch).
+{ const route = ROUTES['POST /api/account/delete'], del = route.fn; route.fn = (store, body, p) => { const r = del(store, body, p); push.forget(p.id); bugs.forget(p.id); return r; }; }
+// The admin pages are for the operator: /admin/net?token=… (connection report), /admin/live?token=… (live players), /admin/pass?token=… (the battle pass switch)
+// and /admin/bugs?token=… (bug reports).
 // The token is ADMIN_TOKEN, or one made on first start and kept in the data dir.
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || (() => {
   const f = path.join(DATA_DIR, 'admin-token');
@@ -228,8 +233,8 @@ async function api(req, res, url) {
   if (!route) return sendJson(res, 404, { error: 'no such endpoint' });
   try {
     const body = req.method === 'POST' ? await readJson(req, route.body || MAX_BODY) : {};
-    const player = route.auth ? economy.auth(store, req.headers) : null;
-    sendJson(res, 200, await route.fn(store, body, player));
+    const player = route.auth === 'optional' ? (() => { try { return economy.auth(store, req.headers); } catch (e) { return null; } })() : route.auth ? economy.auth(store, req.headers) : null;
+    sendJson(res, 200, await route.fn(store, body, player, { ip }));
   } catch (e) {
     if (e instanceof economy.ApiError || e.status) sendJson(res, e.status || 400, { error: e.message });
     else { console.error('API error on ' + url + ': ' + (e.stack || e)); sendJson(res, 500, { error: 'server error' }); }
@@ -278,6 +283,8 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }); res.end(players.page());
   } else if (url === '/admin/pass') {
     passPage(req, res).catch(e => { console.error(e); res.end(); });
+  } else if (url === '/admin/bugs') {
+    bugs.admin(req, res, adminOk).catch(e => { console.error(e); res.end(); });
   } else if (url === '/admin/push') {
     pushPage(req, res).catch(e => { console.error(e); res.end(); });
   } else if (url === '/admin/live/stream') {
