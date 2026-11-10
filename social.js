@@ -17,7 +17,9 @@ const STATUSES = new Set(['menu', 'arena', 'practice', 'nearby', 'spectating']);
 const fail = (status, msg) => Object.assign(new Error(msg), { status });
 const cleanCode = s => String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
 
-function create({ file, nameBlocked = () => false, now = () => Date.now() }) {
+// onEvent (optional) hears what may deserve a push notification (push-triggers.js): { type: 'request' | 'accepted' | 'invite',
+// from, to, name: the sender's name, party? }. It runs after the reply, and its errors are its own.
+function create({ file, nameBlocked = () => false, now = () => Date.now(), onEvent = null }) {
   // players: id -> { code, name, friends: [id], incoming: [id], outgoing: [id] }; codes: code -> id
   let d = { players: {}, codes: {} };
   try { const j = JSON.parse(fs.readFileSync(file, 'utf8')); if (j && j.players && j.codes) d = j; } catch (e) {}
@@ -30,6 +32,8 @@ function create({ file, nameBlocked = () => false, now = () => Date.now() }) {
   }
   setInterval(flush, 2000).unref();
   process.on('exit', flush);
+  // what may deserve a push notification (see onEvent above), told after the reply
+  const emit = (type, from, to, extra) => { if (onEvent) setImmediate(() => { try { onEvent({ type, from, to, name: card(from).name, ...extra }); } catch (e) {} }); };
 
   const seen = new Map();     // player id -> { at, status }
   const parties = new Map();  // party id -> { id, leader, members: [id], invites: Map(id -> at), go: 0, goBy: null }
@@ -115,17 +119,17 @@ function create({ file, nameBlocked = () => false, now = () => Date.now() }) {
       const r = rec(p), id = byCode(body.code);
       if (id === p.id) throw fail(400, "that's your own friend code");
       if (r.friends.includes(id)) return view(p.id);
-      if (r.incoming.includes(id)) { befriend(p.id, id); return view(p.id); } // they had already asked: accept
+      if (r.incoming.includes(id)) { befriend(p.id, id); emit('accepted', p.id, id); return view(p.id); } // they had already asked: accept
       const t = d.players[id];
       if (t.incoming.length >= MAX_REQUESTS || r.outgoing.length >= MAX_REQUESTS) throw fail(409, 'too many open friend requests');
-      if (!t.incoming.includes(p.id)) t.incoming.push(p.id);
+      if (!t.incoming.includes(p.id)) { t.incoming.push(p.id); emit('request', p.id, id); }
       if (!r.outgoing.includes(id)) r.outgoing.push(id);
       save(); return view(p.id);
     },
     accept(store, body, p) {
       const r = rec(p), id = byCode(body.code);
       if (!r.incoming.includes(id)) throw fail(404, 'no friend request from that player');
-      befriend(p.id, id); return view(p.id);
+      befriend(p.id, id); emit('accepted', p.id, id); return view(p.id);
     },
     // unfriends, declines a request, or cancels one you sent
     remove(store, body, p) {
@@ -145,7 +149,7 @@ function create({ file, nameBlocked = () => false, now = () => Date.now() }) {
         q = { id: pid, leader: p.id, members: [p.id], invites: new Map(), go: 0, goBy: null };
         parties.set(pid, q); partyOf.set(p.id, pid);
       }
-      q.invites.set(id, now());
+      q.invites.set(id, now()); emit('invite', p.id, id, { party: q.id });
       return view(p.id);
     },
     partyJoin(store, body, p) {
@@ -174,6 +178,7 @@ function create({ file, nameBlocked = () => false, now = () => Date.now() }) {
 
   return {
     handlers,
+    online,   // a player's status ('menu', 'arena', …) while their game checks in, else null
     // account deletion: the player disappears from every friend list and party
     forget(id) {
       const r = d.players[id]; leaveParty(id); seen.delete(id);

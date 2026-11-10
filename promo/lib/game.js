@@ -12,7 +12,7 @@ const { CSS_URL } = require('./fonts');
 const ROOT = path.join(__dirname, '..', '..');
 const EDITS = [
   ['window.__mt={', 'window.__mt={x:s=>eval(s),', 'the ?debug=1 handle (window.__mt={…})'],
-  ['DPR=Math.min(saverOn?1.5:2,window.devicePixelRatio||1)', 'DPR=Math.min(saverOn?1.5:4,window.devicePixelRatio||1)', 'the canvas DPR cap in resize()'],
+  ['DPR=Math.min(saverOn?1.5:2,resCap,window.devicePixelRatio||1)', 'DPR=Math.min(saverOn?1.5:4,window.devicePixelRatio||1)', 'the canvas DPR cap in resize()'],
   [`href="${CSS_URL}"`, 'href="fonts.css"', 'the Google Fonts stylesheet link'],
 ];
 // outFile must sit next to fonts.css (see fonts.js)

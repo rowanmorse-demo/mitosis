@@ -8,6 +8,8 @@ const economy = require('./economy');
 const netstats = require('./netstats');
 const live = require('./live');
 const social = require('./social');
+const pushes = require('./push');
+const pushTriggersMod = require('./push-triggers');
 
 const PORT = Number(process.env.PORT) || 3000;
 const ROOM_SIZE = 16;                // games per arena room: each room has its own host, bots and round
@@ -20,11 +22,16 @@ const page = fs.readFileSync(path.join(__dirname, 'index.html'));
 const UPDATES_DIR = process.env.UPDATES_DIR || path.join(__dirname, 'updates'); // signed page updates for the apps (tools/page-update.js)
 const store = openStore();
 if (economy.ladderReset(store)) console.log('rank ladder: every rating starts again at ' + economy.RATING.start); // once per database (economy.js)
-const friends = social.create({ file: path.join(DATA_DIR, 'social.json'), nameBlocked: economy.nameBlocked });
+let pushTriggers = null; // what sends notifications (push-triggers.js): friend requests and party invites as they happen, the rest on a timer
+const friends = social.create({ file: path.join(DATA_DIR, 'social.json'), nameBlocked: economy.nameBlocked, onEvent: e => { if (pushTriggers) pushTriggers.onSocial(e).catch(err => console.error('push: ' + err.message)); } });
+const pushLog = s => console.log(new Date().toLocaleTimeString() + '  ' + s);
+const push = pushes.create({ store, dataDir: DATA_DIR, log: pushLog }); // push notifications (push.js): device tokens, switches, APNs / FCM
+pushTriggers = pushTriggersMod.create({ store, push, economy, social: friends, log: pushLog });
+pushTriggers.start();
 // signing in can fold this device's player into an existing account: its friends move along
 const signIn = fn => async (store, body, p) => {
   const r = await fn(store, body, p);
-  if (r && r.merged) { const to = store.playerBySecret(p.deviceHash); if (to && to.id !== p.id) friends.merge(p.id, to.id); }
+  if (r && r.merged) { const to = store.playerBySecret(p.deviceHash); if (to && to.id !== p.id) { friends.merge(p.id, to.id); push.merge(p.id, to.id); } }
   return r;
 };
 
@@ -66,6 +73,10 @@ const ROUTES = {
   'POST /api/social/party/decline': { fn: friends.handlers.partyDecline, auth: true },
   'POST /api/social/party/leave': { fn: friends.handlers.partyLeave, auth: true },
   'POST /api/social/party/go': { fn: friends.handlers.partyGo, auth: true },
+  // push notifications (push.js): the page registers the app's device token and sets which kinds to send
+  'POST /api/push/register': { fn: push.handlers.register, auth: true },
+  'POST /api/push/unregister': { fn: push.handlers.unregister, auth: true },
+  'POST /api/push/prefs': { fn: push.handlers.prefs, auth: true },
   'GET /api/catalog': { fn: store => economy.catalog(store), auth: false },
   'GET /api/leaderboard': { fn: store => economy.handlers.leaderboard(store), auth: false },
   // clients report long frames here so stalls on phones can be read from the server log
@@ -75,6 +86,8 @@ const ROUTES = {
   // connection quality from the games (ping, lost pings, frame rate, time-zone region); read it at /admin/net
   'POST /api/net': { fn: (store, body) => { const r = netstats.clean(body, Date.now()); if (r) store.addNet(r); return { ok: true }; }, auth: false },
 };
+// deleting an account deletes its push devices and switches too
+{ const route = ROUTES['POST /api/account/delete'], del = route.fn; route.fn = (store, body, p) => { const r = del(store, body, p); push.forget(p.id); return r; }; }
 // The admin pages are for the operator: /admin/net?token=… (connection report), /admin/live?token=… (live players) and /admin/pass?token=… (the battle pass switch).
 // The token is ADMIN_TOKEN, or one made on first start and kept in the data dir.
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || (() => {
@@ -135,6 +148,47 @@ ${st ? `<dl><dt>Players with progress</dt><dd>${st.players}</dd><dt>Bought the B
 <h2>Testers</h2><p>Testers see the pass now: while it is off, and before its season starts. What they earn and claim is real and carries into the season. To add a phone, open the game on it, reload this page and press Make tester beside it.</p>
 ${a.testers.length ? `<ul class="pl">${a.testers.map(r => row(r, false)).join('')}</ul>` : '<p>No testers yet.</p>'}
 <h3>Opened the game in the last 30 minutes</h3>${recent.length ? `<ul class="pl">${recent.map(r => row(r, true)).join('')}</ul>` : '<p>Nobody else.</p>'}</main>`);
+}
+// Push notifications for the operator: GET shows whether Apple / Google sending is set up, the devices, what went out today
+// and the players with notifications; POST player=<id> sends that player a test (title, body and link optional), e.g.
+//   curl -d player=<id> -d link=friends 'http://localhost:3000/admin/push?token=…'
+async function pushPage(req, res) {
+  if (!adminOk(req, res)) return;
+  const q = new URL(req.url, 'http://x').searchParams, esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';');
+  if (req.method === 'POST') {
+    let body = ''; for await (const d of req) { body += d; if (body.length > 4096) break; }
+    const f = new URLSearchParams(body), id = f.get('player') || '', who = store.player(id);
+    const r = who ? await push.notify(id, 'test', { title: f.get('title') || 'Mitosis', body: f.get('body') || 'Test notification. Tap to open ' + (f.get('link') || 'the game') + '.', link: f.get('link') || 'home' })
+      : { sent: 0, dead: 0, errors: [], skipped: 'no such player' };
+    const said = r.sent ? `Sent to ${r.sent} device${r.sent > 1 ? 's' : ''}` : r.skipped ? 'Not sent: ' + r.skipped : 'Not sent';
+    const msg = said + (r.dead ? `, dropped ${r.dead} dead token${r.dead > 1 ? 's' : ''}` : '') + (r.errors.length ? ' (' + r.errors.join('; ') + ')' : '');
+    log('push test to ' + id.slice(0, 8) + ': ' + msg);
+    if (q.get('format') === 'json' || /json|curl/i.test((req.headers.accept || '') + (req.headers['user-agent'] || ''))) { res.writeHead(200, { 'Content-Type': 'application/json' }); return res.end(JSON.stringify(r) + '\n'); }
+    res.writeHead(303, { Location: '/admin/push?token=' + encodeURIComponent(q.get('token')) + '&said=' + encodeURIComponent(msg) }); return res.end();
+  }
+  const st = push.stats(), recent = push.recent(30).map(r => ({ ...r, name: (store.player(r.player) || {}).name || 'Unnamed cell' }));
+  if (q.get('format') === 'json') { res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); return res.end(JSON.stringify({ ...st, recent })); }
+  const ago = t => { const m = Math.round((Date.now() - t) / 60000); return m < 1 ? 'just now' : m < 120 ? m + ' min ago' : Math.round(m / 60) + ' h ago'; };
+  const links = ['home', 'friends', 'quests', 'pass', 'shop'], kinds = push.KINDS.filter(k => !k.hidden);
+  const offCount = k => st.off.filter(a => a.includes(k) || a.includes('all')).length;
+  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+  res.end(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mitosis notifications</title>
+<style>body{margin:0;padding:24px 16px;background:#020809;color:#dcefe9;font:16px/1.5 system-ui,sans-serif}main{max-width:560px;margin:auto}h1{font-size:24px;margin:0 0 16px}h2{font-size:19px;margin:28px 0 8px}
+p{color:#8aaea9}.st{display:inline-block;padding:4px 12px;border-radius:99px;font-weight:700;margin-right:6px}.on{background:#1f6f4f}.off{background:#5b2330}.said{background:#0b1a1c;padding:10px 14px;border-radius:12px;color:#dcefe9}
+dl{display:grid;grid-template-columns:auto 1fr;gap:6px 16px}dt{color:#8aaea9}dd{margin:0;font-weight:600}ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}li{padding:10px 14px;border-radius:14px;background:#0b1a1c;display:grid;gap:8px}
+li small{color:#8aaea9;font-size:13px}form{display:flex;gap:8px;flex-wrap:wrap;margin:0}select,input{font:15px system-ui;padding:8px 10px;border-radius:10px;border:1px solid #2a3a3c;background:#020809;color:#dcefe9;min-width:0}input{flex:1}
+button{font:700 15px system-ui;padding:9px 18px;border-radius:99px;border:0;cursor:pointer;background:#ff5c8a;color:#fff}code{font-size:13px;color:#8aaea9;word-break:break-all}</style>
+<main><h1>Notifications</h1>
+<p><span class="st ${st.ready.ios ? 'on' : 'off'}">Apple ${st.ready.ios ? 'ready' : 'not set up'}</span><span class="st ${st.ready.android ? 'on' : 'off'}">Google ${st.ready.android ? 'ready' : 'not set up'}</span></p>
+${st.apns ? `<p>APNs key ${esc(st.apns.keyId)}, team ${esc(st.apns.teamId)}, app ${esc(st.apns.topic)}${st.apns.host ? ' · sending to <b>' + esc(st.apns.host) + '</b> (a stand-in, not Apple)' : ''}</p>` : '<p>Apple sending needs APNS_KEY, APNS_KEY_ID and APNS_TEAM_ID (see docs/PUSH.md).</p>'}
+${st.problems.map(p => '<p class="said">' + esc(p) + '</p>').join('')}
+${q.get('said') ? '<p class="said">' + esc(q.get('said')) + '</p>' : ''}
+<h2>Devices</h2>${st.devices.length ? '<dl>' + st.devices.map(d => `<dt>${d.platform === 'ios' ? 'iPhone / iPad' : 'Android'}${d.env ? ' (' + d.env + ')' : ''}</dt><dd>${d.n} device${d.n === 1 ? '' : 's'}, ${d.players} player${d.players === 1 ? '' : 's'}</dd>`).join('') + '</dl>' : '<p>No device has registered yet. The app registers once a player allows notifications.</p>'}
+<h2>Last 24 hours</h2><dl>${kinds.map(k => `<dt>${esc(k.name)}</dt><dd>${st.sent[k.id] || 0} sent · ${offCount(k.id)} switched off</dd>`).join('')}<dt>Tests</dt><dd>${st.sent.test || 0}</dd></dl>
+<h2>Send a test</h2><p>Goes to every device of that player, even with their notifications switched off in the game (not if iOS has them off). Tapping it opens the screen you pick.</p>
+${recent.length ? '<ul>' + recent.map(r => `<li><span><b>${esc(r.name)}</b> <small>${esc(r.player.slice(0, 8))} · ${r.n} device${r.n === 1 ? '' : 's'} (${esc(r.platforms.join(', '))}${r.app ? ', ' + esc(r.app) : ''}) · ${ago(r.seen)}</small></span>
+<form method="post"><input type="hidden" name="player" value="${esc(r.player)}"><select name="link" aria-label="Opens">${links.map(l => `<option>${l}</option>`).join('')}</select><input name="body" placeholder="Message (optional)" aria-label="Message"><button>Send test</button></form></li>`).join('') + '</ul>' : '<p>Nobody yet.</p>'}
+</main>`);
 }
 const crashDir = path.join(DATA_DIR, 'crashes');
 function crashReport(store, body) {
@@ -224,6 +278,8 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }); res.end(players.page());
   } else if (url === '/admin/pass') {
     passPage(req, res).catch(e => { console.error(e); res.end(); });
+  } else if (url === '/admin/push') {
+    pushPage(req, res).catch(e => { console.error(e); res.end(); });
   } else if (url === '/admin/live/stream') {
     if (adminOk(req, res)) players.stream(req, res);
   } else if (/^\/updates\/(ios|android)\/(manifest\.json|page\.html)$/.test(url)) {
@@ -395,6 +451,7 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`\n  Wallets and skins:  ${store.kind} store in ${DATA_DIR}`);
   console.log(`  Connection report:  http://localhost:${PORT}/admin/net?token=${ADMIN_TOKEN}`);
   console.log(`  Live players:       http://localhost:${PORT}/admin/live?token=${ADMIN_TOKEN}`);
+  { const ps = push.stats(); console.log(`  Notifications:      http://localhost:${PORT}/admin/push?token=${ADMIN_TOKEN}  (Apple ${ps.ready.ios ? (ps.apns.host ? 'to ' + ps.apns.host : 'ready') : 'not set up'} · Google ${ps.ready.android ? 'ready' : 'not set up'})`); }
   console.log(`  Battle pass switch: http://localhost:${PORT}/admin/pass?token=${ADMIN_TOKEN}  (${economy.passAdmin(store).on ? 'on' : 'off'})`);
   console.log(`  Purchases:          Apple ${iap.apple ? 'verified' : 'not configured'} · Google Play ${iap.google ? 'verified' : 'not configured'}${iap.unverified ? '  (IAP_UNVERIFIED=1: trusting clients — dev only!)' : ''}`);
   const auth = economy.catalog().auth;

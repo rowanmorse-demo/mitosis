@@ -12,6 +12,15 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         window.makeKeyAndVisible()
         self.window = window
         Store.shared.start()
+        Push.shared.start()                    // push notifications (Push.swift): before returning, so a tap that launched the app is delivered
         return true
+    }
+
+    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        Push.shared.registered(deviceToken)
+    }
+
+    func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        Push.shared.failed(error)
     }
 }

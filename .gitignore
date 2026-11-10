@@ -5,6 +5,9 @@ Thumbs.db
 
 # Server data (wallets, skins, purchases) — never commit
 data/
+# Keys put on the server by the Deploy workflow (APNs .p8) — never commit
+.secrets/
+*.p8
 
 # iOS
 ios/build/
@@ -23,6 +26,11 @@ android/.idea/
 android/*.iml
 android/app/*.iml
 android/.kotlin/
+android/app/release/
+# the Play upload key and its passwords stay on Rowan's machine (see android/RELEASE.md)
+android/keystore.properties
+*.jks
+*.keystore
 
 # store artwork build output (regenerate with ios/store-art/shots.js + compose.js)
 ios/store-art/raw/
@@ -32,6 +40,7 @@ ios/store-art/chrome-*/
 # promo video: rendered output and working files (re-render with node promo/render.js)
 promo/out/
 promo/.work/
+promo/rec/
 
 # rank trophy renders (re-render with node tools/trophies/render.js)
 tools/trophies/out/
