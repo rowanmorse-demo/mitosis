@@ -57,7 +57,11 @@ class SqliteStore {
       CREATE INDEX IF NOT EXISTS quests_at ON quests(at);
       CREATE TABLE IF NOT EXISTS stats(player TEXT, stat TEXT, n INTEGER NOT NULL DEFAULT 0, at INTEGER, PRIMARY KEY(player, stat));
       -- name fonts (economy.js FONT_LOCKS): the ones a player unlocked by ATP or the battle pass; the font in use is players.name_font
-      CREATE TABLE IF NOT EXISTS fonts(player TEXT, font INTEGER, at INTEGER, PRIMARY KEY(player, font));`);
+      CREATE TABLE IF NOT EXISTS fonts(player TEXT, font INTEGER, at INTEGER, PRIMARY KEY(player, font));
+      -- bug reports from the game (bugs.js): cid is the game's own id for a report, so a queued one sent twice is kept once;
+      -- data is the report's text and device details as JSON (plain text only)
+      CREATE TABLE IF NOT EXISTS bugs(id TEXT PRIMARY KEY, cid TEXT UNIQUE, at INTEGER, player TEXT, status TEXT NOT NULL DEFAULT 'new', data TEXT, notes TEXT, fixed TEXT, updated INTEGER);
+      CREATE INDEX IF NOT EXISTS bugs_at ON bugs(at);`);
     const hadPlayed = this.db.prepare('PRAGMA table_info(players)').all().some(c => c.name === 'played');
     for (const sql of ['ALTER TABLE players ADD COLUMN rating INTEGER NOT NULL DEFAULT 1000', 'ALTER TABLE players ADD COLUMN name TEXT', 'ALTER TABLE players ADD COLUMN runs INTEGER NOT NULL DEFAULT 0',
       'ALTER TABLE players ADD COLUMN xp INTEGER NOT NULL DEFAULT 0', 'ALTER TABLE runs ADD COLUMN xp INTEGER',
@@ -165,6 +169,12 @@ class SqliteStore {
       insNet: p('INSERT INTO netstats(at, platform, app, tz, conn, n, lost, min, med, p90, jit, fps, slow) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'),
       netSince: p('SELECT * FROM netstats WHERE at > ? ORDER BY at DESC LIMIT 50000'),
       pruneNet: p('DELETE FROM netstats WHERE at < ?'),
+      insBug: p('INSERT OR IGNORE INTO bugs(id, cid, at, player, status, data, updated) VALUES(?, ?, ?, ?, ?, ?, ?)'),
+      bug: p('SELECT * FROM bugs WHERE id = ?'),
+      bugs: p('SELECT * FROM bugs ORDER BY at DESC LIMIT ?'),
+      setBug: p('UPDATE bugs SET status = ?, notes = ?, fixed = ?, updated = ? WHERE id = ?'),
+      pruneBugs: p('DELETE FROM bugs WHERE at < ? OR id IN (SELECT id FROM bugs ORDER BY at DESC LIMIT -1 OFFSET ?)'),
+      delBugs: p('DELETE FROM bugs WHERE player = ?'),
     };
   }
   playerBySecret(h) { const p = this.q.bySecret.get(h); if (p) return p; const d = this.q.device.get(h); return d ? this.player(d.player) : null; }
@@ -276,7 +286,15 @@ class SqliteStore {
   setFlag(name, value) { this.q.setFlag.run(name, value); }
   addNet(r) { this.q.insNet.run(r.at, r.platform, r.app, r.tz, r.conn, r.n, r.lost, r.min, r.med, r.p90, r.jit, r.fps, r.slow); if (Math.random() < .01) this.q.pruneNet.run(r.at - 90 * 864e5); }
   netSince(t) { return this.q.netSince.all(t).map(r => ({ ...r, fps: r.fps == null ? null : Number(r.fps) })); }
+  /** Bug reports (bugs.js). addBug is false when a report with that cid is already kept. */
+  addBug(b) { return Number(this.q.insBug.run(b.id, b.cid, b.at, b.player, b.status, JSON.stringify(b.data), b.at).changes) > 0; }
+  bug(id) { const r = this.q.bug.get(String(id)); return r ? bugRow(r) : null; }
+  bugs(limit = 1000) { return this.q.bugs.all(limit).map(bugRow); }
+  setBug(id, s, now) { return Number(this.q.setBug.run(s.status, s.notes, s.fixed, now, String(id)).changes) > 0; }
+  pruneBugs(before, keep) { this.q.pruneBugs.run(before, keep); }
+  forgetBugs(player) { this.q.delBugs.run(player); }
 }
+const bugRow = r => ({ id: r.id, cid: r.cid, at: Number(r.at), player: r.player, status: r.status, data: (() => { try { return JSON.parse(r.data) || {}; } catch (e) { return {}; } })(), notes: r.notes || '', fixed: r.fixed || '', updated: Number(r.updated) });
 
 /* ---------- JSON file (fallback) ---------- */
 class JsonStore {
@@ -396,6 +414,12 @@ class JsonStore {
   setFlag(name, value) { this.d.flags[name] = value; this.save(); }
   addNet(r) { const a = this.d.net || (this.d.net = []); a.push(r); if (a.length > 20000) a.splice(0, a.length - 20000); this.save(); }
   netSince(t) { return (this.d.net || []).filter(r => r.at > t); }
+  addBug(b) { const a = this.d.bugs || (this.d.bugs = []); if (b.cid && a.some(x => x.cid === b.cid)) return false; a.push({ ...b, notes: '', fixed: '', updated: b.at }); this.save(); return true; }
+  bug(id) { const r = (this.d.bugs || []).find(x => x.id === String(id)); return r ? JSON.parse(JSON.stringify(r)) : null; }
+  bugs(limit = 1000) { return (this.d.bugs || []).slice().sort((a, b) => b.at - a.at).slice(0, limit).map(r => JSON.parse(JSON.stringify(r))); }
+  setBug(id, s, now) { const r = (this.d.bugs || []).find(x => x.id === String(id)); if (!r) return false; Object.assign(r, { status: s.status, notes: s.notes, fixed: s.fixed, updated: now }); this.save(); return true; }
+  pruneBugs(before, keep) { const a = (this.d.bugs || []).filter(r => r.at >= before).sort((x, y) => y.at - x.at).slice(0, keep); if (a.length !== (this.d.bugs || []).length) { this.d.bugs = a; this.save(); } }
+  forgetBugs(player) { const a = this.d.bugs || []; const k = a.filter(r => r.player !== player); if (k.length !== a.length) { this.d.bugs = k; this.save(); } }
   prune() { // keep the run log small
     const ids = Object.keys(this.d.runs); if (ids.length < 5000) return;
     ids.sort((a, b) => this.d.runs[a].started - this.d.runs[b].started);

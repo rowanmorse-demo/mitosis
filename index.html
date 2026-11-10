@@ -3303,6 +3303,37 @@ body.saver #storeCard .st-ball,body.saver #storeCard .st-gl::after,body.saver #s
    without it, and battery saver drops blur everywhere */
 @media (pointer:coarse){body.playing :is(#stats,.act,.evo,#banner,.toast,#tip,#roundClock,#boardToggle,#board,#board ol,#perfHud,#fx .hchip,#feed div,#joy .knob,.spec-bar,.panel){-webkit-backdrop-filter:none!important;backdrop-filter:none!important}}
 body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+/* Report a bug (#bugSheet): a sheet over any page; the form on the left, what is sent with it on the right */
+.bug-sheet{position:fixed;inset:0;z-index:40;display:grid;place-items:center;box-sizing:border-box;padding:max(10px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));
+  background:rgba(2,8,9,.72);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);touch-action:pan-y;animation:ov .22s ease-out}
+.bug-box{width:min(780px,100%);max-height:100%;overflow:auto;overscroll-behavior:contain;box-sizing:border-box;display:grid;gap:12px;margin:0;padding:14px 18px 16px;border-radius:26px;border:1px solid rgba(170,235,225,.15);
+  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.012) 40%),rgba(5,16,18,.95);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 40px 80px -20px rgba(0,0,0,.9);animation:up .32s cubic-bezier(.2,.8,.2,1)}
+.bug-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-left:4px}
+.bug-top h2{margin:0;font:800 22px/1 var(--display);letter-spacing:-.035em}
+.bug-x{appearance:none;flex:none;width:40px;height:40px;display:grid;place-items:center;padding:0;border-radius:50%;cursor:pointer;color:var(--ink);background:rgba(255,255,255,.06);border:1px solid var(--line)}
+.bug-x svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+.bug-cols{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px;align-items:start}
+.bug-main{display:grid;gap:8px;min-width:0}
+.bug-l{font:700 14px/1.2 var(--display);color:var(--ink);padding-left:4px}
+.bug-sheet textarea,.bug-sheet input{appearance:none;width:100%;box-sizing:border-box;background:linear-gradient(180deg,rgba(0,0,0,.44),rgba(0,0,0,.28));border:1px solid rgba(160,225,215,.16);border-radius:14px;color:var(--ink);
+  font:500 16px/1.4 var(--display);padding:10px 14px;-webkit-user-select:text;user-select:text;touch-action:auto}
+.bug-sheet textarea{resize:none;height:clamp(76px,30vh,150px);display:block}
+.bug-sheet textarea::placeholder,.bug-sheet input::placeholder{color:var(--dim)}
+.bug-sheet textarea:focus,.bug-sheet input:focus{outline:3px solid rgba(255,92,138,.22);outline-offset:0;border-color:rgba(255,92,138,.75)}
+.bug-lrow{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding-right:4px}.bug-row{display:flex}.bug-row input{flex:1;min-width:0;padding:9px 14px}
+.bug-n{flex:none;font:500 11px/1 var(--mono);color:var(--dim);font-variant-numeric:tabular-nums}
+.bug-go{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.bug-send{min-height:46px;padding:0 26px;font-size:16px}
+.bug-msg{margin:0;flex:1;min-width:0;font-size:13px;line-height:1.3;color:#ffb3bd}.bug-msg:empty{display:none}
+.bug-att{display:grid;gap:8px;align-content:start;min-width:0;padding:10px 12px 12px;border-radius:16px;background:rgba(0,0,0,.28);border:1px solid var(--line)}
+.bug-att h3{margin:0;font:500 10.5px/1.2 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.bug-att dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:3px 10px;margin:0;font-size:12.5px;line-height:1.35}
+.bug-att dt{color:var(--muted);white-space:nowrap}.bug-att dd{margin:0;overflow-wrap:anywhere}
+.bug-att pre{margin:0;max-height:72px;overflow:auto;font:10.5px/1.45 var(--mono);color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere;-webkit-user-select:text;user-select:text;touch-action:pan-y}.bug-att pre:empty{display:none}
+.bug-done{display:grid;justify-items:center;text-align:center;gap:8px;padding:10px 8px 6px}.bug-done h3{margin:0;font:800 22px/1.1 var(--display);letter-spacing:-.03em}.bug-done p{margin:0 0 6px;max-width:420px;color:var(--muted);font-size:14px;line-height:1.4}
+.bug-done .primary{min-height:46px;padding:0 34px}
+.bug-tick{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:rgba(111,240,192,.14);border:1px solid rgba(111,240,192,.4)}.bug-tick svg{width:26px;height:26px;fill:none;stroke:var(--xp2);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+@media (max-height:420px){.bug-box{gap:9px;padding:11px 16px 13px;border-radius:22px}.bug-top h2{font-size:19px}.bug-x{width:36px;height:36px}.bug-sheet textarea{height:clamp(70px,26vh,120px)}.bug-att pre{max-height:56px}}
+@media (orientation:portrait){.bug-cols{grid-template-columns:1fr}}
 </style>
 <!-- @name-fonts:css -->
 <style id="nameFonts">
@@ -3665,6 +3696,7 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
             <p class="achline" id="achLine"></p>
           </div></details>
           <button type="button" class="srow nav" id="introAgain"><span class="sl">Welcome tips</span></button>
+          <button type="button" class="srow nav" id="bugBtn"><span class="sl">Report a bug</span></button>
         </div></div>
         <div class="st-foot"><button type="button" class="st-reset"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5v5h5"/><path d="M4.6 14.5A8 8 0 1 0 6.3 6.3L4 10"/></svg>Reset to defaults</button></div>
       </section>
@@ -3837,6 +3869,7 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
     <div class="ov-row">
       <button id="pauseSnd" class="ov-ico" type="button" aria-pressed="true" aria-label="Sound on"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9.6h3.4L12 5.6v12.8l-4.6-4H4z"/><path class="on" d="M15.5 9.2a4 4 0 0 1 0 5.6M18.2 6.6a7.6 7.6 0 0 1 0 10.8"/><path class="off" d="M16 9.5l5 5M21 9.5l-5 5"/></svg></button>
       <button id="pauseSet" class="ov-ico" type="button" aria-label="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg></button>
+      <button id="pauseBug" class="ov-ico" type="button" aria-label="Report a bug"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.2 7.6a2.8 2.8 0 0 1 5.6 0"/><rect x="7.2" y="8.4" width="9.6" height="11.6" rx="4.8"/><path d="M12 12v8M3.6 13.6h3.6M16.8 13.6h3.6M4.8 8.8l2.6 1.6M19.2 8.8l-2.6 1.6M4.8 19l2.6-1.8M19.2 19l-2.6-1.8"/></svg></button>
       <button id="quit" class="ghost ov-btn ov-leave" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4.5h4a1.5 1.5 0 0 1 1.5 1.5v12a1.5 1.5 0 0 1-1.5 1.5h-4"/><path d="M10 8l-4 4 4 4M6 12h9.5"/></svg>Leave</button>
     </div>
   </div>
@@ -3904,6 +3937,24 @@ body.saver *,body.saver *::before,body.saver *::after{-webkit-backdrop-filter:no
       </div>
     </section>
   </div>
+</div>
+
+<!-- Report a bug (server: bugs.js, read at /admin/bugs): opened from Settings › Game › Help and the pause menu, over whatever
+     is open. What goes with the report is listed beside the form before it is sent; offline, it waits and sends later. -->
+<div class="bug-sheet" id="bugSheet" role="dialog" aria-modal="true" aria-labelledby="bugTitle" hidden>
+  <form class="bug-box" id="bugForm" novalidate>
+    <header class="bug-top"><h2 id="bugTitle">Report a bug</h2><button type="button" class="bug-x" id="bugClose" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
+    <div class="bug-cols" id="bugCols">
+      <div class="bug-main">
+        <div class="bug-lrow"><label class="bug-l" for="bugText">What happened?</label><span class="bug-n" id="bugN">0 / 1000</span></div>
+        <textarea id="bugText" maxlength="1000" required placeholder="What you were doing, what you expected, and what happened instead" aria-describedby="bugN"></textarea>
+        <div class="bug-row"><input id="bugEmail" type="email" maxlength="120" autocomplete="email" inputmode="email" placeholder="Email (optional, so we can reply)" aria-label="Email, optional"></div>
+        <div class="bug-go"><button type="submit" class="primary bug-send" id="bugSend">Send report</button><p class="bug-msg" id="bugMsg" role="alert"></p></div>
+      </div>
+      <section class="bug-att" aria-labelledby="bugAttT"><h3 id="bugAttT">Sent with your report</h3><dl id="bugFacts"></dl><pre id="bugLog"></pre></section>
+    </div>
+    <div class="bug-done" id="bugDone" hidden><span class="bug-tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5.5 12.5l4.2 4.2 8.8-9.2"/></svg></span><h3 id="bugDoneT">Thanks, sent</h3><p id="bugDoneP"></p><button type="button" class="primary" id="bugOk">Done</button></div>
+  </form>
 </div>
 
 <script>
@@ -9974,7 +10025,7 @@ let shownCard='startCard';
 // Escape, which is also Android's back button, closes the open page the way its own back button does. When nothing
 // takes it (the lobby with no sheet open), the Android app goes to the background, like any app's first screen. An open
 // battle pass sheet closes first (its own handler).
-addEventListener('keydown',e=>{if(e.key!=='Escape'||!$('bpSheet').hidden||!['storeCard','passCard','questsCard','lookCard','rankCard','settingsCard','friendsCard','profileCard','deleteCard'].includes(shownCard))return;
+addEventListener('keydown',e=>{if(e.key!=='Escape'||!$('bpSheet').hidden||!$('bugSheet').hidden||!['storeCard','passCard','questsCard','lookCard','rankCard','settingsCard','friendsCard','profileCard','deleteCard'].includes(shownCard))return;
   const c=$(shownCard),b=shownCard==='storeCard'?$('storeBack'):shownCard==='passCard'?$('passBack'):shownCard==='deleteCard'?$('deleteCancel'):c.querySelector('.back');
   if(c.hidden||!b||b.closest('[hidden]'))return;e.preventDefault();e.stopImmediatePropagation();b.click();},true);
 function showCard(id){
@@ -10809,7 +10860,55 @@ const PF=window.__mt?{n:0,step:0,net:0,draw:0,gap:0,slow:0}:null;if(PF)window.__
 let frameN=0,last=performance.now(),hudT=0,ema=16,playT=0,lastHitchAt=0,hitchSent=0,wsMax=0,lastTouchAt=0;
 addEventListener('pointerdown',()=>{lastTouchAt=performance.now();},true);
 window.__wsTime=w=>{if(w>wsMax)wsMax=w;};setInterval(()=>{wsMax=0;},1000);
-function reportHitch(text){Native.send({type:'log',text});if(hitchSent++>40)return; // at most 40 reports per session
+// Report a bug (#bugSheet; server: bugs.js, read at /admin/bugs). The last errors and hitches (reportHitch) are kept here
+// so a report can carry them, with the version, device, mode, ping and frame rate; the sheet lists all of it before it goes.
+// The player id goes by the request's sign-in, never in the report. A report that can't be sent waits in localStorage
+// (mitosis.bugs, the last 5) and goes the next time the app opens or comes back online.
+const bugLines=[];let bugCur=null,bugBack=null,bugFlushing=false;
+function bugNote(text){bugLines.push(new Date().toISOString().slice(11,19)+' '+String(text).slice(0,280));if(bugLines.length>30)bugLines.shift();}
+function bugFacts(){const ua=navigator.userAgent||'',io=/(?:iPhone|iPad|iPod|CPU) OS (\d+)[_.](\d+)/.exec(ua),an=/Android (\d+(?:\.\d+)?)/.exec(ua);
+  const os=io?(/iPad|Macintosh/.test(ua)?'iPadOS ':'iOS ')+io[1]+'.'+io[2]:an?'Android '+an[1]:/Mac OS X/.test(ua)?(navigator.maxTouchPoints>1?'iPadOS':'macOS'):/Windows/.test(ua)?'Windows':/CrOS/.test(ua)?'ChromeOS':/Linux/.test(ua)?'Linux':'';
+  const device=/iPad/.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1)?'iPad':/iPhone|iPod/.test(ua)?'iPhone':an?((/;\s*([^;)]+?)\s+Build\//.exec(ua)||[])[1]||'Android device'):TOUCH_UI?'Touch screen':'Computer';
+  const how=nearMode()?'Nearby':CL?'Classic':local==='practice'?'Casual':local==='auto'?'Ranked, bots':'Ranked',p=pingNow();
+  return{platform:Native.platform||'web',app:APP_VER,os,device,screen:innerWidth+'x'+innerHeight+'@'+(+(devicePixelRatio||1).toFixed(2)),
+    mode:how+(mode==='play'?(paused?', paused':', playing'):', lobby'),ping:p==null||nearMode()?null:Math.round(p),fps:ema>0?Math.round(1000/ema):null,log:bugLines.slice()};}
+function bugAppName(v){const m=/^(ios|android)-([\d.]+)(?:-p(\d+))?$/.exec(v);return m?(m[1]==='ios'?'iOS app ':'Android app ')+m[2]+(m[3]?' · page update '+m[3]:''):v==='web'?'Web':v;}
+function bugOpen(){const f=bugFacts();bugCur=f;bugBack=document.activeElement;
+  const rows=[['App',bugAppName(f.app)],['System',f.os||'Unknown'],['Device',f.device],['Screen',innerWidth+' × '+innerHeight],['Mode',f.mode],
+    ['Ping',f.ping==null?'Not measured':f.ping+' ms'],['Frame rate',f.fps==null?'Not measured':f.fps+' fps'],['Player id',wallet.playerId?String(wallet.playerId).slice(0,8):'Not set up yet'],
+    ['Recent errors',f.log.length?f.log.length+(f.log.length>1?' lines, below':' line, below'):'None']];
+  $('bugFacts').innerHTML=rows.map(([k,v])=>`<dt>${k}</dt><dd>${escH(v)}</dd>`).join('');$('bugLog').textContent=f.log.join('\n');
+  $('bugCols').hidden=false;$('bugDone').hidden=true;$('bugMsg').textContent='';bugCount();
+  try{releaseInput();}catch(e){}$('bugSheet').hidden=false;$('bugForm').scrollTop=0;if(!TOUCH_UI)setTimeout(()=>$('bugText').focus(),60);}
+function bugClose(){$('bugSheet').hidden=true;const a=document.activeElement;if(a&&a.blur&&$('bugSheet').contains(a))a.blur();
+  if(bugBack&&bugBack.focus&&!TOUCH_UI)try{bugBack.focus();}catch(e){}bugBack=null;}
+function bugCount(){$('bugN').textContent=$('bugText').value.length+' / 1000';}
+function bugQueue(r){let a=[];try{a=JSON.parse(localStorage.getItem('mitosis.bugs')||'[]');}catch(e){}if(!Array.isArray(a))a=[];a.push(r);try{localStorage.setItem('mitosis.bugs',JSON.stringify(a.slice(-5)));}catch(e){}}
+async function bugFlush(){if(bugFlushing)return;bugFlushing=true;
+  try{let a=[];try{a=JSON.parse(localStorage.getItem('mitosis.bugs')||'[]');}catch(e){}if(!Array.isArray(a))a=[];
+    while(a.length){try{await api('bug',a[0]);}catch(e){if(!e.status||e.status===429||e.status>=500)break;} // still offline, or too many: later; refused: dropped
+      a.shift();try{if(a.length)localStorage.setItem('mitosis.bugs',JSON.stringify(a));else localStorage.removeItem('mitosis.bugs');}catch(e){}}}
+  finally{bugFlushing=false;}}
+const bugId=()=>{const b=new Uint8Array(10);window.crypto.getRandomValues(b);return'b'+[...b].map(x=>x.toString(16).padStart(2,'0')).join('');};
+$('bugBtn').addEventListener('click',bugOpen);$('pauseBug').addEventListener('click',bugOpen);
+$('bugClose').addEventListener('click',bugClose);$('bugText').addEventListener('input',bugCount);
+$('bugOk').addEventListener('click',()=>{$('bugText').value='';bugCount();bugClose();});
+// typing here must not reach the game (M mutes, Space splits, Escape pauses): the sheet keeps its keys, and Escape closes it
+for(const t of['keydown','keyup'])$('bugSheet').addEventListener(t,e=>{if(t==='keydown'&&e.key==='Escape'){e.preventDefault();bugClose();}e.stopPropagation();});
+$('bugForm').addEventListener('submit',async e=>{e.preventDefault();
+  const text=$('bugText').value.trim(),email=$('bugEmail').value.trim(),msg=$('bugMsg'),b=$('bugSend');msg.textContent='';
+  if(text.replace(/\s/g,'').length<3){msg.textContent='Say what happened first';$('bugText').focus();return;}
+  if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@.]{2,}$/.test(email)){msg.textContent='That email doesn\'t look right';$('bugEmail').focus();return;}
+  const rep={...(bugCur||bugFacts()),text,email,cid:bugId()};let later=false;b.disabled=true;b.textContent='Sending…';
+  try{await api('bug',rep);}
+  catch(err){if(!err.status||err.status>=500){bugQueue(rep);later=true;}
+    else{msg.textContent=err.status===429?'Too many reports for now. Try again later':err.message||'Not sent';return;}}
+  finally{b.disabled=false;b.textContent='Send report';}
+  $('bugCols').hidden=true;$('bugDone').hidden=false;$('bugDoneT').textContent=later?'Saved for later':'Thanks, sent';
+  $('bugDoneP').textContent=later?'You\'re offline, so it sends by itself when the game can reach the server again.':email?'We read every report and may email you at '+email+' about it.':'We read every report. Thanks for helping make Mitosis better.';
+  try{document.activeElement.blur();}catch(e){}if(!TOUCH_UI)$('bugOk').focus();});
+setTimeout(bugFlush,8000);addEventListener('online',()=>setTimeout(bugFlush,2000));document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(bugFlush,3000);});
+function reportHitch(text){try{bugNote(text);}catch(e){}Native.send({type:'log',text});if(hitchSent++>40)return; // at most 40 reports per session
   try{fetch(window.MITOSIS_SERVER+'/api/log',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({who:(Native.platform||'web')+':'+(wallet.playerId||'?').slice(0,8),text})}).catch(()=>{});}catch(e){}}
 const COVER=new Set(['deathCard','storeCard','passCard','lookCard','rankCard','settingsCard','friendsCard','profileCard','deleteCard']); // full-screen pages: the arena under them can't be seen
 function frame(nowMs){

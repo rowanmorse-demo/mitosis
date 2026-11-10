@@ -1,6 +1,6 @@
 # Mitosis: Cell Arena — Privacy Policy
 
-_Last updated: 9 November 2026_
+_Last updated: 10 November 2026_
 
 Mitosis: Cell Arena ("Mitosis", "the game") is made by Catapult Consulting, LLC. This policy explains what the game stores, why, and how to remove it. It applies to the iPhone and Android apps and to the website, mitosisgame.com.
 
@@ -26,6 +26,8 @@ Mitosis: Cell Arena ("Mitosis", "the game") is made by Catapult Consulting, LLC.
 
 **Diagnostics.** If the app crashes or stalls, a technical report (device model, OS version, app version and a stack trace) is sent to the server so the problem can be fixed. Reports contain no personal information.
 
+**Bug reports (optional).** If you choose Report a bug (in Settings or the pause menu), the server keeps what you write; your email address, only if you give one so we can reply; and, listed in the form before you send it: the app version and page update, your device type, operating system version and screen size, the game mode, your ping and frame rate, the game's last error and stall messages, and your player id (never your password or sign-in). Reports are used only to find and fix problems, are read only by the developer, and are deleted after 180 days, or straight away when you delete your account.
+
 **Website visits.** mitosisgame.com is served through Cloudflare, which counts page views with Cloudflare Web Analytics: the page visited, the referring site, the country, and the browser and device type. It uses no cookies and no visitor identifier, and Cloudflare does not use it to track you across sites. The apps do not use it.
 
 ## What the game does not do
@@ -37,11 +39,11 @@ Mitosis: Cell Arena ("Mitosis", "the game") is made by Catapult Consulting, LLC.
 
 ## Where data is kept
 
-The Mitosis server stores wallets, accounts, run results, purchase identifiers and diagnostics. It is operated by Catapult Consulting, LLC. Data is kept for as long as the account or device identity exists.
+The Mitosis server stores wallets, accounts, run results, purchase identifiers, diagnostics and bug reports. It is operated by Catapult Consulting, LLC. Data is kept for as long as the account or device identity exists, except bug reports, which are deleted after 180 days.
 
 ## Deleting your data
 
-- **Delete account** in the game (Profile › Account › Delete account, or Settings › Account & data) permanently deletes your account from the server straight away: rating, XP and level, lifetime stats and trophies, ATP, skins, battle pass progress, run history, display name and its font, and any Sign in with Apple or Google link. Records of App Store and Google Play purchases are kept only as anonymous transaction ids, so a purchase cannot be credited twice; they are no longer linked to you. The game then clears its data on your device and starts you fresh.
+- **Delete account** in the game (Profile › Account › Delete account, or Settings › Account & data) permanently deletes your account from the server straight away: rating, XP and level, lifetime stats and trophies, ATP, skins, battle pass progress, run history, display name and its font, bug reports you sent, and any Sign in with Apple or Google link. Records of App Store and Google Play purchases are kept only as anonymous transaction ids, so a purchase cannot be credited twice; they are no longer linked to you. The game then clears its data on your device and starts you fresh.
 - If you signed in with Apple, you can also stop using your Apple Account with the game in iPhone Settings › your name › Sign in with Apple.
 - **Sign out** in the game's Profile (tap your name on the home screen) detaches your device from your account and gives the device a fresh wallet.
 - **Deleting the app** or clearing the website's site data removes the device identity from your device; a new one is created next time you play.
