@@ -1,0 +1,43 @@
+# Read the game server's specs from GitHub, for networks that can't reach it directly (ship or school Wi-Fi).
+# Runs only when started by hand by someone with write access: Actions › Server info › Run workflow, or
+#   gh workflow run server-info.yml
+# Read-only: it prints the processor, memory, disk and network speed, and changes nothing on the server.
+# The two speed checks run for at most 8 seconds each. This repository is public, so its log is public:
+# keep the output to those specs (no hostnames, container names, settings or player data).
+# Needs the repository secret DEPLOY_SSH_KEY, the same key as the Deploy workflow.
+name: Server info
+
+on:
+  workflow_dispatch:
+
+concurrency: deploy
+
+jobs:
+  info:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Read the server's specs
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy
+          chmod 600 ~/.ssh/deploy
+          echo '51.81.81.166 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBYWTgJ31gp1V88ymqZ31K+NM8O+/8gPgwM6KoAP5Sux' > ~/.ssh/known_hosts
+          status=0
+          ssh -i ~/.ssh/deploy -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=20 \
+            ubuntu@51.81.81.166 'bash -s' <<'REMOTE' || status=$?
+          echo "processor cores: $(nproc)"
+          echo "processor: $(lscpu | sed -n 's/^Model name: *//p' | head -1)"
+          echo "memory: $(free -h | awk '/^Mem:/{print $2" total, "$7" available"}')"
+          echo "disk: $(df -h / | awk 'NR==2{print $2" total, "$4" free"}')"
+          for i in $(ls /sys/class/net | grep -v -E '^(lo|docker|veth|br-)'); do
+            echo "network card link speed: $(cat /sys/class/net/$i/speed 2>/dev/null || echo unknown) Mbit/s"
+          done
+          down=$(curl -s -o /dev/null --max-time 8 -w '%{speed_download}' 'https://speed.cloudflare.com/__down?bytes=500000000' || true)
+          up=$(head -c 300000000 /dev/zero | curl -s -o /dev/null --max-time 8 -w '%{speed_upload}' -X POST -T - 'https://speed.cloudflare.com/__up' || true)
+          awk -v d="${down:-0}" -v u="${up:-0}" 'BEGIN{printf "measured download: %.0f Mbit/s\nmeasured upload: %.0f Mbit/s\n", d*8/1e6, u*8/1e6}'
+          REMOTE
+          rm -f ~/.ssh/deploy
+          exit $status
