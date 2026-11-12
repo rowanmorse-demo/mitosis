@@ -1,0 +1,64 @@
+# Back up the game server's data on the server itself, for networks that can't reach it directly (ship or school Wi-Fi).
+# Runs only when started by hand by someone with write access: Actions › Back up › Run workflow, or
+#   gh workflow run backup.yml
+# What it does: a consistent copy of the SQLite database (VACUUM INTO, safe while the game runs) and every JSON data
+# file, into the data volume (/data/backups/<time>) and again outside it (/var/backups/mitosis/<time>, root only).
+# Nothing leaves the server. This repository is public, so its log is public: it prints only the time, file count,
+# sizes and the integrity check, never file contents, player data, hostnames or settings.
+# Keeps the newest 10 backups in each place. Needs the repository secret DEPLOY_SSH_KEY, the same key as Deploy.
+name: Back up
+
+on:
+  workflow_dispatch:
+
+concurrency: deploy
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Back up the data on the server
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy
+          chmod 600 ~/.ssh/deploy
+          echo '51.81.81.166 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBYWTgJ31gp1V88ymqZ31K+NM8O+/8gPgwM6KoAP5Sux' > ~/.ssh/known_hosts
+          status=0
+          ssh -i ~/.ssh/deploy -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=20 \
+            ubuntu@51.81.81.166 'bash -s' <<'REMOTE' || status=$?
+          set -euo pipefail
+          stamp=$(date -u +%Y%m%dT%H%M%SZ)
+          echo "backup: $stamp"
+          echo "server disk before: $(df -h / | awk 'NR==2{print $4" free of "$2}')"
+          sudo docker exec mitosis mkdir -p "/data/backups/$stamp"
+          # The database: VACUUM INTO writes a consistent copy while the server keeps running; then check the copy.
+          sudo docker exec -i -e STAMP="$stamp" mitosis node - <<'JS'
+          const fs = require('fs');
+          if (!fs.existsSync('/data/mitosis.sqlite')) { console.log('database: none (JSON store)'); process.exit(0); }
+          const { DatabaseSync } = require('node:sqlite');
+          const out = `/data/backups/${process.env.STAMP}/mitosis.sqlite`;
+          new DatabaseSync('/data/mitosis.sqlite', { readOnly: true }).exec(`VACUUM INTO '${out}'`);
+          const copy = new DatabaseSync(out, { readOnly: true });
+          console.log('database copy integrity: ' + Object.values(copy.prepare('PRAGMA integrity_check').get())[0]);
+          console.log('database copy size: ' + (fs.statSync(out).size / 1048576).toFixed(1) + ' MB');
+          JS
+          # Every other data file (friends, names, admin state): copied as they are.
+          sudo docker exec mitosis sh -c 'cd /data && for f in *; do [ -f "$f" ] && case "$f" in mitosis.sqlite*) ;; *) cp -p "$f" "backups/'"$stamp"'/";; esac; done; true'
+          echo "files in the backup: $(sudo docker exec mitosis sh -c "ls /data/backups/$stamp | wc -l")"
+          echo "backup size: $(sudo docker exec mitosis du -sh "/data/backups/$stamp" | cut -f1)"
+          # A second copy outside the data volume, readable by root only.
+          sudo install -d -m 700 /var/backups/mitosis
+          sudo docker cp "mitosis:/data/backups/$stamp" "/var/backups/mitosis/$stamp"
+          sudo chmod -R go-rwx "/var/backups/mitosis/$stamp"
+          echo "second copy: $(sudo du -sh "/var/backups/mitosis/$stamp" | cut -f1) outside the data volume"
+          # Keep the newest 10 in each place.
+          sudo docker exec mitosis sh -c 'cd /data/backups && ls -1d */ 2>/dev/null | sort -r | tail -n +11 | xargs -r rm -rf'
+          sudo sh -c 'cd /var/backups/mitosis && ls -1d */ 2>/dev/null | sort -r | tail -n +11 | xargs -r rm -rf'
+          echo "backups kept: $(sudo sh -c 'ls -1 /var/backups/mitosis | wc -l')"
+          echo "server disk after: $(df -h / | awk 'NR==2{print $4" free of "$2}')"
+          REMOTE
+          rm -f ~/.ssh/deploy
+          exit $status
